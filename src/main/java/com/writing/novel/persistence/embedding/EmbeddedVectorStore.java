@@ -66,14 +66,18 @@ public class EmbeddedVectorStore implements VectorStore, Serializable {
         return e == null ? null : e.text;
     }
 
-    /** 余弦相似度 */
+    /**
+     * 余弦相似度。
+     * 注意：乘积必须在 double 下计算——float 乘积对大分量会丢精度，
+     * 可能令 cos>1（数学上不可能）并污染 top-K 排序。
+     */
     private static double cosineSimilarity(float[] a, float[] b) {
         if (a.length != b.length) return 0.0;
         double dot = 0, normA = 0, normB = 0;
         for (int i = 0; i < a.length; i++) {
-            dot += a[i] * b[i];
-            normA += a[i] * a[i];
-            normB += b[i] * b[i];
+            dot += (double) a[i] * b[i];
+            normA += (double) a[i] * a[i];
+            normB += (double) b[i] * b[i];
         }
         if (normA == 0 || normB == 0) return 0.0;
         return dot / (Math.sqrt(normA) * Math.sqrt(normB));
@@ -83,7 +87,8 @@ public class EmbeddedVectorStore implements VectorStore, Serializable {
     @SuppressWarnings("unchecked")
     private void load() {
         File f = new File(indexPath);
-        if (!f.exists()) return;
+        // 不存在或空文件视为无索引，避免反序列化空文件抛 EOFException
+        if (!f.exists() || f.length() == 0) return;
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f))) {
             List<Entry> list = (List<Entry>) ois.readObject();
             for (Entry e : list) index.put(e.id, e);

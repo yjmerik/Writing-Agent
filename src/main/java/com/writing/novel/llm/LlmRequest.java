@@ -41,7 +41,8 @@ public class LlmRequest {
         private String systemPrompt;
         private String userMessage;
         private List<ChatMessage> history = new ArrayList<>();
-        private int maxTokens = 4096;
+        // 0 作为「未显式设置」的哨兵值；网关据此决定是否用请求值覆盖配置默认值。
+        private int maxTokens = 0;
         private double temperature = 0.7;
 
         public Builder taskType(LlmTaskType t) { this.taskType = t; return this; }

@@ -28,3 +28,6 @@ logs/
 
 # Maven wrapper (keep mvnw, ignore local state)
 .mvn/wrapper/maven-wrapper.jar
+
+# Frontend build output (produced by `npm run build` in frontend/)
+src/main/resources/static/

@@ -245,22 +245,282 @@ public class SqliteNovelRepository implements NovelRepository {
         return all.subList(all.size() - count, all.size());
     }
 
-    // --- 以下方法在 Task 10 实现 ---
-    @Override public void saveOutline(Outline o) { throw new UnsupportedOperationException("Task 10"); }
-    @Override public Optional<Outline> findOutlineByProject(String pid) { throw new UnsupportedOperationException("Task 10"); }
-    @Override public void saveSummary(Summary s) { throw new UnsupportedOperationException("Task 10"); }
-    @Override public List<Summary> findSummariesByProject(String pid) { throw new UnsupportedOperationException("Task 10"); }
-    @Override public void saveForeshadowing(Foreshadowing f) { throw new UnsupportedOperationException("Task 10"); }
-    @Override public List<Foreshadowing> findForeshadowingsByProject(String pid) { throw new UnsupportedOperationException("Task 10"); }
-    @Override public List<Foreshadowing> findUnresolvedForeshadowings(String pid) { throw new UnsupportedOperationException("Task 10"); }
-    @Override public void saveStyleProfile(StyleProfile p) { throw new UnsupportedOperationException("Task 10"); }
-    @Override public Optional<StyleProfile> findStyleProfileByProject(String pid) { throw new UnsupportedOperationException("Task 10"); }
-    @Override public void saveContinuityIssue(ContinuityIssue i) { throw new UnsupportedOperationException("Task 10"); }
-    @Override public List<ContinuityIssue> findContinuityIssuesByProject(String pid) { throw new UnsupportedOperationException("Task 10"); }
-    @Override public List<ContinuityIssue> findUnresolvedIssues(String pid) { throw new UnsupportedOperationException("Task 10"); }
-    @Override public String saveCheckpoint(Checkpoint c) { throw new UnsupportedOperationException("Task 10"); }
-    @Override public Optional<Checkpoint> findCheckpoint(String id) { throw new UnsupportedOperationException("Task 10"); }
-    @Override public List<Checkpoint> findPendingCheckpoints(String pid) { throw new UnsupportedOperationException("Task 10"); }
+    // --- Task 10: 大纲/摘要/伏笔/风格/连续性/检查点 ---
+
+    @Override
+    public void saveOutline(Outline o) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "INSERT INTO outlines (project_id, premise) VALUES (?,?) " +
+                     "ON CONFLICT(project_id) DO UPDATE SET premise=excluded.premise")) {
+            ps.setString(1, o.getProjectId()); ps.setString(2, o.getPremise());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        try (Connection conn = cp.getConnection()) {
+            for (Volume v : o.getVolumes()) {
+                saveVolume(conn, v);
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    private void saveVolume(Connection conn, Volume v) {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "INSERT INTO volumes (id,project_id,volume_index,title,summary) VALUES (?,?,?,?,?) " +
+                "ON CONFLICT(id) DO UPDATE SET title=excluded.title, summary=excluded.summary")) {
+            ps.setString(1, v.getId()); ps.setString(2, v.getProjectId());
+            ps.setInt(3, v.getVolumeIndex()); ps.setString(4, v.getTitle());
+            ps.setString(5, v.getSummary());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        for (ChapterSynopsis s : v.getSynopses()) {
+            saveSynopsis(conn, v.getId(), s);
+        }
+    }
+
+    private void saveSynopsis(Connection conn, String volumeId, ChapterSynopsis s) {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "INSERT INTO chapter_synopses (id,project_id,volume_id,chapter_index,title,synopsis,writing_notes) " +
+                "VALUES (?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title, " +
+                "synopsis=excluded.synopsis, writing_notes=excluded.writing_notes")) {
+            ps.setString(1, s.getId()); ps.setString(2, s.getProjectId());
+            ps.setString(3, volumeId); ps.setInt(4, s.getChapterIndex());
+            ps.setString(5, s.getTitle()); ps.setString(6, s.getSynopsis());
+            ps.setString(7, s.getWritingNotes());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public Optional<Outline> findOutlineByProject(String projectId) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT premise FROM outlines WHERE project_id=?")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) return Optional.empty();
+            Outline o = new Outline(projectId, rs.getString("premise"));
+            try (PreparedStatement vps = conn.prepareStatement(
+                    "SELECT * FROM volumes WHERE project_id=? ORDER BY volume_index")) {
+                vps.setString(1, projectId);
+                ResultSet vrs = vps.executeQuery();
+                while (vrs.next()) {
+                    Volume v = new Volume(projectId, vrs.getInt("volume_index"),
+                            vrs.getString("title"), vrs.getString("summary"));
+                    setField(v, "id", vrs.getString("id"));
+                    try (PreparedStatement sps = conn.prepareStatement(
+                            "SELECT * FROM chapter_synopses WHERE volume_id=? ORDER BY chapter_index")) {
+                        sps.setString(1, v.getId());
+                        ResultSet srs = sps.executeQuery();
+                        while (srs.next()) {
+                            ChapterSynopsis s = new ChapterSynopsis(projectId,
+                                    srs.getInt("chapter_index"), srs.getString("title"),
+                                    srs.getString("synopsis"));
+                            setField(s, "id", srs.getString("id"));
+                            s.setWritingNotes(srs.getString("writing_notes"));
+                            v.addSynopsis(s);
+                        }
+                    }
+                    o.addVolume(v);
+                }
+            }
+            return Optional.of(o);
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public void saveSummary(Summary s) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "INSERT INTO summaries (id,project_id,from_chapter,to_chapter,content,updated_at) " +
+                     "VALUES (?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET from_chapter=excluded.from_chapter, " +
+                     "to_chapter=excluded.to_chapter, content=excluded.content, updated_at=excluded.updated_at")) {
+            ps.setString(1, s.getId()); ps.setString(2, s.getProjectId());
+            ps.setInt(3, s.getFromChapter()); ps.setInt(4, s.getToChapter());
+            ps.setString(5, s.getContent()); ps.setString(6, s.getUpdatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public List<Summary> findSummariesByProject(String projectId) {
+        List<Summary> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM summaries WHERE project_id=? ORDER BY from_chapter")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Summary s = new Summary(projectId, rs.getInt("from_chapter"),
+                        rs.getInt("to_chapter"), rs.getString("content"));
+                setField(s, "id", rs.getString("id"));
+                list.add(s);
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    @Override
+    public void saveForeshadowing(Foreshadowing f) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "INSERT INTO foreshadowings (id,project_id,description,planted_context," +
+                     "planted_at_chapter,resolved,resolved_at_chapter,updated_at) VALUES (?,?,?,?,?,?,?,?) " +
+                     "ON CONFLICT(id) DO UPDATE SET description=excluded.description, " +
+                     "planted_context=excluded.planted_context, resolved=excluded.resolved, " +
+                     "resolved_at_chapter=excluded.resolved_at_chapter, updated_at=excluded.updated_at")) {
+            ps.setString(1, f.getId()); ps.setString(2, f.getProjectId());
+            ps.setString(3, f.getDescription()); ps.setString(4, f.getPlantedContext());
+            ps.setInt(5, f.getPlantedAtChapter());
+            ps.setInt(6, f.isResolved() ? 1 : 0);
+            if (f.getResolvedAtChapter() != null) ps.setInt(7, f.getResolvedAtChapter());
+            else ps.setNull(7, Types.INTEGER);
+            ps.setString(8, f.getUpdatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public List<Foreshadowing> findForeshadowingsByProject(String projectId) {
+        List<Foreshadowing> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM foreshadowings WHERE project_id=?")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapForeshadowing(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    @Override
+    public List<Foreshadowing> findUnresolvedForeshadowings(String projectId) {
+        List<Foreshadowing> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM foreshadowings WHERE project_id=? AND resolved=0")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapForeshadowing(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    @Override
+    public void saveStyleProfile(StyleProfile p) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "INSERT INTO style_profiles (project_id,tone,voice,dos_and_donts,sample_chapter_indices,updated_at) " +
+                     "VALUES (?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET tone=excluded.tone, " +
+                     "voice=excluded.voice, dos_and_donts=excluded.dos_and_donts, " +
+                     "sample_chapter_indices=excluded.sample_chapter_indices, updated_at=excluded.updated_at")) {
+            ps.setString(1, p.getProjectId()); ps.setString(2, p.getTone());
+            ps.setString(3, p.getVoice()); ps.setString(4, p.getDosAndDonts());
+            ps.setString(5, String.join(",", p.getSampleChapterIndices().stream()
+                    .map(String::valueOf).toList()));
+            ps.setString(6, p.getUpdatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public Optional<StyleProfile> findStyleProfileByProject(String projectId) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM style_profiles WHERE project_id=?")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) return Optional.empty();
+            StyleProfile p = new StyleProfile(projectId);
+            p.setTone(rs.getString("tone"));
+            p.setVoice(rs.getString("voice"));
+            p.setDosAndDonts(rs.getString("dos_and_donts"));
+            String indices = rs.getString("sample_chapter_indices");
+            if (indices != null && !indices.isEmpty()) {
+                for (String s : indices.split(",")) {
+                    if (!s.isEmpty()) p.addSampleChapter(Integer.parseInt(s.trim()));
+                }
+            }
+            return Optional.of(p);
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public void saveContinuityIssue(ContinuityIssue i) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "INSERT INTO continuity_issues (id,project_id,detected_at_chapter,type,severity,description,resolved,created_at) " +
+                     "VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET resolved=excluded.resolved")) {
+            ps.setString(1, i.getId()); ps.setString(2, i.getProjectId());
+            ps.setInt(3, i.getDetectedAtChapter());
+            ps.setString(4, i.getType().name()); ps.setString(5, i.getSeverity().name());
+            ps.setString(6, i.getDescription());
+            ps.setInt(7, i.isResolved() ? 1 : 0);
+            ps.setString(8, i.getCreatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public List<ContinuityIssue> findContinuityIssuesByProject(String projectId) {
+        List<ContinuityIssue> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM continuity_issues WHERE project_id=? ORDER BY created_at DESC")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapIssue(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    @Override
+    public List<ContinuityIssue> findUnresolvedIssues(String projectId) {
+        List<ContinuityIssue> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM continuity_issues WHERE project_id=? AND resolved=0")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapIssue(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    @Override
+    public String saveCheckpoint(Checkpoint c) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "INSERT INTO checkpoints (id,project_id,type,description,status,created_at) " +
+                     "VALUES (?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET status=excluded.status")) {
+            ps.setString(1, c.getId()); ps.setString(2, c.getProjectId());
+            ps.setString(3, c.getType().name()); ps.setString(4, c.getDescription());
+            ps.setString(5, c.getStatus().name());
+            ps.setString(6, c.getCreatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return c.getId();
+    }
+
+    @Override
+    public Optional<Checkpoint> findCheckpoint(String id) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM checkpoints WHERE id=?")) {
+            ps.setString(1, id);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? Optional.of(mapCheckpoint(rs)) : Optional.empty();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public List<Checkpoint> findPendingCheckpoints(String projectId) {
+        List<Checkpoint> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM checkpoints WHERE project_id=? AND status='PENDING' ORDER BY created_at")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapCheckpoint(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
 
     // --- 映射辅助 ---
     private KnowledgeEntry mapEntry(ResultSet rs) throws SQLException {
@@ -290,6 +550,39 @@ public class SqliteNovelRepository implements NovelRepository {
         setField(c, "id", rs.getString("id"));
         String content = rs.getString("content");
         if (content != null) c.setContent(content);
+        return c;
+    }
+
+    private Foreshadowing mapForeshadowing(ResultSet rs) throws SQLException {
+        Foreshadowing f = new Foreshadowing(rs.getString("project_id"),
+                rs.getString("description"), rs.getString("planted_context"),
+                rs.getInt("planted_at_chapter"));
+        setField(f, "id", rs.getString("id"));
+        if (rs.getInt("resolved") == 1) f.resolve(rs.getInt("resolved_at_chapter"));
+        return f;
+    }
+
+    private ContinuityIssue mapIssue(ResultSet rs) throws SQLException {
+        ContinuityIssue i = new ContinuityIssue(rs.getString("project_id"),
+                rs.getInt("detected_at_chapter"),
+                ContinuityIssue.Type.valueOf(rs.getString("type")),
+                ContinuityIssue.Severity.valueOf(rs.getString("severity")),
+                rs.getString("description"));
+        setField(i, "id", rs.getString("id"));
+        if (rs.getInt("resolved") == 1) i.resolve();
+        return i;
+    }
+
+    private Checkpoint mapCheckpoint(ResultSet rs) throws SQLException {
+        Checkpoint c = new Checkpoint(rs.getString("project_id"),
+                Checkpoint.Type.valueOf(rs.getString("type")),
+                rs.getString("description"));
+        setField(c, "id", rs.getString("id"));
+        switch (Checkpoint.Status.valueOf(rs.getString("status"))) {
+            case APPROVED -> c.approve();
+            case MODIFIED -> c.modify();
+            case REJECTED -> c.reject();
+        }
         return c;
     }
 

@@ -5,12 +5,12 @@ spring:
 persistence:
   relational: sqlite
   vector: embedded
-  embedding: cloud-api
+  embedding: stub
   sqlite:
     db-path: ./data/novel.db
   vector-store:
     index-path: ./data/vectors.idx
-  embedding:
+  embedding-cfg:
     api-base-url: ${EMBEDDING_API_URL:}
     api-key: ${EMBEDDING_API_KEY:}
     model: ${EMBEDDING_MODEL:text-embedding-v2}

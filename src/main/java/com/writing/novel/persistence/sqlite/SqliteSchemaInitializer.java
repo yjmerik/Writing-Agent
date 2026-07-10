@@ -1,13 +1,13 @@
 package com.writing.novel.persistence.sqlite;
 
-import org.springframework.stereotype.Component;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-/** 启动时初始化 SQLite schema（如库不存在则建表）。 */
-@Component
+/**
+ * 启动时初始化 SQLite schema（如库不存在则建表）。
+ * 由 PersistenceConfig 装配为 Bean（非 @Component）。
+ */
 public class SqliteSchemaInitializer {
 
     private static final String[] DDL = {

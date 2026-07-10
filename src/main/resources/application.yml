@@ -14,3 +14,24 @@ persistence:
     api-base-url: ${EMBEDDING_API_URL:}
     api-key: ${EMBEDDING_API_KEY:}
     model: ${EMBEDDING_MODEL:text-embedding-v2}
+
+llm:
+  default-model:
+    base-url: ${LLM_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+    api-key: ${LLM_API_KEY:}
+    model: ${LLM_DEFAULT_MODEL:qwen-plus}
+    temperature: 0.7
+    max-tokens: 4096
+    streaming: true
+  models:
+    CHAPTER_WRITING:
+      base-url: ${LLM_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+      api-key: ${LLM_API_KEY:}
+      model: ${LLM_CHAPTER_MODEL:qwen-max}
+      temperature: 0.8
+      max-tokens: 3000
+    CONTINUITY_CHECK:
+      base-url: ${LLM_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+      api-key: ${LLM_API_KEY:}
+      model: ${LLM_CHECKER_MODEL:qwen-turbo}
+      temperature: 0.3

@@ -1,5 +1,6 @@
 package com.writing.novel.config;
 
+import com.writing.novel.persistence.embedding.CloudApiEmbeddingProvider;
 import com.writing.novel.persistence.embedding.EmbeddedVectorStore;
 import com.writing.novel.persistence.embedding.StubEmbeddingProvider;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
@@ -43,7 +44,18 @@ public class PersistenceConfig {
         return new EmbeddedVectorStore(props.getVectorStore().getIndexPath());
     }
 
-    // --- Embedding: 默认用 Stub（真实云 API 在 Plan 2 接入） ---
+    // --- Embedding: 云 API（OpenAI 兼容 /v1/embeddings） ---
+    @Bean
+    @ConditionalOnProperty(name = "persistence.embedding", havingValue = "cloud-api", matchIfMissing = true)
+    public EmbeddingProvider cloudApiEmbeddingProvider(PersistenceProperties props) {
+        return new CloudApiEmbeddingProvider(
+                props.getEmbeddingCfg().getApiBaseUrl(),
+                props.getEmbeddingCfg().getApiKey(),
+                props.getEmbeddingCfg().getModel()
+        );
+    }
+
+    // --- Embedding: Stub（确定性占位，用于测试与离线开发） ---
     @Bean
     @ConditionalOnProperty(name = "persistence.embedding", havingValue = "stub", matchIfMissing = false)
     public EmbeddingProvider stubEmbeddingProvider() {

@@ -5,7 +5,7 @@ spring:
 persistence:
   relational: sqlite
   vector: embedded
-  embedding: stub
+  embedding: cloud-api
   sqlite:
     db-path: ./data/novel.db
   vector-store:

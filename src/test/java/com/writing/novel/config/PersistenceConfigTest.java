@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @TestPropertySource(properties = {
+        "persistence.embedding=stub",
         "persistence.sqlite.db-path=./data/test-config.db",
         "persistence.vector-store.index-path=./data/test-config-vecs.idx"
 })

@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: writing-agent
+
+persistence:
+  relational: sqlite
+  vector: embedded
+  embedding: cloud-api
+  sqlite:
+    db-path: ./data/novel.db
+  vector-store:
+    index-path: ./data/vectors.idx
+  embedding:
+    api-base-url: ${EMBEDDING_API_URL:}
+    api-key: ${EMBEDDING_API_KEY:}
+    model: ${EMBEDDING_MODEL:text-embedding-v2}

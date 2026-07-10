@@ -44,8 +44,15 @@ public class DefaultLlmGateway implements LlmGateway {
 
         // 始终用请求值覆盖（请求值即最终意图）
         resolved.setTemperature(request.getTemperature());
-        if (request.getMaxTokens() > 0) {
-            resolved.setMaxTokens(request.getMaxTokens());
+        // maxTokens 取请求值与配置值的较大者：
+        // 推理模型（如 GLM-5.2）在 reasoning_content 上消耗大量 token，
+        // Agent 写死的默认值（如 2000）可能不够，配置层（yml）可设更大值兜底。
+        int reqMax = request.getMaxTokens();
+        int cfgMax = base.getMaxTokens();
+        if (reqMax > 0 && cfgMax > 0) {
+            resolved.setMaxTokens(Math.max(reqMax, cfgMax));
+        } else if (reqMax > 0) {
+            resolved.setMaxTokens(reqMax);
         }
 
         return resolved;

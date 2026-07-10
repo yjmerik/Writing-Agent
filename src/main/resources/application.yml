@@ -25,9 +25,9 @@ llm:
     streaming: true
   models:
     CHAPTER_WRITING:
-      base-url: https://api.deepseek.com
-      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
-      model: deepseek-v4-flash
+      base-url: https://open.bigmodel.cn/api/coding/paas/v4
+      api-key: 03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR
+      model: glm-5.2
       temperature: 0.8
       max-tokens: 8192
     CONTINUITY_CHECK:

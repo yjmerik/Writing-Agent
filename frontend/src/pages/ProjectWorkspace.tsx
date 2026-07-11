@@ -8,6 +8,7 @@ import RunConsole from '../components/RunConsole';
 import WorldbuildingView from '../components/WorldbuildingView';
 import OutlineView from '../components/OutlineView';
 import ChapterReader from '../components/ChapterReader';
+import QualityView from '../components/QualityView';
 
 const { Sider, Content } = Layout;
 
@@ -88,11 +89,13 @@ export default function ProjectWorkspace() {
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
+          destroyInactiveTabPane
           items={[
             { key: 'run', label: '运行控制台', children: <RunConsole projectId={project.id} onChanged={load} /> },
-            { key: 'world', label: '世界观与人物', children: <WorldbuildingView projectId={project.id} /> },
-            { key: 'outline', label: '大纲', children: <OutlineView projectId={project.id} /> },
-            { key: 'reader', label: '章节阅读', children: <ChapterReader projectId={project.id} /> },
+            { key: 'world', label: '世界观与人物', children: <WorldbuildingView key={`world-${project.currentChapterIndex}`} projectId={project.id} /> },
+            { key: 'outline', label: '大纲', children: <OutlineView key={`outline-${project.state}`} projectId={project.id} /> },
+            { key: 'reader', label: '章节阅读', children: <ChapterReader key={`reader-${project.currentChapterIndex}`} projectId={project.id} /> },
+            { key: 'quality', label: '质量评价', children: <QualityView projectId={project.id} /> },
           ]}
         />
       </Content>

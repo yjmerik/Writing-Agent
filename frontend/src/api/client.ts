@@ -94,4 +94,21 @@ export const api = {
   // --- 写作 ---
   writeChapter: (id: string) =>
     request<Chapter>(`/projects/${id}/write-chapter`, { method: 'POST' }),
+
+  /** 连续写作：批量写所有章节（慢操作，可能几十分钟） */
+  writeAll: (id: string, maxChapters = 50) =>
+    request<{ projectId: string; chaptersWritten: number; state: string; currentChapter: number; totalWords: number }>(
+      `/projects/${id}/write-all?maxChapters=${maxChapters}`,
+      { method: 'POST' },
+      3600000, // 超时 1 小时
+    ),
+
+  /** 质量评价（慢操作，调 LLM 分析） */
+  evaluate: (id: string) =>
+    request<{
+      scores: Record<string, number>;
+      overallScore: number;
+      summary: string;
+      issues: { dimension: string; severity: string; description: string }[];
+    }>(`/projects/${id}/evaluate`, { method: 'POST' }, 300000),
 };

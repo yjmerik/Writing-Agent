@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { Steps, Button, Space, message, Alert, Card } from 'antd';
-import { PlayCircleOutlined, FileAddOutlined } from '@ant-design/icons';
+import { Steps, Button, Space, message, Alert, Card, Popconfirm } from 'antd';
+import { PlayCircleOutlined, FileAddOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
 import type { ProjectStatus, NovelState, Chapter } from '../types';
 
@@ -17,6 +17,7 @@ const STATE_TEXT: Record<string, string> = {
 export default function RunConsole({ projectId, onChanged }: { projectId: string; onChanged: () => void }) {
   const [running, setRunning] = useState(false);
   const [writing, setWriting] = useState(false);
+  const [batchWriting, setBatchWriting] = useState(false);
   const [lastResult, setLastResult] = useState<string | null>(null);
 
   const handleRun = useCallback(async () => {
@@ -25,7 +26,12 @@ export default function RunConsole({ projectId, onChanged }: { projectId: string
     try {
       const status: ProjectStatus = await api.run(projectId);
       message.success(`已推进到：${STATE_TEXT[status.state] || status.state}`);
-      setLastResult(`当前状态：${STATE_TEXT[status.state] || status.state} | 已写 ${status.currentChapter} 章`);
+      const tips: Record<string, string> = {
+        PLANNING: '\n💡 设定已生成！切换到「世界观与人物」「大纲」Tab 查看',
+        WRITING: '\n💡 现在可以点「写一章」生成正文',
+        PAUSED_AT_CHECKPOINT: '\n💡 交互模式：设定已生成，已暂停等待审核',
+      };
+      setLastResult(`当前状态：${STATE_TEXT[status.state] || status.state} | 已写 ${status.currentChapter} 章${tips[status.state] || ''}`);
       onChanged();
     } catch (e) {
       message.error(`运行失败: ${(e as Error).message}`);
@@ -41,7 +47,7 @@ export default function RunConsole({ projectId, onChanged }: { projectId: string
       const chapter: Chapter = await api.writeChapter(projectId);
       if (chapter) {
         message.success(`第${chapter.chapterIndex}章「${chapter.title}」已完成（${chapter.wordCount}字）`);
-        setLastResult(`新章节：第${chapter.chapterIndex}章「${chapter.title}」（${chapter.wordCount}字）`);
+        setLastResult(`新章节：第${chapter.chapterIndex}章「${chapter.title}」（${chapter.wordCount}字）\n💡 切换到「章节阅读」Tab 查看正文`);
       } else {
         message.info('当前卷已写完，无更多章节');
         setLastResult('当前卷已写完');
@@ -51,6 +57,29 @@ export default function RunConsole({ projectId, onChanged }: { projectId: string
       message.error(`写作失败: ${(e as Error).message}`);
     } finally {
       setWriting(false);
+    }
+  }, [projectId, onChanged]);
+
+  const handleWriteAll = useCallback(async () => {
+    setBatchWriting(true);
+    setLastResult(null);
+    try {
+      const result = await api.writeAll(projectId);
+      const words = result.totalWords;
+      message.success(`连续写作完成！共写 ${result.chaptersWritten} 章，全书 ${result.currentChapter} 章 ${words} 字`);
+      setLastResult(
+        `✅ 连续写作完成\n` +
+        `本次新写：${result.chaptersWritten} 章\n` +
+        `全书章节：${result.currentChapter} 章\n` +
+        `总字数：${words.toLocaleString()} 字\n` +
+        `状态：${result.state === 'FINAL' ? '✅ 已完结' : result.state}\n` +
+        `💡 切换到「章节阅读」Tab 查看全部正文`,
+      );
+      onChanged();
+    } catch (e) {
+      message.error(`连续写作失败: ${(e as Error).message}`);
+    } finally {
+      setBatchWriting(false);
     }
   }, [projectId, onChanged]);
 
@@ -76,7 +105,7 @@ export default function RunConsole({ projectId, onChanged }: { projectId: string
         style={{ marginBottom: 24 }}
       />
 
-      <Space size="large">
+      <Space size="large" wrap>
         <Button
           type="primary"
           size="large"
@@ -94,6 +123,22 @@ export default function RunConsole({ projectId, onChanged }: { projectId: string
         >
           {writing ? '写作中（调 LLM）…' : '写一章'}
         </Button>
+        <Popconfirm
+          title="连续写作"
+          description="将自动写完所有章节，可能耗时数十分钟。确定开始？"
+          onConfirm={handleWriteAll}
+          okText="开始连续写作"
+          cancelText="取消"
+        >
+          <Button
+            danger
+            size="large"
+            icon={<ThunderboltOutlined />}
+            loading={batchWriting}
+          >
+            {batchWriting ? '连续写作中（每章 1-2 分钟）…' : '⚡ 连续写作（写完全书）'}
+          </Button>
+        </Popconfirm>
       </Space>
 
       {lastResult && (

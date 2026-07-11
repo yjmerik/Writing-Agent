@@ -40,14 +40,14 @@ public class PlotterAgent {
 
         String userMessage = "构思：" + concept + "\n主题：" + theme
                 + "\n预计总章数：" + totalChapters
-                + "\n请规划 2-3 卷，每卷 3-5 章。";
+                + "\n请规划足够多的卷和章节以达到这个章节数。每卷 5-8 章。";
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.PLOTTING)
                 .systemPrompt(systemPrompt)
                 .userMessage(userMessage)
                 .temperature(0.8)
-                .maxTokens(3000)
+                .maxTokens(8000)
                 .build();
 
         var resp = gateway.complete(req);

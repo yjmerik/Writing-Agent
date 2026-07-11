@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Card, Tag, Empty, Spin, Row, Col, Descriptions, Divider } from 'antd';
+import { Card, Tag, Empty, Spin, Row, Col, Descriptions, Divider, Button, Space } from 'antd';
+import { ReloadOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
 import type { KnowledgeEntry, Character } from '../types';
 
@@ -54,6 +55,9 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
 
   return (
     <div>
+      <Space style={{ marginBottom: 16 }}>
+        <Button size="small" icon={<ReloadOutlined />} onClick={load}>刷新</Button>
+      </Space>
       <h2>🌍 世界观设定</h2>
       {entries.length === 0 ? (
         <Empty description="暂无世界观设定，请先运行「构思」阶段" />

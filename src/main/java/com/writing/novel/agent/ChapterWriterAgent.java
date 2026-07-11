@@ -62,11 +62,17 @@ public class ChapterWriterAgent {
         repository.saveChapter(chapter);
 
         // 5. 索引章节正文到向量库（供后续语义检索）
+        // 截断到 1500 字，避免 embedding API 输入长度限制；失败不中断写作
         if (vectorRetrieval != null) {
-            vectorRetrieval.index(new IndexedText(
-                    chapter.getId(), projectId,
-                    "第" + chapterIndex + "章 " + chapterTitle + "：" + resp.getContent(),
-                    "CHAPTER"));
+            try {
+                String indexText = "第" + chapterIndex + "章 " + chapterTitle + "：" + resp.getContent();
+                if (indexText.length() > 1500) {
+                    indexText = indexText.substring(0, 1500);
+                }
+                vectorRetrieval.index(new IndexedText(chapter.getId(), projectId, indexText, "CHAPTER"));
+            } catch (Exception e) {
+                // 索引失败不影响写作流程，章节已保存
+            }
         }
 
         return chapter;

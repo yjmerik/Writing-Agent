@@ -58,7 +58,7 @@ public class NovelOrchestrator {
 
         worldBuilder.build(projectId, p.getConcept(), p.getTags());
         characterDesigner.design(projectId, "主角", List.of());
-        plotter.plan(projectId, p.getConcept(), p.getConcept(), 10);
+        plotter.plan(projectId, p.getConcept(), p.getConcept(), 40);
 
         if (p.getMode() == ProjectMode.INTERACTIVE) {
             p.setState(NovelState.PAUSED_AT_CHECKPOINT);
@@ -120,6 +120,41 @@ public class NovelOrchestrator {
         }
 
         return chapter;
+    }
+
+    /**
+     * 连续写作：从当前章节一直写到大纲结束，或达到 maxChapters 上限。
+     * 返回本次新写的章节数。
+     */
+    public int runWritingLoop(String projectId, int maxChapters) {
+        int written = 0;
+        while (written < maxChapters) {
+            Project p = loadProject(projectId);
+            // 检查是否还有未写的章节
+            Outline outline = repository.findOutlineByProject(projectId).orElse(null);
+            if (outline == null) break;
+            if (!hasNextChapter(outline, p.getCurrentChapterIndex())) {
+                p.setState(NovelState.FINAL);
+                repository.saveProject(p);
+                break;
+            }
+            // 如果在 VOLUME_DONE 状态，先转回 WRITING
+            if (p.getState() == NovelState.VOLUME_DONE) {
+                p.setState(NovelState.WRITING);
+                repository.saveProject(p);
+            }
+            Chapter ch = runWritingOneChapter(projectId);
+            if (ch == null) break;
+            written++;
+        }
+        return written;
+    }
+
+    /** 统计项目总字数 */
+    public int getTotalWordCount(String projectId) {
+        return repository.findChaptersByProject(projectId).stream()
+                .mapToInt(Chapter::getWordCount)
+                .sum();
     }
 
     private void generateSummary(String projectId, int from, int to) {

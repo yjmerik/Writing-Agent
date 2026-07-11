@@ -47,4 +47,9 @@ public class AgentConfig {
     public MemoryManagerAgent memoryManagerAgent(LlmGateway gateway, SummaryService summaryService) {
         return new MemoryManagerAgent(gateway, summaryService);
     }
+
+    @Bean
+    public QualityEvaluationAgent qualityEvaluationAgent(LlmGateway gateway, NovelRepository repo) {
+        return new QualityEvaluationAgent(gateway, repo);
+    }
 }

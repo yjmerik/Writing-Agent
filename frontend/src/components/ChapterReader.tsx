@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, Spin, Empty, Button, Space, Typography, List, Tag } from 'antd';
-import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { LeftOutlined, RightOutlined, ReloadOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
 import type { Chapter } from '../types';
 
@@ -31,6 +31,7 @@ export default function ChapterReader({ projectId }: { projectId: string }) {
   return (
     <div>
       <Space style={{ marginBottom: 16 }}>
+        <Button size="small" icon={<ReloadOutlined />} onClick={load}>刷新</Button>
         <List
           size="small"
           style={{ width: 250, background: '#fff' }}

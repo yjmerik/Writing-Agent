@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Tree, Spin, Empty, Card, Typography } from 'antd';
+import { Tree, Spin, Empty, Card, Typography, Button, Space } from 'antd';
+import { ReloadOutlined } from '@ant-design/icons';
 import type { DataNode } from 'antd/es/tree';
 import { api } from '../api/client';
 import type { Outline } from '../types';
@@ -22,7 +23,22 @@ export default function OutlineView({ projectId }: { projectId: string }) {
   useEffect(() => { load(); }, [load]);
 
   if (loading) return <Spin />;
-  if (!outline) return <Empty description="暂无大纲，请先运行「构思」阶段" />;
+
+  return (
+    <Card>
+      <Space style={{ marginBottom: 16 }}>
+        <Button size="small" icon={<ReloadOutlined />} onClick={load}>刷新</Button>
+      </Space>
+      {!outline ? (
+        <Empty description="暂无大纲，请先运行「构思」阶段（生成后点刷新）" />
+      ) : (
+        <OutlineTree outline={outline} />
+      )}
+    </Card>
+  );
+}
+
+function OutlineTree({ outline }: { outline: Outline }) {
 
   // 构建 Tree 数据
   const treeData: DataNode[] = [
@@ -62,13 +78,11 @@ export default function OutlineView({ projectId }: { projectId: string }) {
   ];
 
   return (
-    <Card>
-      <Tree
-        treeData={treeData}
-        defaultExpandAll
-        showLine
-        blockNode
-      />
-    </Card>
+    <Tree
+      treeData={treeData}
+      defaultExpandAll
+      showLine
+      blockNode
+    />
   );
 }

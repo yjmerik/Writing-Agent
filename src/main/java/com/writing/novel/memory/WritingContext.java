@@ -52,6 +52,17 @@ public class WritingContext {
     /** user prompt：本卷大纲 + 近期摘要 + 上章原文 + 伏笔 + 本章任务 */
     public String toUserPrompt() {
         StringBuilder sb = new StringBuilder();
+        // 开头强锚定主角名，防止 LLM 从"上一章原文"中继承错误的名字（滚雪球效应）
+        if (relevantCharacters != null && !relevantCharacters.isEmpty()) {
+            var mainChars = relevantCharacters.stream()
+                    .filter(c -> c.getRole() != null && c.getRole().contains("主角"))
+                    .toList();
+            if (!mainChars.isEmpty()) {
+                sb.append("⚠️ 重要提醒：本章主角的名字是「")
+                  .append(mainChars.get(0).getName()).append("」，")
+                  .append("正文中必须使用这个名字，不得使用任何其他名字。\n\n");
+            }
+        }
         if (volumeOutlineSection != null && !volumeOutlineSection.isBlank()) {
             sb.append("【本卷大纲】\n").append(volumeOutlineSection).append("\n\n");
         }

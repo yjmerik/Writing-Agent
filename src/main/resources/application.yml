@@ -23,7 +23,7 @@ llm:
     temperature: 0.7
     max-tokens: 8192
     streaming: true
-    style-guide: "纯东方玄幻/仙侠风格。禁止出现任何机械、科幻、数据流、电子屏、义眼、AI、代码、能量光谱等现代或科幻元素。所有超自然描写必须使用修仙体系术语（灵气、丹田、神识、法术、阵法、天劫等）。语言风格偏向古风但不过度文言。"
+    style-guide: "严格遵循世界观设定中已确立的类型风格。不要引入与世界观类型不兼容的元素（如仙侠世界不要出现科幻机械）。超自然描写必须使用世界观内的术语体系。"
   models:
     CHAPTER_WRITING:
       base-url: https://open.bigmodel.cn/api/coding/paas/v4
@@ -31,7 +31,7 @@ llm:
       model: glm-5.2
       temperature: 0.8
       max-tokens: 8192
-      style-guide: "纯东方玄幻/仙侠风格。绝对禁止出现机械、科幻、数据流、义眼、电子屏、AI、代码等现代/科幻元素。所有技术描写用修仙术语。人物对话要有古风韵味但不矫揉造作。"
+      style-guide: "严格遵循世界观设定中已确立的类型风格。人物名字必须与【出场人物】完全一致，绝对不得改名。不得引入与世界观不兼容的元素。"
     CONTINUITY_CHECK:
       base-url: https://open.bigmodel.cn/api/coding/paas/v4
       api-key: 03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR

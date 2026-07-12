@@ -40,7 +40,7 @@ class WorldBuilderAgentTest {
             @Override public List<KnowledgeEntry> findAllEntries(String pid) { return List.of(); }
         };
 
-        WorldBuilderAgent agent = new WorldBuilderAgent(mockGateway, mockKb);
+        WorldBuilderAgent agent = new WorldBuilderAgent(mockGateway, mockKb, TestPromptHelper.create());
         Worldbuilding wb = agent.build("proj-1", "一个剑修复仇的玄幻故事", "玄幻,热血");
 
         assertNotNull(wb);

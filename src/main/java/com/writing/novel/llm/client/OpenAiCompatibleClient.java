@@ -113,7 +113,12 @@ public class OpenAiCompatibleClient implements LlmClient {
         if (request.getSystemPrompt() != null && !request.getSystemPrompt().isEmpty()) {
             ObjectNode sys = messages.addObject();
             sys.put("role", "system");
-            sys.put("content", request.getSystemPrompt());
+            // 如果模型配置了 styleGuide，拼接到 systemPrompt 末尾
+            String systemContent = request.getSystemPrompt();
+            if (config.getStyleGuide() != null && !config.getStyleGuide().isBlank()) {
+                systemContent = systemContent + "\n\n【模型风格约束】" + config.getStyleGuide();
+            }
+            sys.put("content", systemContent);
         }
         for (ChatMessage msg : request.getHistory()) {
             ObjectNode m = messages.addObject();

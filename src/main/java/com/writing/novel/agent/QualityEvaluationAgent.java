@@ -6,6 +6,7 @@ import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmResponse;
 import com.writing.novel.llm.LlmTaskType;
+import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.spi.NovelRepository;
 
 import java.util.ArrayList;
@@ -28,11 +29,14 @@ public class QualityEvaluationAgent {
 
     private final LlmGateway gateway;
     private final NovelRepository repository;
+    private final PromptTemplateService promptService;
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    public QualityEvaluationAgent(LlmGateway gateway, NovelRepository repository) {
+    public QualityEvaluationAgent(LlmGateway gateway, NovelRepository repository,
+                                  PromptTemplateService promptService) {
         this.gateway = gateway;
         this.repository = repository;
+        this.promptService = promptService;
     }
 
     /**
@@ -47,32 +51,7 @@ public class QualityEvaluationAgent {
         String outline = collectOutline(projectId);
         String summary = collectSummaries(projectId);
 
-        String systemPrompt = """
-                你是专业的网络小说评审专家。请从以下 5 个维度评价这部小说的质量，并指出具体问题。
-
-                严格按以下 JSON 格式输出（不要输出其他内容）：
-                {
-                  "scores": {
-                    "consistency": 1-10的整数,
-                    "style": 1-10的整数,
-                    "plot": 1-10的整数,
-                    "characters": 1-10的整数,
-                    "worldbuilding": 1-10的整数
-                  },
-                  "overallScore": 1-10的整数,
-                  "issues": [
-                    {"dimension": "consistency|style|plot|characters|worldbuilding", "severity": "high|medium|low", "description": "具体问题描述"}
-                  ],
-                  "summary": "总体评价（2-3句话）"
-                }
-
-                评分标准（1-10）：
-                - consistency（长程一致性）：人物/设定前后是否矛盾
-                - style（风格统一）：文风是否漂移
-                - plot（情节质量）：节奏/爽点/流水账
-                - characters（人物塑造）：角色是否立体
-                - worldbuilding（世界观完整）：设定是否自洽
-                """;
+        String systemPrompt = promptService.render("quality-evaluate", Map.of());
 
         String userMessage = "=== 世界观设定 ===\n" + truncate(worldbuilding, 800) +
                 "\n\n=== 人物卡 ===\n" + truncate(characters, 600) +

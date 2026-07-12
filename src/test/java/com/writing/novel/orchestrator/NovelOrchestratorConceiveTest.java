@@ -61,14 +61,15 @@ class NovelOrchestratorConceiveTest {
         };
 
         projectService = new ProjectService(repo);
+        var promptSvc = com.writing.novel.agent.TestPromptHelper.create();
         orchestrator = new NovelOrchestrator(repo, projectService,
-                new WorldBuilderAgent(gateway, kbSvc),
-                new CharacterDesignerAgent(gateway, kbSvc),
-                new PlotterAgent(gateway, repo),
-                new ChapterWriterAgent(gateway, assembler, repo, vectorSvc),
-                new ContinuityCheckerAgent(gateway, repo),
-                new StyleGuardianAgent(gateway, repo),
-                new MemoryManagerAgent(gateway, summarySvc),
+                new WorldBuilderAgent(gateway, kbSvc, promptSvc),
+                new CharacterDesignerAgent(gateway, kbSvc, promptSvc),
+                new PlotterAgent(gateway, repo, promptSvc),
+                new ChapterWriterAgent(gateway, assembler, repo, vectorSvc, promptSvc),
+                new ContinuityCheckerAgent(gateway, repo, promptSvc),
+                new StyleGuardianAgent(gateway, repo, promptSvc),
+                new MemoryManagerAgent(gateway, summarySvc, promptSvc),
                 summarySvc, assembler);
     }
 

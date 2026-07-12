@@ -4,11 +4,14 @@ import com.writing.novel.domain.Chapter;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
+import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.IndexedText;
 import com.writing.novel.memory.VectorRetrievalService;
 import com.writing.novel.memory.WritingContext;
 import com.writing.novel.spi.NovelRepository;
+
+import java.util.Map;
 
 /**
  * 章节写作 Agent（核心）。
@@ -20,19 +23,22 @@ public class ChapterWriterAgent {
     private final ContextAssembler contextAssembler;
     private final NovelRepository repository;
     private final VectorRetrievalService vectorRetrieval;
+    private final PromptTemplateService promptService;
 
     public ChapterWriterAgent(LlmGateway gateway, ContextAssembler contextAssembler,
-                               NovelRepository repository, VectorRetrievalService vectorRetrieval) {
+                               NovelRepository repository, VectorRetrievalService vectorRetrieval,
+                               PromptTemplateService promptService) {
         this.gateway = gateway;
         this.contextAssembler = contextAssembler;
         this.repository = repository;
         this.vectorRetrieval = vectorRetrieval;
+        this.promptService = promptService;
     }
 
-    /** 兼容测试的三参构造（vectorRetrieval 为 null 时跳过索引） */
+    /** 兼容测试的四参构造（vectorRetrieval 为 null 时跳过索引） */
     public ChapterWriterAgent(LlmGateway gateway, ContextAssembler contextAssembler,
-                               NovelRepository repository) {
-        this(gateway, contextAssembler, repository, null);
+                               NovelRepository repository, PromptTemplateService promptService) {
+        this(gateway, contextAssembler, repository, null, promptService);
     }
 
     public Chapter write(String projectId, int chapterIndex, String chapterTitle,
@@ -41,9 +47,9 @@ public class ChapterWriterAgent {
         WritingContext ctx = contextAssembler.assemble(
                 projectId, chapterIndex, chapterTitle, chapterSynopsis, writingNotes);
 
-        // 2. 构建 LLM 请求
-        String systemPrompt = ctx.toSystemPrompt() + "\n\n你是网络小说写作高手。" +
-                "请根据提供的上下文写出本章正文，保持文风一致，注意与前文衔接。";
+        // 2. 构建 LLM 请求：ContextAssembler 组装的上下文 + chapter-writing 模板的角色定义
+        String chapterWritingPrompt = promptService.render("chapter-writing", Map.of("styleGuide", ""));
+        String systemPrompt = ctx.toSystemPrompt() + "\n\n" + chapterWritingPrompt;
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.CHAPTER_WRITING)

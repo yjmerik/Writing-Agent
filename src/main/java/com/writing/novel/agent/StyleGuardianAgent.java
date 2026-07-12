@@ -4,8 +4,10 @@ import com.writing.novel.domain.StyleProfile;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
+import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.spi.NovelRepository;
 
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,21 +18,18 @@ public class StyleGuardianAgent {
 
     private final LlmGateway gateway;
     private final NovelRepository repository;
+    private final PromptTemplateService promptService;
 
-    public StyleGuardianAgent(LlmGateway gateway, NovelRepository repository) {
+    public StyleGuardianAgent(LlmGateway gateway, NovelRepository repository,
+                              PromptTemplateService promptService) {
         this.gateway = gateway;
         this.repository = repository;
+        this.promptService = promptService;
     }
 
     /** 从样章分析并建立风格基线 */
     public StyleProfile establishProfile(String projectId, String sampleText) {
-        String systemPrompt = """
-                你是文学风格分析专家。分析给定的文本样章，总结其写作风格。
-                严格按以下格式输出：
-                【基调】...
-                【叙事】...
-                【注意事项】...
-                """;
+        String systemPrompt = promptService.render("style-establish", Map.of());
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.STYLE_GUARDIAN)
@@ -52,10 +51,7 @@ public class StyleGuardianAgent {
 
     /** 检查新章节的风格一致性，返回评估报告 */
     public String checkConsistency(String projectId, String chapterText, String styleBaseline) {
-        String systemPrompt = """
-                你是风格一致性审查员。评估新章节是否与全书风格基线一致。
-                输出格式：风格一致性评分：XX/100。简短说明。
-                """;
+        String systemPrompt = promptService.render("style-check", Map.of());
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.STYLE_GUARDIAN)

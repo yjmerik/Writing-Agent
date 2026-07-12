@@ -7,7 +7,10 @@ import com.writing.novel.domain.Worldbuilding;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
+import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.memory.KnowledgeBaseService;
+
+import java.util.Map;
 
 /**
  * 世界观构建 Agent。输入构思简介+类型标签 → 调 LLM → 解析为世界观条目 → 写入知识库。
@@ -16,20 +19,18 @@ public class WorldBuilderAgent {
 
     private final LlmGateway gateway;
     private final KnowledgeBaseService knowledgeBase;
+    private final PromptTemplateService promptService;
 
-    public WorldBuilderAgent(LlmGateway gateway, KnowledgeBaseService knowledgeBase) {
+    public WorldBuilderAgent(LlmGateway gateway, KnowledgeBaseService knowledgeBase,
+                             PromptTemplateService promptService) {
         this.gateway = gateway;
         this.knowledgeBase = knowledgeBase;
+        this.promptService = promptService;
     }
 
     public Worldbuilding build(String projectId, String concept, String tags) {
-        String systemPrompt = """
-                你是网络小说世界观设定专家。根据用户的构思，生成完整的世界观设定。
-                必须覆盖：地理环境、力量体系（修炼/魔法等）、主要势力、历史背景、核心规则。
-                严格按以下格式输出，每行一条：
-                【类型】名称：内容描述
-                类型包括：地理、力量体系、势力、历史、规则。
-                """;
+        String systemPrompt = promptService.render("worldbuilding", Map.of(
+                "concept", concept, "tags", tags, "styleGuide", ""));
 
         String userMessage = "构思：" + concept + "\n类型标签：" + tags
                 + "\n请生成 5-8 条世界观设定。";

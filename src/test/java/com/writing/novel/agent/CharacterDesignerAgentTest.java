@@ -40,7 +40,7 @@ class CharacterDesignerAgentTest {
             @Override public List<Character> findAllCharacters(String pid) { return List.of(); }
         };
 
-        CharacterDesignerAgent agent = new CharacterDesignerAgent(mockGateway, mockKb);
+        CharacterDesignerAgent agent = new CharacterDesignerAgent(mockGateway, mockKb, TestPromptHelper.create());
         Character c = agent.design("proj-1", "主角，复仇者", List.of());
 
         assertNotNull(c);

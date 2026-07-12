@@ -28,7 +28,7 @@ class MemoryManagerAgentTest {
             @Override public void save(Summary s) { saved[0] = true; }
         };
 
-        MemoryManagerAgent agent = new MemoryManagerAgent(mockGateway, summarySvc);
+        MemoryManagerAgent agent = new MemoryManagerAgent(mockGateway, summarySvc, TestPromptHelper.create());
         Summary summary = agent.summarize("proj-1", 1, 3, "第1章正文……\n第2章正文……\n第3章正文……");
 
         assertNotNull(summary);

@@ -26,7 +26,7 @@ class StyleGuardianAgentTest {
             public void streamComplete(LlmRequest req, StreamHandler handler) {}
         };
 
-        StyleGuardianAgent agent = new StyleGuardianAgent(mockGateway, null);
+        StyleGuardianAgent agent = new StyleGuardianAgent(mockGateway, null, TestPromptHelper.create());
         StyleProfile profile = agent.establishProfile("proj-1", "样章正文……");
 
         assertNotNull(profile);
@@ -44,7 +44,7 @@ class StyleGuardianAgentTest {
             @Override
             public void streamComplete(LlmRequest req, StreamHandler handler) {}
         };
-        StyleGuardianAgent agent = new StyleGuardianAgent(mockGateway, null);
+        StyleGuardianAgent agent = new StyleGuardianAgent(mockGateway, null, TestPromptHelper.create());
         String report = agent.checkConsistency("proj-1", "新章节正文", "热血风格");
         assertTrue(report.contains("85"));
     }

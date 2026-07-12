@@ -4,8 +4,10 @@ import com.writing.novel.domain.*;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
+import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.spi.NovelRepository;
 
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,27 +18,19 @@ public class PlotterAgent {
 
     private final LlmGateway gateway;
     private final NovelRepository repository;
+    private final PromptTemplateService promptService;
 
-    public PlotterAgent(LlmGateway gateway, NovelRepository repository) {
+    public PlotterAgent(LlmGateway gateway, NovelRepository repository,
+                        PromptTemplateService promptService) {
         this.gateway = gateway;
         this.repository = repository;
+        this.promptService = promptService;
     }
 
     public Outline plan(String projectId, String concept, String theme, int totalChapters) {
-        String systemPrompt = """
-                你是网络小说大纲规划专家。根据构思生成分层大纲：总纲 + 多卷 + 每卷的章节梗概。
-                严格按以下格式输出：
-
-                【总纲】全书主线一句话概括。
-
-                【卷N】卷名
-                本卷梗概描述。
-                第X章 章节名：本章内容梗概。
-                第Y章 章节名：本章内容梗概。
-
-                【卷M】卷名
-                ...
-                """;
+        String systemPrompt = promptService.render("plotting", Map.of(
+                "concept", concept, "theme", theme,
+                "totalChapters", totalChapters, "styleGuide", ""));
 
         String userMessage = "构思：" + concept + "\n主题：" + theme
                 + "\n预计总章数：" + totalChapters

@@ -4,10 +4,12 @@ import com.writing.novel.domain.ContinuityIssue;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
+import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.spi.NovelRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,22 +20,18 @@ public class ContinuityCheckerAgent {
 
     private final LlmGateway gateway;
     private final NovelRepository repository;
+    private final PromptTemplateService promptService;
 
-    public ContinuityCheckerAgent(LlmGateway gateway, NovelRepository repository) {
+    public ContinuityCheckerAgent(LlmGateway gateway, NovelRepository repository,
+                                  PromptTemplateService promptService) {
         this.gateway = gateway;
         this.repository = repository;
+        this.promptService = promptService;
     }
 
     public List<ContinuityIssue> check(String projectId, int chapterIndex,
                                         String chapterContent, String relevantSettings) {
-        String systemPrompt = """
-                你是小说连续性审查员。检查新章节是否与已有设定矛盾。
-                如果发现问题，严格按以下格式每行一条输出：
-                【类型|严重度】问题描述
-                类型：人物/世界观/时间线/伏笔
-                严重度：高/中/低
-                如果没有问题，回复"未发现连续性问题。"
-                """;
+        String systemPrompt = promptService.render("continuity-check", Map.of());
 
         String userMessage = "新章节内容：\n" + chapterContent
                 + "\n\n相关设定：\n" + relevantSettings;

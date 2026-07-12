@@ -38,7 +38,7 @@ class ChapterWriterAgentTest {
             public void streamComplete(LlmRequest req, StreamHandler handler) {}
         };
 
-        ChapterWriterAgent agent = new ChapterWriterAgent(mockGateway, mockAssembler, new TestNovelRepositoryStub());
+        ChapterWriterAgent agent = new ChapterWriterAgent(mockGateway, mockAssembler, new TestNovelRepositoryStub(), TestPromptHelper.create());
         Chapter ch = agent.write("proj-1", 1, "第一章 张三登场",
                 "张三拜入山门", "3000字");
 
@@ -71,7 +71,7 @@ class ChapterWriterAgentTest {
             public String saveChapter(Chapter c) { saved[0] = true; return c.getId(); }
         };
 
-        ChapterWriterAgent agent = new ChapterWriterAgent(mockGateway, mockAssembler, mockRepo);
+        ChapterWriterAgent agent = new ChapterWriterAgent(mockGateway, mockAssembler, mockRepo, TestPromptHelper.create());
         agent.write("p1", 1, "ch1", "synopsis", null);
 
         assertTrue(saved[0], "写完后应保存章节到仓库");

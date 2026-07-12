@@ -12,6 +12,8 @@ public class ModelConfig {
     private int maxTokens = 4096;
     /** 是否启用流式输出 */
     private boolean streaming = true;
+    /** 模型级风格指引（自动拼接到 systemPrompt 末尾，用于约束 LLM 创作倾向） */
+    private String styleGuide;
 
     public String getBaseUrl() { return baseUrl; }
     public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
@@ -25,4 +27,6 @@ public class ModelConfig {
     public void setMaxTokens(int maxTokens) { this.maxTokens = maxTokens; }
     public boolean isStreaming() { return streaming; }
     public void setStreaming(boolean streaming) { this.streaming = streaming; }
+    public String getStyleGuide() { return styleGuide; }
+    public void setStyleGuide(String styleGuide) { this.styleGuide = styleGuide; }
 }

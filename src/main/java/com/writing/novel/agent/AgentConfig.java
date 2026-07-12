@@ -1,6 +1,7 @@
 package com.writing.novel.agent;
 
 import com.writing.novel.llm.LlmGateway;
+import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.KnowledgeBaseService;
 import com.writing.novel.memory.SummaryService;
@@ -13,43 +14,51 @@ import org.springframework.context.annotation.Configuration;
 public class AgentConfig {
 
     @Bean
-    public WorldBuilderAgent worldBuilderAgent(LlmGateway gateway, KnowledgeBaseService kb) {
-        return new WorldBuilderAgent(gateway, kb);
+    public WorldBuilderAgent worldBuilderAgent(LlmGateway gateway, KnowledgeBaseService kb,
+                                               PromptTemplateService promptService) {
+        return new WorldBuilderAgent(gateway, kb, promptService);
     }
 
     @Bean
-    public CharacterDesignerAgent characterDesignerAgent(LlmGateway gateway, KnowledgeBaseService kb) {
-        return new CharacterDesignerAgent(gateway, kb);
+    public CharacterDesignerAgent characterDesignerAgent(LlmGateway gateway, KnowledgeBaseService kb,
+                                                         PromptTemplateService promptService) {
+        return new CharacterDesignerAgent(gateway, kb, promptService);
     }
 
     @Bean
-    public PlotterAgent plotterAgent(LlmGateway gateway, NovelRepository repo) {
-        return new PlotterAgent(gateway, repo);
+    public PlotterAgent plotterAgent(LlmGateway gateway, NovelRepository repo,
+                                     PromptTemplateService promptService) {
+        return new PlotterAgent(gateway, repo, promptService);
     }
 
     @Bean
     public ChapterWriterAgent chapterWriterAgent(LlmGateway gateway, ContextAssembler assembler,
-                                                   NovelRepository repo, VectorRetrievalService vector) {
-        return new ChapterWriterAgent(gateway, assembler, repo, vector);
+                                                   NovelRepository repo, VectorRetrievalService vector,
+                                                   PromptTemplateService promptService) {
+        return new ChapterWriterAgent(gateway, assembler, repo, vector, promptService);
     }
 
     @Bean
-    public ContinuityCheckerAgent continuityCheckerAgent(LlmGateway gateway, NovelRepository repo) {
-        return new ContinuityCheckerAgent(gateway, repo);
+    public ContinuityCheckerAgent continuityCheckerAgent(LlmGateway gateway, NovelRepository repo,
+                                                          PromptTemplateService promptService) {
+        return new ContinuityCheckerAgent(gateway, repo, promptService);
     }
 
     @Bean
-    public StyleGuardianAgent styleGuardianAgent(LlmGateway gateway, NovelRepository repo) {
-        return new StyleGuardianAgent(gateway, repo);
+    public StyleGuardianAgent styleGuardianAgent(LlmGateway gateway, NovelRepository repo,
+                                                  PromptTemplateService promptService) {
+        return new StyleGuardianAgent(gateway, repo, promptService);
     }
 
     @Bean
-    public MemoryManagerAgent memoryManagerAgent(LlmGateway gateway, SummaryService summaryService) {
-        return new MemoryManagerAgent(gateway, summaryService);
+    public MemoryManagerAgent memoryManagerAgent(LlmGateway gateway, SummaryService summaryService,
+                                                  PromptTemplateService promptService) {
+        return new MemoryManagerAgent(gateway, summaryService, promptService);
     }
 
     @Bean
-    public QualityEvaluationAgent qualityEvaluationAgent(LlmGateway gateway, NovelRepository repo) {
-        return new QualityEvaluationAgent(gateway, repo);
+    public QualityEvaluationAgent qualityEvaluationAgent(LlmGateway gateway, NovelRepository repo,
+                                                         PromptTemplateService promptService) {
+        return new QualityEvaluationAgent(gateway, repo, promptService);
     }
 }

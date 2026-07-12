@@ -61,14 +61,15 @@ class RealLlmSmokeTest {
         repository.saveProject(p);
 
         // 1. 世界观
-        WorldBuilderAgent worldBuilder = new WorldBuilderAgent(llmGateway, knowledgeBase);
+        var promptSvc = com.writing.novel.agent.TestPromptHelper.create();
+        WorldBuilderAgent worldBuilder = new WorldBuilderAgent(llmGateway, knowledgeBase, promptSvc);
         Worldbuilding wb = worldBuilder.build(p.getId(), p.getConcept(), p.getTags());
         System.out.println("=== 世界观条目数: " + wb.getEntries().size() + " ===");
         wb.getEntries().forEach(e -> System.out.println("  [" + e.getType() + "] " + e.getName()));
         assertFalse(wb.getEntries().isEmpty(), "应生成世界观条目");
 
         // 2. 人物
-        CharacterDesignerAgent charDesigner = new CharacterDesignerAgent(llmGateway, knowledgeBase);
+        CharacterDesignerAgent charDesigner = new CharacterDesignerAgent(llmGateway, knowledgeBase, promptSvc);
         Character mc = charDesigner.design(p.getId(), "男主角，剑修，复仇者", List.of());
         System.out.println("=== 主角: " + mc.getName() + " ===");
         System.out.println("  性格: " + mc.getPersonality());
@@ -77,7 +78,7 @@ class RealLlmSmokeTest {
         assertNotNull(mc.getPersonality());
 
         // 3. 大纲
-        PlotterAgent plotter = new PlotterAgent(llmGateway, repository);
+        PlotterAgent plotter = new PlotterAgent(llmGateway, repository, promptSvc);
         Outline outline = plotter.plan(p.getId(), p.getConcept(), "复仇与成长", 5);
         System.out.println("=== 总纲: " + outline.getPremise() + " ===");
         outline.getVolumes().forEach(v -> {

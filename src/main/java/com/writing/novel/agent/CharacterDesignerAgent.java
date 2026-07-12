@@ -4,9 +4,11 @@ import com.writing.novel.domain.Character;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
+import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.memory.KnowledgeBaseService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,10 +19,13 @@ public class CharacterDesignerAgent {
 
     private final LlmGateway gateway;
     private final KnowledgeBaseService knowledgeBase;
+    private final PromptTemplateService promptService;
 
-    public CharacterDesignerAgent(LlmGateway gateway, KnowledgeBaseService knowledgeBase) {
+    public CharacterDesignerAgent(LlmGateway gateway, KnowledgeBaseService knowledgeBase,
+                                  PromptTemplateService promptService) {
         this.gateway = gateway;
         this.knowledgeBase = knowledgeBase;
+        this.promptService = promptService;
     }
 
     public Character design(String projectId, String requirement, List<Character> existing) {
@@ -28,18 +33,7 @@ public class CharacterDesignerAgent {
                 existing.stream().map(c -> c.getName() + "（" + c.getRole() + "）")
                         .reduce((a, b) -> a + "、" + b).orElse("");
 
-        String systemPrompt = """
-                你是网络小说人物设计专家。根据剧情需求设计一个立体的人物。
-                严格按以下格式输出：
-                【姓名】...
-                【角色定位】主角/配角/反派
-                【性格】...
-                【能力】...
-                【动机】...
-                【外貌】...
-                【人物关系】...
-                【成长弧】...
-                """;
+        String systemPrompt = promptService.render("character-design", Map.of("styleGuide", ""));
 
         String userMessage = "剧情需求：" + requirement
                 + "\n已有人物：" + existingDesc

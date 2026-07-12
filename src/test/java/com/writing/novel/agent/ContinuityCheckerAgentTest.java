@@ -28,7 +28,7 @@ class ContinuityCheckerAgentTest {
             public void streamComplete(LlmRequest req, StreamHandler handler) {}
         };
 
-        ContinuityCheckerAgent agent = new ContinuityCheckerAgent(mockGateway, null);
+        ContinuityCheckerAgent agent = new ContinuityCheckerAgent(mockGateway, null, TestPromptHelper.create());
         List<ContinuityIssue> issues = agent.check("proj-1", 12,
                 "第12章正文……", "人物设定：张三用断水剑");
 
@@ -48,7 +48,7 @@ class ContinuityCheckerAgentTest {
             @Override
             public void streamComplete(LlmRequest req, StreamHandler handler) {}
         };
-        ContinuityCheckerAgent agent = new ContinuityCheckerAgent(mockGateway, null);
+        ContinuityCheckerAgent agent = new ContinuityCheckerAgent(mockGateway, null, TestPromptHelper.create());
         List<ContinuityIssue> issues = agent.check("p1", 5, "正文", "设定");
         assertTrue(issues.isEmpty());
     }

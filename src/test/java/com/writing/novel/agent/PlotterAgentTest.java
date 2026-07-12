@@ -36,7 +36,7 @@ class PlotterAgentTest {
             public void streamComplete(LlmRequest request, StreamHandler handler) {}
         };
 
-        PlotterAgent agent = new PlotterAgent(mockGateway, new TestNovelRepositoryStub());
+        PlotterAgent agent = new PlotterAgent(mockGateway, new TestNovelRepositoryStub(), TestPromptHelper.create());
         Outline outline = agent.plan("proj-1", "剑修复仇玄幻故事",
                 "主角从凡人修炼至大乘", 3);
 

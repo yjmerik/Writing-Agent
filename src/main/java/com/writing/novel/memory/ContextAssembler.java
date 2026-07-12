@@ -120,14 +120,34 @@ public class ContextAssembler {
 
     private void assembleRetrievedContext(String projectId, String queryText, WritingContext ctx) {
         List<Character> allChars = knowledgeBase.findAllCharacters(projectId);
-        var searchResults = vectorRetrieval.search(queryText, projectId, RETRIEVAL_TOP_K);
-        List<String> relevantIds = searchResults.stream()
-                .map(r -> r.id())
-                .toList();
+        if (allChars.isEmpty()) return;
 
+        // 向量检索相关人物（try-catch 防止 embedding API 失败中断写作）
+        List<String> relevantIds;
+        try {
+            var searchResults = vectorRetrieval.search(queryText, projectId, RETRIEVAL_TOP_K);
+            relevantIds = searchResults.stream().map(r -> r.id()).toList();
+        } catch (Exception e) {
+            relevantIds = List.of();
+        }
+
+        final List<String> finalRelevantIds = relevantIds;
         List<Character> relevantChars = allChars.stream()
-                .filter(c -> relevantIds.contains(c.getId()))
+                .filter(c -> finalRelevantIds.contains(c.getId()))
                 .collect(Collectors.toList());
+
+        // 强制注入主角（主角不依赖检索命中，避免名字漂移）
+        for (Character c : allChars) {
+            if (isMainCharacter(c) && !relevantChars.contains(c)) {
+                relevantChars.add(0, c);  // 主角放第一位
+            }
+        }
+
+        // 回退：检索完全没命中时，注入全部人物（最多 8 个）
+        if (relevantChars.isEmpty()) {
+            relevantChars = allChars.stream().limit(8).collect(Collectors.toList());
+        }
+
         ctx.setRelevantCharacters(relevantChars);
 
         StringBuilder settings = new StringBuilder();
@@ -138,6 +158,12 @@ public class ContextAssembler {
             });
         }
         ctx.setRelevantSettings(settings.toString().trim());
+    }
+
+    /** 判断是否主角（用于强制锚定） */
+    private boolean isMainCharacter(Character c) {
+        String role = c.getRole();
+        return role != null && (role.contains("主角") || role.contains("男主") || role.contains("女主"));
     }
 
     private String buildForeshadowings(String projectId) {

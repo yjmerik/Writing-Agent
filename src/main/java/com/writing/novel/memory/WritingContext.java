@@ -34,12 +34,15 @@ public class WritingContext {
             sb.append("【相关设定】\n").append(relevantSettings).append("\n\n");
         }
         if (!relevantCharacters.isEmpty()) {
-            sb.append("【出场人物】\n");
+            sb.append("【出场人物（必须严格遵守以下设定，不得改名或改变性格）】\n");
             for (Character c : relevantCharacters) {
-                sb.append("- ").append(c.getName()).append("（").append(c.getRole()).append("）");
-                if (c.getPersonality() != null) sb.append("：").append(c.getPersonality());
-                if (c.getAbility() != null) sb.append("，").append(c.getAbility());
-                sb.append("\n");
+                sb.append("■ ").append(c.getName()).append("（").append(c.getRole()).append("）\n");
+                if (c.getPersonality() != null) sb.append("  性格：").append(c.getPersonality()).append("\n");
+                if (c.getAbility() != null) sb.append("  能力：").append(c.getAbility()).append("\n");
+                if (c.getMotivation() != null) sb.append("  动机：").append(c.getMotivation()).append("\n");
+                if (c.getAppearance() != null) sb.append("  外貌：").append(c.getAppearance()).append("\n");
+                if (c.getRelationships() != null) sb.append("  人物关系：").append(c.getRelationships()).append("\n");
+                if (c.getGrowthArc() != null) sb.append("  成长弧：").append(c.getGrowthArc()).append("\n");
             }
             sb.append("\n");
         }

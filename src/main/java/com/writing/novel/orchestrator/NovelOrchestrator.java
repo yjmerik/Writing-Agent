@@ -115,11 +115,39 @@ public class NovelOrchestrator {
         p.setCurrentChapterIndex(chapterIndex);
         repository.saveProject(p);
 
+        // 写完后做连续性检查（发现问题记录到 DB，不中断写作）
+        checkContinuityAfterWriting(projectId, chapterIndex, chapter);
+
         if (chapterIndex % 3 == 0) {
             generateSummary(projectId, chapterIndex - 2, chapterIndex);
         }
 
         return chapter;
+    }
+
+    /** 写完一章后检查连续性，发现矛盾记录到 DB（不中断写作流程） */
+    private void checkContinuityAfterWriting(String projectId, int chapterIndex, Chapter chapter) {
+        try {
+            String settings = collectSettingsForCheck(projectId);
+            continuityChecker.check(projectId, chapterIndex, chapter.getContent(), settings);
+        } catch (Exception e) {
+            // 检查失败不中断写作
+        }
+    }
+
+    /** 收集设定摘要供连续性检查参考 */
+    private String collectSettingsForCheck(String projectId) {
+        StringBuilder sb = new StringBuilder();
+        for (var c : repository.findCharactersByProject(projectId)) {
+            sb.append(c.getName()).append("（").append(c.getRole()).append("）");
+            if (c.getPersonality() != null) sb.append(" 性格：").append(c.getPersonality());
+            if (c.getAbility() != null) sb.append(" 能力：").append(c.getAbility());
+            sb.append("\n");
+        }
+        for (var e : repository.findKnowledgeEntriesByProject(projectId)) {
+            sb.append("【").append(e.getName()).append("】").append(e.getContent()).append("\n");
+        }
+        return sb.toString();
     }
 
     /**

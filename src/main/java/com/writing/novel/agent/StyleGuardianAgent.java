@@ -27,14 +27,14 @@ public class StyleGuardianAgent {
         this.promptService = promptService;
     }
 
-    /** 从样章分析并建立风格基线 */
-    public StyleProfile establishProfile(String projectId, String sampleText) {
+    /** 基于世界观构思建立全书风格基线（在构思阶段调用，先于人物/大纲/写作） */
+    public StyleProfile establishProfile(String projectId, String conceptAndTags) {
         String systemPrompt = promptService.render("style-establish", Map.of());
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.STYLE_GUARDIAN)
                 .systemPrompt(systemPrompt)
-                .userMessage("请分析以下样章的风格：\n" + sampleText)
+                .userMessage("请为以下小说构思建立风格基线：\n" + conceptAndTags)
                 .temperature(0.5)
                 .maxTokens(800)
                 .build();

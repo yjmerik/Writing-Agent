@@ -57,6 +57,12 @@ public class NovelOrchestrator {
         }
 
         worldBuilder.build(projectId, p.getConcept(), p.getTags());
+
+        // 风格基线前置：在世界观生成后立即建立全书风格基线
+        // 这样后续的人物设计、大纲规划、章节写作都能遵循统一风格
+        styleGuardian.establishProfile(projectId,
+                "世界观构思：" + p.getConcept() + "\n类型标签：" + p.getTags());
+
         characterDesigner.design(projectId, "主角", List.of());
         plotter.plan(projectId, p.getConcept(), p.getConcept(), 40);
 

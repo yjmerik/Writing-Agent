@@ -38,3 +38,9 @@ llm:
       model: glm-5.2
       temperature: 0.3
       max-tokens: 4096
+    GENERAL:
+      base-url: https://api.deepseek.com
+      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
+      model: deepseek-v4-flash
+      temperature: 0.3
+      max-tokens: 4096

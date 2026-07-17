@@ -70,8 +70,19 @@ public class NovelOrchestrator {
         }
 
         // 大纲（幂等：已有大纲则跳过）
+        // 提取主角名传给 Plotter，防止大纲用不同名字（Agent间一致性）
         if (repository.findOutlineByProject(projectId).isEmpty()) {
-            plotter.plan(projectId, p.getConcept(), p.getConcept(), 10);
+            String protagonistName = "";
+            var chars = repository.findCharactersByProject(projectId);
+            for (var c : chars) {
+                if (c.getRole() != null && c.getRole().contains("主角")) {
+                    protagonistName = c.getName();
+                    break;
+                }
+            }
+            String theme = (protagonistName.isEmpty() ? "" : "主角名为「" + protagonistName + "」。")
+                    + "主题：" + p.getConcept();
+            plotter.plan(projectId, p.getConcept(), theme, 10);
         }
 
         if (p.getMode() == ProjectMode.INTERACTIVE) {

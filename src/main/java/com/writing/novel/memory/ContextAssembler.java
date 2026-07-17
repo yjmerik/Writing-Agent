@@ -52,6 +52,9 @@ public class ContextAssembler {
         ctx.setRelevantForeshadowings(buildForeshadowings(projectId));
         ctx.setTaskSection(buildTaskSection(chapterTitle, chapterSynopsis, writingNotes));
 
+        // Token 预算控制：总预算 12K token，超限时按优先级裁剪低优先级 section
+        applyTokenBudget(ctx);
+
         return ctx;
     }
 
@@ -66,8 +69,12 @@ public class ContextAssembler {
     private String buildWorldbuildingSection(String projectId) {
         List<KnowledgeEntry> entries = knowledgeBase.findAllEntries(projectId);
         if (entries.isEmpty()) return "";
+        // 条目超过 10 条时只注入前 10 条（核心设定），避免撑爆 context
+        // 详细条目由 assembleRetrievedContext 的语义检索按需补充
         StringBuilder sb = new StringBuilder();
-        for (KnowledgeEntry e : entries) {
+        int limit = Math.min(entries.size(), 10);
+        for (int i = 0; i < limit; i++) {
+            KnowledgeEntry e = entries.get(i);
             sb.append("【").append(e.getName()).append("】").append(e.getContent()).append("\n");
         }
         return sb.toString().trim();
@@ -95,13 +102,38 @@ public class ContextAssembler {
 
     private String buildRecentSummary(String projectId, int chapterIndex) {
         int lookBackTo = Math.max(1, chapterIndex - 1);
-        List<Summary> summaries = summaryService.findRecent(projectId, lookBackTo, RECENT_SUMMARY_WINDOW);
-        if (summaries.isEmpty()) return "";
+        List<Summary> allSummaries = summaryService.findRecent(projectId, lookBackTo, RECENT_SUMMARY_WINDOW);
+        if (allSummaries.isEmpty()) return "";
+
+        // 分离细粒度摘要（≤3章范围）和卷级摘要（>3章范围）
+        List<Summary> fineGrained = new java.util.ArrayList<>();
+        List<Summary> volumeLevel = new java.util.ArrayList<>();
+        for (Summary s : allSummaries) {
+            if (s.getToChapter() - s.getFromChapter() + 1 > 3) {
+                volumeLevel.add(s);
+            } else {
+                fineGrained.add(s);
+            }
+        }
+
         StringBuilder sb = new StringBuilder();
-        for (Summary s : summaries) {
-            sb.append("第").append(s.getFromChapter()).append("-")
-                    .append(s.getToChapter()).append("章：")
-                    .append(s.getContent()).append("\n");
+        // 先注入卷级摘要（远期剧情概览）
+        if (!volumeLevel.isEmpty()) {
+            sb.append("【前卷概览】\n");
+            for (Summary s : volumeLevel) {
+                sb.append("第").append(s.getFromChapter()).append("-")
+                        .append(s.getToChapter()).append("章：")
+                        .append(s.getContent()).append("\n");
+            }
+            sb.append("\n");
+        }
+        // 再注入近期细粒度摘要
+        if (!fineGrained.isEmpty()) {
+            for (Summary s : fineGrained) {
+                sb.append("第").append(s.getFromChapter()).append("-")
+                        .append(s.getToChapter()).append("章：")
+                        .append(s.getContent()).append("\n");
+            }
         }
         return sb.toString().trim();
     }
@@ -185,5 +217,42 @@ public class ContextAssembler {
             sb.append("要求：").append(writingNotes);
         }
         return sb.toString().trim();
+    }
+
+    /** Token 预算控制：超限时按优先级从低到高裁剪 */
+    private static final int TOKEN_BUDGET = 12000;
+
+    private void applyTokenBudget(WritingContext ctx) {
+        int total = sumTokens(ctx);
+        if (total <= TOKEN_BUDGET) return;
+
+        // 按优先级从低到高裁剪（先裁最不重要的）
+        // 优先级：任务>人物>摘要>上章原文>风格>设定>大纲>世界观>伏笔
+        if (total > TOKEN_BUDGET && ctx.getRelevantForeshadowings() != null) {
+            ctx.setRelevantForeshadowings("");  // 先清伏笔
+            total = sumTokens(ctx);
+        }
+        if (total > TOKEN_BUDGET && ctx.getWorldbuildingSection() != null) {
+            // 世界观截断到 2000 token
+            ctx.setWorldbuildingSection(TokenBudget.truncateToTokens(ctx.getWorldbuildingSection(), 2000));
+            total = sumTokens(ctx);
+        }
+        if (total > TOKEN_BUDGET && ctx.getVolumeOutlineSection() != null) {
+            ctx.setVolumeOutlineSection(TokenBudget.truncateToTokens(ctx.getVolumeOutlineSection(), 1500));
+            total = sumTokens(ctx);
+        }
+        if (total > TOKEN_BUDGET && ctx.getRelevantSettings() != null) {
+            ctx.setRelevantSettings("");
+            total = sumTokens(ctx);
+        }
+        if (total > TOKEN_BUDGET && ctx.getRecentTextSection() != null) {
+            // 上章原文截断到 800 token
+            ctx.setRecentTextSection(TokenBudget.truncateToTokens(ctx.getRecentTextSection(), 800));
+        }
+    }
+
+    private int sumTokens(WritingContext ctx) {
+        return TokenBudget.estimateTokens(ctx.toSystemPrompt())
+                + TokenBudget.estimateTokens(ctx.toUserPrompt());
     }
 }

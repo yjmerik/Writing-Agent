@@ -54,7 +54,10 @@ public class EmbeddedVectorStore implements VectorStore, Serializable {
         for (Entry e : index.values()) {
             if (!e.projectId.equals(projectId)) continue;
             double score = cosineSimilarity(queryVector, e.vector);
-            results.add(new VectorSearchResult(e.id, score));
+            // score 阈值过滤：cosine < 0 视为负相关，丢弃避免噪声注入
+            if (score >= 0.0) {
+                results.add(new VectorSearchResult(e.id, score));
+            }
         }
         results.sort((a, b) -> Double.compare(b.score(), a.score()));
         return results.size() <= topK ? results : results.subList(0, topK);

@@ -40,26 +40,52 @@ public class OpenAiCompatibleClient implements LlmClient {
         ObjectNode body = buildRequestBody(config, request, false);
         String url = config.getBaseUrl() + "/chat/completions";
 
-        Request httpRequest = new Request.Builder()
-                .url(url)
-                .header("Authorization", "Bearer " + config.getApiKey())
-                .header("Content-Type", "application/json")
-                .post(RequestBody.create(body.toString(), MediaType.parse("application/json")))
-                .build();
+        // 429/5xx 重试（3次，指数退避）
+        for (int attempt = 0; attempt < 3; attempt++) {
+            Request httpRequest = new Request.Builder()
+                    .url(url)
+                    .header("Authorization", "Bearer " + config.getApiKey())
+                    .header("Content-Type", "application/json")
+                    .post(RequestBody.create(body.toString(), MediaType.parse("application/json")))
+                    .build();
 
-        try (Response response = httpClient.newCall(httpRequest).execute()) {
-            if (!response.isSuccessful()) {
-                throw new RuntimeException("LLM 调用失败: HTTP " + response.code()
+            try (Response response = httpClient.newCall(httpRequest).execute()) {
+                if (response.isSuccessful()) {
+                    JsonNode root = MAPPER.readTree(response.body().string());
+                    String content = root.path("choices").path(0)
+                            .path("message").path("content").asText();
+                    int promptTokens = root.path("usage").path("prompt_tokens").asInt();
+                    int completionTokens = root.path("usage").path("completion_tokens").asInt();
+                    return new LlmResponse(content, promptTokens, completionTokens);
+                }
+                // 400/401/403 等客户端错误不重试（内容审查/鉴权问题）
+                if (response.code() >= 400 && response.code() < 500 && response.code() != 429) {
+                    String errBody = response.body().string();
+                    throw new RuntimeException("LLM 调用失败: HTTP " + response.code() + " " + errBody);
+                }
+                // 429/5xx 可重试
+                if (attempt < 2) {
+                    response.close();
+                    sleepBackoff(attempt);
+                    continue;
+                }
+                throw new RuntimeException("LLM 调用失败（重试耗尽）: HTTP " + response.code()
                         + " " + response.body().string());
+            } catch (IOException e) {
+                if (attempt < 2) {
+                    sleepBackoff(attempt);
+                    continue;
+                }
+                throw new RuntimeException("LLM 调用异常（重试耗尽）", e);
             }
-            JsonNode root = MAPPER.readTree(response.body().string());
-            String content = root.path("choices").path(0)
-                    .path("message").path("content").asText();
-            int promptTokens = root.path("usage").path("prompt_tokens").asInt();
-            int completionTokens = root.path("usage").path("completion_tokens").asInt();
-            return new LlmResponse(content, promptTokens, completionTokens);
-        } catch (IOException e) {
-            throw new RuntimeException("LLM 调用异常", e);
+        }
+        throw new RuntimeException("LLM 调用失败：不应到达此处");
+    }
+
+    /** 指数退避：1s, 2s */
+    private void sleepBackoff(int attempt) {
+        try { Thread.sleep(1000L * (attempt + 1)); } catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
         }
     }
 

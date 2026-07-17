@@ -45,8 +45,28 @@ public class WorldBuilderAgent {
 
         var resp = gateway.complete(req);
 
+        Worldbuilding wb = parseWorldbuilding(resp.getContent(), projectId);
+
+        // 输出校验：0 条目时重试 1 次
+        if (wb.getEntries().isEmpty()) {
+            resp = gateway.complete(req); // 重试
+            wb = parseWorldbuilding(resp.getContent(), projectId);
+        }
+
+        // 仍为空时 fallback：至少生成 1 条基础条目
+        if (wb.getEntries().isEmpty()) {
+            KnowledgeEntry fallback = new KnowledgeEntry(projectId, "CUSTOM",
+                    "基础设定", concept + "（系统自动生成的占位设定，请重新运行构思以获得完整世界观）");
+            wb.addEntry(fallback);
+            knowledgeBase.saveEntry(fallback);
+        }
+
+        return wb;
+    }
+
+    private Worldbuilding parseWorldbuilding(String content, String projectId) {
         Worldbuilding wb = new Worldbuilding(projectId);
-        for (ParsedEntry pe : ResponseParser.parseEntries(resp.getContent())) {
+        for (ParsedEntry pe : ResponseParser.parseEntries(content)) {
             KnowledgeEntry entry = new KnowledgeEntry(projectId,
                     normalizeType(pe.type()), pe.name(), pe.content());
             wb.addEntry(entry);

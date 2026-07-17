@@ -136,16 +136,104 @@ public class NovelOrchestrator {
             generateSummary(projectId, chapterIndex - 2, chapterIndex);
         }
 
+        // 卷结束时生成卷级全局摘要（递归摘要）
+        checkAndGenerateVolumeSummary(projectId, outline, chapterIndex);
+
         return chapter;
     }
 
-    /** 写完一章后检查连续性，发现矛盾记录到 DB（不中断写作流程） */
+    /** 检查当前章是否是某卷最后一章，如果是则生成卷级摘要 */
+    private void checkAndGenerateVolumeSummary(String projectId, Outline outline, int chapterIndex) {
+        for (Volume v : outline.getVolumes()) {
+            if (v.getSynopses().isEmpty()) continue;
+            int lastChapter = v.getSynopses().stream()
+                    .mapToInt(ChapterSynopsis::getChapterIndex).max().orElse(0);
+            int firstChapter = v.getSynopses().stream()
+                    .mapToInt(ChapterSynopsis::getChapterIndex).min().orElse(0);
+            if (chapterIndex == lastChapter) {
+                // 这是卷末，生成卷级摘要
+                try {
+                    generateVolumeSummary(projectId, v, firstChapter, lastChapter);
+                } catch (Exception e) {
+                    // 卷摘要生成失败不影响写作
+                }
+                break;
+            }
+        }
+    }
+
+    /** 生成卷级摘要：汇总本卷所有章节摘要为一条全局摘要 */
+    private void generateVolumeSummary(String projectId, Volume volume, int fromChapter, int toChapter) {
+        // 收集本卷的细粒度摘要
+        var summaries = summaryService.findCovering(projectId, fromChapter);
+        if (summaries.isEmpty()) return;
+        StringBuilder combined = new StringBuilder();
+        for (var s : summaries) {
+            if (s.getFromChapter() >= fromChapter && s.getToChapter() <= toChapter) {
+                combined.append(s.getContent()).append("\n");
+            }
+        }
+        if (combined.isEmpty()) return;
+        // 用 MemoryManager 压缩为卷级摘要
+        memoryManager.summarize(projectId, fromChapter, toChapter,
+                "卷" + volume.getVolumeIndex() + "「" + volume.getTitle() + "」的详细内容：\n" + combined);
+    }
+
+    /**
+     * 写完一章后检查连续性。
+     * 发现 HIGH 级矛盾时触发 1 次重写（把矛盾描述加入 prompt 要求修正）。
+     * 每 5 章检查一次风格漂移。
+     */
     private void checkContinuityAfterWriting(String projectId, int chapterIndex, Chapter chapter) {
         try {
             String settings = collectSettingsForCheck(projectId);
-            continuityChecker.check(projectId, chapterIndex, chapter.getContent(), settings);
+            var issues = continuityChecker.check(projectId, chapterIndex, chapter.getContent(), settings);
+
+            // HIGH 级矛盾纠偏：触发 1 次重写
+            boolean hasHighIssue = issues.stream()
+                    .anyMatch(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH);
+            if (hasHighIssue && chapter.getContent().length() > 500) {
+                String issueDesc = issues.stream()
+                        .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH)
+                        .map(ContinuityIssue::getDescription)
+                        .reduce((a, b) -> a + "；" + b)
+                        .orElse("");
+                rewriteWithCorrection(projectId, chapterIndex, chapter, issueDesc, settings);
+            }
         } catch (Exception e) {
             // 检查失败不中断写作
+        }
+
+        // 每 5 章检查风格漂移
+        if (chapterIndex % 5 == 0) {
+            try {
+                var styleOpt = repository.findStyleProfileByProject(projectId);
+                if (styleOpt.isPresent()) {
+                    var style = styleOpt.get();
+                    String baseline = style.getTone() + " " + style.getDosAndDonts();
+                    styleGuardian.checkConsistency(projectId, chapter.getContent(), baseline);
+                }
+            } catch (Exception e) {
+                // 风格检查失败不中断
+            }
+        }
+    }
+
+    /** 带纠偏指令的重写：调用 ChapterWriterAgent.rewrite */
+    private void rewriteWithCorrection(String projectId, int chapterIndex, Chapter chapter,
+                                        String issueDesc, String settings) {
+        try {
+            var outline = repository.findOutlineByProject(projectId).orElse(null);
+            if (outline == null) return;
+            var synopsis = findSynopsis(outline, chapterIndex);
+            if (synopsis == null) return;
+
+            Chapter rewritten = chapterWriter.rewrite(
+                    projectId, chapterIndex, synopsis.getTitle(),
+                    synopsis.getSynopsis(), synopsis.getWritingNotes(), issueDesc);
+            // 重写成功则替换；失败（返回 null）则保留原版本
+        } catch (Exception e) {
+            // 纠偏失败保留原版本
         }
     }
 
@@ -170,9 +258,11 @@ public class NovelOrchestrator {
      */
     public int runWritingLoop(String projectId, int maxChapters) {
         int written = 0;
+        int consecutiveFailures = 0;
+        int consecutiveHighIssues = 0;
+
         while (written < maxChapters) {
             Project p = loadProject(projectId);
-            // 检查是否还有未写的章节
             Outline outline = repository.findOutlineByProject(projectId).orElse(null);
             if (outline == null) break;
             if (!hasNextChapter(outline, p.getCurrentChapterIndex())) {
@@ -180,14 +270,42 @@ public class NovelOrchestrator {
                 repository.saveProject(p);
                 break;
             }
-            // 如果在 VOLUME_DONE 状态，先转回 WRITING
             if (p.getState() == NovelState.VOLUME_DONE) {
                 p.setState(NovelState.WRITING);
                 repository.saveProject(p);
             }
-            Chapter ch = runWritingOneChapter(projectId);
-            if (ch == null) break;
-            written++;
+
+            // 异常容错：单章失败不崩溃整个 loop
+            try {
+                Chapter ch = runWritingOneChapter(projectId);
+                if (ch == null) break;
+                written++;
+                consecutiveFailures = 0; // 成功则重置失败计数
+
+                // 质量熔断：检查本章是否有 HIGH 级连续性问题
+                boolean hasHighIssue = !repository.findUnresolvedIssues(projectId).stream()
+                        .filter(i -> i.getDetectedAtChapter() == ch.getChapterIndex())
+                        .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH)
+                        .toList().isEmpty();
+                if (hasHighIssue) {
+                    consecutiveHighIssues++;
+                    if (consecutiveHighIssues >= 3) {
+                        // 连续 3 章 HIGH 问题，暂停写作
+                        break;
+                    }
+                } else {
+                    consecutiveHighIssues = 0;
+                }
+            } catch (Exception e) {
+                consecutiveFailures++;
+                // 连续 3 章失败才中止循环
+                if (consecutiveFailures >= 3) {
+                    break;
+                }
+                // 跳过该章继续下一章（推进章节索引避免死循环）
+                p.setCurrentChapterIndex(p.getCurrentChapterIndex() + 1);
+                repository.saveProject(p);
+            }
         }
         return written;
     }

@@ -46,6 +46,23 @@ public class PlotterAgent {
 
         var resp = gateway.complete(req);
         Outline outline = parseOutline(resp.getContent(), projectId);
+
+        // 输出校验：0 卷时重试 1 次
+        if (outline.getVolumes().isEmpty()) {
+            resp = gateway.complete(req);
+            outline = parseOutline(resp.getContent(), projectId);
+        }
+
+        // 仍为空的 fallback：创建 1 卷 3 章的最小大纲
+        if (outline.getVolumes().isEmpty()) {
+            outline = new Outline(projectId, concept);
+            Volume v = new Volume(projectId, 1, "第一卷", theme);
+            v.addSynopsis(new ChapterSynopsis(projectId, 1, "第一章 开端", concept + " 故事开始"));
+            v.addSynopsis(new ChapterSynopsis(projectId, 2, "第二章 发展", "情节推进"));
+            v.addSynopsis(new ChapterSynopsis(projectId, 3, "第三章 高潮", "第一次冲突"));
+            outline.addVolume(v);
+        }
+
         repository.saveOutline(outline);
         return outline;
     }

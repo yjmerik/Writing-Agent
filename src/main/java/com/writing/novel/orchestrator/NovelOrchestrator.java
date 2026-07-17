@@ -69,9 +69,10 @@ public class NovelOrchestrator {
             characterDesigner.design(projectId, "主角", List.of());
         }
 
-        // 大纲（幂等：已有大纲则跳过）
+        // 大纲（幂等：已有有效大纲则跳过，fallback 大纲需重新生成）
         // 提取主角名传给 Plotter，防止大纲用不同名字（Agent间一致性）
-        if (repository.findOutlineByProject(projectId).isEmpty()) {
+        if (repository.findOutlineByProject(projectId).isEmpty()
+                || isFallbackOutline(projectId)) {
             String protagonistName = "";
             var chars = repository.findCharactersByProject(projectId);
             for (var c : chars) {
@@ -363,6 +364,26 @@ public class NovelOrchestrator {
         return outline.getVolumes().stream()
                 .flatMap(v -> v.getSynopses().stream())
                 .anyMatch(s -> s.getChapterIndex() > currentIndex);
+    }
+
+    /** 检测是否为 fallback 大纲（Plotter 解析失败时生成的最小占位大纲） */
+    private boolean isFallbackOutline(String projectId) {
+        var outline = repository.findOutlineByProject(projectId);
+        if (outline.isEmpty()) return false;
+        var o = outline.get();
+        // fallback 特征：0 卷或总章数 ≤ 3（最小大纲）或卷标题为"第一卷"（fallback 默认）
+        int totalChapters = o.getVolumes().stream()
+                .mapToInt(v -> v.getSynopses().size()).sum();
+        if (o.getVolumes().isEmpty() || totalChapters <= 3) {
+            // 检查是否看起来像 fallback（卷名为默认值、章节名为默认值）
+            for (var v : o.getVolumes()) {
+                if ("第一卷".equals(v.getTitle())) return true;
+                for (var s : v.getSynopses()) {
+                    if ("第一章 开端".equals(s.getTitle())) return true;
+                }
+            }
+        }
+        return false;
     }
 
     private Project loadProject(String projectId) {

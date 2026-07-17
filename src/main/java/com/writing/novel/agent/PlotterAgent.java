@@ -47,14 +47,16 @@ public class PlotterAgent {
         var resp = gateway.complete(req);
         Outline outline = parseOutline(resp.getContent(), projectId);
 
-        // 输出校验：0 卷时重试 1 次
-        if (outline.getVolumes().isEmpty()) {
+        // 输出校验：0 卷或 0 章时重试 1 次
+        int parsedChapters = outline.getVolumes().stream().mapToInt(v -> v.getSynopses().size()).sum();
+        if (outline.getVolumes().isEmpty() || parsedChapters == 0) {
             resp = gateway.complete(req);
             outline = parseOutline(resp.getContent(), projectId);
+            parsedChapters = outline.getVolumes().stream().mapToInt(v -> v.getSynopses().size()).sum();
         }
 
-        // 仍为空的 fallback：创建 1 卷 3 章的最小大纲
-        if (outline.getVolumes().isEmpty()) {
+        // 仍为空（0 卷或 0 章）的 fallback：创建 1 卷 3 章的最小大纲
+        if (outline.getVolumes().isEmpty() || parsedChapters == 0) {
             outline = new Outline(projectId, concept);
             Volume v = new Volume(projectId, 1, "第一卷", theme);
             v.addSynopsis(new ChapterSynopsis(projectId, 1, "第一章 开端", concept + " 故事开始"));

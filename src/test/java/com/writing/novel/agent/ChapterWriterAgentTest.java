@@ -32,7 +32,7 @@ class ChapterWriterAgentTest {
         LlmGateway mockGateway = new LlmGateway() {
             @Override
             public LlmResponse complete(LlmRequest req) {
-                return new LlmResponse("张三踏入青云宗山门，剑意凛然，这是正文内容……", 200, 800);
+                return new LlmResponse("张三踏入青云宗山门，剑意凛然，这是正文内容。".repeat(30), 200, 800);
             }
             @Override
             public void streamComplete(LlmRequest req, StreamHandler handler) {}
@@ -60,7 +60,7 @@ class ChapterWriterAgentTest {
         };
         LlmGateway mockGateway = new LlmGateway() {
             @Override
-            public LlmResponse complete(LlmRequest req) { return new LlmResponse("正文内容", 10, 20); }
+            public LlmResponse complete(LlmRequest req) { return new LlmResponse("这是足够长的正文内容用于测试。".repeat(50), 10, 20); }
             @Override
             public void streamComplete(LlmRequest req, StreamHandler handler) {}
         };

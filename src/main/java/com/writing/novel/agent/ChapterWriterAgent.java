@@ -59,19 +59,58 @@ public class ChapterWriterAgent {
                 .maxTokens(3000)
                 .build();
 
-        // 3. 调 LLM 写正文（空内容或 <500 字时重试 1 次）
-        var resp = gateway.complete(req);
+        // 3. 调 LLM 写正文（空内容/<500字用变化 prompt 重试；contentFilter 用温和 prompt 重试）
+        com.writing.novel.llm.LlmResponse resp;
+        try {
+            resp = gateway.complete(req);
+        } catch (com.writing.novel.llm.client.ContentFilterException e) {
+            // 内容审查拦截：用温和 prompt 重试（避开暴力直白，改用侧面烘托）
+            var mildReq = LlmRequest.builder()
+                    .taskType(LlmTaskType.CHAPTER_WRITING)
+                    .systemPrompt(systemPrompt + "\n\n注意：请避开暴力/血腥的直白描写，改用侧面烘托、心理描写和氛围渲染来表现冲突。")
+                    .userMessage(ctx.toUserPrompt())
+                    .temperature(0.5) // 大幅降温度
+                    .maxTokens(3000)
+                    .build();
+            resp = gateway.complete(mildReq);
+        }
         if (resp.getContent() == null || resp.getContent().length() < 500) {
-            resp = gateway.complete(req); // 重试
+            // 重试：变化 prompt 引导 LLM 输出完整正文
+            var retryReq = LlmRequest.builder()
+                    .taskType(LlmTaskType.CHAPTER_WRITING)
+                    .systemPrompt(systemPrompt)
+                    .userMessage(ctx.toUserPrompt()
+                            + "\n\n⚠️ 上次输出为空或过短。请严格按四段式结构完整输出不少于2500字的正文。")
+                    .temperature(0.7)
+                    .maxTokens(3000)
+                    .build();
+            try {
+                resp = gateway.complete(retryReq);
+            } catch (com.writing.novel.llm.client.ContentFilterException e2) {
+                // 温和重试也触发审查：最后一次尝试，极低温度 + 最保守 prompt
+                var safeReq = LlmRequest.builder()
+                        .taskType(LlmTaskType.CHAPTER_WRITING)
+                        .systemPrompt(systemPrompt + "\n\n绝对禁止任何直接的暴力、身体伤害、血腥描写。所有冲突用对话和心理活动表现。")
+                        .userMessage(ctx.toUserPrompt())
+                        .temperature(0.3)
+                        .maxTokens(2000)
+                        .build();
+                resp = gateway.complete(safeReq);
+            }
         }
 
-        // 4. 构建 Chapter 并保存
+        // 4. 内容校验：仍不达标则不保存、抛异常（绝不入库空章节）
+        if (resp.getContent() == null || resp.getContent().length() < 500) {
+            throw new RuntimeException("章节内容为空或过短（" 
+                    + (resp.getContent() == null ? 0 : resp.getContent().length()) + "字），放弃保存");
+        }
+
+        // 5. 构建 Chapter 并保存
         Chapter chapter = new Chapter(projectId, chapterIndex, chapterTitle);
         chapter.setContent(resp.getContent());
         repository.saveChapter(chapter);
 
-        // 5. 按段落分块索引章节正文（替换之前的前 1500 字截断）
-        // 每块 ~800 字，带 chunk 编号，确保中后段情节也能被召回
+        // 6. 按段落分块索引章节正文
         if (vectorRetrieval != null) {
             try {
                 indexChapterInChunks(projectId, chapter, resp.getContent());
@@ -84,10 +123,11 @@ public class ChapterWriterAgent {
     }
 
     /**
-     * 带纠偏指令的重写：把连续性问题加入 prompt，要求 LLM 修正后重新生成。
+     * 带纠偏指令的重写：返回修正后的正文内容（不新建 Chapter，由调用方原地更新）。
      * 用于 ContinuityChecker 发现 HIGH 级矛盾后的纠偏闭环。
+     * @return 修正后的正文内容；重写失败返回 null（保留原版本）
      */
-    public Chapter rewrite(String projectId, int chapterIndex, String chapterTitle,
+    public String rewriteForCorrection(String projectId, int chapterIndex, String chapterTitle,
                            String chapterSynopsis, String writingNotes, String correctionInstructions) {
         WritingContext ctx = contextAssembler.assemble(
                 projectId, chapterIndex, chapterTitle,
@@ -105,7 +145,7 @@ public class ChapterWriterAgent {
                 .taskType(LlmTaskType.CHAPTER_WRITING)
                 .systemPrompt(systemPrompt)
                 .userMessage(ctx.toUserPrompt())
-                .temperature(0.7) // 降温度，更忠实约束
+                .temperature(0.7)
                 .maxTokens(3000)
                 .build();
 
@@ -114,19 +154,7 @@ public class ChapterWriterAgent {
             return null; // 重写也失败，保留原版本
         }
 
-        Chapter chapter = new Chapter(projectId, chapterIndex, chapterTitle);
-        chapter.setContent(resp.getContent());
-        repository.saveChapter(chapter);
-
-        if (vectorRetrieval != null) {
-            try {
-                String indexText = "第" + chapterIndex + "章 " + chapterTitle + "：" + resp.getContent();
-                if (indexText.length() > 1500) indexText = indexText.substring(0, 1500);
-                vectorRetrieval.index(new IndexedText(chapter.getId(), projectId, indexText, "CHAPTER"));
-            } catch (Exception ignored) {}
-        }
-
-        return chapter;
+        return resp.getContent();
     }
 
     /** 按段落分块索引章节正文，每块 ~800 字，确保中后段情节也能被召回 */

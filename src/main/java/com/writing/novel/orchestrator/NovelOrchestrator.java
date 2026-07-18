@@ -128,6 +128,16 @@ public class NovelOrchestrator {
                 () -> new IllegalStateException("无大纲，无法写作"));
 
         int chapterIndex = p.getCurrentChapterIndex() + 1;
+
+        // 幂等检查：该章已存在且内容有效则跳过（断点续写时避免重复）
+        var existing = repository.findChapterByIndex(projectId, chapterIndex);
+        if (existing.isPresent() && existing.get().getWordCount() >= 500) {
+            // 已有有效章节，推进索引并返回
+            p.setCurrentChapterIndex(chapterIndex);
+            repository.saveProject(p);
+            return existing.get();
+        }
+
         ChapterSynopsis synopsis = findSynopsis(outline, chapterIndex);
         if (synopsis == null) {
             p.setState(NovelState.VOLUME_DONE);
@@ -138,6 +148,8 @@ public class NovelOrchestrator {
         Chapter chapter = chapterWriter.write(projectId, chapterIndex,
                 synopsis.getTitle(), synopsis.getSynopsis(), synopsis.getWritingNotes());
 
+        // 内容校验：不达标不推进索引（chapterWriter.write 已保证 ≥500 字或抛异常）
+        p = loadProject(projectId); // 重新加载最新状态
         p.setCurrentChapterIndex(chapterIndex);
         repository.saveProject(p);
 
@@ -231,7 +243,7 @@ public class NovelOrchestrator {
         }
     }
 
-    /** 带纠偏指令的重写：调用 ChapterWriterAgent.rewrite */
+    /** 带纠偏指令的重写：原地更新原 chapter（避免重复章节） */
     private void rewriteWithCorrection(String projectId, int chapterIndex, Chapter chapter,
                                         String issueDesc, String settings) {
         try {
@@ -240,10 +252,14 @@ public class NovelOrchestrator {
             var synopsis = findSynopsis(outline, chapterIndex);
             if (synopsis == null) return;
 
-            Chapter rewritten = chapterWriter.rewrite(
+            String newContent = chapterWriter.rewriteForCorrection(
                     projectId, chapterIndex, synopsis.getTitle(),
                     synopsis.getSynopsis(), synopsis.getWritingNotes(), issueDesc);
-            // 重写成功则替换；失败（返回 null）则保留原版本
+            // 重写成功则用新内容原地更新（复用原 chapter 的 id，触发 ON CONFLICT DO UPDATE）
+            if (newContent != null && newContent.length() >= 500) {
+                chapter.setContent(newContent);
+                repository.saveChapter(chapter); // 用原 id 覆盖，不产生重复
+            }
         } catch (Exception e) {
             // 纠偏失败保留原版本
         }
@@ -310,13 +326,14 @@ public class NovelOrchestrator {
                 }
             } catch (Exception e) {
                 consecutiveFailures++;
-                // 连续 3 章失败才中止循环
+                // 连续 3 次失败才中止循环（不跳章，保留剧情连续性）
                 if (consecutiveFailures >= 3) {
                     break;
                 }
-                // 跳过该章继续下一章（推进章节索引避免死循环）
-                p.setCurrentChapterIndex(p.getCurrentChapterIndex() + 1);
-                repository.saveProject(p);
+                // 退避后重试同一章（绝不推进索引跳章）
+                try { Thread.sleep(5000L * consecutiveFailures); } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt(); break;
+                }
             }
         }
         return written;

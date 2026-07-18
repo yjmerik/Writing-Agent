@@ -27,6 +27,8 @@ public class OpenAiCompatibleClient implements LlmClient {
         this.httpClient = new OkHttpClient.Builder()
                 .connectTimeout(Duration.ofSeconds(30))
                 .readTimeout(Duration.ofMinutes(5))
+                .callTimeout(Duration.ofMinutes(3)) // 单次请求最长 3 分钟
+                .retryOnConnectionFailure(true)      // 网络抖动自动重试
                 .build();
     }
 
@@ -58,9 +60,14 @@ public class OpenAiCompatibleClient implements LlmClient {
                     int completionTokens = root.path("usage").path("completion_tokens").asInt();
                     return new LlmResponse(content, promptTokens, completionTokens);
                 }
-                // 400/401/403 等客户端错误不重试（内容审查/鉴权问题）
+                // 400/401/403 等客户端错误
                 if (response.code() >= 400 && response.code() < 500 && response.code() != 429) {
                     String errBody = response.body().string();
+                    // 内容审查错误抛专用异常（可恢复，上层可用温和 prompt 重试）
+                    if (errBody.contains("1301") || errBody.contains("content_filter")
+                            || errBody.contains("Content Filter") || errBody.contains("contentFilter")) {
+                        throw new ContentFilterException("内容审查拦截: " + errBody);
+                    }
                     throw new RuntimeException("LLM 调用失败: HTTP " + response.code() + " " + errBody);
                 }
                 // 429/5xx 可重试

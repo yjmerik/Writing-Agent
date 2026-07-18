@@ -101,13 +101,47 @@ public class PlotterAgent {
             while (chM.find()) {
                 int idx = parseChineseOrArabic(chM.group(1));
                 String title = chM.group(2).trim();
-                String synopsis = chM.group(3).trim();
-                ChapterSynopsis cs = new ChapterSynopsis(projectId, idx, title, synopsis);
+                String rawContent = chM.group(3).trim();
+
+                // 精细化解析：从 rawContent 中拆分 beats/climax/cast
+                ChapterSynopsis cs = new ChapterSynopsis(projectId, idx, title, rawContent);
+                parseChapterDetails(cs, rawContent);
                 volume.addSynopsis(cs);
             }
             outline.addVolume(volume);
         }
         return outline;
+    }
+
+    /** 从章节原始内容中拆分场景节拍、爽点、出场人物 */
+    private void parseChapterDetails(ChapterSynopsis cs, String rawContent) {
+        // 尝试按 "爽点：" 和 "人物：" 标记拆分
+        // 格式：场景节拍描述。爽点：XXX。人物：YYY
+        String beats = rawContent;
+        String climax = null;
+        String cast = null;
+
+        // 提取爽点
+        Matcher climaxM = Pattern.compile("爽点[：:]\\s*(.+?)(?=。人物[：:]|$)").matcher(rawContent);
+        if (climaxM.find()) {
+            climax = climaxM.group(1).trim();
+        }
+
+        // 提取人物
+        Matcher castM = Pattern.compile("人物[：:]\\s*(.+)").matcher(rawContent);
+        if (castM.find()) {
+            cast = castM.group(1).trim();
+        }
+
+        // 提取场景节拍（爽点标记前的内容）
+        int climaxIdx = rawContent.indexOf("爽点");
+        if (climaxIdx > 0) {
+            beats = rawContent.substring(0, climaxIdx).replaceAll("[。；;]$", "").trim();
+        }
+
+        cs.setBeats(beats);
+        cs.setClimax(climax);
+        cs.setCast(cast);
     }
 
     /** 解析中文数字或阿拉伯数字（一→1，二→2...十→10，二十→20） */

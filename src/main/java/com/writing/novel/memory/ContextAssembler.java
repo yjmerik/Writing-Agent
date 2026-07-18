@@ -50,7 +50,9 @@ public class ContextAssembler {
         String queryText = chapterSynopsis != null ? chapterSynopsis : chapterTitle;
         assembleRetrievedContext(projectId, queryText, ctx);
         ctx.setRelevantForeshadowings(buildForeshadowings(projectId));
-        ctx.setTaskSection(buildTaskSection(chapterTitle, chapterSynopsis, writingNotes));
+        // 查找当前章节的结构化大纲信息（beats/climax/cast）
+        ChapterSynopsis fullSynopsis = findFullSynopsis(projectId, chapterIndex);
+        ctx.setTaskSection(buildTaskSection(chapterTitle, chapterSynopsis, writingNotes, fullSynopsis));
 
         // Token 预算控制：总预算 12K token，超限时按优先级裁剪低优先级 section
         applyTokenBudget(ctx);
@@ -209,10 +211,39 @@ public class ContextAssembler {
         return sb.toString().trim();
     }
 
-    private String buildTaskSection(String chapterTitle, String synopsis, String writingNotes) {
+    /** 从 outline 查找当前章节的完整 ChapterSynopsis（含 beats/climax/cast） */
+    private ChapterSynopsis findFullSynopsis(String projectId, int chapterIndex) {
+        var outline = repository.findOutlineByProject(projectId);
+        if (outline.isEmpty()) return null;
+        for (Volume v : outline.get().getVolumes()) {
+            for (ChapterSynopsis s : v.getSynopses()) {
+                if (s.getChapterIndex() == chapterIndex) return s;
+            }
+        }
+        return null;
+    }
+
+    private String buildTaskSection(String chapterTitle, String synopsis, String writingNotes,
+                                     ChapterSynopsis fullSynopsis) {
         StringBuilder sb = new StringBuilder();
         sb.append("章节：").append(chapterTitle).append("\n");
-        sb.append("内容：").append(synopsis != null ? synopsis : "").append("\n");
+        // 如果有结构化信息，分段输出
+        if (fullSynopsis != null) {
+            if (fullSynopsis.getBeats() != null && !fullSynopsis.getBeats().isBlank()) {
+                sb.append("场景节拍：").append(fullSynopsis.getBeats()).append("\n");
+            } else if (synopsis != null) {
+                sb.append("内容：").append(synopsis).append("\n");
+            }
+            if (fullSynopsis.getClimax() != null && !fullSynopsis.getClimax().isBlank()) {
+                sb.append("爽点：").append(fullSynopsis.getClimax()).append("\n");
+            }
+            if (fullSynopsis.getCast() != null && !fullSynopsis.getCast().isBlank()) {
+                sb.append("出场人物：").append(fullSynopsis.getCast()).append("\n");
+            }
+        } else {
+            // 回退到扁平模式
+            sb.append("内容：").append(synopsis != null ? synopsis : "").append("\n");
+        }
         if (writingNotes != null && !writingNotes.isBlank()) {
             sb.append("要求：").append(writingNotes);
         }

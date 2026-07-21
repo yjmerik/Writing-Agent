@@ -231,6 +231,34 @@
         "orchestrator/NovelOrchestrator.java"
       ],
       "problem_ref": "P2: 静默吞异常→闭环失效不可见、调试极难"
+    },
+    {
+      "id": "p2-04",
+      "name": "PlotterAgent 正则兼容 DeepSeek 格式",
+      "description": "卷/章正则 3 级 fallback：多行空行格式→单行无空行→单行冒号分隔；支持 markdown 标题前缀(#)、中文序数(第X卷/卷X)、加粗标记(**爽点**/**人物**)；parseChapterDetails 去除 markdown 加粗标记",
+      "phase": 2,
+      "dependencies": [
+        "p2-01"
+      ],
+      "status": "completed",
+      "evidence": "E2E: 2卷×24章大纲解析成功；87 tests pass",
+      "files": [
+        "agent/PlotterAgent.java"
+      ],
+      "problem_ref": "P0: DeepSeek markdown 格式不匹配正则→大纲始终 fallback 3章"
+    },
+    {
+      "id": "p0-01",
+      "name": "全 LLM 任务路由至 DeepSeek V4 Flash",
+      "description": "application.yml 中 PLOTTING/WORLDBUILDING/CHARACTER_DESIGN/CHAPTER_WRITING/CONTINUITY_CHECK/STYLE_GUARDIAN/MEMORY_SUMMARY/GENERAL 全部路由至 DeepSeek V4 Flash；默认模型保留 local qwen3-4b-wuxia 作为兜底",
+      "phase": 0,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "E2E: DeepSeek 质量评分 7/10 vs 之前 qwen 2/10",
+      "files": [
+        "application.yml"
+      ],
+      "problem_ref": "P0: 核心写作任务仍使用 qwen3-4b-wuxia→产出 2/10"
     }
   ]
 }

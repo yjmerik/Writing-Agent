@@ -1,0 +1,236 @@
+{
+  "project": "WritingAgent — 长篇小说自动写作系统",
+  "current_phase": "全部 Phase 完成",
+  "features": [
+    {
+      "id": "p1-01",
+      "name": "故事原旨注入上下文",
+      "description": "WritingContext 新增 premiseSection 字段，ContextAssembler 从 Outline.premise + Project.concept 注入，toSystemPrompt 最前面输出【故事原旨】，永不被 token 裁剪",
+      "phase": 1,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "86 tests pass",
+      "files": [
+        "memory/WritingContext.java",
+        "memory/ContextAssembler.java"
+      ],
+      "problem_ref": "P0 根因1: 总纲不进上下文→写到第20章LLM完全失忆"
+    },
+    {
+      "id": "p1-02",
+      "name": "CharacterDesigner 注入构思+世界观",
+      "description": "runConceiving 调 design 时传入 concept+tags+世界观摘要；CharacterDesignerAgent 从 repository 读取世界观条目注入 userMessage；character-design.st 的【姓名】字段加世界观约束",
+      "phase": 1,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "86 tests pass",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "agent/CharacterDesignerAgent.java",
+        "prompts/character-design.st"
+      ],
+      "problem_ref": "P0 根因5: Agent间信息断层→人物总是陆昭然"
+    },
+    {
+      "id": "p1-03",
+      "name": "Plotter 注入世界观+人物",
+      "description": "runConceiving 在调 plotter 前将世界观条目和人物卡摘要拼成字符串传入；PlotterAgent.plan 新增参数注入 userMessage",
+      "phase": 1,
+      "dependencies": [
+        "p1-02"
+      ],
+      "status": "completed",
+      "evidence": "86 tests pass",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "agent/PlotterAgent.java"
+      ],
+      "problem_ref": "P1: Plotter看不到世界观/人物→大纲与设定脱节"
+    },
+    {
+      "id": "p1-04",
+      "name": "卷级摘要全量注入",
+      "description": "ContextAssembler.buildRecentSummary 中卷级摘要（覆盖>3章）不受 RECENT_SUMMARY_WINDOW 限制全量注入，细粒度保持 window=5",
+      "phase": 1,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "86 tests pass",
+      "files": [
+        "memory/ContextAssembler.java"
+      ],
+      "problem_ref": "P0: 递归摘要是假的→第50章看不到第1卷"
+    },
+    {
+      "id": "p1-05",
+      "name": "章节正文 chunk 检索修复",
+      "description": "assembleRetrievedContext 中检索结果 id 含 #chunk 时用 vectorRetrieval.getText(id) 取文本而非 findKnowledgeEntry",
+      "phase": 1,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "86 tests pass",
+      "files": [
+        "memory/ContextAssembler.java"
+      ],
+      "problem_ref": "P1: 章节chunk索引后读不出→向量检索对前文召回贡献为零"
+    },
+    {
+      "id": "p1-06",
+      "name": "styleGuide 从 StyleProfile 动态注入",
+      "description": "Agent 从 repository 读取 StyleProfile 的 tone+dosAndDonts 作为 styleGuide 变量传入模板，不再写死空串",
+      "phase": 1,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "86 tests pass",
+      "files": [
+        "agent/ChapterWriterAgent.java",
+        "agent/CharacterDesignerAgent.java",
+        "agent/PlotterAgent.java"
+      ],
+      "problem_ref": "P0: styleGuide永远传空串→模板条件块全部失效"
+    },
+    {
+      "id": "p2-01",
+      "name": "大纲规模参数化",
+      "description": "plotting.st 删除'2-3卷'硬限制改为参数驱动；runConceiving 的 plotter.plan totalChapters 从 10 改为可配置（默认20）",
+      "phase": 2,
+      "dependencies": [
+        "p1-03"
+      ],
+      "status": "completed",
+      "evidence": "86 tests pass; frontend built",
+      "files": [
+        "prompts/plotting.st",
+        "agent/PlotterAgent.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "P0: 上限锁死6-15章→系统名义是长篇实际只能写短篇"
+    },
+    {
+      "id": "p2-02",
+      "name": "世界观注入按类型多样选样",
+      "description": "buildWorldbuildingSection 从纯取前10条改为按type分组每组最多2条，优先级 POWER_SYSTEM>FACTION>GEOGRAPHY>RULE>HISTORY>CUSTOM",
+      "phase": 2,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "86 tests pass; frontend built",
+      "files": [
+        "memory/ContextAssembler.java",
+        "agent/WorldBuilderAgent.java"
+      ],
+      "problem_ref": "P1: 世界观只取前10条无排序→关键设定可能不在前10条"
+    },
+    {
+      "id": "p2-03",
+      "name": "worldbuilding.st 去法则化+扩展类型",
+      "description": "类型清单扩展为地理/势力/力量体系/历史/文化风俗/经济资源/重要地点/规则；弱化'法则'导向；扩展 normalizeType 映射",
+      "phase": 2,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "86 tests pass; frontend built",
+      "files": [
+        "prompts/worldbuilding.st",
+        "agent/WorldBuilderAgent.java"
+      ],
+      "problem_ref": "P0: 世界观全是法则→prompt强导向+类型映射太窄"
+    },
+    {
+      "id": "p3-01",
+      "name": "ContinuityIssue.resolve 接通",
+      "description": "rewriteWithCorrection 成功后把对应 HIGH 级 issue 标记 resolve()；质量熔断改为统计最近N章新增未解决HIGH数量",
+      "phase": 3,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "86 tests pass; frontend built",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "P1: Issue永不resolve→质量熔断计数永远递增"
+    },
+    {
+      "id": "p3-02",
+      "name": "StyleGuardian.checkConsistency 接入闭环",
+      "description": "接收 checkConsistency 返回值并解析评分；评分<60时把风格问题描述注入下一章 writingNotes",
+      "phase": 3,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "86 tests pass; frontend built",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "P0: 返回值被完全丢弃→文风漂移无人管"
+    },
+    {
+      "id": "p3-03",
+      "name": "伏笔系统接入",
+      "description": "Plotter生成大纲后从大纲文本抽取伏笔存入Foreshadowing表；ContinuityChecker检测伏笔回收时调Foreshadowing.resolve()",
+      "phase": 3,
+      "dependencies": [
+        "p1-03"
+      ],
+      "status": "completed",
+      "evidence": "86 tests pass; frontend built",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "agent/PlotterAgent.java",
+        "domain/Foreshadowing.java"
+      ],
+      "problem_ref": "P0: 伏笔系统是空壳→表/类/prompt齐全但无写入点"
+    },
+    {
+      "id": "p3-04",
+      "name": "卷末触发全局质量评价",
+      "description": "checkAndGenerateVolumeSummary 中增加 QualityEvaluationAgent.evaluate 调用；低分维度改进建议注入下一卷 Plotter prompt",
+      "phase": 3,
+      "dependencies": [
+        "p3-02"
+      ],
+      "status": "completed",
+      "evidence": "86 tests pass; frontend built",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "agent/QualityEvaluationAgent.java"
+      ],
+      "problem_ref": "P0: QualityEvaluationAgent游离在编排循环外→无自动质量门禁"
+    },
+    {
+      "id": "p4-01",
+      "name": "UI 状态机 Steps 修复",
+      "description": "ProjectWorkspace 传 project.state 给 RunConsole；Steps 的 current 改为 STATES.indexOf(actualState)；补充 PAUSED_AT_CHECKPOINT 映射",
+      "phase": 4,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "86 tests pass; frontend built",
+      "files": [
+        "frontend/src/components/RunConsole.tsx",
+        "frontend/src/pages/ProjectWorkspace.tsx"
+      ],
+      "problem_ref": "UI: Steps的current写死为FINAL→进度条永远显示全部完成"
+    },
+    {
+      "id": "p4-02",
+      "name": "按钮互斥+状态提示",
+      "description": "三个按钮加 disabled={running||writing||batchWriting} 互斥；loading按钮加'后端调用中约30-60s'文字提示",
+      "phase": 4,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "86 tests pass; frontend built",
+      "files": [
+        "frontend/src/components/RunConsole.tsx"
+      ],
+      "problem_ref": "UI: 按钮无互斥→并发触发后端"
+    },
+    {
+      "id": "p4-03",
+      "name": "静默 catch 改为日志",
+      "description": "NovelOrchestrator 中6处 catch(Exception e){} 改为 catch(Exception e){ log.warn(...); }；引入 SLF4J Logger",
+      "phase": 4,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "86 tests pass; frontend built",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "P2: 静默吞异常→闭环失效不可见、调试极难"
+    }
+  ]
+}

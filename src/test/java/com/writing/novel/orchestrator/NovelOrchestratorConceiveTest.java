@@ -70,7 +70,8 @@ class NovelOrchestratorConceiveTest {
                 new ContinuityCheckerAgent(gateway, repo, promptSvc),
                 new StyleGuardianAgent(gateway, repo, promptSvc),
                 new MemoryManagerAgent(gateway, summarySvc, promptSvc),
-                summarySvc, assembler);
+                summarySvc, assembler,
+                new com.writing.novel.agent.QualityEvaluationAgent(gateway, repo, promptSvc));
     }
 
     @Test

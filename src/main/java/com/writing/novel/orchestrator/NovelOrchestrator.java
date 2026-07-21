@@ -5,6 +5,8 @@ import com.writing.novel.domain.*;
 import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.SummaryService;
 import com.writing.novel.spi.NovelRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -12,6 +14,8 @@ import java.util.List;
  * 小说编排器——系统大脑。驱动状态机，调度 7 个 Agent。
  */
 public class NovelOrchestrator {
+
+    private static final Logger log = LoggerFactory.getLogger(NovelOrchestrator.class);
 
     private final NovelRepository repository;
     private final ProjectService projectService;
@@ -24,6 +28,7 @@ public class NovelOrchestrator {
     private final MemoryManagerAgent memoryManager;
     private final SummaryService summaryService;
     private final ContextAssembler contextAssembler;
+    private final com.writing.novel.agent.QualityEvaluationAgent qualityEvaluationAgent;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -35,7 +40,8 @@ public class NovelOrchestrator {
                               StyleGuardianAgent styleGuardian,
                               MemoryManagerAgent memoryManager,
                               SummaryService summaryService,
-                              ContextAssembler contextAssembler) {
+                              ContextAssembler contextAssembler,
+                              com.writing.novel.agent.QualityEvaluationAgent qualityEvaluationAgent) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -47,6 +53,7 @@ public class NovelOrchestrator {
         this.memoryManager = memoryManager;
         this.summaryService = summaryService;
         this.contextAssembler = contextAssembler;
+        this.qualityEvaluationAgent = qualityEvaluationAgent;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -64,13 +71,18 @@ public class NovelOrchestrator {
                     "世界观构思：" + p.getConcept() + "\n类型标签：" + p.getTags());
         }
 
-        // 人物设计（幂等：已有主角则跳过，防止重新构思时重复生成）
+        // 人物设计（幂等：已有主角则跳过）
+        // 传入构思+世界观摘要，让人物设计贴合设定（解决"人物总是陆昭然"问题）
         if (repository.findCharactersByProject(projectId).isEmpty()) {
-            characterDesigner.design(projectId, "主角", List.of());
+            String worldSummary = collectWorldbuildingSummary(projectId);
+            String charRequirement = "主角。故事构思：" + p.getConcept()
+                    + "；类型标签：" + p.getTags()
+                    + (worldSummary.isEmpty() ? "" : "\n已生成的世界观设定：\n" + worldSummary);
+            characterDesigner.design(projectId, charRequirement, List.of());
         }
 
         // 大纲（幂等：已有有效大纲则跳过，fallback 大纲需重新生成）
-        // 提取主角名传给 Plotter，防止大纲用不同名字（Agent间一致性）
+        // 提取主角名+世界观+人物摘要传给 Plotter（解决 Agent 间信息断层）
         if (repository.findOutlineByProject(projectId).isEmpty()
                 || isFallbackOutline(projectId)) {
             String protagonistName = "";
@@ -81,10 +93,17 @@ public class NovelOrchestrator {
                     break;
                 }
             }
+            String worldSummary = collectWorldbuildingSummary(projectId);
+            String charSummary = collectCharacterSummary(projectId);
             String theme = (protagonistName.isEmpty() ? "" : "主角名为「" + protagonistName + "」。")
-                    + "主题：" + p.getConcept();
+                    + "主题：" + p.getConcept()
+                    + (worldSummary.isEmpty() ? "" : "\n世界观设定：\n" + worldSummary)
+                    + (charSummary.isEmpty() ? "" : "\n已有人物：\n" + charSummary);
             plotter.plan(projectId, p.getConcept(), theme, 10);
         }
+
+        // 伏笔抽取：从大纲文本中提取伏笔条目（p3-03）
+        extractForeshadowingsFromOutline(projectId);
 
         if (p.getMode() == ProjectMode.INTERACTIVE) {
             p.setState(NovelState.PAUSED_AT_CHECKPOINT);
@@ -179,7 +198,7 @@ public class NovelOrchestrator {
                 try {
                     generateVolumeSummary(projectId, v, firstChapter, lastChapter);
                 } catch (Exception e) {
-                    // 卷摘要生成失败不影响写作
+                    log.warn("卷摘要生成失败: {}", e.getMessage());
                 }
                 break;
             }
@@ -201,6 +220,21 @@ public class NovelOrchestrator {
         // 用 MemoryManager 压缩为卷级摘要
         memoryManager.summarize(projectId, fromChapter, toChapter,
                 "卷" + volume.getVolumeIndex() + "「" + volume.getTitle() + "」的详细内容：\n" + combined);
+        // p3-04: 卷末触发质量评价（反馈闭环）
+        try {
+            var report = qualityEvaluationAgent.evaluate(projectId);
+            if (report.overallScore < 6) {
+                // 低分记录为 issue 供后续优化参考
+                repository.saveContinuityIssue(new ContinuityIssue(
+                        projectId, toChapter,
+                        ContinuityIssue.Type.WORLDBUILDING,
+                        ContinuityIssue.Severity.MEDIUM,
+                        "卷" + volume.getVolumeIndex() + "质量评分" + report.overallScore
+                                + "/10：" + report.summary));
+            }
+        } catch (Exception e) {
+            log.warn("质量评价失败: {}", e.getMessage());
+        }
     }
 
     /**
@@ -223,22 +257,46 @@ public class NovelOrchestrator {
                         .reduce((a, b) -> a + "；" + b)
                         .orElse("");
                 rewriteWithCorrection(projectId, chapterIndex, chapter, issueDesc, settings);
+                // 重写后标记已处理的 HIGH issue 为 resolved（p3-01）
+                issues.stream()
+                        .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH)
+                        .forEach(i -> {
+                            i.resolve();
+                            repository.saveContinuityIssue(i);
+                        });
             }
         } catch (Exception e) {
-            // 检查失败不中断写作
+            log.warn("连续性检查失败: {}", e.getMessage());
         }
 
-        // 每 5 章检查风格漂移
+        // 每 5 章检查风格漂移，解析评分并记录问题（p3-02）
         if (chapterIndex % 5 == 0) {
             try {
                 var styleOpt = repository.findStyleProfileByProject(projectId);
                 if (styleOpt.isPresent()) {
                     var style = styleOpt.get();
-                    String baseline = style.getTone() + " " + style.getDosAndDonts();
-                    styleGuardian.checkConsistency(projectId, chapter.getContent(), baseline);
+                    String baseline = (style.getTone() != null ? style.getTone() : "")
+                            + (style.getVoice() != null ? " " + style.getVoice() : "")
+                            + (style.getDosAndDonts() != null ? " " + style.getDosAndDonts() : "");
+                    String report = styleGuardian.checkConsistency(projectId, chapter.getContent(), baseline);
+                    // 解析评分：格式 "风格一致性评分：XX/100"
+                    if (report != null) {
+                        var scoreMatch = java.util.regex.Pattern.compile("(\\d+)/100").matcher(report);
+                        if (scoreMatch.find()) {
+                            int score = Integer.parseInt(scoreMatch.group(1));
+                            if (score < 60) {
+                                // 风格评分低，记录为 ContinuityIssue
+                                repository.saveContinuityIssue(new ContinuityIssue(
+                                        projectId, chapterIndex,
+                                        ContinuityIssue.Type.WORLDBUILDING,
+                                        ContinuityIssue.Severity.MEDIUM,
+                                        "风格漂移（评分" + score + "/100）：" + report));
+                            }
+                        }
+                    }
                 }
             } catch (Exception e) {
-                // 风格检查失败不中断
+                log.warn("风格检查失败: {}", e.getMessage());
             }
         }
     }
@@ -261,8 +319,65 @@ public class NovelOrchestrator {
                 repository.saveChapter(chapter); // 用原 id 覆盖，不产生重复
             }
         } catch (Exception e) {
-            // 纠偏失败保留原版本
+            log.warn("纠偏重写失败，保留原版本: {}", e.getMessage());
         }
+    }
+
+    /** 从大纲文本中抽取伏笔条目存入 Foreshadowing 表（p3-03） */
+    private void extractForeshadowingsFromOutline(String projectId) {
+        try {
+            // 已有伏笔则跳过（幂等）
+            if (!repository.findForeshadowingsByProject(projectId).isEmpty()) return;
+            var outlineOpt = repository.findOutlineByProject(projectId);
+            if (outlineOpt.isEmpty()) return;
+            String fullText = outlineOpt.get().getPremise();
+            for (var v : outlineOpt.get().getVolumes()) {
+                fullText += "\n" + v.getTitle() + " " + v.getSummary();
+                for (var s : v.getSynopses()) {
+                    fullText += "\n" + s.getSynopsis();
+                }
+            }
+            // 用正则找含"伏笔/暗示/暗藏/埋下/秘密/真相"的段落
+            var pattern = java.util.regex.Pattern.compile(
+                    "[^\\n。]*(?:伏笔|暗示|暗藏|埋下|秘密|真相|隐情|未解)[^\\n。]*");
+            var matcher = pattern.matcher(fullText);
+            int count = 0;
+            while (matcher.find() && count < 5) {
+                String desc = matcher.group().trim();
+                if (desc.length() > 5) {
+                    repository.saveForeshadowing(new Foreshadowing(
+                            projectId, desc, "从大纲自动抽取", 1));
+                    count++;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("伏笔抽取失败: {}", e.getMessage());
+        }
+    }
+
+    /** 收集世界观摘要（供 CharacterDesigner/Plotter 注入用） */
+    private String collectWorldbuildingSummary(String projectId) {
+        var entries = repository.findKnowledgeEntriesByProject(projectId);
+        if (entries.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        for (var e : entries) {
+            sb.append("【").append(e.getName()).append("】").append(e.getContent()).append("\n");
+        }
+        return sb.toString().trim();
+    }
+
+    /** 收集人物卡摘要（供 Plotter 注入用） */
+    private String collectCharacterSummary(String projectId) {
+        var chars = repository.findCharactersByProject(projectId);
+        if (chars.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        for (var c : chars) {
+            sb.append(c.getName()).append("（").append(c.getRole()).append("）");
+            if (c.getPersonality() != null) sb.append(" 性格：").append(c.getPersonality());
+            if (c.getAbility() != null) sb.append(" 能力：").append(c.getAbility());
+            sb.append("\n");
+        }
+        return sb.toString().trim();
     }
 
     /** 收集设定摘要供连续性检查参考 */

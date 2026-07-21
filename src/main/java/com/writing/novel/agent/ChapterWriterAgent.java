@@ -48,7 +48,9 @@ public class ChapterWriterAgent {
                 projectId, chapterIndex, chapterTitle, chapterSynopsis, writingNotes);
 
         // 2. 构建 LLM 请求：ContextAssembler 组装的上下文 + chapter-writing 模板的角色定义
-        String chapterWritingPrompt = promptService.render("chapter-writing", Map.of("styleGuide", ""));
+        // styleGuide 从 StyleProfile 动态注入（不再写死空串）
+        String dynamicStyleGuide = extractStyleGuide(projectId);
+        String chapterWritingPrompt = promptService.render("chapter-writing", Map.of("styleGuide", dynamicStyleGuide));
         String systemPrompt = ctx.toSystemPrompt() + "\n\n" + chapterWritingPrompt;
 
         var req = LlmRequest.builder()
@@ -191,5 +193,20 @@ public class ChapterWriterAgent {
                     chapter.getId() + "#chunk" + chunkNum,
                     projectId, current.toString(), "CHAPTER"));
         }
+    }
+
+    /** 从 StyleProfile 提取风格指引（tone + dosAndDonts）作为 styleGuide 变量 */
+    private String extractStyleGuide(String projectId) {
+        if (repository == null) return "";
+        var styleOpt = repository.findStyleProfileByProject(projectId);
+        if (styleOpt.isEmpty()) return "";
+        var style = styleOpt.get();
+        StringBuilder sb = new StringBuilder();
+        if (style.getTone() != null) sb.append(style.getTone());
+        if (style.getDosAndDonts() != null) {
+            if (sb.length() > 0) sb.append("。");
+            sb.append(style.getDosAndDonts());
+        }
+        return sb.toString();
     }
 }

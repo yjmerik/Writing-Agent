@@ -81,7 +81,10 @@ public class WorldBuilderAgent {
             case "力量体系" -> "POWER_SYSTEM";
             case "势力" -> "FACTION";
             case "历史" -> "HISTORY";
-            case "规则" -> "RULE";
+            case "规则", "法则" -> "RULE";
+            case "文化", "风俗", "文化风俗" -> "CULTURE";
+            case "经济", "资源", "经济资源" -> "ECONOMY";
+            case "种族" -> "RACE";
             default -> "CUSTOM";
         };
     }

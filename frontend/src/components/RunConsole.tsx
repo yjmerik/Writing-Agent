@@ -14,10 +14,11 @@ const STATE_TEXT: Record<string, string> = {
   PAUSED_AT_CHECKPOINT: '暂停审核',
 };
 
-export default function RunConsole({ projectId, onChanged }: { projectId: string; onChanged: () => void }) {
+export default function RunConsole({ projectId, projectState, onChanged }: { projectId: string; projectState: NovelState; onChanged: () => void }) {
   const [running, setRunning] = useState(false);
   const [writing, setWriting] = useState(false);
   const [batchWriting, setBatchWriting] = useState(false);
+  const busy = running || writing || batchWriting;
   const [lastResult, setLastResult] = useState<string | null>(null);
 
   const handleRun = useCallback(async () => {
@@ -87,7 +88,11 @@ export default function RunConsole({ projectId, onChanged }: { projectId: string
     <Card>
       <Steps
         size="small"
-        current={STATES.indexOf('FINAL')}
+        current={projectState === 'PAUSED_AT_CHECKPOINT'
+          ? STATES.indexOf('PLANNING')  // 暂停时显示到规划步骤
+          : STATES.indexOf(projectState) >= 0
+            ? STATES.indexOf(projectState)
+            : 0}
         items={STATES.map((s) => ({ title: STATE_TEXT[s] }))}
         style={{ marginBottom: 24 }}
       />
@@ -111,6 +116,7 @@ export default function RunConsole({ projectId, onChanged }: { projectId: string
           size="large"
           icon={<PlayCircleOutlined />}
           loading={running}
+          disabled={busy}
           onClick={handleRun}
         >
           {running ? '运行中（调 LLM）…' : '推进状态'}
@@ -119,6 +125,7 @@ export default function RunConsole({ projectId, onChanged }: { projectId: string
           size="large"
           icon={<FileAddOutlined />}
           loading={writing}
+          disabled={busy}
           onClick={handleWriteChapter}
         >
           {writing ? '写作中（调 LLM）…' : '写一章'}
@@ -129,12 +136,14 @@ export default function RunConsole({ projectId, onChanged }: { projectId: string
           onConfirm={handleWriteAll}
           okText="开始连续写作"
           cancelText="取消"
+          disabled={busy}
         >
           <Button
             danger
             size="large"
             icon={<ThunderboltOutlined />}
             loading={batchWriting}
+            disabled={busy}
           >
             {batchWriting ? '连续写作中（每章 1-2 分钟）…' : '⚡ 连续写作（写完全书）'}
           </Button>

@@ -39,6 +39,9 @@ public class ContextAssembler {
 
         WritingContext ctx = new WritingContext();
 
+        // 【故事原旨】最高优先级注入——让 LLM 永远知道这本书讲什么
+        ctx.setPremiseSection(buildPremiseSection(projectId));
+
         repository.findStyleProfileByProject(projectId)
                 .ifPresent(style -> ctx.setStyleSection(buildStyleSection(style)));
 
@@ -68,16 +71,47 @@ public class ContextAssembler {
         return sb.toString();
     }
 
+    /** 构建故事原旨：总纲 + 构思，作为全书最高纲领 */
+    private String buildPremiseSection(String projectId) {
+        StringBuilder sb = new StringBuilder();
+        repository.findProject(projectId).ifPresent(p -> {
+            if (p.getConcept() != null) sb.append("构思：").append(p.getConcept()).append("\n");
+        });
+        repository.findOutlineByProject(projectId).ifPresent(o -> {
+            if (o.getPremise() != null && !o.getPremise().isBlank()) {
+                sb.append("总纲：").append(o.getPremise());
+            }
+        });
+        return sb.toString().trim();
+    }
+
+    /** 世界观按类型多样选样：每种 type 最多 2 条，优先级排序 */
+    private static final java.util.Map<String, Integer> TYPE_PRIORITY = java.util.Map.of(
+            "POWER_SYSTEM", 1, "FACTION", 2, "GEOGRAPHY", 3, "RULE", 4,
+            "HISTORY", 5, "CULTURE", 6, "ECONOMY", 7, "RACE", 8, "CUSTOM", 9
+    );
+
     private String buildWorldbuildingSection(String projectId) {
         List<KnowledgeEntry> entries = knowledgeBase.findAllEntries(projectId);
         if (entries.isEmpty()) return "";
-        // 条目超过 10 条时只注入前 10 条（核心设定），避免撑爆 context
-        // 详细条目由 assembleRetrievedContext 的语义检索按需补充
+        // 按 type 分组，每组最多 2 条，按优先级排序
+        java.util.Map<String, List<KnowledgeEntry>> byType = new java.util.LinkedHashMap<>();
+        for (KnowledgeEntry e : entries) {
+            byType.computeIfAbsent(e.getType(), k -> new java.util.ArrayList<>()).add(e);
+        }
+        // 按类型优先级排序
+        List<String> sortedTypes = new java.util.ArrayList<>(byType.keySet());
+        sortedTypes.sort(java.util.Comparator.comparingInt(
+                t -> TYPE_PRIORITY.getOrDefault(t, 99)));
+
         StringBuilder sb = new StringBuilder();
-        int limit = Math.min(entries.size(), 10);
-        for (int i = 0; i < limit; i++) {
-            KnowledgeEntry e = entries.get(i);
-            sb.append("【").append(e.getName()).append("】").append(e.getContent()).append("\n");
+        for (String type : sortedTypes) {
+            List<KnowledgeEntry> group = byType.get(type);
+            int limit = Math.min(group.size(), 2); // 每类最多 2 条
+            for (int i = 0; i < limit; i++) {
+                KnowledgeEntry e = group.get(i);
+                sb.append("【").append(e.getName()).append("】").append(e.getContent()).append("\n");
+            }
         }
         return sb.toString().trim();
     }
@@ -104,19 +138,22 @@ public class ContextAssembler {
 
     private String buildRecentSummary(String projectId, int chapterIndex) {
         int lookBackTo = Math.max(1, chapterIndex - 1);
-        List<Summary> allSummaries = summaryService.findRecent(projectId, lookBackTo, RECENT_SUMMARY_WINDOW);
-        if (allSummaries.isEmpty()) return "";
+        // 细粒度摘要：最近 window 章
+        List<Summary> recentSummaries = summaryService.findRecent(projectId, lookBackTo, RECENT_SUMMARY_WINDOW);
+        // 卷级摘要：全量注入（不受 window 限制），保证第 50 章能看到第 1 卷
+        List<Summary> allSummaries = summaryService.findAll(projectId);
 
-        // 分离细粒度摘要（≤3章范围）和卷级摘要（>3章范围）
         List<Summary> fineGrained = new java.util.ArrayList<>();
         List<Summary> volumeLevel = new java.util.ArrayList<>();
         for (Summary s : allSummaries) {
-            if (s.getToChapter() - s.getFromChapter() + 1 > 3) {
-                volumeLevel.add(s);
-            } else {
-                fineGrained.add(s);
+            int span = s.getToChapter() - s.getFromChapter() + 1;
+            if (span > 3) {
+                volumeLevel.add(s); // 卷级全量
+            } else if (s.getToChapter() >= lookBackTo - RECENT_SUMMARY_WINDOW + 1) {
+                fineGrained.add(s); // 细粒度仅最近 window（用范围判断而非 contains）
             }
         }
+        if (fineGrained.isEmpty() && volumeLevel.isEmpty()) return "";
 
         StringBuilder sb = new StringBuilder();
         // 先注入卷级摘要（远期剧情概览）
@@ -186,10 +223,19 @@ public class ContextAssembler {
 
         StringBuilder settings = new StringBuilder();
         for (String id : relevantIds) {
-            repository.findKnowledgeEntry(id).ifPresent(e -> {
-                settings.append("【").append(e.getName()).append("】")
-                        .append(e.getContent()).append("\n");
-            });
+            if (id.contains("#chunk")) {
+                // 章节正文 chunk：从向量库取文本（findKnowledgeEntry 查不到）
+                String chunkText = vectorRetrieval.getText(id);
+                if (chunkText != null) {
+                    settings.append(chunkText).append("\n");
+                }
+            } else {
+                // 知识条目：从 DB 取
+                repository.findKnowledgeEntry(id).ifPresent(e -> {
+                    settings.append("【").append(e.getName()).append("】")
+                            .append(e.getContent()).append("\n");
+                });
+            }
         }
         ctx.setRelevantSettings(settings.toString().trim());
     }

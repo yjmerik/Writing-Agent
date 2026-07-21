@@ -91,7 +91,7 @@ export default function ProjectWorkspace() {
           onChange={setActiveTab}
           destroyInactiveTabPane
           items={[
-            { key: 'run', label: '运行控制台', children: <RunConsole projectId={project.id} onChanged={load} /> },
+            { key: 'run', label: '运行控制台', children: <RunConsole projectId={project.id} projectState={project.state} onChanged={load} /> },
             { key: 'world', label: '世界观与人物', children: <WorldbuildingView key={`world-${project.currentChapterIndex}`} projectId={project.id} /> },
             { key: 'outline', label: '大纲', children: <OutlineView key={`outline-${project.state}`} projectId={project.id} /> },
             { key: 'reader', label: '章节阅读', children: <ChapterReader key={`reader-${project.currentChapterIndex}`} projectId={project.id} /> },

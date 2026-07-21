@@ -26,9 +26,10 @@ public class OrchestratorConfig {
                                                  StyleGuardianAgent styleGuardian,
                                                  MemoryManagerAgent memoryManager,
                                                  SummaryService summaryService,
-                                                 ContextAssembler contextAssembler) {
+                                                 ContextAssembler contextAssembler,
+                                                 QualityEvaluationAgent qualityEvaluationAgent) {
         return new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
-                summaryService, contextAssembler);
+                summaryService, contextAssembler, qualityEvaluationAgent);
     }
 }

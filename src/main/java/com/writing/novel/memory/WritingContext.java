@@ -20,10 +20,16 @@ public class WritingContext {
     private String relevantSettings;
     private String relevantForeshadowings;
     private String taskSection;
+    private String premiseSection; // 故事原旨（总纲+构思），最高优先级，永不被裁剪
 
-    /** system prompt：风格 + 世界观 + 相关设定 + 出场人物（稳定不变的上下文） */
+    /** system prompt：故事原旨 + 风格 + 世界观 + 相关设定 + 出场人物 */
     public String toSystemPrompt() {
         StringBuilder sb = new StringBuilder();
+        // 【故事原旨】最高优先级——让 LLM 永远知道"这本书讲什么"
+        if (premiseSection != null && !premiseSection.isBlank()) {
+            sb.append("【故事原旨（全书最高纲领，所有章节必须服务于这个核心）】\n")
+              .append(premiseSection).append("\n\n");
+        }
         if (styleSection != null && !styleSection.isBlank()) {
             sb.append("【文风要求】\n").append(styleSection).append("\n\n");
         }
@@ -97,4 +103,6 @@ public class WritingContext {
     public void setRelevantForeshadowings(String s) { this.relevantForeshadowings = s; }
     public String getTaskSection() { return taskSection; }
     public void setTaskSection(String s) { this.taskSection = s; }
+    public String getPremiseSection() { return premiseSection; }
+    public void setPremiseSection(String s) { this.premiseSection = s; }
 }

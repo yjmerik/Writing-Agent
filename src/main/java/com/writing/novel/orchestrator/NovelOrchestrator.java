@@ -4,6 +4,7 @@ import com.writing.novel.agent.*;
 import com.writing.novel.domain.*;
 import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.SummaryService;
+import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.spi.NovelRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ public class NovelOrchestrator {
     private final SummaryService summaryService;
     private final ContextAssembler contextAssembler;
     private final com.writing.novel.agent.QualityEvaluationAgent qualityEvaluationAgent;
+    private final EntityGraphService entityGraphService;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -41,7 +43,8 @@ public class NovelOrchestrator {
                               MemoryManagerAgent memoryManager,
                               SummaryService summaryService,
                               ContextAssembler contextAssembler,
-                              com.writing.novel.agent.QualityEvaluationAgent qualityEvaluationAgent) {
+                              com.writing.novel.agent.QualityEvaluationAgent qualityEvaluationAgent,
+                              EntityGraphService entityGraphService) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -54,6 +57,7 @@ public class NovelOrchestrator {
         this.summaryService = summaryService;
         this.contextAssembler = contextAssembler;
         this.qualityEvaluationAgent = qualityEvaluationAgent;
+        this.entityGraphService = entityGraphService;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -175,6 +179,13 @@ public class NovelOrchestrator {
         // 写完后做连续性检查（发现问题记录到 DB，不中断写作）
         checkContinuityAfterWriting(projectId, chapterIndex, chapter);
 
+        // 图数据库：LLM 提取本章实体和关系
+        try {
+            entityGraphService.extractFromChapter(projectId, chapter);
+        } catch (Exception e) {
+            log.warn("实体提取失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+
         if (chapterIndex % 3 == 0) {
             generateSummary(projectId, chapterIndex - 2, chapterIndex);
         }
@@ -223,6 +234,17 @@ public class NovelOrchestrator {
         // p3-04: 卷末触发质量评价（反馈闭环）
         try {
             var report = qualityEvaluationAgent.evaluate(projectId);
+            // 持久化评价记录（供下一卷 ContextAssembler 读取）
+            var record = new EvaluationRecord(projectId, volume.getVolumeIndex(),
+                    java.util.Map.of(
+                            "consistency", report.consistency,
+                            "style", report.style,
+                            "plot", report.plot,
+                            "characters", report.characters,
+                            "worldbuilding", report.worldbuilding),
+                    report.overallScore, report.summary,
+                    buildImprovementNotes(report));
+            repository.saveEvaluationRecord(record);
             if (report.overallScore < 6) {
                 // 低分记录为 issue 供后续优化参考
                 repository.saveContinuityIssue(new ContinuityIssue(
@@ -496,6 +518,18 @@ public class NovelOrchestrator {
         return outline.getVolumes().stream()
                 .flatMap(v -> v.getSynopses().stream())
                 .anyMatch(s -> s.getChapterIndex() > currentIndex);
+    }
+
+    /** 从评分报告中提取低分维度的改进方向 */
+    private String buildImprovementNotes(com.writing.novel.agent.QualityEvaluationAgent.EvaluationReport report) {
+        if (report == null) return "";
+        StringBuilder sb = new StringBuilder();
+        if (report.consistency < 7) sb.append("一致性需改进；");
+        if (report.plot < 7) sb.append("情节爽点密度需提升；");
+        if (report.characters < 7) sb.append("人物塑造需深化；");
+        if (report.style < 7) sb.append("文风需统一；");
+        if (report.worldbuilding < 7) sb.append("世界观需更自洽；");
+        return sb.isEmpty() ? "" : sb.toString();
     }
 
     /** 检测是否为 fallback 大纲（Plotter 解析失败时生成的最小占位大纲） */

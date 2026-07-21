@@ -80,7 +80,8 @@ class NovelOrchestratorConceiveTest {
                 new StyleGuardianAgent(gateway, repo, promptSvc),
                 new MemoryManagerAgent(gateway, summarySvc, promptSvc),
                 summarySvc, assembler,
-                new com.writing.novel.agent.QualityEvaluationAgent(gateway, repo, promptSvc));
+                new com.writing.novel.agent.QualityEvaluationAgent(gateway, repo, promptSvc),
+                null);
     }
 
     @Test

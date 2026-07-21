@@ -3,6 +3,7 @@ package com.writing.novel.orchestrator;
 import com.writing.novel.agent.*;
 import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.SummaryService;
+import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.spi.NovelRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,9 +28,10 @@ public class OrchestratorConfig {
                                                  MemoryManagerAgent memoryManager,
                                                  SummaryService summaryService,
                                                  ContextAssembler contextAssembler,
-                                                 QualityEvaluationAgent qualityEvaluationAgent) {
+                                                 QualityEvaluationAgent qualityEvaluationAgent,
+                                                 EntityGraphService entityGraphService) {
         return new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
-                summaryService, contextAssembler, qualityEvaluationAgent);
+                summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService);
     }
 }

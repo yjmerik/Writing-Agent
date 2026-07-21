@@ -60,7 +60,24 @@ public class SqliteSchemaInitializer {
 
         "CREATE TABLE IF NOT EXISTS checkpoints (" +
             "id TEXT PRIMARY KEY, project_id TEXT, type TEXT, " +
-            "description TEXT, status TEXT, created_at TEXT)"
+            "description TEXT, status TEXT, created_at TEXT)",
+
+        // 图数据库：实体表
+        "CREATE TABLE IF NOT EXISTS entities (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, name TEXT, type TEXT, " +
+            "aliases TEXT, first_seen_chapter INTEGER, last_seen_chapter INTEGER, " +
+            "metadata TEXT, created_at TEXT, updated_at TEXT)",
+
+        // 图数据库：关系边表
+        "CREATE TABLE IF NOT EXISTS entity_edges (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, source_id TEXT, target_id TEXT, " +
+            "relationship TEXT, weight REAL, metadata TEXT, created_at TEXT)",
+
+        // 卷末质量评价记录表
+        "CREATE TABLE IF NOT EXISTS evaluation_records (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, volume_index INTEGER, " +
+            "scores_json TEXT, overall_score INTEGER, summary TEXT, " +
+            "improvement_notes TEXT, created_at TEXT)"
     };
 
     private final ConnectionProvider cp;

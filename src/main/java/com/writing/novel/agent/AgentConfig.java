@@ -6,6 +6,7 @@ import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.KnowledgeBaseService;
 import com.writing.novel.memory.SummaryService;
 import com.writing.novel.memory.VectorRetrievalService;
+import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.spi.NovelRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -60,5 +61,16 @@ public class AgentConfig {
     public QualityEvaluationAgent qualityEvaluationAgent(LlmGateway gateway, NovelRepository repo,
                                                          PromptTemplateService promptService) {
         return new QualityEvaluationAgent(gateway, repo, promptService);
+    }
+
+    @Bean
+    public EntityExtractorAgent entityExtractorAgent(LlmGateway gateway, NovelRepository repo,
+                                                     PromptTemplateService promptService) {
+        return new EntityExtractorAgent(gateway, repo, promptService);
+    }
+
+    @Bean
+    public EntityGraphService entityGraphService(NovelRepository repo, EntityExtractorAgent extractor) {
+        return new EntityGraphService(repo, extractor);
     }
 }

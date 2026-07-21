@@ -21,6 +21,9 @@ public class WritingContext {
     private String relevantForeshadowings;
     private String taskSection;
     private String premiseSection; // 故事原旨（总纲+构思），最高优先级，永不被裁剪
+    private String entityConsistencySection;  // 图数据库：实体一致性提醒
+    private String writingConstraints;        // 量化写作约束
+    private String qualityFeedbackSection;    // 上卷质量评价反馈
 
     /** system prompt：故事原旨 + 风格 + 世界观 + 相关设定 + 出场人物 */
     public String toSystemPrompt() {
@@ -35,6 +38,9 @@ public class WritingContext {
         }
         if (worldbuildingSection != null && !worldbuildingSection.isBlank()) {
             sb.append("【世界观设定】\n").append(worldbuildingSection).append("\n\n");
+        }
+        if (entityConsistencySection != null && !entityConsistencySection.isBlank()) {
+            sb.append(entityConsistencySection).append("\n\n");
         }
         if (relevantSettings != null && !relevantSettings.isBlank()) {
             sb.append("【相关设定】\n").append(relevantSettings).append("\n\n");
@@ -82,6 +88,12 @@ public class WritingContext {
             sb.append("【待回收伏笔】\n").append(relevantForeshadowings).append("\n\n");
         }
         sb.append("【本章任务】\n").append(taskSection != null ? taskSection : "");
+        if (qualityFeedbackSection != null && !qualityFeedbackSection.isBlank()) {
+            sb.append("\n\n").append(qualityFeedbackSection);
+        }
+        if (writingConstraints != null && !writingConstraints.isBlank()) {
+            sb.append("\n\n").append(writingConstraints);
+        }
         return sb.toString().trim();
     }
 
@@ -105,4 +117,10 @@ public class WritingContext {
     public void setTaskSection(String s) { this.taskSection = s; }
     public String getPremiseSection() { return premiseSection; }
     public void setPremiseSection(String s) { this.premiseSection = s; }
+    public String getEntityConsistencySection() { return entityConsistencySection; }
+    public void setEntityConsistencySection(String s) { this.entityConsistencySection = s; }
+    public String getWritingConstraints() { return writingConstraints; }
+    public void setWritingConstraints(String s) { this.writingConstraints = s; }
+    public String getQualityFeedbackSection() { return qualityFeedbackSection; }
+    public void setQualityFeedbackSection(String s) { this.qualityFeedbackSection = s; }
 }

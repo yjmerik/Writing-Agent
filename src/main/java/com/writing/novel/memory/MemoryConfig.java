@@ -1,5 +1,6 @@
 package com.writing.novel.memory;
 
+import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.spi.EmbeddingProvider;
 import com.writing.novel.spi.NovelRepository;
 import com.writing.novel.spi.VectorStore;
@@ -34,7 +35,9 @@ public class MemoryConfig {
     public ContextAssembler contextAssembler(NovelRepository repository,
                                               KnowledgeBaseService knowledgeBase,
                                               SummaryService summaryService,
-                                              VectorRetrievalService vectorRetrieval) {
-        return new ContextAssembler(repository, knowledgeBase, summaryService, vectorRetrieval);
+                                              VectorRetrievalService vectorRetrieval,
+                                              EntityGraphService entityGraphService) {
+        return new ContextAssembler(repository, knowledgeBase, summaryService,
+                vectorRetrieval, entityGraphService);
     }
 }

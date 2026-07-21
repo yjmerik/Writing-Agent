@@ -5,6 +5,9 @@ import com.writing.novel.domain.Chapter;
 import com.writing.novel.domain.Character;
 import com.writing.novel.domain.Checkpoint;
 import com.writing.novel.domain.ContinuityIssue;
+import com.writing.novel.domain.Entity;
+import com.writing.novel.domain.EntityEdge;
+import com.writing.novel.domain.EvaluationRecord;
 import com.writing.novel.domain.Foreshadowing;
 import com.writing.novel.domain.KnowledgeEntry;
 import com.writing.novel.domain.Outline;
@@ -52,4 +55,21 @@ public class TestNovelRepositoryStub implements NovelRepository {
     @Override public String saveCheckpoint(Checkpoint c) { return c.getId(); }
     @Override public Optional<Checkpoint> findCheckpoint(String id) { return Optional.empty(); }
     @Override public List<Checkpoint> findPendingCheckpoints(String p) { return List.of(); }
+
+    // --- Entity ---
+    @Override public void saveEntity(Entity e) {}
+    @Override public Optional<Entity> findEntity(String id) { return Optional.empty(); }
+    @Override public Optional<Entity> findEntityByName(String p, String n) { return Optional.empty(); }
+    @Override public List<Entity> findEntitiesByProject(String p) { return List.of(); }
+    @Override public List<Entity> findEntitiesInChapterRange(String p, int f, int t) { return List.of(); }
+
+    // --- EntityEdge ---
+    @Override public void saveEntityEdge(EntityEdge e) {}
+    @Override public List<EntityEdge> findEdgesBySource(String id) { return List.of(); }
+    @Override public List<EntityEdge> findEdgesByTarget(String id) { return List.of(); }
+    @Override public List<EntityEdge> findEdgesByProject(String p) { return List.of(); }
+
+    // --- EvaluationRecord ---
+    @Override public void saveEvaluationRecord(EvaluationRecord r) {}
+    @Override public Optional<EvaluationRecord> findLatestEvaluation(String p) { return Optional.empty(); }
 }

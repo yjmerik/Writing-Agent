@@ -7,6 +7,7 @@ import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmResponse;
 import com.writing.novel.llm.client.StreamHandler;
 import com.writing.novel.memory.*;
+import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
@@ -42,7 +43,15 @@ class NovelOrchestratorWritingTest {
         VectorRetrievalService vectorSvc = new VectorRetrievalService(store, emb);
         KnowledgeBaseService kbSvc = new KnowledgeBaseService(repo, vectorSvc);
         SummaryService summarySvc = new SummaryService(repo);
-        ContextAssembler assembler = new ContextAssembler(repo, kbSvc, summarySvc, vectorSvc);
+        EntityGraphService entityGraphSvc = new EntityGraphService(repo, null) {
+            @Override public String recallConsistencySection(String projectId, int currentChapter) { return ""; }
+            @Override public java.util.List<String> getRecentEntityNames(String projectId, int currentChapter) { return java.util.List.of(); }
+            @Override public String resolveCanonical(String projectId, String rawName) { return rawName; }
+            @Override public com.writing.novel.agent.EntityExtractorAgent.ExtractionResult extractFromChapter(String projectId, com.writing.novel.domain.Chapter chapter) {
+                return new com.writing.novel.agent.EntityExtractorAgent.ExtractionResult(0, 0, 0, null);
+            }
+        };
+        ContextAssembler assembler = new ContextAssembler(repo, kbSvc, summarySvc, vectorSvc, entityGraphSvc);
 
         LlmGateway gateway = new LlmGateway() {
             @Override

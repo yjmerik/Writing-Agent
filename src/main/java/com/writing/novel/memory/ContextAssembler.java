@@ -2,6 +2,7 @@ package com.writing.novel.memory;
 
 import com.writing.novel.domain.*;
 import com.writing.novel.domain.Character;
+import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.spi.NovelRepository;
 
 import java.util.List;
@@ -22,15 +23,18 @@ public class ContextAssembler {
     private final KnowledgeBaseService knowledgeBase;
     private final SummaryService summaryService;
     private final VectorRetrievalService vectorRetrieval;
+    private final EntityGraphService entityGraphService;
 
     public ContextAssembler(NovelRepository repository,
                             KnowledgeBaseService knowledgeBase,
                             SummaryService summaryService,
-                            VectorRetrievalService vectorRetrieval) {
+                            VectorRetrievalService vectorRetrieval,
+                            EntityGraphService entityGraphService) {
         this.repository = repository;
         this.knowledgeBase = knowledgeBase;
         this.summaryService = summaryService;
         this.vectorRetrieval = vectorRetrieval;
+        this.entityGraphService = entityGraphService;
     }
 
     public WritingContext assemble(String projectId, int chapterIndex,
@@ -56,6 +60,15 @@ public class ContextAssembler {
         // 查找当前章节的结构化大纲信息（beats/climax/cast）
         ChapterSynopsis fullSynopsis = findFullSynopsis(projectId, chapterIndex);
         ctx.setTaskSection(buildTaskSection(chapterTitle, chapterSynopsis, writingNotes, fullSynopsis));
+
+        // 图数据库：实体一致性注入
+        ctx.setEntityConsistencySection(buildEntityConsistencySection(projectId, chapterIndex));
+
+        // 图数据库：量化写作约束
+        ctx.setWritingConstraints(buildWritingConstraints(fullSynopsis));
+
+        // 质量反馈闭环：上卷评价注入
+        ctx.setQualityFeedbackSection(buildQualityFeedbackSection(projectId));
 
         // Token 预算控制：总预算 12K token，超限时按优先级裁剪低优先级 section
         applyTokenBudget(ctx);
@@ -294,6 +307,54 @@ public class ContextAssembler {
             sb.append("要求：").append(writingNotes);
         }
         return sb.toString().trim();
+    }
+
+    // --- 图数据库：实体一致性注入 ---
+
+    private String buildEntityConsistencySection(String projectId, int chapterIndex) {
+        return entityGraphService.recallConsistencySection(projectId, chapterIndex);
+    }
+
+    // --- 量化写作约束 ---
+
+    private String buildWritingConstraints(ChapterSynopsis synopsis) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("【本章刚性约束（逐条检查，遗漏即违规）】\n");
+
+        // 1. 爽点约束
+        sb.append("□ 必须包含至少 2 个爽点（信息差/反预期/智斗/情感反转/规则利用，类型须与前章轮换）\n");
+
+        // 2. 世界观约束
+        sb.append("□ 必须使用至少 1 个世界观独特设定（星辰淬体/星痕共振/星祭节等）\n");
+
+        // 3. 节拍覆盖
+        if (synopsis != null && synopsis.getBeats() != null && !synopsis.getBeats().isBlank()) {
+            String[] beats = synopsis.getBeats().split("→");
+            sb.append("□ 场景节拍必须全部覆盖（共 ").append(beats.length)
+              .append(" 个：").append(synopsis.getBeats()).append("）\n");
+        }
+
+        // 4. 悬念结尾
+        sb.append("□ 章节结尾必须是一个悬念钩子，不能是场景自然结束\n");
+
+        return sb.toString();
+    }
+
+    // --- 质量反馈闭环 ---
+
+    private String buildQualityFeedbackSection(String projectId) {
+        var eval = repository.findLatestEvaluation(projectId);
+        if (eval.isEmpty()) return "";
+
+        EvaluationRecord record = eval.get();
+        // 只在低分维度（< 7）时注入反馈
+        List<String> lowDims = record.getLowScoreDimensions(7);
+        if (lowDims.isEmpty()) return "";
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("【上卷质量评价反馈——改进方向】\n");
+        sb.append(record.formatFeedback());
+        return sb.toString();
     }
 
     /** Token 预算控制：超限时按优先级从低到高裁剪 */

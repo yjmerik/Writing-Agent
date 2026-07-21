@@ -7,6 +7,7 @@ import com.writing.novel.llm.LlmResponse;
 import com.writing.novel.llm.client.StreamHandler;
 import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.WritingContext;
+import com.writing.novel.service.EntityGraphService;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,7 +21,7 @@ class ChapterWriterAgentTest {
         mockCtx.setTaskSection("第一章 张三登场");
 
         // ContextAssembler 是类不是接口，用匿名子类覆盖 assemble
-        ContextAssembler mockAssembler = new ContextAssembler(null, null, null, null) {
+        ContextAssembler mockAssembler = new ContextAssembler(null, null, null, null, null) {
             @Override
             public WritingContext assemble(String projectId, int chapterIndex,
                                            String chapterTitle, String chapterSynopsis,
@@ -52,7 +53,7 @@ class ChapterWriterAgentTest {
     @Test
     void 写完后保存章节到仓库() {
         WritingContext mockCtx = new WritingContext();
-        ContextAssembler mockAssembler = new ContextAssembler(null, null, null, null) {
+        ContextAssembler mockAssembler = new ContextAssembler(null, null, null, null, null) {
             @Override
             public WritingContext assemble(String pid, int ci, String ct, String cs, String wn) {
                 return mockCtx;

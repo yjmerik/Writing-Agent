@@ -5,6 +5,8 @@ import com.writing.novel.domain.Character;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
+import com.writing.novel.agent.EntityExtractorAgent;
+import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.spi.EmbeddingProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +25,7 @@ class ContextAssemblerTest {
     private SqliteNovelRepository repo;
     private KnowledgeBaseService kbService;
     private SummaryService summaryService;
+    private EntityGraphService entityGraphService;
 
     @BeforeEach
     void setUp() {
@@ -39,7 +42,15 @@ class ContextAssemblerTest {
         VectorRetrievalService vectorSvc = new VectorRetrievalService(store, emb);
         kbService = new KnowledgeBaseService(repo, vectorSvc);
         summaryService = new SummaryService(repo);
-        assembler = new ContextAssembler(repo, kbService, summaryService, vectorSvc);
+        entityGraphService = new EntityGraphService(repo, null) {
+            @Override public String recallConsistencySection(String projectId, int currentChapter) { return ""; }
+            @Override public java.util.List<String> getRecentEntityNames(String projectId, int currentChapter) { return java.util.List.of(); }
+            @Override public String resolveCanonical(String projectId, String rawName) { return rawName; }
+            @Override public EntityExtractorAgent.ExtractionResult extractFromChapter(String projectId, com.writing.novel.domain.Chapter chapter) {
+                return new EntityExtractorAgent.ExtractionResult(0, 0, 0, null);
+            }
+        };
+        assembler = new ContextAssembler(repo, kbService, summaryService, vectorSvc, entityGraphService);
     }
 
     @Test

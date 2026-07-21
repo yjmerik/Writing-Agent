@@ -50,7 +50,9 @@ public class ChapterWriterAgent {
         // 2. 构建 LLM 请求：ContextAssembler 组装的上下文 + chapter-writing 模板的角色定义
         // styleGuide 从 StyleProfile 动态注入（不再写死空串）
         String dynamicStyleGuide = extractStyleGuide(projectId);
-        String chapterWritingPrompt = promptService.render("chapter-writing", Map.of("styleGuide", dynamicStyleGuide));
+        String chapterWritingPrompt = promptService.render("chapter-writing", Map.of(
+                "styleGuide", dynamicStyleGuide,
+                "writingConstraints", ctx.getWritingConstraints() != null ? ctx.getWritingConstraints() : ""));
         String systemPrompt = ctx.toSystemPrompt() + "\n\n" + chapterWritingPrompt;
 
         var req = LlmRequest.builder()

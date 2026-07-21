@@ -45,13 +45,15 @@ public class PlotterAgent {
                 .build();
 
         var resp = gateway.complete(req);
-        Outline outline = parseOutline(resp.getContent(), projectId);
+        String rawContent = resp.getContent();
+        Outline outline = parseOutline(rawContent, projectId);
 
         // 输出校验：0 卷或 0 章时重试 1 次
         int parsedChapters = outline.getVolumes().stream().mapToInt(v -> v.getSynopses().size()).sum();
         if (outline.getVolumes().isEmpty() || parsedChapters == 0) {
             resp = gateway.complete(req);
-            outline = parseOutline(resp.getContent(), projectId);
+            rawContent = resp.getContent();
+            outline = parseOutline(rawContent, projectId);
             parsedChapters = outline.getVolumes().stream().mapToInt(v -> v.getSynopses().size()).sum();
         }
 
@@ -77,9 +79,9 @@ public class PlotterAgent {
 
         Outline outline = new Outline(projectId, premise);
 
-        // 提取卷：【卷N】或【卷一】卷名\n 后面直到下一个【卷或结尾
-        // 支持阿拉伯数字和中文数字（卷1/卷一/卷壹）；兼容 \r\n 和 \n 换行
-        Matcher volM = Pattern.compile("【卷([0-9一二三四五六七八九十百]+)】(.+?)\\r?\\n(.+?)(?=【卷|【伏笔|$)", Pattern.DOTALL).matcher(text);
+        // 提取卷：【卷N】或【卷一】或【第N卷】或【第一卷】或 #【卷N】（兼容 markdown 标题前缀）
+        // 卷名可能包含「（第X-Y章）」之类的后缀
+        Matcher volM = Pattern.compile("#?\\s*【第?卷([0-9一二三四五六七八九十百]+)[】第]*(.+?)\\r?\\n(.+?)(?=#?\\s*【第?卷|#?\\s*【伏笔|$)", Pattern.DOTALL).matcher(text);
         while (volM.find()) {
             int volIndex = parseChineseOrArabic(volM.group(1));
             String volTitle = volM.group(2).trim();
@@ -97,16 +99,50 @@ public class PlotterAgent {
             Volume volume = new Volume(projectId, volIndex, volTitle, volSummary);
 
             // 提取章节：第X章，X 支持中文数字和阿拉伯数字
-            Matcher chM = Pattern.compile("第([0-9一二三四五六七八九十百]+)章\\s*(.+?)：(.+)").matcher(volBody);
+            // 兼容格式（多行）：
+            //   "## 第1章 标题\n**场景节拍**：内容...\n**爽点**：...\n**人物**：..."
+            //   或 "### 第1章 标题\n\n**场景节拍**：内容...（标题和场景节拍间可能有空行）
+            // 兼容格式（单行）：
+            //   "**第1章 标题**：场景节拍...**爽点**：...**人物**：..."
+            boolean hasChapters = false;
+
+            // 尝试多行格式（beats/newline separated）
+            Matcher chM = Pattern.compile("(?:#+\\s*|\\*{2})?第([0-9一二三四五六七八九十百]+)章\\s*(.+?)\\r?\\n\\r?\\n(\\*{0,2}场景节拍\\*{0,2}[：:]\\s*.+)", Pattern.DOTALL).matcher(volBody);
             while (chM.find()) {
+                hasChapters = true;
                 int idx = parseChineseOrArabic(chM.group(1));
                 String title = chM.group(2).trim();
                 String rawContent = chM.group(3).trim();
-
-                // 精细化解析：从 rawContent 中拆分 beats/climax/cast
                 ChapterSynopsis cs = new ChapterSynopsis(projectId, idx, title, rawContent);
                 parseChapterDetails(cs, rawContent);
                 volume.addSynopsis(cs);
+            }
+
+            // 尝试多行格式（单换行，无空行）
+            if (!hasChapters) {
+                Matcher chM1 = Pattern.compile("(?:#+\\s*|\\*{2})?第([0-9一二三四五六七八九十百]+)章\\s*(.+?)\\r?\\n(\\*{0,2}场景节拍\\*{0,2}[：:]\\s*.+)", Pattern.DOTALL).matcher(volBody);
+                while (chM1.find()) {
+                    hasChapters = true;
+                    int idx = parseChineseOrArabic(chM1.group(1));
+                    String title = chM1.group(2).trim();
+                    String rawContent = chM1.group(3).trim();
+                    ChapterSynopsis cs = new ChapterSynopsis(projectId, idx, title, rawContent);
+                    parseChapterDetails(cs, rawContent);
+                    volume.addSynopsis(cs);
+                }
+            }
+
+            // 如果没有匹配到多行格式，尝试单行格式（标题:内容，冒号分隔）
+            if (!hasChapters) {
+                Matcher chM2 = Pattern.compile("\\*{0,2}第([0-9一二三四五六七八九十百]+)章\\s*(.+?)[：:]\\s*(.+?)(?=\\*{0,2}第\\d+章|$)", Pattern.DOTALL).matcher(volBody);
+                while (chM2.find()) {
+                    int idx = parseChineseOrArabic(chM2.group(1));
+                    String title = chM2.group(2).trim();
+                    String rawContent = chM2.group(3).trim();
+                    ChapterSynopsis cs = new ChapterSynopsis(projectId, idx, title, rawContent);
+                    parseChapterDetails(cs, rawContent);
+                    volume.addSynopsis(cs);
+                }
             }
             outline.addVolume(volume);
         }
@@ -115,28 +151,30 @@ public class PlotterAgent {
 
     /** 从章节原始内容中拆分场景节拍、爽点、出场人物 */
     private void parseChapterDetails(ChapterSynopsis cs, String rawContent) {
+        // 处理 markdown 加粗标记：**爽点** → 爽点
+        String clean = rawContent.replaceAll("\\*\\*", "");
         // 尝试按 "爽点：" 和 "人物：" 标记拆分
         // 格式：场景节拍描述。爽点：XXX。人物：YYY
-        String beats = rawContent;
+        String beats = clean;
         String climax = null;
         String cast = null;
 
         // 提取爽点
-        Matcher climaxM = Pattern.compile("爽点[：:]\\s*(.+?)(?=。人物[：:]|$)").matcher(rawContent);
+        Matcher climaxM = Pattern.compile("爽点[：:]\\s*(.+?)(?=。?人物[：:]|$)").matcher(clean);
         if (climaxM.find()) {
             climax = climaxM.group(1).trim();
         }
 
         // 提取人物
-        Matcher castM = Pattern.compile("人物[：:]\\s*(.+)").matcher(rawContent);
+        Matcher castM = Pattern.compile("人物[：:]\\s*(.+)").matcher(clean);
         if (castM.find()) {
             cast = castM.group(1).trim();
         }
 
         // 提取场景节拍（爽点标记前的内容）
-        int climaxIdx = rawContent.indexOf("爽点");
+        int climaxIdx = clean.indexOf("爽点");
         if (climaxIdx > 0) {
-            beats = rawContent.substring(0, climaxIdx).replaceAll("[。；;]$", "").trim();
+            beats = clean.substring(0, climaxIdx).replaceAll("[。；;]$", "").trim();
         }
 
         cs.setBeats(beats);

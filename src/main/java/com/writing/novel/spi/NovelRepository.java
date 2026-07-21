@@ -4,6 +4,9 @@ import com.writing.novel.domain.Chapter;
 import com.writing.novel.domain.Character;
 import com.writing.novel.domain.Checkpoint;
 import com.writing.novel.domain.ContinuityIssue;
+import com.writing.novel.domain.Entity;
+import com.writing.novel.domain.EntityEdge;
+import com.writing.novel.domain.EvaluationRecord;
 import com.writing.novel.domain.Foreshadowing;
 import com.writing.novel.domain.KnowledgeEntry;
 import com.writing.novel.domain.Outline;
@@ -70,4 +73,21 @@ public interface NovelRepository {
     String saveCheckpoint(Checkpoint checkpoint);
     Optional<Checkpoint> findCheckpoint(String id);
     List<Checkpoint> findPendingCheckpoints(String projectId);
+
+    // --- Entity (Graph) ---
+    void saveEntity(Entity entity);
+    Optional<Entity> findEntity(String id);
+    Optional<Entity> findEntityByName(String projectId, String name);
+    List<Entity> findEntitiesByProject(String projectId);
+    List<Entity> findEntitiesInChapterRange(String projectId, int fromChapter, int toChapter);
+
+    // --- EntityEdge (Graph) ---
+    void saveEntityEdge(EntityEdge edge);
+    List<EntityEdge> findEdgesBySource(String entityId);
+    List<EntityEdge> findEdgesByTarget(String entityId);
+    List<EntityEdge> findEdgesByProject(String projectId);
+
+    // --- EvaluationRecord ---
+    void saveEvaluationRecord(EvaluationRecord record);
+    Optional<EvaluationRecord> findLatestEvaluation(String projectId);
 }

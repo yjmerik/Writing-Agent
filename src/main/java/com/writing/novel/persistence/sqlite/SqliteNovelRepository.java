@@ -3,10 +3,15 @@ package com.writing.novel.persistence.sqlite;
 import com.writing.novel.domain.*;
 import com.writing.novel.domain.Character;  // 显式导入，避免与 java.lang.Character 歧义
 import com.writing.novel.spi.NovelRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.sql.*;
 import java.time.Instant;
 import java.util.*;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class SqliteNovelRepository implements NovelRepository {
 
@@ -81,7 +86,8 @@ public class SqliteNovelRepository implements NovelRepository {
         try (Connection conn = cp.getConnection();
              Statement st = conn.createStatement()) {
             for (String t : new String[]{"projects","knowledge_entries","characters","chapters",
-                    "summaries","foreshadowings","style_profiles","continuity_issues","checkpoints"}) {
+                    "summaries","foreshadowings","style_profiles","continuity_issues","checkpoints",
+                    "entities","entity_edges","evaluation_records"}) {
                 st.execute("DELETE FROM " + t + " WHERE project_id='" + id.replace("'","''") + "'");
             }
         } catch (SQLException e) {
@@ -522,7 +528,202 @@ public class SqliteNovelRepository implements NovelRepository {
         return list;
     }
 
-    // --- 映射辅助 ---
+    // --- 图数据库：实体 CRUD ---
+
+    @Override
+    public void saveEntity(Entity e) {
+        String sql = "INSERT INTO entities (id,project_id,name,type,aliases,first_seen_chapter,last_seen_chapter,metadata,created_at,updated_at) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name, type=excluded.type, " +
+                "aliases=excluded.aliases, first_seen_chapter=excluded.first_seen_chapter, " +
+                "last_seen_chapter=excluded.last_seen_chapter, metadata=excluded.metadata, updated_at=excluded.updated_at";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, e.getId()); ps.setString(2, e.getProjectId());
+            ps.setString(3, e.getName()); ps.setString(4, e.getType().name());
+            ps.setString(5, toJsonList(e.getAliases()));
+            ps.setInt(6, e.getFirstSeenChapter()); ps.setInt(7, e.getLastSeenChapter());
+            ps.setString(8, e.getMetadata());
+            ps.setString(9, e.getCreatedAt().toString());
+            ps.setString(10, e.getUpdatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException ex) { throw new RuntimeException(ex); }
+    }
+
+    @Override
+    public Optional<Entity> findEntity(String id) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM entities WHERE id=?")) {
+            ps.setString(1, id);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? Optional.of(mapEntity(rs)) : Optional.empty();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public Optional<Entity> findEntityByName(String projectId, String name) {
+        // 先精确匹配 name，再匹配 aliases JSON（模糊匹配）
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM entities WHERE project_id=? AND (name=? OR aliases LIKE ?)")) {
+            ps.setString(1, projectId);
+            ps.setString(2, name);
+            ps.setString(3, "%\"" + name.replace("\"", "") + "\"%");
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? Optional.of(mapEntity(rs)) : Optional.empty();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public List<Entity> findEntitiesByProject(String projectId) {
+        List<Entity> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM entities WHERE project_id=? ORDER BY last_seen_chapter DESC")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapEntity(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    @Override
+    public List<Entity> findEntitiesInChapterRange(String projectId, int fromChapter, int toChapter) {
+        List<Entity> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM entities WHERE project_id=? AND last_seen_chapter>=? AND last_seen_chapter<=? " +
+                     "ORDER BY last_seen_chapter DESC")) {
+            ps.setString(1, projectId);
+            ps.setInt(2, fromChapter);
+            ps.setInt(3, toChapter);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapEntity(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    // --- 图数据库：关系边 CRUD ---
+
+    @Override
+    public void saveEntityEdge(EntityEdge edge) {
+        String sql = "INSERT INTO entity_edges (id,project_id,source_id,target_id,relationship,weight,metadata,created_at) " +
+                "VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
+                "relationship=excluded.relationship, weight=excluded.weight, metadata=excluded.metadata";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, edge.getId()); ps.setString(2, edge.getProjectId());
+            ps.setString(3, edge.getSourceId()); ps.setString(4, edge.getTargetId());
+            ps.setString(5, edge.getRelationship().name());
+            ps.setDouble(6, edge.getWeight());
+            ps.setString(7, edge.getMetadata());
+            ps.setString(8, edge.getCreatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException ex) { throw new RuntimeException(ex); }
+    }
+
+    @Override
+    public List<EntityEdge> findEdgesBySource(String entityId) {
+        List<EntityEdge> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM entity_edges WHERE source_id=?")) {
+            ps.setString(1, entityId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapEdge(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    @Override
+    public List<EntityEdge> findEdgesByTarget(String entityId) {
+        List<EntityEdge> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM entity_edges WHERE target_id=?")) {
+            ps.setString(1, entityId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapEdge(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    @Override
+    public List<EntityEdge> findEdgesByProject(String projectId) {
+        List<EntityEdge> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM entity_edges WHERE project_id=?")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapEdge(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    // --- EvaluationRecord ---
+
+    @Override
+    public void saveEvaluationRecord(EvaluationRecord r) {
+        String sql = "INSERT INTO evaluation_records (id,project_id,volume_index,scores_json,overall_score,summary,improvement_notes,created_at) " +
+                "VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
+                "scores_json=excluded.scores_json, overall_score=excluded.overall_score, " +
+                "summary=excluded.summary, improvement_notes=excluded.improvement_notes";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, r.getId()); ps.setString(2, r.getProjectId());
+            ps.setInt(3, r.getVolumeIndex());
+            ps.setString(4, mapToJson(r.getScores()));
+            ps.setInt(5, r.getOverallScore());
+            ps.setString(6, r.getSummary());
+            ps.setString(7, r.getImprovementNotes());
+            ps.setString(8, r.getCreatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException ex) { throw new RuntimeException(ex); }
+    }
+
+    @Override
+    public Optional<EvaluationRecord> findLatestEvaluation(String projectId) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM evaluation_records WHERE project_id=? ORDER BY created_at DESC LIMIT 1")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? Optional.of(mapEvaluationRecord(rs)) : Optional.empty();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    // --- 新的映射辅助 ---
+
+    private Entity mapEntity(ResultSet rs) throws SQLException {
+        Entity e = new Entity(rs.getString("project_id"), rs.getString("name"),
+                EntityType.valueOf(rs.getString("type")));
+        setField(e, "id", rs.getString("id"));
+        String aliasesJson = rs.getString("aliases");
+        if (aliasesJson != null && !aliasesJson.isBlank() && !aliasesJson.equals("[]")) {
+            e.setAliases(parseJsonList(aliasesJson));
+        }
+        e.setFirstSeenChapter(rs.getInt("first_seen_chapter"));
+        e.setLastSeenChapter(rs.getInt("last_seen_chapter"));
+        e.setMetadata(rs.getString("metadata"));
+        return e;
+    }
+
+    private EntityEdge mapEdge(ResultSet rs) throws SQLException {
+        EntityEdge edge = new EntityEdge(rs.getString("project_id"),
+                rs.getString("source_id"), rs.getString("target_id"),
+                RelationshipType.valueOf(rs.getString("relationship")));
+        setField(edge, "id", rs.getString("id"));
+        edge.setWeight(rs.getDouble("weight"));
+        edge.setMetadata(rs.getString("metadata"));
+        return edge;
+    }
+
+    private EvaluationRecord mapEvaluationRecord(ResultSet rs) throws SQLException {
+        Map<String, Integer> scores = parseScoreJson(rs.getString("scores_json"));
+        return new EvaluationRecord(rs.getString("project_id"), rs.getInt("volume_index"),
+                scores, rs.getInt("overall_score"),
+                rs.getString("summary"), rs.getString("improvement_notes"));
+    }
     private KnowledgeEntry mapEntry(ResultSet rs) throws SQLException {
         KnowledgeEntry e = new KnowledgeEntry(rs.getString("project_id"),
                 rs.getString("type"), rs.getString("name"), rs.getString("content"));
@@ -595,6 +796,46 @@ public class SqliteNovelRepository implements NovelRepository {
             f.set(target, value);
         } catch (Exception e) {
             throw new RuntimeException("无法设置字段 " + fieldName, e);
+        }
+    }
+
+    // --- JSON 工具方法 ---
+
+    private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+
+    private static String toJsonList(List<String> list) {
+        if (list == null || list.isEmpty()) return "[]";
+        try {
+            return JSON_MAPPER.writeValueAsString(list);
+        } catch (JsonProcessingException e) {
+            return "[]";
+        }
+    }
+
+    private static List<String> parseJsonList(String json) {
+        if (json == null || json.isBlank()) return new ArrayList<>();
+        try {
+            return JSON_MAPPER.readValue(json, new TypeReference<List<String>>() {});
+        } catch (JsonProcessingException e) {
+            return new ArrayList<>();
+        }
+    }
+
+    private static String mapToJson(Map<String, Integer> map) {
+        if (map == null || map.isEmpty()) return "{}";
+        try {
+            return JSON_MAPPER.writeValueAsString(map);
+        } catch (JsonProcessingException e) {
+            return "{}";
+        }
+    }
+
+    private static Map<String, Integer> parseScoreJson(String json) {
+        if (json == null || json.isBlank()) return new HashMap<>();
+        try {
+            return JSON_MAPPER.readValue(json, new TypeReference<Map<String, Integer>>() {});
+        } catch (JsonProcessingException e) {
+            return new HashMap<>();
         }
     }
 }

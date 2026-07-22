@@ -4,6 +4,7 @@ import com.writing.novel.agent.*;
 import com.writing.novel.domain.*;
 import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.SummaryService;
+import com.writing.novel.service.ClimaxDiversityTracker;
 import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.spi.NovelRepository;
 import org.slf4j.Logger;
@@ -31,6 +32,8 @@ public class NovelOrchestrator {
     private final ContextAssembler contextAssembler;
     private final com.writing.novel.agent.QualityEvaluationAgent qualityEvaluationAgent;
     private final EntityGraphService entityGraphService;
+    private final CharacterProfileUpgrader characterProfileUpgrader;
+    private final ClimaxDiversityTracker climaxDiversityTracker;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -44,7 +47,9 @@ public class NovelOrchestrator {
                               SummaryService summaryService,
                               ContextAssembler contextAssembler,
                               com.writing.novel.agent.QualityEvaluationAgent qualityEvaluationAgent,
-                              EntityGraphService entityGraphService) {
+                              EntityGraphService entityGraphService,
+                              CharacterProfileUpgrader characterProfileUpgrader,
+                              ClimaxDiversityTracker climaxDiversityTracker) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -58,6 +63,8 @@ public class NovelOrchestrator {
         this.contextAssembler = contextAssembler;
         this.qualityEvaluationAgent = qualityEvaluationAgent;
         this.entityGraphService = entityGraphService;
+        this.characterProfileUpgrader = characterProfileUpgrader;
+        this.climaxDiversityTracker = climaxDiversityTracker;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -184,6 +191,15 @@ public class NovelOrchestrator {
             entityGraphService.extractFromChapter(projectId, chapter);
         } catch (Exception e) {
             log.warn("实体提取失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+
+        // 角色档案升级：每 5 章检测重复出现的配角并升级
+        if (chapterIndex % 5 == 0) {
+            try {
+                characterProfileUpgrader.upgrade(projectId, chapterIndex);
+            } catch (Exception e) {
+                log.warn("角色升级失败(章{}): {}", chapterIndex, e.getMessage());
+            }
         }
 
         if (chapterIndex % 3 == 0) {

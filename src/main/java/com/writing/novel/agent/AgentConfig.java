@@ -6,6 +6,7 @@ import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.KnowledgeBaseService;
 import com.writing.novel.memory.SummaryService;
 import com.writing.novel.memory.VectorRetrievalService;
+import com.writing.novel.service.ClimaxDiversityTracker;
 import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.spi.NovelRepository;
 import org.springframework.context.annotation.Bean;
@@ -78,5 +79,16 @@ public class AgentConfig {
     public WritingPreferencesAgent writingPreferencesAgent(LlmGateway gateway, NovelRepository repo,
                                                             PromptTemplateService promptService) {
         return new WritingPreferencesAgent(gateway, repo, promptService);
+    }
+
+    @Bean
+    public CharacterProfileUpgrader characterProfileUpgrader(LlmGateway gateway, NovelRepository repo,
+                                                              PromptTemplateService promptService) {
+        return new CharacterProfileUpgrader(gateway, repo, promptService);
+    }
+
+    @Bean
+    public ClimaxDiversityTracker climaxDiversityTracker() {
+        return new ClimaxDiversityTracker();
     }
 }

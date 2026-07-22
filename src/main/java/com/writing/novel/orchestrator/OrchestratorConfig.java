@@ -3,6 +3,7 @@ package com.writing.novel.orchestrator;
 import com.writing.novel.agent.*;
 import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.SummaryService;
+import com.writing.novel.service.ClimaxDiversityTracker;
 import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.spi.NovelRepository;
 import org.springframework.context.annotation.Bean;
@@ -29,9 +30,12 @@ public class OrchestratorConfig {
                                                  SummaryService summaryService,
                                                  ContextAssembler contextAssembler,
                                                  QualityEvaluationAgent qualityEvaluationAgent,
-                                                 EntityGraphService entityGraphService) {
+                                                 EntityGraphService entityGraphService,
+                                                 CharacterProfileUpgrader characterProfileUpgrader,
+                                                 ClimaxDiversityTracker climaxDiversityTracker) {
         return new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
-                summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService);
+                summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
+                characterProfileUpgrader, climaxDiversityTracker);
     }
 }

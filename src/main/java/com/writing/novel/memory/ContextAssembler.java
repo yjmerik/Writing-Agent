@@ -202,10 +202,33 @@ public class ContextAssembler {
         if (prevOpt.isEmpty()) return "";
         String content = prevOpt.get().getContent();
         if (content == null || content.isEmpty()) return "";
+
+        StringBuilder sb = new StringBuilder();
+
+        // 截取上章末尾作为参考上下文
         if (content.length() > RECENT_TEXT_CHARS) {
-            return "..." + content.substring(content.length() - RECENT_TEXT_CHARS);
+            sb.append("...").append(content.substring(content.length() - RECENT_TEXT_CHARS));
+        } else {
+            sb.append(content);
         }
-        return content;
+
+        // 精确衔接点：提取最后 3 句话
+        String[] sentences = content.split("(?<=[。！？])");
+        String lastThree = "";
+        if (sentences.length >= 3) {
+            lastThree = sentences[sentences.length - 3].trim()
+                    + sentences[sentences.length - 2].trim()
+                    + sentences[sentences.length - 1].trim();
+        } else {
+            lastThree = content.length() > 200 ? content.substring(content.length() - 200) : content;
+        }
+
+        sb.append("\n\n【精确衔接点（本章从这里开始）】\n")
+          .append(lastThree)
+          .append("\n\n⚠️ 本章正文必须从上文最后一句话的下一时刻/下一场景直接开始，"
+                  + "不得重复描述上一章结尾已经写过的场景。");
+
+        return sb.toString();
     }
 
     private void assembleRetrievedContext(String projectId, String queryText, WritingContext ctx) {

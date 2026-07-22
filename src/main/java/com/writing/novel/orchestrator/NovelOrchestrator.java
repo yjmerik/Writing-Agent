@@ -545,6 +545,8 @@ public class NovelOrchestrator {
         if (report.characters < 7) sb.append("人物塑造需深化；");
         if (report.style < 7) sb.append("文风需统一；");
         if (report.worldbuilding < 7) sb.append("世界观需更自洽；");
+        if (report.dialogue < 7) sb.append("对话质量需提升（增加对话/区分度/引用）；");
+        if (report.patternDiversity < 7) sb.append("叙事模式需更多样化（爽点轮换/场景结构变化）；");
         return sb.isEmpty() ? "" : sb.toString();
     }
 

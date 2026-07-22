@@ -111,7 +111,7 @@ public class PlotterAgent {
             while (chM.find()) {
                 hasChapters = true;
                 int idx = parseChineseOrArabic(chM.group(1));
-                String title = chM.group(2).trim();
+                String title = sanitizeTitle(chM.group(2));
                 String rawContent = chM.group(3).trim();
                 ChapterSynopsis cs = new ChapterSynopsis(projectId, idx, title, rawContent);
                 parseChapterDetails(cs, rawContent);
@@ -124,7 +124,7 @@ public class PlotterAgent {
                 while (chM1.find()) {
                     hasChapters = true;
                     int idx = parseChineseOrArabic(chM1.group(1));
-                    String title = chM1.group(2).trim();
+                    String title = sanitizeTitle(chM1.group(2));
                     String rawContent = chM1.group(3).trim();
                     ChapterSynopsis cs = new ChapterSynopsis(projectId, idx, title, rawContent);
                     parseChapterDetails(cs, rawContent);
@@ -137,7 +137,7 @@ public class PlotterAgent {
                 Matcher chM2 = Pattern.compile("\\*{0,2}第([0-9一二三四五六七八九十百]+)章\\s*(.+?)[：:]\\s*(.+?)(?=\\*{0,2}第\\d+章|$)", Pattern.DOTALL).matcher(volBody);
                 while (chM2.find()) {
                     int idx = parseChineseOrArabic(chM2.group(1));
-                    String title = chM2.group(2).trim();
+                    String title = sanitizeTitle(chM2.group(2));
                     String rawContent = chM2.group(3).trim();
                     ChapterSynopsis cs = new ChapterSynopsis(projectId, idx, title, rawContent);
                     parseChapterDetails(cs, rawContent);
@@ -180,6 +180,12 @@ public class PlotterAgent {
         cs.setBeats(beats);
         cs.setClimax(climax);
         cs.setCast(cast);
+    }
+
+    /** 清理标题中的 markdown 标记（**、#、多余空格） */
+    private String sanitizeTitle(String title) {
+        if (title == null) return "";
+        return title.replaceAll("\\*{2}", "").replaceAll("#+\\s*", "").trim();
     }
 
     /** 解析中文数字或阿拉伯数字（一→1，二→2...十→10，二十→20） */

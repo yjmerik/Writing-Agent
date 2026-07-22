@@ -88,6 +88,8 @@ public class QualityEvaluationAgent {
             report.plot = scores.path("plot").asInt();
             report.characters = scores.path("characters").asInt();
             report.worldbuilding = scores.path("worldbuilding").asInt();
+            report.dialogue = scores.path("dialogue").asInt();
+            report.patternDiversity = scores.path("pattern_diversity").asInt();
             report.overallScore = root.path("overallScore").asInt();
             report.summary = root.path("summary").asText("");
 
@@ -196,6 +198,8 @@ public class QualityEvaluationAgent {
         public int plot;
         public int characters;
         public int worldbuilding;
+        public int dialogue;
+        public int patternDiversity;
         public int overallScore;
         public String summary;
         public List<QualityIssue> issues = new ArrayList<>();
@@ -208,6 +212,8 @@ public class QualityEvaluationAgent {
             scores.put("plot", plot);
             scores.put("characters", characters);
             scores.put("worldbuilding", worldbuilding);
+            scores.put("dialogue", dialogue);
+            scores.put("pattern_diversity", patternDiversity);
             m.put("scores", scores);
             m.put("overallScore", overallScore);
             m.put("summary", summary);

@@ -24,6 +24,8 @@ public class WritingContext {
     private String entityConsistencySection;  // 图数据库：实体一致性提醒
     private String writingConstraints;        // 量化写作约束
     private String qualityFeedbackSection;    // 上卷质量评价反馈
+    private String characterVoiceSection;     // 角色说话风格
+    private String knowledgeQuoteSection;     // 引用素材
 
     /** system prompt：故事原旨 + 风格 + 世界观 + 相关设定 + 出场人物 */
     public String toSystemPrompt() {
@@ -60,6 +62,9 @@ public class WritingContext {
             }
             sb.append("\n");
         }
+        if (characterVoiceSection != null && !characterVoiceSection.isBlank()) {
+            sb.append(characterVoiceSection).append("\n\n");
+        }
         return sb.toString().trim();
     }
 
@@ -90,6 +95,9 @@ public class WritingContext {
             sb.append("【待回收伏笔】\n").append(relevantForeshadowings).append("\n\n");
         }
         sb.append("【本章任务】\n").append(taskSection != null ? taskSection : "");
+        if (knowledgeQuoteSection != null && !knowledgeQuoteSection.isBlank()) {
+            sb.append("\n\n").append(knowledgeQuoteSection);
+        }
         if (qualityFeedbackSection != null && !qualityFeedbackSection.isBlank()) {
             sb.append("\n\n").append(qualityFeedbackSection);
         }
@@ -125,4 +133,8 @@ public class WritingContext {
     public void setWritingConstraints(String s) { this.writingConstraints = s; }
     public String getQualityFeedbackSection() { return qualityFeedbackSection; }
     public void setQualityFeedbackSection(String s) { this.qualityFeedbackSection = s; }
+    public String getCharacterVoiceSection() { return characterVoiceSection; }
+    public void setCharacterVoiceSection(String s) { this.characterVoiceSection = s; }
+    public String getKnowledgeQuoteSection() { return knowledgeQuoteSection; }
+    public void setKnowledgeQuoteSection(String s) { this.knowledgeQuoteSection = s; }
 }

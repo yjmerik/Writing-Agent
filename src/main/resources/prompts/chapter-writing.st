@@ -40,3 +40,11 @@
 {{#if styleGuide}}
 风格约束：{{styleGuide}}
 {{/if}}
+
+{{#if characterVoices}}
+{{characterVoices}}
+{{/if}}
+
+{{#if knowledgeQuotes}}
+{{knowledgeQuotes}}
+{{/if}}

@@ -61,11 +61,17 @@ public class ContextAssembler {
         ChapterSynopsis fullSynopsis = findFullSynopsis(projectId, chapterIndex);
         ctx.setTaskSection(buildTaskSection(chapterTitle, chapterSynopsis, writingNotes, fullSynopsis));
 
-        // 图数据库：实体一致性注入
+        // 实体一致性注入
         ctx.setEntityConsistencySection(buildEntityConsistencySection(projectId, chapterIndex));
 
-        // 图数据库：量化写作约束
-        ctx.setWritingConstraints(buildWritingConstraints(fullSynopsis));
+        // 写作偏好：对话约束（含密度目标）+ 原有的量化约束
+        ctx.setWritingConstraints(buildWritingConstraints(projectId, fullSynopsis));
+
+        // 角色声音注入（说话风格 + 知识领域）
+        ctx.setCharacterVoiceSection(buildCharacterVoiceSection(projectId));
+
+        // 引用素材注入（与角色知识领域匹配的世界观条目）
+        ctx.setKnowledgeQuoteSection(buildKnowledgeQuoteSection(projectId));
 
         // 质量反馈闭环：上卷评价注入
         ctx.setQualityFeedbackSection(buildQualityFeedbackSection(projectId));
@@ -315,17 +321,34 @@ public class ContextAssembler {
         return entityGraphService.recallConsistencySection(projectId, chapterIndex);
     }
 
-    // --- 量化写作约束 ---
+    // --- 量化写作约束（含对话密度） ---
 
-    private String buildWritingConstraints(ChapterSynopsis synopsis) {
+    private String buildWritingConstraints(String projectId, ChapterSynopsis synopsis) {
         StringBuilder sb = new StringBuilder();
         sb.append("【本章刚性约束（逐条检查，遗漏即违规）】\n");
 
+        // 0. 对话约束（从 WritingPreferences 读取密度目标）
+        var prefs = repository.findWritingPreferences(projectId);
+        double density = prefs.map(p -> p.getDialogueDensity()).orElse(0.35);
+        boolean enforceDialogue = prefs.map(p -> p.isEnableDialogueEnforcement()).orElse(true);
+        if (enforceDialogue) {
+            int pct = (int)(density * 100);
+            sb.append("□ 本章对话占比不得低于 ").append(pct)
+              .append("%（以引号\"标注的对话内容计算），对话必须推动情节或展现角色性格\n")
+              .append("□ 每个出场角色至少说 2 句话，且符合其说话风格\n")
+              .append("□ 禁止连续 3 段纯叙述无对话\n");
+        }
+
         // 1. 爽点约束
-        sb.append("□ 必须包含至少 2 个爽点（信息差/反预期/智斗/情感反转/规则利用，类型须与前章轮换）\n");
+        boolean rotateClimax = prefs.map(p -> p.isEnableClimaxRotation()).orElse(true);
+        sb.append("□ 必须包含至少 2 个爽点");
+        if (rotateClimax) {
+            sb.append("（类型须与前章轮换）");
+        }
+        sb.append("\n");
 
         // 2. 世界观约束
-        sb.append("□ 必须使用至少 1 个世界观独特设定（星辰淬体/星痕共振/星祭节等）\n");
+        sb.append("□ 必须使用至少 1 个世界观独特设定\n");
 
         // 3. 节拍覆盖
         if (synopsis != null && synopsis.getBeats() != null && !synopsis.getBeats().isBlank()) {
@@ -337,6 +360,64 @@ public class ContextAssembler {
         // 4. 悬念结尾
         sb.append("□ 章节结尾必须是一个悬念钩子，不能是场景自然结束\n");
 
+        return sb.toString();
+    }
+
+    // --- 角色声音注入 ---
+
+    private String buildCharacterVoiceSection(String projectId) {
+        var prefs = repository.findWritingPreferences(projectId);
+        if (prefs.isEmpty() || !prefs.get().isEnableCharacterVoice()) return "";
+
+        var chars = knowledgeBase.findAllCharacters(projectId);
+        var withVoice = chars.stream()
+                .filter(c -> c.getSpeakingStyle() != null && !c.getSpeakingStyle().isBlank())
+                .toList();
+        if (withVoice.isEmpty()) return "";
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("【角色说话风格要求（以下角色有明确说话风格，写作时必须严格遵守）】\n");
+        for (var c : withVoice) {
+            sb.append("■ ").append(c.getName()).append("：").append(c.getSpeakingStyle()).append("\n");
+        }
+        return sb.toString();
+    }
+
+    // --- 引用素材注入 ---
+
+    private String buildKnowledgeQuoteSection(String projectId) {
+        var prefs = repository.findWritingPreferences(projectId);
+        if (prefs.isEmpty() || !prefs.get().isEnableKnowledgeQuotes()) return "";
+
+        // 找有知识领域的角色
+        var chars = knowledgeBase.findAllCharacters(projectId);
+        var withKnowledge = chars.stream()
+                .filter(c -> c.getKnowledgeDomains() != null && !c.getKnowledgeDomains().isBlank())
+                .toList();
+        if (withKnowledge.isEmpty()) return "";
+
+        // 从 KnowledgeEntry 中匹配关键词
+        var entries = repository.findKnowledgeEntriesByProject(projectId);
+        if (entries.isEmpty()) return "";
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("【可用引用素材（角色可自然引用以下内容展现学识）】\n");
+        for (var c : withKnowledge) {
+            String domains = c.getKnowledgeDomains();
+            // 找到匹配的知识条目
+            var matched = entries.stream()
+                    .filter(e -> domains.contains(e.getType()) || domains.contains(e.getName())
+                            || e.getName().contains(c.getName().substring(0, Math.min(2, c.getName().length()))))
+                    .limit(3)
+                    .toList();
+            if (!matched.isEmpty()) {
+                sb.append("角色「").append(c.getName()).append("」精通").append(domains).append("，可引用：\n");
+                for (var e : matched) {
+                    String quote = e.getContent().length() > 60 ? e.getContent().substring(0, 60) + "..." : e.getContent();
+                    sb.append("■ ").append(e.getName()).append("：").append(quote).append("\n");
+                }
+            }
+        }
         return sb.toString();
     }
 

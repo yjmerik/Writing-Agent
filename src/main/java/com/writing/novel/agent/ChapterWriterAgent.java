@@ -52,7 +52,9 @@ public class ChapterWriterAgent {
         String dynamicStyleGuide = extractStyleGuide(projectId);
         String chapterWritingPrompt = promptService.render("chapter-writing", Map.of(
                 "styleGuide", dynamicStyleGuide,
-                "writingConstraints", ctx.getWritingConstraints() != null ? ctx.getWritingConstraints() : ""));
+                "writingConstraints", ctx.getWritingConstraints() != null ? ctx.getWritingConstraints() : "",
+                "characterVoices", ctx.getCharacterVoiceSection() != null ? ctx.getCharacterVoiceSection() : "",
+                "knowledgeQuotes", ctx.getKnowledgeQuoteSection() != null ? ctx.getKnowledgeQuoteSection() : ""));
         String systemPrompt = ctx.toSystemPrompt() + "\n\n" + chapterWritingPrompt;
 
         var req = LlmRequest.builder()

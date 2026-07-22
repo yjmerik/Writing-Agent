@@ -41,7 +41,7 @@ public class PlotterAgent {
                 .systemPrompt(systemPrompt)
                 .userMessage(userMessage)
                 .temperature(0.8)
-                .maxTokens(8000)
+                .maxTokens(12000)
                 .build();
 
         var resp = gateway.complete(req);

@@ -77,7 +77,15 @@ public class SqliteSchemaInitializer {
         "CREATE TABLE IF NOT EXISTS evaluation_records (" +
             "id TEXT PRIMARY KEY, project_id TEXT, volume_index INTEGER, " +
             "scores_json TEXT, overall_score INTEGER, summary TEXT, " +
-            "improvement_notes TEXT, created_at TEXT)"
+            "improvement_notes TEXT, created_at TEXT)",
+
+        // 写作偏好表（作者可控制的写作参数）
+        "CREATE TABLE IF NOT EXISTS writing_preferences (" +
+            "project_id TEXT PRIMARY KEY, " +
+            "dialogue_density REAL DEFAULT 0.35, enable_dialogue_enforcement INTEGER DEFAULT 1, " +
+            "enable_climax_rotation INTEGER DEFAULT 1, enable_character_voice INTEGER DEFAULT 1, " +
+            "enable_knowledge_quotes INTEGER DEFAULT 1, preferred_quote_sources TEXT DEFAULT '[]', " +
+            "prevent_transition_overlap INTEGER DEFAULT 1, updated_at TEXT)"
     };
 
     private final ConnectionProvider cp;

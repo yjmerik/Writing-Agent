@@ -13,6 +13,7 @@ import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.StyleProfile;
 import com.writing.novel.domain.Summary;
+import com.writing.novel.domain.WritingPreferences;
 
 import java.util.List;
 import java.util.Optional;
@@ -90,4 +91,8 @@ public interface NovelRepository {
     // --- EvaluationRecord ---
     void saveEvaluationRecord(EvaluationRecord record);
     Optional<EvaluationRecord> findLatestEvaluation(String projectId);
+
+    // --- WritingPreferences ---
+    void saveWritingPreferences(WritingPreferences prefs);
+    Optional<WritingPreferences> findWritingPreferences(String projectId);
 }

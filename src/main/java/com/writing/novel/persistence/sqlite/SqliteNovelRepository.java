@@ -2,6 +2,7 @@ package com.writing.novel.persistence.sqlite;
 
 import com.writing.novel.domain.*;
 import com.writing.novel.domain.Character;  // 显式导入，避免与 java.lang.Character 歧义
+import com.writing.novel.domain.WritingPreferences;
 import com.writing.novel.spi.NovelRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -692,6 +693,48 @@ public class SqliteNovelRepository implements NovelRepository {
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
+    // --- WritingPreferences ---
+
+    @Override
+    public void saveWritingPreferences(WritingPreferences p) {
+        String sql = "INSERT INTO writing_preferences (project_id,dialogue_density,enable_dialogue_enforcement," +
+                "enable_climax_rotation,enable_character_voice,enable_knowledge_quotes," +
+                "preferred_quote_sources,prevent_transition_overlap,updated_at) " +
+                "VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET " +
+                "dialogue_density=excluded.dialogue_density, " +
+                "enable_dialogue_enforcement=excluded.enable_dialogue_enforcement, " +
+                "enable_climax_rotation=excluded.enable_climax_rotation, " +
+                "enable_character_voice=excluded.enable_character_voice, " +
+                "enable_knowledge_quotes=excluded.enable_knowledge_quotes, " +
+                "preferred_quote_sources=excluded.preferred_quote_sources, " +
+                "prevent_transition_overlap=excluded.prevent_transition_overlap, " +
+                "updated_at=excluded.updated_at";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, p.getProjectId());
+            ps.setDouble(2, p.getDialogueDensity());
+            ps.setInt(3, p.isEnableDialogueEnforcement() ? 1 : 0);
+            ps.setInt(4, p.isEnableClimaxRotation() ? 1 : 0);
+            ps.setInt(5, p.isEnableCharacterVoice() ? 1 : 0);
+            ps.setInt(6, p.isEnableKnowledgeQuotes() ? 1 : 0);
+            ps.setString(7, p.getPreferredQuoteSources());
+            ps.setInt(8, p.isPreventTransitionOverlap() ? 1 : 0);
+            ps.setString(9, p.getUpdatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException ex) { throw new RuntimeException(ex); }
+    }
+
+    @Override
+    public Optional<WritingPreferences> findWritingPreferences(String projectId) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM writing_preferences WHERE project_id=?")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? Optional.of(mapWritingPreferences(rs)) : Optional.empty();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
     // --- 新的映射辅助 ---
 
     private Entity mapEntity(ResultSet rs) throws SQLException {
@@ -723,6 +766,19 @@ public class SqliteNovelRepository implements NovelRepository {
         return new EvaluationRecord(rs.getString("project_id"), rs.getInt("volume_index"),
                 scores, rs.getInt("overall_score"),
                 rs.getString("summary"), rs.getString("improvement_notes"));
+    }
+
+    private WritingPreferences mapWritingPreferences(ResultSet rs) throws SQLException {
+        WritingPreferences p = new WritingPreferences(rs.getString("project_id"));
+        p.setDialogueDensity(rs.getDouble("dialogue_density"));
+        p.setEnableDialogueEnforcement(rs.getInt("enable_dialogue_enforcement") == 1);
+        p.setEnableClimaxRotation(rs.getInt("enable_climax_rotation") == 1);
+        p.setEnableCharacterVoice(rs.getInt("enable_character_voice") == 1);
+        p.setEnableKnowledgeQuotes(rs.getInt("enable_knowledge_quotes") == 1);
+        String qs = rs.getString("preferred_quote_sources");
+        p.setPreferredQuoteSources(qs != null ? qs : "[]");
+        p.setPreventTransitionOverlap(rs.getInt("prevent_transition_overlap") == 1);
+        return p;
     }
     private KnowledgeEntry mapEntry(ResultSet rs) throws SQLException {
         KnowledgeEntry e = new KnowledgeEntry(rs.getString("project_id"),

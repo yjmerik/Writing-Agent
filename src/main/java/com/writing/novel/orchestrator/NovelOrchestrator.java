@@ -103,7 +103,7 @@ public class NovelOrchestrator {
                     + "主题：" + p.getConcept()
                     + (worldSummary.isEmpty() ? "" : "\n世界观设定：\n" + worldSummary)
                     + (charSummary.isEmpty() ? "" : "\n已有人物：\n" + charSummary);
-            plotter.plan(projectId, p.getConcept(), theme, 10);
+            plotter.plan(projectId, p.getConcept(), theme, 24);
         }
 
         // 伏笔抽取：从大纲文本中提取伏笔条目（p3-03）

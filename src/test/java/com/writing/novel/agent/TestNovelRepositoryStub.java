@@ -14,6 +14,7 @@ import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.StyleProfile;
 import com.writing.novel.domain.Summary;
+import com.writing.novel.domain.WritingPreferences;
 
 import java.util.List;
 import java.util.Optional;
@@ -72,4 +73,8 @@ public class TestNovelRepositoryStub implements NovelRepository {
     // --- EvaluationRecord ---
     @Override public void saveEvaluationRecord(EvaluationRecord r) {}
     @Override public Optional<EvaluationRecord> findLatestEvaluation(String p) { return Optional.empty(); }
+
+    // --- WritingPreferences ---
+    @Override public void saveWritingPreferences(WritingPreferences p) {}
+    @Override public Optional<WritingPreferences> findWritingPreferences(String p) { return Optional.empty(); }
 }

@@ -1,0 +1,99 @@
+package com.writing.novel.domain;
+
+import java.time.Instant;
+import java.util.UUID;
+
+/**
+ * 写作偏好——作者可控制的写作参数。
+ * 通过 WritingPreferencesAgent 自然语言交互修改，也可直接 REST API 调整。
+ * 每项目一份，在项目创建时初始化默认值。
+ */
+public class WritingPreferences {
+    private final String id;
+    private final String projectId;
+
+    // 对话控制
+    private double dialogueDensity;               // 0.0-1.0，目标对话占比，默认 0.35
+    private boolean enableDialogueEnforcement;     // 默认 true
+
+    // 爽点控制
+    private boolean enableClimaxRotation;          // 默认 true
+
+    // 角色声音
+    private boolean enableCharacterVoice;          // 默认 true
+
+    // 引用素材
+    private boolean enableKnowledgeQuotes;         // 默认 true
+    private String preferredQuoteSources;          // JSON 数组 ["兵法","古籍","诗词"]
+
+    // 过渡控制
+    private boolean preventTransitionOverlap;      // 默认 true
+
+    private Instant updatedAt;
+
+    public WritingPreferences(String projectId) {
+        this.id = UUID.randomUUID().toString();
+        this.projectId = projectId;
+        this.dialogueDensity = 0.35;
+        this.enableDialogueEnforcement = true;
+        this.enableClimaxRotation = true;
+        this.enableCharacterVoice = true;
+        this.enableKnowledgeQuotes = true;
+        this.preferredQuoteSources = "[]";
+        this.preventTransitionOverlap = true;
+        this.updatedAt = Instant.now();
+    }
+
+    /** 批量更新（从 WritingPreferencesAgent JSON 解析后调用） */
+    public void applyUpdates(java.util.Map<String, Object> updates) {
+        updates.forEach((key, value) -> {
+            switch (key) {
+                case "dialogueDensity" -> this.dialogueDensity = ((Number) value).doubleValue();
+                case "enableDialogueEnforcement" -> this.enableDialogueEnforcement = (Boolean) value;
+                case "enableClimaxRotation" -> this.enableClimaxRotation = (Boolean) value;
+                case "enableCharacterVoice" -> this.enableCharacterVoice = (Boolean) value;
+                case "enableKnowledgeQuotes" -> this.enableKnowledgeQuotes = (Boolean) value;
+                case "preferredQuoteSources" -> {
+                    if (value instanceof java.util.List) {
+                        this.preferredQuoteSources = new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(value).toString();
+                    }
+                }
+                case "preventTransitionOverlap" -> this.preventTransitionOverlap = (Boolean) value;
+            }
+        });
+        this.updatedAt = Instant.now();
+    }
+
+    /** 转换为 Map（用于 Agent prompt 渲染） */
+    public java.util.Map<String, Object> toMap() {
+        java.util.Map<String, Object> m = new java.util.HashMap<>();
+        m.put("dialogueDensity", dialogueDensity);
+        m.put("enableDialogueEnforcement", enableDialogueEnforcement);
+        m.put("enableClimaxRotation", enableClimaxRotation);
+        m.put("enableCharacterVoice", enableCharacterVoice);
+        m.put("enableKnowledgeQuotes", enableKnowledgeQuotes);
+        m.put("preferredQuoteSources", preferredQuoteSources);
+        m.put("preventTransitionOverlap", preventTransitionOverlap);
+        return m;
+    }
+
+    // Getters / Setters
+
+    public String getId() { return id; }
+    public String getProjectId() { return projectId; }
+    public double getDialogueDensity() { return dialogueDensity; }
+    public void setDialogueDensity(double d) { this.dialogueDensity = d; this.updatedAt = Instant.now(); }
+    public boolean isEnableDialogueEnforcement() { return enableDialogueEnforcement; }
+    public void setEnableDialogueEnforcement(boolean b) { this.enableDialogueEnforcement = b; this.updatedAt = Instant.now(); }
+    public boolean isEnableClimaxRotation() { return enableClimaxRotation; }
+    public void setEnableClimaxRotation(boolean b) { this.enableClimaxRotation = b; this.updatedAt = Instant.now(); }
+    public boolean isEnableCharacterVoice() { return enableCharacterVoice; }
+    public void setEnableCharacterVoice(boolean b) { this.enableCharacterVoice = b; this.updatedAt = Instant.now(); }
+    public boolean isEnableKnowledgeQuotes() { return enableKnowledgeQuotes; }
+    public void setEnableKnowledgeQuotes(boolean b) { this.enableKnowledgeQuotes = b; this.updatedAt = Instant.now(); }
+    public String getPreferredQuoteSources() { return preferredQuoteSources; }
+    public void setPreferredQuoteSources(String s) { this.preferredQuoteSources = s; this.updatedAt = Instant.now(); }
+    public boolean isPreventTransitionOverlap() { return preventTransitionOverlap; }
+    public void setPreventTransitionOverlap(boolean b) { this.preventTransitionOverlap = b; this.updatedAt = Instant.now(); }
+    public Instant getUpdatedAt() { return updatedAt; }
+}

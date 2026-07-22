@@ -73,4 +73,10 @@ public class AgentConfig {
     public EntityGraphService entityGraphService(NovelRepository repo, EntityExtractorAgent extractor) {
         return new EntityGraphService(repo, extractor);
     }
+
+    @Bean
+    public WritingPreferencesAgent writingPreferencesAgent(LlmGateway gateway, NovelRepository repo,
+                                                            PromptTemplateService promptService) {
+        return new WritingPreferencesAgent(gateway, repo, promptService);
+    }
 }

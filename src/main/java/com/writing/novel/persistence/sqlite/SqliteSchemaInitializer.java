@@ -23,7 +23,9 @@ public class SqliteSchemaInitializer {
         "CREATE TABLE IF NOT EXISTS characters (" +
             "id TEXT PRIMARY KEY, project_id TEXT, name TEXT, role TEXT, " +
             "personality TEXT, ability TEXT, motivation TEXT, appearance TEXT, " +
-            "relationships TEXT, growth_arc TEXT, version INTEGER, updated_at TEXT)",
+            "relationships TEXT, growth_arc TEXT, " +
+            "speaking_style TEXT, knowledge_domains TEXT, " +
+            "version INTEGER, updated_at TEXT)",
 
         "CREATE TABLE IF NOT EXISTS outlines (" +
             "project_id TEXT PRIMARY KEY, premise TEXT)",

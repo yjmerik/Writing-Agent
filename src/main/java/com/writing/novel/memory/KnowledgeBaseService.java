@@ -42,11 +42,12 @@ public class KnowledgeBaseService {
 
     public void saveCharacter(Character character) {
         repository.saveCharacter(character);
-        // 完整索引全部 8 字段，提升召回率（之前只索引了 4 字段）
+        // 完整索引全部字段，提升召回率
         String indexText = character.getName() + "（" + character.getRole() + "）"
                 + nullSafe(character.getPersonality()) + nullSafe(character.getAbility())
                 + nullSafe(character.getMotivation()) + nullSafe(character.getAppearance())
-                + nullSafe(character.getRelationships()) + nullSafe(character.getGrowthArc());
+                + nullSafe(character.getRelationships()) + nullSafe(character.getGrowthArc())
+                + nullSafe(character.getSpeakingStyle()) + nullSafe(character.getKnowledgeDomains());
         vectorRetrieval.index(new IndexedText(
                 character.getId(), character.getProjectId(), indexText, "CHARACTER"));
     }

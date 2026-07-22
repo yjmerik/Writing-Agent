@@ -55,6 +55,8 @@ public class WritingContext {
                 if (c.getAppearance() != null) sb.append("  外貌：").append(c.getAppearance()).append("\n");
                 if (c.getRelationships() != null) sb.append("  人物关系：").append(c.getRelationships()).append("\n");
                 if (c.getGrowthArc() != null) sb.append("  成长弧：").append(c.getGrowthArc()).append("\n");
+                if (c.getSpeakingStyle() != null) sb.append("  说话风格：").append(c.getSpeakingStyle()).append("\n");
+                if (c.getKnowledgeDomains() != null) sb.append("  知识领域：").append(c.getKnowledgeDomains()).append("\n");
             }
             sb.append("\n");
         }

@@ -15,6 +15,8 @@ public class Character {
     private String appearance;    // 外貌
     private String relationships; // 人物关系（自然语言或结构化）
     private String growthArc;     // 成长弧
+    private String speakingStyle;  // 说话风格："引经据典，善用兵法典故，语气沉稳"
+    private String knowledgeDomains; // 知识领域 JSON：["兵法","古籍","阵法","星象"]
     private int version;
     private Instant updatedAt;
 
@@ -45,6 +47,10 @@ public class Character {
     public void setRelationships(String r) { this.relationships = r; bumpVersion(); }
     public String getGrowthArc() { return growthArc; }
     public void setGrowthArc(String g) { this.growthArc = g; bumpVersion(); }
+    public String getSpeakingStyle() { return speakingStyle; }
+    public void setSpeakingStyle(String s) { this.speakingStyle = s; bumpVersion(); }
+    public String getKnowledgeDomains() { return knowledgeDomains; }
+    public void setKnowledgeDomains(String k) { this.knowledgeDomains = k; bumpVersion(); }
     public int getVersion() { return version; }
     public Instant getUpdatedAt() { return updatedAt; }
 

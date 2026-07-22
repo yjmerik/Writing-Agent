@@ -63,6 +63,8 @@ public class CharacterDesignerAgent {
         c.setAppearance(extractFieldOrNull(text, "外貌"));
         c.setRelationships(extractFieldOrNull(text, "人物关系"));
         c.setGrowthArc(extractFieldOrNull(text, "成长弧"));
+        c.setSpeakingStyle(extractFieldOrNull(text, "说话风格"));
+        c.setKnowledgeDomains(extractFieldOrNull(text, "知识领域"));
         return c;
     }
 

@@ -24,11 +24,12 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public String saveProject(Project p) {
-        String sql = "INSERT INTO projects (id,title,concept,tags,mode,state,current_chapter_index,created_at,updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?) " +
+        String sql = "INSERT INTO projects (id,title,concept,tags,mode,state,current_chapter_index,genre,created_at,updated_at) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?) " +
                 "ON CONFLICT(id) DO UPDATE SET title=excluded.title, concept=excluded.concept, " +
                 "tags=excluded.tags, mode=excluded.mode, state=excluded.state, " +
-                "current_chapter_index=excluded.current_chapter_index, updated_at=excluded.updated_at";
+                "current_chapter_index=excluded.current_chapter_index, genre=excluded.genre, " +
+                "updated_at=excluded.updated_at";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, p.getId());
@@ -38,8 +39,9 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setString(5, p.getMode().name());
             ps.setString(6, p.getState().name());
             ps.setInt(7, p.getCurrentChapterIndex());
-            ps.setString(8, p.getCreatedAt().toString());
-            ps.setString(9, p.getUpdatedAt().toString());
+            ps.setString(8, p.getGenre() != null ? p.getGenre().name() : null);
+            ps.setString(9, p.getCreatedAt().toString());
+            ps.setString(10, p.getUpdatedAt().toString());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -61,6 +63,12 @@ public class SqliteNovelRepository implements NovelRepository {
             p.setMode(ProjectMode.valueOf(rs.getString("mode")));
             p.setState(NovelState.valueOf(rs.getString("state")));
             p.setCurrentChapterIndex(rs.getInt("current_chapter_index"));
+            try {
+                String genreStr = rs.getString("genre");
+                if (genreStr != null && !genreStr.isBlank()) {
+                    p.setGenre(GenreProfile.valueOf(genreStr));
+                }
+            } catch (Exception ignored) {}
             return Optional.of(p);
         } catch (Exception e) {
             throw new RuntimeException(e);

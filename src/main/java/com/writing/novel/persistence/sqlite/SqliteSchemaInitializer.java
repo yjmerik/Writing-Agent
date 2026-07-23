@@ -14,7 +14,7 @@ public class SqliteSchemaInitializer {
         "CREATE TABLE IF NOT EXISTS projects (" +
             "id TEXT PRIMARY KEY, title TEXT, concept TEXT, tags TEXT, " +
             "mode TEXT, state TEXT, current_chapter_index INTEGER, " +
-            "created_at TEXT, updated_at TEXT)",
+            "genre TEXT, created_at TEXT, updated_at TEXT)",
 
         "CREATE TABLE IF NOT EXISTS knowledge_entries (" +
             "id TEXT PRIMARY KEY, project_id TEXT, type TEXT, name TEXT, " +

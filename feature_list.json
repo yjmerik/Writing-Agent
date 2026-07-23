@@ -461,8 +461,8 @@
       "description": "从 Project.tags 推断题材(CULTIVATION/MYSTERY/ROMANCE/THRILLER/HISTORICAL/GENERAL)；Project 新增 genre 字段；GenreDetector 服务",
       "phase": 5,
       "dependencies": [],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "86 tests pass; GenreDetector + Project.genre",
       "files": [
         "domain/Project.java",
         "domain/GenreProfile.java",

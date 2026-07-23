@@ -6,6 +6,7 @@ import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.SummaryService;
 import com.writing.novel.service.ClimaxDiversityTracker;
 import com.writing.novel.service.EntityGraphService;
+import com.writing.novel.service.GenreDetector;
 import com.writing.novel.service.PlotProgressionDetector;
 import com.writing.novel.spi.NovelRepository;
 import org.slf4j.Logger;
@@ -38,6 +39,7 @@ public class NovelOrchestrator {
     private final PlotProgressionDetector plotProgressionDetector;
     private final ArcUpdater arcUpdater;
     private final ForeshadowingExtractor foreshadowingExtractor;
+    private final GenreDetector genreDetector;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -56,7 +58,8 @@ public class NovelOrchestrator {
                               ClimaxDiversityTracker climaxDiversityTracker,
                               PlotProgressionDetector plotProgressionDetector,
                               ArcUpdater arcUpdater,
-                              ForeshadowingExtractor foreshadowingExtractor) {
+                              ForeshadowingExtractor foreshadowingExtractor,
+                              GenreDetector genreDetector) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -75,6 +78,7 @@ public class NovelOrchestrator {
         this.plotProgressionDetector = plotProgressionDetector;
         this.arcUpdater = arcUpdater;
         this.foreshadowingExtractor = foreshadowingExtractor;
+        this.genreDetector = genreDetector;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -82,6 +86,14 @@ public class NovelOrchestrator {
         Project p = loadProject(projectId);
         if (p.getState() != NovelState.CONCEIVING && p.getState() != NovelState.PAUSED_AT_CHECKPOINT) {
             throw new IllegalStateException("项目不在构思阶段: " + p.getState());
+        }
+
+        // p5-d1: 题材推断（幂等：已有则跳过）
+        if (p.getGenre() == null && genreDetector != null) {
+            var genre = genreDetector.detect(p.getTags(), p.getConcept());
+            p.setGenre(genre);
+            repository.saveProject(p);
+            log.info("题材推断: {} → {}", p.getTags(), genre.getChineseName());
         }
 
         worldBuilder.build(projectId, p.getConcept(), p.getTags());

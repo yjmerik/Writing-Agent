@@ -109,4 +109,9 @@ public class AgentConfig {
                                                            PromptTemplateService promptService) {
         return new ForeshadowingExtractor(gateway, repo, promptService);
     }
+
+    @Bean
+    public com.writing.novel.service.GenreDetector genreDetector() {
+        return new com.writing.novel.service.GenreDetector();
+    }
 }

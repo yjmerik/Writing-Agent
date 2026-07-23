@@ -275,22 +275,25 @@ public class NovelOrchestrator {
         // p3-04: 卷末触发质量评价（反馈闭环）
         try {
             var report = qualityEvaluationAgent.evaluate(projectId);
-            // 持久化评价记录（供下一卷 ContextAssembler 读取）
+            // 持久化评价记录（供下一卷 ContextAssembler 读取），包含全部 7 个维度
+            var scoresMap = new java.util.HashMap<String, Integer>();
+            scoresMap.put("consistency", report.consistency);
+            scoresMap.put("style", report.style);
+            scoresMap.put("plot", report.plot);
+            scoresMap.put("characters", report.characters);
+            scoresMap.put("worldbuilding", report.worldbuilding);
+            scoresMap.put("dialogue", report.dialogue);
+            scoresMap.put("pattern_diversity", report.patternDiversity);
             var record = new EvaluationRecord(projectId, volume.getVolumeIndex(),
-                    java.util.Map.of(
-                            "consistency", report.consistency,
-                            "style", report.style,
-                            "plot", report.plot,
-                            "characters", report.characters,
-                            "worldbuilding", report.worldbuilding),
+                    scoresMap,
                     report.overallScore, report.summary,
                     buildImprovementNotes(report));
             repository.saveEvaluationRecord(record);
             if (report.overallScore < 6) {
-                // 低分记录为 issue 供后续优化参考
+                // 低分记录为 PLOT 类型 issue（之前误用 WORLDBUILDING）
                 repository.saveContinuityIssue(new ContinuityIssue(
                         projectId, toChapter,
-                        ContinuityIssue.Type.WORLDBUILDING,
+                        ContinuityIssue.Type.PLOT,
                         ContinuityIssue.Severity.MEDIUM,
                         "卷" + volume.getVolumeIndex() + "质量评分" + report.overallScore
                                 + "/10：" + report.summary));

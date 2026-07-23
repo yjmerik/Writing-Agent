@@ -318,8 +318,8 @@
       "dependencies": [
         "p5-a3"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "86 tests pass; plot score now saves all 7 dims + Type.PLOT fix",
       "files": [
         "orchestrator/NovelOrchestrator.java",
         "agent/PlotterAgent.java"

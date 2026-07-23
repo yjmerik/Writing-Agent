@@ -181,6 +181,13 @@ public class EntityGraphService {
             case USES -> "使用";
             case ALLY -> "盟友";
             case ENEMY -> "敌对";
+            case LOVE -> "恋人";
+            case RIVAL -> "竞争";
+            case MENTOR -> "师徒";
+            case BETRAYS -> "背叛";
+            case SUSPECTS -> "怀疑";
+            case PROTECTS -> "守护";
+            case SERVES -> "效力";
             case CONTAINS -> "包含";
             case PRODUCES -> "生产";
             case KNOWS -> "认识";

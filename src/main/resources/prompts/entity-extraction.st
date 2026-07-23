@@ -16,7 +16,10 @@
 1. 只提取本章正文中实际【指名道姓】出现的实体，不要编造
 2. 已有实体使用其规范名，已在已有清单中的【不要重复创建】
 3. 别名：正文中使用的非规范名（如"苏兄"代"苏尘"）记录为 aliases
-4. 关系：只提取明确的关系（A的B→A OWNS B；A在B→A LOCATED_IN B；A/B敌对→ENEMY）
+4. 关系：只提取明确的关系，类型包括：
+   OWNS(拥有)/LOCATED_IN(位于)/MEMBER_OF(隶属)/CREATES(创造)/USES(使用)/
+   ALLY(盟友)/ENEMY(敌对)/LOVE(恋人)/RIVAL(竞争)/MENTOR(师徒)/
+   BETRAYS(背叛)/SUSPECTS(怀疑)/PROTECTS(守护)/SERVES(效力)/KNOWS(认识)/RELATED_TO(关联)
 5. 每条关系必须有原文依据
 
 章节正文：

@@ -383,8 +383,8 @@
       "dependencies": [
         "p5-b1"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "86 tests pass; +7 relationship types + symmetric dedup",
       "files": [
         "domain/RelationshipType.java",
         "agent/EntityExtractorAgent.java"

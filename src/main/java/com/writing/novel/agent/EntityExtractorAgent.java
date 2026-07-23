@@ -142,24 +142,41 @@ public class EntityExtractorAgent {
                     String targetId = findEntityIdByName(allEntities, targetName);
 
                     if (sourceId != null && targetId != null && !sourceId.equals(targetId)) {
-                        // 检查已存在的边（含时间作用域处理）
-                        List<EntityEdge> existingEdges = repository.findEdgesBySource(sourceId);
-                        // 当前仍然有效的同类型边（重复，跳过）
-                        boolean sameCurrentExists = existingEdges.stream()
-                                .anyMatch(e -> e.getTargetId().equals(targetId)
-                                        && e.getRelationship() == finalRel
-                                        && e.isCurrent());
+                        // 检查已存在的边（含时间作用域 + 对称关系处理）
+                        List<EntityEdge> existingFromSource = repository.findEdgesBySource(sourceId);
+                        List<EntityEdge> existingFromTarget = repository.findEdgesBySource(targetId);
+
+                        // 对称关系（ALLY/ENEMY/LOVE/RIVAL/KNOWS）双向检查
+                        boolean sameCurrentExists;
+                        if (finalRel.isSymmetric()) {
+                            sameCurrentExists = existingFromSource.stream()
+                                    .anyMatch(e -> e.getTargetId().equals(targetId)
+                                            && e.getRelationship() == finalRel && e.isCurrent())
+                                    || existingFromTarget.stream()
+                                    .anyMatch(e -> e.getTargetId().equals(sourceId)
+                                            && e.getRelationship() == finalRel && e.isCurrent());
+                        } else {
+                            sameCurrentExists = existingFromSource.stream()
+                                    .anyMatch(e -> e.getTargetId().equals(targetId)
+                                            && e.getRelationship() == finalRel && e.isCurrent());
+                        }
                         if (sameCurrentExists) continue;
 
-                        // 关系转变：旧的不同类型边失效（如 ALLY→ENEMY）
-                        existingEdges.stream()
-                                .filter(e -> e.getTargetId().equals(targetId)
-                                        && e.getRelationship() != finalRel
-                                        && e.isCurrent())
-                                .forEach(e -> {
-                                    e.expire(chapterIndex);
-                                    repository.saveEntityEdge(e);
-                                });
+                        // 关系转变：旧的同类对称边失效（如 ALLY→ENEMY）
+                        if (finalRel.isSymmetric()) {
+                            existingFromSource.stream()
+                                    .filter(e -> e.getTargetId().equals(targetId)
+                                            && e.getRelationship() != finalRel
+                                            && e.getRelationship().isSymmetric()
+                                            && e.isCurrent())
+                                    .forEach(e -> { e.expire(chapterIndex); repository.saveEntityEdge(e); });
+                            existingFromTarget.stream()
+                                    .filter(e -> e.getTargetId().equals(sourceId)
+                                            && e.getRelationship() != finalRel
+                                            && e.getRelationship().isSymmetric()
+                                            && e.isCurrent())
+                                    .forEach(e -> { e.expire(chapterIndex); repository.saveEntityEdge(e); });
+                        }
 
                         // 创建新边（标记从本章开始生效）
                         EntityEdge edge = new EntityEdge(projectId, sourceId, targetId, finalRel);

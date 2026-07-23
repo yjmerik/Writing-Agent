@@ -6,6 +6,7 @@ import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.SummaryService;
 import com.writing.novel.service.ClimaxDiversityTracker;
 import com.writing.novel.service.EntityGraphService;
+import com.writing.novel.service.PlotProgressionDetector;
 import com.writing.novel.spi.NovelRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,7 @@ public class NovelOrchestrator {
     private final EntityGraphService entityGraphService;
     private final CharacterProfileUpgrader characterProfileUpgrader;
     private final ClimaxDiversityTracker climaxDiversityTracker;
+    private final PlotProgressionDetector plotProgressionDetector;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -49,7 +51,8 @@ public class NovelOrchestrator {
                               com.writing.novel.agent.QualityEvaluationAgent qualityEvaluationAgent,
                               EntityGraphService entityGraphService,
                               CharacterProfileUpgrader characterProfileUpgrader,
-                              ClimaxDiversityTracker climaxDiversityTracker) {
+                              ClimaxDiversityTracker climaxDiversityTracker,
+                              PlotProgressionDetector plotProgressionDetector) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -65,6 +68,7 @@ public class NovelOrchestrator {
         this.entityGraphService = entityGraphService;
         this.characterProfileUpgrader = characterProfileUpgrader;
         this.climaxDiversityTracker = climaxDiversityTracker;
+        this.plotProgressionDetector = plotProgressionDetector;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -201,6 +205,17 @@ public class NovelOrchestrator {
             }
         } catch (Exception e) {
             log.warn("爽点追踪失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+
+        // 剧情停滞检测：基于张力曲线，连续低张力触发警告
+        try {
+            plotProgressionDetector.detectStall(projectId, chapterIndex)
+                    .ifPresent(issue -> {
+                        repository.saveContinuityIssue(issue);
+                        log.warn("剧情停滞警告(章{}): {}", chapterIndex, issue.getDescription());
+                    });
+        } catch (Exception e) {
+            log.warn("停滞检测失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
         // 角色档案升级：每 5 章检测重复出现的配角并升级

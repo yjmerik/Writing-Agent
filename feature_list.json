@@ -301,8 +301,8 @@
       "dependencies": [
         "p5-a2"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "86 tests pass; PlotProgressionDetector detects stall/high-tension-fatigue",
       "files": [
         "agent/PlotProgressionDetector.java",
         "domain/ContinuityIssue.java",

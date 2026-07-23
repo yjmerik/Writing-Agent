@@ -8,6 +8,7 @@ import com.writing.novel.memory.SummaryService;
 import com.writing.novel.memory.VectorRetrievalService;
 import com.writing.novel.service.ClimaxDiversityTracker;
 import com.writing.novel.service.EntityGraphService;
+import com.writing.novel.service.PlotProgressionDetector;
 import com.writing.novel.spi.NovelRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -90,5 +91,10 @@ public class AgentConfig {
     @Bean
     public ClimaxDiversityTracker climaxDiversityTracker() {
         return new ClimaxDiversityTracker();
+    }
+
+    @Bean
+    public PlotProgressionDetector plotProgressionDetector(NovelRepository repo) {
+        return new PlotProgressionDetector(repo);
     }
 }

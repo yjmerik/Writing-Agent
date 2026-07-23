@@ -2,6 +2,7 @@ package com.writing.novel.memory;
 
 import com.writing.novel.domain.*;
 import com.writing.novel.domain.Character;
+import com.writing.novel.service.ClimaxDiversityTracker;
 import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.spi.NovelRepository;
 
@@ -24,17 +25,20 @@ public class ContextAssembler {
     private final SummaryService summaryService;
     private final VectorRetrievalService vectorRetrieval;
     private final EntityGraphService entityGraphService;
+    private final ClimaxDiversityTracker climaxDiversityTracker;
 
     public ContextAssembler(NovelRepository repository,
                             KnowledgeBaseService knowledgeBase,
                             SummaryService summaryService,
                             VectorRetrievalService vectorRetrieval,
-                            EntityGraphService entityGraphService) {
+                            EntityGraphService entityGraphService,
+                            ClimaxDiversityTracker climaxDiversityTracker) {
         this.repository = repository;
         this.knowledgeBase = knowledgeBase;
         this.summaryService = summaryService;
         this.vectorRetrieval = vectorRetrieval;
         this.entityGraphService = entityGraphService;
+        this.climaxDiversityTracker = climaxDiversityTracker;
     }
 
     public WritingContext assemble(String projectId, int chapterIndex,
@@ -369,6 +373,14 @@ public class ContextAssembler {
             sb.append("（类型须与前章轮换）");
         }
         sb.append("\n");
+
+        // 1b. 爽点轮换约束（来自 ClimaxDiversityTracker 实际历史）
+        if (rotateClimax) {
+            String rotation = climaxDiversityTracker.generateRotationConstraint();
+            if (rotation != null && !rotation.isBlank()) {
+                sb.append(rotation);
+            }
+        }
 
         // 2. 世界观约束
         sb.append("□ 必须使用至少 1 个世界观独特设定\n");

@@ -51,7 +51,7 @@ class NovelOrchestratorWritingTest {
                 return new com.writing.novel.agent.EntityExtractorAgent.ExtractionResult(0, 0, 0, null);
             }
         };
-        ContextAssembler assembler = new ContextAssembler(repo, kbSvc, summarySvc, vectorSvc, entityGraphSvc);
+        ContextAssembler assembler = new ContextAssembler(repo, kbSvc, summarySvc, vectorSvc, entityGraphSvc, new com.writing.novel.service.ClimaxDiversityTracker());
 
         LlmGateway gateway = new LlmGateway() {
             @Override

@@ -1,5 +1,6 @@
 package com.writing.novel.memory;
 
+import com.writing.novel.service.ClimaxDiversityTracker;
 import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.spi.EmbeddingProvider;
 import com.writing.novel.spi.NovelRepository;
@@ -36,8 +37,9 @@ public class MemoryConfig {
                                               KnowledgeBaseService knowledgeBase,
                                               SummaryService summaryService,
                                               VectorRetrievalService vectorRetrieval,
-                                              EntityGraphService entityGraphService) {
+                                              EntityGraphService entityGraphService,
+                                              ClimaxDiversityTracker climaxDiversityTracker) {
         return new ContextAssembler(repository, knowledgeBase, summaryService,
-                vectorRetrieval, entityGraphService);
+                vectorRetrieval, entityGraphService, climaxDiversityTracker);
     }
 }

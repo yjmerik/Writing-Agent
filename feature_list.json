@@ -266,8 +266,8 @@
       "description": "修复死代码：Orchestrator 每章写后调 climaxDiversityTracker.record()，ContextAssembler.buildWritingConstraints 调 generateRotationConstraint() 注入实际轮换约束（基于最近3章历史）",
       "phase": 5,
       "dependencies": [],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "86 tests pass; ClimaxDiversityTracker injected into ContextAssembler + called from Orchestrator",
       "files": [
         "orchestrator/NovelOrchestrator.java",
         "memory/ContextAssembler.java",

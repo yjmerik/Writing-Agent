@@ -193,6 +193,16 @@ public class NovelOrchestrator {
             log.warn("实体提取失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
+        // 爽点多样性追踪：从章节概要的 climax 字段推断爽点类型
+        try {
+            var climaxTypes = inferClimaxTypes(synopsis);
+            if (!climaxTypes.isEmpty()) {
+                climaxDiversityTracker.record(chapterIndex, climaxTypes);
+            }
+        } catch (Exception e) {
+            log.warn("爽点追踪失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+
         // 角色档案升级：每 5 章检测重复出现的配角并升级
         if (chapterIndex % 5 == 0) {
             try {
@@ -534,6 +544,19 @@ public class NovelOrchestrator {
         return outline.getVolumes().stream()
                 .flatMap(v -> v.getSynopses().stream())
                 .anyMatch(s -> s.getChapterIndex() > currentIndex);
+    }
+
+    /** 从 ChapterSynopsis.climax 文本推断爽点类型（关键词匹配） */
+    private List<ClimaxType> inferClimaxTypes(ChapterSynopsis synopsis) {
+        if (synopsis == null || synopsis.getClimax() == null) return List.of();
+        String text = synopsis.getClimax().toLowerCase();
+        List<ClimaxType> types = new java.util.ArrayList<>();
+        if (text.contains("信息差") || text.contains("主角知道") || text.contains("暗中")) types.add(ClimaxType.INFO_GAP);
+        if (text.contains("智斗") || text.contains("策略") || text.contains("计谋") || text.contains("反间")) types.add(ClimaxType.STRATEGIC);
+        if (text.contains("情感") || text.contains("反转") || text.contains("敌变友") || text.contains("友变敌") || text.contains("真相")) types.add(ClimaxType.EMOTIONAL_REVERSAL);
+        if (text.contains("规则") || text.contains("利用") || text.contains("漏洞") || text.contains("阵法")) types.add(ClimaxType.RULE_EXPLOIT);
+        if (text.contains("反预期") || text.contains("颠覆") || text.contains("意外")) types.add(ClimaxType.ANTI_EXPECTATION);
+        return types;
     }
 
     /** 从评分报告中提取低分维度的改进方向 */

@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": "全部 Phase 完成",
+  "current_phase": "Phase 5: 通用化架构优化（16 features）",
   "features": [
     {
       "id": "p1-01",
@@ -259,6 +259,264 @@
         "application.yml"
       ],
       "problem_ref": "P0: 核心写作任务仍使用 qwen3-4b-wuxia→产出 2/10"
+    },
+    {
+      "id": "p5-a1",
+      "name": "激活 ClimaxDiversityTracker + 爽点轮换约束",
+      "description": "修复死代码：Orchestrator 每章写后调 climaxDiversityTracker.record()，ContextAssembler.buildWritingConstraints 调 generateRotationConstraint() 注入实际轮换约束（基于最近3章历史）",
+      "phase": 5,
+      "dependencies": [],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "memory/ContextAssembler.java",
+        "service/ClimaxDiversityTracker.java"
+      ],
+      "problem_ref": "P1: ClimaxDiversityTracker 死代码，注入但从未调用"
+    },
+    {
+      "id": "p5-a2",
+      "name": "ChapterSynopsis 扩展 plotPurpose/tensionLevel/volumeArcPosition",
+      "description": "ChapterSynopsis 新增 plotPurpose(剧情线)、tensionLevel(1-10)、volumeArcPosition(SETUP/RISING/CLIMAX/RESOLUTION) 字段；PlotterAgent 解析时填充；SQLite schema 同步",
+      "phase": 5,
+      "dependencies": [
+        "p5-a1"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "domain/ChapterSynopsis.java",
+        "agent/PlotterAgent.java",
+        "persistence/sqlite/SqliteSchemaInitializer.java",
+        "persistence/sqlite/SqliteNovelRepository.java"
+      ],
+      "problem_ref": "P3/P4: 无张力曲线、无章节目的字段"
+    },
+    {
+      "id": "p5-a3",
+      "name": "PlotProgressionDetector 停滞检测",
+      "description": "每章写后用 LLM 检测是否推进至少1条剧情线+评估张力；连续2章 tension<3 触发 ContinuityIssue(PLOT类型)；ContinuityIssue.Type 新增 PLOT",
+      "phase": 5,
+      "dependencies": [
+        "p5-a2"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "agent/PlotProgressionDetector.java",
+        "domain/ContinuityIssue.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "P2: 无停滞剧情检测，2000字闲聊章节通过所有检查"
+    },
+    {
+      "id": "p5-a4",
+      "name": "卷末plot评分回传下卷planning",
+      "description": "卷末 EvaluationRecord 的 plot/pattern_diversity 低分维度注入下卷 Plotter 的 prompt；修复 plot 问题分类为 Type.PLOT 而非 WORLDBUILDING",
+      "phase": 5,
+      "dependencies": [
+        "p5-a3"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "agent/PlotterAgent.java"
+      ],
+      "problem_ref": "P5/P6: 卷末评分不回传+分类错误"
+    },
+    {
+      "id": "p5-b1",
+      "name": "EntityEdge 时间作用域 (validFromChapter/validToChapter)",
+      "description": "EntityEdge 新增 validFromChapter/validToChapter；关系变更时旧边 validToChapter=N，新边 validFromChapter=N+1；查询时只返回当前有效边；SQLite schema 同步",
+      "phase": 5,
+      "dependencies": [],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "domain/EntityEdge.java",
+        "agent/EntityExtractorAgent.java",
+        "persistence/sqlite/SqliteSchemaInitializer.java",
+        "persistence/sqlite/SqliteNovelRepository.java",
+        "spi/NovelRepository.java"
+      ],
+      "problem_ref": "R1: 关系边无时间维度，ALLY+ENEMY 同时存在"
+    },
+    {
+      "id": "p5-b2",
+      "name": "关系边注入到 recallConsistencySection",
+      "description": "EntityGraphService.recallConsistencySection 输出边类型（不只实体名）：'苏尘↔李寒山：敌对（第10章起）'；同场角色注入化学反应提示",
+      "phase": 5,
+      "dependencies": [
+        "p5-b1"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "service/EntityGraphService.java"
+      ],
+      "problem_ref": "R2/R4: 关系从不注入prompt+无化学反应"
+    },
+    {
+      "id": "p5-b3",
+      "name": "ArcUpdater Agent 角色弧线动态更新",
+      "description": "每10章重新评估角色弧线：从近期章节提取角色变化→更新 Character.growthArc/relationships/speakingStyle；不再排除已有档案的角色",
+      "phase": 5,
+      "dependencies": [
+        "p5-b2"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "agent/ArcUpdater.java",
+        "prompts/arc-update.st",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "R3: 角色弧线冻结，成长不更新"
+    },
+    {
+      "id": "p5-b4",
+      "name": "RelationshipType 枚举扩展 + 对称关系处理",
+      "description": "新增 LOVE/RIVAL/MENTOR/BETRAYS/SUSPECTS/PROTECTS；对称关系(ALLY/ENEMY/LOVE)去重时双向检查；EntityExtractorAgent 提取时区分对称/非对称",
+      "phase": 5,
+      "dependencies": [
+        "p5-b1"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "domain/RelationshipType.java",
+        "agent/EntityExtractorAgent.java"
+      ],
+      "problem_ref": "R5/R6: 关系类型不够通用+配角弧线无独立追踪"
+    },
+    {
+      "id": "p5-c1",
+      "name": "修复 Foreshadowing.resolve() 死代码 + 连续性检查自动回收",
+      "description": "ContinuityChecker 检测到伏笔回收→Foreshadowing.resolve()；NovelOrchestrator.checkContinuityAfterWriting 后扫描伏笔状态；collectSettingsForCheck 包含伏笔台账",
+      "phase": 5,
+      "dependencies": [],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "agent/ContinuityCheckerAgent.java",
+        "resources/prompts/continuity-check.st"
+      ],
+      "problem_ref": "F1/F6: resolve()从不调用+检查器看不到伏笔台账"
+    },
+    {
+      "id": "p5-c2",
+      "name": "ForeshadowingExtractor 动态提取 + 修复 plantedAtChapter",
+      "description": "新增 ForeshadowingExtractor Agent 每章写后扫描正文提取新伏笔；plantedAtChapter=实际章节号；移除硬上限5；plotting.st 输出结构化伏笔列表",
+      "phase": 5,
+      "dependencies": [
+        "p5-c1"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "agent/ForeshadowingExtractor.java",
+        "prompts/foreshadowing-extract.st",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "F2/F3: plantedAtChapter=1+硬上限5"
+    },
+    {
+      "id": "p5-c3",
+      "name": "ChekhovAudit 卷末/完结未回收伏笔审计",
+      "description": "卷末和 FINAL 状态时检查未回收伏笔→记录为 ContinuityIssue；Foreshadowing 新增 isRedHerring 字段支持红鲱鱼；密度追踪每卷伏笔数",
+      "phase": 5,
+      "dependencies": [
+        "p5-c2"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "domain/Foreshadowing.java"
+      ],
+      "problem_ref": "F4/F7/F8: 无审计+无红鲱鱼+无密度追踪"
+    },
+    {
+      "id": "p5-c4",
+      "name": "伏笔 token 预算优先级提升 + 相关性过滤",
+      "description": "applyTokenBudget 中伏笔优先级提升（不再最先丢弃）；buildForeshadowings 按章节相关性过滤（近章优先）；新增 recalled 中间状态",
+      "phase": 5,
+      "dependencies": [
+        "p5-c1"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "memory/ContextAssembler.java",
+        "domain/Foreshadowing.java"
+      ],
+      "problem_ref": "F5: 伏笔在token压力下最先丢弃"
+    },
+    {
+      "id": "p5-d1",
+      "name": "GenreProfile 题材推断 + Project 字段",
+      "description": "从 Project.tags 推断题材(CULTIVATION/MYSTERY/ROMANCE/THRILLER/HISTORICAL/GENERAL)；Project 新增 genre 字段；GenreDetector 服务",
+      "phase": 5,
+      "dependencies": [],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "domain/Project.java",
+        "domain/GenreProfile.java",
+        "service/GenreDetector.java"
+      ],
+      "problem_ref": "G2: 无题材检测/条件分支"
+    },
+    {
+      "id": "p5-d2",
+      "name": "题材条件化 plotting.st + 爽点类型集",
+      "description": "plotting.st 按题材输出不同规则（玄幻境界/悬疑线索/言情情感节拍）；ClimaxType 按题材选择子集；反套路黑名单按题材",
+      "phase": 5,
+      "dependencies": [
+        "p5-d1"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "resources/prompts/plotting.st",
+        "domain/ClimaxType.java",
+        "domain/GenreProfile.java"
+      ],
+      "problem_ref": "G1/G3: 玄幻硬编码+ClimaxType不够通用"
+    },
+    {
+      "id": "p5-d3",
+      "name": "题材条件化 chapter-writing.st 节奏规则",
+      "description": "chapter-writing.st 按题材调整四段式比例（悬疑慢节奏/言情情感/动作快节奏）；continuity-check.st 去除仙侠硬编码边界",
+      "phase": 5,
+      "dependencies": [
+        "p5-d1"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "resources/prompts/chapter-writing.st",
+        "resources/prompts/continuity-check.st"
+      ],
+      "problem_ref": "G4: 四段式不适用所有题材"
+    },
+    {
+      "id": "p5-d4",
+      "name": "PlotterAgent 接收 styleGuide + 章节计数验证",
+      "description": "修复 PlotterAgent.java:33 styleGuide 传空→接收完整上下文；解析后验证章节数（请求24→实际X→不足重试）；writingNotes 字段填充",
+      "phase": 5,
+      "dependencies": [
+        "p5-d2"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "agent/PlotterAgent.java"
+      ],
+      "problem_ref": "Q1/Q2/Q3: styleGuide忽略+writingNotes死字段+解析丢章"
     }
   ]
 }

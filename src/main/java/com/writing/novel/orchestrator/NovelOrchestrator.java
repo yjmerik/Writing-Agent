@@ -323,6 +323,43 @@ public class NovelOrchestrator {
         } catch (Exception e) {
             log.warn("质量评价失败: {}", e.getMessage());
         }
+
+        // p5-c3: ChekhovAudit——卷末检查未回收伏笔
+        try {
+            chekhovAudit(projectId, volume.getVolumeIndex(), fromChapter, toChapter);
+        } catch (Exception e) {
+            log.warn("伏笔审计失败: {}", e.getMessage());
+        }
+    }
+
+    /** p5-c3: 卷末伏笔审计——检查本卷埋下但未回收的伏笔 */
+    private void chekhovAudit(String projectId, int volumeIndex, int fromChapter, int toChapter) {
+        var allForeshadowings = repository.findForeshadowingsByProject(projectId);
+        // 本卷埋下的伏笔
+        var plantedInVolume = allForeshadowings.stream()
+                .filter(f -> f.getPlantedAtChapter() >= fromChapter && f.getPlantedAtChapter() <= toChapter)
+                .toList();
+        // 本卷埋下但仍未回收的
+        var unresolved = plantedInVolume.stream()
+                .filter(f -> !f.isResolved())
+                .toList();
+
+        if (!unresolved.isEmpty()) {
+            StringBuilder desc = new StringBuilder();
+            desc.append("卷").append(volumeIndex).append("有 ")
+                .append(unresolved.size()).append(" 条未回收伏笔：\n");
+            for (var f : unresolved) {
+                desc.append("- ").append(f.getDescription())
+                    .append("（埋于第").append(f.getPlantedAtChapter()).append("章）\n");
+            }
+            desc.append("建议在后续章节中回收这些伏笔。");
+            repository.saveContinuityIssue(new ContinuityIssue(
+                    projectId, toChapter,
+                    ContinuityIssue.Type.FORESHADOWING,
+                    ContinuityIssue.Severity.MEDIUM,
+                    desc.toString()));
+            log.info("ChekhovAudit(卷{}): {} 条未回收伏笔", volumeIndex, unresolved.size());
+        }
     }
 
     /**

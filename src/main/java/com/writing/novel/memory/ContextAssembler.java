@@ -486,10 +486,11 @@ public class ContextAssembler {
         int total = sumTokens(ctx);
         if (total <= TOKEN_BUDGET) return;
 
-        // 按优先级从低到高裁剪（先裁最不重要的）
-        // 优先级：任务>人物>摘要>上章原文>风格>设定>大纲>世界观>伏笔
-        if (total > TOKEN_BUDGET && ctx.getRelevantForeshadowings() != null) {
-            ctx.setRelevantForeshadowings("");  // 先清伏笔
+        // p5-c4: 调整优先级——伏笔不再最先丢弃（长程连续性需要）
+        // 新优先级（从低到高）：设定>世界观>大纲>上章原文>伏笔
+        // 伏笔保留到最后，因为它是长程连续性的核心
+        if (total > TOKEN_BUDGET && ctx.getRelevantSettings() != null) {
+            ctx.setRelevantSettings("");
             total = sumTokens(ctx);
         }
         if (total > TOKEN_BUDGET && ctx.getWorldbuildingSection() != null) {
@@ -501,13 +502,14 @@ public class ContextAssembler {
             ctx.setVolumeOutlineSection(TokenBudget.truncateToTokens(ctx.getVolumeOutlineSection(), 1500));
             total = sumTokens(ctx);
         }
-        if (total > TOKEN_BUDGET && ctx.getRelevantSettings() != null) {
-            ctx.setRelevantSettings("");
-            total = sumTokens(ctx);
-        }
         if (total > TOKEN_BUDGET && ctx.getRecentTextSection() != null) {
             // 上章原文截断到 800 token
             ctx.setRecentTextSection(TokenBudget.truncateToTokens(ctx.getRecentTextSection(), 800));
+            total = sumTokens(ctx);
+        }
+        // 伏笔最后才截断（截断到 500 token 而非清空）
+        if (total > TOKEN_BUDGET && ctx.getRelevantForeshadowings() != null) {
+            ctx.setRelevantForeshadowings(TokenBudget.truncateToTokens(ctx.getRelevantForeshadowings(), 500));
         }
     }
 

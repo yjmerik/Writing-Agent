@@ -431,8 +431,8 @@
       "dependencies": [
         "p5-c2"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "86 tests pass",
       "files": [
         "orchestrator/NovelOrchestrator.java",
         "domain/Foreshadowing.java"
@@ -447,8 +447,8 @@
       "dependencies": [
         "p5-c1"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "86 tests pass",
       "files": [
         "memory/ContextAssembler.java",
         "domain/Foreshadowing.java"

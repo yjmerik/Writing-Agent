@@ -36,6 +36,7 @@ public class NovelOrchestrator {
     private final CharacterProfileUpgrader characterProfileUpgrader;
     private final ClimaxDiversityTracker climaxDiversityTracker;
     private final PlotProgressionDetector plotProgressionDetector;
+    private final ArcUpdater arcUpdater;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -52,7 +53,8 @@ public class NovelOrchestrator {
                               EntityGraphService entityGraphService,
                               CharacterProfileUpgrader characterProfileUpgrader,
                               ClimaxDiversityTracker climaxDiversityTracker,
-                              PlotProgressionDetector plotProgressionDetector) {
+                              PlotProgressionDetector plotProgressionDetector,
+                              ArcUpdater arcUpdater) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -69,6 +71,7 @@ public class NovelOrchestrator {
         this.characterProfileUpgrader = characterProfileUpgrader;
         this.climaxDiversityTracker = climaxDiversityTracker;
         this.plotProgressionDetector = plotProgressionDetector;
+        this.arcUpdater = arcUpdater;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -224,6 +227,15 @@ public class NovelOrchestrator {
                 characterProfileUpgrader.upgrade(projectId, chapterIndex);
             } catch (Exception e) {
                 log.warn("角色升级失败(章{}): {}", chapterIndex, e.getMessage());
+            }
+        }
+
+        // 角色弧线更新：每 10 章重新评估已建档角色的成长弧和关系
+        if (chapterIndex % 10 == 0) {
+            try {
+                arcUpdater.updateArcs(projectId, chapterIndex);
+            } catch (Exception e) {
+                log.warn("弧线更新失败(章{}): {}", chapterIndex, e.getMessage());
             }
         }
 

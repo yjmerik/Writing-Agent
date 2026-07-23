@@ -366,8 +366,8 @@
       "dependencies": [
         "p5-b2"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "86 tests pass; ArcUpdater every 10 chapters",
       "files": [
         "agent/ArcUpdater.java",
         "prompts/arc-update.st",

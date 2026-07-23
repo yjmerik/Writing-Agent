@@ -97,4 +97,10 @@ public class AgentConfig {
     public PlotProgressionDetector plotProgressionDetector(NovelRepository repo) {
         return new PlotProgressionDetector(repo);
     }
+
+    @Bean
+    public ArcUpdater arcUpdater(LlmGateway gateway, NovelRepository repo,
+                                  PromptTemplateService promptService) {
+        return new ArcUpdater(gateway, repo, promptService);
+    }
 }

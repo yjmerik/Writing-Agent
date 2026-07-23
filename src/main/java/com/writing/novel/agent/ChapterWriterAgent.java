@@ -9,6 +9,7 @@ import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.IndexedText;
 import com.writing.novel.memory.VectorRetrievalService;
 import com.writing.novel.memory.WritingContext;
+import com.writing.novel.service.GenreRuleProvider;
 import com.writing.novel.spi.NovelRepository;
 
 import java.util.Map;
@@ -24,21 +25,23 @@ public class ChapterWriterAgent {
     private final NovelRepository repository;
     private final VectorRetrievalService vectorRetrieval;
     private final PromptTemplateService promptService;
+    private final GenreRuleProvider genreRuleProvider;
 
     public ChapterWriterAgent(LlmGateway gateway, ContextAssembler contextAssembler,
                                NovelRepository repository, VectorRetrievalService vectorRetrieval,
-                               PromptTemplateService promptService) {
+                               PromptTemplateService promptService, GenreRuleProvider genreRuleProvider) {
         this.gateway = gateway;
         this.contextAssembler = contextAssembler;
         this.repository = repository;
         this.vectorRetrieval = vectorRetrieval;
         this.promptService = promptService;
+        this.genreRuleProvider = genreRuleProvider;
     }
 
     /** 兼容测试的四参构造（vectorRetrieval 为 null 时跳过索引） */
     public ChapterWriterAgent(LlmGateway gateway, ContextAssembler contextAssembler,
                                NovelRepository repository, PromptTemplateService promptService) {
-        this(gateway, contextAssembler, repository, null, promptService);
+        this(gateway, contextAssembler, repository, null, promptService, null);
     }
 
     public Chapter write(String projectId, int chapterIndex, String chapterTitle,
@@ -50,11 +53,20 @@ public class ChapterWriterAgent {
         // 2. 构建 LLM 请求：ContextAssembler 组装的上下文 + chapter-writing 模板的角色定义
         // styleGuide 从 StyleProfile 动态注入（不再写死空串）
         String dynamicStyleGuide = extractStyleGuide(projectId);
+        // p5-d3: 获取题材节奏规则
+        String genrePacingRules = "";
+        if (genreRuleProvider != null) {
+            var project = repository.findProject(projectId).orElse(null);
+            if (project != null) {
+                genrePacingRules = genreRuleProvider.getChapterWritingRules(project.getGenre());
+            }
+        }
         String chapterWritingPrompt = promptService.render("chapter-writing", Map.of(
                 "styleGuide", dynamicStyleGuide,
                 "writingConstraints", ctx.getWritingConstraints() != null ? ctx.getWritingConstraints() : "",
                 "characterVoices", ctx.getCharacterVoiceSection() != null ? ctx.getCharacterVoiceSection() : "",
-                "knowledgeQuotes", ctx.getKnowledgeQuoteSection() != null ? ctx.getKnowledgeQuoteSection() : ""));
+                "knowledgeQuotes", ctx.getKnowledgeQuoteSection() != null ? ctx.getKnowledgeQuoteSection() : "",
+                "genrePacingRules", genrePacingRules));
         String systemPrompt = ctx.toSystemPrompt() + "\n\n" + chapterWritingPrompt;
 
         var req = LlmRequest.builder()

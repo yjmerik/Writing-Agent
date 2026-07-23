@@ -6,6 +6,7 @@ import com.writing.novel.memory.SummaryService;
 import com.writing.novel.service.ClimaxDiversityTracker;
 import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.service.GenreDetector;
+import com.writing.novel.service.GenreRuleProvider;
 import com.writing.novel.service.PlotProgressionDetector;
 import com.writing.novel.spi.NovelRepository;
 import org.springframework.context.annotation.Bean;
@@ -38,11 +39,12 @@ public class OrchestratorConfig {
                                                  PlotProgressionDetector plotProgressionDetector,
                                                  ArcUpdater arcUpdater,
                                                  ForeshadowingExtractor foreshadowingExtractor,
-                                                 GenreDetector genreDetector) {
+                                                 GenreDetector genreDetector,
+                                                 GenreRuleProvider genreRuleProvider) {
         return new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
                 characterProfileUpgrader, climaxDiversityTracker, plotProgressionDetector,
-                arcUpdater, foreshadowingExtractor, genreDetector);
+                arcUpdater, foreshadowingExtractor, genreDetector, genreRuleProvider);
     }
 }

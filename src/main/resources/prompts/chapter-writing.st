@@ -42,6 +42,10 @@
 风格约束：{{styleGuide}}
 {{/if}}
 
+{{#if genrePacingRules}}
+{{genrePacingRules}}
+{{/if}}
+
 {{#if characterVoices}}
 {{characterVoices}}
 {{/if}}

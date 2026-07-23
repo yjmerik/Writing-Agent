@@ -7,6 +7,7 @@ import com.writing.novel.memory.SummaryService;
 import com.writing.novel.service.ClimaxDiversityTracker;
 import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.service.GenreDetector;
+import com.writing.novel.service.GenreRuleProvider;
 import com.writing.novel.service.PlotProgressionDetector;
 import com.writing.novel.spi.NovelRepository;
 import org.slf4j.Logger;
@@ -40,6 +41,7 @@ public class NovelOrchestrator {
     private final ArcUpdater arcUpdater;
     private final ForeshadowingExtractor foreshadowingExtractor;
     private final GenreDetector genreDetector;
+    private final GenreRuleProvider genreRuleProvider;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -59,7 +61,8 @@ public class NovelOrchestrator {
                               PlotProgressionDetector plotProgressionDetector,
                               ArcUpdater arcUpdater,
                               ForeshadowingExtractor foreshadowingExtractor,
-                              GenreDetector genreDetector) {
+                              GenreDetector genreDetector,
+                              GenreRuleProvider genreRuleProvider) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -79,6 +82,7 @@ public class NovelOrchestrator {
         this.arcUpdater = arcUpdater;
         this.foreshadowingExtractor = foreshadowingExtractor;
         this.genreDetector = genreDetector;
+        this.genreRuleProvider = genreRuleProvider;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -132,7 +136,9 @@ public class NovelOrchestrator {
                     + "主题：" + p.getConcept()
                     + (worldSummary.isEmpty() ? "" : "\n世界观设定：\n" + worldSummary)
                     + (charSummary.isEmpty() ? "" : "\n已有人物：\n" + charSummary);
-            plotter.plan(projectId, p.getConcept(), theme, 24);
+            String genreRules = genreRuleProvider != null
+                    ? genreRuleProvider.getPlottingRules(p.getGenre()) : "";
+            plotter.plan(projectId, p.getConcept(), theme, 24, theme, genreRules);
         }
 
         // 伏笔抽取：从大纲文本中提取伏笔条目（p3-03）

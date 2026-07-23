@@ -28,9 +28,16 @@ public class PlotterAgent {
     }
 
     public Outline plan(String projectId, String concept, String theme, int totalChapters) {
+        return plan(projectId, concept, theme, totalChapters, "", "");
+    }
+
+    public Outline plan(String projectId, String concept, String theme, int totalChapters,
+                        String styleGuide, String genreRules) {
         String systemPrompt = promptService.render("plotting", Map.of(
                 "concept", concept, "theme", theme,
-                "totalChapters", totalChapters, "styleGuide", ""));
+                "totalChapters", totalChapters,
+                "styleGuide", styleGuide != null ? styleGuide : "",
+                "genreRules", genreRules != null ? genreRules : ""));
 
         String userMessage = "构思：" + concept + "\n主题：" + theme
                 + "\n预计总章数：" + totalChapters
@@ -55,6 +62,26 @@ public class PlotterAgent {
             rawContent = resp.getContent();
             outline = parseOutline(rawContent, projectId);
             parsedChapters = outline.getVolumes().stream().mapToInt(v -> v.getSynopses().size()).sum();
+        }
+
+        // p5-d4: 章节计数验证——如果解析出的章节数远少于请求（<50%），用更明确的提示重试
+        if (parsedChapters > 0 && parsedChapters < totalChapters / 2) {
+            var retryReq = LlmRequest.builder()
+                    .taskType(LlmTaskType.PLOTTING)
+                    .systemPrompt(systemPrompt)
+                    .userMessage("注意：上次只生成了 " + parsedChapters + " 章，但需要 " + totalChapters
+                            + " 章。请务必生成至少 " + totalChapters + " 个章节（第1章到第"
+                            + totalChapters + "章），每卷5-8章，不要遗漏。")
+                    .temperature(0.8)
+                    .maxTokens(12000)
+                    .build();
+            var retryResp = gateway.complete(retryReq);
+            var retryOutline = parseOutline(retryResp.getContent(), projectId);
+            int retryChapters = retryOutline.getVolumes().stream().mapToInt(v -> v.getSynopses().size()).sum();
+            if (retryChapters > parsedChapters) {
+                outline = retryOutline;
+                parsedChapters = retryChapters;
+            }
         }
 
         // 仍为空（0 卷或 0 章）的 fallback：创建 1 卷 3 章的最小大纲

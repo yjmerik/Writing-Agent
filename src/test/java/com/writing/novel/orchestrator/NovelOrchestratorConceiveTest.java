@@ -75,13 +75,13 @@ class NovelOrchestratorConceiveTest {
                 new WorldBuilderAgent(gateway, kbSvc, promptSvc),
                 new CharacterDesignerAgent(gateway, kbSvc, promptSvc),
                 new PlotterAgent(gateway, repo, promptSvc),
-                new ChapterWriterAgent(gateway, assembler, repo, vectorSvc, promptSvc),
+                new ChapterWriterAgent(gateway, assembler, repo, vectorSvc, promptSvc, null),
                 new ContinuityCheckerAgent(gateway, repo, promptSvc),
                 new StyleGuardianAgent(gateway, repo, promptSvc),
                 new MemoryManagerAgent(gateway, summarySvc, promptSvc),
                 summarySvc, assembler,
                 new com.writing.novel.agent.QualityEvaluationAgent(gateway, repo, promptSvc),
-                null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null);
     }
 
     @Test

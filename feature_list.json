@@ -332,8 +332,8 @@
       "description": "EntityEdge 新增 validFromChapter/validToChapter；关系变更时旧边 validToChapter=N，新边 validFromChapter=N+1；查询时只返回当前有效边；SQLite schema 同步",
       "phase": 5,
       "dependencies": [],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "86 tests pass; EntityEdge +time-scoped fields + transition handling",
       "files": [
         "domain/EntityEdge.java",
         "agent/EntityExtractorAgent.java",

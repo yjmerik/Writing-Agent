@@ -618,9 +618,11 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public void saveEntityEdge(EntityEdge edge) {
-        String sql = "INSERT INTO entity_edges (id,project_id,source_id,target_id,relationship,weight,metadata,created_at) " +
-                "VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
-                "relationship=excluded.relationship, weight=excluded.weight, metadata=excluded.metadata";
+        String sql = "INSERT INTO entity_edges (id,project_id,source_id,target_id,relationship,weight,metadata,created_at," +
+                "valid_from_chapter,valid_to_chapter) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
+                "relationship=excluded.relationship, weight=excluded.weight, metadata=excluded.metadata, " +
+                "valid_from_chapter=excluded.valid_from_chapter, valid_to_chapter=excluded.valid_to_chapter";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, edge.getId()); ps.setString(2, edge.getProjectId());
@@ -629,6 +631,8 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setDouble(6, edge.getWeight());
             ps.setString(7, edge.getMetadata());
             ps.setString(8, edge.getCreatedAt().toString());
+            ps.setInt(9, edge.getValidFromChapter());
+            ps.setInt(10, edge.getValidToChapter());
             ps.executeUpdate();
         } catch (SQLException ex) { throw new RuntimeException(ex); }
     }
@@ -769,6 +773,8 @@ public class SqliteNovelRepository implements NovelRepository {
         setField(edge, "id", rs.getString("id"));
         edge.setWeight(rs.getDouble("weight"));
         edge.setMetadata(rs.getString("metadata"));
+        try { edge.setValidFromChapter(rs.getInt("valid_from_chapter")); } catch (Exception ignored) {}
+        try { edge.setValidToChapter(rs.getInt("valid_to_chapter")); } catch (Exception ignored) {}
         return edge;
     }
 

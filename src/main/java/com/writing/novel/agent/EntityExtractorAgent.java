@@ -142,17 +142,31 @@ public class EntityExtractorAgent {
                     String targetId = findEntityIdByName(allEntities, targetName);
 
                     if (sourceId != null && targetId != null && !sourceId.equals(targetId)) {
-                        // 检查是否已存在相同边（防止重复）
+                        // 检查已存在的边（含时间作用域处理）
                         List<EntityEdge> existingEdges = repository.findEdgesBySource(sourceId);
-                        boolean exists = existingEdges.stream()
+                        // 当前仍然有效的同类型边（重复，跳过）
+                        boolean sameCurrentExists = existingEdges.stream()
                                 .anyMatch(e -> e.getTargetId().equals(targetId)
-                                        && e.getRelationship() == finalRel);
-                        if (!exists) {
-                            EntityEdge edge = new EntityEdge(projectId, sourceId, targetId, finalRel);
-                            edge.setWeight(weight);
-                            repository.saveEntityEdge(edge);
-                            newEdges++;
-                        }
+                                        && e.getRelationship() == finalRel
+                                        && e.isCurrent());
+                        if (sameCurrentExists) continue;
+
+                        // 关系转变：旧的不同类型边失效（如 ALLY→ENEMY）
+                        existingEdges.stream()
+                                .filter(e -> e.getTargetId().equals(targetId)
+                                        && e.getRelationship() != finalRel
+                                        && e.isCurrent())
+                                .forEach(e -> {
+                                    e.expire(chapterIndex);
+                                    repository.saveEntityEdge(e);
+                                });
+
+                        // 创建新边（标记从本章开始生效）
+                        EntityEdge edge = new EntityEdge(projectId, sourceId, targetId, finalRel);
+                        edge.setWeight(weight);
+                        edge.setValidFromChapter(chapterIndex);
+                        repository.saveEntityEdge(edge);
+                        newEdges++;
                     }
                 }
             }

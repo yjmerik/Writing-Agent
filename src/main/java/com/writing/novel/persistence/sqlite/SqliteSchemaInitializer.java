@@ -74,7 +74,8 @@ public class SqliteSchemaInitializer {
         // 图数据库：关系边表
         "CREATE TABLE IF NOT EXISTS entity_edges (" +
             "id TEXT PRIMARY KEY, project_id TEXT, source_id TEXT, target_id TEXT, " +
-            "relationship TEXT, weight REAL, metadata TEXT, created_at TEXT)",
+            "relationship TEXT, weight REAL, metadata TEXT, created_at TEXT, " +
+            "valid_from_chapter INTEGER DEFAULT 0, valid_to_chapter INTEGER DEFAULT 0)",
 
         // 卷末质量评价记录表
         "CREATE TABLE IF NOT EXISTS evaluation_records (" +

@@ -2,71 +2,78 @@
 
 ## Current State
 
-**Last Updated:** 2026-07-22
-**Active Feature:** 全部 16 features 已完成 ✅
-**Architecture Review:** 完成并实施
-**E2E 验证:** 通过 — DeepSeek V4 Flash 7/10, PlotterAgent 正则已兼容
+**Last Updated:** 2026-07-24
+**Phase 5:** 全部 16 features 已完成 ✅
+**Tests:** 86 pass, 0 failures, 1 skipped
+**Prompt Templates:** 14 个
+**Commits:** 60+
 
-## Status
+## Phase 5 完成情况
 
-### What's Done
+### 5-A PlotAdvancementGuard (剧情推进守卫) ✅
+- p5-a1: 激活 ClimaxDiversityTracker 爽点轮换（修复死代码）
+- p5-a2: ChapterSynopsis +plotPurpose/tensionLevel/volumeArcPosition
+- p5-a3: PlotProgressionDetector 停滞检测（连续低张力/高张力疲劳）
+- p5-a4: 卷末plot评分回传下卷 + 7维度EvaluationRecord + Type.PLOT修复
 
-- [x] Plan 1-6 全部实现（持久化→LLM Gateway→三层记忆→7 Agent→Orchestrator→REST API+前端）
-- [x] 5 轮质量优化完成（Bug修复→Prompt优化→Harness改进→一致性+情节→稳定性修复）
-- [x] 深度架构审查完成（5 维度 × 30 个问题定位）
-- [x] Harness 创建（AGENTS.md + feature_list.json + init.sh）
-- [x] 4-Phase 架构优化全部实施（16/16 features）
-- [x] PlotterAgent 正则兼容 DeepSeek markdown 格式（卷/章正则 3 级 fallback）
-- [x] 全 LLM 任务路由至 DeepSeek V4 Flash（PLOTTING/WORLDBUILDING/CHARACTER_DESIGN/CHAPTER_WRITING/CONTINUITY_CHECK/STYLE_GUARDIAN/MEMORY_SUMMARY/GENERAL）
-- [x] E2E 生成测试完成: 2卷×24章大纲 + 7章正文(25K字) + 质量评价 7/10
+### 5-B RelationshipDynamicsEngine (关系动态引擎) ✅
+- p5-b1: EntityEdge 时间作用域 (validFromChapter/validToChapter)
+- p5-b2: 关系边注入到 recallConsistencySection（带类型+时间）
+- p5-b3: ArcUpdater Agent 角色弧线动态更新（每10章）
+- p5-b4: RelationshipType 扩展7种 + 对称关系去重
 
-### What's Next
+### 5-C ForeshadowingLifecycleManager (伏笔生命周期) ✅
+- p5-c1: 修复 Foreshadowing.resolve() 死代码 + 连续性检查自动回收
+- p5-c2: ForeshadowingExtractor 动态提取（每章）+ plantedAtChapter修复
+- p5-c3: ChekhovAudit 卷末未回收伏笔审计
+- p5-c4: 伏笔 token 优先级提升（不再最先丢弃）
 
-1. **中长篇全量生成测试**：写入 24 章全部内容，验证大规模一致性
-2. **一致性5分→8分**：修复 ContextAssembler 中细粒度设定注入（药材名等细节）
-3. **情节6分→8分**：优化 chapter-writing.st prompt 增加爽点密度要求
-4. **交互模式测试**：验证 PAUSED_AT_CHECKPOINT 流
+### 5-D GenreAdaptiveSystem (题材自适应) ✅
+- p5-d1: GenreProfile 枚举 + GenreDetector（9种题材推断）
+- p5-d2: 题材条件化 plotting.st（GenreRuleProvider 9种规则）
+- p5-d3: 题材条件化 chapter-writing.st（节奏规则）
+- p5-d4: PlotterAgent styleGuide修复 + 章节计数验证
+
+## 新增 Agents (Phase 5)
+- **PlotProgressionDetector**: 张力曲线停滞检测
+- **ArcUpdater**: 角色弧线每10章动态更新
+- **ForeshadowingExtractor**: 每章伏笔动态提取
+- **GenreDetector**: 题材自动推断
+- **GenreRuleProvider**: 9种题材规则提供者
+
+## 新增 Services (Phase 5)
+- **ClimaxDiversityTracker**: 爽点轮换追踪（已激活）
+- **PlotProgressionDetector**: 剧情停滞检测
+- **GenreDetector**: 题材推断
+- **GenreRuleProvider**: 题材规则提供
+
+## 新增 Prompt Templates (Phase 5)
+- **arc-update.st**: 角色弧线更新
+- **foreshadowing-extract.st**: 伏笔动态提取
+
+## 关键 BUG 修复
+1. ClimaxDiversityTracker 死代码→已激活
+2. Foreshadowing.resolve() 从不调用→已修复
+3. plantedAtChapter 全是1→实际章节号
+4. plot问题分类为WORLDBUILDING→改为PLOT
+5. EvaluationRecord只存5维度→存全部7维度
+6. PlotterAgent styleGuide传空串→接收完整上下文
 
 ## Metrics
 
 | 指标 | 数值 |
 |------|------|
 | 测试数 | 86（0 failures, 1 skipped） |
-| Commit 数 | 49 |
-| 源文件 | ~65 main + ~42 test |
-| 最佳质量评分 | 7/10（DeepSeek V4 Flash, 全 DeepSeek 路由） |
-| 大纲解析 | 2卷×24章，实时标题+节拍（非 fallback） |
-| 角色名多样性 | 叶星渊 / 陆星痕 / 苏尘 / 顾星辰 / 苏夜尘（不再重复"陆昭然"） |
+| Prompt 模板 | 14 个 |
+| 源文件 | ~80 main + ~45 test |
+| 新增 Agent | 5 个 |
+| 新增 Service | 4 个 |
+| 新增 Domain | 4 个（ClimaxType, GenreProfile, EntityEdge时间字段, ChapterSynopsis新字段） |
+| 新增 RelationshipType | 7 种 |
 
-## Blockers / Risks
+## Next Steps
 
-- [x] ~~**大纲解析脆弱**：PlotterAgent 正则现已兼容 DeepSeek markdown 格式（Phase 2 修复）~~
-- [ ] **一致性细节**：药材名等细粒度设定需 ContextAssembler 更强注入
-- [ ] **爽点密度**：ChapterWriter prompt 需要明确要求每章至少2个爽点
-- [ ] **GLM-5.2 限额**：已切换 DeepSeek V4 Flash，GLM 仅作 embedding
-
-## Decisions Made
-
-- **DeepSeek V4 Flash 为主模型**：PLOTTING/WORLDBUILDING/CHARACTER_DESIGN/CHAPTER_WRITING 等全部路由至 DeepSeek
-- **PlotterAgent 3级正则 fallback**：多行空行→单行无空行→单行冒号分隔，适配不同 LLM 输出格式
-- **质量基线**：DeepSeek V4 Flash + 当前架构 = 7/10，目标 8.5+/10
-
-## Files Modified Last Session
-
-- `src/main/java/com/writing/novel/agent/PlotterAgent.java` — 大纲正则重写（卷/章 3级 fallback），兼容 markdown 格式
-- `src/main/resources/application.yml` — 全任务路由至 DeepSeek V4 Flash
-
-## Evidence of Completion
-
-- [x] Tests pass: `mvn test` → Tests run: 86, Failures: 0, Errors: 0, Skipped: 1
-- [x] Compile clean: `mvn compile` → BUILD SUCCESS
-- [x] E2E quality evaluation: DeepSeek 总分 7/10（风格9/世界观9/人物8/一致性6/情节6）
-- [x] 24章大纲解析成功: 卷1"坠星之殒"×10章, 卷2"星陨铁之乱"×14章
-- [x] E2E output: 7 chapters / 25,311 chars / unique protagonist "顾星辰"
-
-## Notes for Next Session
-
-1. 启动全 24 章批量写入，验证中长篇一致性
-2. 优化 chapter-writing.st 增加「每章至少2个爽点」「世界观元素至少使用1个」约束
-3. 修复 ContextAssembler 细粒度设定注入（药材名/地名一致性）
-4. 可选：将默认模型由 local qwen3-4b-wuxia 改为 DeepSeek
+1. E2E 全量验证：启动服务器，写24章100K字，验证所有新特性
+2. 多题材测试：用不同 tags（悬疑/言情/历史）验证 GenreDetector
+3. 对话密度验证：验证 40% 对话密度约束是否生效
+4. 关系动态验证：验证 ALLY→ENEMY 关系转变是否正确追踪

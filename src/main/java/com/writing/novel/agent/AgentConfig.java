@@ -103,4 +103,10 @@ public class AgentConfig {
                                   PromptTemplateService promptService) {
         return new ArcUpdater(gateway, repo, promptService);
     }
+
+    @Bean
+    public ForeshadowingExtractor foreshadowingExtractor(LlmGateway gateway, NovelRepository repo,
+                                                           PromptTemplateService promptService) {
+        return new ForeshadowingExtractor(gateway, repo, promptService);
+    }
 }

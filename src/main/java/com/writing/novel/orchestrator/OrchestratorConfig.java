@@ -35,10 +35,12 @@ public class OrchestratorConfig {
                                                  CharacterProfileUpgrader characterProfileUpgrader,
                                                  ClimaxDiversityTracker climaxDiversityTracker,
                                                  PlotProgressionDetector plotProgressionDetector,
-                                                 ArcUpdater arcUpdater) {
+                                                 ArcUpdater arcUpdater,
+                                                 ForeshadowingExtractor foreshadowingExtractor) {
         return new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
-                characterProfileUpgrader, climaxDiversityTracker, plotProgressionDetector, arcUpdater);
+                characterProfileUpgrader, climaxDiversityTracker, plotProgressionDetector,
+                arcUpdater, foreshadowingExtractor);
     }
 }

@@ -414,8 +414,8 @@
       "dependencies": [
         "p5-c1"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "86 tests pass; ForeshadowingExtractor per-chapter",
       "files": [
         "agent/ForeshadowingExtractor.java",
         "prompts/foreshadowing-extract.st",

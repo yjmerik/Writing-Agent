@@ -37,6 +37,7 @@ public class NovelOrchestrator {
     private final ClimaxDiversityTracker climaxDiversityTracker;
     private final PlotProgressionDetector plotProgressionDetector;
     private final ArcUpdater arcUpdater;
+    private final ForeshadowingExtractor foreshadowingExtractor;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -54,7 +55,8 @@ public class NovelOrchestrator {
                               CharacterProfileUpgrader characterProfileUpgrader,
                               ClimaxDiversityTracker climaxDiversityTracker,
                               PlotProgressionDetector plotProgressionDetector,
-                              ArcUpdater arcUpdater) {
+                              ArcUpdater arcUpdater,
+                              ForeshadowingExtractor foreshadowingExtractor) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -72,6 +74,7 @@ public class NovelOrchestrator {
         this.climaxDiversityTracker = climaxDiversityTracker;
         this.plotProgressionDetector = plotProgressionDetector;
         this.arcUpdater = arcUpdater;
+        this.foreshadowingExtractor = foreshadowingExtractor;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -198,6 +201,13 @@ public class NovelOrchestrator {
             entityGraphService.extractFromChapter(projectId, chapter);
         } catch (Exception e) {
             log.warn("实体提取失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+
+        // p5-c2: 伏笔动态提取——从正文中识别新埋下的伏笔
+        try {
+            foreshadowingExtractor.extract(projectId, chapter);
+        } catch (Exception e) {
+            log.warn("伏笔提取失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
         // 爽点多样性追踪：从章节概要的 climax 字段推断爽点类型

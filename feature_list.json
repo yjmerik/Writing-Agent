@@ -351,8 +351,8 @@
       "dependencies": [
         "p5-b1"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "86 tests pass; relationships now injected with type+time",
       "files": [
         "service/EntityGraphService.java"
       ],

@@ -130,7 +130,62 @@ public class EntityGraphService {
             sb.append("\n");
         }
 
+        // 5. 当前有效关系边注入（只输出 CHARACTER 之间的关系）
+        appendCurrentRelationships(sb, entities);
+
         return sb.toString();
+    }
+
+    /** 输出当前有效的人物间关系边 */
+    private void appendCurrentRelationships(StringBuilder sb, List<Entity> entities) {
+        var charEntities = entities.stream()
+                .filter(e -> e.getType() == EntityType.CHARACTER)
+                .toList();
+        if (charEntities.size() < 2) return;
+
+        Map<String, String> idToName = charEntities.stream()
+                .collect(Collectors.toMap(Entity::getId, Entity::getName, (a, b) -> a));
+
+        List<String> relLines = new ArrayList<>();
+        Set<String> seen = new HashSet<>(); // 去重对称关系
+        for (Entity e : charEntities) {
+            for (EntityEdge edge : repository.findEdgesBySource(e.getId())) {
+                if (!edge.isCurrent()) continue; // 只输出当前有效的
+                if (!idToName.containsKey(edge.getTargetId())) continue; // 目标不在本章角色中
+                String sourceName = idToName.get(edge.getSourceId());
+                String targetName = idToName.get(edge.getTargetId());
+                String pair = sourceName.compareTo(targetName) < 0
+                        ? sourceName + "↔" + targetName
+                        : targetName + "↔" + sourceName;
+                if (seen.contains(pair + edge.getRelationship())) continue;
+                seen.add(pair + edge.getRelationship());
+                String relZh = relationshipToChinese(edge.getRelationship());
+                String timeNote = edge.getValidFromChapter() > 0
+                        ? "（第" + edge.getValidFromChapter() + "章起）"
+                        : "";
+                relLines.add(sourceName + "→" + targetName + "：" + relZh + timeNote);
+            }
+        }
+        if (!relLines.isEmpty()) {
+            sb.append("■ 当前关系动态（本章角色间的关系必须与此一致）：\n");
+            for (String line : relLines) sb.append("  ").append(line).append("\n");
+        }
+    }
+
+    private String relationshipToChinese(RelationshipType rel) {
+        return switch (rel) {
+            case OWNS -> "拥有";
+            case LOCATED_IN -> "位于";
+            case MEMBER_OF -> "隶属";
+            case CREATES -> "创造";
+            case USES -> "使用";
+            case ALLY -> "盟友";
+            case ENEMY -> "敌对";
+            case CONTAINS -> "包含";
+            case PRODUCES -> "生产";
+            case KNOWS -> "认识";
+            case RELATED_TO -> "关联";
+        };
     }
 
     /**

@@ -180,6 +180,18 @@ public class PlotterAgent {
         cs.setBeats(beats);
         cs.setClimax(climax);
         cs.setCast(cast);
+
+        // 提取剧情目的
+        Matcher purposeM = Pattern.compile("目的[：:]\\s*(.+?)(?=。?张力[：:]|。?人物[：:]|$)").matcher(clean);
+        if (purposeM.find()) {
+            cs.setPlotPurpose(purposeM.group(1).trim());
+        }
+
+        // 提取张力等级
+        Matcher tensionM = Pattern.compile("张力[：:]\\s*(\\d+)").matcher(clean);
+        if (tensionM.find()) {
+            try { cs.setTensionLevel(Integer.parseInt(tensionM.group(1))); } catch (Exception ignored) {}
+        }
     }
 
     /** 清理标题中的 markdown 标记（**、#、多余空格） */

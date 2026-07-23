@@ -13,6 +13,9 @@ public class ChapterSynopsis {
     private String beats;       // 场景节拍（分号分隔，如"被嘲讽→遭遇危机→觉醒→反击"）
     private String climax;      // 本章爽点设计
     private String cast;        // 出场人物
+    private String plotPurpose;      // 本章推进的剧情线（如"主角获得力量"或"揭示反派身份"）
+    private int tensionLevel;        // 张力等级 1-10（1=平静过渡，10=全书高潮）
+    private String volumeArcPosition; // 卷内位置：SETUP/RISING/CLIMAX/RESOLUTION
 
     public ChapterSynopsis(String projectId, int chapterIndex, String title, String synopsis) {
         this.id = UUID.randomUUID().toString();
@@ -20,6 +23,7 @@ public class ChapterSynopsis {
         this.chapterIndex = chapterIndex;
         this.title = title;
         this.synopsis = synopsis;
+        this.tensionLevel = 5; // 默认中等张力
     }
 
     public String getId() { return id; }
@@ -37,4 +41,10 @@ public class ChapterSynopsis {
     public void setClimax(String c) { this.climax = c; }
     public String getCast() { return cast; }
     public void setCast(String c) { this.cast = c; }
+    public String getPlotPurpose() { return plotPurpose; }
+    public void setPlotPurpose(String p) { this.plotPurpose = p; }
+    public int getTensionLevel() { return tensionLevel; }
+    public void setTensionLevel(int t) { this.tensionLevel = Math.max(1, Math.min(10, t)); }
+    public String getVolumeArcPosition() { return volumeArcPosition; }
+    public void setVolumeArcPosition(String v) { this.volumeArcPosition = v; }
 }

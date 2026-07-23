@@ -283,8 +283,8 @@
       "dependencies": [
         "p5-a1"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "86 tests pass; ChapterSynopsis +3 fields, PlotterAgent parses 目的/张力, ContextAssembler injects",
       "files": [
         "domain/ChapterSynopsis.java",
         "agent/PlotterAgent.java",

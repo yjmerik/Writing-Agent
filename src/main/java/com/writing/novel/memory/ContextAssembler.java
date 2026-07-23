@@ -332,6 +332,12 @@ public class ContextAssembler {
             if (fullSynopsis.getCast() != null && !fullSynopsis.getCast().isBlank()) {
                 sb.append("出场人物：").append(fullSynopsis.getCast()).append("\n");
             }
+            if (fullSynopsis.getPlotPurpose() != null && !fullSynopsis.getPlotPurpose().isBlank()) {
+                sb.append("剧情目的：").append(fullSynopsis.getPlotPurpose()).append("\n");
+            }
+            if (fullSynopsis.getTensionLevel() > 0) {
+                sb.append("张力等级：").append(fullSynopsis.getTensionLevel()).append("/10\n");
+            }
         } else {
             // 回退到扁平模式
             sb.append("内容：").append(synopsis != null ? synopsis : "").append("\n");

@@ -36,7 +36,8 @@ public class SqliteSchemaInitializer {
 
         "CREATE TABLE IF NOT EXISTS chapter_synopses (" +
             "id TEXT PRIMARY KEY, project_id TEXT, volume_id TEXT, " +
-            "chapter_index INTEGER, title TEXT, synopsis TEXT, writing_notes TEXT)",
+            "chapter_index INTEGER, title TEXT, synopsis TEXT, writing_notes TEXT, " +
+            "plot_purpose TEXT, tension_level INTEGER DEFAULT 5, volume_arc_position TEXT)",
 
         "CREATE TABLE IF NOT EXISTS chapters (" +
             "id TEXT PRIMARY KEY, project_id TEXT, chapter_index INTEGER, " +

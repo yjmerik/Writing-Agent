@@ -397,8 +397,8 @@
       "description": "ContinuityChecker 检测到伏笔回收→Foreshadowing.resolve()；NovelOrchestrator.checkContinuityAfterWriting 后扫描伏笔状态；collectSettingsForCheck 包含伏笔台账",
       "phase": 5,
       "dependencies": [],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "86 tests pass; resolve() now called + ledger injected",
       "files": [
         "orchestrator/NovelOrchestrator.java",
         "agent/ContinuityCheckerAgent.java",

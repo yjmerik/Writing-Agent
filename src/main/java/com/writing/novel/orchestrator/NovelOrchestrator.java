@@ -347,6 +347,13 @@ public class NovelOrchestrator {
             log.warn("连续性检查失败: {}", e.getMessage());
         }
 
+        // p5-c1: 伏笔回收检测——本章是否回收了某个未回收伏笔
+        try {
+            checkForeshadowingResolution(projectId, chapterIndex, chapter);
+        } catch (Exception e) {
+            log.warn("伏笔回收检测失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+
         // 每 5 章检查风格漂移，解析评分并记录问题（p3-02）
         if (chapterIndex % 5 == 0) {
             try {
@@ -377,6 +384,48 @@ public class NovelOrchestrator {
                 log.warn("风格检查失败: {}", e.getMessage());
             }
         }
+    }
+
+    /**
+     * p5-c1: 检测本章是否回收了未回收的伏笔。
+     * 方法：对每个未回收伏笔，检查章节内容是否包含伏笔关键词 + 回收标记词。
+     */
+    private void checkForeshadowingResolution(String projectId, int chapterIndex, Chapter chapter) {
+        var unresolved = repository.findUnresolvedForeshadowings(projectId);
+        if (unresolved.isEmpty()) return;
+
+        String content = chapter.getContent();
+        if (content == null) return;
+
+        // 回收标记词：表明伏笔在本章被揭晓/回收
+        var resolveMarkers = java.util.List.of("真相", "原来", "终于", "果然", "揭晓", "解开", "浮出水面",
+                "大白于天下", "谜底", "原来如此", "终于明白", "原来是这样");
+
+        for (var f : unresolved) {
+            // 提取伏笔描述的关键词（取前 4-8 字作为匹配关键词）
+            String desc = f.getDescription();
+            String keyword = extractKeyword(desc);
+            if (keyword == null || keyword.length() < 2) continue;
+
+            // 检查章节内容是否同时包含伏笔关键词 + 回收标记
+            boolean hasKeyword = content.contains(keyword);
+            boolean hasResolveMarker = resolveMarkers.stream().anyMatch(content::contains);
+
+            if (hasKeyword && hasResolveMarker) {
+                f.resolve(chapterIndex);
+                repository.saveForeshadowing(f);
+                log.info("伏笔回收(章{}): {}", chapterIndex, desc);
+            }
+        }
+    }
+
+    /** 从伏笔描述中提取匹配关键词 */
+    private String extractKeyword(String desc) {
+        if (desc == null || desc.length() < 2) return null;
+        // 去除常见前缀词
+        String cleaned = desc.replaceAll("^(伏笔|暗示|暗藏|埋下|秘密|真相|隐情|未解|关于|有关)[:：]", "").trim();
+        // 取前 6 字作为关键词
+        return cleaned.length() > 6 ? cleaned.substring(0, 6) : cleaned;
     }
 
     /** 带纠偏指令的重写：原地更新原 chapter（避免重复章节） */
@@ -469,6 +518,15 @@ public class NovelOrchestrator {
         }
         for (var e : repository.findKnowledgeEntriesByProject(projectId)) {
             sb.append("【").append(e.getName()).append("】").append(e.getContent()).append("\n");
+        }
+        // p5-c1: 注入未回收伏笔台账，供连续性检查器参考
+        var foreshadowings = repository.findUnresolvedForeshadowings(projectId);
+        if (!foreshadowings.isEmpty()) {
+            sb.append("\n=== 待回收伏笔 ===\n");
+            for (var f : foreshadowings) {
+                sb.append("- ").append(f.getDescription())
+                  .append("（埋于第").append(f.getPlantedAtChapter()).append("章）\n");
+            }
         }
         return sb.toString();
     }

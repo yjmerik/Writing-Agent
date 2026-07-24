@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": "Phase 5: 通用化架构优化（16 features）",
+  "current_phase": "Phase 6: 写作配置框架完成（4 features）",
   "features": [
     {
       "id": "p1-01",
@@ -517,6 +517,30 @@
         "agent/PlotterAgent.java"
       ],
       "problem_ref": "Q1/Q2/Q3: styleGuide忽略+writingNotes死字段+解析丢章"
+    },
+    {
+      "id": "p6-1",
+      "name": "WritingPreset 预设模板系统",
+      "status": "completed",
+      "evidence": "86 tests pass; 6 built-in presets + custom preset API"
+    },
+    {
+      "id": "p6-2",
+      "name": "ContextFeedbackCollector 反馈闭环",
+      "status": "completed",
+      "evidence": "86 tests pass; ContinuityIssue → WritingContext.feedbackSection"
+    },
+    {
+      "id": "p6-3",
+      "name": "CharacterVoiceEnhancer + Rewrite修复",
+      "status": "completed",
+      "evidence": "86 tests pass; cast filtering + contrast mode + rewrite path fix"
+    },
+    {
+      "id": "p6-4",
+      "name": "StyleProfileDynamicUpdate",
+      "status": "completed",
+      "evidence": "86 tests pass; volume-end StyleProfile merge update"
     }
   ]
 }

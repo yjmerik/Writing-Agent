@@ -8,6 +8,9 @@
 5. enableKnowledgeQuotes（引用素材）：true/false，开启后角色可引用经典/诗词/兵法展现学识
 6. preferredQuoteSources（引用来源）：字符串数组，如["兵法","古籍","诗词","阵法","星象"]
 7. preventTransitionOverlap（过渡去重）：true/false，开启后避免相邻章节场景描写重复
+8. enableFeedbackInjection（反馈注入）：true/false，开启后历史问题自动注入下章上下文
+9. feedbackWindow（反馈窗口）：整数，回看多少章的反馈（默认10）
+10. dialogueDifferentiation（对话差异化）："contrast"=配对对比(默认) / "individual"=只列个体 / "none"=不注入
 
 当前配置：
 {{currentConfig}}

@@ -26,6 +26,7 @@ public class WritingContext {
     private String qualityFeedbackSection;    // 上卷质量评价反馈
     private String characterVoiceSection;     // 角色说话风格
     private String knowledgeQuoteSection;     // 引用素材
+    private String feedbackSection;           // 历史反馈（ContinuityIssue 注入）
 
     /** system prompt：故事原旨 + 风格 + 世界观 + 相关设定 + 出场人物 */
     public String toSystemPrompt() {
@@ -43,6 +44,9 @@ public class WritingContext {
         }
         if (entityConsistencySection != null && !entityConsistencySection.isBlank()) {
             sb.append(entityConsistencySection).append("\n\n");
+        }
+        if (feedbackSection != null && !feedbackSection.isBlank()) {
+            sb.append(feedbackSection).append("\n\n");
         }
         if (relevantSettings != null && !relevantSettings.isBlank()) {
             sb.append("【相关设定】\n").append(relevantSettings).append("\n\n");
@@ -137,4 +141,6 @@ public class WritingContext {
     public void setCharacterVoiceSection(String s) { this.characterVoiceSection = s; }
     public String getKnowledgeQuoteSection() { return knowledgeQuoteSection; }
     public void setKnowledgeQuoteSection(String s) { this.knowledgeQuoteSection = s; }
+    public String getFeedbackSection() { return feedbackSection; }
+    public void setFeedbackSection(String s) { this.feedbackSection = s; }
 }

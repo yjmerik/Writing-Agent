@@ -722,8 +722,9 @@ public class SqliteNovelRepository implements NovelRepository {
     public void saveWritingPreferences(WritingPreferences p) {
         String sql = "INSERT INTO writing_preferences (project_id,dialogue_density,enable_dialogue_enforcement," +
                 "enable_climax_rotation,enable_character_voice,enable_knowledge_quotes," +
-                "preferred_quote_sources,prevent_transition_overlap,updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET " +
+                "preferred_quote_sources,prevent_transition_overlap," +
+                "enable_feedback_injection,feedback_window,dialogue_differentiation,updated_at) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET " +
                 "dialogue_density=excluded.dialogue_density, " +
                 "enable_dialogue_enforcement=excluded.enable_dialogue_enforcement, " +
                 "enable_climax_rotation=excluded.enable_climax_rotation, " +
@@ -731,6 +732,9 @@ public class SqliteNovelRepository implements NovelRepository {
                 "enable_knowledge_quotes=excluded.enable_knowledge_quotes, " +
                 "preferred_quote_sources=excluded.preferred_quote_sources, " +
                 "prevent_transition_overlap=excluded.prevent_transition_overlap, " +
+                "enable_feedback_injection=excluded.enable_feedback_injection, " +
+                "feedback_window=excluded.feedback_window, " +
+                "dialogue_differentiation=excluded.dialogue_differentiation, " +
                 "updated_at=excluded.updated_at";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -742,7 +746,10 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setInt(6, p.isEnableKnowledgeQuotes() ? 1 : 0);
             ps.setString(7, p.getPreferredQuoteSources());
             ps.setInt(8, p.isPreventTransitionOverlap() ? 1 : 0);
-            ps.setString(9, p.getUpdatedAt().toString());
+            ps.setInt(9, p.isEnableFeedbackInjection() ? 1 : 0);
+            ps.setInt(10, p.getFeedbackWindow());
+            ps.setString(11, p.getDialogueDifferentiation() != null ? p.getDialogueDifferentiation() : "contrast");
+            ps.setString(12, p.getUpdatedAt().toString());
             ps.executeUpdate();
         } catch (SQLException ex) { throw new RuntimeException(ex); }
     }
@@ -803,6 +810,10 @@ public class SqliteNovelRepository implements NovelRepository {
         String qs = rs.getString("preferred_quote_sources");
         p.setPreferredQuoteSources(qs != null ? qs : "[]");
         p.setPreventTransitionOverlap(rs.getInt("prevent_transition_overlap") == 1);
+        try { p.setEnableFeedbackInjection(rs.getInt("enable_feedback_injection") == 1); } catch (Exception ignored) { p.setEnableFeedbackInjection(true); }
+        try { p.setFeedbackWindow(rs.getInt("feedback_window")); } catch (Exception ignored) { p.setFeedbackWindow(10); }
+        try { p.setDialogueDifferentiation(rs.getString("dialogue_differentiation")); } catch (Exception ignored) { p.setDialogueDifferentiation("contrast"); }
+        if (p.getDialogueDifferentiation() == null) p.setDialogueDifferentiation("contrast");
         return p;
     }
     private KnowledgeEntry mapEntry(ResultSet rs) throws SQLException {

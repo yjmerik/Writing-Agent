@@ -89,7 +89,9 @@ public class SqliteSchemaInitializer {
             "dialogue_density REAL DEFAULT 0.35, enable_dialogue_enforcement INTEGER DEFAULT 1, " +
             "enable_climax_rotation INTEGER DEFAULT 1, enable_character_voice INTEGER DEFAULT 1, " +
             "enable_knowledge_quotes INTEGER DEFAULT 1, preferred_quote_sources TEXT DEFAULT '[]', " +
-            "prevent_transition_overlap INTEGER DEFAULT 1, updated_at TEXT)"
+            "prevent_transition_overlap INTEGER DEFAULT 1, " +
+            "enable_feedback_injection INTEGER DEFAULT 1, feedback_window INTEGER DEFAULT 10, " +
+            "dialogue_differentiation TEXT DEFAULT 'contrast', updated_at TEXT)"
     };
 
     private final ConnectionProvider cp;

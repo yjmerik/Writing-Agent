@@ -79,6 +79,7 @@ public class ContextAssembler {
 
         // 质量反馈闭环：上卷评价注入
         ctx.setQualityFeedbackSection(buildQualityFeedbackSection(projectId));
+        ctx.setFeedbackSection(buildFeedbackSection(projectId, chapterIndex));
 
         // Token 预算控制：总预算 12K token，超限时按优先级裁剪低优先级 section
         applyTokenBudget(ctx);
@@ -476,6 +477,44 @@ public class ContextAssembler {
         StringBuilder sb = new StringBuilder();
         sb.append("【上卷质量评价反馈——改进方向】\n");
         sb.append(record.formatFeedback());
+        return sb.toString();
+    }
+
+    // --- 反馈闭环：注入历史 ContinuityIssue ---
+
+    private String buildFeedbackSection(String projectId, int chapterIndex) {
+        var prefs = repository.findWritingPreferences(projectId);
+        if (prefs.isEmpty() || !prefs.get().isEnableFeedbackInjection()) return "";
+
+        int window = prefs.get().getFeedbackWindow();
+        int fromChapter = Math.max(1, chapterIndex - window);
+
+        // 查询近 N 章的未解决 ContinuityIssue
+        var issues = repository.findUnresolvedIssues(projectId).stream()
+                .filter(i -> i.getDetectedAtChapter() >= fromChapter)
+                .filter(i -> i.getDetectedAtChapter() < chapterIndex) // 不含本章
+                .sorted((a, b) -> {
+                    // HIGH 优先，然后按章节倒序
+                    int sa = a.getSeverity() == ContinuityIssue.Severity.HIGH ? 0 : 1;
+                    int sb2 = b.getSeverity() == ContinuityIssue.Severity.HIGH ? 0 : 1;
+                    if (sa != sb2) return sa - sb2;
+                    return Integer.compare(b.getDetectedAtChapter(), a.getDetectedAtChapter());
+                })
+                .limit(8) // 最多 8 条
+                .toList();
+
+        if (issues.isEmpty()) return "";
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("【历史反馈（以下问题在近期章节中被发现，本章应避免重犯）】\n");
+        for (var issue : issues) {
+            sb.append("■ [").append(issue.getSeverity()).append("] ");
+            sb.append(issue.getType()).append("：");
+            // 截取描述前 80 字
+            String desc = issue.getDescription();
+            sb.append(desc.length() > 80 ? desc.substring(0, 80) + "..." : desc);
+            sb.append("\n");
+        }
         return sb.toString();
     }
 

@@ -29,6 +29,13 @@ public class WritingPreferences {
     // 过渡控制
     private boolean preventTransitionOverlap;      // 默认 true
 
+    // 反馈闭环控制
+    private boolean enableFeedbackInjection;       // 默认 true：注入历史 ContinuityIssue 反馈
+    private int feedbackWindow;                     // 默认 10：回看多少章的反馈
+
+    // 对话差异化模式
+    private String dialogueDifferentiation;         // "contrast" | "individual" | "none"
+
     private Instant updatedAt;
 
     public WritingPreferences(String projectId) {
@@ -41,6 +48,9 @@ public class WritingPreferences {
         this.enableKnowledgeQuotes = true;
         this.preferredQuoteSources = "[]";
         this.preventTransitionOverlap = true;
+        this.enableFeedbackInjection = true;
+        this.feedbackWindow = 10;
+        this.dialogueDifferentiation = "contrast";
         this.updatedAt = Instant.now();
     }
 
@@ -59,6 +69,9 @@ public class WritingPreferences {
                     }
                 }
                 case "preventTransitionOverlap" -> this.preventTransitionOverlap = (Boolean) value;
+                case "enableFeedbackInjection" -> this.enableFeedbackInjection = (Boolean) value;
+                case "feedbackWindow" -> this.feedbackWindow = ((Number) value).intValue();
+                case "dialogueDifferentiation" -> this.dialogueDifferentiation = (String) value;
             }
         });
         this.updatedAt = Instant.now();
@@ -74,6 +87,10 @@ public class WritingPreferences {
         m.put("enableKnowledgeQuotes", enableKnowledgeQuotes);
         m.put("preferredQuoteSources", preferredQuoteSources);
         m.put("preventTransitionOverlap", preventTransitionOverlap);
+        m.put("enableFeedbackInjection", enableFeedbackInjection);
+        m.put("feedbackWindow", feedbackWindow);
+        m.put("dialogueDifferentiation", dialogueDifferentiation);
+        m.put("updatedAt", updatedAt.toString());
         return m;
     }
 
@@ -95,5 +112,11 @@ public class WritingPreferences {
     public void setPreferredQuoteSources(String s) { this.preferredQuoteSources = s; this.updatedAt = Instant.now(); }
     public boolean isPreventTransitionOverlap() { return preventTransitionOverlap; }
     public void setPreventTransitionOverlap(boolean b) { this.preventTransitionOverlap = b; this.updatedAt = Instant.now(); }
+    public boolean isEnableFeedbackInjection() { return enableFeedbackInjection; }
+    public void setEnableFeedbackInjection(boolean b) { this.enableFeedbackInjection = b; this.updatedAt = Instant.now(); }
+    public int getFeedbackWindow() { return feedbackWindow; }
+    public void setFeedbackWindow(int w) { this.feedbackWindow = w; this.updatedAt = Instant.now(); }
+    public String getDialogueDifferentiation() { return dialogueDifferentiation; }
+    public void setDialogueDifferentiation(String d) { this.dialogueDifferentiation = d; this.updatedAt = Instant.now(); }
     public Instant getUpdatedAt() { return updatedAt; }
 }

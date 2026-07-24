@@ -63,7 +63,7 @@ class ContentControllerTest {
     }
 
     private String createAndConceive() throws Exception {
-        CreateProjectRequest req = new CreateProjectRequest("t", "c", "tag", "SOLO");
+        CreateProjectRequest req = new CreateProjectRequest("t", "c", "tag", "SOLO", null);
         String json = mvc.perform(post("/api/projects")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(req)))

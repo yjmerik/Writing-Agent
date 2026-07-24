@@ -35,7 +35,7 @@ class FullStackSmokeTest {
     @Test
     void 全链路_创建_构思_规划_写章节_查询() throws Exception {
         // 1. 创建项目
-        CreateProjectRequest req = new CreateProjectRequest("全链路测试", "剑修复仇玄幻故事", "玄幻,热血", "SOLO");
+        CreateProjectRequest req = new CreateProjectRequest("全链路测试", "剑修复仇玄幻故事", "玄幻,热血", "SOLO", null);
         String json = mvc.perform(post("/api/projects")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(req)))

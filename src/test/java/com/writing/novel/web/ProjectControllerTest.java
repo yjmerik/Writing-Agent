@@ -32,7 +32,7 @@ class ProjectControllerTest {
 
     @Test
     void 创建项目并查询() throws Exception {
-        CreateProjectRequest req = new CreateProjectRequest("API测试小说", "剑修故事", "玄幻,热血", "SOLO");
+        CreateProjectRequest req = new CreateProjectRequest("API测试小说", "剑修故事", "玄幻,热血", "SOLO", null);
 
         String json = mvc.perform(post("/api/projects")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -57,7 +57,7 @@ class ProjectControllerTest {
 
     @Test
     void 切换模式() throws Exception {
-        CreateProjectRequest req = new CreateProjectRequest("t", "c", "tag", "SOLO");
+        CreateProjectRequest req = new CreateProjectRequest("t", "c", "tag", "SOLO", null);
         String json = mvc.perform(post("/api/projects")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(req)))

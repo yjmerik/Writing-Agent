@@ -1,0 +1,18 @@
+{
+  "name": "cultivation",
+  "description": "硬核修仙：高爽点密度、境界节奏、战斗为主、引经据典",
+  "builtin": true,
+  "genreHint": "CULTIVATION",
+  "preferences": {
+    "dialogueDensity": 0.35,
+    "enableDialogueEnforcement": true,
+    "enableClimaxRotation": true,
+    "enableCharacterVoice": true,
+    "enableKnowledgeQuotes": true,
+    "preferredQuoteSources": ["兵法", "古籍", "阵法"],
+    "preventTransitionOverlap": true
+  },
+  "styleTone": "热血、冷峻、成长驱动",
+  "styleVoice": "第三人称，快节奏，多动作描写，战斗场景注重画面感和打击感",
+  "styleDosAndDonts": "禁止科幻元素混入；人物名字必须与设定一致；境界提升必须有代价；避免路人震惊体"
+}

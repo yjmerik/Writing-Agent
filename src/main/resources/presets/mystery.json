@@ -1,0 +1,18 @@
+{
+  "name": "mystery",
+  "description": "悬疑推理：线索驱动、慢节奏、逻辑严密、对话为核心",
+  "builtin": true,
+  "genreHint": "MYSTERY",
+  "preferences": {
+    "dialogueDensity": 0.5,
+    "enableDialogueEnforcement": true,
+    "enableClimaxRotation": true,
+    "enableCharacterVoice": true,
+    "enableKnowledgeQuotes": true,
+    "preferredQuoteSources": ["古籍", "心理学", "法医学"],
+    "preventTransitionOverlap": true
+  },
+  "styleTone": "悬疑、冷静、推理驱动",
+  "styleVoice": "第三人称，慢节奏，注重细节描写和逻辑链条，对话中暗藏线索",
+  "styleDosAndDonts": "线索必须公平（读者理论上可提前推理出真相）；禁止超自然力量解决谜题；每个嫌疑人都需要有不在场证明或动机"
+}

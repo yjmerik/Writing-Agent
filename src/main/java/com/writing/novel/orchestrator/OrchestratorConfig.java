@@ -8,6 +8,7 @@ import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.service.GenreDetector;
 import com.writing.novel.service.GenreRuleProvider;
 import com.writing.novel.service.PlotProgressionDetector;
+import com.writing.novel.service.PresetRegistry;
 import com.writing.novel.spi.NovelRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,8 +17,8 @@ import org.springframework.context.annotation.Configuration;
 public class OrchestratorConfig {
 
     @Bean
-    public ProjectService projectService(NovelRepository repo) {
-        return new ProjectService(repo);
+    public ProjectService projectService(NovelRepository repo, PresetRegistry presetRegistry) {
+        return new ProjectService(repo, presetRegistry);
     }
 
     @Bean

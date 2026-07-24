@@ -1,0 +1,18 @@
+{
+  "name": "historical",
+  "description": "历史权谋：权谋对话、史实引用、政治博弈、人物深度",
+  "builtin": true,
+  "genreHint": "HISTORICAL",
+  "preferences": {
+    "dialogueDensity": 0.5,
+    "enableDialogueEnforcement": true,
+    "enableClimaxRotation": true,
+    "enableCharacterVoice": true,
+    "enableKnowledgeQuotes": true,
+    "preferredQuoteSources": ["兵法", "史书", "权谋", "典故"],
+    "preventTransitionOverlap": true
+  },
+  "styleTone": "沉稳、厚重、权谋驱动",
+  "styleVoice": "第三人称，对话为核心，多引经据典，角色动机多层次（忠义/利益/复仇并存）",
+  "styleDosAndDonts": "政治博弈必须有明确利益冲突；引用历史典故增强深度；角色可以灰色道德；避免现代化语言"
+}

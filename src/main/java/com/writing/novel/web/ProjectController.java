@@ -21,7 +21,7 @@ public class ProjectController {
     @PostMapping
     public Project create(@RequestBody CreateProjectRequest req) {
         ProjectMode mode = req.mode() != null ? ProjectMode.valueOf(req.mode()) : ProjectMode.SOLO;
-        return projectService.create(req.title(), req.concept(), req.tags(), mode);
+        return projectService.create(req.title(), req.concept(), req.tags(), mode, req.preset());
     }
 
     @GetMapping

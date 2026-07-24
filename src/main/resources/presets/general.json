@@ -1,0 +1,18 @@
+{
+  "name": "general",
+  "description": "通用平衡：适中对话密度、标准节奏、自动题材检测",
+  "builtin": true,
+  "genreHint": null,
+  "preferences": {
+    "dialogueDensity": 0.35,
+    "enableDialogueEnforcement": true,
+    "enableClimaxRotation": true,
+    "enableCharacterVoice": true,
+    "enableKnowledgeQuotes": true,
+    "preferredQuoteSources": [],
+    "preventTransitionOverlap": true
+  },
+  "styleTone": null,
+  "styleVoice": null,
+  "styleDosAndDonts": null
+}

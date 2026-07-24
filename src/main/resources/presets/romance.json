@@ -1,0 +1,18 @@
+{
+  "name": "romance",
+  "description": "古风言情：高对话密度、情感节拍、诗词引用、细腻心理",
+  "builtin": true,
+  "genreHint": "ROMANCE",
+  "preferences": {
+    "dialogueDensity": 0.5,
+    "enableDialogueEnforcement": true,
+    "enableClimaxRotation": true,
+    "enableCharacterVoice": true,
+    "enableKnowledgeQuotes": true,
+    "preferredQuoteSources": ["诗词", "古籍", "典故"],
+    "preventTransitionOverlap": true
+  },
+  "styleTone": "细腻、古风、情感驱动",
+  "styleVoice": "第三人称或第一人称，注重心理描写和情感变化，对话含蓄有层次，适当引用诗词典故",
+  "styleDosAndDonts": "情感发展需要循序渐进；禁止强行误会和狗血桥段；角色对话需有古典韵味但不过分文言"
+}

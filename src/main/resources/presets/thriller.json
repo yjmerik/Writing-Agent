@@ -1,0 +1,18 @@
+{
+  "name": "thriller",
+  "description": "惊悚悬疑：高压节奏、危机递进、紧凑对话、生存驱动",
+  "builtin": true,
+  "genreHint": "THRILLER",
+  "preferences": {
+    "dialogueDensity": 0.35,
+    "enableDialogueEnforcement": true,
+    "enableClimaxRotation": true,
+    "enableCharacterVoice": true,
+    "enableKnowledgeQuotes": false,
+    "preferredQuoteSources": [],
+    "preventTransitionOverlap": true
+  },
+  "styleTone": "紧张、压迫、生存驱动",
+  "styleVoice": "第三人称，极快节奏，短句为主，环境描写烘托危机感",
+  "styleDosAndDonts": "主角必须主动行动；每章危机必须升级；禁止主角无理由的幸运；时间压力必须贯穿始终"
+}

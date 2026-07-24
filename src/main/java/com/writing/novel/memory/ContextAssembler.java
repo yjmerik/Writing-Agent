@@ -72,7 +72,7 @@ public class ContextAssembler {
         ctx.setWritingConstraints(buildWritingConstraints(projectId, fullSynopsis));
 
         // 角色声音注入（说话风格 + 知识领域）
-        ctx.setCharacterVoiceSection(buildCharacterVoiceSection(projectId));
+        ctx.setCharacterVoiceSection(buildCharacterVoiceSection(projectId, fullSynopsis));
 
         // 引用素材注入（与角色知识领域匹配的世界观条目）
         ctx.setKnowledgeQuoteSection(buildKnowledgeQuoteSection(projectId));
@@ -407,21 +407,52 @@ public class ContextAssembler {
 
     // --- 角色声音注入 ---
 
-    private String buildCharacterVoiceSection(String projectId) {
+    private String buildCharacterVoiceSection(String projectId, ChapterSynopsis synopsis) {
         var prefs = repository.findWritingPreferences(projectId);
         if (prefs.isEmpty() || !prefs.get().isEnableCharacterVoice()) return "";
 
-        var chars = knowledgeBase.findAllCharacters(projectId);
-        var withVoice = chars.stream()
+        String differentiation = prefs.get().getDialogueDifferentiation();
+        if ("none".equals(differentiation)) return "";
+
+        var allChars = knowledgeBase.findAllCharacters(projectId);
+        var withVoice = allChars.stream()
                 .filter(c -> c.getSpeakingStyle() != null && !c.getSpeakingStyle().isBlank())
                 .toList();
         if (withVoice.isEmpty()) return "";
 
+        // 按 cast 过滤（如果 synopsis 有 cast 信息）
+        List<Character> filtered = withVoice;
+        if (synopsis != null && synopsis.getCast() != null && !synopsis.getCast().isBlank()) {
+            String cast = synopsis.getCast();
+            filtered = withVoice.stream()
+                    .filter(c -> cast.contains(c.getName()) || c.getName().contains(cast))
+                    .toList();
+            // 如果 cast 过滤后为空（可能 cast 格式不匹配），回退到全部
+            if (filtered.isEmpty()) filtered = withVoice;
+        }
+
         StringBuilder sb = new StringBuilder();
-        sb.append("【角色说话风格要求（以下角色有明确说话风格，写作时必须严格遵守）】\n");
-        for (var c : withVoice) {
+        sb.append("【角色说话风格要求（必须严格遵守差异化，不同角色的语气/语速/用词须有明显区别）】\n");
+        for (var c : filtered) {
             sb.append("■ ").append(c.getName()).append("：").append(c.getSpeakingStyle()).append("\n");
         }
+
+        // 对比模式：当 ≥2 个角色时生成配对对比提示
+        if ("contrast".equals(differentiation) && filtered.size() >= 2) {
+            sb.append("⚠️ 差异化要求：");
+            // 取前 2-3 个角色生成对比
+            int pairs = Math.min(filtered.size(), 3);
+            List<String> contrastParts = new java.util.ArrayList<>();
+            for (int i = 0; i < pairs - 1; i++) {
+                var a = filtered.get(i);
+                var b = filtered.get(i + 1);
+                // 从 speakingStyle 提取关键词对比
+                contrastParts.add(a.getName() + "与" + b.getName() + "的说话方式必须形成明显对比");
+            }
+            sb.append(String.join("；", contrastParts));
+            sb.append("——一个角色不能模仿另一个角色的语气\n");
+        }
+
         return sb.toString();
     }
 

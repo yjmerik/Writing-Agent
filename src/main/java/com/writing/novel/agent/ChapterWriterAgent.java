@@ -66,7 +66,8 @@ public class ChapterWriterAgent {
                 "writingConstraints", ctx.getWritingConstraints() != null ? ctx.getWritingConstraints() : "",
                 "characterVoices", ctx.getCharacterVoiceSection() != null ? ctx.getCharacterVoiceSection() : "",
                 "knowledgeQuotes", ctx.getKnowledgeQuoteSection() != null ? ctx.getKnowledgeQuoteSection() : "",
-                "genrePacingRules", genrePacingRules));
+                "genrePacingRules", genrePacingRules,
+                "feedbackSection", ctx.getFeedbackSection() != null ? ctx.getFeedbackSection() : ""));
         String systemPrompt = ctx.toSystemPrompt() + "\n\n" + chapterWritingPrompt;
 
         var req = LlmRequest.builder()
@@ -123,9 +124,10 @@ public class ChapterWriterAgent {
                     + (resp.getContent() == null ? 0 : resp.getContent().length()) + "字），放弃保存");
         }
 
-        // 5. 构建 Chapter 并保存
+        // 5. 构建 Chapter 并保存（纠正错误的章节号）
+        String cleanContent = sanitizeChapterNumbers(resp.getContent(), chapterIndex);
         Chapter chapter = new Chapter(projectId, chapterIndex, chapterTitle);
-        chapter.setContent(resp.getContent());
+        chapter.setContent(cleanContent);
         repository.saveChapter(chapter);
 
         // 6. 按段落分块索引章节正文
@@ -152,8 +154,23 @@ public class ChapterWriterAgent {
                 chapterSynopsis + "\n\n【纠偏要求】" + correctionInstructions,
                 writingNotes);
 
+        // 修复：rewrite 也传全部模板变量（之前只传 styleGuide=""）
+        String dynamicStyleGuide = extractStyleGuide(projectId);
+        String genrePacingRules = "";
+        if (genreRuleProvider != null) {
+            var project = repository.findProject(projectId).orElse(null);
+            if (project != null) {
+                genrePacingRules = genreRuleProvider.getChapterWritingRules(project.getGenre());
+            }
+        }
         String chapterWritingPrompt = promptService != null
-                ? promptService.render("chapter-writing", java.util.Map.of("styleGuide", ""))
+                ? promptService.render("chapter-writing", java.util.Map.of(
+                    "styleGuide", dynamicStyleGuide,
+                    "writingConstraints", ctx.getWritingConstraints() != null ? ctx.getWritingConstraints() : "",
+                    "characterVoices", ctx.getCharacterVoiceSection() != null ? ctx.getCharacterVoiceSection() : "",
+                    "knowledgeQuotes", ctx.getKnowledgeQuoteSection() != null ? ctx.getKnowledgeQuoteSection() : "",
+                    "genrePacingRules", genrePacingRules,
+                    "feedbackSection", ctx.getFeedbackSection() != null ? ctx.getFeedbackSection() : ""))
                 : "你是网络小说写作高手。";
 
         String systemPrompt = ctx.toSystemPrompt() + "\n\n" + chapterWritingPrompt
@@ -172,7 +189,14 @@ public class ChapterWriterAgent {
             return null; // 重写也失败，保留原版本
         }
 
-        return resp.getContent();
+        return sanitizeChapterNumbers(resp.getContent(), chapterIndex);
+    }
+
+    /** 纠正正文中错误的章节号（LLM 可能自创"第N章"，需统一为系统 chapterIndex） */
+    private String sanitizeChapterNumbers(String content, int chapterIndex) {
+        if (content == null) return content;
+        // 将所有"第\d+章"替换为正确的章节号
+        return content.replaceAll("第\\d+章", "第" + chapterIndex + "章");
     }
 
     /** 按段落分块索引章节正文，每块 ~800 字，确保中后段情节也能被召回 */

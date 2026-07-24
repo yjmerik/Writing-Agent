@@ -53,3 +53,7 @@
 {{#if knowledgeQuotes}}
 {{knowledgeQuotes}}
 {{/if}}
+
+{{#if feedbackSection}}
+{{feedbackSection}}
+{{/if}}

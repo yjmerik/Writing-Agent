@@ -348,6 +348,30 @@ public class NovelOrchestrator {
         } catch (Exception e) {
             log.warn("伏笔审计失败: {}", e.getMessage());
         }
+
+        // p6-4: 卷末动态更新 StyleProfile（从最近5章提取风格趋势）
+        try {
+            updateStyleProfile(projectId, fromChapter, toChapter);
+        } catch (Exception e) {
+            log.warn("风格基线更新失败: {}", e.getMessage());
+        }
+    }
+
+    /** p6-4: 卷末从最近章节重新评估 StyleProfile */
+    private void updateStyleProfile(String projectId, int fromChapter, int toChapter) {
+        var chapters = repository.findChaptersByProject(projectId);
+        // 取本卷最后5章的正文采样
+        var recentText = chapters.stream()
+                .filter(c -> c.getChapterIndex() >= toChapter - 4 && c.getChapterIndex() <= toChapter)
+                .map(c -> {
+                    String content = c.getContent();
+                    return content != null ? content.substring(0, Math.min(300, content.length())) : "";
+                })
+                .reduce((a, b) -> a + "\n---\n" + b)
+                .orElse("");
+        if (recentText.length() < 100) return;
+        styleGuardian.updateProfile(projectId, recentText);
+        log.info("风格基线已更新（卷末 ch{}）", toChapter);
     }
 
     /** p5-c3: 卷末伏笔审计——检查本卷埋下但未回收的伏笔 */

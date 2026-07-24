@@ -66,6 +66,46 @@ public class StyleGuardianAgent {
         return gateway.complete(req).getContent();
     }
 
+    /**
+     * p6-4: 从最近章节重新评估并合并更新 StyleProfile。
+     * 在卷末由 Orchestrator 调用，确保风格基线反映最新趋势。
+     */
+    public StyleProfile updateProfile(String projectId, String recentChaptersText) {
+        var existing = repository.findStyleProfileByProject(projectId);
+        if (existing.isEmpty()) return null;
+
+        StyleProfile profile = existing.get();
+
+        String systemPrompt = promptService.render("style-establish", Map.of());
+        String userMessage = "请根据以下近期章节正文，更新风格基线（保留原有核心特征，融入最新趋势）：\n"
+                + "当前基线——基调：" + profile.getTone()
+                + "，叙事：" + profile.getVoice()
+                + "，注意事项：" + profile.getDosAndDonts()
+                + "\n\n近期章节采样（前1500字）：\n"
+                + (recentChaptersText.length() > 1500 ? recentChaptersText.substring(0, 1500) : recentChaptersText);
+
+        var req = LlmRequest.builder()
+                .taskType(LlmTaskType.STYLE_GUARDIAN)
+                .systemPrompt(systemPrompt)
+                .userMessage(userMessage)
+                .temperature(0.4)
+                .maxTokens(800)
+                .build();
+
+        var resp = gateway.complete(req);
+        String newTone = extractField(resp.getContent(), "基调");
+        String newVoice = extractField(resp.getContent(), "叙事");
+        String newDosAndDonts = extractField(resp.getContent(), "注意事项");
+
+        // 合并：只更新非空的字段（不覆写为空值）
+        if (!newTone.isBlank()) profile.setTone(newTone);
+        if (!newVoice.isBlank()) profile.setVoice(newVoice);
+        if (!newDosAndDonts.isBlank()) profile.setDosAndDonts(newDosAndDonts);
+
+        repository.saveStyleProfile(profile);
+        return profile;
+    }
+
     private String extractField(String text, String field) {
         Pattern p = Pattern.compile("【" + Pattern.quote(field) + "】(.+?)(?=【|$)", Pattern.DOTALL);
         Matcher m = p.matcher(text);

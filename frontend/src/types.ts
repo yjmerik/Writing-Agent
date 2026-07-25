@@ -104,4 +104,17 @@ export interface CreateProjectRequest {
   concept: string;
   tags: string;
   mode: ProjectMode;
+  preset?: string;
+}
+
+export type CheckpointType = 'AFTER_INITIAL_SETUP' | 'AFTER_VOLUME_OUTLINE' | 'AFTER_CHAPTER' | 'ON_CONTINUITY_FIX';
+export type CheckpointStatus = 'PENDING' | 'APPROVED' | 'MODIFIED' | 'REJECTED';
+
+export interface Checkpoint {
+  id: string;
+  projectId: string;
+  type: CheckpointType;
+  description: string;
+  status: CheckpointStatus;
+  createdAt: string;
 }

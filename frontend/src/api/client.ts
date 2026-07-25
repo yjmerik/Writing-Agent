@@ -1,4 +1,4 @@
-/** API 客户端：封装全部 16 个后端端点 */
+/** API 客户端：封装全部后端端点 */
 import type {
   Project,
   ProjectStatus,
@@ -9,6 +9,7 @@ import type {
   Summary,
   CreateProjectRequest,
   ProjectMode,
+  Checkpoint,
 } from '../types';
 
 const BASE = '/api';
@@ -111,4 +112,49 @@ export const api = {
       summary: string;
       issues: { dimension: string; severity: string; description: string }[];
     }>(`/projects/${id}/evaluate`, { method: 'POST' }, 300000),
+
+  // --- p7: 交互式审核 + 章节重写 + 预设 ---
+
+  /** 列出待审核 checkpoint */
+  listCheckpoints: (id: string) =>
+    request<Checkpoint[]>(`/projects/${id}/checkpoints`),
+
+  /** 批准 checkpoint */
+  approveCheckpoint: (id: string, checkpointId: string) =>
+    request<{ status: string; checkpointId: string }>(`/projects/${id}/checkpoints/${checkpointId}/approve`, { method: 'POST' }),
+
+  /** 拒绝 checkpoint（带修改意见重写当前章） */
+  rejectCheckpoint: (id: string, checkpointId: string, instructions: string) =>
+    request<{ status: string; checkpointId: string; instructions: string }>(
+      `/projects/${id}/checkpoints/${checkpointId}/reject`,
+      { method: 'POST', body: JSON.stringify({ instructions }) },
+      300000,
+    ),
+
+  /** 修改 checkpoint（带意见重写后批准） */
+  modifyCheckpoint: (id: string, checkpointId: string, instructions: string) =>
+    request<{ status: string; checkpointId: string; instructions: string }>(
+      `/projects/${id}/checkpoints/${checkpointId}/modify`,
+      { method: 'POST', body: JSON.stringify({ instructions }) },
+      300000,
+    ),
+
+  /** 重写指定章节 */
+  rewriteChapter: (id: string, chapterIndex: number, instructions?: string) =>
+    request<Chapter>(
+      `/projects/${id}/rewrite-chapter/${chapterIndex}`,
+      { method: 'POST', body: JSON.stringify({ instructions: instructions || '' }) },
+      300000,
+    ),
+
+  /** 获取偏好配置 */
+  getPreferences: (id: string) =>
+    request<Record<string, unknown>>(`/projects/${id}/preferences`),
+
+  /** 对话式修改偏好 */
+  chatPreferences: (id: string, message: string) =>
+    request<{ reply: string; preferences: Record<string, unknown> }>(
+      `/projects/${id}/preferences/chat`,
+      { method: 'POST', body: JSON.stringify({ message }) },
+    ),
 };

@@ -54,7 +54,7 @@ public class CharacterDesignerAgent {
     }
 
     private Character parseCharacter(String text, String projectId) {
-        String name = extractField(text, "姓名", "未命名");
+        String name = com.writing.novel.util.NameSanitizer.sanitize(extractField(text, "姓名", "未命名"));
         String role = extractField(text, "角色定位", "配角");
         Character c = new Character(projectId, name, role);
         c.setPersonality(extractFieldOrNull(text, "性格"));

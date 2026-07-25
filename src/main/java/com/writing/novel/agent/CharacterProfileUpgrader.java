@@ -42,10 +42,15 @@ public class CharacterProfileUpgrader {
     public List<String> upgrade(String projectId, int currentChapter) {
         List<String> upgraded = new ArrayList<>();
 
-        // 1. 找出所有 CHARACTER 类型的 Entity，出现跨度 >= 3 章
+        // p7-4: 从 WritingPreferences 读取跨度阈值（可调）
+        int spanThreshold = repository.findWritingPreferences(projectId)
+                .map(p -> p.getCharacterUpgradeSpan())
+                .orElse(2);
+
+        // 1. 找出所有 CHARACTER 类型的 Entity，出现跨度 >= spanThreshold
         var entities = repository.findEntitiesByProject(projectId).stream()
                 .filter(e -> e.getType() == EntityType.CHARACTER)
-                .filter(e -> e.getLastSeenChapter() - e.getFirstSeenChapter() >= 2)
+                .filter(e -> e.getLastSeenChapter() - e.getFirstSeenChapter() >= spanThreshold)
                 .filter(e -> currentChapter - e.getLastSeenChapter() <= 5) // 近5章还活跃
                 .toList();
 
@@ -121,8 +126,9 @@ public class CharacterProfileUpgrader {
 
     /** 从 LLM 输出解析角色档案 */
     private Character parseProfile(String text, String projectId, String name) {
+        String cleanName = com.writing.novel.util.NameSanitizer.sanitize(name);
         String role = extractField(text, "角色定位", "配角");
-        Character c = new Character(projectId, name, role);
+        Character c = new Character(projectId, cleanName, role);
         c.setPersonality(extractFieldOrNull(text, "性格"));
         c.setAbility(extractFieldOrNull(text, "能力"));
         c.setMotivation(extractFieldOrNull(text, "动机"));

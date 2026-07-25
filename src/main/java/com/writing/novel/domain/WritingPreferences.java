@@ -36,6 +36,10 @@ public class WritingPreferences {
     // 对话差异化模式
     private String dialogueDifferentiation;         // "contrast" | "individual" | "none"
 
+    // 阈值参数化（p7-4）
+    private int plotStallWindow;                    // 默认 3：连续多少章低张力视为停滞
+    private int characterUpgradeSpan;               // 默认 2：角色升级跨度阈值（出现跨度>=此值才升级）
+
     private Instant updatedAt;
 
     public WritingPreferences(String projectId) {
@@ -51,6 +55,8 @@ public class WritingPreferences {
         this.enableFeedbackInjection = true;
         this.feedbackWindow = 10;
         this.dialogueDifferentiation = "contrast";
+        this.plotStallWindow = 3;
+        this.characterUpgradeSpan = 2;
         this.updatedAt = Instant.now();
     }
 
@@ -72,6 +78,8 @@ public class WritingPreferences {
                 case "enableFeedbackInjection" -> this.enableFeedbackInjection = (Boolean) value;
                 case "feedbackWindow" -> this.feedbackWindow = ((Number) value).intValue();
                 case "dialogueDifferentiation" -> this.dialogueDifferentiation = (String) value;
+                case "plotStallWindow" -> this.plotStallWindow = ((Number) value).intValue();
+                case "characterUpgradeSpan" -> this.characterUpgradeSpan = ((Number) value).intValue();
             }
         });
         this.updatedAt = Instant.now();
@@ -90,6 +98,8 @@ public class WritingPreferences {
         m.put("enableFeedbackInjection", enableFeedbackInjection);
         m.put("feedbackWindow", feedbackWindow);
         m.put("dialogueDifferentiation", dialogueDifferentiation);
+        m.put("plotStallWindow", plotStallWindow);
+        m.put("characterUpgradeSpan", characterUpgradeSpan);
         m.put("updatedAt", updatedAt.toString());
         return m;
     }
@@ -118,5 +128,9 @@ public class WritingPreferences {
     public void setFeedbackWindow(int w) { this.feedbackWindow = w; this.updatedAt = Instant.now(); }
     public String getDialogueDifferentiation() { return dialogueDifferentiation; }
     public void setDialogueDifferentiation(String d) { this.dialogueDifferentiation = d; this.updatedAt = Instant.now(); }
+    public int getPlotStallWindow() { return plotStallWindow; }
+    public void setPlotStallWindow(int w) { this.plotStallWindow = w; this.updatedAt = Instant.now(); }
+    public int getCharacterUpgradeSpan() { return characterUpgradeSpan; }
+    public void setCharacterUpgradeSpan(int s) { this.characterUpgradeSpan = s; this.updatedAt = Instant.now(); }
     public Instant getUpdatedAt() { return updatedAt; }
 }

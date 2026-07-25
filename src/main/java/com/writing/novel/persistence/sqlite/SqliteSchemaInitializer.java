@@ -91,7 +91,9 @@ public class SqliteSchemaInitializer {
             "enable_knowledge_quotes INTEGER DEFAULT 1, preferred_quote_sources TEXT DEFAULT '[]', " +
             "prevent_transition_overlap INTEGER DEFAULT 1, " +
             "enable_feedback_injection INTEGER DEFAULT 1, feedback_window INTEGER DEFAULT 10, " +
-            "dialogue_differentiation TEXT DEFAULT 'contrast', updated_at TEXT)"
+            "dialogue_differentiation TEXT DEFAULT 'contrast', " +
+            "plot_stall_window INTEGER DEFAULT 3, character_upgrade_span INTEGER DEFAULT 2, " +
+            "updated_at TEXT)"
     };
 
     private final ConnectionProvider cp;

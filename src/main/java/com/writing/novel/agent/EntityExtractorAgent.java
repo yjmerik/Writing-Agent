@@ -81,7 +81,7 @@ public class EntityExtractorAgent {
             JsonNode entitiesNode = root.path("entities");
             if (entitiesNode.isArray()) {
                 for (JsonNode en : entitiesNode) {
-                    String name = en.path("name").asText("");
+                    String name = com.writing.novel.util.NameSanitizer.sanitize(en.path("name").asText(""));
                     if (name.isBlank()) continue;
                     String typeStr = en.path("type").asText("CONCEPT");
 

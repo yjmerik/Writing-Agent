@@ -548,6 +548,17 @@ public class SqliteNovelRepository implements NovelRepository {
         return list;
     }
 
+    @Override
+    public Optional<Checkpoint> findLatestPendingCheckpoint(String projectId) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM checkpoints WHERE project_id=? AND status='PENDING' ORDER BY created_at DESC LIMIT 1")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? Optional.of(mapCheckpoint(rs)) : Optional.empty();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
     // --- 图数据库：实体 CRUD ---
 
     @Override

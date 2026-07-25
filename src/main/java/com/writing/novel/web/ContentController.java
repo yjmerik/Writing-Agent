@@ -50,6 +50,14 @@ public class ContentController {
         return orchestrator.runWritingOneChapter(id);
     }
 
+    /** p7-1: 重写指定章节（不限项目状态） */
+    @PostMapping("/rewrite-chapter/{chapterIndex}")
+    public Chapter rewriteChapter(@PathVariable String id, @PathVariable int chapterIndex,
+                                   @RequestBody(required = false) java.util.Map<String, String> body) {
+        String instructions = body != null ? body.get("instructions") : null;
+        return orchestrator.rewriteChapter(id, chapterIndex, instructions);
+    }
+
     @GetMapping("/memory/summary")
     public List<Summary> summaries(@PathVariable String id) {
         return repository.findSummariesByProject(id);

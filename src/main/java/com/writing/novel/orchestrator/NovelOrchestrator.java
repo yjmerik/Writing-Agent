@@ -169,7 +169,22 @@ public class NovelOrchestrator {
 
     private void resumeFromCheckpoint(String projectId) {
         Project p = loadProject(projectId);
-        p.setState(NovelState.PLANNING);
+        // p7-1: 智能恢复——根据最近的 PENDING checkpoint 类型决定下一步状态
+        var pending = repository.findLatestPendingCheckpoint(projectId);
+        if (pending.isPresent()) {
+            var cp = pending.get();
+            cp.approve();
+            repository.saveCheckpoint(cp);
+
+            NovelState targetState = switch (cp.getType()) {
+                case AFTER_INITIAL_SETUP, AFTER_VOLUME_OUTLINE -> NovelState.PLANNING;
+                case AFTER_CHAPTER, ON_CONTINUITY_FIX -> NovelState.WRITING;
+            };
+            p.setState(targetState);
+        } else {
+            // 无 pending checkpoint，默认进入 PLANNING
+            p.setState(NovelState.PLANNING);
+        }
         repository.saveProject(p);
     }
 
@@ -273,6 +288,15 @@ public class NovelOrchestrator {
 
         // 卷结束时生成卷级全局摘要（递归摘要）
         checkAndGenerateVolumeSummary(projectId, outline, chapterIndex);
+
+        // p7-1: INTERACTIVE 模式——每章写完后暂停等待审核
+        if (p.getMode() == ProjectMode.INTERACTIVE) {
+            p.setState(NovelState.PAUSED_AT_CHECKPOINT);
+            repository.saveProject(p);
+            repository.saveCheckpoint(new Checkpoint(projectId,
+                    Checkpoint.Type.AFTER_CHAPTER,
+                    "第" + chapterIndex + "章「" + chapter.getTitle() + "」已完成，待审核"));
+        }
 
         return chapter;
     }
@@ -721,6 +745,41 @@ public class NovelOrchestrator {
         return outline.getVolumes().stream()
                 .flatMap(v -> v.getSynopses().stream())
                 .anyMatch(s -> s.getChapterIndex() > currentIndex);
+    }
+
+    /**
+     * p7-1: 重写指定章节（不限项目状态，FINAL 也能用）。
+     * @param instructions 可选修改意见（如"增加对话""减少打斗"）
+     */
+    public Chapter rewriteChapter(String projectId, int chapterIndex, String instructions) {
+        Project p = loadProject(projectId);
+        Outline outline = repository.findOutlineByProject(projectId).orElseThrow(
+                () -> new IllegalStateException("无大纲"));
+
+        ChapterSynopsis synopsis = findSynopsis(outline, chapterIndex);
+        if (synopsis == null) throw new IllegalArgumentException("大纲中无此章节: " + chapterIndex);
+
+        var existing = repository.findChapterByIndex(projectId, chapterIndex)
+                .orElseThrow(() -> new IllegalArgumentException("章节不存在: " + chapterIndex));
+
+        String correction = instructions != null && !instructions.isBlank()
+                ? instructions : "请基于上下文重新生成更好的版本";
+
+        String newContent = chapterWriter.rewriteForCorrection(
+                projectId, chapterIndex, synopsis.getTitle(),
+                synopsis.getSynopsis(), synopsis.getWritingNotes(), correction);
+
+        if (newContent != null && newContent.length() >= 500) {
+            existing.setContent(newContent);
+            repository.saveChapter(existing);
+
+            // 重新提取实体和伏笔
+            try { entityGraphService.extractFromChapter(projectId, existing); } catch (Exception ignored) {}
+            try { foreshadowingExtractor.extract(projectId, existing); } catch (Exception ignored) {}
+
+            log.info("章节重写成功(章{}): {} 字", chapterIndex, newContent.length());
+        }
+        return existing;
     }
 
     /** 从 ChapterSynopsis.climax 文本推断爽点类型（关键词匹配） */

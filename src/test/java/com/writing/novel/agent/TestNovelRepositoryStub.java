@@ -56,6 +56,7 @@ public class TestNovelRepositoryStub implements NovelRepository {
     @Override public String saveCheckpoint(Checkpoint c) { return c.getId(); }
     @Override public Optional<Checkpoint> findCheckpoint(String id) { return Optional.empty(); }
     @Override public List<Checkpoint> findPendingCheckpoints(String p) { return List.of(); }
+    @Override public Optional<Checkpoint> findLatestPendingCheckpoint(String p) { return Optional.empty(); }
 
     // --- Entity ---
     @Override public void saveEntity(Entity e) {}

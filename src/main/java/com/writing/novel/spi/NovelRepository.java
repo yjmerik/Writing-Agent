@@ -74,6 +74,7 @@ public interface NovelRepository {
     String saveCheckpoint(Checkpoint checkpoint);
     Optional<Checkpoint> findCheckpoint(String id);
     List<Checkpoint> findPendingCheckpoints(String projectId);
+    Optional<Checkpoint> findLatestPendingCheckpoint(String projectId);
 
     // --- Entity (Graph) ---
     void saveEntity(Entity entity);

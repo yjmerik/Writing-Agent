@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": "Phase 6: 写作配置框架完成（4 features）",
+  "current_phase": "Phase 8 完成 — 42 features total",
   "features": [
     {
       "id": "p1-01",
@@ -541,6 +541,30 @@
       "name": "StyleProfileDynamicUpdate",
       "status": "completed",
       "evidence": "86 tests pass; volume-end StyleProfile merge update"
+    },
+    {
+      "id": "p8-1",
+      "name": "历史感知 Prompt + 通用创意指令重写",
+      "status": "completed",
+      "evidence": "86 tests pass; 删除硬编码黑名单 → 通用创意指令; diversityGuide 注入 3 个 Agent"
+    },
+    {
+      "id": "p8-2",
+      "name": "NarrativeThreadTracker 叙事线索追踪",
+      "status": "completed",
+      "evidence": "86 tests pass; 线索追踪 ACTIVE/SUSPENDED/RESOLVED; 悬挂检测 + 注入"
+    },
+    {
+      "id": "p8-3",
+      "name": "ReaderReviewAgent 读者驱动 Agentic Loop",
+      "status": "completed",
+      "evidence": "86 tests pass; 每章读者检验; score<7 自动重写; 最多1次"
+    },
+    {
+      "id": "p8-4",
+      "name": "DiversityTracker + 激活死代码",
+      "status": "completed",
+      "evidence": "86 tests pass; 多维度轮换约束; getClimaxSuggestions/preventTransitionOverlap 激活"
     }
   ]
 }

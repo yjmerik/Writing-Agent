@@ -137,4 +137,9 @@ public class AgentConfig {
                                                               PromptTemplateService promptService) {
         return new NarrativeThreadExtractor(gateway, tracker, promptService);
     }
+
+    @Bean
+    public ReaderReviewAgent readerReviewAgent(LlmGateway gateway, PromptTemplateService promptService) {
+        return new ReaderReviewAgent(gateway, promptService);
+    }
 }

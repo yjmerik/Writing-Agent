@@ -45,6 +45,7 @@ public class NovelOrchestrator {
     private final GenreRuleProvider genreRuleProvider;
     private final CreativeDiversityService creativeDiversityService;
     private final NarrativeThreadExtractor narrativeThreadExtractor;
+    private final ReaderReviewAgent readerReviewAgent;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -67,7 +68,8 @@ public class NovelOrchestrator {
                               GenreDetector genreDetector,
                               GenreRuleProvider genreRuleProvider,
                               CreativeDiversityService creativeDiversityService,
-                              NarrativeThreadExtractor narrativeThreadExtractor) {
+                              NarrativeThreadExtractor narrativeThreadExtractor,
+                              ReaderReviewAgent readerReviewAgent) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -90,6 +92,7 @@ public class NovelOrchestrator {
         this.genreRuleProvider = genreRuleProvider;
         this.creativeDiversityService = creativeDiversityService;
         this.narrativeThreadExtractor = narrativeThreadExtractor;
+        this.readerReviewAgent = readerReviewAgent;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -287,6 +290,33 @@ public class NovelOrchestrator {
             }
         } catch (Exception e) {
             log.warn("叙事线索提取失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+
+        // p8-3: 读者检验 Agentic Loop——每章写后检验，低分自动重写（最多1次）
+        if (readerReviewAgent != null) {
+            try {
+                var review = readerReviewAgent.review(chapterIndex, chapter.getContent());
+                log.info("读者检验(章{}): {}/10 — {}", chapterIndex, review.getScore(), review.getSummary());
+                if (!review.isPassed()) {
+                    log.info("章节评分 {} < {}，自动重写", review.getScore(), readerReviewAgent.getPassThreshold());
+                    var reviewSynopsis = findSynopsis(outline, chapterIndex);
+                    String newContent = chapterWriter.rewriteForCorrection(
+                            projectId, chapterIndex, chapter.getTitle(),
+                            reviewSynopsis != null ? reviewSynopsis.getSynopsis() : "",
+                            reviewSynopsis != null ? reviewSynopsis.getWritingNotes() : "",
+                            "读者检验改进建议：" + review.getImprovementSuggestion());
+                    if (newContent != null && newContent.length() >= 500) {
+                        chapter.setContent(newContent);
+                        repository.saveChapter(chapter);
+                        log.info("章节重写完成(章{})", chapterIndex);
+                        // 重写后重新检验（只检1次，不再循环）
+                        var reReview = readerReviewAgent.review(chapterIndex, chapter.getContent());
+                        log.info("重写后检验(章{}): {}/10", chapterIndex, reReview.getScore());
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("读者检验失败(章{}): {}", chapterIndex, e.getMessage());
+            }
         }
 
         // p5-c2: 伏笔动态提取——从正文中识别新埋下的伏笔

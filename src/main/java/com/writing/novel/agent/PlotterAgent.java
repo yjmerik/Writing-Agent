@@ -112,102 +112,129 @@ public class PlotterAgent {
 
         Outline outline = new Outline(projectId, premise);
 
-        // 提取卷：【卷N】或【卷一】或【第N卷】或【第一卷】或 #【卷N】（兼容 markdown 标题前缀）
-        // 卷名可能包含「（第X-Y章）」之类的后缀
+        // 提取卷：兼容多种格式
+        // 格式1: 【卷N】卷名\n卷梗概\n第X章...
+        // 格式2: # 第N章 卷名\n... (markdown H1)
+        // 格式3: 卷N 卷名（第X-Y章）\n...
+        // 先尝试标准【卷N】格式
         Matcher volM = Pattern.compile("#?\\s*【第?卷([0-9一二三四五六七八九十百]+)[】第]*(.+?)\\r?\\n(.+?)(?=#?\\s*【第?卷|#?\\s*【伏笔|$)", Pattern.DOTALL).matcher(text);
+        boolean hasVolumes = false;
         while (volM.find()) {
+            hasVolumes = true;
             int volIndex = parseChineseOrArabic(volM.group(1));
             String volTitle = volM.group(2).trim();
             String volBody = volM.group(3).trim();
-            // 卷梗概是第一行（不含"第X章"的行）
-            String volSummary = "";
-            String[] lines = volBody.split("\\n");
-            for (String line : lines) {
-                String lt = line.trim();
-                if (!lt.isEmpty() && !lt.startsWith("第")) {
-                    volSummary = lt;
-                    break;
-                }
-            }
+            String volSummary = extractVolumeSummary(volBody);
             Volume volume = new Volume(projectId, volIndex, volTitle, volSummary);
+            parseChaptersInVolume(volume, volBody, projectId);
+            outline.addVolume(volume);
+        }
 
-            // 提取章节：第X章，X 支持中文数字和阿拉伯数字
-            // 兼容格式（多行）：
-            //   "## 第1章 标题\n**场景节拍**：内容...\n**爽点**：...\n**人物**：..."
-            //   或 "### 第1章 标题\n\n**场景节拍**：内容...（标题和场景节拍间可能有空行）
-            // 兼容格式（单行）：
-            //   "**第1章 标题**：场景节拍...**爽点**：...**人物**：..."
-            boolean hasChapters = false;
+        // 如果没有匹配到【卷N】格式，尝试 markdown 格式：# 卷名 或 ## 卷名
+        if (!hasVolumes) {
+            // 格式: # 卷名\n\n内容...（用 --- 分隔卷）
+            Matcher mdVolM = Pattern.compile("#+\\s*([^\\n]+?)\\r?\\n(.+?)(?=#+\\s+[^\\n]|---|$)", Pattern.DOTALL).matcher(text);
+            int volIdx = 0;
+            while (mdVolM.find()) {
+                volIdx++;
+                String volTitle = sanitizeTitle(mdVolM.group(1));
+                String volBody = mdVolM.group(2).trim();
+                String volSummary = extractVolumeSummary(volBody);
+                Volume volume = new Volume(projectId, volIdx, volTitle, volSummary);
+                parseChaptersInVolume(volume, volBody, projectId);
+                outline.addVolume(volume);
+            }
+        }
 
-            // 尝试多行格式（beats/newline separated）
-            Matcher chM = Pattern.compile("(?:#+\\s*|\\*{2})?第([0-9一二三四五六七八九十百]+)章\\s*(.+?)\\r?\\n\\r?\\n(\\*{0,2}场景节拍\\*{0,2}[：:]\\s*.+)", Pattern.DOTALL).matcher(volBody);
-            while (chM.find()) {
+        // 如果还是没有卷，尝试直接提取所有章节（无卷结构）
+        if (outline.getVolumes().isEmpty()) {
+            Volume volume = new Volume(projectId, 1, "第一卷", "");
+            parseChaptersInVolume(volume, text, projectId);
+            outline.addVolume(volume);
+        }
+
+        repository.saveOutline(outline);
+        return outline;
+    }
+
+    private String extractVolumeSummary(String volBody) {
+        String[] lines = volBody.split("\\n");
+        for (String line : lines) {
+            String lt = line.trim();
+            if (!lt.isEmpty() && !lt.startsWith("第") && !lt.startsWith("#") && !lt.startsWith("*")) {
+                return lt;
+            }
+        }
+        return "";
+    }
+
+    private void parseChaptersInVolume(Volume volume, String volBody, String projectId) {
+        // 多行格式：## 第N章 标题\n\n**场景节拍**：...
+        boolean hasChapters = false;
+        Matcher chM = Pattern.compile("(?:#+\\s*|\\*{2})?第([0-9一二三四五六七八九十百]+)章\\s*(.+?)\\r?\\n\\r?\\n(\\*{0,2}场景节拍\\*{0,2}[：:]\\s*.+?)(?=\\r?\\n\\r?\\n(?:#+\\s*|\\*{2})?第[0-9一二三四五六七八九十百]+章|$)", Pattern.DOTALL).matcher(volBody);
+        while (chM.find()) {
+            hasChapters = true;
+            int idx = parseChineseOrArabic(chM.group(1));
+            String title = sanitizeTitle(chM.group(2));
+            String rawContent = chM.group(3).trim();
+            ChapterSynopsis cs = new ChapterSynopsis(projectId, idx, title, rawContent);
+            parseChapterDetails(cs, rawContent);
+            volume.addSynopsis(cs);
+        }
+
+        // 单换行格式
+        if (!hasChapters) {
+            Matcher chM1 = Pattern.compile("(?:#+\\s*|\\*{2})?第([0-9一二三四五六七八九十百]+)章\\s*(.+?)\\r?\\n(\\*{0,2}场景节拍\\*{0,2}[：:]\\s*.+?)(?=\\r?\\n(?:#+\\s*|\\*{2})?第[0-9一二三四五六七八九十百]+章|$)", Pattern.DOTALL).matcher(volBody);
+            while (chM1.find()) {
                 hasChapters = true;
-                int idx = parseChineseOrArabic(chM.group(1));
-                String title = sanitizeTitle(chM.group(2));
-                String rawContent = chM.group(3).trim();
+                int idx = parseChineseOrArabic(chM1.group(1));
+                String title = sanitizeTitle(chM1.group(2));
+                String rawContent = chM1.group(3).trim();
                 ChapterSynopsis cs = new ChapterSynopsis(projectId, idx, title, rawContent);
                 parseChapterDetails(cs, rawContent);
                 volume.addSynopsis(cs);
             }
-
-            // 尝试多行格式（单换行，无空行）
-            if (!hasChapters) {
-                Matcher chM1 = Pattern.compile("(?:#+\\s*|\\*{2})?第([0-9一二三四五六七八九十百]+)章\\s*(.+?)\\r?\\n(\\*{0,2}场景节拍\\*{0,2}[：:]\\s*.+)", Pattern.DOTALL).matcher(volBody);
-                while (chM1.find()) {
-                    hasChapters = true;
-                    int idx = parseChineseOrArabic(chM1.group(1));
-                    String title = sanitizeTitle(chM1.group(2));
-                    String rawContent = chM1.group(3).trim();
-                    ChapterSynopsis cs = new ChapterSynopsis(projectId, idx, title, rawContent);
-                    parseChapterDetails(cs, rawContent);
-                    volume.addSynopsis(cs);
-                }
-            }
-
-            // 如果没有匹配到多行格式，尝试单行格式（标题:内容，冒号分隔）
-            if (!hasChapters) {
-                Matcher chM2 = Pattern.compile("\\*{0,2}第([0-9一二三四五六七八九十百]+)章\\s*(.+?)[：:]\\s*(.+?)(?=\\*{0,2}第\\d+章|$)", Pattern.DOTALL).matcher(volBody);
-                while (chM2.find()) {
-                    int idx = parseChineseOrArabic(chM2.group(1));
-                    String title = sanitizeTitle(chM2.group(2));
-                    String rawContent = chM2.group(3).trim();
-                    ChapterSynopsis cs = new ChapterSynopsis(projectId, idx, title, rawContent);
-                    parseChapterDetails(cs, rawContent);
-                    volume.addSynopsis(cs);
-                }
-            }
-            outline.addVolume(volume);
         }
-        return outline;
+
+        // 单行格式（标题:内容）
+        if (!hasChapters) {
+            Matcher chM2 = Pattern.compile("\\*{0,2}第([0-9一二三四五六七八九十百]+)章\\s*(.+?)[：:]\\s*(.+?)(?=\\*{0,2}第\\d+章|$)", Pattern.DOTALL).matcher(volBody);
+            while (chM2.find()) {
+                int idx = parseChineseOrArabic(chM2.group(1));
+                String title = sanitizeTitle(chM2.group(2));
+                String rawContent = chM2.group(3).trim();
+                ChapterSynopsis cs = new ChapterSynopsis(projectId, idx, title, rawContent);
+                parseChapterDetails(cs, rawContent);
+                volume.addSynopsis(cs);
+            }
+        }
     }
 
     /** 从章节原始内容中拆分场景节拍、爽点、出场人物 */
     private void parseChapterDetails(ChapterSynopsis cs, String rawContent) {
         // 处理 markdown 加粗标记：**爽点** → 爽点
         String clean = rawContent.replaceAll("\\*\\*", "");
-        // 尝试按 "爽点：" 和 "人物：" 标记拆分
-        // 格式：场景节拍描述。爽点：XXX。人物：YYY
+
         String beats = clean;
         String climax = null;
         String cast = null;
 
-        // 提取爽点
-        Matcher climaxM = Pattern.compile("爽点[：:]\\s*(.+?)(?=。?人物[：:]|$)").matcher(clean);
+        // 提取场景节拍（"场景节拍：" 到 "爽点：" 之间）
+        Matcher beatsM = Pattern.compile("场景节拍[：:]\\s*(.+?)(?=爽点[：:]|$)", Pattern.DOTALL).matcher(clean);
+        if (beatsM.find()) {
+            beats = beatsM.group(1).trim();
+        }
+
+        // 提取爽点（支持 "爽点：" 和 "爽点：**" 格式，到 "人物：" 或 "目的：" 为止）
+        Matcher climaxM = Pattern.compile("爽点[：:]\\s*(.+?)(?=人物[：:]|目的[：:]|张力[：:]|$)", Pattern.DOTALL).matcher(clean);
         if (climaxM.find()) {
             climax = climaxM.group(1).trim();
         }
 
-        // 提取人物
-        Matcher castM = Pattern.compile("人物[：:]\\s*(.+)").matcher(clean);
+        // 提取人物（到 "目的：" 或 "张力：" 为止）
+        Matcher castM = Pattern.compile("人物[：:]\\s*(.+?)(?=目的[：:]|张力[：:]|$)", Pattern.DOTALL).matcher(clean);
         if (castM.find()) {
             cast = castM.group(1).trim();
-        }
-
-        // 提取场景节拍（爽点标记前的内容）
-        int climaxIdx = clean.indexOf("爽点");
-        if (climaxIdx > 0) {
-            beats = clean.substring(0, climaxIdx).replaceAll("[。；;]$", "").trim();
         }
 
         cs.setBeats(beats);

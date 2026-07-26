@@ -125,4 +125,16 @@ public class AgentConfig {
     public com.writing.novel.service.CreativeDiversityService creativeDiversityService(NovelRepository repo) {
         return new com.writing.novel.service.CreativeDiversityService(repo);
     }
+
+    @Bean
+    public com.writing.novel.service.NarrativeThreadTracker narrativeThreadTracker(NovelRepository repo) {
+        return new com.writing.novel.service.NarrativeThreadTracker(repo);
+    }
+
+    @Bean
+    public NarrativeThreadExtractor narrativeThreadExtractor(LlmGateway gateway,
+                                                              com.writing.novel.service.NarrativeThreadTracker tracker,
+                                                              PromptTemplateService promptService) {
+        return new NarrativeThreadExtractor(gateway, tracker, promptService);
+    }
 }

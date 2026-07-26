@@ -1,7 +1,8 @@
 package com.writing.novel.persistence.sqlite;
 
 import com.writing.novel.domain.*;
-import com.writing.novel.domain.Character;  // 显式导入，避免与 java.lang.Character 歧义
+import com.writing.novel.domain.Character;
+import com.writing.novel.domain.ThreadStatus;  // 显式导入，避免与 java.lang.Character 歧义
 import com.writing.novel.domain.WritingPreferences;
 import com.writing.novel.spi.NovelRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -835,6 +836,57 @@ public class SqliteNovelRepository implements NovelRepository {
                 rs.getString("summary"),
                 rs.getString("key_elements"),
                 rs.getInt("volume_index"));
+    }
+
+    // --- NarrativeThread ---
+
+    @Override
+    public void saveNarrativeThread(NarrativeThread thread) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "INSERT INTO narrative_threads (id,project_id,name,status,first_seen_chapter," +
+                     "last_seen_chapter,suspense_chapters,description,created_at,updated_at) " +
+                     "VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
+                     "status=excluded.status, last_seen_chapter=excluded.last_seen_chapter, " +
+                     "suspense_chapters=excluded.suspense_chapters, updated_at=excluded.updated_at")) {
+            ps.setString(1, thread.getId());
+            ps.setString(2, thread.getProjectId());
+            ps.setString(3, thread.getName());
+            ps.setString(4, thread.getStatus().name());
+            ps.setInt(5, thread.getFirstSeenChapter());
+            ps.setInt(6, thread.getLastSeenChapter());
+            ps.setInt(7, thread.getSuspenseChapters());
+            ps.setString(8, thread.getDescription());
+            ps.setString(9, thread.getCreatedAt().toString());
+            ps.setString(10, thread.getUpdatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public List<NarrativeThread> findAllNarrativeThreads(String projectId) {
+        List<NarrativeThread> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM narrative_threads WHERE project_id=? ORDER BY first_seen_chapter")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapNarrativeThread(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    private NarrativeThread mapNarrativeThread(ResultSet rs) throws SQLException {
+        NarrativeThread t = new NarrativeThread(
+                rs.getString("project_id"),
+                rs.getString("name"),
+                rs.getInt("first_seen_chapter"),
+                rs.getString("description"));
+        setField(t, "id", rs.getString("id"));
+        t.setStatus(ThreadStatus.valueOf(rs.getString("status")));
+        t.setLastSeenChapter(rs.getInt("last_seen_chapter"));
+        t.setSuspenseChapters(rs.getInt("suspense_chapters"));
+        return t;
     }
 
     // --- 新的映射辅助 ---

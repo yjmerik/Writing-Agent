@@ -50,7 +50,7 @@ class ContextAssemblerTest {
                 return new EntityExtractorAgent.ExtractionResult(0, 0, 0, null);
             }
         };
-        assembler = new ContextAssembler(repo, kbService, summaryService, vectorSvc, entityGraphService, new com.writing.novel.service.ClimaxDiversityTracker());
+        assembler = new ContextAssembler(repo, kbService, summaryService, vectorSvc, entityGraphService, new com.writing.novel.service.ClimaxDiversityTracker(), null);
     }
 
     @Test

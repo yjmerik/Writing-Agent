@@ -44,6 +44,7 @@ public class NovelOrchestrator {
     private final GenreDetector genreDetector;
     private final GenreRuleProvider genreRuleProvider;
     private final CreativeDiversityService creativeDiversityService;
+    private final NarrativeThreadExtractor narrativeThreadExtractor;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -65,7 +66,8 @@ public class NovelOrchestrator {
                               ForeshadowingExtractor foreshadowingExtractor,
                               GenreDetector genreDetector,
                               GenreRuleProvider genreRuleProvider,
-                              CreativeDiversityService creativeDiversityService) {
+                              CreativeDiversityService creativeDiversityService,
+                              NarrativeThreadExtractor narrativeThreadExtractor) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -87,6 +89,7 @@ public class NovelOrchestrator {
         this.genreDetector = genreDetector;
         this.genreRuleProvider = genreRuleProvider;
         this.creativeDiversityService = creativeDiversityService;
+        this.narrativeThreadExtractor = narrativeThreadExtractor;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -275,6 +278,15 @@ public class NovelOrchestrator {
             entityGraphService.extractFromChapter(projectId, chapter);
         } catch (Exception e) {
             log.warn("实体提取失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+
+        // p8-2: 叙事线索提取与追踪
+        try {
+            if (narrativeThreadExtractor != null) {
+                narrativeThreadExtractor.extractAndUpdate(projectId, chapterIndex, chapter.getContent());
+            }
+        } catch (Exception e) {
+            log.warn("叙事线索提取失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
         // p5-c2: 伏笔动态提取——从正文中识别新埋下的伏笔

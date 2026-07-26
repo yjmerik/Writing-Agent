@@ -14,6 +14,7 @@ import com.writing.novel.domain.Project;
 import com.writing.novel.domain.StyleProfile;
 import com.writing.novel.domain.Summary;
 import com.writing.novel.domain.GenerationLog;
+import com.writing.novel.domain.NarrativeThread;
 import com.writing.novel.domain.WritingPreferences;
 
 import java.util.List;
@@ -102,4 +103,8 @@ public interface NovelRepository {
     void saveGenerationLog(GenerationLog log);
     List<GenerationLog> findRecentGenerationLogs(String projectId, String agentType, int limit);
     List<GenerationLog> findAllGenerationLogs(String projectId);
+
+    // --- NarrativeThread (叙事线索) ---
+    void saveNarrativeThread(NarrativeThread thread);
+    List<NarrativeThread> findAllNarrativeThreads(String projectId);
 }

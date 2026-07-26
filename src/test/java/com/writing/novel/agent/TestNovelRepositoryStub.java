@@ -11,6 +11,7 @@ import com.writing.novel.domain.EvaluationRecord;
 import com.writing.novel.domain.Foreshadowing;
 import com.writing.novel.domain.GenerationLog;
 import com.writing.novel.domain.KnowledgeEntry;
+import com.writing.novel.domain.NarrativeThread;
 import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.StyleProfile;
@@ -84,4 +85,8 @@ public class TestNovelRepositoryStub implements NovelRepository {
     @Override public void saveGenerationLog(GenerationLog log) {}
     @Override public List<GenerationLog> findRecentGenerationLogs(String p, String a, int l) { return List.of(); }
     @Override public List<GenerationLog> findAllGenerationLogs(String p) { return List.of(); }
+
+    // --- NarrativeThread ---
+    @Override public void saveNarrativeThread(NarrativeThread t) {}
+    @Override public List<NarrativeThread> findAllNarrativeThreads(String p) { return List.of(); }
 }

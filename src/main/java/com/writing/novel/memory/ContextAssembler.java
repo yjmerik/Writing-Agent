@@ -4,6 +4,7 @@ import com.writing.novel.domain.*;
 import com.writing.novel.domain.Character;
 import com.writing.novel.service.ClimaxDiversityTracker;
 import com.writing.novel.service.EntityGraphService;
+import com.writing.novel.service.NarrativeThreadTracker;
 import com.writing.novel.spi.NovelRepository;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public class ContextAssembler {
     private final SummaryService summaryService;
     private final VectorRetrievalService vectorRetrieval;
     private final EntityGraphService entityGraphService;
+    private final NarrativeThreadTracker narrativeThreadTracker;
     private final ClimaxDiversityTracker climaxDiversityTracker;
 
     public ContextAssembler(NovelRepository repository,
@@ -32,12 +34,14 @@ public class ContextAssembler {
                             SummaryService summaryService,
                             VectorRetrievalService vectorRetrieval,
                             EntityGraphService entityGraphService,
-                            ClimaxDiversityTracker climaxDiversityTracker) {
+                            ClimaxDiversityTracker climaxDiversityTracker,
+                            NarrativeThreadTracker narrativeThreadTracker) {
         this.repository = repository;
         this.knowledgeBase = knowledgeBase;
         this.summaryService = summaryService;
         this.vectorRetrieval = vectorRetrieval;
         this.entityGraphService = entityGraphService;
+        this.narrativeThreadTracker = narrativeThreadTracker;
         this.climaxDiversityTracker = climaxDiversityTracker;
     }
 
@@ -76,6 +80,9 @@ public class ContextAssembler {
 
         // 引用素材注入（与角色知识领域匹配的世界观条目）
         ctx.setKnowledgeQuoteSection(buildKnowledgeQuoteSection(projectId));
+
+        // 叙事线索追踪
+        ctx.setNarrativeThreadSection(buildNarrativeThreadSection(projectId));
 
         // 质量反馈闭环：上卷评价注入
         ctx.setQualityFeedbackSection(buildQualityFeedbackSection(projectId));
@@ -512,6 +519,11 @@ public class ContextAssembler {
     }
 
     // --- 反馈闭环：注入历史 ContinuityIssue ---
+
+    private String buildNarrativeThreadSection(String projectId) {
+        if (narrativeThreadTracker == null) return "";
+        return narrativeThreadTracker.getThreadSection(projectId);
+    }
 
     private String buildFeedbackSection(String projectId, int chapterIndex) {
         var prefs = repository.findWritingPreferences(projectId);

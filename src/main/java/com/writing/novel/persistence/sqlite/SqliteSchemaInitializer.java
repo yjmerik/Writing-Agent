@@ -98,7 +98,13 @@ public class SqliteSchemaInitializer {
         // 生成日志表（创意多样性追踪）
         "CREATE TABLE IF NOT EXISTS generation_logs (" +
             "id TEXT PRIMARY KEY, project_id TEXT, agent_type TEXT, " +
-            "summary TEXT, key_elements TEXT, volume_index INTEGER, created_at TEXT)"
+            "summary TEXT, key_elements TEXT, volume_index INTEGER, created_at TEXT)",
+
+        // 叙事线索表（叙事连贯性追踪）
+        "CREATE TABLE IF NOT EXISTS narrative_threads (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, name TEXT, status TEXT, " +
+            "first_seen_chapter INTEGER, last_seen_chapter INTEGER, " +
+            "suspense_chapters INTEGER, description TEXT, created_at TEXT, updated_at TEXT)"
     };
 
     private final ConnectionProvider cp;

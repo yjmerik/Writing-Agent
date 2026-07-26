@@ -93,7 +93,12 @@ public class SqliteSchemaInitializer {
             "enable_feedback_injection INTEGER DEFAULT 1, feedback_window INTEGER DEFAULT 10, " +
             "dialogue_differentiation TEXT DEFAULT 'contrast', " +
             "plot_stall_window INTEGER DEFAULT 3, character_upgrade_span INTEGER DEFAULT 2, " +
-            "updated_at TEXT)"
+            "updated_at TEXT)",
+
+        // 生成日志表（创意多样性追踪）
+        "CREATE TABLE IF NOT EXISTS generation_logs (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, agent_type TEXT, " +
+            "summary TEXT, key_elements TEXT, volume_index INTEGER, created_at TEXT)"
     };
 
     private final ConnectionProvider cp;

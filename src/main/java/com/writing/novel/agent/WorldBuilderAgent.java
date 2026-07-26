@@ -29,8 +29,14 @@ public class WorldBuilderAgent {
     }
 
     public Worldbuilding build(String projectId, String concept, String tags) {
+        return build(projectId, concept, tags, "");
+    }
+
+    public Worldbuilding build(String projectId, String concept, String tags, String diversityGuide) {
         String systemPrompt = promptService.render("worldbuilding", Map.of(
-                "concept", concept, "tags", tags, "styleGuide", ""));
+                "concept", concept, "tags", tags,
+                "styleGuide", "",
+                "diversityGuide", diversityGuide != null ? diversityGuide : ""));
 
         String userMessage = "构思：" + concept + "\n类型标签：" + tags
                 + "\n请生成 5-8 条世界观设定。";

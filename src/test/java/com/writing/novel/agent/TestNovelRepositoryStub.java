@@ -9,6 +9,7 @@ import com.writing.novel.domain.Entity;
 import com.writing.novel.domain.EntityEdge;
 import com.writing.novel.domain.EvaluationRecord;
 import com.writing.novel.domain.Foreshadowing;
+import com.writing.novel.domain.GenerationLog;
 import com.writing.novel.domain.KnowledgeEntry;
 import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
@@ -78,4 +79,9 @@ public class TestNovelRepositoryStub implements NovelRepository {
     // --- WritingPreferences ---
     @Override public void saveWritingPreferences(WritingPreferences p) {}
     @Override public Optional<WritingPreferences> findWritingPreferences(String p) { return Optional.empty(); }
+
+    // --- GenerationLog ---
+    @Override public void saveGenerationLog(GenerationLog log) {}
+    @Override public List<GenerationLog> findRecentGenerationLogs(String p, String a, int l) { return List.of(); }
+    @Override public List<GenerationLog> findAllGenerationLogs(String p) { return List.of(); }
 }

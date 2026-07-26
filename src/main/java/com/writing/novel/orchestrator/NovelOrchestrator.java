@@ -5,6 +5,7 @@ import com.writing.novel.domain.*;
 import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.SummaryService;
 import com.writing.novel.service.ClimaxDiversityTracker;
+import com.writing.novel.service.CreativeDiversityService;
 import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.service.GenreDetector;
 import com.writing.novel.service.GenreRuleProvider;
@@ -42,6 +43,7 @@ public class NovelOrchestrator {
     private final ForeshadowingExtractor foreshadowingExtractor;
     private final GenreDetector genreDetector;
     private final GenreRuleProvider genreRuleProvider;
+    private final CreativeDiversityService creativeDiversityService;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -62,7 +64,8 @@ public class NovelOrchestrator {
                               ArcUpdater arcUpdater,
                               ForeshadowingExtractor foreshadowingExtractor,
                               GenreDetector genreDetector,
-                              GenreRuleProvider genreRuleProvider) {
+                              GenreRuleProvider genreRuleProvider,
+                              CreativeDiversityService creativeDiversityService) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -83,6 +86,7 @@ public class NovelOrchestrator {
         this.foreshadowingExtractor = foreshadowingExtractor;
         this.genreDetector = genreDetector;
         this.genreRuleProvider = genreRuleProvider;
+        this.creativeDiversityService = creativeDiversityService;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -100,7 +104,20 @@ public class NovelOrchestrator {
             log.info("题材推断: {} → {}", p.getTags(), genre.getChineseName());
         }
 
-        worldBuilder.build(projectId, p.getConcept(), p.getTags());
+        // p8-1: 历史感知——注入 diversityGuide
+        String wbDiversityGuide = creativeDiversityService != null
+                ? creativeDiversityService.getDiversityGuide(projectId, "WORLDBUILDER") : "";
+        worldBuilder.build(projectId, p.getConcept(), p.getTags(), wbDiversityGuide);
+
+        // 记录世界观生成
+        if (creativeDiversityService != null) {
+            var wbEntries = repository.findKnowledgeEntriesByProject(projectId);
+            String wbSummary = wbEntries.stream()
+                    .map(e -> e.getType() + ":" + e.getName())
+                    .reduce((a, b) -> a + ", " + b).orElse("无");
+            creativeDiversityService.record(projectId, "WORLDBUILDER",
+                    "世界观维度：" + wbSummary, "[]", 0);
+        }
 
         // 风格基线前置：在世界观生成后立即建立全书风格基线（幂等：已有则跳过）
         if (repository.findStyleProfileByProject(projectId).isEmpty()) {
@@ -109,17 +126,27 @@ public class NovelOrchestrator {
         }
 
         // 人物设计（幂等：已有主角则跳过）
-        // 传入构思+世界观摘要，让人物设计贴合设定（解决"人物总是陆昭然"问题）
         if (repository.findCharactersByProject(projectId).isEmpty()) {
             String worldSummary = collectWorldbuildingSummary(projectId);
             String charRequirement = "主角。故事构思：" + p.getConcept()
                     + "；类型标签：" + p.getTags()
                     + (worldSummary.isEmpty() ? "" : "\n已生成的世界观设定：\n" + worldSummary);
-            characterDesigner.design(projectId, charRequirement, List.of());
+            String charDiversity = creativeDiversityService != null
+                    ? creativeDiversityService.getDiversityGuide(projectId, "CHARACTER") : "";
+            characterDesigner.design(projectId, charRequirement, List.of(), charDiversity);
+
+            // 记录角色生成
+            if (creativeDiversityService != null) {
+                var chars = repository.findCharactersByProject(projectId);
+                String charSummary2 = chars.stream()
+                        .map(c -> c.getName() + "(" + c.getRole() + ")")
+                        .reduce((a, b) -> a + ", " + b).orElse("无");
+                creativeDiversityService.record(projectId, "CHARACTER",
+                        "角色设定：" + charSummary2, "[]", 0);
+            }
         }
 
         // 大纲（幂等：已有有效大纲则跳过，fallback 大纲需重新生成）
-        // 提取主角名+世界观+人物摘要传给 Plotter（解决 Agent 间信息断层）
         if (repository.findOutlineByProject(projectId).isEmpty()
                 || isFallbackOutline(projectId)) {
             String protagonistName = "";
@@ -138,7 +165,21 @@ public class NovelOrchestrator {
                     + (charSummary.isEmpty() ? "" : "\n已有人物：\n" + charSummary);
             String genreRules = genreRuleProvider != null
                     ? genreRuleProvider.getPlottingRules(p.getGenre()) : "";
-            plotter.plan(projectId, p.getConcept(), theme, 24, theme, genreRules);
+            String plotDiversity = creativeDiversityService != null
+                    ? creativeDiversityService.getGlobalDiversityGuide(projectId) : "";
+            plotter.plan(projectId, p.getConcept(), theme, 24, theme, genreRules, plotDiversity);
+
+            // 记录大纲生成
+            if (creativeDiversityService != null) {
+                var outline = repository.findOutlineByProject(projectId);
+                if (outline.isPresent()) {
+                    String plotSummary = outline.get().getVolumes().stream()
+                            .map(v -> "卷" + v.getVolumeIndex() + ":" + v.getTitle())
+                            .reduce((a, b) -> a + ", " + b).orElse("无");
+                    creativeDiversityService.record(projectId, "PLOTTER",
+                            "剧情结构：" + plotSummary, "[]", 0);
+                }
+            }
         }
 
         // 伏笔抽取：从大纲文本中提取伏笔条目（p3-03）

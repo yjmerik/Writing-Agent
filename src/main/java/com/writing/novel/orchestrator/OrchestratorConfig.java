@@ -4,6 +4,7 @@ import com.writing.novel.agent.*;
 import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.SummaryService;
 import com.writing.novel.service.ClimaxDiversityTracker;
+import com.writing.novel.service.CreativeDiversityService;
 import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.service.GenreDetector;
 import com.writing.novel.service.GenreRuleProvider;
@@ -41,11 +42,13 @@ public class OrchestratorConfig {
                                                  ArcUpdater arcUpdater,
                                                  ForeshadowingExtractor foreshadowingExtractor,
                                                  GenreDetector genreDetector,
-                                                 GenreRuleProvider genreRuleProvider) {
+                                                 GenreRuleProvider genreRuleProvider,
+                                                 CreativeDiversityService creativeDiversityService) {
         return new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
                 characterProfileUpgrader, climaxDiversityTracker, plotProgressionDetector,
-                arcUpdater, foreshadowingExtractor, genreDetector, genreRuleProvider);
+                arcUpdater, foreshadowingExtractor, genreDetector, genreRuleProvider,
+                creativeDiversityService);
     }
 }

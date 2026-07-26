@@ -29,11 +29,17 @@ public class CharacterDesignerAgent {
     }
 
     public Character design(String projectId, String requirement, List<Character> existing) {
+        return design(projectId, requirement, existing, "");
+    }
+
+    public Character design(String projectId, String requirement, List<Character> existing, String diversityGuide) {
         String existingDesc = existing.isEmpty() ? "（暂无已有人物）" :
                 existing.stream().map(c -> c.getName() + "（" + c.getRole() + "）")
                         .reduce((a, b) -> a + "、" + b).orElse("");
 
-        String systemPrompt = promptService.render("character-design", Map.of("styleGuide", ""));
+        String systemPrompt = promptService.render("character-design", Map.of(
+                "styleGuide", "",
+                "diversityGuide", diversityGuide != null ? diversityGuide : ""));
 
         String userMessage = "剧情需求：" + requirement
                 + "\n已有人物：" + existingDesc

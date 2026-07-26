@@ -781,6 +781,62 @@ public class SqliteNovelRepository implements NovelRepository {
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
+    // --- GenerationLog ---
+
+    @Override
+    public void saveGenerationLog(GenerationLog log) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "INSERT INTO generation_logs (id,project_id,agent_type,summary,key_elements,volume_index,created_at) " +
+                     "VALUES (?,?,?,?,?,?,?)")) {
+            ps.setString(1, log.getId());
+            ps.setString(2, log.getProjectId());
+            ps.setString(3, log.getAgentType());
+            ps.setString(4, log.getSummary());
+            ps.setString(5, log.getKeyElements());
+            ps.setInt(6, log.getVolumeIndex());
+            ps.setString(7, log.getCreatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public List<GenerationLog> findRecentGenerationLogs(String projectId, String agentType, int limit) {
+        List<GenerationLog> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM generation_logs WHERE project_id=? AND agent_type=? ORDER BY created_at DESC LIMIT ?")) {
+            ps.setString(1, projectId);
+            ps.setString(2, agentType);
+            ps.setInt(3, limit);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapGenerationLog(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    @Override
+    public List<GenerationLog> findAllGenerationLogs(String projectId) {
+        List<GenerationLog> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM generation_logs WHERE project_id=? ORDER BY created_at")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapGenerationLog(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    private GenerationLog mapGenerationLog(ResultSet rs) throws SQLException {
+        return new GenerationLog(
+                rs.getString("project_id"),
+                rs.getString("agent_type"),
+                rs.getString("summary"),
+                rs.getString("key_elements"),
+                rs.getInt("volume_index"));
+    }
+
     // --- 新的映射辅助 ---
 
     private Entity mapEntity(ResultSet rs) throws SQLException {

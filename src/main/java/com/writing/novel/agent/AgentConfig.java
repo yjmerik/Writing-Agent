@@ -120,4 +120,9 @@ public class AgentConfig {
     public com.writing.novel.service.GenreRuleProvider genreRuleProvider() {
         return new com.writing.novel.service.GenreRuleProvider();
     }
+
+    @Bean
+    public com.writing.novel.service.CreativeDiversityService creativeDiversityService(NovelRepository repo) {
+        return new com.writing.novel.service.CreativeDiversityService(repo);
+    }
 }

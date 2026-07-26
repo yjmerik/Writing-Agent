@@ -33,11 +33,17 @@ public class PlotterAgent {
 
     public Outline plan(String projectId, String concept, String theme, int totalChapters,
                         String styleGuide, String genreRules) {
+        return plan(projectId, concept, theme, totalChapters, styleGuide, genreRules, "");
+    }
+
+    public Outline plan(String projectId, String concept, String theme, int totalChapters,
+                        String styleGuide, String genreRules, String diversityGuide) {
         String systemPrompt = promptService.render("plotting", Map.of(
                 "concept", concept, "theme", theme,
                 "totalChapters", totalChapters,
                 "styleGuide", styleGuide != null ? styleGuide : "",
-                "genreRules", genreRules != null ? genreRules : ""));
+                "genreRules", genreRules != null ? genreRules : "",
+                "diversityGuide", diversityGuide != null ? diversityGuide : ""));
 
         String userMessage = "构思：" + concept + "\n主题：" + theme
                 + "\n预计总章数：" + totalChapters

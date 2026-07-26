@@ -142,4 +142,9 @@ public class AgentConfig {
     public ReaderReviewAgent readerReviewAgent(LlmGateway gateway, PromptTemplateService promptService) {
         return new ReaderReviewAgent(gateway, promptService);
     }
+
+    @Bean
+    public com.writing.novel.service.DiversityTracker diversityTracker() {
+        return new com.writing.novel.service.DiversityTracker();
+    }
 }

@@ -171,6 +171,11 @@ public class NovelOrchestrator {
                     + (charSummary.isEmpty() ? "" : "\n已有人物：\n" + charSummary);
             String genreRules = genreRuleProvider != null
                     ? genreRuleProvider.getPlottingRules(p.getGenre()) : "";
+            String climaxSuggestions = genreRuleProvider != null
+                    ? genreRuleProvider.getClimaxSuggestions(p.getGenre()) : "";
+            if (!climaxSuggestions.isBlank()) {
+                genreRules = genreRules + "\n本题材推荐爽点类型：" + climaxSuggestions;
+            }
             String plotDiversity = creativeDiversityService != null
                     ? creativeDiversityService.getGlobalDiversityGuide(projectId) : "";
             plotter.plan(projectId, p.getConcept(), theme, 24, theme, genreRules, plotDiversity);

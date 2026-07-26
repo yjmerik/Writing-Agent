@@ -3,6 +3,7 @@ package com.writing.novel.memory;
 import com.writing.novel.domain.*;
 import com.writing.novel.domain.Character;
 import com.writing.novel.service.ClimaxDiversityTracker;
+import com.writing.novel.service.DiversityTracker;
 import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.service.NarrativeThreadTracker;
 import com.writing.novel.spi.NovelRepository;
@@ -27,6 +28,7 @@ public class ContextAssembler {
     private final VectorRetrievalService vectorRetrieval;
     private final EntityGraphService entityGraphService;
     private final NarrativeThreadTracker narrativeThreadTracker;
+    private final DiversityTracker diversityTracker;
     private final ClimaxDiversityTracker climaxDiversityTracker;
 
     public ContextAssembler(NovelRepository repository,
@@ -35,13 +37,15 @@ public class ContextAssembler {
                             VectorRetrievalService vectorRetrieval,
                             EntityGraphService entityGraphService,
                             ClimaxDiversityTracker climaxDiversityTracker,
-                            NarrativeThreadTracker narrativeThreadTracker) {
+                            NarrativeThreadTracker narrativeThreadTracker,
+                            DiversityTracker diversityTracker) {
         this.repository = repository;
         this.knowledgeBase = knowledgeBase;
         this.summaryService = summaryService;
         this.vectorRetrieval = vectorRetrieval;
         this.entityGraphService = entityGraphService;
         this.narrativeThreadTracker = narrativeThreadTracker;
+        this.diversityTracker = diversityTracker;
         this.climaxDiversityTracker = climaxDiversityTracker;
     }
 
@@ -240,6 +244,13 @@ public class ContextAssembler {
           .append("\n\n⚠️ 本章正文必须从上文最后一句话的下一时刻/下一场景直接开始，"
                   + "不得重复描述上一章结尾已经写过的场景。");
 
+        // p8-4: preventTransitionOverlap 偏好控制
+        var prefs = repository.findWritingPreferences(projectId);
+        if (prefs.isPresent() && prefs.get().isPreventTransitionOverlap()) {
+            sb.append("\n⚠️ 特别注意：本章开头不得与最近章节的开头句式雷同，"
+                    + "必须使用完全不同的开场方式（如从不同角色视角、不同场景切入）。");
+        }
+
         return sb.toString();
     }
 
@@ -408,6 +419,14 @@ public class ContextAssembler {
 
         // 4. 悬念结尾
         sb.append("□ 章节结尾必须是一个悬念钩子，不能是场景自然结束\n");
+
+        // 5. 多维度多样性约束（开场/冲突/爽点轮换）
+        if (diversityTracker != null) {
+            String diversityConstraints = diversityTracker.generateAllConstraints();
+            if (diversityConstraints != null && !diversityConstraints.isBlank()) {
+                sb.append(diversityConstraints);
+            }
+        }
 
         return sb.toString();
     }

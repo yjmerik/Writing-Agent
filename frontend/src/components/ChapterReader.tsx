@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, Spin, Empty, Button, Space, Typography, List, Tag } from 'antd';
 import { LeftOutlined, RightOutlined, ReloadOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
+import { renderContent } from '../utils/renderContent';
 import type { Chapter } from '../types';
 
-const { Title, Paragraph } = Typography;
+const { Title } = Typography;
 
 export default function ChapterReader({ projectId }: { projectId: string }) {
   const [chapters, setChapters] = useState<Chapter[]>([]);
@@ -77,13 +78,9 @@ export default function ChapterReader({ projectId }: { projectId: string }) {
             {chapter.wordCount} 字
           </div>
 
-          {/* 正文：按段落分割显示 */}
+          {/* 正文：markdown 渲染 */}
           <div style={{ lineHeight: 2, fontSize: 16 }}>
-            {chapter.content.split('\n').filter(Boolean).map((para, i) => (
-              <Paragraph key={i} style={{ textIndent: '2em', marginBottom: '1em' }}>
-                {para.trim()}
-              </Paragraph>
-            ))}
+            {renderContent(chapter.content)}
           </div>
         </Card>
       )}

@@ -11,6 +11,8 @@ const DIMENSION_LABELS: Record<string, string> = {
   plot: '情节质量',
   characters: '人物塑造',
   worldbuilding: '世界观完整',
+  dialogue: '对话质量',
+  pattern_diversity: '模式多样性',
 };
 
 const SEVERITY_CONFIG: Record<string, { color: string; text: string }> = {
@@ -60,7 +62,7 @@ export default function QualityView({ projectId }: { projectId: string }) {
 
       <Alert
         message="质量评价说明"
-        description="AI 将从 5 个维度（长程一致性/风格统一/情节质量/人物塑造/世界观完整）评价已生成的小说，发现具体问题。建议在写完若干章节后评价。"
+        description="AI 将从 7 个维度（长程一致性 / 风格统一 / 情节质量 / 人物塑造 / 世界观完整 / 对话质量 / 模式多样性）评价已生成的小说，发现具体问题并给出改进建议。建议在写完若干章节后评价。"
         type="info"
         style={{ marginBottom: 24 }}
       />

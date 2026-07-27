@@ -21,7 +21,12 @@ public class ProjectController {
     @PostMapping
     public Project create(@RequestBody CreateProjectRequest req) {
         ProjectMode mode = req.mode() != null ? ProjectMode.valueOf(req.mode()) : ProjectMode.SOLO;
-        return projectService.create(req.title(), req.concept(), req.tags(), mode, req.preset());
+        String title = req.title();
+        // fallback: 标题为空时用构思前10字
+        if ((title == null || title.isBlank()) && req.concept() != null && !req.concept().isBlank()) {
+            title = req.concept().length() > 10 ? req.concept().substring(0, 10) + "…" : req.concept();
+        }
+        return projectService.create(title, req.concept(), req.tags(), mode, req.preset());
     }
 
     @GetMapping

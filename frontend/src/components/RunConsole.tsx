@@ -88,11 +88,13 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
     <Card>
       <Steps
         size="small"
-        current={projectState === 'PAUSED_AT_CHECKPOINT'
-          ? STATES.indexOf('PLANNING')  // 暂停时显示到规划步骤
-          : STATES.indexOf(projectState) >= 0
-            ? STATES.indexOf(projectState)
-            : 0}
+        current={projectState === 'FINAL'
+          ? STATES.length  // 全部完成
+          : projectState === 'PAUSED_AT_CHECKPOINT'
+            ? STATES.indexOf('PLANNING')
+            : STATES.indexOf(projectState) >= 0
+              ? STATES.indexOf(projectState)
+              : 0}
         items={STATES.map((s) => ({ title: STATE_TEXT[s] }))}
         style={{ marginBottom: 24 }}
       />

@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, ReloadOutlined, StepForwardOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
+import { renderContent } from '../utils/renderContent';
 import type { Chapter, Checkpoint, ProjectStatus } from '../types';
 
-const { Paragraph, Text, Title } = Typography;
+const { Text } = Typography;
 
 interface Props {
   projectId: string;
@@ -120,18 +121,9 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   };
   void handleRewriteChapter; // used via Modal footer for standalone rewrite
 
-  const renderContent = (content: string) => {
+  const renderChapterContent = (content: string) => {
     if (!content) return <Text type="secondary">（空）</Text>;
-    return content.split('\n').filter(l => l.trim()).map((line, i) => {
-      const trimmed = line.trim();
-      if (trimmed.startsWith('# ')) {
-        return <Title key={i} level={5} style={{ textAlign: 'center', marginTop: 16 }}>{trimmed.slice(2)}</Title>;
-      }
-      if (trimmed === '---') {
-        return <hr key={i} style={{ margin: '12px 0', border: 'none', borderTop: '1px dashed #ddd' }} />;
-      }
-      return <Paragraph key={i} style={{ textIndent: '2em', marginBottom: '0.3em', lineHeight: 2, fontSize: 16 }}>{trimmed}</Paragraph>;
-    });
+    return renderContent(content);
   };
 
   return (
@@ -157,6 +149,14 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
             }
             style={{ marginBottom: 16 }}
           />
+        )}
+
+        {/* 状态提示 */}
+        {status?.state === 'FINAL' && (
+          <Alert type="success" message={`✅ 全书已完结，共 ${status.currentChapter} 章`} style={{ marginBottom: 16 }} />
+        )}
+        {status?.state === 'WRITING' && !isPaused && (
+          <Alert type="info" message="📝 写作中 — 可查看和重写已完成的章节" style={{ marginBottom: 16 }} />
         )}
 
         {/* 写作控制 */}
@@ -206,7 +206,7 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
                 }
                 style={{ maxHeight: '70vh', overflow: 'auto' }}
               >
-                {renderContent(currentChapter.content)}
+                {renderChapterContent(currentChapter.content)}
               </Card>
             ) : (
               <Card><Text type="secondary">暂无章节。点击"写一章"开始创作。</Text></Card>

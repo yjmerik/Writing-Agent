@@ -45,12 +45,14 @@ public class OrchestratorConfig {
                                                  GenreRuleProvider genreRuleProvider,
                                                  CreativeDiversityService creativeDiversityService,
                                                  NarrativeThreadExtractor narrativeThreadExtractor,
-                                                 ReaderReviewAgent readerReviewAgent) {
+                                                 ReaderReviewAgent readerReviewAgent,
+                                                 ForeshadowingResolutionDetector foreshadowingResolutionDetector) {
         return new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
                 characterProfileUpgrader, climaxDiversityTracker, plotProgressionDetector,
                 arcUpdater, foreshadowingExtractor, genreDetector, genreRuleProvider,
-                creativeDiversityService, narrativeThreadExtractor, readerReviewAgent);
+                creativeDiversityService, narrativeThreadExtractor, readerReviewAgent,
+                foreshadowingResolutionDetector);
     }
 }

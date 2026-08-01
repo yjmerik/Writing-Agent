@@ -81,7 +81,7 @@ class NovelOrchestratorConceiveTest {
                 new MemoryManagerAgent(gateway, summarySvc, promptSvc),
                 summarySvc, assembler,
                 new com.writing.novel.agent.QualityEvaluationAgent(gateway, repo, promptSvc),
-                null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     @Test

@@ -46,6 +46,7 @@ public class NovelOrchestrator {
     private final CreativeDiversityService creativeDiversityService;
     private final NarrativeThreadExtractor narrativeThreadExtractor;
     private final ReaderReviewAgent readerReviewAgent;
+    private final ForeshadowingResolutionDetector foreshadowingResolutionDetector;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -69,7 +70,8 @@ public class NovelOrchestrator {
                               GenreRuleProvider genreRuleProvider,
                               CreativeDiversityService creativeDiversityService,
                               NarrativeThreadExtractor narrativeThreadExtractor,
-                              ReaderReviewAgent readerReviewAgent) {
+                              ReaderReviewAgent readerReviewAgent,
+                              ForeshadowingResolutionDetector foreshadowingResolutionDetector) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -93,6 +95,7 @@ public class NovelOrchestrator {
         this.creativeDiversityService = creativeDiversityService;
         this.narrativeThreadExtractor = narrativeThreadExtractor;
         this.readerReviewAgent = readerReviewAgent;
+        this.foreshadowingResolutionDetector = foreshadowingResolutionDetector;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -512,12 +515,16 @@ public class NovelOrchestrator {
                     .append("（埋于第").append(f.getPlantedAtChapter()).append("章）\n");
             }
             desc.append("建议在后续章节中回收这些伏笔。");
+            // p9-2: 未回收 > 5 条时升级为 HIGH，触发重写路径
+            var severity = unresolved.size() > 5
+                    ? ContinuityIssue.Severity.HIGH
+                    : ContinuityIssue.Severity.MEDIUM;
             repository.saveContinuityIssue(new ContinuityIssue(
                     projectId, toChapter,
                     ContinuityIssue.Type.FORESHADOWING,
-                    ContinuityIssue.Severity.MEDIUM,
+                    severity,
                     desc.toString()));
-            log.info("ChekhovAudit(卷{}): {} 条未回收伏笔", volumeIndex, unresolved.size());
+            log.info("ChekhovAudit(卷{}): {} 条未回收伏笔 [{}]", volumeIndex, unresolved.size(), severity);
         }
     }
 
@@ -593,45 +600,20 @@ public class NovelOrchestrator {
     }
 
     /**
-     * p5-c1: 检测本章是否回收了未回收的伏笔。
-     * 方法：对每个未回收伏笔，检查章节内容是否包含伏笔关键词 + 回收标记词。
+     * p9-2: 伏笔回收检测——用 LLM 判断本章是否回收了未回收伏笔。
+     * 替代旧的关键词匹配检测（p5-c1，0%命中率）。
      */
     private void checkForeshadowingResolution(String projectId, int chapterIndex, Chapter chapter) {
-        var unresolved = repository.findUnresolvedForeshadowings(projectId);
-        if (unresolved.isEmpty()) return;
-
-        String content = chapter.getContent();
-        if (content == null) return;
-
-        // 回收标记词：表明伏笔在本章被揭晓/回收
-        var resolveMarkers = java.util.List.of("真相", "原来", "终于", "果然", "揭晓", "解开", "浮出水面",
-                "大白于天下", "谜底", "原来如此", "终于明白", "原来是这样");
-
-        for (var f : unresolved) {
-            // 提取伏笔描述的关键词（取前 4-8 字作为匹配关键词）
-            String desc = f.getDescription();
-            String keyword = extractKeyword(desc);
-            if (keyword == null || keyword.length() < 2) continue;
-
-            // 检查章节内容是否同时包含伏笔关键词 + 回收标记
-            boolean hasKeyword = content.contains(keyword);
-            boolean hasResolveMarker = resolveMarkers.stream().anyMatch(content::contains);
-
-            if (hasKeyword && hasResolveMarker) {
-                f.resolve(chapterIndex);
-                repository.saveForeshadowing(f);
-                log.info("伏笔回收(章{}): {}", chapterIndex, desc);
+        if (foreshadowingResolutionDetector == null) return;
+        try {
+            int resolved = foreshadowingResolutionDetector.detectAndResolve(
+                    projectId, chapterIndex, chapter.getContent());
+            if (resolved > 0) {
+                log.info("伏笔回收(章{}): {} 条", chapterIndex, resolved);
             }
+        } catch (Exception e) {
+            log.warn("伏笔回收检测失败(章{}): {}", chapterIndex, e.getMessage());
         }
-    }
-
-    /** 从伏笔描述中提取匹配关键词 */
-    private String extractKeyword(String desc) {
-        if (desc == null || desc.length() < 2) return null;
-        // 去除常见前缀词
-        String cleaned = desc.replaceAll("^(伏笔|暗示|暗藏|埋下|秘密|真相|隐情|未解|关于|有关)[:：]", "").trim();
-        // 取前 6 字作为关键词
-        return cleaned.length() > 6 ? cleaned.substring(0, 6) : cleaned;
     }
 
     /** 带纠偏指令的重写：原地更新原 chapter（避免重复章节） */
@@ -751,6 +733,17 @@ public class NovelOrchestrator {
             Outline outline = repository.findOutlineByProject(projectId).orElse(null);
             if (outline == null) break;
             if (!hasNextChapter(outline, p.getCurrentChapterIndex())) {
+                // p9-2: FINAL 完整性门禁——未回收伏笔 > 3 时不转 FINAL
+                var unresolved = repository.findUnresolvedForeshadowings(projectId);
+                if (unresolved.size() > 3) {
+                    log.warn("全书未回收伏笔 {} 条 > 3，记录完整性警告但不阻塞", unresolved.size());
+                    // 记录但不阻塞——避免无限循环。在质量评价中会体现
+                    repository.saveContinuityIssue(new ContinuityIssue(
+                            projectId, p.getCurrentChapterIndex(),
+                            ContinuityIssue.Type.FORESHADOWING,
+                            ContinuityIssue.Severity.HIGH,
+                            "全书完结时有 " + unresolved.size() + " 条伏笔未回收"));
+                }
                 p.setState(NovelState.FINAL);
                 repository.saveProject(p);
                 break;

@@ -256,7 +256,8 @@ public class NovelOrchestrator {
 
         // 幂等检查：该章已存在且内容有效则跳过（断点续写时避免重复）
         var existing = repository.findChapterByIndex(projectId, chapterIndex);
-        if (existing.isPresent() && existing.get().getWordCount() >= 500) {
+        int idempotentMinLen = repository.findWritingPreferences(projectId).map(pref -> pref.getMinChapterLength()).orElse(2000);
+        if (existing.isPresent() && existing.get().getWordCount() >= idempotentMinLen) {
             // 已有有效章节，推进索引并返回
             p.setCurrentChapterIndex(chapterIndex);
             repository.saveProject(p);
@@ -298,6 +299,7 @@ public class NovelOrchestrator {
         }
 
         // p8-3: 读者检验 Agentic Loop——每章写后检验，低分自动重写（最多1次）
+        // p9-1: 重写长度保护——拒绝比原版短70%的重写
         if (readerReviewAgent != null) {
             try {
                 var review = readerReviewAgent.review(chapterIndex, chapter.getContent());
@@ -305,18 +307,21 @@ public class NovelOrchestrator {
                 if (!review.isPassed()) {
                     log.info("章节评分 {} < {}，自动重写", review.getScore(), readerReviewAgent.getPassThreshold());
                     var reviewSynopsis = findSynopsis(outline, chapterIndex);
+                    int originalLength = chapter.getContent().length();
                     String newContent = chapterWriter.rewriteForCorrection(
                             projectId, chapterIndex, chapter.getTitle(),
                             reviewSynopsis != null ? reviewSynopsis.getSynopsis() : "",
                             reviewSynopsis != null ? reviewSynopsis.getWritingNotes() : "",
                             "读者检验改进建议：" + review.getImprovementSuggestion());
-                    if (newContent != null && newContent.length() >= 500) {
+                    // p9-1: 长度保护——重写不能比原版短太多（≥70%）
+                    if (newContent != null && newContent.length() >= originalLength * 0.7) {
                         chapter.setContent(newContent);
                         repository.saveChapter(chapter);
-                        log.info("章节重写完成(章{})", chapterIndex);
-                        // 重写后重新检验（只检1次，不再循环）
+                        log.info("章节重写完成(章{}): {}字→{}字", chapterIndex, originalLength, newContent.length());
                         var reReview = readerReviewAgent.review(chapterIndex, chapter.getContent());
                         log.info("重写后检验(章{}): {}/10", chapterIndex, reReview.getScore());
+                    } else if (newContent != null) {
+                        log.warn("重写内容过短({}字 < 原版{}字的70%)，保留原版", newContent.length(), originalLength);
                     }
                 }
             } catch (Exception e) {
@@ -642,7 +647,7 @@ public class NovelOrchestrator {
                     projectId, chapterIndex, synopsis.getTitle(),
                     synopsis.getSynopsis(), synopsis.getWritingNotes(), issueDesc);
             // 重写成功则用新内容原地更新（复用原 chapter 的 id，触发 ON CONFLICT DO UPDATE）
-            if (newContent != null && newContent.length() >= 500) {
+            if (newContent != null && newContent.length() >= 2000) {
                 chapter.setContent(newContent);
                 repository.saveChapter(chapter); // 用原 id 覆盖，不产生重复
             }
@@ -857,7 +862,7 @@ public class NovelOrchestrator {
                 projectId, chapterIndex, synopsis.getTitle(),
                 synopsis.getSynopsis(), synopsis.getWritingNotes(), correction);
 
-        if (newContent != null && newContent.length() >= 500) {
+        if (newContent != null && newContent.length() >= 2000) {
             existing.setContent(newContent);
             repository.saveChapter(existing);
 

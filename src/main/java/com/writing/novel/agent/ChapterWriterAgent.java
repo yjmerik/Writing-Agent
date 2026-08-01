@@ -78,7 +78,11 @@ public class ChapterWriterAgent {
                 .maxTokens(3000)
                 .build();
 
-        // 3. 调 LLM 写正文（空内容/<500字用变化 prompt 重试；contentFilter 用温和 prompt 重试）
+        // 3. 调 LLM 写正文（空内容/过短用变化 prompt 重试；contentFilter 用温和 prompt 重试）
+        // p9-1: 最低字数从 prefs 读取（默认2000）
+        int minLen = repository.findWritingPreferences(projectId)
+                .map(p -> p.getMinChapterLength())
+                .orElse(2000);
         com.writing.novel.llm.LlmResponse resp;
         try {
             resp = gateway.complete(req);
@@ -93,7 +97,7 @@ public class ChapterWriterAgent {
                     .build();
             resp = gateway.complete(mildReq);
         }
-        if (resp.getContent() == null || resp.getContent().length() < 500) {
+        if (resp.getContent() == null || resp.getContent().length() < minLen) {
             // 重试：变化 prompt 引导 LLM 输出完整正文
             var retryReq = LlmRequest.builder()
                     .taskType(LlmTaskType.CHAPTER_WRITING)
@@ -119,9 +123,9 @@ public class ChapterWriterAgent {
         }
 
         // 4. 内容校验：仍不达标则不保存、抛异常（绝不入库空章节）
-        if (resp.getContent() == null || resp.getContent().length() < 500) {
+        if (resp.getContent() == null || resp.getContent().length() < minLen) {
             throw new RuntimeException("章节内容为空或过短（" 
-                    + (resp.getContent() == null ? 0 : resp.getContent().length()) + "字），放弃保存");
+                    + (resp.getContent() == null ? 0 : resp.getContent().length()) + "字，需≥" + minLen + "字），放弃保存");
         }
 
         // 5. 构建 Chapter 并保存（纠正错误的章节号）

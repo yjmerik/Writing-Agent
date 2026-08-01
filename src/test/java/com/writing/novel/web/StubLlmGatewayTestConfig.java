@@ -29,7 +29,7 @@ public class StubLlmGatewayTestConfig {
                             "【姓名】张三\n【角色定位】主角\n【性格】火爆\n【能力】剑修";
                     case PLOTTING ->
                             "【总纲】张三的修炼之路。\n\n【卷1】初入仙门\n拜入宗门。\n第1章 测试：灵根测试。";
-                    default -> "这是桩 LLM 生成的正文内容，足够长用于测试。".repeat(30);
+                    default -> "这是桩 LLM 生成的正文内容，足够长用于测试章节写入和存储。".repeat(80);
                 };
                 return new LlmResponse(content, 50, 100);
             }

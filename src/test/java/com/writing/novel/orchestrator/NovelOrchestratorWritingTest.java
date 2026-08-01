@@ -71,7 +71,7 @@ class NovelOrchestratorWritingTest {
                             第3章 比武：外门比武。
                             """, 50, 100);
                     case CHAPTER_WRITING -> new LlmResponse(
-                            "这是本章的正文内容，张三的故事继续。".repeat(30), 100, 500);
+                            "这是本章的正文内容，张三的故事继续。".repeat(120), 100, 500);
                     case MEMORY_SUMMARY -> new LlmResponse("章节摘要：张三的修炼进展。", 50, 50);
                     default -> new LlmResponse("ok", 1, 1);
                 };

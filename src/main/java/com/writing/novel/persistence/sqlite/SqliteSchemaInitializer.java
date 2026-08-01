@@ -93,6 +93,7 @@ public class SqliteSchemaInitializer {
             "enable_feedback_injection INTEGER DEFAULT 1, feedback_window INTEGER DEFAULT 10, " +
             "dialogue_differentiation TEXT DEFAULT 'contrast', " +
             "plot_stall_window INTEGER DEFAULT 3, character_upgrade_span INTEGER DEFAULT 2, " +
+            "min_chapter_length INTEGER DEFAULT 2000, " +
             "updated_at TEXT)",
 
         // 生成日志表（创意多样性追踪）

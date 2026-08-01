@@ -38,7 +38,8 @@ public class WritingPreferences {
 
     // 阈值参数化（p7-4）
     private int plotStallWindow;                    // 默认 3：连续多少章低张力视为停滞
-    private int characterUpgradeSpan;               // 默认 2：角色升级跨度阈值（出现跨度>=此值才升级）
+    private int characterUpgradeSpan;               // 默认 2：角色升级跨度阈值
+    private int minChapterLength;                   // 默认 2000：章节最低字数（出现跨度>=此值才升级）
 
     private Instant updatedAt;
 
@@ -57,6 +58,7 @@ public class WritingPreferences {
         this.dialogueDifferentiation = "contrast";
         this.plotStallWindow = 3;
         this.characterUpgradeSpan = 2;
+        this.minChapterLength = 2000;
         this.updatedAt = Instant.now();
     }
 
@@ -80,6 +82,7 @@ public class WritingPreferences {
                 case "dialogueDifferentiation" -> this.dialogueDifferentiation = (String) value;
                 case "plotStallWindow" -> this.plotStallWindow = ((Number) value).intValue();
                 case "characterUpgradeSpan" -> this.characterUpgradeSpan = ((Number) value).intValue();
+                case "minChapterLength" -> this.minChapterLength = ((Number) value).intValue();
             }
         });
         this.updatedAt = Instant.now();
@@ -100,6 +103,7 @@ public class WritingPreferences {
         m.put("dialogueDifferentiation", dialogueDifferentiation);
         m.put("plotStallWindow", plotStallWindow);
         m.put("characterUpgradeSpan", characterUpgradeSpan);
+        m.put("minChapterLength", minChapterLength);
         m.put("updatedAt", updatedAt.toString());
         return m;
     }
@@ -132,5 +136,7 @@ public class WritingPreferences {
     public void setPlotStallWindow(int w) { this.plotStallWindow = w; this.updatedAt = Instant.now(); }
     public int getCharacterUpgradeSpan() { return characterUpgradeSpan; }
     public void setCharacterUpgradeSpan(int s) { this.characterUpgradeSpan = s; this.updatedAt = Instant.now(); }
+    public int getMinChapterLength() { return minChapterLength; }
+    public void setMinChapterLength(int l) { this.minChapterLength = l; this.updatedAt = Instant.now(); }
     public Instant getUpdatedAt() { return updatedAt; }
 }

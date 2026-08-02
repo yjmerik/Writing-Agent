@@ -44,12 +44,18 @@ public class EntityExtractorAgent {
         List<Entity> existingEntities = repository.findEntitiesByProject(projectId);
         String existingJson = formatExistingEntities(existingEntities);
 
+        // p9-5: 截断正文到 3000 字，避免超 token 导致 LLM 返回空
+        String chapterContent = chapter.getContent();
+        if (chapterContent != null && chapterContent.length() > 3000) {
+            chapterContent = chapterContent.substring(0, 3000);
+        }
+
         String systemPrompt = promptService.render("entity-extraction", Map.of(
                 "existingEntities", existingJson,
-                "chapterContent", chapter.getContent()));
+                "chapterContent", chapterContent != null ? chapterContent : ""));
 
-        String userMessage = "第" + chapter.getChapterIndex() + "章 " + chapter.getTitle()
-                + "\n\n" + chapter.getContent();
+        // p9-5: 不在 userMessage 中重复正文（已在 systemPrompt 模板中注入）
+        String userMessage = "请提取第" + chapter.getChapterIndex() + "章中的实体和关系。";
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.GENERAL)

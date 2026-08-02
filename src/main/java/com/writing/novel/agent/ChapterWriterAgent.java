@@ -129,8 +129,10 @@ public class ChapterWriterAgent {
         }
 
         // 5. 构建 Chapter 并保存（纠正错误的章节号）
+        // p9-4: 复用已存在的同索引章节（避免重复行）
         String cleanContent = sanitizeChapterNumbers(resp.getContent(), chapterIndex);
-        Chapter chapter = new Chapter(projectId, chapterIndex, chapterTitle);
+        Chapter chapter = repository.findChapterByIndex(projectId, chapterIndex)
+                .orElse(new Chapter(projectId, chapterIndex, chapterTitle));
         chapter.setContent(cleanContent);
         repository.saveChapter(chapter);
 

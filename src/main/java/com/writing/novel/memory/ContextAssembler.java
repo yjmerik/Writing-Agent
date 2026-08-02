@@ -314,11 +314,22 @@ public class ContextAssembler {
     private String buildForeshadowings(String projectId) {
         List<Foreshadowing> unresolved = repository.findUnresolvedForeshadowings(projectId);
         if (unresolved.isEmpty()) return "";
+
+        // p9-6: 优先注入悬挂过久的伏笔，最多 8 条
+        var sorted = unresolved.stream()
+                .sorted((a, b) -> Integer.compare(b.getPlantedAtChapter(), a.getPlantedAtChapter()))
+                .limit(8)
+                .toList();
+
         StringBuilder sb = new StringBuilder();
-        for (Foreshadowing f : unresolved) {
+        for (Foreshadowing f : sorted) {
             sb.append("- ").append(f.getDescription())
                     .append("（埋于第").append(f.getPlantedAtChapter()).append("章）\n");
         }
+        if (unresolved.size() > 8) {
+            sb.append("（还有 ").append(unresolved.size() - 8).append(" 条伏笔未列出）\n");
+        }
+        sb.append("\n⚠️ 请在本章正文中尽量回收上述伏笔——揭晓谜底、给出答案、或让角色明确提及结论。");
         return sb.toString().trim();
     }
 

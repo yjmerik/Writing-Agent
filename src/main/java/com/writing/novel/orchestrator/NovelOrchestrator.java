@@ -144,6 +144,29 @@ public class NovelOrchestrator {
                     ? creativeDiversityService.getDiversityGuide(projectId, "CHARACTER") : "";
             characterDesigner.design(projectId, charRequirement, List.of(), charDiversity);
 
+            // p9-3: 配角群像设计——至少设计 1 个女性角色 + 1 个对手/反派
+            var existingChars = repository.findCharactersByProject(projectId);
+            final String protagonistSummary = existingChars.stream()
+                    .map(c -> c.getName() + "（" + c.getRole() + "）：性格" + (c.getPersonality() != null ? c.getPersonality().substring(0, Math.min(30, c.getPersonality().length())) : "待定"))
+                    .reduce((a, b) -> a + "；" + b).orElse("");
+
+            // 设计关键对手/反派
+            String antagonistReq = "重要配角/对手或反派。与主角形成对立或互补关系。"
+                    + "已有人物：" + protagonistSummary
+                    + "。故事构思：" + p.getConcept();
+            characterDesigner.design(projectId, antagonistReq, existingChars, charDiversity);
+            var charsAfterAntag = repository.findCharactersByProject(projectId);
+
+            // 设计关键女性角色（与主角有复杂关系）
+            String femaleCharReq = "重要女性配角。必须有独立动机和成长弧，不能只是工具人或符号。"
+                    + "与主角的关系可以是盟友/对手/恋人/血亲。"
+                    + "已有人物：" + protagonistSummary + "；"
+                    + charsAfterAntag.stream()
+                            .filter(c -> !charsAfterAntag.get(0).getName().equals(c.getName()))
+                            .map(c -> c.getName() + "（" + c.getRole() + "）")
+                            .reduce((a, b) -> a + "、" + b).orElse("无");
+            characterDesigner.design(projectId, femaleCharReq, charsAfterAntag, charDiversity);
+
             // 记录角色生成
             if (creativeDiversityService != null) {
                 var chars = repository.findCharactersByProject(projectId);

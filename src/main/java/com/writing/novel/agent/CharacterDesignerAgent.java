@@ -67,7 +67,9 @@ public class CharacterDesignerAgent {
         c.setAbility(extractFieldOrNull(text, "能力"));
         c.setMotivation(extractFieldOrNull(text, "动机"));
         c.setAppearance(extractFieldOrNull(text, "外貌"));
-        c.setRelationships(extractFieldOrNull(text, "人物关系"));
+        // p9-3: 兼容新旧模板——优先取"与主角的关系"，回退到"人物关系"
+        String relation = extractFieldOrNull(text, "与主角的关系");
+        c.setRelationships(relation != null ? relation : extractFieldOrNull(text, "人物关系"));
         c.setGrowthArc(extractFieldOrNull(text, "成长弧"));
         c.setSpeakingStyle(extractFieldOrNull(text, "说话风格"));
         c.setKnowledgeDomains(extractFieldOrNull(text, "知识领域"));

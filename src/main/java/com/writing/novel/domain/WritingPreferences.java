@@ -41,6 +41,9 @@ public class WritingPreferences {
     private int characterUpgradeSpan;               // 默认 2：角色升级跨度阈值
     private int minChapterLength;                   // 默认 2000：章节最低字数（出现跨度>=此值才升级）
 
+    // p10-b1: 信息密度调控
+    private int maxBeatsPerChapter;                 // 默认 4：每章核心事件/场景节拍上限
+
     private Instant updatedAt;
 
     public WritingPreferences(String projectId) {
@@ -59,6 +62,7 @@ public class WritingPreferences {
         this.plotStallWindow = 3;
         this.characterUpgradeSpan = 2;
         this.minChapterLength = 2000;
+        this.maxBeatsPerChapter = 4;
         this.updatedAt = Instant.now();
     }
 
@@ -83,6 +87,7 @@ public class WritingPreferences {
                 case "plotStallWindow" -> this.plotStallWindow = ((Number) value).intValue();
                 case "characterUpgradeSpan" -> this.characterUpgradeSpan = ((Number) value).intValue();
                 case "minChapterLength" -> this.minChapterLength = ((Number) value).intValue();
+                case "maxBeatsPerChapter" -> this.maxBeatsPerChapter = ((Number) value).intValue();
             }
         });
         this.updatedAt = Instant.now();
@@ -104,6 +109,7 @@ public class WritingPreferences {
         m.put("plotStallWindow", plotStallWindow);
         m.put("characterUpgradeSpan", characterUpgradeSpan);
         m.put("minChapterLength", minChapterLength);
+        m.put("maxBeatsPerChapter", maxBeatsPerChapter);
         m.put("updatedAt", updatedAt.toString());
         return m;
     }
@@ -138,5 +144,7 @@ public class WritingPreferences {
     public void setCharacterUpgradeSpan(int s) { this.characterUpgradeSpan = s; this.updatedAt = Instant.now(); }
     public int getMinChapterLength() { return minChapterLength; }
     public void setMinChapterLength(int l) { this.minChapterLength = l; this.updatedAt = Instant.now(); }
+    public int getMaxBeatsPerChapter() { return maxBeatsPerChapter; }
+    public void setMaxBeatsPerChapter(int b) { this.maxBeatsPerChapter = b; this.updatedAt = Instant.now(); }
     public Instant getUpdatedAt() { return updatedAt; }
 }

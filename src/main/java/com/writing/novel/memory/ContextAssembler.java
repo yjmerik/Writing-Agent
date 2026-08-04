@@ -464,11 +464,20 @@ public class ContextAssembler {
         // 2. 世界观约束
         sb.append("□ 必须使用至少 1 个世界观独特设定\n");
 
-        // 3. 节拍覆盖
+        // 3. 节拍覆盖 + 信息密度上限
         if (synopsis != null && synopsis.getBeats() != null && !synopsis.getBeats().isBlank()) {
             String[] beats = synopsis.getBeats().split("→");
             sb.append("□ 场景节拍必须全部覆盖（共 ").append(beats.length)
               .append(" 个：").append(synopsis.getBeats()).append("）\n");
+            // p10-b1: 信息密度约束
+            int maxBeats = prefs.map(com.writing.novel.domain.WritingPreferences::getMaxBeatsPerChapter).orElse(4);
+            if (beats.length > maxBeats) {
+                sb.append("□ ⚠️ 本章场景节拍数(").append(beats.length)
+                  .append(")超过上限(").append(maxBeats)
+                  .append(")，信息密度过高。请合并部分节拍或聚焦核心事件，不要试图在一章内解决所有问题\n");
+            }
+            sb.append("□ 本章核心事件/转折不超过 ").append(maxBeats)
+              .append(" 件——宁可深入刻画少数场景，也不要走马观花堆砌事件\n");
         }
 
         // 4. 悬念结尾

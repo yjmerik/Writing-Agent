@@ -96,6 +96,7 @@ public class SqliteSchemaInitializer {
             "dialogue_differentiation TEXT DEFAULT 'contrast', " +
             "plot_stall_window INTEGER DEFAULT 3, character_upgrade_span INTEGER DEFAULT 2, " +
             "min_chapter_length INTEGER DEFAULT 2000, " +
+            "max_beats_per_chapter INTEGER DEFAULT 4, " +
             "updated_at TEXT)",
 
         // 生成日志表（创意多样性追踪）
@@ -151,5 +152,7 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE characters ADD COLUMN countermeasures TEXT");
         safeAddColumn(st, "ALTER TABLE characters ADD COLUMN independent_will TEXT");
         safeAddColumn(st, "ALTER TABLE characters ADD COLUMN blind_spot TEXT");
+        // p10-b1: writing_preferences 新增列
+        safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN max_beats_per_chapter INTEGER DEFAULT 4");
     }
 }

@@ -49,6 +49,7 @@ public class NovelOrchestrator {
     private final ForeshadowingResolutionDetector foreshadowingResolutionDetector;
     private final SceneClassifier sceneClassifier;
     private final com.writing.novel.service.DiversityTracker diversityTracker;
+    private final com.writing.novel.service.ArcScheduler arcScheduler;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -75,7 +76,8 @@ public class NovelOrchestrator {
                               ReaderReviewAgent readerReviewAgent,
                               ForeshadowingResolutionDetector foreshadowingResolutionDetector,
                               SceneClassifier sceneClassifier,
-                              com.writing.novel.service.DiversityTracker diversityTracker) {
+                              com.writing.novel.service.DiversityTracker diversityTracker,
+                              com.writing.novel.service.ArcScheduler arcScheduler) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -102,6 +104,7 @@ public class NovelOrchestrator {
         this.foreshadowingResolutionDetector = foreshadowingResolutionDetector;
         this.sceneClassifier = sceneClassifier;
         this.diversityTracker = diversityTracker;
+        this.arcScheduler = arcScheduler;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -319,8 +322,17 @@ public class NovelOrchestrator {
             return null;
         }
 
+        // p10-a2: 角色弧光调度——注入配角出场建议
+        String enhancedNotes = synopsis.getWritingNotes();
+        if (arcScheduler != null) {
+            String arcSuggestion = arcScheduler.scheduleAppearance(projectId, chapterIndex);
+            if (!arcSuggestion.isBlank()) {
+                enhancedNotes = (enhancedNotes != null ? enhancedNotes + "\n" : "") + arcSuggestion;
+            }
+        }
+
         Chapter chapter = chapterWriter.write(projectId, chapterIndex,
-                synopsis.getTitle(), synopsis.getSynopsis(), synopsis.getWritingNotes());
+                synopsis.getTitle(), synopsis.getSynopsis(), enhancedNotes);
 
         // 内容校验：不达标不推进索引（chapterWriter.write 已保证 ≥500 字或抛异常）
         p = loadProject(projectId); // 重新加载最新状态
@@ -418,6 +430,15 @@ public class NovelOrchestrator {
             }
         } catch (Exception e) {
             log.warn("场景分类失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+
+        // p10-a2: 更新角色最近出场章节
+        try {
+            if (arcScheduler != null) {
+                arcScheduler.updateLastSeenChapters(projectId, chapterIndex, chapter.getContent());
+            }
+        } catch (Exception e) {
+            log.warn("角色出场更新失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
         // 剧情停滞检测：基于张力曲线，连续低张力触发警告

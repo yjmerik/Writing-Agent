@@ -24,6 +24,10 @@ public class Character {
     private String independentWill;    // 独立判断原则：在什么条件下妥协/绝不退让
     private String blindSpot;          // 认知盲区：主角可利用但需合理铺垫
 
+    // p10-a2: 角色弧光调度
+    private String arcStage;           // 弧光当前阶段（如"蛰伏→觉醒→考验→蜕变→完成"）
+    private Integer lastSeenChapter;   // 最近一次出场章节号
+
     private int version;
     private Instant updatedAt;
 
@@ -66,6 +70,10 @@ public class Character {
     public void setIndependentWill(String i) { this.independentWill = i; bumpVersion(); }
     public String getBlindSpot() { return blindSpot; }
     public void setBlindSpot(String b) { this.blindSpot = b; bumpVersion(); }
+    public String getArcStage() { return arcStage; }
+    public void setArcStage(String s) { this.arcStage = s; bumpVersion(); }
+    public Integer getLastSeenChapter() { return lastSeenChapter; }
+    public void setLastSeenChapter(Integer c) { this.lastSeenChapter = c; bumpVersion(); }
     public int getVersion() { return version; }
     public Instant getUpdatedAt() { return updatedAt; }
 

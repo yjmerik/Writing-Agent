@@ -48,13 +48,14 @@ public class OrchestratorConfig {
                                                  ReaderReviewAgent readerReviewAgent,
                                                  ForeshadowingResolutionDetector foreshadowingResolutionDetector,
                                                  SceneClassifier sceneClassifier,
-                                                 com.writing.novel.service.DiversityTracker diversityTracker) {
+                                                 com.writing.novel.service.DiversityTracker diversityTracker,
+                                                 com.writing.novel.service.ArcScheduler arcScheduler) {
         return new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
                 characterProfileUpgrader, climaxDiversityTracker, plotProgressionDetector,
                 arcUpdater, foreshadowingExtractor, genreDetector, genreRuleProvider,
                 creativeDiversityService, narrativeThreadExtractor, readerReviewAgent,
-                foreshadowingResolutionDetector, sceneClassifier, diversityTracker);
+                foreshadowingResolutionDetector, sceneClassifier, diversityTracker, arcScheduler);
     }
 }

@@ -1,5 +1,6 @@
 package com.writing.novel.memory;
 
+import com.writing.novel.service.ArcScheduler;
 import com.writing.novel.service.ClimaxDiversityTracker;
 import com.writing.novel.service.ClicheDetector;
 import com.writing.novel.service.DiversityTracker;
@@ -38,6 +39,11 @@ public class MemoryConfig {
     @Bean
     public ClicheDetector clicheDetector(NovelRepository repository) {
         return new ClicheDetector(repository);
+    }
+
+    @Bean
+    public ArcScheduler arcScheduler(NovelRepository repository) {
+        return new ArcScheduler(repository);
     }
 
     @Bean

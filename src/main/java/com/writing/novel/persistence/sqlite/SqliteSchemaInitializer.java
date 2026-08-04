@@ -26,6 +26,7 @@ public class SqliteSchemaInitializer {
             "relationships TEXT, growth_arc TEXT, " +
             "speaking_style TEXT, knowledge_domains TEXT, " +
             "strategy_level INTEGER, countermeasures TEXT, independent_will TEXT, blind_spot TEXT, " +
+            "arc_stage TEXT, last_seen_chapter INTEGER, " +
             "version INTEGER, updated_at TEXT)",
 
         "CREATE TABLE IF NOT EXISTS outlines (" +
@@ -152,6 +153,9 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE characters ADD COLUMN countermeasures TEXT");
         safeAddColumn(st, "ALTER TABLE characters ADD COLUMN independent_will TEXT");
         safeAddColumn(st, "ALTER TABLE characters ADD COLUMN blind_spot TEXT");
+        // p10-a2: 角色弧光调度
+        safeAddColumn(st, "ALTER TABLE characters ADD COLUMN arc_stage TEXT");
+        safeAddColumn(st, "ALTER TABLE characters ADD COLUMN last_seen_chapter INTEGER");
         // p10-b1: writing_preferences 新增列
         safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN max_beats_per_chapter INTEGER DEFAULT 4");
     }

@@ -25,6 +25,7 @@ public class SqliteSchemaInitializer {
             "personality TEXT, ability TEXT, motivation TEXT, appearance TEXT, " +
             "relationships TEXT, growth_arc TEXT, " +
             "speaking_style TEXT, knowledge_domains TEXT, " +
+            "strategy_level INTEGER, countermeasures TEXT, independent_will TEXT, blind_spot TEXT, " +
             "version INTEGER, updated_at TEXT)",
 
         "CREATE TABLE IF NOT EXISTS outlines (" +
@@ -145,5 +146,10 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE foreshadowings ADD COLUMN priority TEXT DEFAULT 'MEDIUM'");
         safeAddColumn(st, "ALTER TABLE foreshadowings ADD COLUMN expected_resolve_chapter INTEGER");
         safeAddColumn(st, "ALTER TABLE foreshadowings ADD COLUMN must_resolve INTEGER DEFAULT 0");
+        // p10-a1: characters 表新增列
+        safeAddColumn(st, "ALTER TABLE characters ADD COLUMN strategy_level INTEGER");
+        safeAddColumn(st, "ALTER TABLE characters ADD COLUMN countermeasures TEXT");
+        safeAddColumn(st, "ALTER TABLE characters ADD COLUMN independent_will TEXT");
+        safeAddColumn(st, "ALTER TABLE characters ADD COLUMN blind_spot TEXT");
     }
 }

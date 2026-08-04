@@ -17,6 +17,13 @@ public class Character {
     private String growthArc;     // 成长弧
     private String speakingStyle;  // 说话风格："引经据典，善用兵法典故，语气沉稳"
     private String knowledgeDomains; // 知识领域 JSON：["兵法","古籍","阵法","星象"]
+
+    // p10-a1: 对手智谋建模（题材无关——武侠是招式反制，言情是情感防线，科幻是技术反制）
+    private Integer strategyLevel;     // 智谋层级 1-5（1=易对付，5=极难对付）
+    private String countermeasures;    // 反制能力：面对主角策略时的典型反制手段
+    private String independentWill;    // 独立判断原则：在什么条件下妥协/绝不退让
+    private String blindSpot;          // 认知盲区：主角可利用但需合理铺垫
+
     private int version;
     private Instant updatedAt;
 
@@ -51,6 +58,14 @@ public class Character {
     public void setSpeakingStyle(String s) { this.speakingStyle = s; bumpVersion(); }
     public String getKnowledgeDomains() { return knowledgeDomains; }
     public void setKnowledgeDomains(String k) { this.knowledgeDomains = k; bumpVersion(); }
+    public Integer getStrategyLevel() { return strategyLevel; }
+    public void setStrategyLevel(Integer s) { this.strategyLevel = s; bumpVersion(); }
+    public String getCountermeasures() { return countermeasures; }
+    public void setCountermeasures(String c) { this.countermeasures = c; bumpVersion(); }
+    public String getIndependentWill() { return independentWill; }
+    public void setIndependentWill(String i) { this.independentWill = i; bumpVersion(); }
+    public String getBlindSpot() { return blindSpot; }
+    public void setBlindSpot(String b) { this.blindSpot = b; bumpVersion(); }
     public int getVersion() { return version; }
     public Instant getUpdatedAt() { return updatedAt; }
 

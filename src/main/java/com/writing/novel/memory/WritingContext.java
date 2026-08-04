@@ -64,6 +64,11 @@ public class WritingContext {
                 if (c.getGrowthArc() != null) sb.append("  成长弧：").append(c.getGrowthArc()).append("\n");
                 if (c.getSpeakingStyle() != null) sb.append("  说话风格：").append(c.getSpeakingStyle()).append("\n");
                 if (c.getKnowledgeDomains() != null) sb.append("  知识领域：").append(c.getKnowledgeDomains()).append("\n");
+                // p10-a1: 智谋建模——渲染反制能力和盲区
+                if (c.getStrategyLevel() != null) sb.append("  智谋层级：").append(c.getStrategyLevel()).append("/5\n");
+                if (c.getCountermeasures() != null) sb.append("  反制能力：").append(c.getCountermeasures()).append("\n");
+                if (c.getIndependentWill() != null) sb.append("  独立判断：").append(c.getIndependentWill()).append("\n");
+                if (c.getBlindSpot() != null) sb.append("  盲区：").append(c.getBlindSpot()).append("\n");
             }
             sb.append("\n");
         }

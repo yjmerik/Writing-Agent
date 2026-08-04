@@ -160,12 +160,16 @@ public class SqliteNovelRepository implements NovelRepository {
     @Override
     public String saveCharacter(Character c) {
         String sql = "INSERT INTO characters (id,project_id,name,role,personality,ability,motivation," +
-                "appearance,relationships,growth_arc,speaking_style,knowledge_domains,version,updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
+                "appearance,relationships,growth_arc,speaking_style,knowledge_domains," +
+                "strategy_level,countermeasures,independent_will,blind_spot," +
+                "version,updated_at) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
                 "name=excluded.name, role=excluded.role, personality=excluded.personality, " +
                 "ability=excluded.ability, motivation=excluded.motivation, appearance=excluded.appearance, " +
                 "relationships=excluded.relationships, growth_arc=excluded.growth_arc, " +
                 "speaking_style=excluded.speaking_style, knowledge_domains=excluded.knowledge_domains, " +
+                "strategy_level=excluded.strategy_level, countermeasures=excluded.countermeasures, " +
+                "independent_will=excluded.independent_will, blind_spot=excluded.blind_spot, " +
                 "version=excluded.version, updated_at=excluded.updated_at";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -175,7 +179,12 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setString(7, c.getMotivation()); ps.setString(8, c.getAppearance());
             ps.setString(9, c.getRelationships()); ps.setString(10, c.getGrowthArc());
             ps.setString(11, c.getSpeakingStyle()); ps.setString(12, c.getKnowledgeDomains());
-            ps.setInt(13, c.getVersion()); ps.setString(14, c.getUpdatedAt().toString());
+            if (c.getStrategyLevel() != null) ps.setInt(13, c.getStrategyLevel());
+            else ps.setNull(13, Types.INTEGER);
+            ps.setString(14, c.getCountermeasures());
+            ps.setString(15, c.getIndependentWill());
+            ps.setString(16, c.getBlindSpot());
+            ps.setInt(17, c.getVersion()); ps.setString(18, c.getUpdatedAt().toString());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
         return c.getId();
@@ -975,6 +984,14 @@ public class SqliteNovelRepository implements NovelRepository {
         c.setGrowthArc(rs.getString("growth_arc"));
         c.setSpeakingStyle(rs.getString("speaking_style"));
         c.setKnowledgeDomains(rs.getString("knowledge_domains"));
+        // p10-a1: 读取智谋建模字段（兼容旧库）
+        try {
+            int sl = rs.getInt("strategy_level");
+            if (!rs.wasNull()) setField(c, "strategyLevel", sl);
+            setField(c, "countermeasures", rs.getString("countermeasures"));
+            setField(c, "independentWill", rs.getString("independent_will"));
+            setField(c, "blindSpot", rs.getString("blind_spot"));
+        } catch (SQLException ignored) { /* 旧库无此列 */ }
         return c;
     }
 

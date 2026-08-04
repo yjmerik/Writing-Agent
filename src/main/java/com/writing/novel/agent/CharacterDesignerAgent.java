@@ -73,6 +73,19 @@ public class CharacterDesignerAgent {
         c.setGrowthArc(extractFieldOrNull(text, "成长弧"));
         c.setSpeakingStyle(extractFieldOrNull(text, "说话风格"));
         c.setKnowledgeDomains(extractFieldOrNull(text, "知识领域"));
+
+        // p10-a1: 智谋建模字段
+        String strategyStr = extractFieldOrNull(text, "智谋层级");
+        if (strategyStr != null) {
+            try {
+                // 提取数字
+                java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+)").matcher(strategyStr);
+                if (m.find()) c.setStrategyLevel(Integer.parseInt(m.group(1)));
+            } catch (Exception ignored) {}
+        }
+        c.setCountermeasures(extractFieldOrNull(text, "反制能力"));
+        c.setIndependentWill(extractFieldOrNull(text, "独立判断原则"));
+        c.setBlindSpot(extractFieldOrNull(text, "盲区"));
         return c;
     }
 

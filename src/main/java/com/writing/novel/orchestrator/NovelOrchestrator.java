@@ -50,6 +50,8 @@ public class NovelOrchestrator {
     private final SceneClassifier sceneClassifier;
     private final com.writing.novel.service.DiversityTracker diversityTracker;
     private final com.writing.novel.service.ArcScheduler arcScheduler;
+    private final ConsistencyGuard consistencyGuard;
+    private final com.writing.novel.service.ConsistencyGate consistencyGate;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -77,7 +79,9 @@ public class NovelOrchestrator {
                               ForeshadowingResolutionDetector foreshadowingResolutionDetector,
                               SceneClassifier sceneClassifier,
                               com.writing.novel.service.DiversityTracker diversityTracker,
-                              com.writing.novel.service.ArcScheduler arcScheduler) {
+                              com.writing.novel.service.ArcScheduler arcScheduler,
+                              ConsistencyGuard consistencyGuard,
+                              com.writing.novel.service.ConsistencyGate consistencyGate) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -105,6 +109,8 @@ public class NovelOrchestrator {
         this.sceneClassifier = sceneClassifier;
         this.diversityTracker = diversityTracker;
         this.arcScheduler = arcScheduler;
+        this.consistencyGuard = consistencyGuard;
+        this.consistencyGate = consistencyGate;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -676,6 +682,34 @@ public class NovelOrchestrator {
             } catch (Exception e) {
                 log.warn("风格检查失败(章{}): {}", chapterIndex, e.getMessage());
             }
+        }
+
+        // p10-a3+c2: 一致性守卫——能力越界 + 凭空证据检测
+        try {
+            if (consistencyGuard != null) {
+                var guardIssues = consistencyGuard.check(projectId, chapterIndex, chapter.getContent());
+                for (var issue : guardIssues) {
+                    repository.saveContinuityIssue(issue);
+                    log.warn("一致性守卫(章{}): {}", chapterIndex, issue.getDescription());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("一致性守卫失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+
+        // p10-d2: 一致性门禁——章号/时代用语检查（纯规则）
+        try {
+            if (consistencyGate != null) {
+                var p = loadProject(projectId);
+                var gateIssues = consistencyGate.check(projectId, chapterIndex,
+                        chapter.getContent(), p.getGenre());
+                for (var issue : gateIssues) {
+                    repository.saveContinuityIssue(issue);
+                    log.warn("一致性门禁(章{}): {}", chapterIndex, issue.getDescription());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("一致性门禁失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
         // 每 5 章检查风格漂移，解析评分并记录问题（p3-02）

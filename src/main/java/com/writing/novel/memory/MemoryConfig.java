@@ -47,6 +47,11 @@ public class MemoryConfig {
     }
 
     @Bean
+    public com.writing.novel.service.ConsistencyGate consistencyGate(NovelRepository repository) {
+        return new com.writing.novel.service.ConsistencyGate(repository);
+    }
+
+    @Bean
     public ContextAssembler contextAssembler(NovelRepository repository,
                                               KnowledgeBaseService knowledgeBase,
                                               SummaryService summaryService,

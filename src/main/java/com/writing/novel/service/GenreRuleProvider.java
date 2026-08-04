@@ -82,17 +82,20 @@ public class GenreRuleProvider {
     /** 章节写作阶段的题材特定节奏规则 */
     public String getChapterWritingRules(GenreProfile genre) {
         if (genre == null) return "";
-        return switch (genre) {
+        String pacing = switch (genre) {
             case CULTIVATION -> "节奏：标准四段式（开场钩子15%→冲突升级40%→高潮爽点30%→悬念结尾15%）";
             case MYSTERY -> "节奏：线索铺设优先。开场可慢热（20%），线索分析占核心（50%），转折（20%），新疑问（10%）";
             case ROMANCE -> "节奏：情感场景为主。情感互动占60%，外部事件30%，内心独白10%。避免过多动作描写";
             case THRILLER -> "节奏：紧凑高压。开场即冲突（10%），危机升级（50%），高潮对抗（30%），新威胁（10%）";
-            case HISTORICAL -> "节奏：对话和博弈为主。政治对话/权谋交锋占50%，行动30%，背景铺陈20%";
+            case HISTORICAL -> "节奏：对话和博弈为主。政治对话/权谋交锋占50%，行动30%，背景铺陈20%。注意：不要每章都是厅堂博弈，适当穿插行动/情感/仪式场景";
             case SCIFI -> "节奏：设定展示与情节并重。科技展示20%，情节推进50%，社会影响20%，悬念10%";
             case FANTASY -> "节奏：冒险探索为主。世界观探索30%，冒险行动40%，角色互动20%，悬念10%";
             case LITERARY -> "节奏：自由节奏。注重内心世界和主题深度，不强制四段式结构";
             case GENERAL -> "节奏：标准四段式（开场钩子→冲突升级→高潮→悬念结尾）";
         };
+        // p10-b2: 追加场景分布指导
+        String sceneDist = getRecommendedSceneDistribution(genre);
+        return pacing + "\n" + sceneDist;
     }
 
     /** 题材适用的爽点类型建议 */
@@ -108,6 +111,25 @@ public class GenreRuleProvider {
             case FANTASY -> "规则利用（魔法体系）/反预期/智斗/情感反转";
             case LITERARY -> "情感反转/反预期（主题层面的颠覆）";
             case GENERAL -> "信息差/反预期/智斗/情感反转/规则利用";
+        };
+    }
+
+    /**
+     * p10-b2: 题材推荐的场景类型分布。
+     * 返回该题材下推荐的主要 SceneType（用于指导场景多样性）。
+     */
+    public String getRecommendedSceneDistribution(GenreProfile genre) {
+        if (genre == null) return "";
+        return switch (genre) {
+            case CULTIVATION -> "推荐场景分布：ACTION(行动战斗)40% / CONFRONTATION(对抗博弈)30% / REVELATION(揭示转折)20% / TRANSITION(过渡)10%";
+            case MYSTERY -> "推荐场景分布：INVESTIGATION(调查推理)50% / REVELATION(揭示转折)20% / CONFRONTATION(对抗博弈)20% / TRANSITION(过渡)10%";
+            case ROMANCE -> "推荐场景分布：EMOTIONAL(情感关系)50% / CONFRONTATION(对抗博弈)20% / REVELATION(揭示转折)15% / TRANSITION(过渡)15%";
+            case THRILLER -> "推荐场景分布：ACTION(行动战斗)40% / INVESTIGATION(调查推理)25% / REVELATION(揭示转折)20% / CONFRONTATION(对抗博弈)15%";
+            case HISTORICAL -> "推荐场景分布：CONFRONTATION(对抗博弈)40% / ACTION(行动战斗)20% / REVELATION(揭示转折)20% / EMOTIONAL(情感关系)10% / CEREMONY(仪式盛典)10%";
+            case SCIFI -> "推荐场景分布：INVESTIGATION(调查推理)25% / ACTION(行动战斗)25% / REVELATION(揭示转折)25% / CONFRONTATION(对抗博弈)15% / TRANSITION(过渡)10%";
+            case FANTASY -> "推荐场景分布：ACTION(行动战斗)35% / INVESTIGATION(调查推理)20% / EMOTIONAL(情感关系)20% / REVELATION(揭示转折)15% / CEREMONY(仪式盛典)10%";
+            case LITERARY -> "推荐场景分布：EMOTIONAL(情感关系)40% / REVELATION(揭示转折)25% / TRANSITION(过渡)20% / CONFRONTATION(对抗博弈)15%";
+            case GENERAL -> "推荐场景分布：各场景类型均衡分布，避免任何单一类型连续超过3章";
         };
     }
 }

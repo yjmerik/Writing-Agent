@@ -21,6 +21,7 @@ public class DiversityTracker {
         dimensions.put("opening", new LinkedHashMap<>());    // 开场方式
         dimensions.put("conflict", new LinkedHashMap<>());   // 冲突模式
         dimensions.put("climax", new LinkedHashMap<>());     // 爽点类型
+        dimensions.put("scene", new LinkedHashMap<>());      // p10-b2: 场景结构类型
     }
 
     /** 记录某章在某维度使用的类型 */
@@ -62,6 +63,41 @@ public class DiversityTracker {
         sb.append(generateConstraint("opening", "开场方式"));
         sb.append(generateConstraint("conflict", "冲突模式"));
         sb.append(generateConstraint("climax", "爽点类型"));
+        sb.append(generateConstraint("scene", "场景结构类型"));
         return sb.toString();
+    }
+
+    /**
+     * p10-b2: 检查最近 N 章是否连续使用同一场景类型。
+     * @return 连续相同类型数（>3 时视为套路化）
+     */
+    public int getConsecutiveSceneCount() {
+        var history = dimensions.get("scene");
+        if (history == null || history.isEmpty()) return 0;
+        var chapters = new java.util.ArrayList<>(history.keySet());
+        if (chapters.size() < 2) return 1;
+        // 取最近章的场景类型
+        String latest = history.get(chapters.get(chapters.size() - 1)).stream().findFirst().orElse("");
+        int count = 0;
+        for (int i = chapters.size() - 1; i >= 0; i--) {
+            String s = history.get(chapters.get(i)).stream().findFirst().orElse("");
+            if (s.equals(latest) && !latest.isEmpty()) count++;
+            else break;
+        }
+        return count;
+    }
+
+    /** p10-b2: 获取最近 N 章的场景类型（用于检测结构重复） */
+    public String getRecentSceneTypes(int recentN) {
+        var history = dimensions.get("scene");
+        if (history == null || history.isEmpty()) return "";
+        var chapters = new java.util.ArrayList<>(history.keySet());
+        int from = Math.max(0, chapters.size() - recentN);
+        StringBuilder sb = new StringBuilder();
+        for (int i = from; i < chapters.size(); i++) {
+            String s = history.get(chapters.get(i)).stream().findFirst().orElse("未知");
+            sb.append("第").append(chapters.get(i)).append("章:").append(s).append(" ");
+        }
+        return sb.toString().trim();
     }
 }

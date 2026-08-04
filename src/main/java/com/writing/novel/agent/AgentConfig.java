@@ -151,6 +151,11 @@ public class AgentConfig {
     }
 
     @Bean
+    public SceneClassifier sceneClassifier(LlmGateway gateway, PromptTemplateService promptService) {
+        return new SceneClassifier(gateway, promptService);
+    }
+
+    @Bean
     public com.writing.novel.service.DiversityTracker diversityTracker() {
         return new com.writing.novel.service.DiversityTracker();
     }

@@ -47,6 +47,8 @@ public class NovelOrchestrator {
     private final NarrativeThreadExtractor narrativeThreadExtractor;
     private final ReaderReviewAgent readerReviewAgent;
     private final ForeshadowingResolutionDetector foreshadowingResolutionDetector;
+    private final SceneClassifier sceneClassifier;
+    private final com.writing.novel.service.DiversityTracker diversityTracker;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -71,7 +73,9 @@ public class NovelOrchestrator {
                               CreativeDiversityService creativeDiversityService,
                               NarrativeThreadExtractor narrativeThreadExtractor,
                               ReaderReviewAgent readerReviewAgent,
-                              ForeshadowingResolutionDetector foreshadowingResolutionDetector) {
+                              ForeshadowingResolutionDetector foreshadowingResolutionDetector,
+                              SceneClassifier sceneClassifier,
+                              com.writing.novel.service.DiversityTracker diversityTracker) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -96,6 +100,8 @@ public class NovelOrchestrator {
         this.narrativeThreadExtractor = narrativeThreadExtractor;
         this.readerReviewAgent = readerReviewAgent;
         this.foreshadowingResolutionDetector = foreshadowingResolutionDetector;
+        this.sceneClassifier = sceneClassifier;
+        this.diversityTracker = diversityTracker;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -383,9 +389,35 @@ public class NovelOrchestrator {
             var climaxTypes = inferClimaxTypes(synopsis);
             if (!climaxTypes.isEmpty()) {
                 climaxDiversityTracker.record(chapterIndex, climaxTypes);
+                // p10-b2: 激活 DiversityTracker 的 climax 维度（修复死代码）
+                diversityTracker.record("climax", chapterIndex,
+                        climaxTypes.stream().map(Enum::name).toList());
             }
         } catch (Exception e) {
             log.warn("爽点追踪失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+
+        // p10-b2: 场景结构分类 + 多样性追踪
+        try {
+            var sceneType = sceneClassifier.classify(chapter.getContent());
+            diversityTracker.record("scene", chapterIndex, List.of(sceneType.name()));
+            log.info("场景分类(章{}): {}", chapterIndex, sceneType.getLabel());
+
+            // 检测连续 3+ 章同一场景类型 → 结构套路化警告
+            int consecutive = diversityTracker.getConsecutiveSceneCount();
+            if (consecutive >= 3) {
+                String recent = diversityTracker.getRecentSceneTypes(4);
+                repository.saveContinuityIssue(new ContinuityIssue(
+                        projectId, chapterIndex,
+                        ContinuityIssue.Type.STRUCTURE,
+                        ContinuityIssue.Severity.MEDIUM,
+                        "连续 " + consecutive + " 章使用同一场景类型（" + sceneType.getLabel()
+                                + "），存在结构套路化风险。最近场景：" + recent
+                                + "。建议下一章切换到不同的场景类型。"));
+                log.warn("结构套路化警告(章{}): 连续{}章{}", chapterIndex, consecutive, sceneType.getLabel());
+            }
+        } catch (Exception e) {
+            log.warn("场景分类失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
         // 剧情停滞检测：基于张力曲线，连续低张力触发警告

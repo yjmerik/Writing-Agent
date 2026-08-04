@@ -5,7 +5,7 @@ import java.util.UUID;
 
 /** 连续性矛盾报告 */
 public class ContinuityIssue {
-    public enum Type { CHARACTER, WORLDBUILDING, TIMELINE, FORESHADOWING, PLOT, PACING }
+    public enum Type { CHARACTER, WORLDBUILDING, TIMELINE, FORESHADOWING, PLOT, PACING, STRUCTURE, DENSITY }
     public enum Severity { LOW, MEDIUM, HIGH }
 
     private String id;

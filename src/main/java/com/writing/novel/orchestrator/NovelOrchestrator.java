@@ -1044,6 +1044,30 @@ public class NovelOrchestrator {
             try { entityGraphService.extractFromChapter(projectId, existing); } catch (Exception ignored) {}
             try { foreshadowingExtractor.extract(projectId, existing); } catch (Exception ignored) {}
 
+            // p10: 重写后也运行 Phase 10 检测链（场景分类+一致性守卫+一致性门禁+弧光更新）
+            try {
+                var sceneType = sceneClassifier.classify(newContent);
+                diversityTracker.record("scene", chapterIndex, List.of(sceneType.name()));
+                log.info("重写后场景分类(章{}): {}", chapterIndex, sceneType.getLabel());
+            } catch (Exception ignored) {}
+            try {
+                if (consistencyGuard != null) {
+                    var guardIssues = consistencyGuard.check(projectId, chapterIndex, newContent);
+                    for (var issue : guardIssues) repository.saveContinuityIssue(issue);
+                }
+            } catch (Exception ignored) {}
+            try {
+                if (consistencyGate != null) {
+                    var gateIssues = consistencyGate.check(projectId, chapterIndex, newContent, p.getGenre());
+                    for (var issue : gateIssues) repository.saveContinuityIssue(issue);
+                }
+            } catch (Exception ignored) {}
+            try {
+                if (arcScheduler != null) {
+                    arcScheduler.updateLastSeenChapters(projectId, chapterIndex, newContent);
+                }
+            } catch (Exception ignored) {}
+
             log.info("章节重写成功(章{}): {} 字", chapterIndex, newContent.length());
         }
         return existing;

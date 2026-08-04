@@ -68,7 +68,7 @@ public class ContextAssembler {
 
         String queryText = chapterSynopsis != null ? chapterSynopsis : chapterTitle;
         assembleRetrievedContext(projectId, queryText, ctx);
-        ctx.setRelevantForeshadowings(buildForeshadowings(projectId));
+        ctx.setRelevantForeshadowings(buildForeshadowings(projectId, chapterIndex));
         // 查找当前章节的结构化大纲信息（beats/climax/cast）
         ChapterSynopsis fullSynopsis = findFullSynopsis(projectId, chapterIndex);
         ctx.setTaskSection(buildTaskSection(chapterTitle, chapterSynopsis, writingNotes, fullSynopsis));
@@ -311,25 +311,64 @@ public class ContextAssembler {
         return role != null && (role.contains("主角") || role.contains("男主") || role.contains("女主"));
     }
 
-    private String buildForeshadowings(String projectId) {
+    private String buildForeshadowings(String projectId, int chapterIndex) {
         List<Foreshadowing> unresolved = repository.findUnresolvedForeshadowings(projectId);
         if (unresolved.isEmpty()) return "";
 
-        // p9-6: 优先注入悬挂过久的伏笔，最多 8 条
-        var sorted = unresolved.stream()
-                .sorted((a, b) -> Integer.compare(b.getPlantedAtChapter(), a.getPlantedAtChapter()))
-                .limit(8)
+        final int currentChapter = chapterIndex;
+        final int LIMIT = 10;
+
+        // p10-c1: 排序策略改革——
+        // 1. HIGH priority 或 mustResolve 的伏笔，永不被裁剪（始终注入）
+        // 2. 其余按"挂得最久"（currentChapter - plantedAtChapter）降序，取 top LIMIT
+        var mustInclude = unresolved.stream()
+                .filter(f -> f.getPriority() == Foreshadowing.Priority.HIGH || f.isMustResolve())
+                .toList();
+        var others = unresolved.stream()
+                .filter(f -> f.getPriority() != Foreshadowing.Priority.HIGH && !f.isMustResolve())
+                .sorted((a, b) -> Integer.compare(
+                        b.suspenseChapters(currentChapter), a.suspenseChapters(currentChapter)))
+                .limit(Math.max(0, LIMIT - mustInclude.size()))
                 .toList();
 
         StringBuilder sb = new StringBuilder();
-        for (Foreshadowing f : sorted) {
+
+        // 强制回收段：过期的 mustResolve 伏笔
+        var overdueCritical = mustInclude.stream()
+                .filter(f -> f.isOverdue(currentChapter))
+                .toList();
+        if (!overdueCritical.isEmpty()) {
+            sb.append("🔴 【本章必须回收】以下重要伏笔已超过预计回收章节，务必在本章给出答案：\n");
+            for (Foreshadowing f : overdueCritical) {
+                sb.append("  ★ ").append(f.getDescription())
+                        .append("（埋于第").append(f.getPlantedAtChapter());
+                if (f.getExpectedResolveChapter() != null) {
+                    sb.append("章，应于第").append(f.getExpectedResolveChapter()).append("章回收");
+                }
+                sb.append("）\n");
+            }
+            sb.append("\n");
+        }
+
+        // 正常待回收列表
+        sb.append("【待回收伏笔】请在后续章节中回收以下伏笔（揭晓谜底、给出答案、或让角色明确提及结论）：\n");
+        for (Foreshadowing f : mustInclude) {
+            if (overdueCritical.contains(f)) continue; // 已在强制段列出
             sb.append("- ").append(f.getDescription())
-                    .append("（埋于第").append(f.getPlantedAtChapter()).append("章）\n");
+                    .append("（埋于第").append(f.getPlantedAtChapter()).append("章");
+            if (f.getPriority() == Foreshadowing.Priority.HIGH) sb.append("，★重要");
+            sb.append("）\n");
         }
-        if (unresolved.size() > 8) {
-            sb.append("（还有 ").append(unresolved.size() - 8).append(" 条伏笔未列出）\n");
+        for (Foreshadowing f : others) {
+            sb.append("- ").append(f.getDescription())
+                    .append("（埋于第").append(f.getPlantedAtChapter()).append("章，挂起")
+                    .append(f.suspenseChapters(currentChapter)).append("章）\n");
         }
-        sb.append("\n⚠️ 请在本章正文中尽量回收上述伏笔——揭晓谜底、给出答案、或让角色明确提及结论。");
+
+        int shown = mustInclude.size() + others.size();
+        if (unresolved.size() > shown) {
+            sb.append("（还有 ").append(unresolved.size() - shown).append(" 条次要伏笔未列出）\n");
+        }
         return sb.toString().trim();
     }
 

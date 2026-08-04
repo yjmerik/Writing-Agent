@@ -390,10 +390,13 @@ public class SqliteNovelRepository implements NovelRepository {
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(
                      "INSERT INTO foreshadowings (id,project_id,description,planted_context," +
-                     "planted_at_chapter,resolved,resolved_at_chapter,updated_at) VALUES (?,?,?,?,?,?,?,?) " +
+                     "planted_at_chapter,resolved,resolved_at_chapter,updated_at," +
+                     "priority,expected_resolve_chapter,must_resolve) VALUES (?,?,?,?,?,?,?,?,?,?,?) " +
                      "ON CONFLICT(id) DO UPDATE SET description=excluded.description, " +
                      "planted_context=excluded.planted_context, resolved=excluded.resolved, " +
-                     "resolved_at_chapter=excluded.resolved_at_chapter, updated_at=excluded.updated_at")) {
+                     "resolved_at_chapter=excluded.resolved_at_chapter, updated_at=excluded.updated_at, " +
+                     "priority=excluded.priority, expected_resolve_chapter=excluded.expected_resolve_chapter, " +
+                     "must_resolve=excluded.must_resolve")) {
             ps.setString(1, f.getId()); ps.setString(2, f.getProjectId());
             ps.setString(3, f.getDescription()); ps.setString(4, f.getPlantedContext());
             ps.setInt(5, f.getPlantedAtChapter());
@@ -401,6 +404,10 @@ public class SqliteNovelRepository implements NovelRepository {
             if (f.getResolvedAtChapter() != null) ps.setInt(7, f.getResolvedAtChapter());
             else ps.setNull(7, Types.INTEGER);
             ps.setString(8, f.getUpdatedAt().toString());
+            ps.setString(9, f.getPriority().name());
+            if (f.getExpectedResolveChapter() != null) ps.setInt(10, f.getExpectedResolveChapter());
+            else ps.setNull(10, Types.INTEGER);
+            ps.setInt(11, f.isMustResolve() ? 1 : 0);
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
@@ -423,7 +430,10 @@ public class SqliteNovelRepository implements NovelRepository {
         List<Foreshadowing> list = new ArrayList<>();
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "SELECT * FROM foreshadowings WHERE project_id=? AND resolved=0")) {
+                     "SELECT * FROM foreshadowings WHERE project_id=? AND resolved=0 " +
+                     "ORDER BY must_resolve DESC, " +
+                     "CASE priority WHEN 'HIGH' THEN 0 WHEN 'MEDIUM' THEN 1 ELSE 2 END, " +
+                     "planted_at_chapter ASC")) {
             ps.setString(1, projectId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(mapForeshadowing(rs));
@@ -983,6 +993,14 @@ public class SqliteNovelRepository implements NovelRepository {
                 rs.getInt("planted_at_chapter"));
         setField(f, "id", rs.getString("id"));
         if (rs.getInt("resolved") == 1) f.resolve(rs.getInt("resolved_at_chapter"));
+        // p10-c1: 读取新字段（兼容旧库无列的情况）
+        try {
+            String pri = rs.getString("priority");
+            if (pri != null && !pri.isEmpty()) f.setPriority(Foreshadowing.Priority.valueOf(pri));
+            int exp = rs.getInt("expected_resolve_chapter");
+            if (!rs.wasNull()) f.setExpectedResolveChapter(exp);
+            f.setMustResolve(rs.getInt("must_resolve") == 1);
+        } catch (SQLException ignored) { /* 旧库无此列 */ }
         return f;
     }
 

@@ -9,6 +9,7 @@ import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.spi.NovelRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,24 +34,60 @@ public class ForeshadowingResolutionDetector {
 
     /**
      * 检测本章是否回收了未回收伏笔，并标记已回收的。
+     * p10-c1: 不再截断到前 2000 字——回收常发生在章末。
+     * 对超长章节分段检测，确保全文覆盖。
      * @return 本章回收的伏笔数量
      */
     public int detectAndResolve(String projectId, int chapterIndex, String chapterContent) {
         var unresolved = repository.findUnresolvedForeshadowings(projectId);
         if (unresolved.isEmpty()) return 0;
 
-        // 构建伏笔列表文本
+        // 构建伏笔列表文本（标注重要性和过期状态）
         String foreshadowingList = unresolved.stream()
-                .map(f -> "- " + f.getDescription() + "（埋于第" + f.getPlantedAtChapter() + "章）")
+                .map(f -> {
+                    StringBuilder line = new StringBuilder("- ").append(f.getDescription());
+                    line.append("（埋于第").append(f.getPlantedAtChapter()).append("章");
+                    if (f.getPriority() == Foreshadowing.Priority.HIGH) line.append("，★重要");
+                    if (f.isMustResolve()) line.append("，必须回收");
+                    if (f.isOverdue(chapterIndex)) line.append("，已过期");
+                    line.append("）");
+                    return line.toString();
+                })
                 .collect(Collectors.joining("\n"));
 
-        String content = chapterContent != null
-                ? (chapterContent.length() > 2000 ? chapterContent.substring(0, 2000) : chapterContent)
-                : "";
+        // p10-c1: 不截断——传完整正文。超长时分段检测。
+        String content = chapterContent != null ? chapterContent : "";
+        int totalResolved = 0;
 
+        if (content.length() <= 6000) {
+            // 单次检测
+            totalResolved = detectInSegment(foreshadowingList, content, projectId, chapterIndex, unresolved);
+        } else {
+            // 分段检测（每段 6000 字，重叠 500 字防止割裂回收段）
+            int segmentLen = 6000;
+            int overlap = 500;
+            for (int start = 0; start < content.length(); start += segmentLen - overlap) {
+                int end = Math.min(start + segmentLen, content.length());
+                String segment = content.substring(start, end);
+                totalResolved += detectInSegment(foreshadowingList, segment, projectId, chapterIndex, unresolved);
+                if (end >= content.length()) break;
+                // 刷新未回收列表（前段可能已回收部分）
+                unresolved = repository.findUnresolvedForeshadowings(projectId);
+                if (unresolved.isEmpty()) break;
+                foreshadowingList = unresolved.stream()
+                        .map(f -> "- " + f.getDescription() + "（埋于第" + f.getPlantedAtChapter() + "章）")
+                        .collect(Collectors.joining("\n"));
+            }
+        }
+        return totalResolved;
+    }
+
+    private int detectInSegment(String foreshadowingList, String contentSegment,
+                                 String projectId, int chapterIndex,
+                                 List<Foreshadowing> unresolved) {
         String systemPrompt = promptService.render("foreshadowing-resolve-check", Map.of(
                 "foreshadowings", foreshadowingList,
-                "chapterContent", content));
+                "chapterContent", contentSegment));
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.GENERAL)
@@ -84,12 +121,11 @@ public class ForeshadowingResolutionDetector {
                 String desc = node.path("description").asText("");
                 if (desc.isBlank()) continue;
 
-                // 模糊匹配伏笔（描述包含或被包含）
+                // p10-c1: 改进匹配——从前 6 字模糊匹配升级为语义匹配
+                // 策略：取 LLM 返回描述的关键词（≥2字），与库存伏笔描述做关键词交集
                 for (var f : unresolved) {
                     if (f.isResolved()) continue;
-                    String fDesc = f.getDescription();
-                    if (fDesc.contains(desc.substring(0, Math.min(6, desc.length())))
-                            || desc.contains(fDesc.substring(0, Math.min(6, fDesc.length())))) {
+                    if (descriptionsMatch(f.getDescription(), desc)) {
                         f.resolve(chapterIndex);
                         repository.saveForeshadowing(f);
                         count++;
@@ -101,5 +137,34 @@ public class ForeshadowingResolutionDetector {
         } catch (Exception e) {
             return 0;
         }
+    }
+
+    /**
+     * p10-c1: 语义匹配——替代旧的 6 字前缀 contains 匹配。
+     * 匹配条件（满足任一）：
+     * 1. 双向包含（一个描述包含另一个的 ≥8 字子串）
+     * 2. 关键词交集 ≥2 个（关键词 = ≥2 字的非停用词片段）
+     */
+    private boolean descriptionsMatch(String libraryDesc, String llmDesc) {
+        if (libraryDesc == null || llmDesc == null) return false;
+        // 双向长子串包含
+        int prefixLen = Math.min(8, Math.min(libraryDesc.length(), llmDesc.length()));
+        if (libraryDesc.contains(llmDesc.substring(0, prefixLen))) return true;
+        if (llmDesc.contains(libraryDesc.substring(0, prefixLen))) return true;
+        // 关键词交集（提取 2-4 字的中文词组）
+        long commonKeywords = extractKeywords(libraryDesc).stream()
+                .filter(k -> llmDesc.contains(k))
+                .count();
+        return commonKeywords >= 2;
+    }
+
+    /** 粗略提取中文关键词（2-4 字连续中文片段） */
+    private List<String> extractKeywords(String text) {
+        List<String> keywords = new java.util.ArrayList<>();
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("[\\u4e00-\\u9fa5]{2,4}").matcher(text);
+        while (m.find()) {
+            keywords.add(m.group());
+        }
+        return keywords;
     }
 }

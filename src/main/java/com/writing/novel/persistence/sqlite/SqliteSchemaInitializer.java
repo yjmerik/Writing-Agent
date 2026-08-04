@@ -51,7 +51,8 @@ public class SqliteSchemaInitializer {
         "CREATE TABLE IF NOT EXISTS foreshadowings (" +
             "id TEXT PRIMARY KEY, project_id TEXT, description TEXT, " +
             "planted_context TEXT, planted_at_chapter INTEGER, " +
-            "resolved INTEGER, resolved_at_chapter INTEGER, updated_at TEXT)",
+            "resolved INTEGER, resolved_at_chapter INTEGER, updated_at TEXT, " +
+            "priority TEXT DEFAULT 'MEDIUM', expected_resolve_chapter INTEGER, must_resolve INTEGER DEFAULT 0)",
 
         "CREATE TABLE IF NOT EXISTS style_profiles (" +
             "project_id TEXT PRIMARY KEY, tone TEXT, voice TEXT, " +
@@ -120,8 +121,29 @@ public class SqliteSchemaInitializer {
             for (String ddl : DDL) {
                 st.execute(ddl);
             }
+            // p10: 增量迁移——为旧库补充新增列（CREATE TABLE IF NOT EXISTS 不会改已有表结构）
+            applyMigrations(st);
         } catch (SQLException e) {
             throw new RuntimeException("SQLite schema 初始化失败", e);
         }
+    }
+
+    /** 安全地添加列：忽略"列已存在"错误 */
+    private void safeAddColumn(Statement st, String sql) {
+        try {
+            st.execute(sql);
+        } catch (SQLException e) {
+            // duplicate column name → 列已存在，忽略
+            if (!e.getMessage().contains("duplicate column name")) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private void applyMigrations(Statement st) {
+        // p10-c1: foreshadowings 表新增列
+        safeAddColumn(st, "ALTER TABLE foreshadowings ADD COLUMN priority TEXT DEFAULT 'MEDIUM'");
+        safeAddColumn(st, "ALTER TABLE foreshadowings ADD COLUMN expected_resolve_chapter INTEGER");
+        safeAddColumn(st, "ALTER TABLE foreshadowings ADD COLUMN must_resolve INTEGER DEFAULT 0");
     }
 }

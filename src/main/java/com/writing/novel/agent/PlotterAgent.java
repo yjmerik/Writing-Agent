@@ -252,6 +252,30 @@ public class PlotterAgent {
         if (tensionM.find()) {
             try { cs.setTensionLevel(Integer.parseInt(tensionM.group(1))); } catch (Exception ignored) {}
         }
+
+        // p10-c1: 提取伏笔规划（"伏笔：" 后的内容，区分"埋设-"和"回收-"）
+        Matcher foreshadowM = Pattern.compile("伏笔[：:]\\s*(.+?)(?=场景节拍[：:]|$)", Pattern.DOTALL).matcher(clean);
+        if (foreshadowM.find()) {
+            String fText = foreshadowM.group(1).trim();
+            if (!"无".equals(fText) && !fText.isEmpty()) {
+                StringBuilder toPlant = new StringBuilder();
+                StringBuilder toResolve = new StringBuilder();
+                // 分号或换行分隔多条
+                for (String item : fText.split("[;；\\n]")) {
+                    item = item.trim();
+                    if (item.startsWith("埋设") || item.startsWith("埋下")) {
+                        toPlant.append(item).append(";");
+                    } else if (item.startsWith("回收")) {
+                        toResolve.append(item).append(";");
+                    } else {
+                        // 无法区分的，默认为埋设
+                        if (!item.isEmpty()) toPlant.append(item).append(";");
+                    }
+                }
+                if (toPlant.length() > 0) cs.setForeshadowingsToPlant(toPlant.toString());
+                if (toResolve.length() > 0) cs.setForeshadowingsToResolve(toResolve.toString());
+            }
+        }
     }
 
     /** 清理标题中的 markdown 标记（**、#、多余空格） */

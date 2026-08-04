@@ -89,6 +89,17 @@ public class ForeshadowingExtractor {
                 if (isDuplicate) continue;
 
                 Foreshadowing f = new Foreshadowing(projectId, desc, context, chapterIndex);
+
+                // p10-c1: 读取 LLM 标注的重要性和必须回收标记
+                String priorityStr = node.path("priority").asText("MEDIUM").toUpperCase();
+                try {
+                    f.setPriority(Foreshadowing.Priority.valueOf(priorityStr));
+                } catch (IllegalArgumentException ignored) {
+                    f.setPriority(Foreshadowing.Priority.MEDIUM);
+                }
+                boolean mustResolve = node.path("mustResolve").asBoolean(false);
+                f.setMustResolve(mustResolve || f.getPriority() == Foreshadowing.Priority.HIGH);
+
                 repository.saveForeshadowing(f);
                 existingDescs.add(desc);
                 count++;

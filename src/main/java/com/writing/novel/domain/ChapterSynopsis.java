@@ -17,6 +17,10 @@ public class ChapterSynopsis {
     private int tensionLevel;        // 张力等级 1-10（1=平静过渡，10=全书高潮）
     private String volumeArcPosition; // 卷内位置：SETUP/RISING/CLIMAX/RESOLUTION
 
+    // p10-c1: 大纲层伏笔规划——本章应埋设 / 应回收的伏笔
+    private String foreshadowingsToPlant;   // 本章应埋设的伏笔（分号分隔）
+    private String foreshadowingsToResolve; // 本章应回收的伏笔描述（分号分隔）
+
     public ChapterSynopsis(String projectId, int chapterIndex, String title, String synopsis) {
         this.id = UUID.randomUUID().toString();
         this.projectId = projectId;
@@ -47,4 +51,8 @@ public class ChapterSynopsis {
     public void setTensionLevel(int t) { this.tensionLevel = Math.max(1, Math.min(10, t)); }
     public String getVolumeArcPosition() { return volumeArcPosition; }
     public void setVolumeArcPosition(String v) { this.volumeArcPosition = v; }
+    public String getForeshadowingsToPlant() { return foreshadowingsToPlant; }
+    public void setForeshadowingsToPlant(String f) { this.foreshadowingsToPlant = f; }
+    public String getForeshadowingsToResolve() { return foreshadowingsToResolve; }
+    public void setForeshadowingsToResolve(String f) { this.foreshadowingsToResolve = f; }
 }

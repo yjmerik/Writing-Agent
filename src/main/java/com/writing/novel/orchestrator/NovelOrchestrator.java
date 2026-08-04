@@ -772,11 +772,47 @@ public class NovelOrchestrator {
             Outline outline = repository.findOutlineByProject(projectId).orElse(null);
             if (outline == null) break;
             if (!hasNextChapter(outline, p.getCurrentChapterIndex())) {
-                // p9-2: FINAL 完整性门禁——未回收伏笔 > 3 时不转 FINAL
+                // p10-c1: FINAL 完整性门禁——mustResolve 的关键伏笔未回收时，尝试追加回收章
                 var unresolved = repository.findUnresolvedForeshadowings(projectId);
+                var criticalUnresolved = unresolved.stream()
+                        .filter(Foreshadowing::isMustResolve)
+                        .toList();
+
+                if (!criticalUnresolved.isEmpty() && written < maxChapters
+                        && p.getCurrentChapterIndex() < 999) {
+                    // p10-c1: 有关键伏笔未回收，追加一个"伏笔回收章"而非直接完结
+                    // 标记伏笔为已过期（避免无限追加），然后尝试再写一章
+                    log.warn("全书完结前仍有 {} 条 mustResolve 伏笔未回收，追加回收章",
+                            criticalUnresolved.size());
+                    for (var f : criticalUnresolved) {
+                        if (f.getExpectedResolveChapter() == null) {
+                            f.setExpectedResolveChapter(p.getCurrentChapterIndex());
+                        }
+                    }
+                    // 给最后一章注入强制回收指令（通过 ContinuityIssue feedback）
+                    StringBuilder resolveCmd = new StringBuilder("本章为最终回收章，必须回收以下关键伏笔：\n");
+                    for (var f : criticalUnresolved) {
+                        resolveCmd.append("- ").append(f.getDescription())
+                                .append("（埋于第").append(f.getPlantedAtChapter()).append("章）\n");
+                    }
+                    resolveCmd.append("请在正文中明确揭晓/解答这些悬念。");
+                    repository.saveContinuityIssue(new ContinuityIssue(
+                            projectId, p.getCurrentChapterIndex() + 1,
+                            ContinuityIssue.Type.FORESHADOWING,
+                            ContinuityIssue.Severity.HIGH,
+                            resolveCmd.toString()));
+                    // 降级伏笔 mustResolve（防下一轮仍卡住），但保留 HIGH priority
+                    for (var f : criticalUnresolved) {
+                        f.setMustResolve(false);
+                        repository.saveForeshadowing(f);
+                    }
+                    // 不转 FINAL，让循环继续写一章（会因 hasNextChapter 仍 false 而 fallback）
+                    // 手动推进：设 state 保持 WRITING，下一轮会再次走到这里但 criticalUnresolved 已清空
+                }
+
+                // 非关键伏笔：记录但不阻塞
                 if (unresolved.size() > 3) {
-                    log.warn("全书未回收伏笔 {} 条 > 3，记录完整性警告但不阻塞", unresolved.size());
-                    // 记录但不阻塞——避免无限循环。在质量评价中会体现
+                    log.warn("全书未回收伏笔 {} 条 > 3，记录完整性警告", unresolved.size());
                     repository.saveContinuityIssue(new ContinuityIssue(
                             projectId, p.getCurrentChapterIndex(),
                             ContinuityIssue.Type.FORESHADOWING,

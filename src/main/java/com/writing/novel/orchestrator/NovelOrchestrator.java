@@ -280,6 +280,23 @@ public class NovelOrchestrator {
 
         int chapterIndex = p.getCurrentChapterIndex() + 1;
 
+        // p9-fix: 大纲索引可能有间隙（如跳过第1章从第2章开始），跳到下一个有效章节
+        ChapterSynopsis synopsis = findSynopsis(outline, chapterIndex);
+        if (synopsis == null) {
+            // 当前索引无对应大纲，找下一个有大纲的章节
+            for (int i = chapterIndex + 1; i <= chapterIndex + 10; i++) {
+                ChapterSynopsis next = findSynopsis(outline, i);
+                if (next != null) {
+                    chapterIndex = i;
+                    synopsis = next;
+                    break;
+                }
+            }
+        }
+
+        // 用于 lambda 的 final 副本
+        final int finalChapterIndex = chapterIndex;
+
         // 幂等检查：该章已存在且内容有效则跳过（断点续写时避免重复）
         var existing = repository.findChapterByIndex(projectId, chapterIndex);
         int idempotentMinLen = repository.findWritingPreferences(projectId).map(pref -> pref.getMinChapterLength()).orElse(2000);
@@ -290,7 +307,6 @@ public class NovelOrchestrator {
             return existing.get();
         }
 
-        ChapterSynopsis synopsis = findSynopsis(outline, chapterIndex);
         if (synopsis == null) {
             p.setState(NovelState.VOLUME_DONE);
             repository.saveProject(p);
@@ -377,7 +393,7 @@ public class NovelOrchestrator {
             plotProgressionDetector.detectStall(projectId, chapterIndex)
                     .ifPresent(issue -> {
                         repository.saveContinuityIssue(issue);
-                        log.warn("剧情停滞警告(章{}): {}", chapterIndex, issue.getDescription());
+                        log.warn("剧情停滞警告(章{}): {}", finalChapterIndex, issue.getDescription());
                     });
         } catch (Exception e) {
             log.warn("停滞检测失败(章{}): {}", chapterIndex, e.getMessage());

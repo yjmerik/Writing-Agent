@@ -431,6 +431,9 @@ public class ContextAssembler {
         // 4. 悬念结尾
         sb.append("□ 章节结尾必须是一个悬念钩子，不能是场景自然结束\n");
 
+        // 4b. 主角不完美约束（p9-10）
+        sb.append("□ 主角在本章中必须面临至少一次真正的困境或误判（不能事事算无遗策）\n");
+
         // 5. 多维度多样性约束（开场/冲突/爽点轮换）
         if (diversityTracker != null) {
             String diversityConstraints = diversityTracker.generateAllConstraints();

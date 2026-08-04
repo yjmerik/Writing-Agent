@@ -638,6 +638,25 @@ public class NovelOrchestrator {
             log.warn("伏笔回收检测失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
+        // p10-d1: 风格一致性检查（每 5 章）——检测文风漂移和高频套路词
+        if (chapterIndex % 5 == 0) {
+            try {
+                var profile = repository.findStyleProfileByProject(projectId);
+                if (profile.isPresent()) {
+                    String baseline = "基调：" + profile.get().getTone()
+                            + "，叙事：" + profile.get().getVoice()
+                            + "，注意事项：" + profile.get().getDosAndDonts();
+                    String content = chapter.getContent();
+                    if (content.length() > 3000) content = content.substring(0, 3000);
+                    String report = styleGuardian.checkConsistency(projectId, content, baseline);
+                    log.info("风格检查(章{}): {}", chapterIndex,
+                            report.length() > 100 ? report.substring(0, 100) : report);
+                }
+            } catch (Exception e) {
+                log.warn("风格检查失败(章{}): {}", chapterIndex, e.getMessage());
+            }
+        }
+
         // 每 5 章检查风格漂移，解析评分并记录问题（p3-02）
         if (chapterIndex % 5 == 0) {
             try {

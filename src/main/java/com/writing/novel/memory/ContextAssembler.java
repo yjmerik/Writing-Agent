@@ -3,6 +3,7 @@ package com.writing.novel.memory;
 import com.writing.novel.domain.*;
 import com.writing.novel.domain.Character;
 import com.writing.novel.service.ClimaxDiversityTracker;
+import com.writing.novel.service.ClicheDetector;
 import com.writing.novel.service.DiversityTracker;
 import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.service.NarrativeThreadTracker;
@@ -30,6 +31,7 @@ public class ContextAssembler {
     private final NarrativeThreadTracker narrativeThreadTracker;
     private final DiversityTracker diversityTracker;
     private final ClimaxDiversityTracker climaxDiversityTracker;
+    private final ClicheDetector clicheDetector;
 
     public ContextAssembler(NovelRepository repository,
                             KnowledgeBaseService knowledgeBase,
@@ -38,7 +40,8 @@ public class ContextAssembler {
                             EntityGraphService entityGraphService,
                             ClimaxDiversityTracker climaxDiversityTracker,
                             NarrativeThreadTracker narrativeThreadTracker,
-                            DiversityTracker diversityTracker) {
+                            DiversityTracker diversityTracker,
+                            ClicheDetector clicheDetector) {
         this.repository = repository;
         this.knowledgeBase = knowledgeBase;
         this.summaryService = summaryService;
@@ -47,6 +50,7 @@ public class ContextAssembler {
         this.narrativeThreadTracker = narrativeThreadTracker;
         this.diversityTracker = diversityTracker;
         this.climaxDiversityTracker = climaxDiversityTracker;
+        this.clicheDetector = clicheDetector;
     }
 
     public WritingContext assemble(String projectId, int chapterIndex,
@@ -77,7 +81,7 @@ public class ContextAssembler {
         ctx.setEntityConsistencySection(buildEntityConsistencySection(projectId, chapterIndex));
 
         // 写作偏好：对话约束（含密度目标）+ 原有的量化约束
-        ctx.setWritingConstraints(buildWritingConstraints(projectId, fullSynopsis));
+        ctx.setWritingConstraints(buildWritingConstraints(projectId, chapterIndex, fullSynopsis));
 
         // 角色声音注入（说话风格 + 知识领域）
         ctx.setCharacterVoiceSection(buildCharacterVoiceSection(projectId, fullSynopsis));
@@ -425,7 +429,7 @@ public class ContextAssembler {
 
     // --- 量化写作约束（含对话密度） ---
 
-    private String buildWritingConstraints(String projectId, ChapterSynopsis synopsis) {
+    private String buildWritingConstraints(String projectId, int chapterIndex, ChapterSynopsis synopsis) {
         StringBuilder sb = new StringBuilder();
         sb.append("【本章刚性约束（逐条检查，遗漏即违规）】\n");
 
@@ -478,6 +482,14 @@ public class ContextAssembler {
             String diversityConstraints = diversityTracker.generateAllConstraints();
             if (diversityConstraints != null && !diversityConstraints.isBlank()) {
                 sb.append(diversityConstraints);
+            }
+        }
+
+        // 6. p10-d1: 套路词热度控制——禁用最近高频反应词
+        if (clicheDetector != null) {
+            String forbidden = clicheDetector.generateForbiddenList(projectId, chapterIndex);
+            if (forbidden != null && !forbidden.isBlank()) {
+                sb.append(forbidden);
             }
         }
 

@@ -1,6 +1,7 @@
 package com.writing.novel.memory;
 
 import com.writing.novel.service.ClimaxDiversityTracker;
+import com.writing.novel.service.ClicheDetector;
 import com.writing.novel.service.DiversityTracker;
 import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.service.NarrativeThreadTracker;
@@ -35,6 +36,11 @@ public class MemoryConfig {
     }
 
     @Bean
+    public ClicheDetector clicheDetector(NovelRepository repository) {
+        return new ClicheDetector(repository);
+    }
+
+    @Bean
     public ContextAssembler contextAssembler(NovelRepository repository,
                                               KnowledgeBaseService knowledgeBase,
                                               SummaryService summaryService,
@@ -42,9 +48,10 @@ public class MemoryConfig {
                                               EntityGraphService entityGraphService,
                                               ClimaxDiversityTracker climaxDiversityTracker,
                                               NarrativeThreadTracker narrativeThreadTracker,
-                                              DiversityTracker diversityTracker) {
+                                              DiversityTracker diversityTracker,
+                                              ClicheDetector clicheDetector) {
         return new ContextAssembler(repository, knowledgeBase, summaryService,
                 vectorRetrieval, entityGraphService, climaxDiversityTracker,
-                narrativeThreadTracker, diversityTracker);
+                narrativeThreadTracker, diversityTracker, clicheDetector);
     }
 }

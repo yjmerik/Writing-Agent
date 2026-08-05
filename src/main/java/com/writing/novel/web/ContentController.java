@@ -58,6 +58,13 @@ public class ContentController {
         return orchestrator.rewriteChapter(id, chapterIndex, instructions);
     }
 
+    /** p10.1-e1: 伏笔重要性回溯审计——手动触发 */
+    @PostMapping("/audit-foreshadowings")
+    public java.util.Map<String, Object> auditForeshadowings(@PathVariable String id) {
+        int upgraded = orchestrator.auditForeshadowingImportance(id);
+        return java.util.Map.of("upgraded", upgraded);
+    }
+
     @GetMapping("/memory/summary")
     public List<Summary> summaries(@PathVariable String id) {
         return repository.findSummariesByProject(id);

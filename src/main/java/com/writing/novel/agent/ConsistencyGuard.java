@@ -119,6 +119,25 @@ public class ConsistencyGuard {
                     }
                 }
             }
+
+            // p10.1-e4: 时代用语穿帮
+            JsonNode anachArr = root.path("anachronisms");
+            if (anachArr.isArray()) {
+                for (JsonNode node : anachArr) {
+                    String word = node.path("word").asText("");
+                    String context = node.path("context").asText("");
+                    String suggestion = node.path("suggestion").asText("");
+                    if (!word.isBlank()) {
+                        StringBuilder desc = new StringBuilder("时代用语穿帮：「").append(word).append("」");
+                        if (!context.isBlank()) desc.append("，上下文：").append(context);
+                        if (!suggestion.isBlank()) desc.append("，建议替换为：").append(suggestion);
+                        issues.add(new ContinuityIssue(projectId, chapterIndex,
+                                ContinuityIssue.Type.WORLDBUILDING,
+                                ContinuityIssue.Severity.MEDIUM,
+                                desc.toString()));
+                    }
+                }
+            }
         } catch (Exception ignored) {
         }
         return issues;

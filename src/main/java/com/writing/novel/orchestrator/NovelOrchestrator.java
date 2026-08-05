@@ -52,6 +52,7 @@ public class NovelOrchestrator {
     private final com.writing.novel.service.ArcScheduler arcScheduler;
     private final ConsistencyGuard consistencyGuard;
     private final com.writing.novel.service.ConsistencyGate consistencyGate;
+    private final ForeshadowingImportanceAuditor foreshadowingImportanceAuditor;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -81,7 +82,8 @@ public class NovelOrchestrator {
                               com.writing.novel.service.DiversityTracker diversityTracker,
                               com.writing.novel.service.ArcScheduler arcScheduler,
                               ConsistencyGuard consistencyGuard,
-                              com.writing.novel.service.ConsistencyGate consistencyGate) {
+                              com.writing.novel.service.ConsistencyGate consistencyGate,
+                              ForeshadowingImportanceAuditor foreshadowingImportanceAuditor) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -111,6 +113,7 @@ public class NovelOrchestrator {
         this.arcScheduler = arcScheduler;
         this.consistencyGuard = consistencyGuard;
         this.consistencyGate = consistencyGate;
+        this.foreshadowingImportanceAuditor = foreshadowingImportanceAuditor;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -126,6 +129,15 @@ public class NovelOrchestrator {
             p.setGenre(genre);
             repository.saveProject(p);
             log.info("题材推断: {} → {}", p.getTags(), genre.getChineseName());
+
+            // p10.1-e3: 根据题材设置 maxBeatsPerChapter 默认值
+            if (genreRuleProvider != null) {
+                int maxBeats = genreRuleProvider.getDefaultMaxBeats(genre);
+                var prefs = repository.findWritingPreferences(projectId).orElse(new WritingPreferences(projectId));
+                prefs.setMaxBeatsPerChapter(maxBeats);
+                repository.saveWritingPreferences(prefs);
+                log.info("题材密度设置: {} → maxBeats={}", genre.getChineseName(), maxBeats);
+            }
         }
 
         // p8-1: 历史感知——注入 diversityGuide
@@ -878,6 +890,18 @@ public class NovelOrchestrator {
             Outline outline = repository.findOutlineByProject(projectId).orElse(null);
             if (outline == null) break;
             if (!hasNextChapter(outline, p.getCurrentChapterIndex())) {
+                // p10.1-e1: FINAL 前自动触发伏笔重要性审计（只触发一次）
+                if (foreshadowingImportanceAuditor != null && written == 0) {
+                    try {
+                        int upgraded = foreshadowingImportanceAuditor.audit(projectId);
+                        if (upgraded > 0) {
+                            log.info("FINAL前伏笔审计: {} 条升级为HIGH", upgraded);
+                        }
+                    } catch (Exception e) {
+                        log.warn("伏笔审计失败: {}", e.getMessage());
+                    }
+                }
+
                 // p10-c1: FINAL 完整性门禁——mustResolve 的关键伏笔未回收时，尝试追加回收章
                 var unresolved = repository.findUnresolvedForeshadowings(projectId);
                 var criticalUnresolved = unresolved.stream()
@@ -1071,6 +1095,22 @@ public class NovelOrchestrator {
             log.info("章节重写成功(章{}): {} 字", chapterIndex, newContent.length());
         }
         return existing;
+    }
+
+    /**
+     * p10.1-e1: 伏笔重要性回溯审计——对旧伏笔做批量重要性重评估。
+     * 解决 Phase 10 之前提取的伏笔 priority 全为默认 MEDIUM 的问题。
+     */
+    public int auditForeshadowingImportance(String projectId) {
+        if (foreshadowingImportanceAuditor == null) return 0;
+        try {
+            int upgraded = foreshadowingImportanceAuditor.audit(projectId);
+            log.info("伏笔重要性审计完成(项目{}): {} 条升级为 HIGH", projectId, upgraded);
+            return upgraded;
+        } catch (Exception e) {
+            log.warn("伏笔重要性审计失败: {}", e.getMessage());
+            return 0;
+        }
     }
 
     /** 从 ChapterSynopsis.climax 文本推断爽点类型（关键词匹配） */

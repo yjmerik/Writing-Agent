@@ -762,7 +762,7 @@ public class SqliteNovelRepository implements NovelRepository {
                 "enable_feedback_injection,feedback_window,dialogue_differentiation," +
                 "plot_stall_window,character_upgrade_span,min_chapter_length," +
                 "max_beats_per_chapter,updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET " +
                 "dialogue_density=excluded.dialogue_density, " +
                 "enable_dialogue_enforcement=excluded.enable_dialogue_enforcement, " +
                 "enable_climax_rotation=excluded.enable_climax_rotation, " +

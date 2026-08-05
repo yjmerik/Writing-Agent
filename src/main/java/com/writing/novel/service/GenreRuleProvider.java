@@ -115,6 +115,20 @@ public class GenreRuleProvider {
     }
 
     /**
+     * p10.1-e3: 题材化的默认 maxBeatsPerChapter（每章核心事件上限）。
+     * 权谋/悬疑题材信息密度高，上限更低；武侠/言情偏行动/情感，上限可稍高。
+     */
+    public int getDefaultMaxBeats(GenreProfile genre) {
+        if (genre == null) return 4;
+        return switch (genre) {
+            case HISTORICAL, MYSTERY, THRILLER -> 3;  // 信息密度高的题材
+            case CULTIVATION, SCIFI, FANTASY -> 4;     // 行动/冒险型
+            case ROMANCE, LITERARY -> 4;                // 情感型
+            case GENERAL -> 4;
+        };
+    }
+
+    /**
      * p10-b2: 题材推荐的场景类型分布。
      * 返回该题材下推荐的主要 SceneType（用于指导场景多样性）。
      */

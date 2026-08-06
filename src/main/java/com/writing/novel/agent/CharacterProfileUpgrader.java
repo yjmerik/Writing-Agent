@@ -88,12 +88,14 @@ public class CharacterProfileUpgrader {
         return upgraded;
     }
 
-    /** 从最近章节中采集角色出场段落 */
+    /** 从角色出场章节中采集出场段落 */
     private String collectExcerpts(String projectId, String name, int currentChapter) {
-        var chapters = repository.findRecentChapters(projectId, 10);
+        // p11-fix: 从全部章节中搜索角色出场，而不是只看最近10章
+        var chapters = repository.findChaptersByProject(projectId);
         StringBuilder sb = new StringBuilder();
         for (var ch : chapters) {
             String content = ch.getContent();
+            if (content == null || !content.contains(name)) continue;
             // 找包含角色名的段落（以名字为中心的 200 字窗口）
             int idx = content.indexOf(name);
             while (idx >= 0 && sb.length() < 2000) {
@@ -102,6 +104,7 @@ public class CharacterProfileUpgrader {
                 sb.append(content, start, end).append("\n");
                 idx = content.indexOf(name, idx + name.length());
             }
+            if (sb.length() >= 2000) break;
         }
         return sb.toString();
     }

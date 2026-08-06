@@ -30,51 +30,51 @@ llm:
     style-guide: "严格遵循世界观设定中已确立的类型风格。不要引入与世界观类型不兼容的元素。人物名字必须与【出场人物】完全一致，绝对不得改名。"
   models:
     CHAPTER_WRITING:
-      base-url: https://open.bigmodel.cn/api/paas/v4
-      api-key: 03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR
-      model: glm-5.2
+      base-url: https://api.deepseek.com/v1
+      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
+      model: deepseek-v4-flash
       temperature: 0.8
       max-tokens: 8192
       style-guide: "严格遵循世界观设定中已确立的类型风格。人物名字必须与【出场人物】完全一致，绝对不得改名。不得引入与世界观不兼容的元素。"
     CONTINUITY_CHECK:
-      base-url: https://open.bigmodel.cn/api/paas/v4
-      api-key: 03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR
-      model: glm-5.2
+      base-url: https://api.deepseek.com/v1
+      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
+      model: deepseek-v4-flash
       temperature: 0.3
       max-tokens: 4096
     PLOTTING:
-      base-url: https://open.bigmodel.cn/api/paas/v4
-      api-key: 03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR
-      model: glm-5.2
+      base-url: https://api.deepseek.com/v1
+      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
+      model: deepseek-v4-flash
       temperature: 0.7
       max-tokens: 8192
     WORLDBUILDING:
-      base-url: https://open.bigmodel.cn/api/paas/v4
-      api-key: 03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR
-      model: glm-5.2
+      base-url: https://api.deepseek.com/v1
+      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
+      model: deepseek-v4-flash
       temperature: 0.7
       max-tokens: 8192
     CHARACTER_DESIGN:
-      base-url: https://open.bigmodel.cn/api/paas/v4
-      api-key: 03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR
-      model: glm-5.2
+      base-url: https://api.deepseek.com/v1
+      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
+      model: deepseek-v4-flash
       temperature: 0.7
       max-tokens: 8192
     STYLE_GUARDIAN:
-      base-url: https://open.bigmodel.cn/api/paas/v4
-      api-key: 03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR
-      model: glm-5.2
+      base-url: https://api.deepseek.com/v1
+      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
+      model: deepseek-v4-flash
       temperature: 0.3
       max-tokens: 4096
     MEMORY_SUMMARY:
-      base-url: https://open.bigmodel.cn/api/paas/v4
-      api-key: 03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR
-      model: glm-5.2
+      base-url: https://api.deepseek.com/v1
+      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
+      model: deepseek-v4-flash
       temperature: 0.3
       max-tokens: 4096
     GENERAL:
-      base-url: https://open.bigmodel.cn/api/paas/v4
-      api-key: 03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR
-      model: glm-5.2
+      base-url: https://api.deepseek.com/v1
+      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
+      model: deepseek-v4-flash
       temperature: 0.3
       max-tokens: 4096

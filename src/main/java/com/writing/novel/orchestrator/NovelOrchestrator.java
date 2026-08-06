@@ -1209,6 +1209,9 @@ public class NovelOrchestrator {
                 projectId, chapterIndex, synopsis.getTitle(),
                 synopsis.getSynopsis(), synopsis.getWritingNotes(), correction);
 
+        log.info("重写结果(章{}): newContent={} 字", chapterIndex,
+                newContent != null ? newContent.length() : "null");
+
         if (newContent != null && newContent.length() >= 2000) {
             existing.setContent(newContent);
             repository.saveChapter(existing);

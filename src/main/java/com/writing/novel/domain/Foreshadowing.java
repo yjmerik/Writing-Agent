@@ -48,6 +48,11 @@ public class Foreshadowing {
         return !resolved && expectedResolveChapter != null && currentChapter > expectedResolveChapter;
     }
 
+    /** p11.1-J3: 是否悬置过久（不依赖 expectedResolveChapter，只看悬置章节数） */
+    public boolean isStale(int currentChapter, int threshold) {
+        return !resolved && suspenseChapters(currentChapter) >= threshold;
+    }
+
     public String getId() { return id; }
     public String getProjectId() { return projectId; }
     public String getDescription() { return description; }

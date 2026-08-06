@@ -825,8 +825,8 @@ public class SqliteNovelRepository implements NovelRepository {
                 "enable_feedback_injection,feedback_window,dialogue_differentiation," +
                 "plot_stall_window,character_upgrade_span,min_chapter_length," +
                 "max_beats_per_chapter,max_chapter_length,chapter_length_variation,fast_pace_window," +
-                "updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET " +
+                "foreshadow_suspense_threshold,updated_at) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET " +
                 "dialogue_density=excluded.dialogue_density, " +
                 "enable_dialogue_enforcement=excluded.enable_dialogue_enforcement, " +
                 "enable_climax_rotation=excluded.enable_climax_rotation, " +
@@ -844,6 +844,7 @@ public class SqliteNovelRepository implements NovelRepository {
                 "max_chapter_length=excluded.max_chapter_length, " +
                 "chapter_length_variation=excluded.chapter_length_variation, " +
                 "fast_pace_window=excluded.fast_pace_window, " +
+                "foreshadow_suspense_threshold=excluded.foreshadow_suspense_threshold, " +
                 "updated_at=excluded.updated_at";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -865,7 +866,8 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setInt(16, p.getMaxChapterLength());
             ps.setString(17, p.getChapterLengthVariation() != null ? p.getChapterLengthVariation() : "VARIED");
             ps.setInt(18, p.getFastPaceWindow());
-            ps.setString(19, p.getUpdatedAt().toString());
+            ps.setInt(19, p.getForeshadowSuspenseThreshold());
+            ps.setString(20, p.getUpdatedAt().toString());
             ps.executeUpdate();
         } catch (SQLException ex) { throw new RuntimeException(ex); }
     }
@@ -1045,6 +1047,7 @@ public class SqliteNovelRepository implements NovelRepository {
         try { p.setChapterLengthVariation(rs.getString("chapter_length_variation")); } catch (Exception ignored) { p.setChapterLengthVariation("VARIED"); }
         if (p.getChapterLengthVariation() == null) p.setChapterLengthVariation("VARIED");
         try { p.setFastPaceWindow(rs.getInt("fast_pace_window")); } catch (Exception ignored) { p.setFastPaceWindow(4); }
+        try { p.setForeshadowSuspenseThreshold(rs.getInt("foreshadow_suspense_threshold")); } catch (Exception ignored) { p.setForeshadowSuspenseThreshold(8); }
         return p;
     }
     private KnowledgeEntry mapEntry(ResultSet rs) throws SQLException {

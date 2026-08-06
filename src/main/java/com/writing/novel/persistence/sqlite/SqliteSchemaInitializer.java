@@ -101,6 +101,7 @@ public class SqliteSchemaInitializer {
             "max_chapter_length INTEGER DEFAULT 6000, " +
             "chapter_length_variation TEXT DEFAULT 'VARIED', " +
             "fast_pace_window INTEGER DEFAULT 4, " +
+            "foreshadow_suspense_threshold INTEGER DEFAULT 8, " +
             "updated_at TEXT)",
 
         // 生成日志表（创意多样性追踪）
@@ -172,5 +173,7 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN max_chapter_length INTEGER DEFAULT 6000");
         safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN chapter_length_variation TEXT DEFAULT 'VARIED'");
         safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN fast_pace_window INTEGER DEFAULT 4");
+        // p11.1-J3
+        safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN foreshadow_suspense_threshold INTEGER DEFAULT 8");
     }
 }

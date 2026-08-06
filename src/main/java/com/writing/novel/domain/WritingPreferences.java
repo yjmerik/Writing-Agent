@@ -51,6 +51,9 @@ public class WritingPreferences {
     // p11-F3: 节奏过快检测
     private int fastPaceWindow;                     // 默认 4：连续多少章高张力视为推进过快
 
+    // p11.1-J3: 伏笔悬置告警
+    private int foreshadowSuspenseThreshold;        // 默认 8：伏笔悬置超过 N 章未回收→告警
+
     private Instant updatedAt;
 
     public WritingPreferences(String projectId) {
@@ -73,6 +76,7 @@ public class WritingPreferences {
         this.maxChapterLength = 6000;
         this.chapterLengthVariation = "VARIED";
         this.fastPaceWindow = 4;
+        this.foreshadowSuspenseThreshold = 8;
         this.updatedAt = Instant.now();
     }
 
@@ -101,6 +105,7 @@ public class WritingPreferences {
                 case "maxChapterLength" -> this.maxChapterLength = ((Number) value).intValue();
                 case "chapterLengthVariation" -> this.chapterLengthVariation = (String) value;
                 case "fastPaceWindow" -> this.fastPaceWindow = ((Number) value).intValue();
+                case "foreshadowSuspenseThreshold" -> this.foreshadowSuspenseThreshold = ((Number) value).intValue();
             }
         });
         this.updatedAt = Instant.now();
@@ -126,6 +131,7 @@ public class WritingPreferences {
         m.put("maxChapterLength", maxChapterLength);
         m.put("chapterLengthVariation", chapterLengthVariation);
         m.put("fastPaceWindow", fastPaceWindow);
+        m.put("foreshadowSuspenseThreshold", foreshadowSuspenseThreshold);
         m.put("updatedAt", updatedAt.toString());
         return m;
     }
@@ -168,5 +174,7 @@ public class WritingPreferences {
     public void setChapterLengthVariation(String v) { this.chapterLengthVariation = v; this.updatedAt = Instant.now(); }
     public int getFastPaceWindow() { return fastPaceWindow; }
     public void setFastPaceWindow(int w) { this.fastPaceWindow = w; this.updatedAt = Instant.now(); }
+    public int getForeshadowSuspenseThreshold() { return foreshadowSuspenseThreshold; }
+    public void setForeshadowSuspenseThreshold(int t) { this.foreshadowSuspenseThreshold = t; this.updatedAt = Instant.now(); }
     public Instant getUpdatedAt() { return updatedAt; }
 }

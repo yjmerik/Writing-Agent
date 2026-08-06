@@ -780,6 +780,29 @@ public class NovelOrchestrator {
             log.warn("伏笔回收检测失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
+        // p11.1-J3: 伏笔悬置过久告警
+        try {
+            int threshold = repository.findWritingPreferences(projectId)
+                    .map(p -> p.getForeshadowSuspenseThreshold()).orElse(8);
+            var stale = repository.findUnresolvedForeshadowings(projectId).stream()
+                    .filter(f -> f.isStale(chapterIndex, threshold))
+                    .toList();
+            for (var f : stale) {
+                repository.saveContinuityIssue(new ContinuityIssue(
+                        projectId, chapterIndex,
+                        ContinuityIssue.Type.FORESHADOWING,
+                        ContinuityIssue.Severity.MEDIUM,
+                        "伏笔悬置过久：「" + f.getDescription().substring(0, Math.min(30, f.getDescription().length()))
+                        + "...」已悬置" + f.suspenseChapters(chapterIndex) + "章（埋于第"
+                        + f.getPlantedAtChapter() + "章），建议在近期章节回收"));
+            }
+            if (!stale.isEmpty()) {
+                log.warn("伏笔悬置告警(章{}): {} 条悬置过久", chapterIndex, stale.size());
+            }
+        } catch (Exception e) {
+            log.warn("伏笔悬置检测失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+
         // p10-d1: 风格一致性检查（每 5 章）——检测文风漂移和高频套路词
         if (chapterIndex % 5 == 0) {
             try {

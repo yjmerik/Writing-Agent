@@ -22,6 +22,11 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   const [rewriteInstructions, setRewriteInstructions] = useState('');
   const [rewriting, setRewriting] = useState(false);
   const [qualityReport, setQualityReport] = useState<ChapterQualityReport | null>(null);
+  // p11-G2: 段落编辑状态
+  const [selectedParagraph, setSelectedParagraph] = useState<{ index: number; text: string } | null>(null);
+  const [editMode, setEditMode] = useState<'REWRITE' | 'EXPAND' | 'INSERT'>('REWRITE');
+  const [editInstruction, setEditInstruction] = useState('');
+  const [editing, setEditing] = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -59,6 +64,32 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
       .then(setQualityReport)
       .catch(() => setQualityReport(null));
   }, [projectId, currentChapter]);
+
+  // p11-G2: 段落编辑
+  const handleParagraphClick = (index: number, text: string) => {
+    setSelectedParagraph({ index, text });
+    setEditInstruction('');
+  };
+
+  const handleEditPassage = async () => {
+    if (!currentChapter || !selectedParagraph) return;
+    setEditing(true);
+    try {
+      await api.editPassage(projectId, currentChapter.chapterIndex, {
+        paragraphIndex: selectedParagraph.index,
+        selectedText: selectedParagraph.text,
+        instruction: editInstruction,
+        mode: editMode,
+      });
+      message.success(`段落${editMode === 'REWRITE' ? '重写' : editMode === 'EXPAND' ? '扩充' : '插入'}完成`);
+      setSelectedParagraph(null);
+      await refresh();
+    } catch (e) {
+      message.error('段落编辑失败: ' + (e as Error).message);
+    } finally {
+      setEditing(false);
+    }
+  };
 
   const handleApprove = async () => {
     if (!currentCheckpoint) { message.warning('无待审核项'); return; }
@@ -132,7 +163,7 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
 
   const renderChapterContent = (content: string) => {
     if (!content) return <Text type="secondary">（空）</Text>;
-    return renderContent(content);
+    return renderContent(content, handleParagraphClick);
   };
 
   return (
@@ -217,7 +248,39 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
               >
                 {renderChapterContent(currentChapter.content)}
 
-                {/* p11-I3: 章节质量报告 */}
+                {/* p11-G2: 段落编辑面板 */}
+                {selectedParagraph && (
+                  <Card size="small" title="段落编辑" style={{ marginTop: 16, borderColor: '#1890ff' }}
+                    extra={<Button size="small" type="text" onClick={() => setSelectedParagraph(null)}>✕</Button>}>
+                    <div style={{ marginBottom: 8, padding: 8, background: '#f6f8fa', borderRadius: 4, fontSize: 13 }}>
+                      <Text type="secondary">选中段落（第 {selectedParagraph.index} 段）：</Text>
+                      <div style={{ marginTop: 4 }}>{selectedParagraph.text.substring(0, 100)}
+                        {selectedParagraph.text.length > 100 ? '...' : ''}</div>
+                    </div>
+                    <Space style={{ marginBottom: 8 }}>
+                      {(['REWRITE', 'EXPAND', 'INSERT'] as const).map(m => (
+                        <Button key={m} size="small" type={editMode === m ? 'primary' : 'default'}
+                          onClick={() => setEditMode(m)}>
+                          {m === 'REWRITE' ? '改写' : m === 'EXPAND' ? '扩充' : '在其后插入'}
+                        </Button>
+                      ))}
+                    </Space>
+                    <Input.TextArea
+                      rows={3}
+                      value={editInstruction}
+                      onChange={e => setEditInstruction(e.target.value)}
+                      placeholder={editMode === 'REWRITE' ? '改写指令，如：增加对话、改善节奏...' :
+                        editMode === 'EXPAND' ? '扩充指令，如：增加感官细节、心理描写...' :
+                        '插入内容描述，如：插入一段角色对话...'}
+                    />
+                    <div style={{ marginTop: 8, textAlign: 'right' }}>
+                      <Button type="primary" size="small" loading={editing} onClick={handleEditPassage}
+                        disabled={!editInstruction.trim()}>
+                        执行{editMode === 'REWRITE' ? '改写' : editMode === 'EXPAND' ? '扩充' : '插入'}
+                      </Button>
+                    </div>
+                  </Card>
+                )}
                 {qualityReport && (
                   <div style={{ marginTop: 24, borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
                     <Typography.Title level={5}>

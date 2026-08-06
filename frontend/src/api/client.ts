@@ -164,4 +164,17 @@ export const api = {
     request<ChapterQualityReport>(
       `/projects/${id}/chapters/${chapterIndex}/quality`,
     ),
+
+  /** p11-G2: 段落级编辑 */
+  editPassage: (id: string, chapterIndex: number, body: {
+    paragraphIndex: number;
+    selectedText: string;
+    instruction: string;
+    mode: string;
+  }) =>
+    request<Chapter>(
+      `/projects/${id}/chapters/${chapterIndex}/passage`,
+      { method: 'POST', body: JSON.stringify(body) },
+      120000,
+    ),
 };

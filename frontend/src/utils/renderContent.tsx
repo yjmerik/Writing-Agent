@@ -3,10 +3,13 @@ import React from 'react';
 /**
  * 简易 markdown 渲染器——将小说正文中的 markdown 标记渲染为 HTML。
  * 支持：# 标题、## 小节、--- 分隔线、**加粗**、普通段落缩进。
+ * p11-G2: 支持段落点击回调（用于段落编辑交互）。
  */
-export function renderContent(content: string): React.ReactNode[] {
+export function renderContent(content: string, onParagraphClick?: (index: number, text: string) => void): React.ReactNode[] {
   if (!content) return [];
-  return content.split('\n').filter(Boolean).map((line, i) => {
+  const lines = content.split('\n');
+  let paraIdx = -1; // 只对正文段落编号（跳过标题/分隔线）
+  return lines.filter(Boolean).map((line, i) => {
     const trimmed = line.trim();
     if (!trimmed) return <br key={i} />;
 
@@ -34,8 +37,29 @@ export function renderContent(content: string): React.ReactNode[] {
     }
 
     // 普通段落
+    paraIdx++;
+    const myIdx = i; // 原始行索引（用于 API 调用）
     return (
-      <p key={i} style={{ textIndent: '2em', marginBottom: '0.4em', lineHeight: 2 }}>
+      <p
+        key={i}
+        data-paragraph-index={myIdx}
+        style={{
+          textIndent: '2em',
+          marginBottom: '0.4em',
+          lineHeight: 2,
+          cursor: onParagraphClick ? 'pointer' : 'default',
+          borderRadius: '4px',
+          padding: '2px 4px',
+          transition: 'background 0.2s',
+        }}
+        onClick={onParagraphClick ? (e) => {
+          e.currentTarget.style.background = '#e6f7ff';
+          onParagraphClick(myIdx, trimmed);
+        } : undefined}
+        onMouseLeave={onParagraphClick ? (e) => {
+          e.currentTarget.style.background = '';
+        } : undefined}
+      >
         {renderInline(trimmed)}
       </p>
     );

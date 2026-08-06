@@ -181,6 +181,12 @@ public class AgentConfig {
     }
 
     @Bean
+    public PlotMotifTracker plotMotifTracker(LlmGateway gateway, NovelRepository repo,
+                                              PromptTemplateService promptService) {
+        return new PlotMotifTracker(gateway, repo, promptService);
+    }
+
+    @Bean
     public com.writing.novel.service.DiversityTracker diversityTracker() {
         return new com.writing.novel.service.DiversityTracker();
     }

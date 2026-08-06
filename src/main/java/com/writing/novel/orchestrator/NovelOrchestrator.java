@@ -59,6 +59,7 @@ public class NovelOrchestrator {
     private final com.writing.novel.service.ClicheDetector clicheDetector;
     private final RelationshipEvolutionTracker relationshipEvolutionTracker;
     private final PassageEditor passageEditor;
+    private final PlotMotifTracker plotMotifTracker;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -92,7 +93,8 @@ public class NovelOrchestrator {
                               ForeshadowingImportanceAuditor foreshadowingImportanceAuditor,
                               com.writing.novel.service.ClicheDetector clicheDetector,
                               RelationshipEvolutionTracker relationshipEvolutionTracker,
-                              PassageEditor passageEditor) {
+                              PassageEditor passageEditor,
+                              PlotMotifTracker plotMotifTracker) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -126,6 +128,7 @@ public class NovelOrchestrator {
         this.clicheDetector = clicheDetector;
         this.relationshipEvolutionTracker = relationshipEvolutionTracker;
         this.passageEditor = passageEditor;
+        this.plotMotifTracker = plotMotifTracker;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -173,7 +176,9 @@ public class NovelOrchestrator {
                     .map(e -> e.getType() + ":" + e.getName())
                     .reduce((a, b) -> a + ", " + b).orElse("无");
             creativeDiversityService.record(projectId, "WORLDBUILDER",
-                    "世界观维度：" + wbSummary, "[]", 0);
+                    "世界观维度：" + wbSummary,
+                    wbEntries.stream().map(e -> e.getType() + ":" + e.getName())
+                            .reduce((a, b) -> a + ";" + b).orElse("[]"), 0);
         }
 
         // 风格基线前置：在世界观生成后立即建立全书风格基线（幂等：已有则跳过）
@@ -222,7 +227,9 @@ public class NovelOrchestrator {
                         .map(c -> c.getName() + "(" + c.getRole() + ")")
                         .reduce((a, b) -> a + ", " + b).orElse("无");
                 creativeDiversityService.record(projectId, "CHARACTER",
-                        "角色设定：" + charSummary2, "[]", 0);
+                        "角色设定：" + charSummary2,
+                        chars.stream().map(c -> c.getName() + ":" + c.getRole())
+                                .reduce((a, b) -> a + ";" + b).orElse("[]"), 0);
             }
         }
 
@@ -262,7 +269,10 @@ public class NovelOrchestrator {
                             .map(v -> "卷" + v.getVolumeIndex() + ":" + v.getTitle())
                             .reduce((a, b) -> a + ", " + b).orElse("无");
                     creativeDiversityService.record(projectId, "PLOTTER",
-                            "剧情结构：" + plotSummary, "[]", 0);
+                            "剧情结构：" + plotSummary,
+                            outline.get().getVolumes().stream()
+                                    .map(v -> "卷" + v.getVolumeIndex() + ":" + v.getTitle())
+                                    .reduce((a, b) -> a + ";" + b).orElse("[]"), 0);
                 }
             }
 
@@ -379,6 +389,13 @@ public class NovelOrchestrator {
             String arcSuggestion = arcScheduler.scheduleAppearance(projectId, chapterIndex);
             if (!arcSuggestion.isBlank()) {
                 enhancedNotes = (enhancedNotes != null ? enhancedNotes + "\n" : "") + arcSuggestion;
+            }
+        }
+        // p11.1-J2: 桥段去重约束
+        if (plotMotifTracker != null) {
+            String motifConstraint = plotMotifTracker.getRecentMotifConstraint(projectId, chapterIndex);
+            if (!motifConstraint.isBlank()) {
+                enhancedNotes = (enhancedNotes != null ? enhancedNotes + "\n" : "") + motifConstraint;
             }
         }
 
@@ -519,6 +536,19 @@ public class NovelOrchestrator {
             }
         } catch (Exception e) {
             log.warn("关系演变追踪失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+
+        // p11.1-J2: 桥段追踪——提取叙事桥段标签并检测重复
+        try {
+            if (plotMotifTracker != null) {
+                var motifIssues = plotMotifTracker.trackAndDetect(projectId, chapterIndex, chapter.getContent());
+                for (var issue : motifIssues) {
+                    repository.saveContinuityIssue(issue);
+                    log.warn("桥段重复(章{}): {}", chapterIndex, issue.getDescription());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("桥段追踪失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
         // 剧情停滞检测：基于张力曲线，连续低张力触发警告

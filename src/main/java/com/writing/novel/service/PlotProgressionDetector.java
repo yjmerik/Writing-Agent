@@ -86,6 +86,36 @@ public class PlotProgressionDetector {
                     "建议下一章加入过渡场景。"));
         }
 
+        // p11-F3: 检测 4——节奏过快（连续 N 章中张力全部 ≥6，但不是全部 ≥8）
+        // 区别于检测3：检测3要求全部≥8（高潮疲劳），这里全部≥6说明每章都在高强度推进
+        int fastWindow = repository.findWritingPreferences(projectId)
+                .map(p -> p.getFastPaceWindow())
+                .orElse(4);
+        if (currentChapter >= fastWindow) {
+            List<Integer> recentForFast = new ArrayList<>();
+            for (var v : outline.get().getVolumes()) {
+                for (var s : v.getSynopses()) {
+                    if (s.getChapterIndex() > currentChapter - fastWindow
+                            && s.getChapterIndex() <= currentChapter) {
+                        recentForFast.add(s.getTensionLevel());
+                    }
+                }
+            }
+            if (recentForFast.size() >= fastWindow) {
+                boolean allModerateHigh = recentForFast.stream().allMatch(t -> t >= 6);
+                boolean notAllExtreme = recentForFast.stream().anyMatch(t -> t < 8);
+                if (allModerateHigh && notAllExtreme) {
+                    return Optional.of(new ContinuityIssue(
+                            projectId, currentChapter,
+                            ContinuityIssue.Type.PACING,
+                            ContinuityIssue.Severity.MEDIUM,
+                            "连续" + fastWindow + "章保持中高张力（" + recentForFast + "），" +
+                            "剧情推进过快，缺少喘息。建议下一章设为喘息章（tension≤3），" +
+                            "深化角色关系或展示日常，不推进核心剧情。"));
+                }
+            }
+        }
+
         return Optional.empty();
     }
 }

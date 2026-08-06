@@ -44,6 +44,13 @@ public class WritingPreferences {
     // p10-b1: 信息密度调控
     private int maxBeatsPerChapter;                 // 默认 4：每章核心事件/场景节拍上限
 
+    // p11-F2: 字数动态化
+    private int maxChapterLength;                   // 默认 6000：章节最高字数
+    private String chapterLengthVariation;          // UNIFORM/VARIED，默认 VARIED（长短交替）
+
+    // p11-F3: 节奏过快检测
+    private int fastPaceWindow;                     // 默认 4：连续多少章高张力视为推进过快
+
     private Instant updatedAt;
 
     public WritingPreferences(String projectId) {
@@ -63,6 +70,9 @@ public class WritingPreferences {
         this.characterUpgradeSpan = 2;
         this.minChapterLength = 2000;
         this.maxBeatsPerChapter = 4;
+        this.maxChapterLength = 6000;
+        this.chapterLengthVariation = "VARIED";
+        this.fastPaceWindow = 4;
         this.updatedAt = Instant.now();
     }
 
@@ -88,6 +98,9 @@ public class WritingPreferences {
                 case "characterUpgradeSpan" -> this.characterUpgradeSpan = ((Number) value).intValue();
                 case "minChapterLength" -> this.minChapterLength = ((Number) value).intValue();
                 case "maxBeatsPerChapter" -> this.maxBeatsPerChapter = ((Number) value).intValue();
+                case "maxChapterLength" -> this.maxChapterLength = ((Number) value).intValue();
+                case "chapterLengthVariation" -> this.chapterLengthVariation = (String) value;
+                case "fastPaceWindow" -> this.fastPaceWindow = ((Number) value).intValue();
             }
         });
         this.updatedAt = Instant.now();
@@ -110,6 +123,9 @@ public class WritingPreferences {
         m.put("characterUpgradeSpan", characterUpgradeSpan);
         m.put("minChapterLength", minChapterLength);
         m.put("maxBeatsPerChapter", maxBeatsPerChapter);
+        m.put("maxChapterLength", maxChapterLength);
+        m.put("chapterLengthVariation", chapterLengthVariation);
+        m.put("fastPaceWindow", fastPaceWindow);
         m.put("updatedAt", updatedAt.toString());
         return m;
     }
@@ -146,5 +162,11 @@ public class WritingPreferences {
     public void setMinChapterLength(int l) { this.minChapterLength = l; this.updatedAt = Instant.now(); }
     public int getMaxBeatsPerChapter() { return maxBeatsPerChapter; }
     public void setMaxBeatsPerChapter(int b) { this.maxBeatsPerChapter = b; this.updatedAt = Instant.now(); }
+    public int getMaxChapterLength() { return maxChapterLength; }
+    public void setMaxChapterLength(int l) { this.maxChapterLength = l; this.updatedAt = Instant.now(); }
+    public String getChapterLengthVariation() { return chapterLengthVariation; }
+    public void setChapterLengthVariation(String v) { this.chapterLengthVariation = v; this.updatedAt = Instant.now(); }
+    public int getFastPaceWindow() { return fastPaceWindow; }
+    public void setFastPaceWindow(int w) { this.fastPaceWindow = w; this.updatedAt = Instant.now(); }
     public Instant getUpdatedAt() { return updatedAt; }
 }

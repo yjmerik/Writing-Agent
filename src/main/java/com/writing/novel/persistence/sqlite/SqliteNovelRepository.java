@@ -824,8 +824,9 @@ public class SqliteNovelRepository implements NovelRepository {
                 "preferred_quote_sources,prevent_transition_overlap," +
                 "enable_feedback_injection,feedback_window,dialogue_differentiation," +
                 "plot_stall_window,character_upgrade_span,min_chapter_length," +
-                "max_beats_per_chapter,updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET " +
+                "max_beats_per_chapter,max_chapter_length,chapter_length_variation,fast_pace_window," +
+                "updated_at) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET " +
                 "dialogue_density=excluded.dialogue_density, " +
                 "enable_dialogue_enforcement=excluded.enable_dialogue_enforcement, " +
                 "enable_climax_rotation=excluded.enable_climax_rotation, " +
@@ -840,6 +841,9 @@ public class SqliteNovelRepository implements NovelRepository {
                 "character_upgrade_span=excluded.character_upgrade_span, " +
                 "min_chapter_length=excluded.min_chapter_length, " +
                 "max_beats_per_chapter=excluded.max_beats_per_chapter, " +
+                "max_chapter_length=excluded.max_chapter_length, " +
+                "chapter_length_variation=excluded.chapter_length_variation, " +
+                "fast_pace_window=excluded.fast_pace_window, " +
                 "updated_at=excluded.updated_at";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -858,7 +862,10 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setInt(13, p.getCharacterUpgradeSpan());
             ps.setInt(14, p.getMinChapterLength());
             ps.setInt(15, p.getMaxBeatsPerChapter());
-            ps.setString(16, p.getUpdatedAt().toString());
+            ps.setInt(16, p.getMaxChapterLength());
+            ps.setString(17, p.getChapterLengthVariation() != null ? p.getChapterLengthVariation() : "VARIED");
+            ps.setInt(18, p.getFastPaceWindow());
+            ps.setString(19, p.getUpdatedAt().toString());
             ps.executeUpdate();
         } catch (SQLException ex) { throw new RuntimeException(ex); }
     }
@@ -1034,6 +1041,10 @@ public class SqliteNovelRepository implements NovelRepository {
         try { p.setCharacterUpgradeSpan(rs.getInt("character_upgrade_span")); } catch (Exception ignored) { p.setCharacterUpgradeSpan(2); }
         try { p.setMinChapterLength(rs.getInt("min_chapter_length")); } catch (Exception ignored) { p.setMinChapterLength(2000); }
         try { p.setMaxBeatsPerChapter(rs.getInt("max_beats_per_chapter")); } catch (Exception ignored) { p.setMaxBeatsPerChapter(4); }
+        try { p.setMaxChapterLength(rs.getInt("max_chapter_length")); } catch (Exception ignored) { p.setMaxChapterLength(6000); }
+        try { p.setChapterLengthVariation(rs.getString("chapter_length_variation")); } catch (Exception ignored) { p.setChapterLengthVariation("VARIED"); }
+        if (p.getChapterLengthVariation() == null) p.setChapterLengthVariation("VARIED");
+        try { p.setFastPaceWindow(rs.getInt("fast_pace_window")); } catch (Exception ignored) { p.setFastPaceWindow(4); }
         return p;
     }
     private KnowledgeEntry mapEntry(ResultSet rs) throws SQLException {

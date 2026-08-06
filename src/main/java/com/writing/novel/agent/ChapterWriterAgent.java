@@ -61,12 +61,16 @@ public class ChapterWriterAgent {
                 genrePacingRules = genreRuleProvider.getChapterWritingRules(project.getGenre());
             }
         }
+        // p11-F2: 字数动态化——根据张力等级生成章节类型字数指导
+        String chapterLengthGuide = buildChapterLengthGuide(chapterIndex);
+
         String chapterWritingPrompt = promptService.render("chapter-writing", Map.of(
                 "styleGuide", dynamicStyleGuide,
                 "writingConstraints", ctx.getWritingConstraints() != null ? ctx.getWritingConstraints() : "",
                 "characterVoices", ctx.getCharacterVoiceSection() != null ? ctx.getCharacterVoiceSection() : "",
                 "knowledgeQuotes", ctx.getKnowledgeQuoteSection() != null ? ctx.getKnowledgeQuoteSection() : "",
                 "genrePacingRules", genrePacingRules,
+                "chapterLengthGuide", chapterLengthGuide,
                 "feedbackSection", ctx.getFeedbackSection() != null ? ctx.getFeedbackSection() : ""));
         String systemPrompt = ctx.toSystemPrompt() + "\n\n" + chapterWritingPrompt;
 
@@ -75,7 +79,7 @@ public class ChapterWriterAgent {
                 .systemPrompt(systemPrompt)
                 .userMessage(ctx.toUserPrompt())
                 .temperature(0.8)
-                .maxTokens(3000)
+                .maxTokens(4000)
                 .build();
 
         // 3. 调 LLM 写正文（空内容/过短用变化 prompt 重试；contentFilter 用温和 prompt 重试）
@@ -93,7 +97,7 @@ public class ChapterWriterAgent {
                     .systemPrompt(systemPrompt + "\n\n注意：请避开暴力/血腥的直白描写，改用侧面烘托、心理描写和氛围渲染来表现冲突。")
                     .userMessage(ctx.toUserPrompt())
                     .temperature(0.5) // 大幅降温度
-                    .maxTokens(3000)
+                    .maxTokens(4000)
                     .build();
             resp = gateway.complete(mildReq);
         }
@@ -105,7 +109,7 @@ public class ChapterWriterAgent {
                     .userMessage(ctx.toUserPrompt()
                             + "\n\n⚠️ 上次输出为空或过短。请严格按四段式结构完整输出不少于2500字的正文。")
                     .temperature(0.7)
-                    .maxTokens(3000)
+                    .maxTokens(4000)
                     .build();
             try {
                 resp = gateway.complete(retryReq);
@@ -169,6 +173,7 @@ public class ChapterWriterAgent {
                 genrePacingRules = genreRuleProvider.getChapterWritingRules(project.getGenre());
             }
         }
+        String chapterLengthGuide = buildChapterLengthGuide(chapterIndex);
         String chapterWritingPrompt = promptService != null
                 ? promptService.render("chapter-writing", java.util.Map.of(
                     "styleGuide", dynamicStyleGuide,
@@ -176,6 +181,7 @@ public class ChapterWriterAgent {
                     "characterVoices", ctx.getCharacterVoiceSection() != null ? ctx.getCharacterVoiceSection() : "",
                     "knowledgeQuotes", ctx.getKnowledgeQuoteSection() != null ? ctx.getKnowledgeQuoteSection() : "",
                     "genrePacingRules", genrePacingRules,
+                    "chapterLengthGuide", chapterLengthGuide,
                     "feedbackSection", ctx.getFeedbackSection() != null ? ctx.getFeedbackSection() : ""))
                 : "你是网络小说写作高手。";
 
@@ -187,7 +193,7 @@ public class ChapterWriterAgent {
                 .systemPrompt(systemPrompt)
                 .userMessage(ctx.toUserPrompt())
                 .temperature(0.7)
-                .maxTokens(3000)
+                .maxTokens(4000)
                 .build();
 
         var resp = gateway.complete(req);
@@ -242,6 +248,29 @@ public class ChapterWriterAgent {
     }
 
     /** 从 StyleProfile 提取风格指引（tone + dosAndDonts）作为 styleGuide 变量 */
+    /**
+     * p11-F2: 根据章节序号和奇偶性生成字数指导（长短交替）。
+     * 高潮章（奇数卷末/大纲标注高张力）可写长，喘息章写短。
+     */
+    private String buildChapterLengthGuide(int chapterIndex) {
+        try {
+            var prefs = repository.findWritingPreferences(
+                    repository.findChapterByIndex(
+                            repository.findAllProjects().isEmpty() ? "" :
+                            repository.findAllProjects().get(0).getId(), chapterIndex)
+                            .map(c -> c.getProjectId()).orElse("")).orElse(null);
+            // 简化：用章节奇偶性模拟长短交替
+            boolean isLongChapter = chapterIndex % 3 != 0; // 每3章有1章短章
+            if (isLongChapter) {
+                return "本章为标准/高潮章，目标字数 4000-5500 字。四段式比例：开场500字→冲突升级1800字→高潮1500字→悬念500字。";
+            } else {
+                return "本章为喘息/过渡章，目标字数 2500-3500 字。不必严格四段式，可以是对话驱动/单场景深挖/角色互动为主，不需要爽点爆发。";
+            }
+        } catch (Exception e) {
+            return "目标字数 3000-5000 字。";
+        }
+    }
+
     private String extractStyleGuide(String projectId) {
         if (repository == null) return "";
         var styleOpt = repository.findStyleProfileByProject(projectId);

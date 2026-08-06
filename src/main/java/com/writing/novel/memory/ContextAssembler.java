@@ -494,6 +494,11 @@ public class ContextAssembler {
         // 4b. 主角不完美约束（p9-10）
         sb.append("□ 主角在本章中必须面临至少一次真正的困境或误判（不能事事算无遗策）\n");
 
+        // p11.1-J1: 字数上限约束
+        int maxLen = prefs.map(p -> p.getMaxChapterLength()).orElse(6000);
+        sb.append("□ 本章正文不超过 ").append(maxLen)
+          .append(" 字。超过此限请精简次要场景和描写，宁可少写也不要注水\n");
+
         // 5. 多维度多样性约束（开场/冲突/爽点轮换）
         if (diversityTracker != null) {
             String diversityConstraints = diversityTracker.generateAllConstraints();

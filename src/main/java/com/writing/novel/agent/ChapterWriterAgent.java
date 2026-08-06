@@ -61,9 +61,8 @@ public class ChapterWriterAgent {
                 genrePacingRules = genreRuleProvider.getChapterWritingRules(project.getGenre());
             }
         }
-        // p11-F2: 字数动态化——根据张力等级生成章节类型字数指导
-        String chapterLengthGuide = buildChapterLengthGuide(chapterIndex);
-
+        // p11.1-J1: 字数约束——从 prefs 读取 maxChapterLength
+        String chapterLengthGuide = buildChapterLengthGuide(projectId, chapterIndex);
         String chapterWritingPrompt = promptService.render("chapter-writing", Map.of(
                 "styleGuide", dynamicStyleGuide,
                 "writingConstraints", ctx.getWritingConstraints() != null ? ctx.getWritingConstraints() : "",
@@ -173,7 +172,7 @@ public class ChapterWriterAgent {
                 genrePacingRules = genreRuleProvider.getChapterWritingRules(project.getGenre());
             }
         }
-        String chapterLengthGuide = buildChapterLengthGuide(chapterIndex);
+        String chapterLengthGuide = buildChapterLengthGuide(projectId, chapterIndex);
         String chapterWritingPrompt = promptService != null
                 ? promptService.render("chapter-writing", java.util.Map.of(
                     "styleGuide", dynamicStyleGuide,
@@ -197,7 +196,10 @@ public class ChapterWriterAgent {
                 .build();
 
         var resp = gateway.complete(req);
-        if (resp.getContent() == null || resp.getContent().length() < 500) {
+        // p11.1-J1: 重写下限从 500 提升到 minChapterLength（与 write() 一致）
+        int minLen = repository.findWritingPreferences(projectId)
+                .map(p -> p.getMinChapterLength()).orElse(2000);
+        if (resp.getContent() == null || resp.getContent().length() < minLen) {
             return null; // 重写也失败，保留原版本
         }
 
@@ -252,22 +254,25 @@ public class ChapterWriterAgent {
      * p11-F2: 根据章节序号和奇偶性生成字数指导（长短交替）。
      * 高潮章（奇数卷末/大纲标注高张力）可写长，喘息章写短。
      */
-    private String buildChapterLengthGuide(int chapterIndex) {
+    /**
+     * p11.1-J1: 根据章节序号和 maxChapterLength 生成字数指导。
+     * 长短交替 + 从 prefs 读取 maxChapterLength 约束。
+     */
+    private String buildChapterLengthGuide(String projectId, int chapterIndex) {
         try {
-            var prefs = repository.findWritingPreferences(
-                    repository.findChapterByIndex(
-                            repository.findAllProjects().isEmpty() ? "" :
-                            repository.findAllProjects().get(0).getId(), chapterIndex)
-                            .map(c -> c.getProjectId()).orElse("")).orElse(null);
-            // 简化：用章节奇偶性模拟长短交替
-            boolean isLongChapter = chapterIndex % 3 != 0; // 每3章有1章短章
+            int maxLen = repository.findWritingPreferences(projectId)
+                    .map(p -> p.getMaxChapterLength())
+                    .orElse(6000);
+            boolean isLongChapter = chapterIndex % 3 != 0;
             if (isLongChapter) {
-                return "本章为标准/高潮章，目标字数 4000-5500 字。四段式比例：开场500字→冲突升级1800字→高潮1500字→悬念500字。";
+                int targetMax = Math.min(maxLen, 4500);
+                return "本章为标准/高潮章，目标字数 3500-" + targetMax + " 字（上限 " + maxLen + " 字，超过将被标记为过长）。" +
+                        "四段式比例：开场500字→冲突升级1500字→高潮1200字→悬念400字。宁可精简也不要注水。";
             } else {
                 return "本章为喘息/过渡章，目标字数 2500-3500 字。不必严格四段式，可以是对话驱动/单场景深挖/角色互动为主，不需要爽点爆发。";
             }
         } catch (Exception e) {
-            return "目标字数 3000-5000 字。";
+            return "目标字数 3000-4500 字。";
         }
     }
 

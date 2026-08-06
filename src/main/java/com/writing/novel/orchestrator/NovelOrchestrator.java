@@ -259,6 +259,9 @@ public class NovelOrchestrator {
                             "剧情结构：" + plotSummary, "[]", 0);
                 }
             }
+
+            // p11-H1: 角色群像扩展——根据篇幅动态设计更多配角
+            expandCharacterEnsemble(projectId, p);
         }
 
         // 伏笔抽取：从大纲文本中提取伏笔条目（p3-03）
@@ -834,8 +837,78 @@ public class NovelOrchestrator {
         }
     }
 
-    /** 从大纲文本中抽取伏笔条目存入 Foreshadowing 表（p3-03） */
-    private void extractForeshadowingsFromOutline(String projectId) {
+    /**
+     * p11-H1: 角色群像扩展——根据篇幅动态设计更多配角。
+     * 初始设计只有 3 个角色（主角+对手+女性配角），长篇需要更多。
+     * 在大纲生成后，根据卷数计算需要的配角数量，追加设计。
+     */
+    private void expandCharacterEnsemble(String projectId, Project p) {
+        var existingChars = repository.findCharactersByProject(projectId);
+        var outline = repository.findOutlineByProject(projectId).orElse(null);
+        if (outline == null) return;
+
+        int totalChapters = outline.getVolumes().stream()
+                .mapToInt(v -> v.getSynopses().size()).sum();
+        // 目标：每 3-4 章至少 1 个有名角色，至少 8 个（长篇基线）
+        int targetCount = Math.max(8, totalChapters / 4);
+        int need = targetCount - existingChars.size();
+        if (need <= 0) return;
+
+        log.info("角色群像扩展: 当前{}个角色，目标{}个，追加设计{}个配角",
+                existingChars.size(), targetCount, need);
+
+        String worldSummary = collectWorldbuildingSummary(projectId);
+        String charDiversity = creativeDiversityService != null
+                ? creativeDiversityService.getDiversityGuide(projectId, "CHARACTER") : "";
+
+        // 从大纲提取角色需求线索（出场人物、势力等）
+        String outlineContext = outline.getVolumes().stream()
+                .map(v -> v.getTitle() + "：" + (v.getSummary() != null ? v.getSummary().substring(0, Math.min(60, v.getSummary().length())) : ""))
+                .reduce((a, b) -> a + "\n" + b).orElse("");
+
+        for (int i = 0; i < need; i++) {
+            try {
+                var currentChars = repository.findCharactersByProject(projectId);
+                String charList = currentChars.stream()
+                        .map(c -> c.getName() + "（" + c.getRole() + "）")
+                        .reduce((a, b) -> a + "、" + b).orElse("无");
+
+                // 根据已有角色分布，设计不同类型的配角
+                String roleType = determineNeededRoleType(currentChars, i);
+                String req = "配角设计（第" + (i + 1) + "批）。角色类型：" + roleType
+                        + "\n故事构思：" + p.getConcept()
+                        + "\n大纲脉络：\n" + outlineContext
+                        + "\n已有人物：" + charList
+                        + "\n要求：这个新角色必须与已有角色形成新的关系（盟友/对手/利用/暗恋/血亲），丰富人物关系网。";
+
+                characterDesigner.design(projectId, req, currentChars, charDiversity);
+                log.info("配角群像设计完成(第{}批)", i + 1);
+            } catch (Exception e) {
+                log.warn("配角设计失败(第{}批): {}", i + 1, e.getMessage());
+                break;
+            }
+        }
+    }
+
+    /** 根据已有角色分布，确定下一个需要什么类型的角色 */
+    private String determineNeededRoleType(java.util.List<com.writing.novel.domain.Character> existing, int batch) {
+        long antagonists = existing.stream().filter(c -> c.getRole() != null &&
+                (c.getRole().contains("反派") || c.getRole().contains("对手"))).count();
+        long allies = existing.stream().filter(c -> c.getRole() != null &&
+                (c.getRole().contains("盟友") || c.getRole().contains("导师"))).count();
+        long females = existing.stream().filter(c -> c.getRole() != null &&
+                c.getRole().contains("女")).count();
+
+        return switch (batch % 5) {
+            case 0 -> antagonists < 2 ? "新的对手/反派（与主角形成不同维度的对立）" : "中间派/骑墙角色";
+            case 1 -> "新的盟友/助手（有自己的秘密和动机）";
+            case 2 -> females < 2 ? "新的女性角色（独立动机，非工具人）" : "势力代表/组织人物";
+            case 3 -> "亦敌亦友的复杂角色";
+            default -> "次要配角（丰富世界感的日常角色）";
+        };
+    }
+
+    /** 从大纲文本中抽取伏笔条目存入 Foreshadowing 表（p3-03） */    private void extractForeshadowingsFromOutline(String projectId) {
         try {
             // 已有伏笔则跳过（幂等）
             if (!repository.findForeshadowingsByProject(projectId).isEmpty()) return;

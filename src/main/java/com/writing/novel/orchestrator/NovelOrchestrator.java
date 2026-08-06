@@ -1241,6 +1241,27 @@ public class NovelOrchestrator {
                 }
             } catch (Exception ignored) {}
 
+            // p11-fix: 重写后也触发角色升级（把无档案实体升级为角色卡）
+            try {
+                var upgraded = characterProfileUpgrader.upgrade(projectId, chapterIndex);
+                if (!upgraded.isEmpty()) {
+                    log.info("重写触发角色升级(章{}): {}", chapterIndex, String.join("、", upgraded));
+                }
+            } catch (Exception ignored) {}
+
+            // p11-fix: 重写后也触发关系演变追踪
+            try {
+                if (relationshipEvolutionTracker != null) {
+                    var reviewSynopsis = findSynopsis(outline, chapterIndex);
+                    String castStr = reviewSynopsis != null ? reviewSynopsis.getCast() : "";
+                    int changes = relationshipEvolutionTracker.detectAndApply(
+                            projectId, chapterIndex, newContent, castStr);
+                    if (changes > 0) {
+                        log.info("重写触发关系演变(章{}): {} 条变化", chapterIndex, changes);
+                    }
+                }
+            } catch (Exception ignored) {}
+
             log.info("章节重写成功(章{}): {} 字", chapterIndex, newContent.length());
         }
         return existing;

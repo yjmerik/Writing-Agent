@@ -752,6 +752,69 @@ public class SqliteNovelRepository implements NovelRepository {
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
+    // --- p11-I1: ChapterReview ---
+
+    @Override
+    public void saveChapterReview(ChapterReview r) {
+        String sql = "INSERT INTO chapter_reviews (id,project_id,chapter_index," +
+                "overall_score,engagement,coherence,character_score,hook," +
+                "summary,issues,improvement,created_at) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
+                "overall_score=excluded.overall_score, engagement=excluded.engagement, " +
+                "coherence=excluded.coherence, character_score=excluded.character_score, " +
+                "hook=excluded.hook, summary=excluded.summary, issues=excluded.issues, " +
+                "improvement=excluded.improvement";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, r.getId()); ps.setString(2, r.getProjectId());
+            ps.setInt(3, r.getChapterIndex()); ps.setInt(4, r.getOverallScore());
+            ps.setInt(5, r.getEngagement()); ps.setInt(6, r.getCoherence());
+            ps.setInt(7, r.getCharacter()); ps.setInt(8, r.getHook());
+            ps.setString(9, r.getSummary()); ps.setString(10, r.getIssues());
+            ps.setString(11, r.getImprovement()); ps.setString(12, r.getCreatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public Optional<ChapterReview> findChapterReview(String projectId, int chapterIndex) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM chapter_reviews WHERE project_id=? AND chapter_index=? " +
+                     "ORDER BY created_at DESC LIMIT 1")) {
+            ps.setString(1, projectId); ps.setInt(2, chapterIndex);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? Optional.of(mapChapterReview(rs)) : Optional.empty();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public List<ChapterReview> findChapterReviewsByProject(String projectId) {
+        List<ChapterReview> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM chapter_reviews WHERE project_id=? ORDER BY chapter_index")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapChapterReview(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    private ChapterReview mapChapterReview(ResultSet rs) throws SQLException {
+        ChapterReview r = new ChapterReview(rs.getString("project_id"), rs.getInt("chapter_index"));
+        setField(r, "id", rs.getString("id"));
+        r.setOverallScore(rs.getInt("overall_score"));
+        r.setEngagement(rs.getInt("engagement"));
+        r.setCoherence(rs.getInt("coherence"));
+        r.setCharacter(rs.getInt("character_score"));
+        r.setHook(rs.getInt("hook"));
+        r.setSummary(rs.getString("summary"));
+        r.setIssues(rs.getString("issues"));
+        r.setImprovement(rs.getString("improvement"));
+        return r;
+    }
+
     // --- WritingPreferences ---
 
     @Override

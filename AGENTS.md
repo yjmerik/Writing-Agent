@@ -6,11 +6,12 @@
 ## 项目概述
 
 多 Agent 图架构的长篇小说自动写作系统：
-- **7 个 Agent**：WorldBuilder / CharacterDesigner / Plotter / ChapterWriter / ContinuityChecker / StyleGuardian / MemoryManager
-- **三层记忆**：结构化知识库 + 滚动摘要 + 向量检索
+- **19 个 Agent**：7 个核心 Agent（WorldBuilder / CharacterDesigner / Plotter / ChapterWriter / ContinuityChecker / StyleGuardian / MemoryManager）+ 12 个辅助 Agent（EntityExtractor、Foreshadowing 三件套、QualityEvaluation、ReaderReview、SceneClassifier、ConsistencyGuard、ArcUpdater、CharacterProfileUpgrader、NarrativeThreadExtractor、WritingPreferences）
+- **三层记忆**：结构化知识库 + 滚动摘要 + 向量检索（ContextAssembler 按 TokenBudget 汇成 WritingContext，【故事原旨】永不裁剪）
 - **状态机编排**：CONCEIVING → PLANNING → WRITING → VOLUME_DONE → FINAL
-- **PromptTemplate 系统**：9 个外置 `.st` 模板，支持变量插值和条件块
-- **多模型路由**：按任务类型路由到不同 LLM（GLM-5.2 / DeepSeek / 本地模型）
+- **PromptTemplate 系统**：20 个外置 `.st` 模板 + 6 个题材预设（presets/），支持变量插值和条件块
+- **多模型路由**：按 `LlmTaskType`（8 种）路由到不同 LLM（当前：DeepSeek 为主 / 本地 qwen3-4b-wuxia 兜底 / GLM embedding-3 向量化）
+- **多样性与质量控制**：ClicheDetector、DiversityTracker、ClimaxDiversityTracker、ReaderReview 每章检验（score<7 自动重写，最多 1 次）
 
 设计文档：`docs/superpowers/specs/2026-07-10-novel-writing-system-design.md`
 
@@ -20,7 +21,7 @@ Before writing code:
 
 1. **Confirm working directory** with `pwd` — should be `/Users/erik/ZCodeProject/WritingAgent`
 2. **Read this file** completely
-3. **Read `feature_list.json`** — 查看当前优化进度（4 Phase × 16 features）
+3. **Read `feature_list.json`** — 查看当前优化进度（9 Phase × 50 features；Phase 9 为 harness 闭环设施）
 4. **Run `./init.sh`** — 编译 + 测试验证环境健康
 5. **Review recent commits** with `git log --oneline -5`
 
@@ -30,11 +31,29 @@ If `mvn test` fails, repair baseline first before adding new scope.
 
 - **One feature at a time**: 从 `feature_list.json` 选一个 `not-started` 的 feature
 - **TDD encouraged**: 改 Agent/prompt 时先写或更新测试，再改实现
+- **Bugfix gate (硬规则)**: 修 bug 必须先写复现该 bug 的 failing test，再改实现——不允许直接修
 - **Verification required**: 声明完成前必须跑 `mvn compile && mvn test`
 - **Update artifacts**: 每完成一个 feature，更新 `feature_list.json`（status→completed, evidence）和 `progress.md`
 - **Stay in scope**: 不修改与当前 feature 无关的文件
-- **Prompt changes**: 改 `.st` 模板后必须验证对应 Agent 的测试仍通过（模板变量名不能改）
+- **Prompt changes**: 改 `.st` 模板后必须验证对应 Agent 的测试仍通过（模板变量名不能改）；影响产出质量的 prompt 改动需重跑 `./scripts/e2e.sh` 对比基线
 - **Leave clean state**: 下次会话必须能 `./init.sh` 立即启动
+
+## 需求拆分协议（新需求入口）
+
+新需求进入系统的唯一路径：
+
+1. **写 spec**: 复制 `docs/specs/TEMPLATE.md` 为 `docs/specs/YYYY-MM-DD-<slug>.md`，填写目标/非目标/验收标准/影响面
+2. **拆 feature**: 每个 feature 满足——1-3 个文件改动、可独立验证、标注依赖
+3. **登记 backlog**: 追加到 `feature_list.json`，新 feature 必须含以下字段：
+   - `acceptance`: 机器可验证的完成标准（不是"实现了 X"，而是"跑 Y 命令得到 Z 结果"）
+   - `verify_cmd`: 该 feature 专属验证命令（如 `mvn test -Dtest=XxxTest`）
+4. **backlog 耗尽时**: 跑 `./scripts/diagnose.sh` + `python3 scripts/compare-baseline.py`，从失败分类/质量退化中产生新 feature；若均无问题，向用户请求新需求，不要自造需求
+
+## 失败回流协议（识别问题 → 修复闭环）
+
+- E2E 或运行期失败 → `./scripts/diagnose.sh` 产出失败分类报告
+- 每个需要修复的失败分类 → 按需求拆分协议登记为 feature（`"type": "bug"`，evidence 引用诊断输出）
+- 修复遵循 Bugfix gate：先 failing test 复现，后修复，最后重跑 e2e 确认失败分类消失
 
 ## Key Architecture Constraints
 
@@ -52,9 +71,19 @@ A feature is done only when ALL of the following are true:
 
 - [ ] Target behavior is implemented
 - [ ] `mvn compile` passes without errors
-- [ ] `mvn test` passes (86+ tests, 0 failures)
+- [ ] `mvn test` passes (95+ tests, 0 failures)
+- [ ] Feature 自带的 `verify_cmd` 通过（若有）
 - [ ] Evidence recorded in `feature_list.json`
 - [ ] If prompt changed: corresponding Agent test still passes
+- [ ] If 影响产出质量（prompt/上下文组装/Agent 逻辑）: `./scripts/e2e.sh` + `compare-baseline.py` PASS
+
+## End of Session Procedure（会话结束必做）
+
+1. `mvn test` 确认全绿（不绿则修复或在 handoff 中标注 BROKEN + 原因）
+2. 更新 `feature_list.json`（完成的 feature → completed + evidence）
+3. 更新 `progress.md`（本次会话完成项、当前状态、Next Steps）
+4. 更新 `session-handoff.md`（目标、已完成、验证证据、blockers、下一步入口）
+5. 状态文件的日期必须是当天——过期的状态文件比没有更有害
 
 ## Verification Commands
 
@@ -68,6 +97,18 @@ mvn compile -q
 # Run tests only
 mvn test
 
+# E2E（确定性回放，零 LLM 成本；首次需先 record 建 fixture）
+./scripts/e2e.sh                     # 默认 replay 模式写 3 章 → e2e-report.json
+./scripts/e2e.sh --mode record       # 真实调用并录制 fixture（建/更新基线时）
+
+# 质量基线对比（prompt/上下文/Agent 逻辑改动后必跑）
+python3 scripts/compare-baseline.py            # PASS/FAIL
+python3 scripts/compare-baseline.py --bless    # 人工确认质量后更新基线
+
+# 诊断报告（失败分类 + LLM 统计，agent 可读）
+./scripts/diagnose.sh                          # 默认读 data/logs/events.jsonl
+./scripts/diagnose.sh data/e2e/events.jsonl    # 读 E2E 产生的事件
+
 # Start server for manual testing
 mvn spring-boot:run
 
@@ -75,23 +116,37 @@ mvn spring-boot:run
 cd frontend && npm run build
 ```
 
+## 可观测性设施
+
+- **结构化事件日志**: `data/logs/events.jsonl`（JSON Lines）。事件类型：`LLM_CALL` / `LLM_ERROR` / `CHAPTER_WRITTEN` / `CHAPTER_FAILED`。由 `telemetry/EventLog` 静态写入，`ObservedLlmGateway` 与 NovelOrchestrator 埋点
+- **应用日志落盘**: `data/logs/app.log`（logback 滚动，14 天）
+- **LLM 录制/回放**: `llm.replay.mode` = `"off"`/`"record"`/`"replay"`（application.yml，off 必须带引号），fixture 存 `data/fixtures/llm/`，按任务类型与归一化 prompt 的 SHA-256 指纹命名（配置 JSON 的 `updatedAt` 不参与指纹）。装饰链：Observed → RecordReplay → Default
+
 ## Project Structure
 
 ```
 src/main/java/com/writing/novel/
-├── agent/           # 7 Agent + AgentHarness + ResponseParser
-├── config/          # PersistenceConfig, LlmConfig 等
-├── domain/          # 14 个领域模型 (Project, Chapter, Character, ...)
-├── llm/             # LlmGateway, OpenAiCompatibleClient, PromptTemplateService
-├── memory/          # ContextAssembler, WritingContext, 三层记忆服务
-├── orchestrator/    # NovelOrchestrator (状态机+Agent调度)
-├── persistence/     # SQLite + 嵌入式向量库 + Embedding
-├── spi/             # NovelRepository, VectorStore, EmbeddingProvider
-└── web/             # REST Controller + GlobalExceptionHandler
+├── agent/           # 19 个 Agent + AgentConfig/AgentHarness + util/ResponseParser
+├── config/          # PersistenceConfig, PersistenceProperties
+├── domain/          # 29 个领域模型/枚举 (Project, Chapter, Character, Foreshadowing, NarrativeThread, ...)
+├── llm/             # LlmGateway/DefaultLlmGateway, OpenAiCompatibleClient, PromptTemplateService, LlmTaskType
+├── memory/          # ContextAssembler, WritingContext, TokenBudget, 三层记忆服务
+├── orchestrator/    # NovelOrchestrator (状态机+Agent调度) + ProjectService
+├── persistence/     # SqliteNovelRepository + EmbeddedVectorStore + EmbeddingProvider 实现
+├── service/         # 12 个业务服务 (ArcScheduler, ClicheDetector, DiversityTracker, EntityGraphService, PresetRegistry, ...)
+├── spi/             # NovelRepository, VectorStore, EmbeddingProvider, VectorSearchResult
+├── telemetry/       # EventLog (JSON Lines 事件日志), EventContext (ThreadLocal 上下文)
+├── util/            # NameSanitizer
+└── web/             # 7 个 REST Controller + GlobalExceptionHandler
 src/main/resources/
-├── prompts/         # 9 个 .st 模板文件
-└── application.yml  # 模型配置 + 持久化配置
-frontend/src/        # React + Ant Design 前端
+├── prompts/         # 20 个 .st 模板文件
+├── presets/         # 6 个题材预设 (cultivation/general/historical/mystery/romance/thriller)
+├── logback-spring.xml  # 日志落盘 data/logs/app.log
+└── application.yml  # 模型配置 (按 LlmTaskType 路由) + 持久化 + llm.replay 配置
+scripts/             # e2e.sh (端到端), diagnose.sh (诊断), compare-baseline.py (质量基线)
+baselines/           # golden.json 质量基线（--bless 生成）
+docs/specs/          # 需求 spec（TEMPLATE.md 起步）
+frontend/src/        # React + Ant Design 前端 (2 页面 + 6 组件 + api/client.ts)
 ```
 
 ## Escalation

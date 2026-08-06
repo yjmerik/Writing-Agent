@@ -109,7 +109,14 @@ public class SqliteSchemaInitializer {
         "CREATE TABLE IF NOT EXISTS narrative_threads (" +
             "id TEXT PRIMARY KEY, project_id TEXT, name TEXT, status TEXT, " +
             "first_seen_chapter INTEGER, last_seen_chapter INTEGER, " +
-            "suspense_chapters INTEGER, description TEXT, created_at TEXT, updated_at TEXT)"
+            "suspense_chapters INTEGER, description TEXT, created_at TEXT, updated_at TEXT)",
+
+        // p11-I1: 章节评价表（每章读者评审报告持久化）
+        "CREATE TABLE IF NOT EXISTS chapter_reviews (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, chapter_index INTEGER, " +
+            "overall_score INTEGER, engagement INTEGER, coherence INTEGER, " +
+            "character_score INTEGER, hook INTEGER, " +
+            "summary TEXT, issues TEXT, improvement TEXT, created_at TEXT)"
     };
 
     private final ConnectionProvider cp;

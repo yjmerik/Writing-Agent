@@ -1,7 +1,7 @@
 package com.writing.novel.llm;
 
 import com.writing.novel.llm.client.OpenAiCompatibleClient;
-import com.writing.novel.llm.gateway.DefaultLlmGateway;
+import com.writing.novel.llm.gateway.ObservedLlmGateway;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,7 +23,7 @@ class LlmGatewayWiringTest {
     @Test
     void gateway与client均被装配() {
         assertNotNull(context.getBean(LlmGateway.class));
-        assertTrue(context.getBean(LlmGateway.class) instanceof DefaultLlmGateway);
+        assertTrue(context.getBean(LlmGateway.class) instanceof ObservedLlmGateway);
         assertNotNull(context.getBean(OpenAiCompatibleClient.class));
     }
 }

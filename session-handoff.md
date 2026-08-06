@@ -2,86 +2,59 @@
 
 ## Current Objective
 
-- **Goal**: 实施 4-Phase 架构优化方案，解决深度审查发现的 30 个问题
-- **Current status**: Harness 已创建，Phase 1 待启动
-- **Branch / commit**: main / `3d41c9d` (最新)
+- **Goal**: 建立“需求 → feature → 实现 → E2E → 诊断 → 修复 → 基线优化”的完整 harness 闭环。
+- **Current status**: Phase 9 harness 基建完成；短真实 LLM record/replay 已验证，多章 E2E fixture 与质量基线尚未建立。
+- **Branch / commit**: main；本会话未提交。
 
 ## Completed This Session
 
-- [x] 深度架构审查（5 维度 × 30 问题）
-- [x] 4-Phase 优化方案设计（16 个 feature）
-- [x] Harness 创建（AGENTS.md / feature_list.json / progress.md / init.sh / session-handoff.md）
+- LLM 装饰链：`ObservedLlmGateway → RecordReplayLlmGateway（可选）→ DefaultLlmGateway`
+- 录制/回放 fixture：按 `taskType + systemPrompt + userMessage + history` 的 SHA-256 指纹命名；回放缺失 fail-fast
+- JSON Lines 运行事件、章节事件、app.log 滚动落盘及 `diagnose.sh`
+- `e2e.sh`、`compare-baseline.py`、基线文档、需求 spec 模板与 CI workflow
+- AGENTS.md 的需求拆分、bugfix gate、失败回流、DoD、会话结束协议
+- feature tracker 补齐 schema：50 个 feature 全部含 `acceptance` / `verify_cmd`
+- 修复 E2E 本地访问：环境 HTTP 代理会拦截 localhost；所有脚本 curl 已显式 `--noproxy '*'`
+- 修复 replay 指纹不稳定：配置 JSON 的 `updatedAt` 是易变值，现已在指纹中归一化；回归测试先失败后通过
+- 短偏好解析调用：真实 record 5.37s（587 prompt + 430 completion tokens），随后 replay 3ms，返回一致且将最小章节字数更新为 2500
 
 ## Verification Evidence
 
-| Check | Command | Result | Notes |
-|---|---|---|---|
-| 编译 | `mvn compile` | ✅ BUILD SUCCESS | |
-| 测试 | `mvn test` | ✅ 86 tests, 0 failures | 1 skipped (RealLlmSmokeTest) |
-| 模板 | `find prompts -name *.st` | ✅ 9 个 | |
-| 前端 | `static/index.html` | ✅ 已构建 | |
+| Check | Command | Result |
+|---|---|---|
+| Record/replay regression | `mvn test -Dtest=RecordReplayLlmGatewayTest` | 5 pass（包含 updatedAt 归一化） |
+| Full Maven suite | `mvn test` | 96 tests, 0 failures, 1 skipped |
+| Full gate | `./init.sh` | 95 tests, 0 failures, 1 skipped；前端构建成功（后续新增 1 测试） |
+| Harness audit | `node .../validate-harness.mjs --target .` | 100/100 |
+| Replay E2E bootstrap | `./scripts/e2e.sh --mode replay --chapters 1` | 服务/项目创建成功；无 fixture 时在构思阶段 fail-fast（预期） |
 
-## 4-Phase 优化方案概要
+## Files Changed
 
-### Phase 1：信息流打通（6 features，最高优先级）
-解决"LLM 写到第 20 章完全失忆"+"Agent 间断层"
-- p1-01: 故事原旨（premise）注入上下文 ← **下一步从这里开始**
-- p1-02: CharacterDesigner 注入构思+世界观（解决人物总是"陆昭然"）
-- p1-03: Plotter 注入世界观+人物
-- p1-04: 卷级摘要全量注入（解决第 50 章看不到第 1 卷）
-- p1-05: 章节 chunk 检索修复（向量检索目前对前文召回贡献为零）
-- p1-06: styleGuide 从 StyleProfile 动态注入
-
-### Phase 2：长篇规模（3 features）
-解决"系统只能写 6-15 章短篇"
-- p2-01: 大纲规模参数化（删除 2-3 卷硬限制）
-- p2-02: 世界观按类型多样选样
-- p2-03: worldbuilding.st 去法则化
-
-### Phase 3：闭环接通（4 features）
-解决"反馈机制空转"
-- p3-01: ContinuityIssue.resolve 接通
-- p3-02: StyleGuardian.checkConsistency 接入闭环
-- p3-03: 伏笔系统接入（表/类齐全但无写入点）
-- p3-04: 卷末触发全局质量评价
-
-### Phase 4：UI + 鲁棒性（3 features）
-- p4-01: Steps 状态修复（current 写死为 FINAL）
-- p4-02: 按钮互斥
-- p4-03: 静默 catch 改为日志
-
-## Files Changed This Session
-
-- `AGENTS.md` — 新建（harness 启动路径+工作规则）
-- `feature_list.json` — 新建（16 个 feature 追踪）
-- `progress.md` — 新建（会话连续性日志）
-- `init.sh` — 新建（验证脚本）
-- `session-handoff.md` — 新建（本文件）
-
-## Decisions Made
-
-- **4-Phase 分阶段**：先打通信息流（让 LLM 不失忆），再扩规模，再接闭环，最后修 UI
-- **feature 颗粒度**：每个 feature 对应 1-3 个文件改动，可独立验证
-- **依赖关系**：p1-03 依赖 p1-02（Plotter 注入需要先有人物），其余可并行
+- `src/main/java/.../llm/gateway/{ObservedLlmGateway,RecordReplayLlmGateway}.java`
+- `src/main/java/.../telemetry/{EventContext,EventLog}.java`
+- `src/main/java/.../llm/config/LlmConfig.java`
+- `src/main/java/.../orchestrator/NovelOrchestrator.java`
+- `src/main/resources/{application.yml,logback-spring.xml}`
+- `src/test/java/.../{RecordReplayLlmGatewayTest,EventLogTest,LlmGatewayWiringTest}.java`
+- `scripts/{e2e.sh,diagnose.sh,compare-baseline.py}`
+- `docs/specs/TEMPLATE.md`, `baselines/README.md`, `.github/workflows/ci.yml`
+- `AGENTS.md`, `feature_list.json`, `progress.md`, `init.sh`
 
 ## Blockers / Risks
 
-- GLM-5.2 内容审查（已有三级降级重试但极端情况仍可能失败）
-- GLM-5.2 限额（5小时上限，DeepSeek 余额有限）
-- 大纲解析正则脆弱（Phase 2 p2-01 中考虑改 JSON 输出）
+- **多章 record 未完成**：用户授权后启动过 3 章 record，已成功录制构思与第 1 章（诊断 9 次调用、0 错误），但运行时间过长而中断，未生成 `e2e-report.json`。
+- **质量基线未 bless**：必须先审阅真实 E2E 产物，禁止基于合成数据建立 golden。
+- `init.sh` 前端构建报告一个现有 Vite chunk >500kB warning；不影响构建成功，后续可单独拆分为性能 feature。
+- 测试使用 Java 26 时 SQLite/ByteBuddy 有未来兼容性 warning；当前 Java 17 目标不受影响。
 
 ## Next Session Startup
 
-1. Read `AGENTS.md`.
-2. Read `feature_list.json` — 找到第一个 `not-started` 的 feature（应为 p1-01）。
-3. Review this handoff.
-4. Run `./init.sh` before editing.
-5. 从 p1-01 开始：修改 `WritingContext.java` 和 `ContextAssembler.java`。
+1. `pwd` 确认工作目录，阅读 `AGENTS.md`、`feature_list.json`、本文件。
+2. 运行 `./init.sh`。
+3. 在可接受多章运行时间时：`./scripts/e2e.sh --mode record --chapters 3`。
+4. 审阅 `e2e-report.json`，确认后 `python3 scripts/compare-baseline.py --bless`。
+5. 重跑 `./scripts/e2e.sh`（replay）与 `python3 scripts/compare-baseline.py`；若失败，执行 `./scripts/diagnose.sh data/e2e/events.jsonl` 并按 bugfix gate 创建 spec/feature。
 
 ## Recommended Next Step
 
-实施 **p1-01 故事原旨注入**：
-1. WritingContext 新增 `premiseSection` 字段
-2. toSystemPrompt 最前面输出 `【故事原旨】`
-3. ContextAssembler.assemble 从 Outline.premise + Project.concept 注入
-4. applyTokenBudget 中 premise 设为最高优先级（永不被裁剪）
+在可接受更长运行时间时，建立并验证第一套 3 章确定性 E2E fixture 与质量基线。

@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WritingAgent Harness · 闭环控制室</title>
+<style>
+  /* ============================================================
+     DESIGN TOKENS (control-room operational console)
+     ============================================================ */
+  :root{
+    --bg-deep:#07090d;
+    --bg-panel:#0f141c;
+    --bg-raised:#161d28;
+    --bg-inset:#0a0e15;
+    --line:#232c3b;
+    --line-strong:#344054;
+    --ink:#e6edf3;
+    --ink-2:#aab8cb;
+    --ink-3:#8493a8;
+    --signal:#4dd0d8;
+    --signal-dim:rgba(77,208,216,.14);
+    --signal-line:rgba(77,208,216,.32);
+    --amber:#f5b042;
+    --amber-dim:rgba(245,176,66,.10);
+    --amber-line:rgba(245,176,66,.45);
+    --green:#3fb950;
+    --green-dim:rgba(63,185,80,.10);
+    --green-line:rgba(63,185,80,.40);
+    --red:#f0626e;
+    --red-line:rgba(240,98,110,.45);
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Monaco,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+    --radius:4px;
+    --radius-lg:8px;
+  }
+
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background-color:var(--bg-deep);
+    background-image:
+      linear-gradient(rgba(77,208,216,.022) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(77,208,216,.022) 1px,transparent 1px);
+    background-size:42px 42px;
+    background-position:-1px -1px;
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow-wrap:anywhere;
+  }
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.01em}
+  p{margin:0 0 1rem}
+  ul{margin:0;padding:0;list-style:none}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    color:var(--signal);
+  }
+  .section{padding:64px 0;border-top:1px solid var(--line)}
+  .section-head{margin-bottom:36px;max-width:760px}
+  .section-head h2{
+    font-size:clamp(22px,3.4vw,30px);
+    margin-top:10px;
+    font-weight:600;
+  }
+  .section-head .lede{color:var(--ink-2);margin-top:12px;font-size:15px}
+  .tag-num{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--ink-3);
+    letter-spacing:.12em;
+  }
+
+  /* ============================================================
+     MASTHEAD
+     ============================================================ */
+  header.mast{
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(15,20,28,.92),rgba(7,9,13,.92));
+    position:relative;
+    overflow:hidden;
+  }
+  header.mast::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;height:1px;
+    background:linear-gradient(90deg,transparent,var(--signal-line) 20%,var(--signal-line) 80%,transparent);
+  }
+  .mast-inner{padding:56px 0 48px}
+  .mast-status{
+    display:inline-flex;align-items:center;gap:10px;
+    font-family:var(--mono);font-size:11px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--ink-2);
+    border:1px solid var(--line-strong);border-radius:999px;
+    padding:6px 14px;background:var(--bg-inset);
+  }
+  .mast-status .dot{
+    width:8px;height:8px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 0 3px rgba(63,185,80,.18);
+  }
+  .mast-title{
+    font-family:var(--mono);
+    font-size:clamp(40px,9vw,84px);
+    line-height:1.02;
+    letter-spacing:-.02em;
+    margin:22px 0 6px;
+    font-weight:600;
+  }
+  .mast-title .accent{color:var(--signal)}
+  .mast-sub{
+    font-family:var(--mono);
+    font-size:clamp(13px,2vw,16px);
+    color:var(--ink-3);
+    letter-spacing:.04em;
+  }
+  .mast-tag{
+    margin-top:26px;max-width:680px;color:var(--ink-2);font-size:15.5px;
+  }
+  .mast-coords{
+    margin-top:30px;display:flex;flex-wrap:wrap;gap:10px 28px;
+    font-family:var(--mono);font-size:11px;color:var(--ink-3);
+    letter-spacing:.1em;text-transform:uppercase;
+  }
+  .mast-coords b{color:var(--ink);font-weight:500}
+  .mast-coords span{min-width:0}
+
+  /* ============================================================
+     EVIDENCE STRIP
+     ============================================================ */
+  .strip{display:grid;grid-template-columns:1fr;gap:14px;margin-top:-34px;position:relative;z-index:2}
+  .metric{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-left:2px solid var(--signal);
+    border-radius:var(--radius);
+    padding:20px 20px 18px;
+  }
+  .metric .k{
+    font-family:var(--mono);font-size:10px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--ink-3);
+  }
+  .metric .v{
+    font-family:var(--mono);font-size:clamp(26px,4vw,34px);
+    line-height:1.1;margin-top:8px;font-weight:600;letter-spacing:-.01em;
+  }
+  .metric .v .arrow{color:var(--signal);padding:0 .15em}
+  .metric .v .unit{font-size:.5em;color:var(--ink-3);letter-spacing:.05em;margin-left:6px;vertical-align:middle}
+  .metric .v .slash{font-size:.55em;color:var(--ink-3);letter-spacing:.02em;vertical-align:baseline}
+  .metric .n{margin-top:8px;font-size:12.5px;color:var(--ink-2)}
+  .metric.alt{border-left-color:var(--green)}
+  .metric.alt .v{color:var(--green)}
+
+  /* ============================================================
+     CLOSED-LOOP DIAGRAM
+     ============================================================ */
+  .diagram-shell{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    padding:24px;
+  }
+  .diagram-wrap{display:grid;grid-template-columns:1fr;gap:28px}
+  .diagram-svg{display:none;width:100%;height:auto}
+  .legend{
+    display:none;flex-direction:column;gap:10px;
+    font-family:var(--mono);font-size:12px;color:var(--ink-2);
+  }
+  .legend .row{display:flex;gap:10px;align-items:baseline}
+  .legend .swatch{width:22px;height:3px;flex:0 0 22px;margin-top:8px}
+  .legend .swatch.sig{background:var(--signal)}
+  .legend .swatch.fwd{background:var(--signal-line)}
+  .legend .swatch.back{background:var(--amber-line)}
+  .legend b{color:var(--ink);font-weight:600}
+
+  /* mobile lifecycle list (shown below 768px, hidden at/above) */
+  .lifecycle-mobile{display:flex;flex-direction:column;gap:0;margin:0}
+  .lifecycle-mobile>li{
+    display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;
+    padding:12px 0;border-bottom:1px solid var(--line);
+  }
+  .lifecycle-mobile>li:last-child{border-bottom:none}
+  .lifecycle-mobile .lc-num{font-family:var(--mono);font-size:13px;color:var(--signal);letter-spacing:.08em;padding-top:1px}
+  .lifecycle-mobile .lc-body{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .lifecycle-mobile .lc-name{font-family:var(--mono);font-size:14px;color:var(--ink);font-weight:600}
+  .lifecycle-mobile .lc-note{font-size:13px;color:var(--ink-2);line-height:1.45}
+
+  /* node text in svg */
+  .node-rect{fill:var(--bg-raised);stroke:var(--line-strong);stroke-width:1}
+  .node-rect.entry{stroke:var(--signal-line)}
+  .node-num{fill:var(--signal);font-family:var(--mono);font-size:10px;font-weight:600}
+  .node-label{fill:var(--ink);font-family:var(--mono);font-size:11px;font-weight:500}
+  .arc-fwd{fill:none;stroke:var(--signal-line);stroke-width:1.4}
+  .arc-back{fill:none;stroke:var(--amber-line);stroke-width:1.4;stroke-dasharray:5 4}
+  .core-ring{fill:none;stroke:var(--line);stroke-width:1}
+  .core-label{fill:var(--ink-3);font-family:var(--mono);font-size:11px;letter-spacing:.18em}
+  .core-sub{fill:var(--signal);font-family:var(--mono);font-size:10px;letter-spacing:.22em}
+
+  /* ============================================================
+     GATE CARDS
+     ============================================================ */
+  .gates{display:grid;grid-template-columns:1fr;gap:16px}
+  .gate{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px;
+    display:flex;flex-direction:column;gap:14px;
+  }
+  .gate-head{display:flex;align-items:baseline;gap:12px;border-bottom:1px dashed var(--line);padding-bottom:12px}
+  .gate-head .gn{font-family:var(--mono);font-size:12px;color:var(--signal);letter-spacing:.1em}
+  .gate-head h3{font-size:16px;font-weight:600}
+  .gate-row{display:grid;grid-template-columns:64px 1fr;gap:6px 14px;font-size:13.5px}
+  .gate-row dt{
+    font-family:var(--mono);font-size:10px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--ink-3);padding-top:3px;
+  }
+  .gate-row dd{margin:0;color:var(--ink-2)}
+  .gate-row dd code{font-family:var(--mono);font-size:12px;color:var(--signal);background:var(--bg-inset);padding:1px 5px;border-radius:3px}
+
+  /* ============================================================
+     EVIDENCE CONSOLES (Proven / Designed)
+     ============================================================ */
+  .consoles{display:grid;grid-template-columns:1fr;gap:20px}
+  .console{
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    overflow:hidden;background:var(--bg-panel);
+  }
+  .console.proven{border-color:var(--green-line)}
+  .console.designed{border-color:var(--amber-line);border-width:1.5px}
+  .console-bar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:14px 20px;border-bottom:1px solid var(--line);
+    background:var(--bg-inset);
+  }
+  .console.proven .console-bar{border-bottom-color:var(--green-line)}
+  .console.designed .console-bar{border-bottom-color:var(--amber-line)}
+  .console-bar .ttl{
+    font-family:var(--mono);font-size:12px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink);font-weight:600;
+  }
+  .console-bar .ttl .zh{color:var(--ink-3);font-weight:400;margin-left:8px}
+  .console-bar .state{
+    font-family:var(--mono);font-size:10px;letter-spacing:.16em;
+    text-transform:uppercase;padding:4px 10px;border-radius:3px;
+  }
+  .console.proven .state{color:var(--green);border:1px solid var(--green-line);background:var(--green-dim)}
+  .console.designed .state{color:var(--amber);border:1px solid var(--amber-line);background:var(--amber-dim)}
+  .console-body{padding:18px 20px 8px}
+  .console-body li{
+    display:grid;grid-template-columns:auto 1fr;gap:12px;
+    padding:11px 0;border-bottom:1px solid var(--line);
+    font-size:13.5px;color:var(--ink-2);
+  }
+  .console-body li:last-child{border-bottom:none}
+  .console-body .mark{
+    font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+    padding-top:1px;white-space:nowrap;
+  }
+  .console.proven .mark{color:var(--green)}
+  .console.designed .mark{color:var(--amber)}
+  .console-body b{color:var(--ink);font-weight:600}
+  .console-body code{font-family:var(--mono);font-size:12px;color:var(--signal)}
+
+  /* prominent amber boundary callout */
+  .boundary{
+    margin-top:22px;border:1.5px solid var(--amber-line);
+    background:linear-gradient(180deg,var(--amber-dim),transparent 80%);
+    border-radius:var(--radius-lg);padding:22px 24px;
+  }
+  .boundary .label{
+    font-family:var(--mono);font-size:11px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--amber);font-weight:600;
+  }
+  .boundary h3{font-size:18px;margin:8px 0 6px;color:var(--ink)}
+  .boundary h3 .zh{color:var(--amber)}
+  .boundary p{margin:0;color:var(--ink-2);font-size:14px}
+  .boundary .fine{margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+
+  /* ============================================================
+     COMMANDS
+     ============================================================ */
+  .term{
+    background:var(--bg-inset);border:1px solid var(--line);
+    border-radius:var(--radius-lg);overflow:hidden;
+  }
+  .term-bar{
+    display:flex;align-items:center;gap:10px;
+    padding:12px 18px;border-bottom:1px solid var(--line);
+    font-family:var(--mono);font-size:11px;color:var(--ink-3);
+    letter-spacing:.14em;text-transform:uppercase;
+  }
+  .term-bar .crumb{color:var(--signal)}
+  .term-body{padding:18px 22px;font-family:var(--mono);font-size:13px;line-height:1.85}
+  .term-body .cmd{display:block;color:var(--ink)}
+  .term-body .cmd::before{content:"$ ";color:var(--signal)}
+  .term-body .cmt{color:var(--ink-3);display:block;padding-left:0}
+  .term-body .cmt::before{content:"# ";color:var(--ink-3)}
+
+  /* ============================================================
+     SOURCE LEDGER
+     ============================================================ */
+  .ledger{display:grid;grid-template-columns:1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius)}
+  .ledger li{
+    background:var(--bg-panel);padding:16px 18px;
+    display:grid;grid-template-columns:auto 1fr;gap:8px 16px;align-items:baseline;
+  }
+  .ledger .fn{font-family:var(--mono);font-size:13px;color:var(--signal);white-space:nowrap}
+  .ledger .ds{font-size:13px;color:var(--ink-2);min-width:0}
+
+  /* ============================================================
+     FOOTER
+     ============================================================ */
+  footer.foot{border-top:1px solid var(--line);padding:32px 0 56px;margin-top:24px}
+  .foot-inner{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between;align-items:baseline}
+  .foot-inner p{margin:0;font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.06em}
+
+  /* ============================================================
+     RESPONSIVE
+     ============================================================ */
+  @media (min-width:768px){
+    .strip{grid-template-columns:repeat(4,1fr)}
+    .diagram-wrap{grid-template-columns:1.5fr 1fr;align-items:center}
+    .diagram-svg{display:block}
+    .legend{display:flex}
+    .lifecycle-mobile{display:none}
+    .gates{grid-template-columns:repeat(2,1fr)}
+    .consoles{grid-template-columns:1fr 1fr}
+    .ledger{grid-template-columns:1fr 1fr}
+  }
+  @media (min-width:1080px){
+    .gates{grid-template-columns:repeat(4,1fr)}
+    .ledger{grid-template-columns:1fr 1fr 1fr}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+  :focus-visible{outline:2px solid var(--signal);outline-offset:2px;border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- ============================ MASTHEAD ============================ -->
+<header class="mast" role="banner">
+  <div class="wrap mast-inner">
+    <span class="mast-status"><span class="dot" aria-hidden="true"></span>HARNESS STATUS · DOCUMENTED EVIDENCE</span>
+    <h1 class="mast-title"><span class="accent">WritingAgent</span> Harness</h1>
+    <div class="mast-sub">闭环控制室 / Closed-Loop Control Room</div>
+    <p class="mast-tag">
+      一个把“需求 → feature → 实现 → E2E → 诊断 → 修复 → 基线优化”串成单条闭环的 harness。
+      本页只陈述源文件可佐证的状态：已验证的运行证据与有意留待下一步完成的多章基线工作分开呈现。
+    </p>
+    <div class="mast-coords">
+      <span>STACK · <b>Spring Boot 3 / Java 17 · SQLite · 嵌入式向量库</b></span>
+      <span>PHASE · <b>9 — harness 自动化闭环</b></span>
+      <span>PAGE GENERATED · <b>2026-08-06</b>（非源证据日期，源文件各自标注）</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ============================ EVIDENCE STRIP ============================ -->
+  <section class="strip" aria-label="关键证据">
+    <article class="metric">
+      <div class="k">Features · 50/50</div>
+      <div class="v">50<span class="slash">/50</span></div>
+      <div class="n">feature_list.json · Phase 9 全部 completed</div>
+    </article>
+    <article class="metric alt">
+      <div class="k">Maven · 96 pass / 1 skipped</div>
+      <div class="v">96<span class="slash">pass · 0 fail · 1 skip</span></div>
+      <div class="n">mvn test · skipped = RealLlmSmokeTest</div>
+    </article>
+    <article class="metric alt">
+      <div class="k">Audit · 100/100</div>
+      <div class="v">100<span class="slash">/100</span></div>
+      <div class="n">validate-harness.mjs --target .</div>
+    </article>
+    <article class="metric">
+      <div class="k">Record → Replay · 5.37s → 3ms</div>
+      <div class="v">5.37s<span class="arrow">→</span>3ms</div>
+      <div class="n">同请求一致 · 未触达外部 LLM</div>
+    </article>
+  </section>
+
+  <!-- ============================ CLOSED-LOOP DIAGRAM ============================ -->
+  <section class="section" aria-labelledby="loop-h">
+    <div class="section-head">
+      <span class="eyebrow">01 · Closed Loop</span>
+      <h2 id="loop-h">闭环拓扑：八段连续门禁</h2>
+      <p class="lede">
+        从需求到基线，每一段都有明确入口、机制与出口。任意一段失败都会回流到诊断门与 TDD 门，禁止跳章。
+      </p>
+    </div>
+
+    <div class="diagram-shell">
+      <div class="diagram-wrap">
+        <svg class="diagram-svg" viewBox="0 0 680 600" role="img" aria-labelledby="loop-title loop-desc">
+          <title id="loop-title">WritingAgent harness 闭环控制图</title>
+          <desc id="loop-desc">八个节点按顺时针组成闭环：Spec、Feature Backlog、TDD / Bugfix Gate、Init / CI、Record / Replay E2E、Structured Diagnosis、Bug Feedback、Quality Baseline。失败从诊断门经 Bug Feedback 回流到 TDD 门。</desc>
+
+          <defs>
+            <marker id="arrow-fwd" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#4dd0d8" opacity=".85"/>
+            </marker>
+            <marker id="arrow-back" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#f5b042" opacity=".9"/>
+            </marker>
+          </defs>
+
+          <!-- core ring + label -->
+          <circle class="core-ring" cx="340" cy="290" r="210"/>
+          <circle class="core-ring" cx="340" cy="290" r="118" stroke-dasharray="2 5"/>
+          <text class="core-sub" x="340" y="278" text-anchor="middle">HARNESS</text>
+          <text class="core-label" x="340" y="300" text-anchor="middle">CLOSED LOOP</text>
+          <text class="core-sub" x="340" y="320" text-anchor="middle" fill="#8493a8">单一闭环 · 无跳章</text>
+
+          <!-- forward arcs (clockwise) -->
+          <path class="arc-fwd" d="M378.4,83.6 A210,210 0 0 1 458.9,117.0" marker-end="url(#arrow-fwd)"/>
+          <path class="arc-fwd" d="M513.0,171.1 A210,210 0 0 1 546.4,251.8" marker-end="url(#arrow-fwd)"/>
+          <path class="arc-fwd" d="M546.4,328.2 A210,210 0 0 1 513.0,408.9" marker-end="url(#arrow-fwd)"/>
+          <path class="arc-fwd" d="M458.9,463.0 A210,210 0 0 1 378.4,496.4" marker-end="url(#arrow-fwd)"/>
+          <path class="arc-fwd" d="M301.8,496.4 A210,210 0 0 1 221.1,463.0" marker-end="url(#arrow-fwd)"/>
+          <path class="arc-fwd" d="M166.9,408.9 A210,210 0 0 1 133.6,328.2" marker-end="url(#arrow-fwd)"/>
+          <path class="arc-fwd" d="M133.6,251.8 A210,210 0 0 1 166.9,171.1" marker-end="url(#arrow-fwd)"/>
+          <path class="arc-fwd" d="M221.1,117.0 A210,210 0 0 1 301.8,83.6" marker-end="url(#arrow-fwd)"/>
+
+          <!-- feedback chord: Diagnosis(5) back to TDD(3) via Bug Feedback(6->3 region) drawn as amber dashed inner chord -->
+          <path class="arc-back" d="M179,421 C250,360 380,360 461,421" marker-end="url(#arrow-back)"/>
+          <text x="320" y="356" text-anchor="middle" fill="#f5b042" font-family="ui-monospace,monospace" font-size="10" letter-spacing="2">BUG FEEDBACK · 回流</text>
+
+          <!-- nodes -->
+          <!-- 01 Spec -->
+          <g>
+            <rect class="node-rect entry" x="266" y="52" width="148" height="56" rx="6"/>
+            <text class="node-num" x="276" y="70">01</text>
+            <text class="node-label" x="340" y="88" text-anchor="middle">Spec</text>
+          </g>
+          <!-- 02 Feature Backlog -->
+          <g>
+            <rect class="node-rect" x="414.5" y="113.5" width="148" height="56" rx="6"/>
+            <text class="node-num" x="424.5" y="131.5">02</text>
+            <text class="node-label" x="488.5" y="149.5" text-anchor="middle">Feature Backlog</text>
+          </g>
+          <!-- 03 TDD / Bugfix Gate -->
+          <g>
+            <rect class="node-rect entry" x="476" y="262" width="148" height="56" rx="6"/>
+            <text class="node-num" x="486" y="280">03</text>
+            <text class="node-label" x="550" y="298" text-anchor="middle">TDD / Bugfix Gate</text>
+          </g>
+          <!-- 04 Init / CI -->
+          <g>
+            <rect class="node-rect" x="414.5" y="410.5" width="148" height="56" rx="6"/>
+            <text class="node-num" x="424.5" y="428.5">04</text>
+            <text class="node-label" x="488.5" y="446.5" text-anchor="middle">Init / CI</text>
+          </g>
+          <!-- 05 Record / Replay E2E -->
+          <g>
+            <rect class="node-rect entry" x="266" y="472" width="148" height="56" rx="6"/>
+            <text class="node-num" x="276" y="490">05</text>
+            <text class="node-label" x="340" y="508" text-anchor="middle">Record / Replay E2E</text>
+          </g>
+          <!-- 06 Structured Diagnosis -->
+          <g>
+            <rect class="node-rect" x="117.5" y="410.5" width="148" height="56" rx="6"/>
+            <text class="node-num" x="127.5" y="428.5">06</text>
+            <text class="node-label" x="191.5" y="446.5" text-anchor="middle">Structured Diagnosis</text>
+          </g>
+          <!-- 07 Bug Feedback -->
+          <g>
+            <rect class="node-rect" x="56" y="262" width="148" height="56" rx="6"/>
+            <text class="node-num" x="66" y="280">07</text>
+            <text class="node-label" x="130" y="298" text-anchor="middle">Bug Feedback</text>
+          </g>
+          <!-- 08 Quality Baseline -->
+          <g>
+            <rect class="node-rect entry" x="117.5" y="113.5" width="148" height="56" rx="6"/>
+            <text class="node-num" x="127.5" y="131.5">08</text>
+            <text class="node-label" x="191.5" y="149.5" text-anchor="middle">Quality Baseline</text>
+          </g>
+        </svg>
+
+        <ul class="legend" aria-label="图例">
+          <li class="row"><span class="swatch sig" aria-hidden="true"></span><span><b>入口节点</b>（高亮边框）：闭环的关键门禁，每一道都设有可机器验证的出口。</span></li>
+          <li class="row"><span class="swatch fwd" aria-hidden="true"></span><span><b>正向流</b>（青色实线弧）：Spec → Backlog → TDD → CI → E2E → Diagnosis → Feedback → Baseline，顺时针推进。</span></li>
+          <li class="row"><span class="swatch back" aria-hidden="true"></span><span><b>失败回流</b>（琥珀虚线）：诊断门的失败分类经 Bug Feedback 登记为 bug feature，回到 TDD 门，先写复现测试再修复。</span></li>
+        </ul>
+
+        <ol class="lifecycle-mobile" aria-label="闭环阶段（移动端列表）">
+          <li><span class="lc-num">01</span><div class="lc-body"><span class="lc-name">Spec</span><span class="lc-note">新需求 / 失败回流 → 写 spec（目标 / 非目标 / 验收标准）</span></div></li>
+          <li><span class="lc-num">02</span><div class="lc-body"><span class="lc-name">Feature Backlog</span><span class="lc-note">登记 feature_list.json，每条带 acceptance + verify_cmd</span></div></li>
+          <li><span class="lc-num">03</span><div class="lc-body"><span class="lc-name">TDD / Bugfix Gate</span><span class="lc-note">feature 实现鼓励 TDD；修 bug 是硬规则：先 failing test 复现再改</span></div></li>
+          <li><span class="lc-num">04</span><div class="lc-body"><span class="lc-name">Init / CI</span><span class="lc-note">./init.sh fail-fast + Maven CI 门禁</span></div></li>
+          <li><span class="lc-num">05</span><div class="lc-body"><span class="lc-name">Record / Replay E2E</span><span class="lc-note">e2e.sh 录制 / 回放；多章闭环尚未完成，详见证据台</span></div></li>
+          <li><span class="lc-num">06</span><div class="lc-body"><span class="lc-name">Structured Diagnosis</span><span class="lc-note">diagnose.sh 聚合失败分类与 LLM 统计</span></div></li>
+          <li><span class="lc-num">07</span><div class="lc-body"><span class="lc-name">Bug Feedback</span><span class="lc-note">登记 type:bug feature → 回到 03 门</span></div></li>
+          <li><span class="lc-num">08</span><div class="lc-body"><span class="lc-name">Quality Baseline</span><span class="lc-note">compare-baseline.py 容差判定；golden 基线尚未 bless</span></div></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ GATE CARDS ============================ -->
+  <section class="section" aria-labelledby="gates-h">
+    <div class="section-head">
+      <span class="eyebrow">02 · Gates</span>
+      <h2 id="gates-h">门禁卡：入口 · 机制 · 出口</h2>
+      <p class="lede">每张卡对应闭环图上的一个节点。出口条件都可被一条命令或一个文件状态验证。</p>
+    </div>
+
+    <div class="gates">
+
+      <article class="gate">
+        <div class="gate-head"><span class="gn">01</span><h3>Spec</h3></div>
+        <dl class="gate-row">
+          <dt>入口</dt><dd>新需求，或来自诊断门的失败回流</dd>
+          <dt>机制</dt><dd>复制 <code>docs/specs/TEMPLATE.md</code> 为日期前缀 spec，填目标 / 非目标 / 验收标准 / 影响面</dd>
+          <dt>出口</dt><dd>spec 写完且可拆为 1–3 文件改动的 feature</dd>
+        </dl>
+      </article>
+
+      <article class="gate">
+        <div class="gate-head"><span class="gn">02</span><h3>Feature Backlog</h3></div>
+        <dl class="gate-row">
+          <dt>入口</dt><dd>已批准的 spec</dd>
+          <dt>机制</dt><dd>追加 <code>feature_list.json</code>，每条必带 <code>acceptance</code> 与 <code>verify_cmd</code></dd>
+          <dt>出口</dt><dd>feature 可独立验证、已标注依赖</dd>
+        </dl>
+      </article>
+
+      <article class="gate">
+        <div class="gate-head"><span class="gn">03</span><h3>TDD / Bugfix Gate</h3></div>
+        <dl class="gate-row">
+          <dt>入口</dt><dd>选定一个 feature，或来自 07 门的 bug feature</dd>
+          <dt>机制</dt><dd>feature 实现鼓励 TDD（先写 / 更新测试再改实现）；<b>修 bug 是硬规则</b>——必须先写 failing test 复现，再改实现，不允许直接改</dd>
+          <dt>出口</dt><dd>该 feature / bug 的 <code>mvn test</code> 由红转绿</dd>
+        </dl>
+      </article>
+
+      <article class="gate">
+        <div class="gate-head"><span class="gn">04</span><h3>Init / CI</h3></div>
+        <dl class="gate-row">
+          <dt>入口</dt><dd>实现完成</dd>
+          <dt>机制</dt><dd><code>./init.sh</code> fail-fast 验证编译 / 测试 / 20 模板 / 前端；<code>.github/workflows/ci.yml</code> Maven 门禁</dd>
+          <dt>出口</dt><dd>95+ 测试 · 0 failures · 模板变量无错配</dd>
+        </dl>
+      </article>
+
+      <article class="gate">
+        <div class="gate-head"><span class="gn">05</span><h3>Record / Replay E2E</h3></div>
+        <dl class="gate-row">
+          <dt>入口</dt><dd>绿色构建</dd>
+          <dt>机制</dt><dd><code>e2e.sh</code> 三模式；指纹按 taskType+prompt+history 的 SHA-256 命名，<b>updatedAt 归一化</b>；缺 fixture fail-fast</dd>
+          <dt>出口</dt><dd>产出 <code>e2e-report.json</code> · 0 LLM 错误 · 0 章节失败</dd>
+        </dl>
+      </article>
+
+      <article class="gate">
+        <div class="gate-head"><span class="gn">06</span><h3>Structured Diagnosis</h3></div>
+        <dl class="gate-row">
+          <dt>入口</dt><dd><code>events.jsonl</code>（LLM_CALL / LLM_ERROR / CHAPTER_*）</dd>
+          <dt>机制</dt><dd><code>diagnose.sh</code> 聚合失败分类、LLM 统计、最近章节</dd>
+          <dt>出口</dt><dd>给出最高频失败与修复起点建议</dd>
+        </dl>
+      </article>
+
+      <article class="gate">
+        <div class="gate-head"><span class="gn">07</span><h3>Bug Feedback</h3></div>
+        <dl class="gate-row">
+          <dt>入口</dt><dd>诊断门的失败分类</dd>
+          <dt>机制</dt><dd>按需求拆分协议登记 <code>type:bug</code> feature，evidence 引用诊断输出</dd>
+          <dt>出口</dt><dd>failing test 复现该 bug → 回到 03 门</dd>
+        </dl>
+      </article>
+
+      <article class="gate">
+        <div class="gate-head"><span class="gn">08</span><h3>Quality Baseline</h3></div>
+        <dl class="gate-row">
+          <dt>入口</dt><dd><code>e2e-report.json</code></dd>
+          <dt>机制</dt><dd><code>compare-baseline.py</code> 对比 <code>baselines/golden.json</code>，容差判定 PASS / FAIL</dd>
+          <dt>出口</dt><dd>PASS（无退化），或人工审阅后 <code>--bless</code> 更新基线</dd>
+        </dl>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ============================ EVIDENCE CONSOLES ============================ -->
+  <section class="section" aria-labelledby="ev-h">
+    <div class="section-head">
+      <span class="eyebrow">03 · Evidence</span>
+      <h2 id="ev-h">证据台：已验证 vs 下一步</h2>
+      <p class="lede">两侧严格区分。绿色 = 源文件可佐证的当前事实；琥珀 = 设计完成但运行尚未走完的工作。</p>
+    </div>
+
+    <div class="consoles">
+
+      <!-- PROVEN NOW -->
+      <article class="console proven" aria-labelledby="prov-t">
+        <header class="console-bar">
+          <span class="ttl" id="prov-t">PROVEN NOW<span class="zh">已验证</span></span>
+          <span class="state">事实 · 当前</span>
+        </header>
+        <ul class="console-body">
+          <li><span class="mark">FEATURES</span><span><b>50 / 50</b> features 全部 <code>completed</code>；Phase 9 收尾，每条带 acceptance + verify_cmd。源：<code>feature_list.json</code></span></li>
+          <li><span class="mark">MVN TEST</span><span><b>96 pass / 0 failures / 1 skipped</b>（<code>RealLlmSmokeTest</code>）。源：<code>progress.md</code> / <code>session-handoff.md</code></span></li>
+          <li><span class="mark">AUDIT</span><span><b>validate-harness.mjs 100 / 100</b>。源：<code>progress.md</code></span></li>
+          <li><span class="mark">FINGERPRINT</span><span>配置 JSON 的 <code>updatedAt</code> 已在指纹中归一化；<code>RecordReplayLlmGatewayTest</code> 5 pass（含 updatedAt 回归）。</span></li>
+          <li><span class="mark">RECORD</span><span>短偏好解析真实调用 <b>5.37s</b>（587 prompt + 430 completion tokens）。</span></li>
+          <li><span class="mark">REPLAY</span><span>同请求回放 <b>3ms</b>，结果一致，未触达外部 LLM；最小章字数正确更新为 2500。</span></li>
+          <li><span class="mark">E2E BOOT</span><span><code>e2e.sh --mode replay --chapters 1</code>：服务就绪、项目创建成功；无 fixture 时构思阶段 fail-fast（预期行为）。</span></li>
+          <li><span class="mark">DIAGNOSE</span><span>合成 <code>events.jsonl</code> 经 <code>diagnose.sh</code> 输出的分类 / 统计 / 建议正确。</span></li>
+          <li><span class="mark">BASELINE</span><span>合成报告经 <code>compare-baseline.py --bless</code> → compare 往返 <b>PASS</b>。</span></li>
+        </ul>
+      </article>
+
+      <!-- DESIGNED NEXT -->
+      <article class="console designed" aria-labelledby="des-t">
+        <header class="console-bar">
+          <span class="ttl" id="des-t">DESIGNED NEXT<span class="zh">下一步</span></span>
+          <span class="state">尚未完成</span>
+        </header>
+        <ul class="console-body">
+          <li><span class="mark">3-CH RECORD</span><span>用户授权后启动 <code>e2e.sh --mode record --chapters 3</code>，<b>已成功录制构思阶段与第 1 章</b>（事件日志 <b>9 次 LLM 调用 / 0 错误</b>），因运行时间过长被手动中断。</span></li>
+          <li><span class="mark">REPORT</span><span>中断发生在写作循环中，<b>未生成 e2e-report.json</b>。不代表 3 章 E2E 已通过。</span></li>
+          <li><span class="mark">MULTI-CH REPLAY</span><span>多章零成本 replay 依赖完整的 3 章 fixture 集，<b>尚未验证</b>。</span></li>
+          <li><span class="mark">GOLDEN</span><span><b>baselines/golden.json 不存在</b>。禁止基于合成数据 bless；必须先审阅真实多章 e2e-report.json。</span></li>
+          <li><span class="mark">BASELINE CMP</span><span>对真实多章报告的 <code>compare-baseline.py</code> 对比，<b>待 e2e-report.json 产出后才能运行</b>。</span></li>
+        </ul>
+
+        <!-- prominent amber boundary -->
+        <div class="boundary" role="note">
+          <span class="label">BOUNDARY · 边界声明</span>
+          <h3><span class="zh">尚未完成</span> · 多章闭环尚未走完</h3>
+          <p>
+            3 章 record 仅完成构思 + 第 1 章即中断，e2e-report.json 未生成，golden 基线未 bless。
+            本页所述“5.37s → 3ms”是<b>单次短调用</b>的 record/replay 证据，<b>不是</b>多章 E2E 通过的证据。
+          </p>
+          <p class="fine">任何“3 章 E2E / 多章 replay / e2e-report.json / golden 基线 已通过”的表述均不成立。</p>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ============================ COMMANDS ============================ -->
+  <section class="section" aria-labelledby="cmd-h">
+    <div class="section-head">
+      <span class="eyebrow">04 · Commands</span>
+      <h2 id="cmd-h">操作命令</h2>
+      <p class="lede">闭环每一段对应的可执行命令。init 与 mvn test 已全绿；record/baseline 命令需在可接受运行时间时执行。</p>
+    </div>
+
+    <div class="term">
+      <div class="term-bar"><span class="crumb">harness@control-room</span><span>~/WritingAgent</span></div>
+      <div class="term-body">
+        <span class="cmt">全量验证 — 编译 / 95+ 测试 / 模板 / 前端，fail-fast</span>
+        <span class="cmd">./init.sh</span>
+        <span class="cmt">仅编译</span>
+        <span class="cmd">mvn compile -q</span>
+        <span class="cmt">仅测试（96 pass / 0 fail / 1 skip）</span>
+        <span class="cmd">mvn test</span>
+        <span class="cmt">首次建基线 — 真实调用 LLM 录制 fixture（耗时长，需授权）</span>
+        <span class="cmd">./scripts/e2e.sh --mode record --chapters 3</span>
+        <span class="cmt">零成本回放 — 默认 replay 写 3 章，缺 fixture 即 fail-fast</span>
+        <span class="cmd">./scripts/e2e.sh</span>
+        <span class="cmt">诊断 — 聚合失败分类 / LLM 统计 / 最近章节</span>
+        <span class="cmd">./scripts/diagnose.sh data/e2e/events.jsonl</span>
+        <span class="cmt">基线对比 — e2e-report.json vs baselines/golden.json，退化即 FAIL</span>
+        <span class="cmd">python3 scripts/compare-baseline.py</span>
+        <span class="cmt">人工 bless — 仅在审阅真实 e2e-report.json 质量后执行</span>
+        <span class="cmd">python3 scripts/compare-baseline.py --bless</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ SOURCE LEDGER ============================ -->
+  <section class="section" aria-labelledby="src-h">
+    <div class="section-head">
+      <span class="eyebrow">05 · Source Ledger</span>
+      <h2 id="src-h">源账册</h2>
+      <p class="lede">本页所有陈述仅来自下列七个文件。无外部引用、无运行期采样、无推断质量。</p>
+    </div>
+    <ul class="ledger">
+      <li><span class="fn">AGENTS.md</span><span class="ds">harness 协议、闭环工作流、bugfix gate、DoD、失败回流与会话结束流程</span></li>
+      <li><span class="fn">progress.md</span><span class="ds">Phase 9 完成情况、验证证据表（5.37s / 3ms / 100-100）</span></li>
+      <li><span class="fn">session-handoff.md</span><span class="ds">当前目标、本会话完成项、blockers、3 章 record 中断记录</span></li>
+      <li><span class="fn">feature_list.json</span><span class="ds">50 features / Phase 9 状态 / 每条 acceptance + verify_cmd</span></li>
+      <li><span class="fn">scripts/e2e.sh</span><span class="ds">record / replay / live 三模式、e2e-report.json 产出与退出码</span></li>
+      <li><span class="fn">scripts/diagnose.sh</span><span class="ds">事件聚合、失败分类、LLM 统计、最近章节建议</span></li>
+      <li><span class="fn">scripts/compare-baseline.py</span><span class="ds">容差判定 PASS / FAIL、--bless 基线写入流程</span></li>
+    </ul>
+  </section>
+
+</main>
+
+<!-- ============================ FOOTER ============================ -->
+<footer class="foot" role="contentinfo">
+  <div class="wrap foot-inner">
+    <p>WRITINGAGENT HARNESS · 闭环控制室 — 静态文档产物</p>
+    <p>EVIDENCE BOUND TO 7 SOURCE FILES · PAGE GENERATED 2026-08-06（日期为本页生成时间，非源证据）</p>
+  </div>
+</footer>
+
+</body>
+</html>

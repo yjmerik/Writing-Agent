@@ -2,78 +2,57 @@
 
 ## Current State
 
-**Last Updated:** 2026-07-24
-**Phase 5:** 全部 16 features 已完成 ✅
-**Tests:** 86 pass, 0 failures, 1 skipped
-**Prompt Templates:** 14 个
-**Commits:** 60+
+**Last Updated:** 2026-08-05
+**Phase 9:** harness 自动化闭环设施完成 ✅
+**Features:** 50 total, 50 completed
+**Tests:** 96 pass, 0 failures, 1 skipped (`RealLlmSmokeTest`)
+**Harness validation:** 100/100
 
-## Phase 5 完成情况
+## Phase 9 完成情况
 
-### 5-A PlotAdvancementGuard (剧情推进守卫) ✅
-- p5-a1: 激活 ClimaxDiversityTracker 爽点轮换（修复死代码）
-- p5-a2: ChapterSynopsis +plotPurpose/tensionLevel/volumeArcPosition
-- p5-a3: PlotProgressionDetector 停滞检测（连续低张力/高张力疲劳）
-- p5-a4: 卷末plot评分回传下卷 + 7维度EvaluationRecord + Type.PLOT修复
+### 可重放 E2E
 
-### 5-B RelationshipDynamicsEngine (关系动态引擎) ✅
-- p5-b1: EntityEdge 时间作用域 (validFromChapter/validToChapter)
-- p5-b2: 关系边注入到 recallConsistencySection（带类型+时间）
-- p5-b3: ArcUpdater Agent 角色弧线动态更新（每10章）
-- p5-b4: RelationshipType 扩展7种 + 对称关系去重
+- `RecordReplayLlmGateway`：`record` 录制真实 LLM 响应；`replay` 按请求指纹回放；fixture 缺失 fail-fast
+- 指纹归一化配置 JSON 的 `updatedAt` 字段，避免新建项目的时间戳导致 replay miss
+- `ObservedLlmGateway`：记录每次 LLM 调用的任务类型、耗时、token 用量和错误分类
+- `scripts/e2e.sh`：独立 data/e2e 工作区启动服务、创建项目、构思、逐章写作、输出 `e2e-report.json`
 
-### 5-C ForeshadowingLifecycleManager (伏笔生命周期) ✅
-- p5-c1: 修复 Foreshadowing.resolve() 死代码 + 连续性检查自动回收
-- p5-c2: ForeshadowingExtractor 动态提取（每章）+ plantedAtChapter修复
-- p5-c3: ChekhovAudit 卷末未回收伏笔审计
-- p5-c4: 伏笔 token 优先级提升（不再最先丢弃）
+### 可诊断运行
 
-### 5-D GenreAdaptiveSystem (题材自适应) ✅
-- p5-d1: GenreProfile 枚举 + GenreDetector（9种题材推断）
-- p5-d2: 题材条件化 plotting.st（GenreRuleProvider 9种规则）
-- p5-d3: 题材条件化 chapter-writing.st（节奏规则）
-- p5-d4: PlotterAgent styleGuide修复 + 章节计数验证
+- `telemetry/EventLog` 写 `data/logs/events.jsonl`，事件：`LLM_CALL` / `LLM_ERROR` / `CHAPTER_WRITTEN` / `CHAPTER_FAILED`
+- `EventContext` 关联项目 ID 与章节号
+- `logback-spring.xml` 写 `data/logs/app.log`（14 天滚动）
+- `scripts/diagnose.sh` 聚合失败分类、LLM 统计和最近写作章节
 
-## 新增 Agents (Phase 5)
-- **PlotProgressionDetector**: 张力曲线停滞检测
-- **ArcUpdater**: 角色弧线每10章动态更新
-- **ForeshadowingExtractor**: 每章伏笔动态提取
-- **GenreDetector**: 题材自动推断
-- **GenreRuleProvider**: 9种题材规则提供者
+### 可度量优化
 
-## 新增 Services (Phase 5)
-- **ClimaxDiversityTracker**: 爽点轮换追踪（已激活）
-- **PlotProgressionDetector**: 剧情停滞检测
-- **GenreDetector**: 题材推断
-- **GenreRuleProvider**: 题材规则提供
+- `scripts/compare-baseline.py` 对比 `e2e-report.json` 和 golden 基线，指标退化时失败
+- `baselines/README.md` 规定首次 record 与人工 `--bless` 建立基线的流程
 
-## 新增 Prompt Templates (Phase 5)
-- **arc-update.st**: 角色弧线更新
-- **foreshadowing-extract.st**: 伏笔动态提取
+### 可持续开发
 
-## 关键 BUG 修复
-1. ClimaxDiversityTracker 死代码→已激活
-2. Foreshadowing.resolve() 从不调用→已修复
-3. plantedAtChapter 全是1→实际章节号
-4. plot问题分类为WORLDBUILDING→改为PLOT
-5. EvaluationRecord只存5维度→存全部7维度
-6. PlotterAgent styleGuide传空串→接收完整上下文
+- `docs/specs/TEMPLATE.md` 规定新需求 spec 格式
+- `AGENTS.md` 增加需求拆分、失败回流、bugfix gate、会话结束和 backlog 耗尽协议
+- `feature_list.json` 50 条 feature 均含 `acceptance` 与 `verify_cmd`
+- `.github/workflows/ci.yml` 添加 Maven CI 门禁（仓库配置 remote 后生效）
+- `init.sh` 改为 fail-fast，验证编译、95 测试、20 prompt 模板及前端构建
 
-## Metrics
+## Verification Evidence
 
-| 指标 | 数值 |
-|------|------|
-| 测试数 | 86（0 failures, 1 skipped） |
-| Prompt 模板 | 14 个 |
-| 源文件 | ~80 main + ~45 test |
-| 新增 Agent | 5 个 |
-| 新增 Service | 4 个 |
-| 新增 Domain | 4 个（ClimaxType, GenreProfile, EntityEdge时间字段, ChapterSynopsis新字段） |
-| 新增 RelationshipType | 7 种 |
+| Check | Command | Result |
+|---|---|---|
+| 新增单测 | `mvn test -Dtest=EventLogTest,RecordReplayLlmGatewayTest,LlmGatewayWiringTest` | 10 pass |
+| 全量验证 | `./init.sh` | 95 pass, 0 failures; frontend build pass |
+| Harness 审计 | `validate-harness.mjs --target .` | 100/100 |
+| E2E bootstrap | `./scripts/e2e.sh --mode replay --chapters 1` | 服务就绪、项目创建；fixture 缺失时 fail-fast（预期） |
+| 诊断脚本 | `./scripts/diagnose.sh /tmp/.../events.jsonl` | 合成事件的分类/统计/建议正确 |
+| 基线脚本 | `compare-baseline.py --bless` → compare | 合成报告往返 PASS |
+| 短真实调用 | `POST .../preferences/chat`（record） | 5.37s；587 prompt + 430 completion tokens；偏好正确更新为 2500 字 |
+| 短回放调用 | 同请求（replay） | 3ms；结果一致，未触达外部 LLM |
 
 ## Next Steps
 
-1. E2E 全量验证：启动服务器，写24章100K字，验证所有新特性
-2. 多题材测试：用不同 tags（悬疑/言情/历史）验证 GenreDetector
-3. 对话密度验证：验证 40% 对话密度约束是否生效
-4. 关系动态验证：验证 ALLY→ENEMY 关系转变是否正确追踪
+1. 在可接受更长运行时间时执行 `./scripts/e2e.sh --mode record --chapters 3`，完整录制并审阅多章产出。
+2. 确认 `e2e-report.json` 的质量后运行 `python3 scripts/compare-baseline.py --bless`。
+3. 运行 `./scripts/e2e.sh` 验证零成本多章 replay，再运行 `python3 scripts/compare-baseline.py`。
+4. 后续新需求必须从 `docs/specs/TEMPLATE.md` 起步；E2E 的失败分类按 AGENTS.md 回流为 bug feature。

@@ -2,6 +2,7 @@ package com.writing.novel.spi;
 
 import com.writing.novel.domain.Chapter;
 import com.writing.novel.domain.Character;
+import com.writing.novel.domain.ChapterReview;
 import com.writing.novel.domain.Checkpoint;
 import com.writing.novel.domain.ContinuityIssue;
 import com.writing.novel.domain.Entity;
@@ -94,6 +95,11 @@ public interface NovelRepository {
     // --- EvaluationRecord ---
     void saveEvaluationRecord(EvaluationRecord record);
     Optional<EvaluationRecord> findLatestEvaluation(String projectId);
+
+    // --- p11-I1: ChapterReview（章节评价持久化） ---
+    void saveChapterReview(ChapterReview review);
+    Optional<ChapterReview> findChapterReview(String projectId, int chapterIndex);
+    List<ChapterReview> findChapterReviewsByProject(String projectId);
 
     // --- WritingPreferences ---
     void saveWritingPreferences(WritingPreferences prefs);

@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+# 端到端测试：启动服务 → 建项目 → 构思 → 写 N 章 → 产出 e2e-report.json。
+# 用法: ./scripts/e2e.sh [--mode replay|record|live] [--chapters N] [--port P] [--evaluate]
+#   replay: 用 data/fixtures/llm 回放（确定性、零成本，缺 fixture 则失败）
+#   record: 真实调用 LLM 并录制 fixture（首次建基线时用）
+#   live:   真实调用，不录制
+set -e
+cd "$(dirname "$0")/.."
+
+MODE="replay"
+CHAPTERS=3
+PORT=8090
+EVALUATE=false
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --mode) MODE="$2"; shift 2 ;;
+    --chapters) CHAPTERS="$2"; shift 2 ;;
+    --port) PORT="$2"; shift 2 ;;
+    --evaluate) EVALUATE=true; shift ;;
+    *) echo "未知参数: $1"; exit 1 ;;
+  esac
+done
+
+E2E_DIR="data/e2e"
+BASE="http://localhost:$PORT"
+REPLAY_MODE="off"
+case "$MODE" in
+  replay) REPLAY_MODE="replay" ;;
+  record) REPLAY_MODE="record" ;;
+  live)   REPLAY_MODE="off" ;;
+  *) echo "非法 mode: $MODE"; exit 1 ;;
+esac
+
+echo "=== E2E: mode=$MODE chapters=$CHAPTERS port=$PORT ==="
+rm -rf "$E2E_DIR"
+mkdir -p "$E2E_DIR"
+
+mvn -q spring-boot:run \
+  -Dspring-boot.run.jvmArguments="-Dnovel.events.file=$E2E_DIR/events.jsonl" \
+  -Dspring-boot.run.arguments="--server.port=$PORT --llm.replay.mode=$REPLAY_MODE --persistence.sqlite.db-path=$E2E_DIR/novel.db --persistence.vector-store.index-path=$E2E_DIR/vectors.idx" \
+  > "$E2E_DIR/server.log" 2>&1 &
+SERVER_PID=$!
+trap 'kill $SERVER_PID 2>/dev/null || true; wait $SERVER_PID 2>/dev/null || true' EXIT
+
+echo "▶ 等待服务就绪..."
+for i in $(seq 1 90); do
+  if curl --noproxy '*' -sf "$BASE/api/projects" > /dev/null 2>&1; then break; fi
+  if ! kill -0 $SERVER_PID 2>/dev/null; then
+    echo "❌ 服务启动失败，见 $E2E_DIR/server.log"; tail -20 "$E2E_DIR/server.log"; exit 1
+  fi
+  sleep 1
+done
+curl --noproxy '*' -sf "$BASE/api/projects" > /dev/null || { echo "❌ 服务 90s 未就绪"; exit 1; }
+echo "✅ 服务已就绪"
+
+echo "▶ 创建项目..."
+PROJECT_ID=$(curl --noproxy '*' -sf -X POST "$BASE/api/projects" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"E2E基准小说","concept":"一个雨夜的旧书店里，落魄账房学徒捡到一本会自己续写的账册，凡记入其中的欠债都会以离奇方式清偿","tags":"悬疑,古代","mode":"SOLO","preset":"mystery"}' \
+  | python3 -c "import json,sys; print(json.load(sys.stdin)['id'])")
+echo "✅ 项目: $PROJECT_ID"
+
+echo "▶ 构思阶段（世界观/人物/大纲）..."
+curl --noproxy '*' -sf -X POST "$BASE/api/projects/$PROJECT_ID/run" > /dev/null
+STATE=$(curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/status" | python3 -c "import json,sys; print(json.load(sys.stdin)['state'])")
+if [ "$STATE" = "PLANNING" ]; then
+  curl --noproxy '*' -sf -X POST "$BASE/api/projects/$PROJECT_ID/run" > /dev/null
+  STATE=$(curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/status" | python3 -c "import json,sys; print(json.load(sys.stdin)['state'])")
+fi
+echo "✅ 构思完成，状态: $STATE"
+
+echo "▶ 写作 $CHAPTERS 章..."
+WRITE_RESULT=$(curl --noproxy '*' -sf -X POST "$BASE/api/projects/$PROJECT_ID/write-all?maxChapters=$CHAPTERS")
+echo "$WRITE_RESULT"
+
+EVAL_JSON="null"
+if [ "$EVALUATE" = "true" ]; then
+  echo "▶ 质量评估..."
+  EVAL_JSON=$(curl --noproxy '*' -sf -X POST "$BASE/api/projects/$PROJECT_ID/evaluate" || echo "null")
+fi
+
+echo "▶ 生成报告..."
+CHAPTERS_JSON=$(curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/chapters")
+STATUS_JSON=$(curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/status")
+
+python3 - "$E2E_DIR" "$MODE" <<PYEOF
+import json, sys, datetime
+
+e2e_dir, mode = sys.argv[1], sys.argv[2]
+chapters = json.loads('''$CHAPTERS_JSON''')
+status = json.loads('''$STATUS_JSON''')
+write_result = json.loads('''$WRITE_RESULT''')
+evaluation = json.loads('''$EVAL_JSON''')
+
+llm_errors, chapter_failures, llm_calls = [], [], []
+try:
+    with open(f"{e2e_dir}/events.jsonl", encoding="utf-8") as f:
+        for line in f:
+            try:
+                e = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if e["event"] == "LLM_ERROR": llm_errors.append(e)
+            elif e["event"] == "CHAPTER_FAILED": chapter_failures.append(e)
+            elif e["event"] == "LLM_CALL": llm_calls.append(e)
+except FileNotFoundError:
+    pass
+
+word_counts = [c.get("wordCount", 0) for c in chapters]
+report = {
+    "generatedAt": datetime.datetime.now().isoformat(),
+    "mode": mode,
+    "projectId": status["projectId"],
+    "finalState": status["state"],
+    "chaptersWritten": write_result.get("chaptersWritten", 0),
+    "totalChapters": len(chapters),
+    "totalWords": status.get("totalWords", 0),
+    "wordCount": {
+        "min": min(word_counts) if word_counts else 0,
+        "max": max(word_counts) if word_counts else 0,
+        "avg": sum(word_counts) // len(word_counts) if word_counts else 0,
+    },
+    "llmCalls": len(llm_calls),
+    "llmErrors": len(llm_errors),
+    "chapterFailures": len(chapter_failures),
+    "evaluation": evaluation,
+}
+with open("e2e-report.json", "w", encoding="utf-8") as f:
+    json.dump(report, f, ensure_ascii=False, indent=2)
+print(json.dumps(report, ensure_ascii=False, indent=2))
+
+ok = report["totalChapters"] > 0 and report["chapterFailures"] == 0 and report["llmErrors"] == 0
+sys.exit(0 if ok else 1)
+PYEOF
+E2E_EXIT=$?
+
+if [ $E2E_EXIT -eq 0 ]; then
+  echo "✅ E2E 通过 — 报告: e2e-report.json"
+  echo "   下一步: python3 scripts/compare-baseline.py 对比基线"
+else
+  echo "❌ E2E 失败 — 运行 ./scripts/diagnose.sh $E2E_DIR/events.jsonl 查看诊断"
+fi
+exit $E2E_EXIT

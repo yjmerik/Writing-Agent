@@ -71,9 +71,10 @@ public class ReaderReviewAgent {
                 }
             }
 
-            return new ReviewReport(chapterIndex, overall, summary, issues, improvement);
+            return new ReviewReport(chapterIndex, overall, engagement, coherence,
+                    character, hook, summary, issues, improvement);
         } catch (Exception e) {
-            return new ReviewReport(chapterIndex, 5, "检验解析失败", List.of(), "");
+            return new ReviewReport(chapterIndex, 5, 5, 5, 5, 5, "检验解析失败", List.of(), "");
         }
     }
 

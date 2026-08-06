@@ -11,10 +11,13 @@ import com.writing.novel.service.GenreDetector;
 import com.writing.novel.service.GenreRuleProvider;
 import com.writing.novel.service.PlotProgressionDetector;
 import com.writing.novel.spi.NovelRepository;
+import com.writing.novel.telemetry.EventContext;
+import com.writing.novel.telemetry.EventLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 小说编排器——系统大脑。驱动状态机，调度 7 个 Agent。
@@ -118,6 +121,15 @@ public class NovelOrchestrator {
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
     public void runConceiving(String projectId) {
+        EventContext.setProjectId(projectId);
+        try {
+            doConceiving(projectId);
+        } finally {
+            EventContext.clear();
+        }
+    }
+
+    private void doConceiving(String projectId) {
         Project p = loadProject(projectId);
         if (p.getState() != NovelState.CONCEIVING && p.getState() != NovelState.PAUSED_AT_CHECKPOINT) {
             throw new IllegalStateException("项目不在构思阶段: " + p.getState());
@@ -301,6 +313,15 @@ public class NovelOrchestrator {
 
     /** 写一章 */
     public Chapter runWritingOneChapter(String projectId) {
+        EventContext.setProjectId(projectId);
+        try {
+            return doWriteOneChapter(projectId);
+        } finally {
+            EventContext.clear();
+        }
+    }
+
+    private Chapter doWriteOneChapter(String projectId) {
         Project p = loadProject(projectId);
         Outline outline = repository.findOutlineByProject(projectId).orElseThrow(
                 () -> new IllegalStateException("无大纲，无法写作"));
@@ -349,8 +370,14 @@ public class NovelOrchestrator {
             }
         }
 
+        EventContext.setChapter(chapterIndex);
+        long writeStart = System.currentTimeMillis();
         Chapter chapter = chapterWriter.write(projectId, chapterIndex,
                 synopsis.getTitle(), synopsis.getSynopsis(), enhancedNotes);
+        EventLog.emit("CHAPTER_WRITTEN", Map.of(
+                "chapterIndex", chapterIndex,
+                "wordCount", chapter.getWordCount(),
+                "durationMs", System.currentTimeMillis() - writeStart));
 
         // 内容校验：不达标不推进索引（chapterWriter.write 已保证 ≥500 字或抛异常）
         p = loadProject(projectId); // 重新加载最新状态
@@ -378,6 +405,7 @@ public class NovelOrchestrator {
 
         // p8-3: 读者检验 Agentic Loop——每章写后检验，低分自动重写（最多1次）
         // p9-1: 重写长度保护——拒绝比原版短70%的重写
+        // p11-I1: 评价结果持久化
         if (readerReviewAgent != null) {
             try {
                 var review = readerReviewAgent.review(chapterIndex, chapter.getContent());
@@ -398,9 +426,17 @@ public class NovelOrchestrator {
                         log.info("章节重写完成(章{}): {}字→{}字", chapterIndex, originalLength, newContent.length());
                         var reReview = readerReviewAgent.review(chapterIndex, chapter.getContent());
                         log.info("重写后检验(章{}): {}/10", chapterIndex, reReview.getScore());
+                        // p11-I1: 持久化重写后的最终评价
+                        review = reReview;
                     } else if (newContent != null) {
                         log.warn("重写内容过短({}字 < 原版{}字的70%)，保留原版", newContent.length(), originalLength);
                     }
+                }
+                // p11-I1: 持久化章节评价报告
+                try {
+                    repository.saveChapterReview(ChapterReview.from(projectId, review));
+                } catch (Exception pe) {
+                    log.warn("章节评价持久化失败(章{}): {}", chapterIndex, pe.getMessage());
                 }
             } catch (Exception e) {
                 log.warn("读者检验失败(章{}): {}", chapterIndex, e.getMessage());
@@ -981,6 +1017,12 @@ public class NovelOrchestrator {
                 }
             } catch (Exception e) {
                 consecutiveFailures++;
+                EventLog.emit("CHAPTER_FAILED", Map.of(
+                        "projectId", projectId,
+                        "chapterIndex", p.getCurrentChapterIndex() + 1,
+                        "errorClass", e.getClass().getSimpleName(),
+                        "message", EventLog.truncate(e.getMessage(), 200),
+                        "consecutiveFailures", consecutiveFailures));
                 // 连续 3 次失败才中止循环（不跳章，保留剧情连续性）
                 if (consecutiveFailures >= 3) {
                     break;

@@ -1,0 +1,354 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]: HARNESS STATUS · DOCUMENTED EVIDENCE
+      - heading "WritingAgent Harness" [level=1] [ref=e6]
+      - generic [ref=e7]: 闭环控制室 / Closed-Loop Control Room
+      - paragraph [ref=e8]: 一个把“需求 → feature → 实现 → E2E → 诊断 → 修复 → 基线优化”串成单条闭环的 harness。 本页只陈述源文件可佐证的状态：已验证的运行证据与有意留待下一步完成的多章基线工作分开呈现。
+      - generic [ref=e9]:
+        - generic [ref=e10]: STACK · Spring Boot 3 / Java 17 · SQLite · 嵌入式向量库
+        - generic [ref=e11]: PHASE · 9 — harness 自动化闭环
+        - generic [ref=e12]: PAGE GENERATED · 2026-08-06（非源证据日期，源文件各自标注）
+  - main [ref=e13]:
+    - region "关键证据" [ref=e14]:
+      - article [ref=e15]:
+        - generic [ref=e16]: Features · 50/50
+        - generic [ref=e17]: 50/50
+        - generic [ref=e18]: feature_list.json · Phase 9 全部 completed
+      - article [ref=e19]:
+        - generic [ref=e20]: Maven · 96 pass / 1 skipped
+        - generic [ref=e21]: 96pass · 0 fail · 1 skip
+        - generic [ref=e22]: mvn test · skipped = RealLlmSmokeTest
+      - article [ref=e23]:
+        - generic [ref=e24]: Audit · 100/100
+        - generic [ref=e25]: 100/100
+        - generic [ref=e26]: validate-harness.mjs --target .
+      - article [ref=e27]:
+        - generic [ref=e28]: Record → Replay · 5.37s → 3ms
+        - generic [ref=e29]: 5.37s→3ms
+        - generic [ref=e30]: 同请求一致 · 未触达外部 LLM
+    - region [ref=e31]:
+      - generic [ref=e32]:
+        - text: 01 · Closed Loop
+        - heading "闭环拓扑：八段连续门禁" [level=2] [ref=e33]
+        - paragraph [ref=e34]: 从需求到基线，每一段都有明确入口、机制与出口。任意一段失败都会回流到诊断门与 TDD 门，禁止跳章。
+      - generic [ref=e36]:
+        - img "WritingAgent harness 闭环控制图 八个节点按顺时针组成闭环：Spec、Feature Backlog、TDD / Bugfix Gate、Init / CI、Record / Replay E2E、Structured Diagnosis、Bug Feedback、Quality Baseline。失败从诊断门经 Bug Feedback 回流到 TDD 门。" [ref=e37]:
+          - generic [ref=e40]: HARNESS
+          - generic [ref=e41]: CLOSED LOOP
+          - generic [ref=e42]: 单一闭环 · 无跳章
+          - generic [ref=e52]: BUG FEEDBACK · 回流
+          - generic [ref=e53]:
+            - generic [ref=e55]: "01"
+            - generic [ref=e56]: Spec
+          - generic [ref=e57]:
+            - generic [ref=e59]: "02"
+            - generic [ref=e60]: Feature Backlog
+          - generic [ref=e61]:
+            - generic [ref=e63]: "03"
+            - generic [ref=e64]: TDD / Bugfix Gate
+          - generic [ref=e65]:
+            - generic [ref=e67]: "04"
+            - generic [ref=e68]: Init / CI
+          - generic [ref=e69]:
+            - generic [ref=e71]: "05"
+            - generic [ref=e72]: Record / Replay E2E
+          - generic [ref=e73]:
+            - generic [ref=e75]: "06"
+            - generic [ref=e76]: Structured Diagnosis
+          - generic [ref=e77]:
+            - generic [ref=e79]: "07"
+            - generic [ref=e80]: Bug Feedback
+          - generic [ref=e81]:
+            - generic [ref=e83]: "08"
+            - generic [ref=e84]: Quality Baseline
+        - list "图例" [ref=e85]:
+          - listitem [ref=e86]:
+            - generic [ref=e88]: 入口节点（高亮边框）：闭环的关键门禁，每一道都设有可机器验证的出口。
+          - listitem [ref=e89]:
+            - generic [ref=e91]: 正向流（青色实线弧）：Spec → Backlog → TDD → CI → E2E → Diagnosis → Feedback → Baseline，顺时针推进。
+          - listitem [ref=e92]:
+            - generic [ref=e94]: 失败回流（琥珀虚线）：诊断门的失败分类经 Bug Feedback 登记为 bug feature，回到 TDD 门，先写复现测试再修复。
+    - region [ref=e95]:
+      - generic [ref=e96]:
+        - text: 02 · Gates
+        - heading "门禁卡：入口 · 机制 · 出口" [level=2] [ref=e97]
+        - paragraph [ref=e98]: 每张卡对应闭环图上的一个节点。出口条件都可被一条命令或一个文件状态验证。
+      - generic [ref=e99]:
+        - article [ref=e100]:
+          - generic [ref=e101]:
+            - generic [ref=e102]: "01"
+            - heading "Spec" [level=3] [ref=e103]
+          - generic [ref=e104]:
+            - term [ref=e105]: 入口
+            - definition [ref=e106]: 新需求，或来自诊断门的失败回流
+            - term [ref=e107]: 机制
+            - definition [ref=e108]:
+              - text: 复制
+              - code [ref=e109]: docs/specs/TEMPLATE.md
+              - text: 为日期前缀 spec，填目标 / 非目标 / 验收标准 / 影响面
+            - term [ref=e110]: 出口
+            - definition [ref=e111]: spec 写完且可拆为 1–3 文件改动的 feature
+        - article [ref=e112]:
+          - generic [ref=e113]:
+            - generic [ref=e114]: "02"
+            - heading "Feature Backlog" [level=3] [ref=e115]
+          - generic [ref=e116]:
+            - term [ref=e117]: 入口
+            - definition [ref=e118]: 已批准的 spec
+            - term [ref=e119]: 机制
+            - definition [ref=e120]:
+              - text: 追加
+              - code [ref=e121]: feature_list.json
+              - text: ，每条必带
+              - code [ref=e122]: acceptance
+              - text: 与
+              - code [ref=e123]: verify_cmd
+            - term [ref=e124]: 出口
+            - definition [ref=e125]: feature 可独立验证、已标注依赖
+        - article [ref=e126]:
+          - generic [ref=e127]:
+            - generic [ref=e128]: "03"
+            - heading "TDD / Bugfix Gate" [level=3] [ref=e129]
+          - generic [ref=e130]:
+            - term [ref=e131]: 入口
+            - definition [ref=e132]: 选定一个 feature，或来自 07 门的 bug feature
+            - term [ref=e133]: 机制
+            - definition [ref=e134]: feature 实现鼓励 TDD（先写 / 更新测试再改实现）；修 bug 是硬规则——必须先写 failing test 复现，再改实现，不允许直接改
+            - term [ref=e135]: 出口
+            - definition [ref=e136]:
+              - text: 该 feature / bug 的
+              - code [ref=e137]: mvn test
+              - text: 由红转绿
+        - article [ref=e138]:
+          - generic [ref=e139]:
+            - generic [ref=e140]: "04"
+            - heading "Init / CI" [level=3] [ref=e141]
+          - generic [ref=e142]:
+            - term [ref=e143]: 入口
+            - definition [ref=e144]: 实现完成
+            - term [ref=e145]: 机制
+            - definition [ref=e146]:
+              - code [ref=e147]: ./init.sh
+              - text: fail-fast 验证编译 / 测试 / 20 模板 / 前端；
+              - code [ref=e148]: .github/workflows/ci.yml
+              - text: Maven 门禁
+            - term [ref=e149]: 出口
+            - definition [ref=e150]: 95+ 测试 · 0 failures · 模板变量无错配
+        - article [ref=e151]:
+          - generic [ref=e152]:
+            - generic [ref=e153]: "05"
+            - heading "Record / Replay E2E" [level=3] [ref=e154]
+          - generic [ref=e155]:
+            - term [ref=e156]: 入口
+            - definition [ref=e157]: 绿色构建
+            - term [ref=e158]: 机制
+            - definition [ref=e159]:
+              - code [ref=e160]: e2e.sh
+              - text: 三模式；指纹按 taskType+prompt+history 的 SHA-256 命名，updatedAt 归一化；缺 fixture fail-fast
+            - term [ref=e161]: 出口
+            - definition [ref=e162]:
+              - text: 产出
+              - code [ref=e163]: e2e-report.json
+              - text: · 0 LLM 错误 · 0 章节失败
+        - article [ref=e164]:
+          - generic [ref=e165]:
+            - generic [ref=e166]: "06"
+            - heading "Structured Diagnosis" [level=3] [ref=e167]
+          - generic [ref=e168]:
+            - term [ref=e169]: 入口
+            - definition [ref=e170]:
+              - code [ref=e171]: events.jsonl
+              - text: （LLM_CALL / LLM_ERROR / CHAPTER_*）
+            - term [ref=e172]: 机制
+            - definition [ref=e173]:
+              - code [ref=e174]: diagnose.sh
+              - text: 聚合失败分类、LLM 统计、最近章节
+            - term [ref=e175]: 出口
+            - definition [ref=e176]: 给出最高频失败与修复起点建议
+        - article [ref=e177]:
+          - generic [ref=e178]:
+            - generic [ref=e179]: "07"
+            - heading "Bug Feedback" [level=3] [ref=e180]
+          - generic [ref=e181]:
+            - term [ref=e182]: 入口
+            - definition [ref=e183]: 诊断门的失败分类
+            - term [ref=e184]: 机制
+            - definition [ref=e185]:
+              - text: 按需求拆分协议登记
+              - code [ref=e186]: type:bug
+              - text: feature，evidence 引用诊断输出
+            - term [ref=e187]: 出口
+            - definition [ref=e188]: failing test 复现该 bug → 回到 03 门
+        - article [ref=e189]:
+          - generic [ref=e190]:
+            - generic [ref=e191]: "08"
+            - heading "Quality Baseline" [level=3] [ref=e192]
+          - generic [ref=e193]:
+            - term [ref=e194]: 入口
+            - definition [ref=e195]:
+              - code [ref=e196]: e2e-report.json
+            - term [ref=e197]: 机制
+            - definition [ref=e198]:
+              - code [ref=e199]: compare-baseline.py
+              - text: 对比
+              - code [ref=e200]: baselines/golden.json
+              - text: ，容差判定 PASS / FAIL
+            - term [ref=e201]: 出口
+            - definition [ref=e202]:
+              - text: PASS（无退化），或人工审阅后
+              - code [ref=e203]: "--bless"
+              - text: 更新基线
+    - region [ref=e204]:
+      - generic [ref=e205]:
+        - text: 03 · Evidence
+        - heading "证据台：已验证 vs 下一步" [level=2] [ref=e206]
+        - paragraph [ref=e207]: 两侧严格区分。绿色 = 源文件可佐证的当前事实；琥珀 = 设计完成但运行尚未走完的工作。
+      - generic [ref=e208]:
+        - article "PROVEN NOW已验证" [ref=e209]:
+          - generic [ref=e210]:
+            - generic [ref=e211]: PROVEN NOW已验证
+            - generic [ref=e212]: 事实 · 当前
+          - list [ref=e213]:
+            - listitem [ref=e214]:
+              - generic [ref=e215]: FEATURES
+              - generic [ref=e216]:
+                - text: 50 / 50 features 全部
+                - code [ref=e217]: completed
+                - text: ；Phase 9 收尾，每条带 acceptance + verify_cmd。源：
+                - code [ref=e218]: feature_list.json
+            - listitem [ref=e219]:
+              - generic [ref=e220]: MVN TEST
+              - generic [ref=e221]:
+                - text: 96 pass / 0 failures / 1 skipped（
+                - code [ref=e222]: RealLlmSmokeTest
+                - text: ）。源：
+                - code [ref=e223]: progress.md
+                - text: /
+                - code [ref=e224]: session-handoff.md
+            - listitem [ref=e225]:
+              - generic [ref=e226]: AUDIT
+              - generic [ref=e227]:
+                - text: validate-harness.mjs 100 / 100。源：
+                - code [ref=e228]: progress.md
+            - listitem [ref=e229]:
+              - generic [ref=e230]: FINGERPRINT
+              - generic [ref=e231]:
+                - text: 配置 JSON 的
+                - code [ref=e232]: updatedAt
+                - text: 已在指纹中归一化；
+                - code [ref=e233]: RecordReplayLlmGatewayTest
+                - text: 5 pass（含 updatedAt 回归）。
+            - listitem [ref=e234]:
+              - generic [ref=e235]: RECORD
+              - generic [ref=e236]: 短偏好解析真实调用 5.37s（587 prompt + 430 completion tokens）。
+            - listitem [ref=e237]:
+              - generic [ref=e238]: REPLAY
+              - generic [ref=e239]: 同请求回放 3ms，结果一致，未触达外部 LLM；最小章字数正确更新为 2500。
+            - listitem [ref=e240]:
+              - generic [ref=e241]: E2E BOOT
+              - generic [ref=e242]:
+                - code [ref=e243]: e2e.sh --mode replay --chapters 1
+                - text: ：服务就绪、项目创建成功；无 fixture 时构思阶段 fail-fast（预期行为）。
+            - listitem [ref=e244]:
+              - generic [ref=e245]: DIAGNOSE
+              - generic [ref=e246]:
+                - text: 合成
+                - code [ref=e247]: events.jsonl
+                - text: 经
+                - code [ref=e248]: diagnose.sh
+                - text: 输出的分类 / 统计 / 建议正确。
+            - listitem [ref=e249]:
+              - generic [ref=e250]: BASELINE
+              - generic [ref=e251]:
+                - text: 合成报告经
+                - code [ref=e252]: compare-baseline.py --bless
+                - text: → compare 往返 PASS。
+        - article "DESIGNED NEXT下一步" [ref=e253]:
+          - generic [ref=e254]:
+            - generic [ref=e255]: DESIGNED NEXT下一步
+            - generic [ref=e256]: 尚未完成
+          - list [ref=e257]:
+            - listitem [ref=e258]:
+              - generic [ref=e259]: 3-CH RECORD
+              - generic [ref=e260]:
+                - text: 用户授权后启动
+                - code [ref=e261]: e2e.sh --mode record --chapters 3
+                - text: ，已成功录制构思阶段与第 1 章（事件日志 9 次 LLM 调用 / 0 错误），因运行时间过长被手动中断。
+            - listitem [ref=e262]:
+              - generic [ref=e263]: REPORT
+              - generic [ref=e264]: 中断发生在写作循环中，未生成 e2e-report.json。不代表 3 章 E2E 已通过。
+            - listitem [ref=e265]:
+              - generic [ref=e266]: MULTI-CH REPLAY
+              - generic [ref=e267]: 多章零成本 replay 依赖完整的 3 章 fixture 集，尚未验证。
+            - listitem [ref=e268]:
+              - generic [ref=e269]: GOLDEN
+              - generic [ref=e270]: baselines/golden.json 不存在。禁止基于合成数据 bless；必须先审阅真实多章 e2e-report.json。
+            - listitem [ref=e271]:
+              - generic [ref=e272]: BASELINE CMP
+              - generic [ref=e273]:
+                - text: 对真实多章报告的
+                - code [ref=e274]: compare-baseline.py
+                - text: 对比，待 e2e-report.json 产出后才能运行。
+          - note [ref=e275]:
+            - text: BOUNDARY · 边界声明
+            - heading "尚未完成 · 多章闭环尚未走完" [level=3] [ref=e276]
+            - paragraph [ref=e277]: 3 章 record 仅完成构思 + 第 1 章即中断，e2e-report.json 未生成，golden 基线未 bless。 本页所述“5.37s → 3ms”是单次短调用的 record/replay 证据，不是多章 E2E 通过的证据。
+            - paragraph [ref=e278]: 任何“3 章 E2E / 多章 replay / e2e-report.json / golden 基线 已通过”的表述均不成立。
+    - region [ref=e279]:
+      - generic [ref=e280]:
+        - text: 04 · Commands
+        - heading "操作命令" [level=2] [ref=e281]
+        - paragraph [ref=e282]: 闭环每一段对应的可执行命令。init 与 mvn test 已全绿；record/baseline 命令需在可接受运行时间时执行。
+      - generic [ref=e283]:
+        - generic [ref=e284]:
+          - generic [ref=e285]: harness@control-room
+          - generic [ref=e286]: ~/WritingAgent
+        - generic [ref=e287]:
+          - generic [ref=e288]: "# 全量验证 — 编译 / 95+ 测试 / 模板 / 前端，fail-fast"
+          - generic [ref=e289]: $ ./init.sh
+          - generic [ref=e290]: "# 仅编译"
+          - generic [ref=e291]: $ mvn compile -q
+          - generic [ref=e292]: "# 仅测试（96 pass / 0 fail / 1 skip）"
+          - generic [ref=e293]: $ mvn test
+          - generic [ref=e294]: "# 首次建基线 — 真实调用 LLM 录制 fixture（耗时长，需授权）"
+          - generic [ref=e295]: $ ./scripts/e2e.sh --mode record --chapters 3
+          - generic [ref=e296]: "# 零成本回放 — 默认 replay 写 3 章，缺 fixture 即 fail-fast"
+          - generic [ref=e297]: $ ./scripts/e2e.sh
+          - generic [ref=e298]: "# 诊断 — 聚合失败分类 / LLM 统计 / 最近章节"
+          - generic [ref=e299]: $ ./scripts/diagnose.sh data/e2e/events.jsonl
+          - generic [ref=e300]: "# 基线对比 — e2e-report.json vs baselines/golden.json，退化即 FAIL"
+          - generic [ref=e301]: $ python3 scripts/compare-baseline.py
+          - generic [ref=e302]: "# 人工 bless — 仅在审阅真实 e2e-report.json 质量后执行"
+          - generic [ref=e303]: $ python3 scripts/compare-baseline.py --bless
+    - region [ref=e304]:
+      - generic [ref=e305]:
+        - text: 05 · Source Ledger
+        - heading "源账册" [level=2] [ref=e306]
+        - paragraph [ref=e307]: 本页所有陈述仅来自下列七个文件。无外部引用、无运行期采样、无推断质量。
+      - list [ref=e308]:
+        - listitem [ref=e309]:
+          - generic [ref=e310]: AGENTS.md
+          - generic [ref=e311]: harness 协议、闭环工作流、bugfix gate、DoD、失败回流与会话结束流程
+        - listitem [ref=e312]:
+          - generic [ref=e313]: progress.md
+          - generic [ref=e314]: Phase 9 完成情况、验证证据表（5.37s / 3ms / 100-100）
+        - listitem [ref=e315]:
+          - generic [ref=e316]: session-handoff.md
+          - generic [ref=e317]: 当前目标、本会话完成项、blockers、3 章 record 中断记录
+        - listitem [ref=e318]:
+          - generic [ref=e319]: feature_list.json
+          - generic [ref=e320]: 50 features / Phase 9 状态 / 每条 acceptance + verify_cmd
+        - listitem [ref=e321]:
+          - generic [ref=e322]: scripts/e2e.sh
+          - generic [ref=e323]: record / replay / live 三模式、e2e-report.json 产出与退出码
+        - listitem [ref=e324]:
+          - generic [ref=e325]: scripts/diagnose.sh
+          - generic [ref=e326]: 事件聚合、失败分类、LLM 统计、最近章节建议
+        - listitem [ref=e327]:
+          - generic [ref=e328]: scripts/compare-baseline.py
+          - generic [ref=e329]: 容差判定 PASS / FAIL、--bless 基线写入流程
+  - contentinfo [ref=e330]:
+    - generic [ref=e331]:
+      - paragraph [ref=e332]: WRITINGAGENT HARNESS · 闭环控制室 — 静态文档产物
+      - paragraph [ref=e333]: EVIDENCE BOUND TO 7 SOURCE FILES · PAGE GENERATED 2026-08-06（日期为本页生成时间，非源证据）

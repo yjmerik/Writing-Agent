@@ -16,6 +16,10 @@ persistence:
     model: embedding-3
 
 llm:
+  # 录制/回放：确定性 E2E 的基石。mode: "off" | "record" | "replay"（off 必须加引号，否则 YAML 解析为 false）
+  replay:
+    mode: "off"
+    dir: data/fixtures/llm
   default-model:
     base-url: http://127.0.0.1:8088/v1
     api-key: sk-bookllm-4b-wuxia-2026

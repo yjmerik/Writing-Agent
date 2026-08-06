@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WritingAgent — 长篇小说自动写作系统 · 架构总览</title>
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --ink: #22211d;
+    --muted: #6f6a5e;
+    --card: #ffffff;
+    --line: #e3ded2;
+    --accent: #8a4b2d;
+    --accent-2: #3c5a4c;
+    --accent-3: #4a5878;
+    --accent-4: #7d6032;
+    --code-bg: #f0ede4;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Source Han Serif SC", "Songti SC", Georgia, serif;
+    background: var(--bg); color: var(--ink);
+    line-height: 1.65; padding: 48px 24px 96px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  header { border-bottom: 3px solid var(--ink); padding-bottom: 24px; margin-bottom: 40px; }
+  header h1 { font-size: 2.2rem; letter-spacing: .02em; }
+  header .sub { color: var(--muted); margin-top: 8px; font-size: 1.02rem; }
+  .badges { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .badge {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: .78rem;
+    background: var(--ink); color: var(--bg); padding: 3px 10px; border-radius: 999px;
+  }
+  .badge.alt { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
+  h2 {
+    font-size: 1.35rem; margin: 48px 0 16px;
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  h2 .no { font-family: ui-monospace, monospace; color: var(--accent); font-size: 1rem; }
+  h3 { font-size: 1.02rem; margin-bottom: 8px; }
+  p.desc { color: var(--muted); margin-bottom: 16px; max-width: 72ch; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 20px 22px; margin-bottom: 14px;
+  }
+  code, .mono {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: .85em;
+    background: var(--code-bg); padding: 1px 6px; border-radius: 4px;
+  }
+  /* ---- 分层架构图 ---- */
+  .layers { display: flex; flex-direction: column; gap: 10px; }
+  .layer {
+    border-radius: var(--radius); padding: 16px 20px; border: 1px solid var(--line);
+    background: var(--card); display: grid; grid-template-columns: 150px 1fr; gap: 16px; align-items: start;
+  }
+  .layer .lname { font-weight: 700; font-size: .95rem; }
+  .layer .lname small { display: block; font-weight: 400; color: var(--muted); font-family: ui-monospace, monospace; font-size: .72rem; margin-top: 2px; }
+  .layer .items { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-family: ui-monospace, monospace; font-size: .74rem; padding: 3px 9px;
+    border-radius: 5px; background: var(--code-bg); border: 1px solid var(--line); white-space: nowrap;
+  }
+  .layer.l-web   { border-left: 5px solid var(--accent-3); }
+  .layer.l-orch  { border-left: 5px solid var(--accent); }
+  .layer.l-agent { border-left: 5px solid var(--accent-2); }
+  .layer.l-mem   { border-left: 5px solid var(--accent-4); }
+  .layer.l-llm   { border-left: 5px solid #9a3b4f; }
+  .layer.l-spi   { border-left: 5px solid #666; }
+  .layer.l-infra { border-left: 5px solid #333; background: #efece3; }
+  .arrow-note { text-align: center; color: var(--muted); font-size: .82rem; padding: 2px 0; }
+  /* ---- 状态机 ---- */
+  .fsm { display: flex; align-items: center; gap: 0; flex-wrap: wrap; margin: 10px 0 6px; }
+  .state {
+    border: 2px solid var(--ink); border-radius: 8px; padding: 8px 16px;
+    font-family: ui-monospace, monospace; font-size: .82rem; font-weight: 700; background: var(--card);
+  }
+  .state small { display: block; font-weight: 400; color: var(--muted); font-family: inherit; font-size: .7rem; }
+  .fsm .arr { padding: 0 10px; color: var(--accent); font-weight: 700; }
+  /* ---- 表格 ---- */
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th { text-align: left; border-bottom: 2px solid var(--ink); padding: 8px 10px; font-size: .82rem; letter-spacing: .04em; }
+  td { border-bottom: 1px solid var(--line); padding: 8px 10px; vertical-align: top; }
+  td code { white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 760px) {
+    .grid2 { grid-template-columns: 1fr; }
+    .layer { grid-template-columns: 1fr; }
+  }
+  /* ---- 三层记忆 ---- */
+  .mem3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 760px) { .mem3 { grid-template-columns: 1fr; } }
+  .mem3 .card h3 { color: var(--accent-4); }
+  ul.tight { padding-left: 20px; font-size: .9rem; }
+  ul.tight li { margin-bottom: 4px; }
+  footer { margin-top: 64px; color: var(--muted); font-size: .82rem; border-top: 1px solid var(--line); padding-top: 16px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 20px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; text-align: center; }
+  .kpi b { display: block; font-size: 1.6rem; color: var(--accent); }
+  .kpi span { font-size: .78rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>WritingAgent · 长篇小说自动写作系统</h1>
+  <div class="sub">多 Agent 图架构 · 三层记忆 · 状态机编排 · 多模型路由</div>
+  <div class="badges">
+    <span class="badge">Spring Boot 3</span>
+    <span class="badge">Java 17</span>
+    <span class="badge">React 18 + Ant Design</span>
+    <span class="badge alt">SQLite</span>
+    <span class="badge alt">嵌入式向量库</span>
+    <span class="badge alt">StringTemplate (.st) Prompt 外置</span>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi"><b>19</b><span>Agent（7 核心 + 12 辅助）</span></div>
+    <div class="kpi"><b>29</b><span>领域模型/枚举</span></div>
+    <div class="kpi"><b>20</b><span>外置 Prompt 模板</span></div>
+    <div class="kpi"><b>7</b><span>REST Controller</span></div>
+    <div class="kpi"><b>43</b><span>测试类</span></div>
+    <div class="kpi"><b>42</b><span>已完成 Feature（8 Phase）</span></div>
+  </div>
+</header>
+
+<!-- ================= 分层架构 ================= -->
+<h2><span class="no">01</span>分层架构总览</h2>
+<p class="desc">自上而下的依赖方向：Web → Orchestrator → Agent / Memory / Service → LLM 网关 与 SPI 接口 → 持久化实现。业务层只依赖 SPI 接口，Agent 之间不直接调用，全部经 NovelOrchestrator 调度。</p>
+
+<div class="layers">
+  <div class="layer l-web">
+    <div class="lname">Web 层<small>web/</small></div>
+    <div class="items">
+      <span class="chip">ProjectController</span>
+      <span class="chip">OrchestratorController</span>
+      <span class="chip">ContentController</span>
+      <span class="chip">CheckpointController</span>
+      <span class="chip">PreferencesController</span>
+      <span class="chip">PresetController</span>
+      <span class="chip">GlobalExceptionHandler</span>
+    </div>
+  </div>
+  <div class="arrow-note">▼ REST 请求进入，调用编排器与服务</div>
+  <div class="layer l-orch">
+    <div class="lname">编排层<small>orchestrator/</small></div>
+    <div class="items">
+      <span class="chip">NovelOrchestrator（状态机 + Agent 调度，~1200 行核心）</span>
+      <span class="chip">ProjectService</span>
+      <span class="chip">OrchestratorConfig</span>
+    </div>
+  </div>
+  <div class="arrow-note">▼ 按状态机阶段调度各 Agent，组装写作上下文</div>
+  <div class="layer l-agent">
+    <div class="lname">Agent 层<small>agent/</small></div>
+    <div class="items">
+      <span class="chip">WorldBuilder</span>
+      <span class="chip">CharacterDesigner</span>
+      <span class="chip">Plotter</span>
+      <span class="chip">ChapterWriter</span>
+      <span class="chip">ContinuityChecker</span>
+      <span class="chip">StyleGuardian</span>
+      <span class="chip">MemoryManager</span>
+      <span class="chip">EntityExtractor</span>
+      <span class="chip">Foreshadowing×3</span>
+      <span class="chip">QualityEvaluation</span>
+      <span class="chip">ReaderReview</span>
+      <span class="chip">SceneClassifier</span>
+      <span class="chip">ConsistencyGuard</span>
+      <span class="chip">ArcUpdater</span>
+      <span class="chip">NarrativeThreadExtractor</span>
+      <span class="chip">WritingPreferences</span>
+      <span class="chip">AgentHarness / ResponseParser</span>
+    </div>
+  </div>
+  <div class="layer l-mem">
+    <div class="lname">记忆 / 业务服务<small>memory/ · service/</small></div>
+    <div class="items">
+      <span class="chip">ContextAssembler</span>
+      <span class="chip">WritingContext</span>
+      <span class="chip">KnowledgeBaseService</span>
+      <span class="chip">SummaryService</span>
+      <span class="chip">VectorRetrievalService</span>
+      <span class="chip">TokenBudget</span>
+      <span class="chip">EntityGraphService</span>
+      <span class="chip">NarrativeThreadTracker</span>
+      <span class="chip">ArcScheduler</span>
+      <span class="chip">ConsistencyGate</span>
+      <span class="chip">ClicheDetector</span>
+      <span class="chip">DiversityTracker×2</span>
+      <span class="chip">GenreDetector / GenreRuleProvider</span>
+      <span class="chip">PlotProgressionDetector</span>
+      <span class="chip">PresetRegistry</span>
+    </div>
+  </div>
+  <div class="arrow-note">▼ Agent 经 LlmGateway 调用大模型；数据经 SPI 接口读写</div>
+  <div class="layer l-llm">
+    <div class="lname">LLM 层<small>llm/</small></div>
+    <div class="items">
+      <span class="chip">LlmGateway → DefaultLlmGateway（按 LlmTaskType 路由）</span>
+      <span class="chip">OpenAiCompatibleClient</span>
+      <span class="chip">PromptTemplateService（.st 渲染）</span>
+      <span class="chip">ContentFilterException</span>
+      <span class="chip">StreamHandler</span>
+    </div>
+  </div>
+  <div class="layer l-spi">
+    <div class="lname">SPI 接口<small>spi/</small></div>
+    <div class="items">
+      <span class="chip">NovelRepository</span>
+      <span class="chip">VectorStore</span>
+      <span class="chip">EmbeddingProvider</span>
+      <span class="chip">VectorSearchResult</span>
+    </div>
+  </div>
+  <div class="arrow-note">▼ 实现</div>
+  <div class="layer l-infra">
+    <div class="lname">持久化实现<small>persistence/</small></div>
+    <div class="items">
+      <span class="chip">SqliteNovelRepository</span>
+      <span class="chip">SqliteSchemaInitializer</span>
+      <span class="chip">ConnectionProvider</span>
+      <span class="chip">EmbeddedVectorStore</span>
+      <span class="chip">CloudApiEmbeddingProvider（GLM embedding-3）</span>
+      <span class="chip">StubEmbeddingProvider</span>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 状态机 ================= -->
+<h2><span class="no">02</span>状态机编排</h2>
+<p class="desc"><code>NovelOrchestrator</code> 驱动项目生命周期，各步骤具备幂等检查（DB 已有产物则跳过）。单章失败退避重试不跳章，&lt;500 字的空内容不入库。</p>
+<div class="card">
+  <div class="fsm">
+    <div class="state">CONCEIVING<small>世界观 / 人物 / 大纲</small></div><span class="arr">→</span>
+    <div class="state">PLANNING<small>细化大纲</small></div><span class="arr">→</span>
+    <div class="state">WRITING<small>逐章创作循环</small></div><span class="arr">→</span>
+    <div class="state">VOLUME_DONE<small>单卷完结</small></div><span class="arr">→</span>
+    <div class="state">FINAL<small>全书完结</small></div>
+  </div>
+  <h3 style="margin-top:18px">核心入口方法</h3>
+  <ul class="tight">
+    <li><code>runConceiving(projectId)</code> — 构思阶段：WorldBuilder → CharacterDesigner → Plotter，信息逐级注入（世界观 → 人物 → 大纲）</li>
+    <li><code>step(projectId)</code> — 按当前状态推进一步</li>
+    <li><code>runWritingOneChapter(projectId)</code> — 单章流水线：上下文组装 → 写作 → 一致性/风格检查 → 记忆更新</li>
+    <li><code>runWritingLoop(projectId, maxChapters)</code> — 批量写作循环（容错重试）</li>
+    <li><code>rewriteChapter(...)</code> / <code>auditForeshadowingImportance(...)</code> — 重写与伏笔审计</li>
+  </ul>
+</div>
+
+<!-- ================= 三层记忆 ================= -->
+<h2><span class="no">03</span>三层记忆系统</h2>
+<p class="desc"><code>ContextAssembler</code> 将三层记忆按 <code>TokenBudget</code> 预算汇成 <code>WritingContext</code>。【故事原旨】（Outline.premise + Project.concept）置于最前且永不被裁剪。</p>
+<div class="mem3">
+  <div class="card">
+    <h3>① 结构化知识库</h3>
+    <p class="desc" style="margin:0">KnowledgeBaseService · 世界观条目、人物卡、伏笔、实体图谱（Entity / EntityEdge）、叙事线索，存于 SQLite。</p>
+  </div>
+  <div class="card">
+    <h3>② 滚动摘要</h3>
+    <p class="desc" style="margin:0">SummaryService · 章级摘要 + 卷级摘要。卷级摘要（覆盖 &gt;3 章）全量注入，细粒度摘要按 window=5 滚动。</p>
+  </div>
+  <div class="card">
+    <h3>③ 向量检索</h3>
+    <p class="desc" style="margin:0">VectorRetrievalService · 章节正文分 chunk 嵌入（EmbeddedVectorStore），写作前语义召回相关前文。</p>
+  </div>
+</div>
+
+<!-- ================= LLM 多模型路由 ================= -->
+<h2><span class="no">04</span>LLM 多模型路由</h2>
+<p class="desc"><code>DefaultLlmGateway</code> 按 <code>LlmTaskType</code> 从 <code>application.yml</code> 选取模型配置，未命中的任务落到 default-model。</p>
+<div class="card">
+  <table>
+    <thead><tr><th>任务类型（LlmTaskType）</th><th>当前路由</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>CHAPTER_WRITING</code></td><td>deepseek-v4-flash</td><td>章节正文创作</td></tr>
+      <tr><td><code>WORLDBUILDING</code> / <code>CHARACTER_DESIGN</code> / <code>PLOTTING</code></td><td>deepseek-v4-flash</td><td>构思阶段三件套</td></tr>
+      <tr><td><code>CONTINUITY_CHECK</code> / <code>STYLE_GUARDIAN</code></td><td>deepseek-v4-flash</td><td>质量守护</td></tr>
+      <tr><td><code>MEMORY_SUMMARY</code> / <code>GENERAL</code></td><td>deepseek-v4-flash</td><td>摘要与通用任务</td></tr>
+      <tr><td><em>default-model</em></td><td>qwen3-4b-wuxia（本地 :8088）</td><td>本地兜底模型</td></tr>
+      <tr><td><em>Embedding</em></td><td>GLM embedding-3（云端 API）</td><td>向量化</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ================= Prompt 模板 ================= -->
+<h2><span class="no">05</span>Prompt 模板体系（20 个 .st）</h2>
+<p class="desc">Agent 的 systemPrompt 一律通过 <code>promptService.render(templateName, vars)</code> 渲染，支持变量插值与条件块，禁止硬编码。模板变量名必须与 Agent 代码的 <code>Map.of(...)</code> 保持一致。</p>
+<div class="card">
+  <div class="items" style="display:flex;flex-wrap:wrap;gap:6px">
+    <span class="chip">worldbuilding.st</span><span class="chip">character-design.st</span><span class="chip">character-upgrade.st</span>
+    <span class="chip">plotting.st</span><span class="chip">chapter-writing.st</span><span class="chip">arc-update.st</span>
+    <span class="chip">continuity-check.st</span><span class="chip">consistency-guard.st</span><span class="chip">style-check.st</span>
+    <span class="chip">style-establish.st</span><span class="chip">memory-summary.st</span><span class="chip">entity-extraction.st</span>
+    <span class="chip">foreshadowing-extract.st</span><span class="chip">foreshadowing-audit.st</span><span class="chip">foreshadowing-resolve-check.st</span>
+    <span class="chip">narrative-extract.st</span><span class="chip">scene-classify.st</span><span class="chip">quality-evaluate.st</span>
+    <span class="chip">reader-review.st</span><span class="chip">preferences-chat.st</span>
+  </div>
+  <p class="desc" style="margin-top:12px;margin-bottom:0">另有 6 个题材预设（presets/）：cultivation · general · historical · mystery · romance · thriller</p>
+</div>
+
+<!-- ================= REST API ================= -->
+<h2><span class="no">06</span>REST API</h2>
+<div class="grid2">
+  <div class="card">
+    <h3>项目与编排</h3>
+    <table>
+      <tbody>
+        <tr><td><code>POST /api/projects</code></td><td>创建项目</td></tr>
+        <tr><td><code>GET /api/projects[/{id}]</code></td><td>列表 / 详情</td></tr>
+        <tr><td><code>PUT /api/projects/{id}/mode</code></td><td>切换模式</td></tr>
+        <tr><td><code>DELETE /api/projects/{id}</code></td><td>删除项目</td></tr>
+        <tr><td><code>POST /api/projects/{id}/run</code></td><td>推进状态机</td></tr>
+        <tr><td><code>GET /api/projects/{id}/status</code></td><td>查询状态</td></tr>
+        <tr><td><code>POST /api/projects/{id}/write-all</code></td><td>批量写作循环</td></tr>
+        <tr><td><code>POST /api/projects/{id}/evaluate</code></td><td>质量评估</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h3>内容与交互</h3>
+    <table>
+      <tbody>
+        <tr><td><code>GET .../worldbuilding | characters | outline | chapters</code></td><td>产物查询</td></tr>
+        <tr><td><code>POST .../write-chapter</code></td><td>写一章</td></tr>
+        <tr><td><code>POST .../rewrite-chapter/{idx}</code></td><td>重写章节</td></tr>
+        <tr><td><code>POST .../audit-foreshadowings</code></td><td>伏笔审计</td></tr>
+        <tr><td><code>GET .../memory/summary</code></td><td>记忆摘要</td></tr>
+        <tr><td><code>GET|POST .../checkpoints/*</code></td><td>检查点 审批/驳回/修改</td></tr>
+        <tr><td><code>GET|PUT|POST .../preferences[/chat]</code></td><td>写作偏好（含对话式调整）</td></tr>
+        <tr><td><code>GET|POST /api/presets</code></td><td>题材预设</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ================= 前端 ================= -->
+<h2><span class="no">07</span>前端（React 18 + Ant Design）</h2>
+<div class="card">
+  <table>
+    <thead><tr><th>模块</th><th>文件</th><th>职责</th></tr></thead>
+    <tbody>
+      <tr><td>页面</td><td><code>ProjectListPage</code> · <code>ProjectWorkspace</code></td><td>项目列表 / 工作台</td></tr>
+      <tr><td>组件</td><td><code>RunConsole</code> · <code>ChapterReader</code> · <code>OutlineView</code> · <code>WorldbuildingView</code> · <code>QualityView</code> · <code>InteractiveReview</code></td><td>运行控制台、章节阅读、大纲/世界观展示、质量面板、交互式审阅</td></tr>
+      <tr><td>API</td><td><code>api/client.ts</code></td><td>REST 客户端封装</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ================= 写作单章流水线 ================= -->
+<h2><span class="no">08</span>单章写作流水线（WRITING 阶段）</h2>
+<div class="card">
+  <div class="fsm" style="font-size:.85rem">
+    <div class="state">上下文组装<small>ContextAssembler</small></div><span class="arr">→</span>
+    <div class="state">章节写作<small>ChapterWriter</small></div><span class="arr">→</span>
+    <div class="state">一致性检查<small>ContinuityChecker / ConsistencyGate</small></div><span class="arr">→</span>
+    <div class="state">风格守护<small>StyleGuardian</small></div><span class="arr">→</span>
+    <div class="state">记忆更新<small>摘要 / 实体抽取 / 伏笔 / 向量索引</small></div>
+  </div>
+  <ul class="tight" style="margin-top:14px">
+    <li>入库门槛：正文 ≥ 500 字，空内容不落库</li>
+    <li>失败策略：退避重试，不跳章</li>
+    <li>写后异步链：EntityExtractor（实体图谱）→ ForeshadowingExtractor（伏笔登记）→ NarrativeThreadExtractor（叙事线索）→ SummaryService（滚动摘要）→ 向量索引</li>
+    <li>多样性控制：ClicheDetector、DiversityTracker、ClimaxDiversityTracker 防止套路化</li>
+  </ul>
+</div>
+
+<!-- ================= 关键约束 ================= -->
+<h2><span class="no">09</span>关键架构约束</h2>
+<div class="card">
+  <ul class="tight">
+    <li><b>Agent 间不直接调用</b> — 全部经 NovelOrchestrator 调度</li>
+    <li><b>Prompt 外置</b> — systemPrompt 必须经 <code>promptService.render(...)</code>，禁止硬编码</li>
+    <li><b>SPI 分层</b> — 业务层只依赖 <code>NovelRepository</code> / <code>VectorStore</code> / <code>EmbeddingProvider</code> 接口</li>
+    <li><b>幂等性</b> — runConceiving 各步骤先查 DB，已有产物则跳过</li>
+    <li><b>写作循环容错</b> — 单章失败不跳章（退避重试），空内容不入库（≥500 字门槛）</li>
+    <li><b>SQLite 单进程</b> — 避免多个 write-all 并发操作同一项目</li>
+  </ul>
+</div>
+
+<footer>
+  生成于 2026-08-05 · 依据源码结构（src/main/java/com/writing/novel）与 AGENTS.md、feature_list.json 汇编 · 验证入口：<code>./init.sh</code>
+</footer>
+
+</div>
+</body>
+</html>

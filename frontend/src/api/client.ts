@@ -10,6 +10,7 @@ import type {
   CreateProjectRequest,
   ProjectMode,
   Checkpoint,
+  ChapterQualityReport,
 } from '../types';
 
 const BASE = '/api';
@@ -156,5 +157,11 @@ export const api = {
     request<{ reply: string; preferences: Record<string, unknown> }>(
       `/projects/${id}/preferences/chat`,
       { method: 'POST', body: JSON.stringify({ message }) },
+    ),
+
+  /** p11-I3: 获取章节质量报告 */
+  getChapterQuality: (id: string, chapterIndex: number) =>
+    request<ChapterQualityReport>(
+      `/projects/${id}/chapters/${chapterIndex}/quality`,
     ),
 };

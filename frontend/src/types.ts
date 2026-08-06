@@ -90,6 +90,32 @@ export interface Chapter {
   updatedAt: string;
 }
 
+/** p11-I3: 章节质量报告 */
+export interface ChapterQualityReport {
+  chapterIndex: number;
+  chapterTitle: string;
+  wordCount: number;
+  grade: string;
+  review: {
+    overallScore: number;
+    engagement: number;
+    coherence: number;
+    character: number;
+    hook: number;
+    summary: string;
+    issues: string;
+    improvement: string;
+  } | null;
+  issues: Array<{
+    type: string;
+    severity: string;
+    description: string;
+    resolved: boolean;
+  }>;
+  clicheCount: number;
+  topCliches: string[];
+}
+
 export interface Summary {
   id: string;
   projectId: string;

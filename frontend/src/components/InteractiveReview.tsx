@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin } from 'antd';
-import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, ReloadOutlined, StepForwardOutlined } from '@ant-design/icons';
+import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin, Progress, Collapse } from 'antd';
+import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, ReloadOutlined, StepForwardOutlined, TrophyOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
 import { renderContent } from '../utils/renderContent';
-import type { Chapter, Checkpoint, ProjectStatus } from '../types';
+import type { Chapter, Checkpoint, ProjectStatus, ChapterQualityReport } from '../types';
 
 const { Text } = Typography;
 
@@ -21,6 +21,7 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   const [rewriteModalOpen, setRewriteModalOpen] = useState(false);
   const [rewriteInstructions, setRewriteInstructions] = useState('');
   const [rewriting, setRewriting] = useState(false);
+  const [qualityReport, setQualityReport] = useState<ChapterQualityReport | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -50,6 +51,14 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   const currentCheckpoint = checkpoints[checkpoints.length - 1];
   const isInteractive = status?.mode === 'INTERACTIVE';
   const currentChapter = chapters[selectedIdx];
+
+  // p11-I3: 选中章节时获取质量报告
+  useEffect(() => {
+    if (!currentChapter) { setQualityReport(null); return; }
+    api.getChapterQuality(projectId, currentChapter.chapterIndex)
+      .then(setQualityReport)
+      .catch(() => setQualityReport(null));
+  }, [projectId, currentChapter]);
 
   const handleApprove = async () => {
     if (!currentCheckpoint) { message.warning('无待审核项'); return; }
@@ -207,6 +216,88 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
                 style={{ maxHeight: '70vh', overflow: 'auto' }}
               >
                 {renderChapterContent(currentChapter.content)}
+
+                {/* p11-I3: 章节质量报告 */}
+                {qualityReport && (
+                  <div style={{ marginTop: 24, borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
+                    <Typography.Title level={5}>
+                      <TrophyOutlined /> 章节质量报告
+                      <Tag color={qualityReport.grade === 'A' ? 'green' : qualityReport.grade === 'B' ? 'gold' : 'red'} style={{ marginLeft: 8 }}>
+                        {qualityReport.grade} 级
+                      </Tag>
+                    </Typography.Title>
+
+                    {/* 读者评分 */}
+                    {qualityReport.review && (
+                      <Row gutter={16} style={{ marginBottom: 16 }}>
+                        <Col span={4}>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: 28, fontWeight: 700, color: qualityReport.review.overallScore >= 7 ? '#52c41a' : '#faad14' }}>
+                              {qualityReport.review.overallScore}
+                            </div>
+                            <Text type="secondary">综合评分</Text>
+                          </div>
+                        </Col>
+                        {[
+                          { label: '吸引力', val: qualityReport.review.engagement },
+                          { label: '连贯性', val: qualityReport.review.coherence },
+                          { label: '角色塑造', val: qualityReport.review.character },
+                          { label: '章末钩子', val: qualityReport.review.hook },
+                        ].map(d => (
+                          <Col span={5} key={d.label}>
+                            <Text type="secondary">{d.label}</Text>
+                            <Progress percent={d.val * 10} size="small" format={() => `${d.val}/10`} />
+                          </Col>
+                        ))}
+                      </Row>
+                    )}
+
+                    {/* 读者简评 */}
+                    {qualityReport.review?.summary && (
+                      <Alert type="info" message={qualityReport.review.summary} style={{ marginBottom: 8 }} />
+                    )}
+
+                    {/* 改进建议 */}
+                    {qualityReport.review?.improvement && (
+                      <Alert type="warning" message="改进建议" description={qualityReport.review.improvement} style={{ marginBottom: 8 }} />
+                    )}
+
+                    {/* 问题列表 */}
+                    {qualityReport.issues.length > 0 && (
+                      <Collapse
+                        size="small"
+                        style={{ marginBottom: 8 }}
+                        items={[{
+                          key: 'issues',
+                          label: `检测问题（${qualityReport.issues.length} 项）`,
+                          children: (
+                            <List
+                              size="small"
+                              dataSource={qualityReport.issues}
+                              renderItem={item => (
+                                <List.Item>
+                                  <Tag color={item.severity === 'HIGH' ? 'red' : item.severity === 'MEDIUM' ? 'orange' : 'default'}>
+                                    {item.severity}
+                                  </Tag>
+                                  <Tag>{item.type}</Tag>
+                                  <Text style={{ fontSize: 12 }}>{item.description}</Text>
+                                </List.Item>
+                              )}
+                            />
+                          ),
+                        }]}
+                      />
+                    )}
+
+                    {/* 套路词统计 */}
+                    {qualityReport.clicheCount > 0 && (
+                      <div style={{ fontSize: 12, color: '#999' }}>
+                        套路词出现 {qualityReport.clicheCount} 次
+                        {qualityReport.topCliches.length > 0 && `：${qualityReport.topCliches.join('、')}`}
+                      </div>
+                    )}
+                  </div>
+                )}
               </Card>
             ) : (
               <Card><Text type="secondary">暂无章节。点击"写一章"开始创作。</Text></Card>

@@ -651,6 +651,26 @@ public class ContextAssembler {
             sb.append(desc.length() > 80 ? desc.substring(0, 80) + "..." : desc);
             sb.append("\n");
         }
+
+        // p11-I4: 注入上一章读者评审反馈
+        if (chapterIndex > 1) {
+            var prevReview = repository.findChapterReview(projectId, chapterIndex - 1);
+            if (prevReview.isPresent()) {
+                var rv = prevReview.get();
+                if (!rv.isPassed()) {
+                    sb.append("\n【上一章读者评价（").append(rv.getOverallScore())
+                      .append("/10，未达标）改进建议】\n");
+                    if (rv.getImprovement() != null && !rv.getImprovement().isBlank()) {
+                        String imp = rv.getImprovement();
+                        sb.append(imp.length() > 200 ? imp.substring(0, 200) + "..." : imp).append("\n");
+                    }
+                    if (rv.getIssues() != null && !rv.getIssues().isBlank()) {
+                        sb.append("上章问题：").append(rv.getIssues()).append("\n");
+                    }
+                }
+            }
+        }
+
         return sb.toString();
     }
 

@@ -92,6 +92,14 @@ public class ContextAssembler {
         // 叙事线索追踪
         ctx.setNarrativeThreadSection(buildNarrativeThreadSection(projectId));
 
+        // p11-H4: 角色关系网络注入
+        String relationshipWeb = buildRelationshipWeb(projectId, fullSynopsis);
+        if (relationshipWeb != null && !relationshipWeb.isBlank()) {
+            ctx.setNarrativeThreadSection(
+                    (ctx.getNarrativeThreadSection() != null ? ctx.getNarrativeThreadSection() + "\n\n" : "")
+                    + relationshipWeb);
+        }
+
         // 质量反馈闭环：上卷评价注入
         ctx.setQualityFeedbackSection(buildQualityFeedbackSection(projectId));
         ctx.setFeedbackSection(buildFeedbackSection(projectId, chapterIndex));
@@ -616,6 +624,60 @@ public class ContextAssembler {
     private String buildNarrativeThreadSection(String projectId) {
         if (narrativeThreadTracker == null) return "";
         return narrativeThreadTracker.getThreadSection(projectId);
+    }
+
+    /**
+     * p11-H4: 构建角色关系网络注入——展示本章出场角色之间的当前关系。
+     * 让 LLM 知道角色 A 和 B 之间是"暗中利用"还是"真心盟友"。
+     */
+    private String buildRelationshipWeb(String projectId, ChapterSynopsis synopsis) {
+        if (synopsis == null || synopsis.getCast() == null || synopsis.getCast().isBlank()) return "";
+        String cast = synopsis.getCast();
+
+        var edges = repository.findEdgesByProject(projectId);
+        if (edges.isEmpty()) return "";
+
+        // 获取所有 CHARACTER 实体
+        var characters = repository.findEntitiesByProject(projectId).stream()
+                .filter(e -> e.getType() == EntityType.CHARACTER)
+                .toList();
+        var nameToId = new java.util.HashMap<String, String>();
+        var idToName = new java.util.HashMap<String, String>();
+        for (var c : characters) {
+            nameToId.put(c.getName(), c.getId());
+            idToName.put(c.getId(), c.getName());
+        }
+
+        // 找出 cast 中出现的角色之间的关系
+        var relevantEdges = edges.stream()
+                .filter(EntityEdge::isCurrent)
+                .filter(e -> {
+                    String srcName = idToName.get(e.getSourceId());
+                    String tgtName = idToName.get(e.getTargetId());
+                    return srcName != null && tgtName != null
+                            && (cast.contains(srcName) || cast.contains(tgtName));
+                })
+                .toList();
+
+        if (relevantEdges.isEmpty()) return "";
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("【角色关系网络——本章出场角色之间的当前关系】\n");
+        for (var edge : relevantEdges) {
+            String srcName = idToName.getOrDefault(edge.getSourceId(), "?");
+            String tgtName = idToName.getOrDefault(edge.getTargetId(), "?");
+            sb.append("■ ").append(srcName).append(" → ").append(tgtName)
+                    .append("：").append(edge.getRelationship());
+            if (edge.getValidFromChapter() > 0) {
+                sb.append("（自第").append(edge.getValidFromChapter()).append("章）");
+            }
+            if (edge.getMetadata() != null && !edge.getMetadata().isBlank()) {
+                sb.append(" — ").append(edge.getMetadata());
+            }
+            sb.append("\n");
+        }
+        sb.append("本章的对话和互动应体现上述关系设定。\n");
+        return sb.toString().trim();
     }
 
     private String buildFeedbackSection(String projectId, int chapterIndex) {

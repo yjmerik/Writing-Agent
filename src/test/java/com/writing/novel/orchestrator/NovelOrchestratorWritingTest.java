@@ -94,7 +94,7 @@ class NovelOrchestratorWritingTest {
                 new com.writing.novel.agent.QualityEvaluationAgent(gateway, repo, promptSvc),
                 null, null, null, null, null, null, null, null, null, null, null, null,
                 new com.writing.novel.agent.SceneClassifier(gateway, promptSvc),
-                new com.writing.novel.service.DiversityTracker(), null, null, null, null, null);
+                new com.writing.novel.service.DiversityTracker(), null, null, null, null, null, null);
     }
 
     @Test

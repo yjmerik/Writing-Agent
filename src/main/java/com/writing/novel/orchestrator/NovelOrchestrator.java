@@ -57,6 +57,7 @@ public class NovelOrchestrator {
     private final com.writing.novel.service.ConsistencyGate consistencyGate;
     private final ForeshadowingImportanceAuditor foreshadowingImportanceAuditor;
     private final com.writing.novel.service.ClicheDetector clicheDetector;
+    private final RelationshipEvolutionTracker relationshipEvolutionTracker;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -88,7 +89,8 @@ public class NovelOrchestrator {
                               ConsistencyGuard consistencyGuard,
                               com.writing.novel.service.ConsistencyGate consistencyGate,
                               ForeshadowingImportanceAuditor foreshadowingImportanceAuditor,
-                              com.writing.novel.service.ClicheDetector clicheDetector) {
+                              com.writing.novel.service.ClicheDetector clicheDetector,
+                              RelationshipEvolutionTracker relationshipEvolutionTracker) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -120,6 +122,7 @@ public class NovelOrchestrator {
         this.consistencyGate = consistencyGate;
         this.foreshadowingImportanceAuditor = foreshadowingImportanceAuditor;
         this.clicheDetector = clicheDetector;
+        this.relationshipEvolutionTracker = relationshipEvolutionTracker;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -499,6 +502,20 @@ public class NovelOrchestrator {
             }
         } catch (Exception e) {
             log.warn("角色出场更新失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+
+        // p11-H3: 关系演变追踪——检测本章角色关系变化并更新图谱
+        try {
+            if (relationshipEvolutionTracker != null) {
+                String castStr = synopsis != null ? synopsis.getCast() : "";
+                int changes = relationshipEvolutionTracker.detectAndApply(
+                        projectId, chapterIndex, chapter.getContent(), castStr);
+                if (changes > 0) {
+                    log.info("关系演变(章{}): {} 条变化", chapterIndex, changes);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("关系演变追踪失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
         // 剧情停滞检测：基于张力曲线，连续低张力触发警告

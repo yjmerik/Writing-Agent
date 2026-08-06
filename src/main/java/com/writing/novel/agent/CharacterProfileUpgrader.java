@@ -48,11 +48,16 @@ public class CharacterProfileUpgrader {
                 .map(p -> p.getCharacterUpgradeSpan())
                 .orElse(1));
 
-        // 1. 找出所有 CHARACTER 类型的 Entity，出现跨度 >= spanThreshold
+        // 1. 找出所有 CHARACTER 类型的 Entity
+        // p11-fix: 放宽条件——只要有出场记录（span>=0）就考虑升级，不再要求多章跨度
+        // spanThreshold 仅作为优先级排序参考（多章出场的优先升级）
         var entities = repository.findEntitiesByProject(projectId).stream()
                 .filter(e -> e.getType() == EntityType.CHARACTER)
-                .filter(e -> e.getLastSeenChapter() - e.getFirstSeenChapter() >= spanThreshold)
+                .filter(e -> e.getLastSeenChapter() - e.getFirstSeenChapter() >= 0)
                 .filter(e -> currentChapter - e.getLastSeenChapter() <= 8) // p11-H2: 5→8（更宽松）
+                .sorted((a, b) -> Integer.compare(
+                        b.getLastSeenChapter() - b.getFirstSeenChapter(),
+                        a.getLastSeenChapter() - a.getFirstSeenChapter())) // 跨度大的优先
                 .toList();
 
         // 2. 排除已有 Character 档案的

@@ -43,15 +43,16 @@ public class CharacterProfileUpgrader {
         List<String> upgraded = new ArrayList<>();
 
         // p7-4: 从 WritingPreferences 读取跨度阈值（可调）
-        int spanThreshold = repository.findWritingPreferences(projectId)
+        // p11-H2: 默认从 2 降低到 1（出现 2 章即可升级，加快角色建档速度）
+        int spanThreshold = Math.max(1, repository.findWritingPreferences(projectId)
                 .map(p -> p.getCharacterUpgradeSpan())
-                .orElse(2);
+                .orElse(1));
 
         // 1. 找出所有 CHARACTER 类型的 Entity，出现跨度 >= spanThreshold
         var entities = repository.findEntitiesByProject(projectId).stream()
                 .filter(e -> e.getType() == EntityType.CHARACTER)
                 .filter(e -> e.getLastSeenChapter() - e.getFirstSeenChapter() >= spanThreshold)
-                .filter(e -> currentChapter - e.getLastSeenChapter() <= 5) // 近5章还活跃
+                .filter(e -> currentChapter - e.getLastSeenChapter() <= 8) // p11-H2: 5→8（更宽松）
                 .toList();
 
         // 2. 排除已有 Character 档案的
@@ -69,7 +70,7 @@ public class CharacterProfileUpgrader {
         // 3. 每个候选：采集出场段落 → 生成 Character 档案
         for (Entity candidate : candidates) {
             String excerpts = collectExcerpts(projectId, candidate.getName(), currentChapter);
-            if (excerpts.length() < 50) continue; // 出场太少，跳过
+            if (excerpts.length() < 30) continue; // p11-H2: 50→30（降低门槛）
 
             // 调用 LLM 生成角色档案
             Character profile = generateProfile(projectId, candidate.getName(), excerpts);
@@ -137,6 +138,18 @@ public class CharacterProfileUpgrader {
         c.setGrowthArc(extractFieldOrNull(text, "成长弧"));
         c.setSpeakingStyle(extractFieldOrNull(text, "说话风格"));
         c.setKnowledgeDomains(extractFieldOrNull(text, "知识领域"));
+
+        // p11-H2: 补全智谋建模字段（与 CharacterDesignerAgent 保持一致）
+        String strategyStr = extractFieldOrNull(text, "智谋层级");
+        if (strategyStr != null) {
+            try {
+                java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+)").matcher(strategyStr);
+                if (m.find()) c.setStrategyLevel(Integer.parseInt(m.group(1)));
+            } catch (Exception ignored) {}
+        }
+        c.setCountermeasures(extractFieldOrNull(text, "反制能力"));
+        c.setIndependentWill(extractFieldOrNull(text, "独立判断原则"));
+        c.setBlindSpot(extractFieldOrNull(text, "盲区"));
         return c;
     }
 

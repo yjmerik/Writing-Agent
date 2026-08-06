@@ -621,6 +621,17 @@ public class NovelOrchestrator {
             log.warn("伏笔审计失败: {}", e.getMessage());
         }
 
+        // p11-H2: 卷末批量升级角色——把本卷出现但无档案的实体升级为角色
+        try {
+            var upgraded = characterProfileUpgrader.upgrade(projectId, toChapter);
+            if (!upgraded.isEmpty()) {
+                log.info("卷末角色升级(卷{}): {} → {}", volume.getVolumeIndex(),
+                        upgraded.size(), String.join("、", upgraded));
+            }
+        } catch (Exception e) {
+            log.warn("卷末角色升级失败: {}", e.getMessage());
+        }
+
         // p6-4: 卷末动态更新 StyleProfile（从最近5章提取风格趋势）
         try {
             updateStyleProfile(projectId, fromChapter, toChapter);

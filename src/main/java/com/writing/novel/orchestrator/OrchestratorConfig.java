@@ -54,7 +54,8 @@ public class OrchestratorConfig {
                                                  com.writing.novel.service.ConsistencyGate consistencyGate,
                                                  ForeshadowingImportanceAuditor foreshadowingImportanceAuditor,
                                                  com.writing.novel.service.ClicheDetector clicheDetector,
-                                                 RelationshipEvolutionTracker relationshipEvolutionTracker) {
+                                                 RelationshipEvolutionTracker relationshipEvolutionTracker,
+                                                 PassageEditor passageEditor) {
         return new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
@@ -63,6 +64,6 @@ public class OrchestratorConfig {
                 creativeDiversityService, narrativeThreadExtractor, readerReviewAgent,
                 foreshadowingResolutionDetector, sceneClassifier, diversityTracker, arcScheduler,
                 consistencyGuard, consistencyGate, foreshadowingImportanceAuditor, clicheDetector,
-                relationshipEvolutionTracker);
+                relationshipEvolutionTracker, passageEditor);
     }
 }

@@ -58,6 +58,7 @@ public class NovelOrchestrator {
     private final ForeshadowingImportanceAuditor foreshadowingImportanceAuditor;
     private final com.writing.novel.service.ClicheDetector clicheDetector;
     private final RelationshipEvolutionTracker relationshipEvolutionTracker;
+    private final PassageEditor passageEditor;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -90,7 +91,8 @@ public class NovelOrchestrator {
                               com.writing.novel.service.ConsistencyGate consistencyGate,
                               ForeshadowingImportanceAuditor foreshadowingImportanceAuditor,
                               com.writing.novel.service.ClicheDetector clicheDetector,
-                              RelationshipEvolutionTracker relationshipEvolutionTracker) {
+                              RelationshipEvolutionTracker relationshipEvolutionTracker,
+                              PassageEditor passageEditor) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -123,6 +125,7 @@ public class NovelOrchestrator {
         this.foreshadowingImportanceAuditor = foreshadowingImportanceAuditor;
         this.clicheDetector = clicheDetector;
         this.relationshipEvolutionTracker = relationshipEvolutionTracker;
+        this.passageEditor = passageEditor;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -1247,6 +1250,90 @@ public class NovelOrchestrator {
      * p10.1-e1: 伏笔重要性回溯审计——对旧伏笔做批量重要性重评估。
      * 解决 Phase 10 之前提取的伏笔 priority 全为默认 MEDIUM 的问题。
      */
+    /**
+     * p11-G1: 段落级编辑——只改选中段落，保留前后不变。
+     * @param paragraphIndex 段落号（0-based，按 \n 分割）
+     * @param selectedText 选中文本（定位验证）
+     * @param instruction 编辑指令
+     * @param mode REWRITE/EXPAND/INSERT
+     */
+    public Chapter editPassage(String projectId, int chapterIndex, int paragraphIndex,
+                                String selectedText, String instruction, String mode) {
+        Chapter chapter = repository.findChapterByIndex(projectId, chapterIndex)
+                .orElseThrow(() -> new IllegalArgumentException("章节不存在: " + chapterIndex));
+        String content = chapter.getContent();
+        if (content == null || content.isBlank()) return chapter;
+
+        String[] paragraphs = content.split("\n");
+        if (paragraphIndex < 0 || paragraphIndex >= paragraphs.length) {
+            throw new IllegalArgumentException("段落号越界: " + paragraphIndex + "（共" + paragraphs.length + "段）");
+        }
+
+        // 定位验证：选中文本应与段落匹配
+        String targetParagraph = paragraphs[paragraphIndex];
+        if (selectedText != null && !selectedText.isBlank()
+                && !targetParagraph.contains(selectedText.substring(0, Math.min(10, selectedText.length())))) {
+            throw new IllegalArgumentException("段落定位失败：选中文本与段落不匹配，请刷新页面重试");
+        }
+
+        // 提取上下文（前2段+后2段）
+        String contextBefore = extractContext(paragraphs, paragraphIndex, -1, 2);
+        String contextAfter = extractContext(paragraphs, paragraphIndex, 1, 2);
+
+        // 调用 PassageEditor
+        String editedPassage = passageEditor.editPassage(
+                targetParagraph, contextBefore, contextAfter, instruction, mode);
+        if (editedPassage == null || editedPassage.isBlank()) {
+            log.warn("段落编辑失败(章{}段{}): LLM返回空", chapterIndex, paragraphIndex);
+            return chapter;
+        }
+
+        // 拼接：前段不变 + 新段落 + 后段不变
+        StringBuilder newContent = new StringBuilder();
+        for (int i = 0; i < paragraphs.length; i++) {
+            if (i == paragraphIndex) {
+                if ("INSERT".equalsIgnoreCase(mode)) {
+                    newContent.append(paragraphs[i]).append("\n").append(editedPassage);
+                } else {
+                    newContent.append(editedPassage);
+                }
+            } else {
+                newContent.append(paragraphs[i]);
+            }
+            if (i < paragraphs.length - 1) newContent.append("\n");
+        }
+
+        // 长度保护：改写后不能比原来短太多（≥80%）
+        if (!"INSERT".equalsIgnoreCase(mode) && newContent.length() < content.length() * 0.8) {
+            log.warn("段落编辑后总字数过短({}→{}),保留原版", content.length(), newContent.length());
+            return chapter;
+        }
+
+        chapter.setContent(newContent.toString());
+        repository.saveChapter(chapter);
+        log.info("段落编辑完成(章{}段{}): {}→{}字", chapterIndex, paragraphIndex,
+                content.length(), newContent.length());
+
+        // 重跑检测器
+        try { entityGraphService.extractFromChapter(projectId, chapter); } catch (Exception ignored) {}
+        try { foreshadowingExtractor.extract(projectId, chapter); } catch (Exception ignored) {}
+
+        return chapter;
+    }
+
+    /** 提取上下文段落（向前/向后取 N 段） */
+    private String extractContext(String[] paragraphs, int center, int direction, int count) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 1; i <= count; i++) {
+            int idx = center + direction * i;
+            if (idx >= 0 && idx < paragraphs.length) {
+                if (sb.length() > 0) sb.append("\n");
+                sb.append(paragraphs[idx]);
+            }
+        }
+        return sb.toString();
+    }
+
     public int auditForeshadowingImportance(String projectId) {
         if (foreshadowingImportanceAuditor == null) return 0;
         try {

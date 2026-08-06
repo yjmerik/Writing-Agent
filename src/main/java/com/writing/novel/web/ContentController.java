@@ -72,6 +72,15 @@ public class ContentController {
         return orchestrator.buildChapterQualityReport(id, chapterIndex);
     }
 
+    /** p11-G1: 段落级编辑——局部改写/扩充/插入 */
+    @PostMapping("/chapters/{chapterIndex}/passage")
+    public Chapter editPassage(@PathVariable String id, @PathVariable int chapterIndex,
+                                @RequestBody PassageEditRequest req) {
+        return orchestrator.editPassage(id, chapterIndex,
+                req.getParagraphIndex(), req.getSelectedText(),
+                req.getInstruction(), req.getMode());
+    }
+
     @GetMapping("/memory/summary")
     public List<Summary> summaries(@PathVariable String id) {
         return repository.findSummariesByProject(id);

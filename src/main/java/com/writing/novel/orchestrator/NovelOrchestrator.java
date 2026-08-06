@@ -56,6 +56,7 @@ public class NovelOrchestrator {
     private final ConsistencyGuard consistencyGuard;
     private final com.writing.novel.service.ConsistencyGate consistencyGate;
     private final ForeshadowingImportanceAuditor foreshadowingImportanceAuditor;
+    private final com.writing.novel.service.ClicheDetector clicheDetector;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -86,7 +87,8 @@ public class NovelOrchestrator {
                               com.writing.novel.service.ArcScheduler arcScheduler,
                               ConsistencyGuard consistencyGuard,
                               com.writing.novel.service.ConsistencyGate consistencyGate,
-                              ForeshadowingImportanceAuditor foreshadowingImportanceAuditor) {
+                              ForeshadowingImportanceAuditor foreshadowingImportanceAuditor,
+                              com.writing.novel.service.ClicheDetector clicheDetector) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -117,6 +119,7 @@ public class NovelOrchestrator {
         this.consistencyGuard = consistencyGuard;
         this.consistencyGate = consistencyGate;
         this.foreshadowingImportanceAuditor = foreshadowingImportanceAuditor;
+        this.clicheDetector = clicheDetector;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -1153,6 +1156,41 @@ public class NovelOrchestrator {
             log.warn("伏笔重要性审计失败: {}", e.getMessage());
             return 0;
         }
+    }
+
+    /**
+     * p11-I2: 构建章节聚合质量报告。
+     * 聚合读者评审 + ContinuityIssue + 场景类型 + 套路词统计。
+     */
+    public ChapterQualityReport buildChapterQualityReport(String projectId, int chapterIndex) {
+        var chapter = repository.findChapterByIndex(projectId, chapterIndex).orElse(null);
+        if (chapter == null) {
+            return new ChapterQualityReport(chapterIndex, "", 0);
+        }
+        ChapterQualityReport report = new ChapterQualityReport(
+                chapterIndex, chapter.getTitle(), chapter.getWordCount());
+
+        // 读者评审
+        repository.findChapterReview(projectId, chapterIndex)
+                .ifPresent(report::setReview);
+
+        // 该章的 ContinuityIssue
+        var issues = repository.findUnresolvedIssues(projectId).stream()
+                .filter(i -> i.getDetectedAtChapter() == chapterIndex)
+                .toList();
+        report.setIssues(issues);
+
+        // 套路词统计
+        try {
+            var counts = clicheDetector.countCliches(chapter.getContent());
+            report.setClicheCount(counts.values().stream().mapToInt(Integer::intValue).sum());
+            report.setTopCliches(counts.entrySet().stream()
+                    .filter(e -> e.getValue() >= 2)
+                    .map(e -> e.getKey() + "(" + e.getValue() + "次)")
+                    .toList());
+        } catch (Exception ignored) {}
+
+        return report;
     }
 
     /** 从 ChapterSynopsis.climax 文本推断爽点类型（关键词匹配） */

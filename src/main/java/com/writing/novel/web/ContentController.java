@@ -65,6 +65,13 @@ public class ContentController {
         return java.util.Map.of("upgraded", upgraded);
     }
 
+    /** p11-I2: 获取章节聚合质量报告 */
+    @GetMapping("/chapters/{chapterIndex}/quality")
+    public ChapterQualityReport chapterQuality(@PathVariable String id,
+                                                 @PathVariable int chapterIndex) {
+        return orchestrator.buildChapterQualityReport(id, chapterIndex);
+    }
+
     @GetMapping("/memory/summary")
     public List<Summary> summaries(@PathVariable String id) {
         return repository.findSummariesByProject(id);

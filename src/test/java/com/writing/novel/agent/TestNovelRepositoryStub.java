@@ -77,6 +77,11 @@ public class TestNovelRepositoryStub implements NovelRepository {
     @Override public void saveEvaluationRecord(EvaluationRecord r) {}
     @Override public Optional<EvaluationRecord> findLatestEvaluation(String p) { return Optional.empty(); }
 
+    // --- p11-I1: ChapterReview ---
+    @Override public void saveChapterReview(com.writing.novel.domain.ChapterReview r) {}
+    @Override public Optional<com.writing.novel.domain.ChapterReview> findChapterReview(String p, int c) { return Optional.empty(); }
+    @Override public List<com.writing.novel.domain.ChapterReview> findChapterReviewsByProject(String p) { return List.of(); }
+
     // --- WritingPreferences ---
     @Override public void saveWritingPreferences(WritingPreferences p) {}
     @Override public Optional<WritingPreferences> findWritingPreferences(String p) { return Optional.empty(); }

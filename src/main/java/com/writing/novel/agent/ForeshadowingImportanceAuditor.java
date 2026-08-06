@@ -91,7 +91,7 @@ public class ForeshadowingImportanceAuditor {
                 .systemPrompt(systemPrompt)
                 .userMessage("请评估上述伏笔的重要性。")
                 .temperature(0.2)
-                .maxTokens(2000)
+                .maxTokens(4096)
                 .build();
 
         try {

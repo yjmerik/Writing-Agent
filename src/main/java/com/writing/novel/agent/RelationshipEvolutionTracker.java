@@ -68,7 +68,7 @@ public class RelationshipEvolutionTracker {
                 .systemPrompt(systemPrompt)
                 .userMessage("请分析本章的关系变化。")
                 .temperature(0.2)
-                .maxTokens(1000)
+                .maxTokens(3072)
                 .build();
 
         try {

@@ -67,7 +67,7 @@ public class ConsistencyGuard {
                 .systemPrompt(systemPrompt)
                 .userMessage("请检查本章是否存在能力越界或凭空证据问题。")
                 .temperature(0.2)
-                .maxTokens(1000)
+                .maxTokens(3072)
                 .build();
 
         try {

@@ -53,7 +53,7 @@ public class PassageEditor {
                 .systemPrompt(systemPrompt)
                 .userMessage("请执行段落编辑。")
                 .temperature(0.7)
-                .maxTokens(1500)
+                .maxTokens(4096)
                 .build();
 
         try {

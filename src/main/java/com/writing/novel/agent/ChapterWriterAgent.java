@@ -79,7 +79,7 @@ public class ChapterWriterAgent {
                 .systemPrompt(systemPrompt)
                 .userMessage(ctx.toUserPrompt())
                 .temperature(0.8)
-                .maxTokens(4000)
+                .maxTokens(8192)
                 .build();
 
         // 3. 调 LLM 写正文（空内容/过短用变化 prompt 重试；contentFilter 用温和 prompt 重试）
@@ -97,7 +97,7 @@ public class ChapterWriterAgent {
                     .systemPrompt(systemPrompt + "\n\n注意：请避开暴力/血腥的直白描写，改用侧面烘托、心理描写和氛围渲染来表现冲突。")
                     .userMessage(ctx.toUserPrompt())
                     .temperature(0.5) // 大幅降温度
-                    .maxTokens(4000)
+                    .maxTokens(8192)
                     .build();
             resp = gateway.complete(mildReq);
         }
@@ -109,7 +109,7 @@ public class ChapterWriterAgent {
                     .userMessage(ctx.toUserPrompt()
                             + "\n\n⚠️ 上次输出为空或过短。请严格按四段式结构完整输出不少于2500字的正文。")
                     .temperature(0.7)
-                    .maxTokens(4000)
+                    .maxTokens(8192)
                     .build();
             try {
                 resp = gateway.complete(retryReq);
@@ -120,7 +120,7 @@ public class ChapterWriterAgent {
                         .systemPrompt(systemPrompt + "\n\n绝对禁止任何直接的暴力、身体伤害、血腥描写。所有冲突用对话和心理活动表现。")
                         .userMessage(ctx.toUserPrompt())
                         .temperature(0.3)
-                        .maxTokens(2000)
+                        .maxTokens(4096)
                         .build();
                 resp = gateway.complete(safeReq);
             }
@@ -193,7 +193,7 @@ public class ChapterWriterAgent {
                 .systemPrompt(systemPrompt)
                 .userMessage(ctx.toUserPrompt())
                 .temperature(0.7)
-                .maxTokens(4000)
+                .maxTokens(8192)
                 .build();
 
         var resp = gateway.complete(req);

@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
  */
 public class CharacterProfileUpgrader {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CharacterProfileUpgrader.class);
+
     private final LlmGateway gateway;
     private final NovelRepository repository;
     private final PromptTemplateService promptService;
@@ -72,9 +74,14 @@ public class CharacterProfileUpgrader {
 
         if (candidates.isEmpty()) return upgraded;
 
+        // p11-fix: debug 日志
+        log.info("角色升级 candidates: {}", candidates.stream()
+                .map(e -> e.getName() + "(ch" + e.getFirstSeenChapter() + "-" + e.getLastSeenChapter() + ")").toList());
+
         // 3. 每个候选：采集出场段落 → 生成 Character 档案
         for (Entity candidate : candidates) {
             String excerpts = collectExcerpts(projectId, candidate.getName(), currentChapter);
+            log.info("角色升级 {} excerpts: {} 字", candidate.getName(), excerpts.length());
             if (excerpts.length() < 30) continue; // p11-H2: 50→30（降低门槛）
 
             // 调用 LLM 生成角色档案

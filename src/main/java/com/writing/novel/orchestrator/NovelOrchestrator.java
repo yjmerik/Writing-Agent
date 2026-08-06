@@ -1247,7 +1247,9 @@ public class NovelOrchestrator {
                 if (!upgraded.isEmpty()) {
                     log.info("重写触发角色升级(章{}): {}", chapterIndex, String.join("、", upgraded));
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                log.warn("重写触发角色升级失败(章{}): {}", chapterIndex, e.getMessage(), e);
+            }
 
             // p11-fix: 重写后也触发关系演变追踪
             try {

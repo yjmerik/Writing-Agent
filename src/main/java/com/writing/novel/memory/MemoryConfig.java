@@ -52,6 +52,11 @@ public class MemoryConfig {
     }
 
     @Bean
+    public com.writing.novel.service.ExpositionDetector expositionDetector() {
+        return new com.writing.novel.service.ExpositionDetector();
+    }
+
+    @Bean
     public ContextAssembler contextAssembler(NovelRepository repository,
                                               KnowledgeBaseService knowledgeBase,
                                               SummaryService summaryService,

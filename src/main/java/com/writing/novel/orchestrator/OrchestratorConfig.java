@@ -56,7 +56,8 @@ public class OrchestratorConfig {
                                                  com.writing.novel.service.ClicheDetector clicheDetector,
                                                  RelationshipEvolutionTracker relationshipEvolutionTracker,
                                                  PassageEditor passageEditor,
-                                                 PlotMotifTracker plotMotifTracker) {
+                                                 PlotMotifTracker plotMotifTracker,
+                                                 com.writing.novel.service.ExpositionDetector expositionDetector) {
         return new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
@@ -65,6 +66,6 @@ public class OrchestratorConfig {
                 creativeDiversityService, narrativeThreadExtractor, readerReviewAgent,
                 foreshadowingResolutionDetector, sceneClassifier, diversityTracker, arcScheduler,
                 consistencyGuard, consistencyGate, foreshadowingImportanceAuditor, clicheDetector,
-                relationshipEvolutionTracker, passageEditor, plotMotifTracker);
+                relationshipEvolutionTracker, passageEditor, plotMotifTracker, expositionDetector);
     }
 }

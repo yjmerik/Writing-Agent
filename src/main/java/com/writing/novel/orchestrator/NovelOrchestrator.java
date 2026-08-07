@@ -60,6 +60,7 @@ public class NovelOrchestrator {
     private final RelationshipEvolutionTracker relationshipEvolutionTracker;
     private final PassageEditor passageEditor;
     private final PlotMotifTracker plotMotifTracker;
+    private final com.writing.novel.service.ExpositionDetector expositionDetector;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -94,7 +95,8 @@ public class NovelOrchestrator {
                               com.writing.novel.service.ClicheDetector clicheDetector,
                               RelationshipEvolutionTracker relationshipEvolutionTracker,
                               PassageEditor passageEditor,
-                              PlotMotifTracker plotMotifTracker) {
+                              PlotMotifTracker plotMotifTracker,
+                              com.writing.novel.service.ExpositionDetector expositionDetector) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -129,6 +131,7 @@ public class NovelOrchestrator {
         this.relationshipEvolutionTracker = relationshipEvolutionTracker;
         this.passageEditor = passageEditor;
         this.plotMotifTracker = plotMotifTracker;
+        this.expositionDetector = expositionDetector;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -848,6 +851,19 @@ public class NovelOrchestrator {
             }
         } catch (Exception e) {
             log.warn("一致性门禁失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+
+        // p11.1-J4: 说明文密度检测——连续无对话段落
+        try {
+            if (expositionDetector != null) {
+                expositionDetector.detect(projectId, chapterIndex, chapter.getContent())
+                        .ifPresent(issue -> {
+                            repository.saveContinuityIssue(issue);
+                            log.warn("说明文密度(章{}): {}", chapterIndex, issue.getDescription());
+                        });
+            }
+        } catch (Exception e) {
+            log.warn("说明文密度检测失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
         // 每 5 章检查风格漂移，解析评分并记录问题（p3-02）

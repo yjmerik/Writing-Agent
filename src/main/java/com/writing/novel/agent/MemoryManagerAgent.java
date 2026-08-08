@@ -34,7 +34,7 @@ public class MemoryManagerAgent {
                 .systemPrompt(systemPrompt)
                 .userMessage("请压缩第" + fromChapter + "-" + toChapter + "章：\n" + chaptersText)
                 .temperature(0.3)
-                .maxTokens(500)
+                .maxTokens(1500) // p12-K4: 500→1500（卷摘要需要更多空间）
                 .build();
 
         var resp = gateway.complete(req);

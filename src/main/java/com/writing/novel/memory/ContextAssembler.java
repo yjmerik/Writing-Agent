@@ -187,7 +187,7 @@ public class ContextAssembler {
         int lookBackTo = Math.max(1, chapterIndex - 1);
         // 细粒度摘要：最近 window 章
         List<Summary> recentSummaries = summaryService.findRecent(projectId, lookBackTo, RECENT_SUMMARY_WINDOW);
-        // 卷级摘要：全量注入（不受 window 限制），保证第 50 章能看到第 1 卷
+        // 卷级摘要：p12-K4 限制最多注入最近 3 卷，更早的只取摘要首句
         List<Summary> allSummaries = summaryService.findAll(projectId);
 
         List<Summary> fineGrained = new java.util.ArrayList<>();
@@ -195,21 +195,35 @@ public class ContextAssembler {
         for (Summary s : allSummaries) {
             int span = s.getToChapter() - s.getFromChapter() + 1;
             if (span > 3) {
-                volumeLevel.add(s); // 卷级全量
+                volumeLevel.add(s); // 卷级
             } else if (s.getToChapter() >= lookBackTo - RECENT_SUMMARY_WINDOW + 1) {
-                fineGrained.add(s); // 细粒度仅最近 window（用范围判断而非 contains）
+                fineGrained.add(s); // 细粒度仅最近 window
             }
         }
         if (fineGrained.isEmpty() && volumeLevel.isEmpty()) return "";
+
+        // p12-K4: 卷摘要按章节倒序排列，最近 3 卷详细，更早的截断
+        volumeLevel.sort((a, b) -> Integer.compare(b.getFromChapter(), a.getFromChapter()));
+        int VOLUME_DETAIL_LIMIT = 3;
 
         StringBuilder sb = new StringBuilder();
         // 先注入卷级摘要（远期剧情概览）
         if (!volumeLevel.isEmpty()) {
             sb.append("【前卷概览】\n");
-            for (Summary s : volumeLevel) {
+            for (int i = 0; i < volumeLevel.size(); i++) {
+                Summary s = volumeLevel.get(i);
                 sb.append("第").append(s.getFromChapter()).append("-")
-                        .append(s.getToChapter()).append("章：")
-                        .append(s.getContent()).append("\n");
+                        .append(s.getToChapter()).append("章：");
+                if (i < VOLUME_DETAIL_LIMIT) {
+                    // 最近 3 卷详细
+                    sb.append(s.getContent());
+                } else {
+                    // 更早的卷截断到前 100 字
+                    String content = s.getContent();
+                    sb.append(content.length() > 100 ? content.substring(0, 100) + "..." : content);
+                    sb.append("（早期卷，已精简）");
+                }
+                sb.append("\n");
             }
             sb.append("\n");
         }
@@ -331,10 +345,14 @@ public class ContextAssembler {
         final int LIMIT = 10;
 
         // p10-c1: 排序策略改革——
-        // 1. HIGH priority 或 mustResolve 的伏笔，永不被裁剪（始终注入）
-        // 2. 其余按"挂得最久"（currentChapter - plantedAtChapter）降序，取 top LIMIT
+        // 1. HIGH priority 或 mustResolve 的伏笔优先注入
+        // 2. p12-K4: HIGH 伏笔也设上限（最多 15 条），超过的按挂得最久优先
+        // 3. 其余按"挂得最久"（currentChapter - plantedAtChapter）降序，取 top LIMIT
         var mustInclude = unresolved.stream()
                 .filter(f -> f.getPriority() == Foreshadowing.Priority.HIGH || f.isMustResolve())
+                .sorted((a, b) -> Integer.compare(
+                        b.suspenseChapters(currentChapter), a.suspenseChapters(currentChapter)))
+                .limit(15)
                 .toList();
         var others = unresolved.stream()
                 .filter(f -> f.getPriority() != Foreshadowing.Priority.HIGH && !f.isMustResolve())
@@ -742,7 +760,7 @@ public class ContextAssembler {
     }
 
     /** Token 预算控制：超限时按优先级从低到高裁剪 */
-    private static final int TOKEN_BUDGET = 12000;
+    private static final int TOKEN_BUDGET = 16000; // p12-K4: 12000→16000
 
     private void applyTokenBudget(WritingContext ctx) {
         int total = sumTokens(ctx);

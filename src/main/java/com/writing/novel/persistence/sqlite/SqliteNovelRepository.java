@@ -271,6 +271,37 @@ public class SqliteNovelRepository implements NovelRepository {
     }
 
     @Override
+    public List<Chapter> findChapterMetaByProject(String projectId) {
+        List<Chapter> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT id, project_id, chapter_index, title, word_count, version, created_at, updated_at " +
+                     "FROM chapters WHERE project_id=? ORDER BY chapter_index")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Chapter c = new Chapter(rs.getString("project_id"),
+                        rs.getInt("chapter_index"), rs.getString("title"));
+                setField(c, "id", rs.getString("id"));
+                setField(c, "wordCount", rs.getInt("word_count"));
+                list.add(c);
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    @Override
+    public int getTotalWordCount(String projectId) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT COALESCE(SUM(word_count), 0) FROM chapters WHERE project_id=?")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getInt(1) : 0;
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
     public List<Chapter> findRecentChapters(String projectId, int count) {
         List<Chapter> all = findChaptersByProject(projectId);
         if (all.size() <= count) return all;

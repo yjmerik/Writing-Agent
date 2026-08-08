@@ -135,6 +135,8 @@ public class SqliteSchemaInitializer {
             for (String ddl : DDL) {
                 st.execute(ddl);
             }
+            // p12-K3: 创建索引（百万字性能基础）
+            createIndexes(st);
             // p10: 增量迁移——为旧库补充新增列（CREATE TABLE IF NOT EXISTS 不会改已有表结构）
             applyMigrations(st);
         } catch (SQLException e) {
@@ -150,6 +152,56 @@ public class SqliteSchemaInitializer {
             // duplicate column name → 列已存在，忽略
             if (!e.getMessage().contains("duplicate column name")) {
                 throw new RuntimeException(e);
+            }
+        }
+    }
+
+    /**
+     * p12-K3: 创建数据库索引——百万字级别的性能基础。
+     * 所有 WHERE/ORDER BY/GROUP BY 用到的列都需要索引。
+     */
+    private void createIndexes(Statement st) {
+        String[] indexes = {
+            // chapters: 按 project_id 查、按 index 排序
+            "CREATE INDEX IF NOT EXISTS idx_chapters_project ON chapters(project_id, chapter_index)",
+            // chapter_synopses: 按 project_id 查
+            "CREATE INDEX IF NOT EXISTS idx_synopses_project ON chapter_synopses(project_id, chapter_index)",
+            // characters: 按 project_id 查
+            "CREATE INDEX IF NOT EXISTS idx_characters_project ON characters(project_id)",
+            // foreshadowings: 按 project_id + resolved 过滤
+            "CREATE INDEX IF NOT EXISTS idx_foreshadowings_project ON foreshadowings(project_id, resolved, priority)",
+            // continuity_issues: 按 project_id + resolved 过滤
+            "CREATE INDEX IF NOT EXISTS idx_issues_project ON continuity_issues(project_id, resolved, detected_at_chapter)",
+            // entities: 按 project_id + type 过滤
+            "CREATE INDEX IF NOT EXISTS idx_entities_project ON entities(project_id, type)",
+            // entity_edges: 按 project_id / source / target 查
+            "CREATE INDEX IF NOT EXISTS idx_edges_project ON entity_edges(project_id)",
+            "CREATE INDEX IF NOT EXISTS idx_edges_source ON entity_edges(source_id)",
+            "CREATE INDEX IF NOT EXISTS idx_edges_target ON entity_edges(target_id)",
+            // summaries: 按 project_id 查
+            "CREATE INDEX IF NOT EXISTS idx_summaries_project ON summaries(project_id)",
+            // volumes: 按 project_id 查
+            "CREATE INDEX IF NOT EXISTS idx_volumes_project ON volumes(project_id)",
+            // knowledge_entries: 按 project_id 查
+            "CREATE INDEX IF NOT EXISTS idx_knowledge_project ON knowledge_entries(project_id)",
+            // chapter_reviews: 按 project_id + chapter 查
+            "CREATE INDEX IF NOT EXISTS idx_reviews_project ON chapter_reviews(project_id, chapter_index)",
+            // generation_logs: 按 project_id + agent_type 查
+            "CREATE INDEX IF NOT EXISTS idx_genlogs_project ON generation_logs(project_id, agent_type)",
+            // narrative_threads: 按 project_id 查
+            "CREATE INDEX IF NOT EXISTS idx_threads_project ON narrative_threads(project_id)",
+            // checkpoints: 按 project_id 查
+            "CREATE INDEX IF NOT EXISTS idx_checkpoints_project ON checkpoints(project_id)",
+            // evaluation_records: 按 project_id 查
+            "CREATE INDEX IF NOT EXISTS idx_eval_project ON evaluation_records(project_id)",
+            // writing_preferences: 按 project_id 查（主键已有，但显式声明）
+            "CREATE INDEX IF NOT EXISTS idx_prefs_project ON writing_preferences(project_id)"
+        };
+        for (String idx : indexes) {
+            try {
+                st.execute(idx);
+            } catch (SQLException e) {
+                // 索引已存在则忽略
             }
         }
     }

@@ -53,6 +53,12 @@ public interface NovelRepository {
     Optional<Chapter> findChapter(String id);
     Optional<Chapter> findChapterByIndex(String projectId, int chapterIndex);
     List<Chapter> findChaptersByProject(String projectId);
+
+    // p12-K3: 轻量查询——不全量加载正文
+    /** 只返回 index/title/wordCount（content 为 null），用于章节列表展示 */
+    List<Chapter> findChapterMetaByProject(String projectId);
+    /** SUM 聚合求总字数——不全量加载正文 */
+    int getTotalWordCount(String projectId);
     List<Chapter> findRecentChapters(String projectId, int count);
 
     // --- Summary ---

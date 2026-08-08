@@ -1214,9 +1214,8 @@ public class NovelOrchestrator {
 
     /** 统计项目总字数 */
     public int getTotalWordCount(String projectId) {
-        return repository.findChaptersByProject(projectId).stream()
-                .mapToInt(Chapter::getWordCount)
-                .sum();
+        // p12-K3: 使用 SUM 聚合，不全量加载正文
+        return repository.getTotalWordCount(projectId);
     }
 
     private void generateSummary(String projectId, int from, int to) {

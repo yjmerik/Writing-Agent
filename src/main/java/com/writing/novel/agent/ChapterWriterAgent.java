@@ -143,6 +143,8 @@ public class ChapterWriterAgent {
         if (vectorRetrieval != null) {
             try {
                 indexChapterInChunks(projectId, chapter, resp.getContent());
+                // p12-K3: 每章索引完后 flush 向量库
+                vectorRetrieval.flush();
             } catch (Exception e) {
                 // 索引失败不影响写作流程，章节已保存
             }

@@ -590,6 +590,8 @@ public class NovelOrchestrator {
         // 卷结束时生成卷级全局摘要（递归摘要）
         checkAndGenerateVolumeSummary(projectId, outline, chapterIndex);
 
+        // p12-K3: 向量库 flush 已在 ChapterWriterAgent.indexChapterInChunks 后完成
+
         // p7-1: INTERACTIVE 模式——每章写完后暂停等待审核
         if (p.getMode() == ProjectMode.INTERACTIVE) {
             p.setState(NovelState.PAUSED_AT_CHECKPOINT);

@@ -30,4 +30,11 @@ public interface VectorStore {
 
     /** 取回某 id 的原文 */
     String getText(String id);
+
+    /**
+     * p12-K3: 刷新持久化（批量写入）。
+     * 默认空实现（对不需要持久化的实现是 no-op）。
+     * EmbeddedVectorStore 覆盖为把内存索引写入文件。
+     */
+    default void flush() {}
 }

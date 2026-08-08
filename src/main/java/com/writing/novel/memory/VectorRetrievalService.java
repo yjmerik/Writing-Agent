@@ -37,4 +37,9 @@ public class VectorRetrievalService {
     public void remove(String id) {
         vectorStore.delete(id);
     }
+
+    /** p12-K3: 批量持久化 flush */
+    public void flush() {
+        vectorStore.flush();
+    }
 }

@@ -29,6 +29,7 @@ class EmbeddedVectorStoreTest extends VectorStoreContractTest {
     @Test
     void 重启后数据保留() {
         store().upsert("x1", "p1", "文本A", new float[]{1.0f, 0.0f});
+        store().flush(); // p12-K3: 批量持久化后需要手动 flush
         // 用同一路径重新加载
         EmbeddedVectorStore reloaded = new EmbeddedVectorStore(tempDir.resolve("vecs.idx").toString());
         assertEquals("文本A", reloaded.getText("x1"));

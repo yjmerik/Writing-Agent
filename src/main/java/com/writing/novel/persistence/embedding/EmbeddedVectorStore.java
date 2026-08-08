@@ -30,6 +30,11 @@ public class EmbeddedVectorStore implements VectorStore, Serializable {
 
     private final String indexPath;
     private final Map<String, Entry> index = new ConcurrentHashMap<>();
+    /** p12-K3: dirty 标记——批量持久化，不再每次 upsert 都写文件 */
+    private volatile boolean dirty = false;
+    /** 累计 upsert/delete 次数，达到阈值自动 flush */
+    private int pendingChanges = 0;
+    private static final int FLUSH_THRESHOLD = 20;
 
     public EmbeddedVectorStore(String indexPath) {
         this.indexPath = indexPath;
@@ -39,13 +44,30 @@ public class EmbeddedVectorStore implements VectorStore, Serializable {
     @Override
     public synchronized void upsert(String id, String projectId, String text, float[] vector) {
         index.put(id, new Entry(id, projectId, text, vector.clone()));
-        persist();
+        markDirty();
     }
 
     @Override
     public synchronized void delete(String id) {
         index.remove(id);
+        markDirty();
+    }
+
+    /** p12-K3: 标记脏 + 达阈值自动 flush */
+    private void markDirty() {
+        dirty = true;
+        pendingChanges++;
+        if (pendingChanges >= FLUSH_THRESHOLD) {
+            flush();
+        }
+    }
+
+    /** p12-K3: 手动触发持久化（每章写完后调用） */
+    public synchronized void flush() {
+        if (!dirty) return;
         persist();
+        dirty = false;
+        pendingChanges = 0;
     }
 
     @Override

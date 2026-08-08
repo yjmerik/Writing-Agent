@@ -1122,6 +1122,23 @@ public class NovelOrchestrator {
             Project p = loadProject(projectId);
             Outline outline = repository.findOutlineByProject(projectId).orElse(null);
             if (outline == null) break;
+
+            // p12-fix: 分层大纲延迟生成——大纲耗尽时尝试生成下一卷
+            if (!hasNextChapter(outline, p.getCurrentChapterIndex())) {
+                boolean extended = tryExtendLayeredOutline(projectId, p);
+                if (extended) {
+                    // 重新加载大纲
+                    outline = repository.findOutlineByProject(projectId).orElse(null);
+                    if (outline == null || !hasNextChapter(outline, p.getCurrentChapterIndex())) {
+                        // 仍然没有更多章节，进入完结流程
+                        break;
+                    }
+                } else {
+                    break;
+                }
+            }
+
+            // 跳过已完成的逻辑到 hasNextChapter false 的处理
             if (!hasNextChapter(outline, p.getCurrentChapterIndex())) {
                 // p10.1-e1: FINAL 前自动触发伏笔重要性审计（只触发一次）
                 if (foreshadowingImportanceAuditor != null && written == 0) {
@@ -1274,6 +1291,89 @@ public class NovelOrchestrator {
         return outline.getVolumes().stream()
                 .flatMap(v -> v.getSynopses().stream())
                 .anyMatch(s -> s.getChapterIndex() > currentIndex);
+    }
+
+    /**
+     * p12-fix: 分层大纲延迟生成——尝试用 planVolume 生成下一卷的详细章节大纲。
+     * @return true 如果成功扩展了大纲（新增了章节梗概）
+     */
+    private boolean tryExtendLayeredOutline(String projectId, Project p) {
+        try {
+            var prefs = repository.findWritingPreferences(projectId).orElse(null);
+            if (prefs == null || !prefs.isLayeredOutline()) return false;
+
+            int targetChapters = prefs.getTargetChapters();
+            int currentChapter = p.getCurrentChapterIndex();
+            if (currentChapter >= targetChapters) return false;
+
+            // 从 outline.premise 中解析总纲，找到下一卷信息
+            var outlineOpt = repository.findOutlineByProject(projectId);
+            if (outlineOpt.isEmpty()) return false;
+            String masterOutline = outlineOpt.get().getPremise();
+            if (masterOutline == null || masterOutline.isBlank()) return false;
+
+            // 计算下一卷的范围
+            int nextStartChapter = currentChapter + 1;
+            int chaptersPerVolume = Math.max(15, targetChapters / (targetChapters / 20));
+            int nextEndChapter = Math.min(nextStartChapter + chaptersPerVolume - 1, targetChapters);
+            int volumeNumber = (nextStartChapter - 1) / chaptersPerVolume + 1;
+
+            log.info("分层大纲延迟生成: 卷{}, 第{}-{}章", volumeNumber, nextStartChapter, nextEndChapter);
+
+            // 获取前文摘要（最近卷的摘要）
+            String previousSummary = "";
+            var summaries = repository.findSummariesByProject(projectId);
+            if (!summaries.isEmpty()) {
+                previousSummary = summaries.stream()
+                        .reduce((a, b) -> b).get().getContent(); // 取最后一条
+            }
+
+            // 获取已有角色列表
+            String existingCharacters = repository.findCharactersByProject(projectId).stream()
+                    .map(c -> c.getName() + "(" + c.getRole() + ")")
+                    .reduce((a, b) -> a + ", " + b).orElse("无");
+
+            // 调用 planVolume 生成下一卷
+            String volumeText = plotter.planVolume(
+                    masterOutline, previousSummary,
+                    "卷" + volumeNumber, "（延迟生成，根据总纲规划）",
+                    nextStartChapter, nextEndChapter, existingCharacters);
+
+            // 解析并追加到 outline
+            Outline outline = outlineOpt.get();
+            parseAndAppendVolume(outline, volumeText, projectId, volumeNumber, nextStartChapter);
+            repository.saveOutline(outline);
+
+            log.info("分层大纲延迟生成完成: 卷{}, 新增章节梗概", volumeNumber);
+            return true;
+        } catch (Exception e) {
+            log.warn("分层大纲延迟生成失败: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * p12-fix: 解析 planVolume 的输出并追加到已有 outline。
+     */
+    private void parseAndAppendVolume(Outline outline, String text, String projectId,
+                                       int volumeNumber, int startChapter) {
+        // 创建新卷
+        Volume volume = new Volume(projectId, volumeNumber, "卷" + volumeNumber, "延迟生成");
+        outline.addVolume(volume);
+
+        // 解析章节（复用 plotting 的格式：第X章 章节名：场景节拍...）
+        java.util.regex.Pattern chapterPattern = java.util.regex.Pattern.compile(
+                "第(\\d+)章\\s*(.+?)：(.+?)(?=第\\d+章|$)", java.util.regex.Pattern.DOTALL);
+        java.util.regex.Matcher m = chapterPattern.matcher(text);
+        while (m.find()) {
+            int chIdx = Integer.parseInt(m.group(1));
+            String title = m.group(2).trim();
+            String body = m.group(3).trim();
+            ChapterSynopsis syn = new ChapterSynopsis(projectId, chIdx, title, body);
+            syn.setBeats(body); // 简化：body 作为 beats
+            volume.addSynopsis(syn);
+        }
+        log.info("解析追加卷{}: {} 章", volumeNumber, volume.getSynopses().size());
     }
 
     /**

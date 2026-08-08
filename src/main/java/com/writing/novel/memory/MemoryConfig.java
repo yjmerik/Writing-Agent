@@ -57,6 +57,13 @@ public class MemoryConfig {
     }
 
     @Bean
+    public com.writing.novel.service.WritingTaskExecutor writingTaskExecutor(
+            com.writing.novel.orchestrator.NovelOrchestrator orchestrator,
+            NovelRepository repository) {
+        return new com.writing.novel.service.WritingTaskExecutor(orchestrator, repository);
+    }
+
+    @Bean
     public ContextAssembler contextAssembler(NovelRepository repository,
                                               KnowledgeBaseService knowledgeBase,
                                               SummaryService summaryService,

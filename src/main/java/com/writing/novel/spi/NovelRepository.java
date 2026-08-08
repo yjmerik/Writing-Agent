@@ -17,6 +17,7 @@ import com.writing.novel.domain.Summary;
 import com.writing.novel.domain.GenerationLog;
 import com.writing.novel.domain.NarrativeThread;
 import com.writing.novel.domain.WritingPreferences;
+import com.writing.novel.domain.WritingTask;
 
 import java.util.List;
 import java.util.Optional;
@@ -106,6 +107,12 @@ public interface NovelRepository {
     void saveChapterReview(ChapterReview review);
     Optional<ChapterReview> findChapterReview(String projectId, int chapterIndex);
     List<ChapterReview> findChapterReviewsByProject(String projectId);
+
+    // --- p12-K2: WritingTask（异步写作任务） ---
+    void saveWritingTask(WritingTask task);
+    Optional<WritingTask> findWritingTask(String taskId);
+    Optional<WritingTask> findActiveWritingTask(String projectId);
+    List<WritingTask> findWritingTasksByProject(String projectId);
 
     // --- WritingPreferences ---
     void saveWritingPreferences(WritingPreferences prefs);

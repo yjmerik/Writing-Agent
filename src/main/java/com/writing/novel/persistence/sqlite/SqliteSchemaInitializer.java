@@ -120,7 +120,14 @@ public class SqliteSchemaInitializer {
             "id TEXT PRIMARY KEY, project_id TEXT, chapter_index INTEGER, " +
             "overall_score INTEGER, engagement INTEGER, coherence INTEGER, " +
             "character_score INTEGER, hook INTEGER, " +
-            "summary TEXT, issues TEXT, improvement TEXT, created_at TEXT)"
+            "summary TEXT, issues TEXT, improvement TEXT, created_at TEXT)",
+
+        // p12-K2: 异步写作任务表
+        "CREATE TABLE IF NOT EXISTS writing_tasks (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, status TEXT, " +
+            "current_chapter INTEGER, total_chapters INTEGER, " +
+            "chapters_written INTEGER, total_words INTEGER, " +
+            "error_message TEXT, created_at TEXT, updated_at TEXT)"
     };
 
     private final ConnectionProvider cp;

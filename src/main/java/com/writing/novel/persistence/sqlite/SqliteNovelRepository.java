@@ -846,6 +846,78 @@ public class SqliteNovelRepository implements NovelRepository {
         return r;
     }
 
+    // --- p12-K2: WritingTask ---
+
+    @Override
+    public void saveWritingTask(WritingTask t) {
+        String sql = "INSERT INTO writing_tasks (id,project_id,status,current_chapter,total_chapters," +
+                "chapters_written,total_words,error_message,created_at,updated_at) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
+                "status=excluded.status, current_chapter=excluded.current_chapter, " +
+                "total_chapters=excluded.total_chapters, chapters_written=excluded.chapters_written, " +
+                "total_words=excluded.total_words, error_message=excluded.error_message, " +
+                "updated_at=excluded.updated_at";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, t.getId()); ps.setString(2, t.getProjectId());
+            ps.setString(3, t.getStatus().name()); ps.setInt(4, t.getCurrentChapter());
+            ps.setInt(5, t.getTotalChapters()); ps.setInt(6, t.getChaptersWritten());
+            ps.setInt(7, t.getTotalWords());
+            ps.setString(8, t.getErrorMessage());
+            ps.setString(9, t.getCreatedAt().toString());
+            ps.setString(10, t.getUpdatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public Optional<WritingTask> findWritingTask(String taskId) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM writing_tasks WHERE id=?")) {
+            ps.setString(1, taskId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? Optional.of(mapWritingTask(rs)) : Optional.empty();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public Optional<WritingTask> findActiveWritingTask(String projectId) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM writing_tasks WHERE project_id=? AND status='RUNNING' " +
+                     "ORDER BY updated_at DESC LIMIT 1")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? Optional.of(mapWritingTask(rs)) : Optional.empty();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public List<WritingTask> findWritingTasksByProject(String projectId) {
+        List<WritingTask> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM writing_tasks WHERE project_id=? ORDER BY created_at DESC")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapWritingTask(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    private WritingTask mapWritingTask(ResultSet rs) throws SQLException {
+        WritingTask t = new WritingTask(rs.getString("project_id"), rs.getInt("total_chapters"));
+        setField(t, "id", rs.getString("id"));
+        t.setStatus(WritingTask.Status.valueOf(rs.getString("status")));
+        t.setCurrentChapter(rs.getInt("current_chapter"));
+        t.setChaptersWritten(rs.getInt("chapters_written"));
+        t.setTotalWords(rs.getInt("total_words"));
+        String err = rs.getString("error_message");
+        t.setErrorMessage(err != null ? err : "");
+        return t;
+    }
+
     // --- WritingPreferences ---
 
     @Override

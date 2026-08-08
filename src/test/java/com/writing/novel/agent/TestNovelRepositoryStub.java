@@ -84,6 +84,12 @@ public class TestNovelRepositoryStub implements NovelRepository {
     @Override public Optional<com.writing.novel.domain.ChapterReview> findChapterReview(String p, int c) { return Optional.empty(); }
     @Override public List<com.writing.novel.domain.ChapterReview> findChapterReviewsByProject(String p) { return List.of(); }
 
+    // --- p12-K2: WritingTask ---
+    @Override public void saveWritingTask(com.writing.novel.domain.WritingTask t) {}
+    @Override public Optional<com.writing.novel.domain.WritingTask> findWritingTask(String t) { return Optional.empty(); }
+    @Override public Optional<com.writing.novel.domain.WritingTask> findActiveWritingTask(String p) { return Optional.empty(); }
+    @Override public List<com.writing.novel.domain.WritingTask> findWritingTasksByProject(String p) { return List.of(); }
+
     // --- WritingPreferences ---
     @Override public void saveWritingPreferences(WritingPreferences p) {}
     @Override public Optional<WritingPreferences> findWritingPreferences(String p) { return Optional.empty(); }

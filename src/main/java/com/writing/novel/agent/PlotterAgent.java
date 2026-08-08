@@ -104,6 +104,73 @@ public class PlotterAgent {
         return outline;
     }
 
+    // ==================== p12-K1: 分层大纲 ====================
+
+    /**
+     * p12-K1: 生成全书总纲（卷级规划，不含章节细节）。
+     * 用于百万字项目——先生成卷结构，后续按需生成分卷大纲。
+     * @return 总纲文本（包含 N 卷的标题/梗概/章节范围）
+     */
+    public String planMasterOutline(String projectId, String concept, int totalChapters,
+                                     String worldSummary, String genreRules) {
+        int volumeCount = Math.max(2, totalChapters / 20); // 每 20 章约 1 卷
+        String systemPrompt = promptService.render("master-outline", Map.of(
+                "concept", concept,
+                "worldSummary", worldSummary != null ? worldSummary : "（暂无世界观摘要）",
+                "genreRules", genreRules != null ? genreRules : "",
+                "totalChapters", String.valueOf(totalChapters),
+                "volumeCount", String.valueOf(volumeCount)));
+
+        var req = LlmRequest.builder()
+                .taskType(LlmTaskType.PLOTTING)
+                .systemPrompt(systemPrompt)
+                .userMessage("请生成全书总纲。")
+                .temperature(0.7)
+                .maxTokens(8192)
+                .build();
+        var resp = gateway.complete(req);
+        return resp.getContent();
+    }
+
+    /**
+     * p12-K1: 为指定卷生成详细章节大纲（延迟生成）。
+     * 写到该卷第一章前才调用——避免一次性生成 250 章。
+     * @param masterOutline 全书总纲文本
+     * @param previousSummary 前卷摘要（用于衔接）
+     * @param volumeTitle 本卷标题
+     * @param volumeSummary 本卷梗概
+     * @param startChapter 起始章号
+     * @param endChapter 结束章号
+     * @param existingCharacters 已有角色列表
+     * @return 该卷的章节大纲文本（LLM 输出）
+     */
+    public String planVolume(String masterOutline, String previousSummary,
+                              String volumeTitle, String volumeSummary,
+                              int startChapter, int endChapter,
+                              String existingCharacters) {
+        int chapterCount = endChapter - startChapter + 1;
+        String systemPrompt = promptService.render("volume-outline", Map.of(
+                "masterOutline", masterOutline != null ? masterOutline : "（暂无总纲）",
+                "previousSummary", previousSummary != null ? previousSummary : "（第一卷，无前文）",
+                "volumeTitle", volumeTitle,
+                "volumeSummary", volumeSummary != null ? volumeSummary : "",
+                "startChapter", String.valueOf(startChapter),
+                "endChapter", String.valueOf(endChapter),
+                "startChapterPlus1", String.valueOf(startChapter + 1),
+                "chapterCount", String.valueOf(chapterCount),
+                "existingCharacters", existingCharacters != null ? existingCharacters : "（暂无）"));
+
+        var req = LlmRequest.builder()
+                .taskType(LlmTaskType.PLOTTING)
+                .systemPrompt(systemPrompt)
+                .userMessage("请生成本卷的详细章节大纲。")
+                .temperature(0.7)
+                .maxTokens(8192)
+                .build();
+        var resp = gateway.complete(req);
+        return resp.getContent();
+    }
+
     private Outline parseOutline(String text, String projectId) {
         // 提取总纲
         String premise = "";

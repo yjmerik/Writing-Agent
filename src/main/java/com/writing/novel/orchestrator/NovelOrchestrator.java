@@ -262,7 +262,26 @@ public class NovelOrchestrator {
             }
             String plotDiversity = creativeDiversityService != null
                     ? creativeDiversityService.getGlobalDiversityGuide(projectId) : "";
-            plotter.plan(projectId, p.getConcept(), theme, 24, theme, genreRules, plotDiversity);
+
+            // p12-K1: 从 prefs 读取目标章数（默认 24，百万字可设 240）
+            int targetChapters = repository.findWritingPreferences(projectId)
+                    .map(prefs -> prefs.getTargetChapters()).orElse(24);
+            boolean useLayered = repository.findWritingPreferences(projectId)
+                    .map(prefs -> prefs.isLayeredOutline()).orElse(false);
+
+            if (useLayered && targetChapters > 40) {
+                // p12-K1: 分层大纲模式——先生成总纲，第一卷详细大纲
+                String wbSummaryForOutline = collectWorldbuildingSummary(projectId);
+                String masterOutline = plotter.planMasterOutline(
+                        projectId, p.getConcept(), targetChapters, wbSummaryForOutline, genreRules);
+                // 存储总纲到 outline.premise（临时存储，后续按卷扩展）
+                Outline masterOutlineObj = new Outline(projectId, masterOutline);
+                repository.saveOutline(masterOutlineObj);
+                log.info("分层大纲总纲生成完成: {} 卷规划", Math.max(2, targetChapters / 20));
+            } else {
+                // 传统模式——一次性生成全部大纲（≤40章适用）
+                plotter.plan(projectId, p.getConcept(), theme, targetChapters, theme, genreRules, plotDiversity);
+            }
 
             // 记录大纲生成
             if (creativeDiversityService != null) {

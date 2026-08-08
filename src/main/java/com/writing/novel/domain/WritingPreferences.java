@@ -54,6 +54,10 @@ public class WritingPreferences {
     // p11.1-J3: 伏笔悬置告警
     private int foreshadowSuspenseThreshold;        // 默认 8：伏笔悬置超过 N 章未回收→告警
 
+    // p12-K1: 百万字规模参数
+    private int targetChapters;                     // 默认 24：目标总章数（百万字≈240章）
+    private boolean layeredOutline;                 // 默认 false：是否使用分层大纲模式
+
     private Instant updatedAt;
 
     public WritingPreferences(String projectId) {
@@ -77,6 +81,8 @@ public class WritingPreferences {
         this.chapterLengthVariation = "VARIED";
         this.fastPaceWindow = 4;
         this.foreshadowSuspenseThreshold = 8;
+        this.targetChapters = 24;
+        this.layeredOutline = false;
         this.updatedAt = Instant.now();
     }
 
@@ -106,6 +112,8 @@ public class WritingPreferences {
                 case "chapterLengthVariation" -> this.chapterLengthVariation = (String) value;
                 case "fastPaceWindow" -> this.fastPaceWindow = ((Number) value).intValue();
                 case "foreshadowSuspenseThreshold" -> this.foreshadowSuspenseThreshold = ((Number) value).intValue();
+                case "targetChapters" -> this.targetChapters = ((Number) value).intValue();
+                case "layeredOutline" -> this.layeredOutline = (Boolean) value;
             }
         });
         this.updatedAt = Instant.now();
@@ -132,6 +140,8 @@ public class WritingPreferences {
         m.put("chapterLengthVariation", chapterLengthVariation);
         m.put("fastPaceWindow", fastPaceWindow);
         m.put("foreshadowSuspenseThreshold", foreshadowSuspenseThreshold);
+        m.put("targetChapters", targetChapters);
+        m.put("layeredOutline", layeredOutline);
         m.put("updatedAt", updatedAt.toString());
         return m;
     }
@@ -176,5 +186,9 @@ public class WritingPreferences {
     public void setFastPaceWindow(int w) { this.fastPaceWindow = w; this.updatedAt = Instant.now(); }
     public int getForeshadowSuspenseThreshold() { return foreshadowSuspenseThreshold; }
     public void setForeshadowSuspenseThreshold(int t) { this.foreshadowSuspenseThreshold = t; this.updatedAt = Instant.now(); }
+    public int getTargetChapters() { return targetChapters; }
+    public void setTargetChapters(int t) { this.targetChapters = t; this.updatedAt = Instant.now(); }
+    public boolean isLayeredOutline() { return layeredOutline; }
+    public void setLayeredOutline(boolean l) { this.layeredOutline = l; this.updatedAt = Instant.now(); }
     public Instant getUpdatedAt() { return updatedAt; }
 }

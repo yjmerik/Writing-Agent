@@ -928,8 +928,8 @@ public class SqliteNovelRepository implements NovelRepository {
                 "enable_feedback_injection,feedback_window,dialogue_differentiation," +
                 "plot_stall_window,character_upgrade_span,min_chapter_length," +
                 "max_beats_per_chapter,max_chapter_length,chapter_length_variation,fast_pace_window," +
-                "foreshadow_suspense_threshold,updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET " +
+                "foreshadow_suspense_threshold,target_chapters,layered_outline,updated_at) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET " +
                 "dialogue_density=excluded.dialogue_density, " +
                 "enable_dialogue_enforcement=excluded.enable_dialogue_enforcement, " +
                 "enable_climax_rotation=excluded.enable_climax_rotation, " +
@@ -948,6 +948,8 @@ public class SqliteNovelRepository implements NovelRepository {
                 "chapter_length_variation=excluded.chapter_length_variation, " +
                 "fast_pace_window=excluded.fast_pace_window, " +
                 "foreshadow_suspense_threshold=excluded.foreshadow_suspense_threshold, " +
+                "target_chapters=excluded.target_chapters, " +
+                "layered_outline=excluded.layered_outline, " +
                 "updated_at=excluded.updated_at";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -970,7 +972,9 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setString(17, p.getChapterLengthVariation() != null ? p.getChapterLengthVariation() : "VARIED");
             ps.setInt(18, p.getFastPaceWindow());
             ps.setInt(19, p.getForeshadowSuspenseThreshold());
-            ps.setString(20, p.getUpdatedAt().toString());
+            ps.setInt(20, p.getTargetChapters());
+            ps.setInt(21, p.isLayeredOutline() ? 1 : 0);
+            ps.setString(22, p.getUpdatedAt().toString());
             ps.executeUpdate();
         } catch (SQLException ex) { throw new RuntimeException(ex); }
     }
@@ -1151,6 +1155,8 @@ public class SqliteNovelRepository implements NovelRepository {
         if (p.getChapterLengthVariation() == null) p.setChapterLengthVariation("VARIED");
         try { p.setFastPaceWindow(rs.getInt("fast_pace_window")); } catch (Exception ignored) { p.setFastPaceWindow(4); }
         try { p.setForeshadowSuspenseThreshold(rs.getInt("foreshadow_suspense_threshold")); } catch (Exception ignored) { p.setForeshadowSuspenseThreshold(8); }
+        try { p.setTargetChapters(rs.getInt("target_chapters")); } catch (Exception ignored) { p.setTargetChapters(24); }
+        try { p.setLayeredOutline(rs.getInt("layered_outline") == 1); } catch (Exception ignored) { p.setLayeredOutline(false); }
         return p;
     }
     private KnowledgeEntry mapEntry(ResultSet rs) throws SQLException {

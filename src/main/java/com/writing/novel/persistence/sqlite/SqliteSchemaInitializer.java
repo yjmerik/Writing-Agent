@@ -102,6 +102,8 @@ public class SqliteSchemaInitializer {
             "chapter_length_variation TEXT DEFAULT 'VARIED', " +
             "fast_pace_window INTEGER DEFAULT 4, " +
             "foreshadow_suspense_threshold INTEGER DEFAULT 8, " +
+            "target_chapters INTEGER DEFAULT 24, " +
+            "layered_outline INTEGER DEFAULT 0, " +
             "updated_at TEXT)",
 
         // 生成日志表（创意多样性追踪）

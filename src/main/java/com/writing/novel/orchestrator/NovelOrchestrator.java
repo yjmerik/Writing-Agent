@@ -1136,11 +1136,26 @@ public class NovelOrchestrator {
      * 返回本次新写的章节数。
      */
     public int runWritingLoop(String projectId, int maxChapters) {
+        return runWritingLoop(projectId, maxChapters, () -> false);
+    }
+
+    /**
+     * 连续写作：从当前章节一直写到大纲结束，或达到 maxChapters 上限。
+     * p13-mc-p0-01: 支持取消信号检查——每章前调 cancelChecker，true 则退出。
+     * @param cancelChecker 返回 true 表示用户请求取消，循环在当前章完成后退出
+     * @return 本次新写的章节数
+     */
+    public int runWritingLoop(String projectId, int maxChapters, java.util.function.BooleanSupplier cancelChecker) {
         int written = 0;
         int consecutiveFailures = 0;
         int consecutiveHighIssues = 0;
 
         while (written < maxChapters) {
+            // p13-mc-p0-01: 每章前检查取消信号
+            if (cancelChecker.getAsBoolean()) {
+                log.info("写作循环被取消（用户请求），已写 {} 章", written);
+                break;
+            }
             Project p = loadProject(projectId);
             Outline outline = repository.findOutlineByProject(projectId).orElse(null);
             if (outline == null) break;

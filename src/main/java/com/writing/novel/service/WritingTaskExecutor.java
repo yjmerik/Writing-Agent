@@ -62,7 +62,9 @@ public class WritingTaskExecutor {
     private void executeWriting(WritingTask task, int maxChapters) {
         try {
             log.info("写作任务开始: {}", task.getId());
-            int written = orchestrator.runWritingLoop(task.getProjectId(), maxChapters);
+            final String taskId = task.getId();
+            int written = orchestrator.runWritingLoop(task.getProjectId(), maxChapters,
+                    () -> isCancelled(taskId));
 
             // 检查是否被取消
             if (isCancelled(task.getId())) {

@@ -1236,8 +1236,11 @@ public class NovelOrchestrator {
                             ContinuityIssue.Severity.HIGH,
                             "全书完结时有 " + unresolved.size() + " 条伏笔未回收"));
                 }
-                p.setState(NovelState.FINAL);
+                // mc-p3-02: 成书质量门禁——检查通过才 FINAL，否则 NEEDS_REVISION
+                boolean passed = runFinalAuditGate(projectId, p);
+                p.setState(passed ? NovelState.FINAL : NovelState.NEEDS_REVISION);
                 repository.saveProject(p);
+                log.info("成书门禁: {} → {}", passed ? "PASS" : "FAIL", passed ? "FINAL" : "NEEDS_REVISION");
                 break;
             }
             if (p.getState() == NovelState.VOLUME_DONE) {
@@ -1333,6 +1336,52 @@ public class NovelOrchestrator {
                 }
                 // 卷级摘要(span>3)不在此重算，留给卷末或FINAL门禁处理
             }
+        }
+    }
+
+    /**
+     * mc-p3-02: 成书质量门禁——FINAL 前的全局质量检查。
+     * 硬性门禁（不通过→NEEDS_REVISION）：
+     * - mustResolve 伏笔未回收数 > 3
+     * - 未解决 HIGH 级 ContinuityIssue > 10
+     * 软性门禁（只警告不阻塞）：
+     * - 总字数 < targetChapters * 2000（篇幅不足）
+     */
+    private boolean runFinalAuditGate(String projectId, Project p) {
+        try {
+            // 硬性：mustResolve 伏笔
+            var unresolved = repository.findUnresolvedForeshadowings(projectId);
+            var criticalUnresolved = unresolved.stream()
+                    .filter(Foreshadowing::isMustResolve).toList();
+            if (criticalUnresolved.size() > 3) {
+                log.warn("成书门禁 FAIL: {} 条 mustResolve 伏笔未回收", criticalUnresolved.size());
+                return false;
+            }
+
+            // 硬性：未解决 HIGH issues
+            long highIssues = repository.findUnresolvedIssues(projectId).stream()
+                    .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH).count();
+            if (highIssues > 10) {
+                log.warn("成书门禁 FAIL: {} 条未解决 HIGH 级问题", highIssues);
+                return false;
+            }
+
+            // 软性：篇幅
+            int totalWords = repository.getTotalWordCount(projectId);
+            int targetChapters = repository.findWritingPreferences(projectId)
+                    .map(prefs -> prefs.getTargetChapters()).orElse(80);
+            int minWords = targetChapters * 2000;
+            if (totalWords < minWords) {
+                log.warn("成书门禁 SOFT WARN: 总字数 {} < 目标 {}", totalWords, minWords);
+                // 软性不阻塞
+            }
+
+            log.info("成书门禁 PASS: 伏笔={}, HIGH issues={}, 字数={}",
+                    criticalUnresolved.size(), highIssues, totalWords);
+            return true;
+        } catch (Exception e) {
+            log.warn("成书门禁异常，默认通过: {}", e.getMessage());
+            return true;
         }
     }
 

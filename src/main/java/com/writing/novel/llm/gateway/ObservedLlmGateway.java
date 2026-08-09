@@ -26,11 +26,14 @@ public class ObservedLlmGateway implements LlmGateway {
         long start = System.currentTimeMillis();
         try {
             LlmResponse response = delegate.complete(request);
+            // mc-p3-03: 补估算成本（DeepSeek 定价：输入 0.001元/千token，输出 0.002元/千token）
+            double estimatedCostCny = estimateCost(response.getPromptTokens(), response.getCompletionTokens());
             EventLog.emit("LLM_CALL", Map.of(
                     "taskType", request.getTaskType().name(),
                     "durationMs", System.currentTimeMillis() - start,
                     "promptTokens", response.getPromptTokens(),
-                    "completionTokens", response.getCompletionTokens()));
+                    "completionTokens", response.getCompletionTokens(),
+                    "estimatedCostCny", Math.round(estimatedCostCny * 10000) / 10000.0));
             return response;
         } catch (RuntimeException e) {
             EventLog.emit("LLM_ERROR", Map.of(
@@ -71,5 +74,14 @@ public class ObservedLlmGateway implements LlmGateway {
                 handler.onError(error);
             }
         });
+    }
+
+    /**
+     * mc-p3-03: 估算 LLM 调用成本（人民币）。
+     * DeepSeek-V4 定价参考：输入 0.001元/千token，输出 0.002元/千token。
+     */
+    private static double estimateCost(int promptTokens, int completionTokens) {
+        if (promptTokens <= 0 && completionTokens <= 0) return 0;
+        return (promptTokens / 1000.0) * 0.001 + (completionTokens / 1000.0) * 0.002;
     }
 }

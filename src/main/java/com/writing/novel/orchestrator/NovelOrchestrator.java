@@ -1318,6 +1318,24 @@ public class NovelOrchestrator {
         repository.saveProject(p);
     }
 
+    /**
+     * mc-p1-02: 重写章节后失效覆盖该章的摘要——重新生成覆盖该章的滚动摘要。
+     */
+    private void invalidateSummariesForChapter(String projectId, int chapterIndex) {
+        var summaries = repository.findSummariesByProject(projectId);
+        for (var s : summaries) {
+            if (chapterIndex >= s.getFromChapter() && chapterIndex <= s.getToChapter()) {
+                int span = s.getToChapter() - s.getFromChapter() + 1;
+                if (span <= 3) {
+                    // 细粒度摘要——重算
+                    log.info("重算覆盖第{}章的摘要(范围{}-{})", chapterIndex, s.getFromChapter(), s.getToChapter());
+                    generateSummary(projectId, s.getFromChapter(), s.getToChapter());
+                }
+                // 卷级摘要(span>3)不在此重算，留给卷末或FINAL门禁处理
+            }
+        }
+    }
+
     private ChapterSynopsis findSynopsis(Outline outline, int chapterIndex) {
         for (Volume v : outline.getVolumes()) {
             for (ChapterSynopsis s : v.getSynopses()) {
@@ -1467,6 +1485,11 @@ public class NovelOrchestrator {
         if (newContent != null && newContent.length() >= 2000) {
             existing.setContent(newContent);
             repository.saveChapter(existing);
+
+            // mc-p1-02: 重写后失效覆盖该章的摘要（标记 dirty 供下次组装时重算）
+            try {
+                invalidateSummariesForChapter(projectId, chapterIndex);
+            } catch (Exception ignored) {}
 
             // 重新提取实体和伏笔
             try { entityGraphService.extractFromChapter(projectId, existing); } catch (Exception ignored) {}

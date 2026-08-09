@@ -400,9 +400,31 @@ public class NovelOrchestrator {
         }
 
         if (synopsis == null) {
-            p.setState(NovelState.VOLUME_DONE);
-            repository.saveProject(p);
-            return null;
+            // p12-fix: 大纲耗尽——尝试分层大纲延迟扩展
+            boolean extended = tryExtendLayeredOutline(projectId, p);
+            if (extended) {
+                // 重新查找大纲和 synopsis
+                outline = repository.findOutlineByProject(projectId).orElse(null);
+                if (outline != null) {
+                    synopsis = findSynopsis(outline, chapterIndex);
+                    if (synopsis == null) {
+                        // gap-skip: 找下一个有 synopsis 的章节
+                        for (int i = chapterIndex + 1; i <= chapterIndex + 20; i++) {
+                            ChapterSynopsis next = findSynopsis(outline, i);
+                            if (next != null) {
+                                chapterIndex = i;
+                                synopsis = next;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if (synopsis == null) {
+                p.setState(NovelState.VOLUME_DONE);
+                repository.saveProject(p);
+                return null;
+            }
         }
 
         // p10-a2: 角色弧光调度——注入配角出场建议
@@ -1341,10 +1363,14 @@ public class NovelOrchestrator {
 
             // 解析并追加到 outline
             Outline outline = outlineOpt.get();
-            parseAndAppendVolume(outline, volumeText, projectId, volumeNumber, nextStartChapter);
+            int parsed = parseAndAppendVolume(outline, volumeText, projectId, volumeNumber, nextStartChapter);
+            if (parsed == 0) {
+                log.warn("分层大纲延迟生成: 卷{} 解析出0章，LLM输出格式不匹配", volumeNumber);
+                return false;
+            }
             repository.saveOutline(outline);
 
-            log.info("分层大纲延迟生成完成: 卷{}, 新增章节梗概", volumeNumber);
+            log.info("分层大纲延迟生成完成: 卷{}, 新增 {} 章梗概", volumeNumber, parsed);
             return true;
         } catch (Exception e) {
             log.warn("分层大纲延迟生成失败: {}", e.getMessage());
@@ -1354,26 +1380,37 @@ public class NovelOrchestrator {
 
     /**
      * p12-fix: 解析 planVolume 的输出并追加到已有 outline。
+     * @return 解析出的章节数（0 表示解析失败）
      */
-    private void parseAndAppendVolume(Outline outline, String text, String projectId,
+    private int parseAndAppendVolume(Outline outline, String text, String projectId,
                                        int volumeNumber, int startChapter) {
         // 创建新卷
         Volume volume = new Volume(projectId, volumeNumber, "卷" + volumeNumber, "延迟生成");
         outline.addVolume(volume);
 
-        // 解析章节（复用 plotting 的格式：第X章 章节名：场景节拍...）
+        // p12-fix: 更宽松的正则——支持多种分隔符（：:。.）
         java.util.regex.Pattern chapterPattern = java.util.regex.Pattern.compile(
-                "第(\\d+)章\\s*(.+?)：(.+?)(?=第\\d+章|$)", java.util.regex.Pattern.DOTALL);
+                "第(\\d+)章\\s*(.+?)[：:。\\n]\\s*(.+?)(?=第\\d+章|$)", java.util.regex.Pattern.DOTALL);
         java.util.regex.Matcher m = chapterPattern.matcher(text);
+        int parsed = 0;
         while (m.find()) {
-            int chIdx = Integer.parseInt(m.group(1));
-            String title = m.group(2).trim();
-            String body = m.group(3).trim();
-            ChapterSynopsis syn = new ChapterSynopsis(projectId, chIdx, title, body);
-            syn.setBeats(body); // 简化：body 作为 beats
-            volume.addSynopsis(syn);
+            try {
+                int chIdx = Integer.parseInt(m.group(1));
+                String title = m.group(2).trim();
+                String body = m.group(3).trim();
+                // 去重：跳过已存在的章号
+                boolean exists = outline.getVolumes().stream()
+                        .flatMap(v -> v.getSynopses().stream())
+                        .anyMatch(s -> s.getChapterIndex() == chIdx);
+                if (exists) continue;
+                ChapterSynopsis syn = new ChapterSynopsis(projectId, chIdx, title, body);
+                syn.setBeats(body);
+                volume.addSynopsis(syn);
+                parsed++;
+            } catch (Exception ignored) {}
         }
-        log.info("解析追加卷{}: {} 章", volumeNumber, volume.getSynopses().size());
+        log.info("解析追加卷{}: {} 章", volumeNumber, parsed);
+        return parsed;
     }
 
     /**

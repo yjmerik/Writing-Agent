@@ -2,59 +2,63 @@
 
 ## Current Objective
 
-- **Goal**: 建立“需求 → feature → 实现 → E2E → 诊断 → 修复 → 基线优化”的完整 harness 闭环。
-- **Current status**: Phase 9 harness 基建完成；短真实 LLM record/replay 已验证，多章 E2E fixture 与质量基线尚未建立。
-- **Branch / commit**: main；本会话未提交。
+- **Goal**: 百万字可靠性优化（`docs/specs/2026-08-09-million-character-reliability.md`，18 个 feature：mc-p0 任务正确性/安全 → mc-p1 数据正确性 → mc-p2 长程记忆 → mc-p3 质量证据），依据审查报告修复 5 类阻断问题，并做端到端验证。
+- **Current status**: P0/P1/P2 全部完成并提交；P3 单元测试完成；mc-p3-01（20 章 replay fixture + 基线）后台真实记录中。
+- **Branch / commit**: main；最近提交 `13e8085 fix(mc-p3-01): 分层大纲截断空转修复`、`90378e6 feat(mc-p3)`。
+
+## 审查 5 类阻断问题 → 修复状态
+
+| 阻断 | 修复 | 证据 |
+|---|---|---|
+| 单活跃作业并发双写 | `startWriting` 同步等待旧任务退出（30s 超时）；cancel 只设内存标志，DB CANCELLED 循环退出后写 | `SingleActiveJobTest`/`WritingTaskCancelTest` |
+| P1 数据正确性缺失 | Chapter.version 往返（mapChapter 覆盖）；summaries dirty + sourceChapterVersion；重写失效摘要 | `VersionedMemoryTest` |
+| P2 长程记忆未实现 | model-aware token budget（窗口 90%）；连续性检查注入历史卷摘要+叙事线索台账；embedding cloud-api 默认 | `TokenBudgetSafetyTest`/`ContinuityHistoryInputTest`/`EmbeddingProfileTest` |
+| P3 门禁绕过 + 无 fixture | VOLUME_DONE→step() 统一走 runFinalAuditGate；e2e.sh 异步轮询 + 报告从文件读取；20 章 fixture 记录中 | `FinalAuditGateTest` |
+| 凭据无 fail-fast | validateKeys 校验所有模型、仅远程端点要求 key、本地豁免；测试加载系统 key（load-env.sh） | `LlmPropertiesValidateTest` |
 
 ## Completed This Session
 
-- LLM 装饰链：`ObservedLlmGateway → RecordReplayLlmGateway（可选）→ DefaultLlmGateway`
-- 录制/回放 fixture：按 `taskType + systemPrompt + userMessage + history` 的 SHA-256 指纹命名；回放缺失 fail-fast
-- JSON Lines 运行事件、章节事件、app.log 滚动落盘及 `diagnose.sh`
-- `e2e.sh`、`compare-baseline.py`、基线文档、需求 spec 模板与 CI workflow
-- AGENTS.md 的需求拆分、bugfix gate、失败回流、DoD、会话结束协议
-- feature tracker 补齐 schema：50 个 feature 全部含 `acceptance` / `verify_cmd`
-- 修复 E2E 本地访问：环境 HTTP 代理会拦截 localhost；所有脚本 curl 已显式 `--noproxy '*'`
-- 修复 replay 指纹不稳定：配置 JSON 的 `updatedAt` 是易变值，现已在指纹中归一化；回归测试先失败后通过
-- 短偏好解析调用：真实 record 5.37s（587 prompt + 430 completion tokens），随后 replay 3ms，返回一致且将最小章节字数更新为 2500
+- **凭据 fail-fast 语义修正**（mc-p0-04）：validateKeys 校验 default-model + 全部任务模型；远程端点必须带 key，localhost/127.x/*.local 豁免——修复仅配 DeepSeek 的真实部署被本地空 key 阻断的问题
+- **测试环境加载系统 key**：`scripts/load-env.sh` 从 ~/.zshrc 提取 export 注入环境（不回显、不 source 整文件、始终成功返回）；init.sh 接入
+- **JDK 26 兼容**：byte-buddy 1.17.8 + mockito 5.17.0（inline mock 重定形）
+- **P0 行为测试**：WritingTaskRecoveryTest / HonestTerminalStateTest / SingleActiveJobTest / WritingTaskCancelTest / LlmPropertiesValidateTest
+- **P2 长程记忆**：TokenBudget.budgetForModel（contextWindow 90%，deepseek 64K/本地 32K 已配）；Summary.sourceChapterVersion+dirty（表列+迁移，重写失效→细粒度重算/卷级过滤）；ContinuityCheckerAgent 历史卷摘要+线索台账；EmbeddingProfileTest 双档
+- **P3 质量证据**：FinalAuditGateTest（门禁→NEEDS_REVISION）；LlmCostTelemetryTest（estimatedCostCny）；diagnose.sh 成本聚合
+- **E2E 基建修复**：write-all 异步轮询至终态；报告 JSON 从文件读取（修复章节正文控制字符）；轮询上限按章节数缩放
+- **embedding 切换百炼**：`DASHSCOPE_EMBEDDING_API_KEY`（用户提供，已入 ~/.zshrc）→ text-embedding-v3 OpenAI 兼容端点，实测 1024 维
+- **分层大纲截断空转修复**（Bugfix gate）：planVolume 20 章+总纲注入致 completion 触顶 8192 截断 → 解析 0 章 → 写作循环空转；修复=卷块 8 章 + maxTokens 12000 + createPlaceholderVolume 占位兜底；`LayeredOutlineParsingTest` 4 用例
 
 ## Verification Evidence
 
 | Check | Command | Result |
 |---|---|---|
-| Record/replay regression | `mvn test -Dtest=RecordReplayLlmGatewayTest` | 5 pass（包含 updatedAt 归一化） |
-| Full Maven suite | `mvn test` | 96 tests, 0 failures, 1 skipped |
-| Full gate | `./init.sh` | 95 tests, 0 failures, 1 skipped；前端构建成功（后续新增 1 测试） |
-| Harness audit | `node .../validate-harness.mjs --target .` | 100/100 |
-| Replay E2E bootstrap | `./scripts/e2e.sh --mode replay --chapters 1` | 服务/项目创建成功；无 fixture 时在构思阶段 fail-fast（预期） |
+| 全量测试 | `source scripts/load-env.sh && mvn test` | 134 pass, 0 failures, 1 skipped |
+| 完整 harness | `./init.sh` | 编译+测试+前端全通过 |
+| 3 章 E2E record→replay | `./scripts/e2e.sh --mode record/replay --chapters 3` | 46 次回放调用、8644 字、0 错误 |
+| 基线 | `python3 scripts/compare-baseline.py --bless && compare` | PASS（minChapters=3 已入库） |
+| diagnose 成本聚合 | `./scripts/diagnose.sh /tmp/cost-events.jsonl` | 按 taskType 成本合计 + 总成本 |
+| 20 章记录 | `./scripts/e2e.sh --mode record --chapters 20`（后台） | 进行中（修复前 0 章空转 → 修复后 8 synopses/卷正常推进） |
 
-## Files Changed
+## Blockers
 
-- `src/main/java/.../llm/gateway/{ObservedLlmGateway,RecordReplayLlmGateway}.java`
-- `src/main/java/.../telemetry/{EventContext,EventLog}.java`
-- `src/main/java/.../llm/config/LlmConfig.java`
-- `src/main/java/.../orchestrator/NovelOrchestrator.java`
-- `src/main/resources/{application.yml,logback-spring.xml}`
-- `src/test/java/.../{RecordReplayLlmGatewayTest,EventLogTest,LlmGatewayWiringTest}.java`
-- `scripts/{e2e.sh,diagnose.sh,compare-baseline.py}`
-- `docs/specs/TEMPLATE.md`, `baselines/README.md`, `.github/workflows/ci.yml`
-- `AGENTS.md`, `feature_list.json`, `progress.md`, `init.sh`
+- 20 章真实记录耗时 ~60-100 分钟（单章 2-5 分钟：CHAPTER_WRITING + 检查链多次 LLM 调用）
+- 单章偶发"空内容过短"失败（1/4 章），循环容错已处理，无需阻断
 
-## Blockers / Risks
+## Next Steps（下次会话入口）
 
-- **多章 record 未完成**：用户授权后启动过 3 章 record，已成功录制构思与第 1 章（诊断 9 次调用、0 错误），但运行时间过长而中断，未生成 `e2e-report.json`。
-- **质量基线未 bless**：必须先审阅真实 E2E 产物，禁止基于合成数据建立 golden。
-- `init.sh` 前端构建报告一个现有 Vite chunk >500kB warning；不影响构建成功，后续可单独拆分为性能 feature。
-- 测试使用 Java 26 时 SQLite/ByteBuddy 有未来兼容性 warning；当前 Java 17 目标不受影响。
+1. 等 20 章 record 完成 → `./scripts/e2e.sh --mode replay --chapters 20` 零成本验证 → 重新 `--bless` 20 章基线 → compare PASS
+2. `./scripts/e2e.sh --mode replay --chapters 20 --evaluate` 跑 QualityEvaluationAgent 全维度评分
+3. 向会话目标推进：连续 30+ 章 ≈ 10 万字输出 + 独立质量评估达标
+4. 若 20 章 replay 遇 fixture 缺失（LLM 输出偶变），按 Bugfix gate 回流修复
+5. 恢复用户 8080 开发服务：`mvn spring-boot:run`（本会话清理 e2e 残留时停掉了）
 
-## Next Session Startup
+## Files Changed（本会话）
 
-1. `pwd` 确认工作目录，阅读 `AGENTS.md`、`feature_list.json`、本文件。
-2. 运行 `./init.sh`。
-3. 在可接受多章运行时间时：`./scripts/e2e.sh --mode record --chapters 3`。
-4. 审阅 `e2e-report.json`，确认后 `python3 scripts/compare-baseline.py --bless`。
-5. 重跑 `./scripts/e2e.sh`（replay）与 `python3 scripts/compare-baseline.py`；若失败，执行 `./scripts/diagnose.sh data/e2e/events.jsonl` 并按 bugfix gate 创建 spec/feature。
-
-## Recommended Next Step
-
-在可接受更长运行时间时，建立并验证第一套 3 章确定性 E2E fixture 与质量基线。
+- `src/main/java/.../llm/config/{LlmProperties,ModelConfig,LlmConfig}.java`
+- `src/main/java/.../memory/{TokenBudget,ContextAssembler}.java`、`domain/Summary.java`
+- `src/main/java/.../agent/{ChapterWriterAgent,ContinuityCheckerAgent,AgentConfig,PlotterAgent}.java`
+- `src/main/java/.../orchestrator/NovelOrchestrator.java`、`service/WritingTaskExecutor.java`
+- `src/main/java/.../persistence/sqlite/{SqliteNovelRepository,SqliteSchemaInitializer}.java`
+- `src/main/resources/application.yml`、`pom.xml`、`init.sh`
+- `scripts/{load-env,e2e,diagnose}.sh`、`baselines/golden.json`
+- 测试：LlmPropertiesValidateTest / TokenBudgetSafetyTest / VersionedMemoryTest / ContinuityHistoryInputTest / EmbeddingProfileTest / FinalAuditGateTest / LlmCostTelemetryTest / LayeredOutlineParsingTest / WritingTaskRecoveryTest / HonestTerminalStateTest / SingleActiveJobTest / ChapterWriterAgentTest

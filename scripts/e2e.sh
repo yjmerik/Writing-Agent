@@ -74,14 +74,20 @@ WRITE_RESULT=$(curl --noproxy '*' -sf -X POST "$BASE/api/projects/$PROJECT_ID/wr
 echo "$WRITE_RESULT"
 TASK_ID=$(echo "$WRITE_RESULT" | python3 -c "import json,sys; print(json.load(sys.stdin)['taskId'])")
 
-# p12-K2: 异步写作——轮询任务直到终态（最多 20 分钟）
+# p12-K2: 异步写作——轮询任务直到终态（上限 = 章节数 × 4 分钟，20 章 ≈ 80 分钟）
+POLL_LIMIT=$(( CHAPTERS * 240 ))
+[ "$POLL_LIMIT" -lt 600 ] && POLL_LIMIT=600
 TASK_JSON=""
-for i in $(seq 1 600); do
+for i in $(seq 1 "$POLL_LIMIT"); do
   TASK_JSON=$(curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/writing-tasks/$TASK_ID")
   TASK_STATE=$(echo "$TASK_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['status'])")
   case "$TASK_STATE" in
     COMPLETED|FAILED|CANCELLED) break ;;
   esac
+  if [ $(( i % 30 )) -eq 0 ]; then
+    TASK_CHAPTERS=$(echo "$TASK_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['chaptersWritten'])")
+    echo "  进度: 已写 $TASK_CHAPTERS/$CHAPTERS 章（轮询 ${i}s）"
+  fi
   sleep 2
 done
 echo "✅ 写作任务终态: $TASK_STATE"

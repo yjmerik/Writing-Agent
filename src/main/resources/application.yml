@@ -26,6 +26,7 @@ llm:
     model: qwen3-4b-wuxia
     temperature: 0.7
     max-tokens: 8192
+    context-window: 32768
     streaming: true
     style-guide: "严格遵循世界观设定中已确立的类型风格。不要引入与世界观类型不兼容的元素。人物名字必须与【出场人物】完全一致，绝对不得改名。"
   models:
@@ -35,6 +36,7 @@ llm:
       model: deepseek-v4-flash
       temperature: 0.8
       max-tokens: 8192
+      context-window: 64000
       style-guide: "严格遵循世界观设定中已确立的类型风格。人物名字必须与【出场人物】完全一致，绝对不得改名。不得引入与世界观不兼容的元素。"
     CONTINUITY_CHECK:
       base-url: https://api.deepseek.com/v1
@@ -42,39 +44,48 @@ llm:
       model: deepseek-v4-flash
       temperature: 0.3
       max-tokens: 4096
+      context-window: 64000
     PLOTTING:
       base-url: https://api.deepseek.com/v1
       api-key: ${DEEPSEEK_API_KEY:}
       model: deepseek-v4-flash
       temperature: 0.7
       max-tokens: 8192
+      context-window: 64000
     WORLDBUILDING:
       base-url: https://api.deepseek.com/v1
       api-key: ${DEEPSEEK_API_KEY:}
       model: deepseek-v4-flash
       temperature: 0.7
       max-tokens: 8192
+      context-window: 64000
     CHARACTER_DESIGN:
       base-url: https://api.deepseek.com/v1
       api-key: ${DEEPSEEK_API_KEY:}
       model: deepseek-v4-flash
       temperature: 0.7
       max-tokens: 8192
+      context-window: 64000
     STYLE_GUARDIAN:
       base-url: https://api.deepseek.com/v1
       api-key: ${DEEPSEEK_API_KEY:}
       model: deepseek-v4-flash
       temperature: 0.3
       max-tokens: 4096
+      context-window: 64000
     MEMORY_SUMMARY:
       base-url: https://api.deepseek.com/v1
       api-key: ${DEEPSEEK_API_KEY:}
       model: deepseek-v4-flash
       temperature: 0.3
       max-tokens: 4096
+      context-window: 64000
     GENERAL:
       base-url: https://api.deepseek.com/v1
       api-key: ${DEEPSEEK_API_KEY:}
       model: deepseek-v4-flash
       temperature: 0.3
       max-tokens: 4096
+      context-window: 64000
+
+

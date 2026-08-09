@@ -7,6 +7,7 @@ import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.IndexedText;
+import com.writing.novel.memory.TokenBudget;
 import com.writing.novel.memory.VectorRetrievalService;
 import com.writing.novel.memory.WritingContext;
 import com.writing.novel.service.GenreRuleProvider;
@@ -26,29 +27,48 @@ public class ChapterWriterAgent {
     private final VectorRetrievalService vectorRetrieval;
     private final PromptTemplateService promptService;
     private final GenreRuleProvider genreRuleProvider;
+    /** mc-p2-03: 模型配置（用于推导上下文组装预算），可为 null（回退默认预算） */
+    private final com.writing.novel.llm.config.LlmProperties llmProperties;
 
     public ChapterWriterAgent(LlmGateway gateway, ContextAssembler contextAssembler,
                                NovelRepository repository, VectorRetrievalService vectorRetrieval,
-                               PromptTemplateService promptService, GenreRuleProvider genreRuleProvider) {
+                               PromptTemplateService promptService, GenreRuleProvider genreRuleProvider,
+                               com.writing.novel.llm.config.LlmProperties llmProperties) {
         this.gateway = gateway;
         this.contextAssembler = contextAssembler;
         this.repository = repository;
         this.vectorRetrieval = vectorRetrieval;
         this.promptService = promptService;
         this.genreRuleProvider = genreRuleProvider;
+        this.llmProperties = llmProperties;
+    }
+
+    /** 兼容测试的六参构造（vectorRetrieval 为 null 时跳过索引） */
+    public ChapterWriterAgent(LlmGateway gateway, ContextAssembler contextAssembler,
+                               NovelRepository repository, VectorRetrievalService vectorRetrieval,
+                               PromptTemplateService promptService, GenreRuleProvider genreRuleProvider) {
+        this(gateway, contextAssembler, repository, vectorRetrieval, promptService, genreRuleProvider, null);
     }
 
     /** 兼容测试的四参构造（vectorRetrieval 为 null 时跳过索引） */
     public ChapterWriterAgent(LlmGateway gateway, ContextAssembler contextAssembler,
                                NovelRepository repository, PromptTemplateService promptService) {
-        this(gateway, contextAssembler, repository, null, promptService, null);
+        this(gateway, contextAssembler, repository, null, promptService, null, null);
+    }
+
+    /** mc-p2-03: 按 CHAPTER_WRITING 模型配置推导上下文组装预算 */
+    private int chapterWritingBudget() {
+        if (llmProperties == null) return TokenBudget.DEFAULT_BUDGET;
+        var cfg = llmProperties.forTaskType(LlmTaskType.CHAPTER_WRITING.name());
+        return TokenBudget.budgetForModel(cfg != null ? cfg.getContextWindow() : 0);
     }
 
     public Chapter write(String projectId, int chapterIndex, String chapterTitle,
                          String chapterSynopsis, String writingNotes) {
-        // 1. 组装上下文
+        // 1. 组装上下文（mc-p2-03: 预算按 CHAPTER_WRITING 模型窗口 90% 推导）
         WritingContext ctx = contextAssembler.assemble(
-                projectId, chapterIndex, chapterTitle, chapterSynopsis, writingNotes);
+                projectId, chapterIndex, chapterTitle, chapterSynopsis, writingNotes,
+                chapterWritingBudget());
 
         // 2. 构建 LLM 请求：ContextAssembler 组装的上下文 + chapter-writing 模板的角色定义
         // styleGuide 从 StyleProfile 动态注入（不再写死空串）
@@ -163,7 +183,7 @@ public class ChapterWriterAgent {
         WritingContext ctx = contextAssembler.assemble(
                 projectId, chapterIndex, chapterTitle,
                 chapterSynopsis + "\n\n【纠偏要求】" + correctionInstructions,
-                writingNotes);
+                writingNotes, chapterWritingBudget());
 
         // 修复：rewrite 也传全部模板变量（之前只传 styleGuide=""）
         String dynamicStyleGuide = extractStyleGuide(projectId);

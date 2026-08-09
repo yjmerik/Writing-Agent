@@ -48,7 +48,8 @@ public class SqliteSchemaInitializer {
 
         "CREATE TABLE IF NOT EXISTS summaries (" +
             "id TEXT PRIMARY KEY, project_id TEXT, from_chapter INTEGER, " +
-            "to_chapter INTEGER, content TEXT, updated_at TEXT)",
+            "to_chapter INTEGER, content TEXT, updated_at TEXT, " +
+            "source_chapter_version INTEGER DEFAULT 0, dirty INTEGER DEFAULT 0)",
 
         "CREATE TABLE IF NOT EXISTS foreshadowings (" +
             "id TEXT PRIMARY KEY, project_id TEXT, description TEXT, " +
@@ -236,5 +237,8 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN fast_pace_window INTEGER DEFAULT 4");
         // p11.1-J3
         safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN foreshadow_suspense_threshold INTEGER DEFAULT 8");
+        // mc-p2-01: versioned memory——summaries 派生版本与脏标记
+        safeAddColumn(st, "ALTER TABLE summaries ADD COLUMN source_chapter_version INTEGER DEFAULT 0");
+        safeAddColumn(st, "ALTER TABLE summaries ADD COLUMN dirty INTEGER DEFAULT 0");
     }
 }

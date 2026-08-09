@@ -28,6 +28,12 @@ class ChapterWriterAgentTest {
                                            String writingNotes) {
                 return mockCtx;
             }
+            @Override
+            public WritingContext assemble(String projectId, int chapterIndex,
+                                           String chapterTitle, String chapterSynopsis,
+                                           String writingNotes, int maxContextTokens) {
+                return mockCtx;
+            }
         };
 
         LlmGateway mockGateway = new LlmGateway() {
@@ -56,6 +62,10 @@ class ChapterWriterAgentTest {
         ContextAssembler mockAssembler = new ContextAssembler(null, null, null, null, null, null, null, null, null) {
             @Override
             public WritingContext assemble(String pid, int ci, String ct, String cs, String wn) {
+                return mockCtx;
+            }
+            @Override
+            public WritingContext assemble(String pid, int ci, String ct, String cs, String wn, int budget) {
                 return mockCtx;
             }
         };

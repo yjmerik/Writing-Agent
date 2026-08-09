@@ -1306,7 +1306,13 @@ public class NovelOrchestrator {
                     sb.append(c.getContent()).append("\n"));
         }
         if (!sb.isEmpty()) {
-            memoryManager.summarize(projectId, from, to, sb.toString());
+            Summary fresh = memoryManager.summarize(projectId, from, to, sb.toString());
+            // mc-p2-01: 记录派生来源版本 + 清 dirty（重算后内容已是最新）
+            int srcVersion = repository.findChapterByIndex(projectId, to)
+                    .map(com.writing.novel.domain.Chapter::getVersion).orElse(0);
+            fresh.setSourceChapterVersion(srcVersion);
+            fresh.setDirty(false);
+            repository.saveSummary(fresh);
         }
     }
 
@@ -1325,19 +1331,24 @@ public class NovelOrchestrator {
     }
 
     /**
-     * mc-p1-02: 重写章节后失效覆盖该章的摘要——重新生成覆盖该章的滚动摘要。
+     * mc-p1-02/mc-p2-01: 重写章节后失效覆盖该章的摘要。
+     * 所有覆盖该章的摘要先置 dirty（组装时被 ContextAssembler 过滤，不注入旧内容）；
+     * 细粒度摘要（span≤3）立即重算并清 dirty；卷级摘要（span>3）保持 dirty，
+     * 待卷末/FINAL 门禁重算后自动清 dirty。
      */
     private void invalidateSummariesForChapter(String projectId, int chapterIndex) {
         var summaries = repository.findSummariesByProject(projectId);
         for (var s : summaries) {
             if (chapterIndex >= s.getFromChapter() && chapterIndex <= s.getToChapter()) {
+                s.setDirty(true);
+                repository.saveSummary(s);
                 int span = s.getToChapter() - s.getFromChapter() + 1;
                 if (span <= 3) {
-                    // 细粒度摘要——重算
+                    // 细粒度摘要——立即重算（重算后 dirty 清 false）
                     log.info("重算覆盖第{}章的摘要(范围{}-{})", chapterIndex, s.getFromChapter(), s.getToChapter());
                     generateSummary(projectId, s.getFromChapter(), s.getToChapter());
                 }
-                // 卷级摘要(span>3)不在此重算，留给卷末或FINAL门禁处理
+                // 卷级摘要(span>3)保持 dirty——ContextAssembler 过滤，不注入过期内容
             }
         }
     }

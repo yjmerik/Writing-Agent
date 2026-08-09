@@ -56,6 +56,17 @@ public class ContextAssembler {
     public WritingContext assemble(String projectId, int chapterIndex,
                                    String chapterTitle, String chapterSynopsis,
                                    String writingNotes) {
+        return assemble(projectId, chapterIndex, chapterTitle, chapterSynopsis,
+                writingNotes, TokenBudget.DEFAULT_BUDGET);
+    }
+
+    /**
+     * mc-p2-03: 带模型感知预算的组装。
+     * @param maxContextTokens 组装预算（通常由 TokenBudget.budgetForModel(contextWindow) 推导）
+     */
+    public WritingContext assemble(String projectId, int chapterIndex,
+                                   String chapterTitle, String chapterSynopsis,
+                                   String writingNotes, int maxContextTokens) {
 
         WritingContext ctx = new WritingContext();
 
@@ -104,8 +115,8 @@ public class ContextAssembler {
         ctx.setQualityFeedbackSection(buildQualityFeedbackSection(projectId));
         ctx.setFeedbackSection(buildFeedbackSection(projectId, chapterIndex));
 
-        // Token 预算控制：总预算 12K token，超限时按优先级裁剪低优先级 section
-        applyTokenBudget(ctx);
+        // Token 预算控制：预算按模型窗口推导（90%），超限时按优先级裁剪低优先级 section
+        applyTokenBudget(ctx, maxContextTokens);
 
         return ctx;
     }
@@ -189,6 +200,9 @@ public class ContextAssembler {
         List<Summary> recentSummaries = summaryService.findRecent(projectId, lookBackTo, RECENT_SUMMARY_WINDOW);
         // 卷级摘要：p12-K4 限制最多注入最近 3 卷，更早的只取摘要首句
         List<Summary> allSummaries = summaryService.findAll(projectId);
+
+        // mc-p2-01: 过滤 dirty 摘要——源章节被重写后未重算的旧摘要不注入上下文
+        allSummaries = allSummaries.stream().filter(s -> !s.isDirty()).toList();
 
         List<Summary> fineGrained = new java.util.ArrayList<>();
         List<Summary> volumeLevel = new java.util.ArrayList<>();
@@ -760,35 +774,33 @@ public class ContextAssembler {
     }
 
     /** Token 预算控制：超限时按优先级从低到高裁剪 */
-    private static final int TOKEN_BUDGET = 16000; // p12-K4: 12000→16000
-
-    private void applyTokenBudget(WritingContext ctx) {
+    private void applyTokenBudget(WritingContext ctx, int budget) {
         int total = sumTokens(ctx);
-        if (total <= TOKEN_BUDGET) return;
+        if (total <= budget) return;
 
         // p5-c4: 调整优先级——伏笔不再最先丢弃（长程连续性需要）
         // 新优先级（从低到高）：设定>世界观>大纲>上章原文>伏笔
         // 伏笔保留到最后，因为它是长程连续性的核心
-        if (total > TOKEN_BUDGET && ctx.getRelevantSettings() != null) {
+        if (total > budget && ctx.getRelevantSettings() != null) {
             ctx.setRelevantSettings("");
             total = sumTokens(ctx);
         }
-        if (total > TOKEN_BUDGET && ctx.getWorldbuildingSection() != null) {
+        if (total > budget && ctx.getWorldbuildingSection() != null) {
             // 世界观截断到 2000 token
             ctx.setWorldbuildingSection(TokenBudget.truncateToTokens(ctx.getWorldbuildingSection(), 2000));
             total = sumTokens(ctx);
         }
-        if (total > TOKEN_BUDGET && ctx.getVolumeOutlineSection() != null) {
+        if (total > budget && ctx.getVolumeOutlineSection() != null) {
             ctx.setVolumeOutlineSection(TokenBudget.truncateToTokens(ctx.getVolumeOutlineSection(), 1500));
             total = sumTokens(ctx);
         }
-        if (total > TOKEN_BUDGET && ctx.getRecentTextSection() != null) {
+        if (total > budget && ctx.getRecentTextSection() != null) {
             // 上章原文截断到 800 token
             ctx.setRecentTextSection(TokenBudget.truncateToTokens(ctx.getRecentTextSection(), 800));
             total = sumTokens(ctx);
         }
         // 伏笔最后才截断（截断到 500 token 而非清空）
-        if (total > TOKEN_BUDGET && ctx.getRelevantForeshadowings() != null) {
+        if (total > budget && ctx.getRelevantForeshadowings() != null) {
             ctx.setRelevantForeshadowings(TokenBudget.truncateToTokens(ctx.getRelevantForeshadowings(), 500));
         }
     }

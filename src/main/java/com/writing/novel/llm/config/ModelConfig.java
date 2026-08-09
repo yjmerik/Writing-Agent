@@ -10,6 +10,8 @@ public class ModelConfig {
     private String model;
     private double temperature = 0.7;
     private int maxTokens = 4096;
+    /** 模型上下文窗口（输入+输出，token）。0 表示未配置，回退默认预算（mc-p2-03） */
+    private int contextWindow = 0;
     /** 是否启用流式输出 */
     private boolean streaming = true;
     /** 模型级风格指引（自动拼接到 systemPrompt 末尾，用于约束 LLM 创作倾向） */
@@ -25,6 +27,8 @@ public class ModelConfig {
     public void setTemperature(double temperature) { this.temperature = temperature; }
     public int getMaxTokens() { return maxTokens; }
     public void setMaxTokens(int maxTokens) { this.maxTokens = maxTokens; }
+    public int getContextWindow() { return contextWindow; }
+    public void setContextWindow(int contextWindow) { this.contextWindow = contextWindow; }
     public boolean isStreaming() { return streaming; }
     public void setStreaming(boolean streaming) { this.streaming = streaming; }
     public String getStyleGuide() { return styleGuide; }

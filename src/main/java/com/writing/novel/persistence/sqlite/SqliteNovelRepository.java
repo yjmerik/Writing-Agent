@@ -402,12 +402,16 @@ public class SqliteNovelRepository implements NovelRepository {
     public void saveSummary(Summary s) {
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO summaries (id,project_id,from_chapter,to_chapter,content,updated_at) " +
-                     "VALUES (?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET from_chapter=excluded.from_chapter, " +
-                     "to_chapter=excluded.to_chapter, content=excluded.content, updated_at=excluded.updated_at")) {
+                     "INSERT INTO summaries (id,project_id,from_chapter,to_chapter,content,updated_at," +
+                     "source_chapter_version,dirty) VALUES (?,?,?,?,?,?,?,?) " +
+                     "ON CONFLICT(id) DO UPDATE SET from_chapter=excluded.from_chapter, " +
+                     "to_chapter=excluded.to_chapter, content=excluded.content, updated_at=excluded.updated_at, " +
+                     "source_chapter_version=excluded.source_chapter_version, dirty=excluded.dirty")) {
             ps.setString(1, s.getId()); ps.setString(2, s.getProjectId());
             ps.setInt(3, s.getFromChapter()); ps.setInt(4, s.getToChapter());
             ps.setString(5, s.getContent()); ps.setString(6, s.getUpdatedAt().toString());
+            ps.setInt(7, s.getSourceChapterVersion());
+            ps.setInt(8, s.isDirty() ? 1 : 0);
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
@@ -424,6 +428,8 @@ public class SqliteNovelRepository implements NovelRepository {
                 Summary s = new Summary(projectId, rs.getInt("from_chapter"),
                         rs.getInt("to_chapter"), rs.getString("content"));
                 setField(s, "id", rs.getString("id"));
+                setField(s, "sourceChapterVersion", rs.getInt("source_chapter_version"));
+                setField(s, "dirty", rs.getInt("dirty") != 0);
                 list.add(s);
             }
         } catch (SQLException e) { throw new RuntimeException(e); }

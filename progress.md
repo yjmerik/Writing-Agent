@@ -20,8 +20,15 @@
 
 | Check | Command | Result |
 |---|---|---|
-| 全量测试（真实系统 key） | `source scripts/load-env.sh && mvn test` | 116 pass, 0 failures |
+| 全量测试（真实系统 key） | `source scripts/load-env.sh && mvn test` | 125 pass, 0 failures |
 | 完整 harness | `./init.sh` | 编译+测试+前端构建全通过 |
+
+## 百万字可靠性 — P2 长程记忆完成
+
+- **mc-p2-03 model-aware token budget**：`ModelConfig` 新增 `contextWindow`（deepseek-v4-flash 64000 / 本地 32768 已配置）；`TokenBudget.budgetForModel()` 按窗口 90% 推导预算；`ContextAssembler.assemble(..., maxContextTokens)` 重载 + `ChapterWriterAgent` 按 CHAPTER_WRITING 模型注入；`TokenBudgetSafetyTest` 断言组装后估计 token ≤ 窗口 90%
+- **mc-p2-01 versioned memory**：`Summary` 新增 `sourceChapterVersion` + `dirty`（表列 + 迁移）；重写章节后 `invalidateSummariesForChapter` 标记所有覆盖摘要 dirty，细粒度立即重算（清 dirty + 版本跟随），卷级保持 dirty 被 `ContextAssembler` 过滤；`VersionedMemoryTest` 验证往返、过滤、重写失效三条链路
+- **mc-p2-02 连续性检查长程输入**：`ContinuityCheckerAgent` 检查段注入历史卷摘要（span>3、非 dirty、最近 5 卷）+ 叙事线索台账（未回收线索）；`ContinuityHistoryInputTest` 用 50 章合成数据断言非空
+- **mc-p2-04 embedding 默认档**：`application.yml` 默认 `cloud-api`，stub 仅显式配置生效；`EmbeddingProfileTest` 双档断言
 
 ## 历史：Phase 9 完成情况
 

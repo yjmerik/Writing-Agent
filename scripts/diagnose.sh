@@ -63,10 +63,15 @@ print(f"\n## LLM 调用统计（共 {len(llm_calls)} 次）")
 by_task = defaultdict(list)
 for e in llm_calls:
     by_task[e.get("taskType", "?")].append(e)
+grand_total_cost = 0.0
 for task, items in sorted(by_task.items(), key=lambda kv: -len(kv[1])):
     durs = [i.get("durationMs", 0) for i in items]
     tokens = sum(i.get("promptTokens", 0) + i.get("completionTokens", 0) for i in items)
-    print(f"- {task}: {len(items)} 次, 平均耗时 {sum(durs)//max(len(durs),1)}ms, 总tokens {tokens}")
+    cost = sum(i.get("estimatedCostCny", 0.0) for i in items)
+    grand_total_cost += cost
+    print(f"- {task}: {len(items)} 次, 平均耗时 {sum(durs)//max(len(durs),1)}ms, "
+          f"总tokens {tokens}, 估算成本 ¥{cost:.4f}")
+print(f"### 总估算成本: ¥{grand_total_cost:.4f}")
 
 chapters = [e for e in events if e["event"] == "CHAPTER_WRITTEN"]
 print(f"\n## 最近写作章节（共 {len(chapters)} 章）")

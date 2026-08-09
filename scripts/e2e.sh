@@ -72,6 +72,20 @@ echo "✅ 构思完成，状态: $STATE"
 echo "▶ 写作 $CHAPTERS 章..."
 WRITE_RESULT=$(curl --noproxy '*' -sf -X POST "$BASE/api/projects/$PROJECT_ID/write-all?maxChapters=$CHAPTERS")
 echo "$WRITE_RESULT"
+TASK_ID=$(echo "$WRITE_RESULT" | python3 -c "import json,sys; print(json.load(sys.stdin)['taskId'])")
+
+# p12-K2: 异步写作——轮询任务直到终态（最多 20 分钟）
+TASK_JSON=""
+for i in $(seq 1 600); do
+  TASK_JSON=$(curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/writing-tasks/$TASK_ID")
+  TASK_STATE=$(echo "$TASK_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['status'])")
+  case "$TASK_STATE" in
+    COMPLETED|FAILED|CANCELLED) break ;;
+  esac
+  sleep 2
+done
+echo "✅ 写作任务终态: $TASK_STATE"
+TASK_JSON=$(curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/writing-tasks/$TASK_ID")
 
 EVAL_JSON="null"
 if [ "$EVALUATE" = "true" ]; then
@@ -80,16 +94,17 @@ if [ "$EVALUATE" = "true" ]; then
 fi
 
 echo "▶ 生成报告..."
-CHAPTERS_JSON=$(curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/chapters")
-STATUS_JSON=$(curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/status")
+curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/chapters" > "$E2E_DIR/chapters.json"
+curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/status" > "$E2E_DIR/status.json"
 
 python3 - "$E2E_DIR" "$MODE" <<PYEOF
 import json, sys, datetime
 
 e2e_dir, mode = sys.argv[1], sys.argv[2]
-chapters = json.loads('''$CHAPTERS_JSON''')
-status = json.loads('''$STATUS_JSON''')
+chapters = json.load(open(f"{e2e_dir}/chapters.json", encoding="utf-8"))
+status = json.load(open(f"{e2e_dir}/status.json", encoding="utf-8"))
 write_result = json.loads('''$WRITE_RESULT''')
+task_json = json.loads('''$TASK_JSON''')
 evaluation = json.loads('''$EVAL_JSON''')
 
 llm_errors, chapter_failures, llm_calls = [], [], []
@@ -112,7 +127,9 @@ report = {
     "mode": mode,
     "projectId": status["projectId"],
     "finalState": status["state"],
-    "chaptersWritten": write_result.get("chaptersWritten", 0),
+    "chaptersWritten": task_json.get("chaptersWritten", write_result.get("chaptersWritten", 0)),
+    "taskStatus": task_json.get("status", "?"),
+    "taskError": task_json.get("errorMessage", ""),
     "totalChapters": len(chapters),
     "totalWords": status.get("totalWords", 0),
     "wordCount": {
@@ -129,7 +146,8 @@ with open("e2e-report.json", "w", encoding="utf-8") as f:
     json.dump(report, f, ensure_ascii=False, indent=2)
 print(json.dumps(report, ensure_ascii=False, indent=2))
 
-ok = report["totalChapters"] > 0 and report["chapterFailures"] == 0 and report["llmErrors"] == 0
+ok = report["totalChapters"] > 0 and report["chapterFailures"] == 0 and report["llmErrors"] == 0 \
+    and report.get("taskStatus") != "FAILED"
 sys.exit(0 if ok else 1)
 PYEOF
 E2E_EXIT=$?

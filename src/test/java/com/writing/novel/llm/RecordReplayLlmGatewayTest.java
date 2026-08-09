@@ -111,6 +111,43 @@ class RecordReplayLlmGatewayTest {
         assertEquals("偏好已更新", replayed.getContent());
     }
 
+    /**
+     * mc-p3-01: 录制时失败的请求也必须能回放——复现相同异常类型，
+     * 让 ContentFilterException 等触发相同的重试路径（record→replay 完全确定）。
+     */
+    @Test
+    void 录制失败可回放相同异常() {
+        LlmGateway failingDelegate = new LlmGateway() {
+            @Override
+            public LlmResponse complete(LlmRequest req) {
+                throw new com.writing.novel.llm.client.ContentFilterException("内容审查拦截: 暴力描写");
+            }
+            @Override
+            public void streamComplete(LlmRequest req, StreamHandler handler) {}
+        };
+        LlmGateway recorder = new RecordReplayLlmGateway(
+                failingDelegate, RecordReplayLlmGateway.Mode.RECORD, fixtureDir);
+        assertThrows(com.writing.novel.llm.client.ContentFilterException.class,
+                () -> recorder.complete(request("含敏感内容")));
+        assertTrue(fixtureDir.resolve("GENERAL-" + firstFixtureHash() + ".json").toFile().exists()
+                || fixtureDir.toFile().list().length >= 1, "失败请求应录制 fixture");
+
+        LlmGateway replayer = new RecordReplayLlmGateway(
+                explodingDelegate(), RecordReplayLlmGateway.Mode.REPLAY, fixtureDir);
+        com.writing.novel.llm.client.ContentFilterException ex = assertThrows(
+                com.writing.novel.llm.client.ContentFilterException.class,
+                () -> replayer.complete(request("含敏感内容")));
+        assertTrue(ex.getMessage().contains("内容审查拦截"), "应复现录制时的异常消息: " + ex.getMessage());
+    }
+
+    private String firstFixtureHash() {
+        String[] files = fixtureDir.toFile().list();
+        for (String f : files) {
+            if (f.endsWith(".json")) return f.replace("GENERAL-", "").replace(".json", "");
+        }
+        return "";
+    }
+
     @Test
     void 流式录制后可流式回放() {
         AtomicInteger calls = new AtomicInteger();

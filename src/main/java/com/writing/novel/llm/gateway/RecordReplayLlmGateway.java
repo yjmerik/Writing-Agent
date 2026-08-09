@@ -57,9 +57,15 @@ public class RecordReplayLlmGateway implements LlmGateway {
         if (mode == Mode.REPLAY) {
             return loadFixture(fixture, request);
         }
-        LlmResponse response = delegate.complete(request);
-        saveFixture(fixture, request, response);
-        return response;
+        try {
+            LlmResponse response = delegate.complete(request);
+            saveFixture(fixture, request, response);
+            return response;
+        } catch (RuntimeException e) {
+            // mc-p3-01: 失败也录制——回放时复现同样的异常与重试路径，保证 record→replay 完全确定
+            saveErrorFixture(fixture, request, e);
+            throw e;
+        }
     }
 
     @Override
@@ -103,6 +109,13 @@ public class RecordReplayLlmGateway implements LlmGateway {
         }
         try {
             JsonNode node = MAPPER.readTree(Files.readString(fixture, StandardCharsets.UTF_8));
+            // mc-p3-01: 录制时失败的请求——回放时复现同样的异常（触发相同的重试路径）
+            if (node.has("error")) {
+                String errorClass = node.path("error").asText();
+                String message = node.path("errorMessage").asText("");
+                log.info("回放录制失败: {} {}", errorClass, message);
+                throw rethrow(errorClass, message);
+            }
             return new LlmResponse(
                     node.path("content").asText(),
                     node.path("promptTokens").asInt(0),
@@ -110,6 +123,18 @@ public class RecordReplayLlmGateway implements LlmGateway {
         } catch (IOException e) {
             throw new IllegalStateException("回放 fixture 解析失败: " + fixture, e);
         }
+    }
+
+    /** 按录制类名重抛异常——ContentFilterException 等重试路径依赖具体类型 */
+    private static RuntimeException rethrow(String className, String message) {
+        try {
+            Class<?> clazz = Class.forName(className);
+            if (RuntimeException.class.isAssignableFrom(clazz)) {
+                var ctor = clazz.getConstructor(String.class);
+                return (RuntimeException) ctor.newInstance(message);
+            }
+        } catch (Exception ignored) { /* 回退到通用异常 */ }
+        return new IllegalStateException(message);
     }
 
     private void saveFixture(Path fixture, LlmRequest request, LlmResponse response) {
@@ -129,6 +154,23 @@ public class RecordReplayLlmGateway implements LlmGateway {
         } catch (IOException e) {
             // 录制失败不影响业务返回，仅告警
             log.warn("LLM fixture 录制失败: {}", e.getMessage());
+        }
+    }
+
+    /** mc-p3-01: 录制失败的请求——含错误类名与消息，供回放复现 */
+    private void saveErrorFixture(Path fixture, LlmRequest request, RuntimeException error) {
+        try {
+            Files.createDirectories(fixtureDir);
+            ObjectNode node = MAPPER.createObjectNode();
+            node.put("taskType", request.getTaskType().name());
+            node.put("recordedAt", Instant.now().toString());
+            node.put("error", error.getClass().getName());
+            node.put("errorMessage", error.getMessage() == null ? "" : error.getMessage());
+            Files.writeString(fixture, MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(node),
+                    StandardCharsets.UTF_8);
+            log.info("已录制 LLM 失败 fixture: {} ({})", fixture.getFileName(), error.getClass().getSimpleName());
+        } catch (IOException e) {
+            log.warn("LLM 失败 fixture 录制失败: {}", e.getMessage());
         }
     }
 

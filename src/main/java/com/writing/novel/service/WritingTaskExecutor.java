@@ -32,6 +32,34 @@ public class WritingTaskExecutor {
     public WritingTaskExecutor(NovelOrchestrator orchestrator, NovelRepository repository) {
         this.orchestrator = orchestrator;
         this.repository = repository;
+        // mc-p0-02: 启动时清扫孤儿 RUNNING 任务（进程崩溃后残留）
+        sweepOrphanedTasks();
+    }
+
+    /**
+     * mc-p0-02: 清扫所有项目中的孤儿 RUNNING 任务——进程崩溃后 DB 残留的 RUNNING 行。
+     * 收敛为 FAILED(errorMessage=进程未干净退出)，不自动续写。
+     */
+    private void sweepOrphanedTasks() {
+        try {
+            int swept = 0;
+            for (var project : repository.findAllProjects()) {
+                var active = repository.findActiveWritingTask(project.getId());
+                if (active.isPresent() && active.get().getStatus() == WritingTask.Status.RUNNING) {
+                    var task = active.get();
+                    task.setStatus(WritingTask.Status.FAILED);
+                    task.setErrorMessage("进程未干净退出");
+                    repository.saveWritingTask(task);
+                    swept++;
+                    log.warn("孤儿任务清扫: taskId={}, projectId={} → FAILED", task.getId(), project.getId());
+                }
+            }
+            if (swept > 0) {
+                log.info("孤儿任务清扫完成: {} 个 RUNNING 任务收敛为 FAILED", swept);
+            }
+        } catch (Exception e) {
+            log.warn("孤儿任务清扫失败: {}", e.getMessage());
+        }
     }
 
     /**
@@ -66,10 +94,27 @@ public class WritingTaskExecutor {
             int written = orchestrator.runWritingLoop(task.getProjectId(), maxChapters,
                     () -> isCancelled(taskId));
 
-            // 检查是否被取消
+            // mc-p0-03: 诚实终态——区分写满、熔断、取消
             if (isCancelled(task.getId())) {
                 task.setStatus(WritingTask.Status.CANCELLED);
+            } else if (written < maxChapters) {
+                // 未写满——可能是大纲耗尽或熔断，检查是否大纲已完结
+                var project = repository.findProject(task.getProjectId());
+                var outline = repository.findOutlineByProject(task.getProjectId());
+                boolean outlineExhausted = outline.isPresent() && project.isPresent() &&
+                        !outline.get().getVolumes().stream()
+                                .flatMap(v -> v.getSynopses().stream())
+                                .anyMatch(s -> s.getChapterIndex() > project.get().getCurrentChapterIndex());
+                if (outlineExhausted) {
+                    // 大纲已写完——正常完成
+                    task.setStatus(WritingTask.Status.COMPLETED);
+                } else {
+                    // 未写满且大纲未写完——异常终止
+                    task.setStatus(WritingTask.Status.FAILED);
+                    task.setErrorMessage("写作未完成: 写了" + written + "/" + maxChapters + "章");
+                }
             } else {
+                // 写满 maxChapters——正常完成
                 task.setStatus(WritingTask.Status.COMPLETED);
             }
             task.setChaptersWritten(written);

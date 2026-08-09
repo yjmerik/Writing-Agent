@@ -5,14 +5,14 @@ spring:
 persistence:
   relational: sqlite
   vector: embedded
-  embedding: stub
+  embedding: cloud-api
   sqlite:
     db-path: ./data/novel.db
   vector-store:
     index-path: ./data/vectors.idx
   embedding-cfg:
     api-base-url: https://open.bigmodel.cn/api/coding/paas/v4
-    api-key: 03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR
+    api-key: ${GLM_EMBEDDING_API_KEY:}
     model: embedding-3
 
 llm:
@@ -22,7 +22,7 @@ llm:
     dir: data/fixtures/llm
   default-model:
     base-url: http://127.0.0.1:8088/v1
-    api-key: sk-bookllm-4b-wuxia-2026
+    api-key: ${LOCAL_LLM_API_KEY:}
     model: qwen3-4b-wuxia
     temperature: 0.7
     max-tokens: 8192
@@ -31,50 +31,50 @@ llm:
   models:
     CHAPTER_WRITING:
       base-url: https://api.deepseek.com/v1
-      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
+      api-key: ${DEEPSEEK_API_KEY:}
       model: deepseek-v4-flash
       temperature: 0.8
       max-tokens: 8192
       style-guide: "严格遵循世界观设定中已确立的类型风格。人物名字必须与【出场人物】完全一致，绝对不得改名。不得引入与世界观不兼容的元素。"
     CONTINUITY_CHECK:
       base-url: https://api.deepseek.com/v1
-      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
+      api-key: ${DEEPSEEK_API_KEY:}
       model: deepseek-v4-flash
       temperature: 0.3
       max-tokens: 4096
     PLOTTING:
       base-url: https://api.deepseek.com/v1
-      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
+      api-key: ${DEEPSEEK_API_KEY:}
       model: deepseek-v4-flash
       temperature: 0.7
       max-tokens: 8192
     WORLDBUILDING:
       base-url: https://api.deepseek.com/v1
-      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
+      api-key: ${DEEPSEEK_API_KEY:}
       model: deepseek-v4-flash
       temperature: 0.7
       max-tokens: 8192
     CHARACTER_DESIGN:
       base-url: https://api.deepseek.com/v1
-      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
+      api-key: ${DEEPSEEK_API_KEY:}
       model: deepseek-v4-flash
       temperature: 0.7
       max-tokens: 8192
     STYLE_GUARDIAN:
       base-url: https://api.deepseek.com/v1
-      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
+      api-key: ${DEEPSEEK_API_KEY:}
       model: deepseek-v4-flash
       temperature: 0.3
       max-tokens: 4096
     MEMORY_SUMMARY:
       base-url: https://api.deepseek.com/v1
-      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
+      api-key: ${DEEPSEEK_API_KEY:}
       model: deepseek-v4-flash
       temperature: 0.3
       max-tokens: 4096
     GENERAL:
       base-url: https://api.deepseek.com/v1
-      api-key: sk-5dbe7a31f9084abb874dedc1cc2d5a78
+      api-key: ${DEEPSEEK_API_KEY:}
       model: deepseek-v4-flash
       temperature: 0.3
       max-tokens: 4096

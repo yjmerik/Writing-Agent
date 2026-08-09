@@ -165,7 +165,8 @@ public class PlotterAgent {
                 .systemPrompt(systemPrompt)
                 .userMessage("请生成本卷的详细章节大纲。")
                 .temperature(0.7)
-                .maxTokens(8192)
+                // mc-p3-01: 12000 输出余量——8 章 × 详细格式 + 总纲注入，避免截断
+                .maxTokens(12000)
                 .build();
         var resp = gateway.complete(req);
         return resp.getContent();

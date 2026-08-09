@@ -1443,7 +1443,9 @@ public class NovelOrchestrator {
 
             // 计算下一卷的范围
             int nextStartChapter = currentChapter + 1;
-            int chaptersPerVolume = Math.max(15, targetChapters / (targetChapters / 20));
+            // mc-p3-01 修复: 每卷 8 章——单次 planVolume 输出控制在模型输出上限内
+            // （原 max(15, target/…)=20 章 + 总纲注入导致 completion 触顶 8192 被截断 → 解析 0 章）
+            int chaptersPerVolume = 8;
             int nextEndChapter = Math.min(nextStartChapter + chaptersPerVolume - 1, targetChapters);
             int volumeNumber = (nextStartChapter - 1) / chaptersPerVolume + 1;
 
@@ -1472,8 +1474,12 @@ public class NovelOrchestrator {
             Outline outline = outlineOpt.get();
             int parsed = parseAndAppendVolume(outline, volumeText, projectId, volumeNumber, nextStartChapter);
             if (parsed == 0) {
-                log.warn("分层大纲延迟生成: 卷{} 解析出0章，LLM输出格式不匹配", volumeNumber);
-                return false;
+                // mc-p3-01: LLM 输出被截断/格式漂移导致解析 0 章时，用卷梗概占位生成该卷章节，
+                // 保证写作循环不空转（宁可先写出来，再由大纲延迟扩展补齐细节）
+                log.warn("分层大纲延迟生成: 卷{} 解析出0章（输出可能被截断），改用占位兜底生成 {} 章",
+                        volumeNumber, nextEndChapter - nextStartChapter + 1);
+                parsed = createPlaceholderVolume(outline, projectId, volumeNumber, nextEndChapter);
+                if (parsed == 0) return false;
             }
             repository.saveOutline(outline);
 
@@ -1483,6 +1489,38 @@ public class NovelOrchestrator {
             log.warn("分层大纲延迟生成失败: {}", e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * mc-p3-01: 分层大纲占位兜底——LLM 卷大纲解析失败时，为卷 volumeNumber
+     * 生成 startChapter..endChapter 的占位章节梗概（以卷梗概/总纲为主题），
+     * 让写作循环得以继续。后续 tryExtendLayeredOutline 会持续扩展后续卷。
+     * @return 生成的章节数
+     */
+    private int createPlaceholderVolume(Outline outline, String projectId, int volumeNumber, int endChapter) {
+        var existing = outline.getVolumes();
+        Volume volume = existing.isEmpty() || existing.get(existing.size() - 1).getVolumeIndex() != volumeNumber
+                ? new Volume(projectId, volumeNumber, "卷" + volumeNumber, "（占位卷，待细化）")
+                : existing.get(existing.size() - 1);
+        if (!outline.getVolumes().contains(volume)) {
+            outline.addVolume(volume);
+        }
+        int startChapter = (volumeNumber - 1) * 8 + 1;
+        int created = 0;
+        String premise = outline.getPremise() != null ? outline.getPremise() : "";
+        String synopsis = (premise.length() > 80 ? premise.substring(0, 80) : premise) + "——本卷主线推进";
+        for (int i = startChapter; i <= endChapter; i++) {
+            final int chIndex = i;
+            boolean exists = outline.getVolumes().stream()
+                    .flatMap(v -> v.getSynopses().stream())
+                    .anyMatch(s -> s.getChapterIndex() == chIndex);
+            if (exists) continue;
+            ChapterSynopsis syn = new ChapterSynopsis(projectId, i, "第" + i + "章", synopsis);
+            syn.setBeats("开场→推进→冲突→收尾");
+            volume.addSynopsis(syn);
+            created++;
+        }
+        return created;
     }
 
     /**

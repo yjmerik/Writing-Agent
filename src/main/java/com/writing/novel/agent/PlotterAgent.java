@@ -236,12 +236,18 @@ public class PlotterAgent {
     }
 
     private void parseChaptersInVolume(Volume volume, String volBody, String projectId) {
+        // p12-fix: 收集已存在的章号，防止重复
+        java.util.Set<Integer> existingIndices = new java.util.HashSet<>();
+        for (ChapterSynopsis s : volume.getSynopses()) existingIndices.add(s.getChapterIndex());
+
         // 多行格式：## 第N章 标题\n\n**场景节拍**：...
         boolean hasChapters = false;
         Matcher chM = Pattern.compile("(?:#+\\s*|\\*{2})?第([0-9一二三四五六七八九十百]+)章\\s*(.+?)\\r?\\n\\r?\\n(\\*{0,2}场景节拍\\*{0,2}[：:]\\s*.+?)(?=\\r?\\n\\r?\\n(?:#+\\s*|\\*{2})?第[0-9一二三四五六七八九十百]+章|$)", Pattern.DOTALL).matcher(volBody);
         while (chM.find()) {
             hasChapters = true;
             int idx = parseChineseOrArabic(chM.group(1));
+            if (existingIndices.contains(idx)) continue; // p12-fix: 跳过重复章号
+            existingIndices.add(idx);
             String title = sanitizeTitle(chM.group(2));
             String rawContent = chM.group(3).trim();
             ChapterSynopsis cs = new ChapterSynopsis(projectId, idx, title, rawContent);
@@ -255,6 +261,8 @@ public class PlotterAgent {
             while (chM1.find()) {
                 hasChapters = true;
                 int idx = parseChineseOrArabic(chM1.group(1));
+                if (existingIndices.contains(idx)) continue; // p12-fix: 去重
+                existingIndices.add(idx);
                 String title = sanitizeTitle(chM1.group(2));
                 String rawContent = chM1.group(3).trim();
                 ChapterSynopsis cs = new ChapterSynopsis(projectId, idx, title, rawContent);
@@ -268,6 +276,8 @@ public class PlotterAgent {
             Matcher chM2 = Pattern.compile("\\*{0,2}第([0-9一二三四五六七八九十百]+)章\\s*(.+?)[：:]\\s*(.+?)(?=\\*{0,2}第\\d+章|$)", Pattern.DOTALL).matcher(volBody);
             while (chM2.find()) {
                 int idx = parseChineseOrArabic(chM2.group(1));
+                if (existingIndices.contains(idx)) continue; // p12-fix: 去重
+                existingIndices.add(idx);
                 String title = sanitizeTitle(chM2.group(2));
                 String rawContent = chM2.group(3).trim();
                 ChapterSynopsis cs = new ChapterSynopsis(projectId, idx, title, rawContent);

@@ -1238,14 +1238,17 @@ public class NovelOrchestrator {
                 consecutiveFailures = 0; // 成功则重置失败计数
 
                 // 质量熔断：检查本章是否有 HIGH 级连续性问题
+                // p12-fix: 放宽阈值 3→10（百万字写作中 ConsistencyGuard 检测敏感，
+                // 能力越界/凭空证据在武侠/玄幻题材中高频出现，不应因此中断写作）
                 boolean hasHighIssue = !repository.findUnresolvedIssues(projectId).stream()
                         .filter(i -> i.getDetectedAtChapter() == ch.getChapterIndex())
                         .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH)
                         .toList().isEmpty();
                 if (hasHighIssue) {
                     consecutiveHighIssues++;
-                    if (consecutiveHighIssues >= 3) {
-                        // 连续 3 章 HIGH 问题，暂停写作
+                    if (consecutiveHighIssues >= 10) {
+                        // 连续 10 章 HIGH 问题，暂停写作
+                        log.warn("连续 {} 章 HIGH 问题，暂停写作", consecutiveHighIssues);
                         break;
                     }
                 } else {
@@ -1321,8 +1324,16 @@ public class NovelOrchestrator {
      */
     private boolean tryExtendLayeredOutline(String projectId, Project p) {
         try {
+            log.info("tryExtendLayeredOutline 触发: projectId={}, currentChapter={}", projectId, p.getCurrentChapterIndex());
             var prefs = repository.findWritingPreferences(projectId).orElse(null);
-            if (prefs == null || !prefs.isLayeredOutline()) return false;
+            if (prefs == null) {
+                log.warn("tryExtendLayeredOutline: prefs 为 null");
+                return false;
+            }
+            if (!prefs.isLayeredOutline()) {
+                log.warn("tryExtendLayeredOutline: layeredOutline=false");
+                return false;
+            }
 
             int targetChapters = prefs.getTargetChapters();
             int currentChapter = p.getCurrentChapterIndex();

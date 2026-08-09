@@ -85,6 +85,30 @@ class LayeredOutlineParsingTest {
     }
 
     @Test
+    void 行内章节引用不截断解析() throws Exception {
+        // 复现 mc-p3-01：伏笔文本含"预计第N章回收"等行内章号引用，
+        // 旧正则 (?=第\d+章) 会被截断 → 8 章大纲误解析为 5 章、章节错乱
+        String text = "【总纲】卷1\n\n"
+            + "第1章 开局：开场冲突。爽点：反转。人物：沈砚。目的：建立主线。张力：6。伏笔：埋设甲（伏笔，预计第5章回收）；埋设乙（预计卷2回收）。\n"
+            + "第2章 推进：开场→冲突。爽点：爽感。人物：楚蘅。目的：推进。张力：7。伏笔：埋设丙（预计第3章回收）。\n"
+            + "第3章 高潮：对决。爽点：碾压。人物：邵孤舟。目的：转折。张力：8。伏笔：埋设丁。\n"
+            + "第4章 收尾：收束。爽点：悬念。人物：范伯衡。目的：埋线。张力：5。伏笔：无。\n"
+            + "第5章 转折：意外。爽点：惊变。人物：温不换。目的：升级。张力：9。伏笔：埋设戊（预计第7章回收）。\n"
+            + "第6章 喘息：对话。爽点：互动。人物：沈砚。目的：刻画。张力：3。伏笔：无。\n"
+            + "第7章 推进二：线索。爽点：发现。人物：许清让。目的：铺陈。张力：6。伏笔：埋设己。\n"
+            + "第8章 卷末：引爆。爽点：决战。人物：全员。目的：收束卷。张力：10。伏笔：回收甲乙丙。\n";
+        Outline outline = new Outline("p1", "总纲");
+        int parsed = invokeParse(outline, text, "p1", 1, 1);
+        assertEquals(8, parsed, "行内'预计第N章回收'不应截断解析，实际 " + parsed);
+        // 验证各章都解析出正确的标题
+        var synopses = outline.getVolumes().get(0).getSynopses();
+        assertEquals(8, synopses.size());
+        assertTrue(synopses.stream().anyMatch(s -> s.getChapterIndex() == 3), "第3章不应丢失");
+        assertTrue(synopses.stream().anyMatch(s -> s.getChapterIndex() == 5 && s.getTitle().contains("转折")),
+                "第5章应解析出正确标题");
+    }
+
+    @Test
     void 解析0章时占位兜底生成卷() throws Exception {
         Project p = new Project("占位", "测试", "悬疑");
         repo.saveProject(p);

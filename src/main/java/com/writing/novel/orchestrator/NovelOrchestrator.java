@@ -1525,6 +1525,9 @@ public class NovelOrchestrator {
 
     /**
      * p12-fix: 解析 planVolume 的输出并追加到已有 outline。
+     * mc-p3-01: 正则改为行首锚定——避免与正文中的"预计第N章回收"等
+     * 行内章号引用冲突（旧正则的 (?=第\d+章) lookahead 会被截断，
+     * 导致 8 章大纲误解析为 5 章、章节错乱）。
      * @return 解析出的章节数（0 表示解析失败）
      */
     private int parseAndAppendVolume(Outline outline, String text, String projectId,
@@ -1533,9 +1536,11 @@ public class NovelOrchestrator {
         Volume volume = new Volume(projectId, volumeNumber, "卷" + volumeNumber, "延迟生成");
         outline.addVolume(volume);
 
-        // p12-fix: 更宽松的正则——支持多种分隔符（：:。.）
+        // 行首锚定：第N章 必须出现在行首；下一章 lookahead 也要求行首，
+        // 行内的"预计第5章回收"不触发截断
         java.util.regex.Pattern chapterPattern = java.util.regex.Pattern.compile(
-                "第(\\d+)章\\s*(.+?)[：:。\\n]\\s*(.+?)(?=第\\d+章|$)", java.util.regex.Pattern.DOTALL);
+                "(?m)^\\s*第(\\d+)章\\s*(.+?)[：:]\\s*(.+?)(?=^\\s*第\\d+章|\\z)",
+                java.util.regex.Pattern.DOTALL);
         java.util.regex.Matcher m = chapterPattern.matcher(text);
         int parsed = 0;
         while (m.find()) {

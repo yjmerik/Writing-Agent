@@ -1199,6 +1199,8 @@ public class SqliteNovelRepository implements NovelRepository {
         setField(c, "id", rs.getString("id"));
         String content = rs.getString("content");
         if (content != null) c.setContent(content);
+        // mc-p1-01: 用 DB 中的真实 version 覆盖（setContent 会 bump version，需修正）
+        setField(c, "version", rs.getInt("version"));
         return c;
     }
 

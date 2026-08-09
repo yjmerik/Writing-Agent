@@ -1316,7 +1316,10 @@ public class NovelOrchestrator {
         if (outline != null && hasNextChapter(outline, p.getCurrentChapterIndex())) {
             p.setState(NovelState.WRITING);
         } else {
-            p.setState(NovelState.FINAL);
+            // mc-p3-02: 统一走门禁——不能绕过直接置 FINAL
+            boolean passed = runFinalAuditGate(projectId, p);
+            p.setState(passed ? NovelState.FINAL : NovelState.NEEDS_REVISION);
+            log.info("卷末成书门禁: {} → {}", passed ? "PASS" : "FAIL", passed ? "FINAL" : "NEEDS_REVISION");
         }
         repository.saveProject(p);
     }

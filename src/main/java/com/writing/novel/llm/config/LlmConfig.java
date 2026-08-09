@@ -28,6 +28,10 @@ public class LlmConfig {
     public LlmGateway llmGateway(LlmProperties properties, LlmClient client,
                                  @Value("${llm.replay.mode:off}") String replayMode,
                                  @Value("${llm.replay.dir:data/fixtures/llm}") String replayDir) {
+        // mc-p0-04: 启动时校验凭据（replay 模式跳过）
+        properties.setReplayMode(replayMode.equalsIgnoreCase("replay"));
+        properties.validateKeys();
+
         LlmGateway gateway = new DefaultLlmGateway(properties, client);
         switch (replayMode.toLowerCase()) {
             case "record" -> gateway = new RecordReplayLlmGateway(

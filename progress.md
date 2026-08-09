@@ -2,13 +2,28 @@
 
 ## Current State
 
-**Last Updated:** 2026-08-05
-**Phase 9:** harness 自动化闭环设施完成 ✅
-**Features:** 50 total, 50 completed
-**Tests:** 96 pass, 0 failures, 1 skipped (`RealLlmSmokeTest`)
-**Harness validation:** 100/100
+**Last Updated:** 2026-08-09
+**Phase:** 百万字可靠性优化（docs/specs/2026-08-09-million-character-reliability.md）
+**Tests:** 116 pass, 0 failures, 1 skipped (`RealLlmSmokeTest`，需 `REAL_LLM=true`)
 
-## Phase 9 完成情况
+## 百万字可靠性 — P0 修复完成（审查回流）
+
+### 审查 5 类阻断问题的修复
+
+1. **单活跃作业并发双写**（mc-p0-05）：`startWriting` 同步等待旧任务退出（30s 超时）后再启动新任务；`cancel` 只设内存标志，DB 的 CANCELLED 在循环退出后写入
+2. **凭据 fail-fast 语义修正**（mc-p0-04）：`validateKeys()` 现在校验 **所有** 模型配置（default-model + 各任务类型），仅对**远程**端点要求 api-key，本地端点（localhost/127.x/*.local）豁免——修复了原先只看 default-model、导致仅配 DeepSeek 的真实部署反而无法启动的问题
+3. **测试环境加载系统 api-key**：新增 `scripts/load-env.sh`，从 `~/.zshrc` 等系统 shell 配置提取 `export KEY=...` 注入环境（不回显、不 source 整文件），`init.sh` 接入；测试用真实系统 key 而非 fake key
+4. **JDK 26 兼容**：pom 升级 `byte-buddy 1.17.8` + `mockito 5.17.0`，修复 Mockito inline mock 无法对已加载类重定形
+5. **P0 行为测试**：`WritingTaskRecoveryTest`（孤儿清扫）、`HonestTerminalStateTest`（诚实终态）、`SingleActiveJobTest`（单活跃作业）、`WritingTaskCancelTest`（取消）、`LlmPropertiesValidateTest`（fail-fast 语义）——真实行为断言，非 POJO setter
+
+### 验证
+
+| Check | Command | Result |
+|---|---|---|
+| 全量测试（真实系统 key） | `source scripts/load-env.sh && mvn test` | 116 pass, 0 failures |
+| 完整 harness | `./init.sh` | 编译+测试+前端构建全通过 |
+
+## 历史：Phase 9 完成情况
 
 ### 可重放 E2E
 

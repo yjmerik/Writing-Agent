@@ -19,6 +19,9 @@
 
     <properties>
         <java.version>17</java.version>
+        <!-- JDK 26 运行时需要新版本 ByteBuddy 才能对已加载类做 inline 重定形 -->
+        <byte-buddy.version>1.17.8</byte-buddy.version>
+        <mockito.version>5.17.0</mockito.version>
     </properties>
 
     <dependencies>

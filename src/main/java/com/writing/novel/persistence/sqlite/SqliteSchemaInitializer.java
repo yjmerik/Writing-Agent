@@ -102,7 +102,7 @@ public class SqliteSchemaInitializer {
             "chapter_length_variation TEXT DEFAULT 'VARIED', " +
             "fast_pace_window INTEGER DEFAULT 4, " +
             "foreshadow_suspense_threshold INTEGER DEFAULT 8, " +
-            "target_chapters INTEGER DEFAULT 80, " +
+            "target_chapters INTEGER DEFAULT 400, " +
             "layered_outline INTEGER DEFAULT 1, " +
             "updated_at TEXT)",
 

@@ -3,6 +3,12 @@ set -euo pipefail
 
 echo "=== WritingAgent 环境验证 ==="
 
+# 加载系统 shell 配置中的 LLM api-key（凭据 fail-fast 校验需要真实 key）
+source scripts/load-env.sh
+if [ -z "${DEEPSEEK_API_KEY:-}" ]; then
+    echo "⚠ DEEPSEEK_API_KEY 未配置——LLM 相关测试将使用 replay/本地端点，远程调用测试会跳过"
+fi
+
 echo "▶ 编译中..."
 mvn compile -q
 echo "✅ 编译通过"

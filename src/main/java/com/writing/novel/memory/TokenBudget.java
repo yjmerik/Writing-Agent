@@ -31,6 +31,18 @@ public final class TokenBudget {
         return (int) Math.floor(contextWindow * WINDOW_USAGE_RATIO);
     }
 
+    /**
+     * mc-p3-01: 组装预算考虑模型输出上限——输入预算 = 窗口 - 输出预留 - 5% 安全余量。
+     * 推理模型（如 deepseek-v4-flash）reasoning_content 消耗大量输出 token，
+     * 若不预留输出，长章节会被截断。
+     */
+    public static int budgetForModel(int contextWindow, int maxOutputTokens) {
+        if (contextWindow <= 0) return DEFAULT_BUDGET;
+        int output = maxOutputTokens > 0 ? maxOutputTokens : 0;
+        int reserved = output + (int) (contextWindow * 0.05);
+        return Math.max(1000, contextWindow - reserved);
+    }
+
     /** 如果文本超出 token 预算，从尾部截断 */
     public static String truncateToTokens(String text, int maxTokens) {
         if (text == null) return "";

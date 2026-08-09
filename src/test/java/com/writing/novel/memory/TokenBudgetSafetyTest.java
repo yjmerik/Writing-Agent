@@ -66,6 +66,14 @@ class TokenBudgetSafetyTest {
     }
 
     @Test
+    void 预算考虑输出预留() {
+        // mc-p3-01: 输入预算 = 窗口 - 输出(20000) - 5%余量(3200)
+        assertEquals(40800, TokenBudget.budgetForModel(64000, 20000));
+        assertEquals(TokenBudget.DEFAULT_BUDGET, TokenBudget.budgetForModel(0, 8192));
+        assertTrue(TokenBudget.budgetForModel(64000, 20000) > 0);
+    }
+
+    @Test
     void 组装后估计token不超过模型窗口90百分比() {
         // 大量世界观条目 + 历史章节，模拟 50 章后的长程上下文
         Project p = new Project("预算测试", "测试", "玄幻");

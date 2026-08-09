@@ -56,11 +56,23 @@ public class ChapterWriterAgent {
         this(gateway, contextAssembler, repository, null, promptService, null, null);
     }
 
-    /** mc-p2-03: 按 CHAPTER_WRITING 模型配置推导上下文组装预算 */
+    /**
+     * mc-p3-01: 章节写作 maxTokens 从模型配置读取（默认 20000）。
+     * deepseek-v4-flash 是推理模型，reasoning_content 消耗大量输出 token，
+     * 8192 上限会导致 3000+ 字正文被截断（completion 触顶、content 0-1800 字）。
+     */
+    private int chapterWritingMaxTokens() {
+        if (llmProperties == null) return 20000;
+        var cfg = llmProperties.forTaskType(LlmTaskType.CHAPTER_WRITING.name());
+        return cfg != null && cfg.getMaxTokens() > 0 ? cfg.getMaxTokens() : 20000;
+    }
+
+    /** mc-p2-03: 按 CHAPTER_WRITING 模型配置推导上下文组装预算（考虑输出预留） */
     private int chapterWritingBudget() {
         if (llmProperties == null) return TokenBudget.DEFAULT_BUDGET;
         var cfg = llmProperties.forTaskType(LlmTaskType.CHAPTER_WRITING.name());
-        return TokenBudget.budgetForModel(cfg != null ? cfg.getContextWindow() : 0);
+        if (cfg == null) return TokenBudget.DEFAULT_BUDGET;
+        return TokenBudget.budgetForModel(cfg.getContextWindow(), cfg.getMaxTokens());
     }
 
     public Chapter write(String projectId, int chapterIndex, String chapterTitle,
@@ -98,7 +110,7 @@ public class ChapterWriterAgent {
                 .systemPrompt(systemPrompt)
                 .userMessage(ctx.toUserPrompt())
                 .temperature(0.8)
-                .maxTokens(8192)
+                .maxTokens(chapterWritingMaxTokens())
                 .build();
 
         // 3. 调 LLM 写正文（空内容/过短用变化 prompt 重试；contentFilter 用温和 prompt 重试）
@@ -116,7 +128,7 @@ public class ChapterWriterAgent {
                     .systemPrompt(systemPrompt + "\n\n注意：请避开暴力/血腥的直白描写，改用侧面烘托、心理描写和氛围渲染来表现冲突。")
                     .userMessage(ctx.toUserPrompt())
                     .temperature(0.5) // 大幅降温度
-                    .maxTokens(8192)
+                    .maxTokens(chapterWritingMaxTokens())
                     .build();
             resp = gateway.complete(mildReq);
         }
@@ -128,7 +140,7 @@ public class ChapterWriterAgent {
                     .userMessage(ctx.toUserPrompt()
                             + "\n\n⚠️ 上次输出为空或过短。请严格按四段式结构完整输出不少于2500字的正文。")
                     .temperature(0.7)
-                    .maxTokens(8192)
+                    .maxTokens(chapterWritingMaxTokens())
                     .build();
             try {
                 resp = gateway.complete(retryReq);
@@ -139,7 +151,7 @@ public class ChapterWriterAgent {
                         .systemPrompt(systemPrompt + "\n\n绝对禁止任何直接的暴力、身体伤害、血腥描写。所有冲突用对话和心理活动表现。")
                         .userMessage(ctx.toUserPrompt())
                         .temperature(0.3)
-                        .maxTokens(4096)
+                        .maxTokens(chapterWritingMaxTokens())
                         .build();
                 resp = gateway.complete(safeReq);
             }
@@ -214,7 +226,7 @@ public class ChapterWriterAgent {
                 .systemPrompt(systemPrompt)
                 .userMessage(ctx.toUserPrompt())
                 .temperature(0.7)
-                .maxTokens(8192)
+                .maxTokens(chapterWritingMaxTokens())
                 .build();
 
         var resp = gateway.complete(req);

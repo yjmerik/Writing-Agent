@@ -36,7 +36,8 @@ llm:
       api-key: ${DEEPSEEK_API_KEY:}
       model: deepseek-v4-flash
       temperature: 0.8
-      max-tokens: 8192
+      # mc-p3-01: 推理模型 reasoning_content 消耗大量输出 token；8192 会截断 3000+ 字正文
+      max-tokens: 20000
       context-window: 64000
       style-guide: "严格遵循世界观设定中已确立的类型风格。人物名字必须与【出场人物】完全一致，绝对不得改名。不得引入与世界观不兼容的元素。"
     CONTINUITY_CHECK:

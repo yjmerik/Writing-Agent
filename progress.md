@@ -30,6 +30,15 @@
 - **mc-p2-02 连续性检查长程输入**：`ContinuityCheckerAgent` 检查段注入历史卷摘要（span>3、非 dirty、最近 5 卷）+ 叙事线索台账（未回收线索）；`ContinuityHistoryInputTest` 用 50 章合成数据断言非空
 - **mc-p2-04 embedding 默认档**：`application.yml` 默认 `cloud-api`，stub 仅显式配置生效；`EmbeddingProfileTest` 双档断言
 
+## 百万字可靠性 — P3 质量证据（进行中）
+
+- **mc-p3-02 FINAL 门禁**：`FinalAuditGateTest` 验证 VOLUME_DONE→step() 统一走 `runFinalAuditGate`（mustResolve>3 / HIGH>10 → NEEDS_REVISION，通过→FINAL），不再绕过
+- **mc-p3-03 成本遥测**：`LlmCostTelemetryTest` 验证 LLM_CALL 事件含 promptTokens/completionTokens/estimatedCostCny（DeepSeek 0.001/0.002 定价）
+- **mc-p3-04 diagnose 成本聚合**：`diagnose.sh` 按 taskType 输出成本合计 + 总成本（实测聚合输出）
+- **mc-p3-01 20 章 fixture + 基线（进行中）**：3 章 record→replay 闭环已通（46 次回放调用、0 错误、8644 字），`golden.json` 已 bless（compare PASS）；20 章真实记录进行中
+- **e2e.sh 修复**：异步写作轮询至终态；报告 JSON 改从文件读取（修复章节正文控制字符导致报告生成失败）
+- **embedding 切换百炼**：`DASHSCOPE_EMBEDDING_API_KEY`（用户提供）→ `text-embedding-v3` OpenAI 兼容端点，实测返回 1024 维向量
+
 ## 历史：Phase 9 完成情况
 
 ### 可重放 E2E

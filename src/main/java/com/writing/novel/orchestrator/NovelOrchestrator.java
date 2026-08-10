@@ -1536,12 +1536,13 @@ public class NovelOrchestrator {
         Volume volume = new Volume(projectId, volumeNumber, "卷" + volumeNumber, "延迟生成");
         outline.addVolume(volume);
 
-        // 行首锚定：第N章 必须出现在行首；下一章 lookahead 也要求行首，
-        // 行内的"预计第5章回收"不触发截断
+        // mc-p3-01: 行首锚定 + 兼容 markdown 加粗(**第N章 标题**)；
+        // 标题非空、遇 ：/: / 换行即止；行内"预计第N章回收"不触发截断
+        String cleanText = text == null ? "" : text.replace("**", "");
         java.util.regex.Pattern chapterPattern = java.util.regex.Pattern.compile(
-                "(?m)^\\s*第(\\d+)章\\s*(.+?)[：:]\\s*(.+?)(?=^\\s*第\\d+章|\\z)",
+                "(?m)^\\s*第(\\d+)章\\s*(.+?)(?:[：:]|\\n|$)(.*?)(?=^\\s*第\\d+章|\\z)",
                 java.util.regex.Pattern.DOTALL);
-        java.util.regex.Matcher m = chapterPattern.matcher(text);
+        java.util.regex.Matcher m = chapterPattern.matcher(cleanText);
         int parsed = 0;
         while (m.find()) {
             try {

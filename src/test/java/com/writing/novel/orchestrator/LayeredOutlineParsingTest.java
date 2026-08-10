@@ -109,6 +109,22 @@ class LayeredOutlineParsingTest {
     }
 
     @Test
+    void markdown加粗章节行也能解析() throws Exception {
+        // 复现：planVolume 输出 **第N章 标题** + 换行 + **场景节拍：** 的格式
+        String text = "【总纲】卷2 积阴堂来客\n\n"
+            + "**第9章 灰烬里的官靴**\n**场景节拍：** 乔二娘心神不宁，雨夜查访。\n**爽点：** 账册侦查。\n**人物：** 沈砚舟、裴照临\n**目的：** 引入大理寺。\n**张力：** 6\n**伏笔：** 埋设青蚨钱挂坠（重要，预计卷9回收）。\n\n"
+            + "**第10章 雨吏的脚印**\n**场景节拍：** 雨夜追踪。\n**爽点：** 反杀。\n**人物：** 裴照临\n**目的：** 推进。\n**张力：** 7\n**伏笔：** 无。\n\n"
+            + "**第11章 账册的裂缝**\n**场景节拍：** 账册异变。\n**爽点：** 玄奇。\n**人物：** 沈砚舟\n**目的：** 揭示设定。\n**张力：** 8\n**伏笔：** 埋设裂缝原因。\n";
+        Outline outline = new Outline("p1", "总纲");
+        int parsed = invokeParse(outline, text, "p1", 1, 1);
+        assertEquals(3, parsed, "markdown 加粗章节行应解析 3 章，实际 " + parsed);
+        var synopses = outline.getVolumes().get(0).getSynopses();
+        assertEquals(3, synopses.size());
+        assertTrue(synopses.stream().anyMatch(s -> s.getChapterIndex() == 9 && s.getTitle().contains("灰烬")),
+                "第9章标题应解析干净，实际: " + synopses.stream().map(s -> s.getChapterIndex() + ":" + s.getTitle()).toList());
+    }
+
+    @Test
     void 解析0章时占位兜底生成卷() throws Exception {
         Project p = new Project("占位", "测试", "悬疑");
         repo.saveProject(p);

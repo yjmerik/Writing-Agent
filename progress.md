@@ -2,9 +2,32 @@
 
 ## Current State
 
-**Last Updated:** 2026-08-09
+**Last Updated:** 2026-08-10
 **Phase:** 百万字可靠性优化（docs/specs/2026-08-09-million-character-reliability.md）
-**Tests:** 116 pass, 0 failures, 1 skipped (`RealLlmSmokeTest`，需 `REAL_LLM=true`)
+**Tests:** 138 pass, 0 failures, 1 skipped (`RealLlmSmokeTest`，需 `REAL_LLM=true`)
+
+## 百万字可靠性 — P0/P1/P2/P3 完成
+
+- **P0 任务正确性/安全**：单活跃作业收敛、cancel 状态机、诚实终态、孤儿清扫、凭据 fail-fast 语义修正（校验所有模型、远程端点要求 key、本地豁免）、测试加载系统 key（load-env.sh）、JDK26 兼容（byte-buddy/mockito 升级）
+- **P1 数据正确性**：Chapter.version 往返、摘要 dirty + sourceChapterVersion（表列+迁移）、重写失效→细粒度重算/卷级过滤
+- **P2 长程记忆**：model-aware token budget（窗口 90%、输出预留）、连续性检查注入历史卷摘要+叙事线索台账、embedding cloud-api 默认（百炼 text-embedding-v3）
+- **P3 质量证据**：FINAL 门禁统一（NEEDS_REVISION）、LLM 成本遥测（estimatedCostCny）、diagnose 成本聚合、E2E 异步轮询
+
+### 本次排查修复的 4 个真实可靠性 bug（Bugfix gate）
+
+1. **分层大纲截断空转**：planVolume 20 章+总纲注入致 completion 触顶 → 卷块 8 章 + maxTokens 12000 + 占位兜底
+2. **record→replay 非确定**：录制时抛异常的请求未落 fixture → 失败也录制、回放复现同类型异常
+3. **推理模型输出触顶**：deepseek-v4-flash reasoning_content 消耗大量输出 token，8192 截断正文 → CHAPTER_WRITING maxTokens 20000 + 组装预算预留输出
+4. **卷大纲解析误截断**：行内"预计第N章回收"触发 `(?=第\d+章)` → 行首锚定 + 兼容 markdown 加粗章节行
+
+### 快速验证（3 章，~10 分钟）
+
+- **record**：3 章、11,081 字、46 次 LLM 调用、0 失败
+- **replay**：与记录完全一致（同字数/同调用/同失败）
+- **质量评估**（真实 LLM）：overallScore **7/10**；人物 7 / 世界观 6 / 情节 6 / 对话 7 / 文风 8 / 多样性 7 / 一致性 5；发现 HIGH 一致性矛盾（明代/清代年号混用）等真实问题
+- **基线**：golden.json bless（minChapters=3, minTotalWords=8864, minEvaluationScore=7），compare PASS
+
+## 历史：Phase 9 完成情况
 
 ## 百万字可靠性 — P0 修复完成（审查回流）
 

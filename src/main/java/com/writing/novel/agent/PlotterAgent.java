@@ -135,7 +135,8 @@ public class PlotterAgent {
                 .systemPrompt(systemPrompt)
                 .userMessage("请生成全书总纲。")
                 .temperature(0.7)
-                .maxTokens(8192)
+                // op-fix: 推理模型 reasoning_content 耗 token，8192 致总纲正文为空
+                .maxTokens(16000)
                 .build();
         var resp = gateway.complete(req);
         return resp.getContent();

@@ -553,7 +553,30 @@ public class ContextAssembler {
             sb.append(eraConstraint);
         }
 
+        // cn-03: 主角名锚点——防止正文与人物卡改名漂移
+        String nameAnchor = buildProtagonistNameConstraint(projectId);
+        if (nameAnchor != null && !nameAnchor.isBlank()) {
+            sb.append(nameAnchor);
+        }
+
         return sb.toString();
+    }
+
+    /**
+     * cn-03: 主角名锚点约束。从人物卡取主角名，强制正文使用此名。
+     */
+    private String buildProtagonistNameConstraint(String projectId) {
+        try {
+            var mc = knowledgeBase.findAllCharacters(projectId).stream()
+                    .filter(this::isMainCharacter)
+                    .map(c -> c.getName())
+                    .findFirst().orElse(null);
+            if (mc == null || mc.isBlank()) return "";
+            return "□ 【主角名锚点·硬约束】主角名为「" + mc + "」，正文必须始终使用此名，"
+                    + "不得改用其他字、别号或别名指代主角。\n";
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     /**

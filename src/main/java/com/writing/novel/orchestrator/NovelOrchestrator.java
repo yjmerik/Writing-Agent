@@ -272,8 +272,10 @@ public class NovelOrchestrator {
             if (useLayered && targetChapters > 40) {
                 // p12-K1: 分层大纲模式——先生成总纲，第一卷详细大纲
                 String wbSummaryForOutline = collectWorldbuildingSummary(projectId);
+                // cn-01: 把主角名 + 人物摘要传给 master outline，避免大纲自创名字漂移
                 String masterOutline = plotter.planMasterOutline(
-                        projectId, p.getConcept(), targetChapters, wbSummaryForOutline, genreRules);
+                        projectId, p.getConcept(), targetChapters, wbSummaryForOutline, genreRules,
+                        protagonistName, charSummary);
                 // 存储总纲到 outline.premise（临时存储，后续按卷扩展）
                 Outline masterOutlineObj = new Outline(projectId, masterOutline);
                 repository.saveOutline(masterOutlineObj);
@@ -1464,11 +1466,16 @@ public class NovelOrchestrator {
                     .map(c -> c.getName() + "(" + c.getRole() + ")")
                     .reduce((a, b) -> a + ", " + b).orElse("无");
 
+            // cn-02: 取主角名锚定卷大纲
+            String protagonistName = repository.findCharactersByProject(projectId).stream()
+                    .filter(c -> c.getRole() != null && c.getRole().contains("主角"))
+                    .map(c -> c.getName()).findFirst().orElse("");
+
             // 调用 planVolume 生成下一卷
             String volumeText = plotter.planVolume(
                     masterOutline, previousSummary,
                     "卷" + volumeNumber, "（延迟生成，根据总纲规划）",
-                    nextStartChapter, nextEndChapter, existingCharacters);
+                    nextStartChapter, nextEndChapter, existingCharacters, protagonistName);
 
             // 解析并追加到 outline
             Outline outline = outlineOpt.get();

@@ -9,6 +9,14 @@
 故事构思：
 {{concept}}
 
+{{#if protagonistName}}
+**主角名锚定（全书必须使用此名，不得改名、不得用其他字代替）**：主角名为「{{protagonistName}}」。总纲和各卷描述中提及主角时必须使用此名。
+{{/if}}
+{{#if characterSummary}}
+已有人物设定（大纲必须与此一致，不得改名）：
+{{characterSummary}}
+{{/if}}
+
 世界观设定摘要：
 {{worldSummary}}
 

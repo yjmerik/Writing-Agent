@@ -48,6 +48,12 @@ public class ContinuityCheckerAgent {
             msg.append("\n\n").append(eraCheck);
         }
 
+        // cn-03: 主角姓名漂移检测
+        String nameCheck = buildNameDriftCheckSection(projectId);
+        if (nameCheck != null && !nameCheck.isBlank()) {
+            msg.append("\n\n").append(nameCheck);
+        }
+
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.CONTINUITY_CHECK)
                 .systemPrompt(systemPrompt)
@@ -127,6 +133,24 @@ public class ContinuityCheckerAgent {
             sb.append("发现任何时代矛盾，必须以 【世界观|高】 格式报告（高严重度），"
                     + "并在描述中写明冲突的具体名词。无矛盾则正常输出。\n");
             return sb.toString();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    /**
+     * cn-03: 主角姓名漂移检测段——注入主角名 + "改名/别名判 HIGH" 指令。
+     */
+    private String buildNameDriftCheckSection(String projectId) {
+        if (repository == null) return "";
+        try {
+            var mc = repository.findCharactersByProject(projectId).stream()
+                    .filter(c -> c.getRole() != null && c.getRole().contains("主角"))
+                    .map(c -> c.getName()).findFirst().orElse(null);
+            if (mc == null || mc.isBlank()) return "";
+            return "【主角姓名一致性专项检查】主角名为「" + mc + "」。\n"
+                    + "请检查本章正文是否用了其他名字/别号/别名指代主角，或与人物卡名字不一致。\n"
+                    + "发现姓名漂移，必须以 【人物|高】 格式报告（高严重度），描述写明正文用了哪个错误名字。\n";
         } catch (Exception e) {
             return "";
         }

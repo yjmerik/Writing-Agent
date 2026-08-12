@@ -109,17 +109,26 @@ public class PlotterAgent {
     /**
      * p12-K1: 生成全书总纲（卷级规划，不含章节细节）。
      * 用于百万字项目——先生成卷结构，后续按需生成分卷大纲。
+     * cn-01: 接收主角名 + 人物摘要，避免大纲自创名字与人物卡漂移。
      * @return 总纲文本（包含 N 卷的标题/梗概/章节范围）
      */
     public String planMasterOutline(String projectId, String concept, int totalChapters,
                                      String worldSummary, String genreRules) {
+        return planMasterOutline(projectId, concept, totalChapters, worldSummary, genreRules, "", "");
+    }
+
+    public String planMasterOutline(String projectId, String concept, int totalChapters,
+                                     String worldSummary, String genreRules,
+                                     String protagonistName, String characterSummary) {
         int volumeCount = Math.max(2, totalChapters / 20); // 每 20 章约 1 卷
         String systemPrompt = promptService.render("master-outline", Map.of(
                 "concept", concept,
                 "worldSummary", worldSummary != null ? worldSummary : "（暂无世界观摘要）",
                 "genreRules", genreRules != null ? genreRules : "",
                 "totalChapters", String.valueOf(totalChapters),
-                "volumeCount", String.valueOf(volumeCount)));
+                "volumeCount", String.valueOf(volumeCount),
+                "protagonistName", protagonistName != null ? protagonistName : "",
+                "characterSummary", characterSummary != null ? characterSummary : ""));
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.PLOTTING)
@@ -148,6 +157,17 @@ public class PlotterAgent {
                               String volumeTitle, String volumeSummary,
                               int startChapter, int endChapter,
                               String existingCharacters) {
+        return planVolume(masterOutline, previousSummary, volumeTitle, volumeSummary,
+                startChapter, endChapter, existingCharacters, "");
+    }
+
+    /**
+     * cn-02: 带主角名的卷大纲生成，避免卷大纲改名漂移。
+     */
+    public String planVolume(String masterOutline, String previousSummary,
+                              String volumeTitle, String volumeSummary,
+                              int startChapter, int endChapter,
+                              String existingCharacters, String protagonistName) {
         int chapterCount = endChapter - startChapter + 1;
         String systemPrompt = promptService.render("volume-outline", Map.of(
                 "masterOutline", masterOutline != null ? masterOutline : "（暂无总纲）",
@@ -158,7 +178,8 @@ public class PlotterAgent {
                 "endChapter", String.valueOf(endChapter),
                 "startChapterPlus1", String.valueOf(startChapter + 1),
                 "chapterCount", String.valueOf(chapterCount),
-                "existingCharacters", existingCharacters != null ? existingCharacters : "（暂无）"));
+                "existingCharacters", existingCharacters != null ? existingCharacters : "（暂无）",
+                "protagonistName", protagonistName != null ? protagonistName : ""));
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.PLOTTING)

@@ -12,6 +12,9 @@
 卷梗概：{{volumeSummary}}
 章节范围：第{{startChapter}}章到第{{endChapter}}章（共{{chapterCount}}章）。
 已有角色：{{existingCharacters}}
+{{#if protagonistName}}
+**主角名锚定**：主角名为「{{protagonistName}}」，本章大纲必须使用此名，不得改名。
+{{/if}}
 
 核心原则：
 1. 每章必须有明确的戏剧目的：不是"然后发生了X"，而是"本章解决了什么问题/制造了什么新问题"

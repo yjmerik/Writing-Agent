@@ -71,6 +71,38 @@
 - 全量 **154 tests**，0 失败
 - 3 章 record→replay 闭环（10,227 字、0 失败），基线 minEvaluationScore=8，compare PASS
 
+## 开篇节奏加速（op-01）— 节奏偏缓通用方案
+
+针对两轮复评均标记的 MEDIUM plot"前3章节奏偏缓、爽点不密集"，定位**根因**：`buildChapterLengthGuide` 用 `chapterIndex % 3` 判长短，第 3 章（3%3==0）被标为"喘息/过渡章，不需要爽点爆发"，但开篇前几章每章都应高压。spec：`docs/specs/2026-08-12-opening-pacing.md`。
+
+- **op-01 开篇加速**：前 5 章（OPENING_CHAPTERS）强制高压——禁止喘息章判定，要求首 500 字钩子 + 至少 2 爽点 + 章内冲突升级；ContextAssembler 注入"开篇加速硬约束"
+- **op-fix master outline maxTokens**：planMasterOutline 的 8192 致推理模型 reasoning_content 耗尽预算、总纲正文为空 → 16000（同 CHAPTER_WRITING 修复模式）
+- `OpeningPacingTest` 3 用例
+
+### 开篇节奏验证（质量 Agent 三次复评）
+
+| 维度 | 原始 | +时代 | +姓名 | +开篇节奏 |
+|---|---|---|---|---|
+| 一致性 | 5 | 6 | 9 | **9** |
+| 世界观 | 6 | 8 | 9 | **9** |
+| 情节 plot | 6 | 7 | 7 | **9** ↑↑ |
+| 人物 | 7 | 7 | 8 | 8 |
+| 对话 | 7 | 6 | 8 | 8 |
+| 文风 | 8 | 8 | 9 | **9** |
+| **总体** | **7** | 7 | 8 | **9** ↑ |
+
+**"前3章节奏偏缓"MEDIUM 已解决**（plot 7→9）。复评："开局三章已显露出克制而清冽的悬疑感与命运张力，是兼具文学质感与商业潜力的高完成度网文"。**无 HIGH 问题**，仅余 MEDIUM（配角功能性、爽点模式重复）+ LOW（金句）。
+
+- 全量 **157 tests**，0 失败
+- 3 章 record→replay 闭环（8,584 字、0 失败），基线 minEvaluationScore=9，compare PASS
+
+## 三轮质量迭代总览
+
+通过"质量评估→通用方案→复评"闭环，overallScore **7→9**，一致性 **5→9**，消除了全部 HIGH 问题：
+1. **时代一致性护栏**（ec）：朝代年号混用 HIGH 消失
+2. **角色姓名锚定**（cn）：主角改名漂移 HIGH 消失（大纲/人物卡/正文零漂移）
+3. **开篇节奏加速**（op）：前 3 章节奏偏缓 MEDIUM 解决（plot 7→9）
+
 ## 历史：Phase 9 完成情况
 
 ## 百万字可靠性 — P0 修复完成（审查回流）

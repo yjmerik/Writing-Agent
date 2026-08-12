@@ -46,8 +46,30 @@
 
 **目标问题已消除**：护栏前的 HIGH"明代/清代道光年号混用"在护栏后复评中消失 ✅。复评发现的 HIGH 是另一类问题（主角改名不统一——姓名漂移，属下一通用议题）。
 
-- 全量 **148 tests**，0 失败
-- 3 章 record→replay 闭环（9802 字、0 失败），基线 compare PASS
+## 角色姓名锚定（cn-01..cn-03）— 姓名漂移通用方案
+
+针对时代护栏复评后暴露的 HIGH"主角改名不统一（大纲沈墨 vs 人物卡顾蘅秋）"，定位**根因**：`runConceiving` 分层大纲路径 `planMasterOutline` 未传主角名，`master-outline.st` 无名字变量 → LLM 自创名与人物卡漂移。spec：`docs/specs/2026-08-12-character-name-anchor.md`。
+
+- **cn-01 master outline**：`planMasterOutline` 新增 protagonistName+characterSummary；模板新增 `{{protagonistName}}` 锚定原则 + 已有人物设定
+- **cn-02 volume outline**：`planVolume` 新增 protagonistName；volume-outline.st 加锚定
+- **cn-03 写作+检查护栏**：ChapterWriter 主角名锚点硬约束；ContinuityChecker 姓名漂移检测（判【人物|高】）
+- 兼容旧签名（无主角名时安全降级）
+
+### 姓名锚定验证（质量 Agent 二次复评）
+
+| 维度 | 原始 | +时代护栏 | +姓名锚定 |
+|---|---|---|---|
+| 一致性 consistency | 5 | 6 | **9** ↑↑ |
+| 世界观 worldbuilding | 6 | 8 | **9** ↑ |
+| 人物 characters | 7 | 7 | **8** ↑ |
+| 对话 dialogue | 7 | 6 | **8** ↑ |
+| 文风 style | 8 | 8 | **9** ↑ |
+| **总体 overallScore** | **7** | 7 | **8** ↑ |
+
+**姓名漂移 HIGH 已消失** ✅：大纲/人物卡/正文统一为"季衡"（大纲 80 次、正文 98 次，零漂移）。复评**无 HIGH 问题**，剩余均为 MEDIUM/LOW（节奏、配角厚度、金句、模式多样性）。
+
+- 全量 **154 tests**，0 失败
+- 3 章 record→replay 闭环（10,227 字、0 失败），基线 minEvaluationScore=8，compare PASS
 
 ## 历史：Phase 9 完成情况
 

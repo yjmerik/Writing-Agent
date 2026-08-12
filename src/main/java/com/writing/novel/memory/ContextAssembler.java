@@ -547,7 +547,39 @@ public class ContextAssembler {
             }
         }
 
+        // ec-02: 时代一致性护栏——历史题材禁止其他朝代年号/器物/典籍/官制混用
+        String eraConstraint = buildEraConstraint(projectId);
+        if (eraConstraint != null && !eraConstraint.isBlank()) {
+            sb.append(eraConstraint);
+        }
+
         return sb.toString();
+    }
+
+    /**
+     * ec-02: 推导时代锚点并生成写作约束。无时代信号（架空/修仙/现代）返回空串。
+     */
+    private String buildEraConstraint(String projectId) {
+        try {
+            var entries = repository.findKnowledgeEntriesByProject(projectId);
+            String concept = repository.findProject(projectId)
+                    .map(p -> p.getConcept()).orElse("");
+            String anchor = com.writing.novel.service.EraAnchorService.deriveEraAnchor(entries, concept);
+            if (anchor == null || anchor.isBlank()) return "";
+            StringBuilder sb = new StringBuilder();
+            sb.append("□ 【时代一致性·硬约束】本作品时代设定：").append(anchor).append("。\n");
+            if (anchor.startsWith("⚠️")) {
+                sb.append("  上方检测到多朝代信号混用，本章必须统一为提示中最高频的朝代，"
+                        + "不得再出现其他朝代的年号/器物/典籍/官制/服饰/称谓。\n");
+            } else {
+                sb.append("  本章正文中出现的年号、钱币、典籍、官制、服饰、称谓、典章制度"
+                        + "必须与").append(anchor).append("一致，禁止引入其他朝代的同类名词"
+                        + "（如不得在明代背景中出现清代年号或清代机构）。\n");
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     // --- 角色声音注入 ---

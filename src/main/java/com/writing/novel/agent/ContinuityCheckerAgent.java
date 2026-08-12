@@ -42,6 +42,12 @@ public class ContinuityCheckerAgent {
             msg.append("\n\n").append(history);
         }
 
+        // ec-03: 时代一致性检测——历史题材下，年号/朝代矛盾判 HIGH
+        String eraCheck = buildEraCheckSection(projectId);
+        if (eraCheck != null && !eraCheck.isBlank()) {
+            msg.append("\n\n").append(eraCheck);
+        }
+
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.CONTINUITY_CHECK)
                 .systemPrompt(systemPrompt)
@@ -100,6 +106,30 @@ public class ContinuityCheckerAgent {
             }
         }
         return sb.toString().trim();
+    }
+
+    /**
+     * ec-03: 时代一致性检测段——注入时代锚点 + "年号/朝代矛盾判 HIGH" 指令。
+     * 历史题材才注入；架空/修仙/现代无信号则返回空。
+     */
+    private String buildEraCheckSection(String projectId) {
+        if (repository == null) return "";
+        try {
+            var entries = repository.findKnowledgeEntriesByProject(projectId);
+            String concept = repository.findProject(projectId)
+                    .map(p -> p.getConcept()).orElse("");
+            String anchor = com.writing.novel.service.EraAnchorService.deriveEraAnchor(entries, concept);
+            if (anchor == null || anchor.isBlank()) return "";
+            StringBuilder sb = new StringBuilder();
+            sb.append("【时代一致性专项检查】本作品时代设定：").append(anchor).append("。\n");
+            sb.append("请专门检查本章正文是否出现与上述时代设定冲突的元素，"
+                    + "包括但不限于：其他朝代的年号、钱币、典籍、官制机构、服饰、称谓、典章制度。\n");
+            sb.append("发现任何时代矛盾，必须以 【世界观|高】 格式报告（高严重度），"
+                    + "并在描述中写明冲突的具体名词。无矛盾则正常输出。\n");
+            return sb.toString();
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     private List<ContinuityIssue> parseIssues(String text, String projectId, int chapterIndex) {

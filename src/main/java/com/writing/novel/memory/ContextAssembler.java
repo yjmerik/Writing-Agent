@@ -22,6 +22,8 @@ public class ContextAssembler {
     private static final int RETRIEVAL_TOP_K = 5;
     private static final int RECENT_TEXT_CHARS = 2000;
     private static final int RECENT_SUMMARY_WINDOW = 5;
+    /** op-01: 开篇高压章节数——前 N 章强制快速抓人 */
+    public static final int OPENING_CHAPTERS = 5;
 
     private final NovelRepository repository;
     private final KnowledgeBaseService knowledgeBase;
@@ -557,6 +559,15 @@ public class ContextAssembler {
         String nameAnchor = buildProtagonistNameConstraint(projectId);
         if (nameAnchor != null && !nameAnchor.isBlank()) {
             sb.append(nameAnchor);
+        }
+
+        // op-01: 开篇节奏加速——前 N 章强制快速抓人
+        if (chapterIndex <= OPENING_CHAPTERS) {
+            sb.append("□ 【开篇加速·硬约束】本章是全书前").append(OPENING_CHAPTERS)
+              .append("章之一，必须快速抓住读者：\n")
+              .append("  - 首 500 字内必须出现冲突/悬念/反转，禁止用大段环境描写或世界观解说开场\n")
+              .append("  - 本章至少 2 个爽点，冲突必须在章内升级并部分解决（不能只铺悬念不推进）\n")
+              .append("  - 禁止「喘息章」节奏——每一段都要推进剧情或深化人物，不得纯氛围渲染\n");
         }
 
         return sb.toString();

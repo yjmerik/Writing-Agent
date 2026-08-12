@@ -21,6 +21,9 @@ import java.util.Map;
  */
 public class ChapterWriterAgent {
 
+    /** op-01: 开篇高压章节数（与 ContextAssembler.OPENING_CHAPTERS 一致） */
+    public static final int OPENING_CHAPTERS = 5;
+
     private final LlmGateway gateway;
     private final ContextAssembler contextAssembler;
     private final NovelRepository repository;
@@ -297,8 +300,16 @@ public class ChapterWriterAgent {
             int maxLen = repository.findWritingPreferences(projectId)
                     .map(p -> p.getMaxChapterLength())
                     .orElse(6000);
-            boolean isLongChapter = chapterIndex % 3 != 0;
-            if (isLongChapter) {
+            // op-01: 开篇前 5 章强制高压——禁止喘息章判定
+            boolean isOpening = chapterIndex <= OPENING_CHAPTERS;
+            boolean isLongChapter = isOpening || chapterIndex % 3 != 0;
+            if (isOpening) {
+                int targetMax = Math.min(maxLen, 4500);
+                return "本章为【开篇高压章】（前" + OPENING_CHAPTERS + "章），目标字数 3500-" + targetMax + " 字。"
+                        + "开篇必须快速抓人：首 500 字内必须出现冲突/悬念/反转钩子，不得用大段环境描写或背景铺垫开场。"
+                        + "四段式比例：开场钩子500字→冲突升级1500字→高潮爽点1200字→悬念400字。"
+                        + "本章至少 2 个爽点，冲突必须在章内升级而非只铺悬念。";
+            } else if (isLongChapter) {
                 int targetMax = Math.min(maxLen, 4500);
                 return "本章为标准/高潮章，目标字数 3500-" + targetMax + " 字（上限 " + maxLen + " 字，超过将被标记为过长）。" +
                         "四段式比例：开场500字→冲突升级1500字→高潮1200字→悬念400字。宁可精简也不要注水。";

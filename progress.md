@@ -27,6 +27,28 @@
 - **质量评估**（真实 LLM）：overallScore **7/10**；人物 7 / 世界观 6 / 情节 6 / 对话 7 / 文风 8 / 多样性 7 / 一致性 5；发现 HIGH 一致性矛盾（明代/清代年号混用）等真实问题
 - **基线**：golden.json bless（minChapters=3, minTotalWords=8864, minEvaluationScore=7），compare PASS
 
+## 时代一致性护栏（ec-01..ec-03）— 质量评估问题通用方案
+
+针对质量评估发现的 HIGH 一致性矛盾（世界观明代 vs 正文清代年号混用），按需求拆分协议落 spec（`docs/specs/2026-08-12-era-consistency.md`）并实现通用方案：
+
+- **ec-01 EraAnchorService**：从世界观条目+构思扫描朝代/年号关键词（明/清/唐/宋/元/汉/秦/隋/三国/春秋战国），推导时代锚点；多朝代冲突标注；架空修仙世界不误判。`EraAnchorTest` 6 用例
+- **ec-02 ChapterWriter 时代约束**：`ContextAssembler.buildWritingConstraints` 注入"时代一致性硬约束"——禁止其他朝代年号/器物/典籍/官制。`EraConstraintInjectionTest`（历史题材注入、架空不注入）
+- **ec-03 ContinuityChecker 时代检测**：检查段注入时代锚点 +"年号/朝代矛盾判【世界观|高】"指令。`ContinuityEraCheckTest`
+
+### 时代护栏验证（质量 Agent 复评）
+
+| 维度 | 护栏前 | 护栏后 |
+|---|---|---|
+| 一致性 consistency | 5 | **6** ↑ |
+| 世界观 worldbuilding | 6 | **8** ↑ |
+| 情节 plot | 6 | **7** ↑ |
+| 总体 overallScore | 7 | 7 |
+
+**目标问题已消除**：护栏前的 HIGH"明代/清代道光年号混用"在护栏后复评中消失 ✅。复评发现的 HIGH 是另一类问题（主角改名不统一——姓名漂移，属下一通用议题）。
+
+- 全量 **148 tests**，0 失败
+- 3 章 record→replay 闭环（9802 字、0 失败），基线 compare PASS
+
 ## 历史：Phase 9 完成情况
 
 ## 百万字可靠性 — P0 修复完成（审查回流）

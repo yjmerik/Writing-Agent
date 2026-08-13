@@ -55,6 +55,9 @@ public class ContextAssembler {
         this.clicheDetector = clicheDetector;
     }
 
+    /** D1: 稳定段缓存——key=projectId:sectionName，value=段文本（每章 DB 查询+拼接削减） */
+    private final java.util.Map<String, String> stableSectionCache = new java.util.concurrent.ConcurrentHashMap<>();
+
     public WritingContext assemble(String projectId, int chapterIndex,
                                    String chapterTitle, String chapterSynopsis,
                                    String writingNotes) {
@@ -131,18 +134,26 @@ public class ContextAssembler {
         return sb.toString();
     }
 
-    /** 构建故事原旨：总纲 + 构思，作为全书最高纲领 */
+    /** 构建故事原旨：总纲 + 构思，作为全书最高纲领。D1: 稳定段缓存 */
     private String buildPremiseSection(String projectId) {
-        StringBuilder sb = new StringBuilder();
-        repository.findProject(projectId).ifPresent(p -> {
-            if (p.getConcept() != null) sb.append("构思：").append(p.getConcept()).append("\n");
+        return cached("premise", projectId, () -> {
+            StringBuilder sb = new StringBuilder();
+            repository.findProject(projectId).ifPresent(p -> {
+                if (p.getConcept() != null) sb.append("构思：").append(p.getConcept()).append("\n");
+            });
+            repository.findOutlineByProject(projectId).ifPresent(o -> {
+                if (o.getPremise() != null && !o.getPremise().isBlank()) {
+                    sb.append("总纲：").append(o.getPremise());
+                }
+            });
+            return sb.toString().trim();
         });
-        repository.findOutlineByProject(projectId).ifPresent(o -> {
-            if (o.getPremise() != null && !o.getPremise().isBlank()) {
-                sb.append("总纲：").append(o.getPremise());
-            }
-        });
-        return sb.toString().trim();
+    }
+
+    /** D1: 稳定段缓存读写——key=projectId:sectionName */
+    private String cached(String section, String projectId, java.util.function.Supplier<String> builder) {
+        String key = projectId + ":" + section;
+        return stableSectionCache.computeIfAbsent(key, k -> builder.get());
     }
 
     /** 世界观按类型多样选样：每种 type 最多 2 条，优先级排序 */
@@ -152,28 +163,30 @@ public class ContextAssembler {
     );
 
     private String buildWorldbuildingSection(String projectId) {
-        List<KnowledgeEntry> entries = knowledgeBase.findAllEntries(projectId);
-        if (entries.isEmpty()) return "";
-        // 按 type 分组，每组最多 2 条，按优先级排序
-        java.util.Map<String, List<KnowledgeEntry>> byType = new java.util.LinkedHashMap<>();
-        for (KnowledgeEntry e : entries) {
-            byType.computeIfAbsent(e.getType(), k -> new java.util.ArrayList<>()).add(e);
-        }
-        // 按类型优先级排序
-        List<String> sortedTypes = new java.util.ArrayList<>(byType.keySet());
-        sortedTypes.sort(java.util.Comparator.comparingInt(
-                t -> TYPE_PRIORITY.getOrDefault(t, 99)));
-
-        StringBuilder sb = new StringBuilder();
-        for (String type : sortedTypes) {
-            List<KnowledgeEntry> group = byType.get(type);
-            int limit = Math.min(group.size(), 2); // 每类最多 2 条
-            for (int i = 0; i < limit; i++) {
-                KnowledgeEntry e = group.get(i);
-                sb.append("【").append(e.getName()).append("】").append(e.getContent()).append("\n");
+        return cached("worldbuilding", projectId, () -> {
+            List<KnowledgeEntry> entries = knowledgeBase.findAllEntries(projectId);
+            if (entries.isEmpty()) return "";
+            // 按 type 分组，每组最多 2 条，按优先级排序
+            java.util.Map<String, List<KnowledgeEntry>> byType = new java.util.LinkedHashMap<>();
+            for (KnowledgeEntry e : entries) {
+                byType.computeIfAbsent(e.getType(), k -> new java.util.ArrayList<>()).add(e);
             }
-        }
-        return sb.toString().trim();
+            // 按类型优先级排序
+            List<String> sortedTypes = new java.util.ArrayList<>(byType.keySet());
+            sortedTypes.sort(java.util.Comparator.comparingInt(
+                    t -> TYPE_PRIORITY.getOrDefault(t, 99)));
+
+            StringBuilder sb = new StringBuilder();
+            for (String type : sortedTypes) {
+                List<KnowledgeEntry> group = byType.get(type);
+                int limit = Math.min(group.size(), 2); // 每类最多 2 条
+                for (int i = 0; i < limit; i++) {
+                    KnowledgeEntry e = group.get(i);
+                    sb.append("【").append(e.getName()).append("】").append(e.getContent()).append("\n");
+                }
+            }
+            return sb.toString().trim();
+        });
     }
 
     private String buildVolumeOutline(String projectId, int chapterIndex) {
@@ -723,6 +736,10 @@ public class ContextAssembler {
     // --- 引用素材注入 ---
 
     private String buildKnowledgeQuoteSection(String projectId) {
+        return cached("knowledgeQuote", projectId, () -> buildKnowledgeQuoteUncached(projectId));
+    }
+
+    private String buildKnowledgeQuoteUncached(String projectId) {
         var prefs = repository.findWritingPreferences(projectId);
         if (prefs.isEmpty() || !prefs.get().isEnableKnowledgeQuotes()) return "";
 

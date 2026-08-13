@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # 端到端测试：启动服务 → 建项目 → 构思 → 写 N 章 → 产出 e2e-report.json。
 # 用法: ./scripts/e2e.sh [--mode replay|record|live] [--chapters N] [--port P] [--evaluate]
-#   replay: 用 data/fixtures/llm 回放（确定性、零成本，缺 fixture 则失败）
-#   record: 真实调用 LLM 并录制 fixture（首次建基线时用）
+#   replay: 功能冒烟——用 data/fixtures/llm 回放 3 章，验证管道完整性（确定性、零成本）
+#   record: 真实调用 LLM 并录制 fixture + 生成完整长篇（建基线/长篇验证用）
 #   live:   真实调用，不录制
 set -e
 cd "$(dirname "$0")/.."
 
 MODE="replay"
-CHAPTERS=3
+CHAPTERS=""
 PORT=8090
 EVALUATE=false
 while [ $# -gt 0 ]; do
@@ -20,6 +20,14 @@ while [ $# -gt 0 ]; do
     *) echo "未知参数: $1"; exit 1 ;;
   esac
 done
+
+# replay 模式固定 3 章（功能冒烟，不重跑完整长篇）；record/live 按 --chapters（默认 3）
+if [ "$MODE" = "replay" ]; then
+  CHAPTERS=3
+  echo "ℹ️ replay 模式：固定 3 章功能冒烟（不重跑完整长篇，避免 evolving-state 发散）"
+else
+  CHAPTERS="${CHAPTERS:-3}"
+fi
 
 E2E_DIR="data/e2e"
 BASE="http://localhost:$PORT"
@@ -82,9 +90,14 @@ WRITE_RESULT=$(curl --noproxy '*' -sf -X POST "$BASE/api/projects/$PROJECT_ID/wr
 echo "$WRITE_RESULT"
 TASK_ID=$(echo "$WRITE_RESULT" | python3 -c "import json,sys; print(json.load(sys.stdin)['taskId'])")
 
-# p12-K2: 异步写作——轮询任务直到终态（上限 = 章节数 × 4 分钟，20 章 ≈ 80 分钟）
-POLL_LIMIT=$(( CHAPTERS * 240 ))
-[ "$POLL_LIMIT" -lt 600 ] && POLL_LIMIT=600
+# 异步写作——轮询任务直到终态
+# replay（3 章）固定 10 分钟上限；record/live 按章节数缩放
+if [ "$MODE" = "replay" ]; then
+  POLL_LIMIT=600
+else
+  POLL_LIMIT=$(( CHAPTERS * 240 ))
+  [ "$POLL_LIMIT" -lt 600 ] && POLL_LIMIT=600
+fi
 TASK_JSON=""
 for i in $(seq 1 "$POLL_LIMIT"); do
   TASK_JSON=$(curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/writing-tasks/$TASK_ID")

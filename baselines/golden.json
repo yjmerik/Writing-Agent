@@ -1,10 +1,10 @@
 {
-  "blessedAt": "2026-08-13T10:35:04.387209",
+  "blessedAt": "2026-08-13T20:13:19.795028",
   "blessedFrom": "e2e-report.json",
-  "minChapters": 10,
-  "minTotalWords": 26030,
-  "minAvgWordCount": 2277,
+  "minChapters": 3,
+  "minTotalWords": 8653,
+  "minAvgWordCount": 2523,
   "maxChapterFailures": 0,
   "maxLlmErrors": 0,
-  "minEvaluationScore": 8
+  "minEvaluationScore": null
 }

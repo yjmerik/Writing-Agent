@@ -60,6 +60,12 @@ PROJECT_ID=$(curl --noproxy '*' -sf -X POST "$BASE/api/projects" \
   | python3 -c "import json,sys; print(json.load(sys.stdin)['id'])")
 echo "✅ 项目: $PROJECT_ID"
 
+# 按章节数设置 targetChapters（避免 master outline 规划 400 章超长超时）
+echo "▶ 设置 targetChapters=$CHAPTERS ..."
+curl --noproxy '*' -sf -X PUT "$BASE/api/projects/$PROJECT_ID/preferences" \
+  -H "Content-Type: application/json" \
+  -d "{\"targetChapters\":$CHAPTERS,\"layeredOutline\":true}" > /dev/null 2>&1 || true
+
 echo "▶ 构思阶段（世界观/人物/大纲）..."
 curl --noproxy '*' -sf -X POST "$BASE/api/projects/$PROJECT_ID/run" > /dev/null
 STATE=$(curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/status" | python3 -c "import json,sys; print(json.load(sys.stdin)['state'])")

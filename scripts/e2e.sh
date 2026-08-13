@@ -32,6 +32,8 @@ case "$MODE" in
 esac
 
 echo "=== E2E: mode=$MODE chapters=$CHAPTERS port=$PORT ==="
+# 备份上一轮 record 的 DB（防止 replay 覆盖 record 数据）
+if [ -f "$E2E_DIR/novel.db" ]; then cp "$E2E_DIR/novel.db" "$E2E_DIR/novel-record.db"; fi
 rm -rf "$E2E_DIR"
 mkdir -p "$E2E_DIR"
 

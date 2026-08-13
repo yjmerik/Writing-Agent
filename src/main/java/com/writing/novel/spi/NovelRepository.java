@@ -65,6 +65,8 @@ public interface NovelRepository {
     // --- Summary ---
     void saveSummary(Summary summary);
     List<Summary> findSummariesByProject(String projectId);
+    /** so-fix: 删除指定摘要（用于清理被卷级摘要覆盖的细粒度摘要） */
+    void deleteSummary(String summaryId);
 
     // --- Foreshadowing ---
     void saveForeshadowing(Foreshadowing f);

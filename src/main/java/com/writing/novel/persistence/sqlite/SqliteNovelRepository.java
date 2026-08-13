@@ -444,6 +444,15 @@ public class SqliteNovelRepository implements NovelRepository {
     }
 
     @Override
+    public void deleteSummary(String summaryId) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement("DELETE FROM summaries WHERE id=?")) {
+            ps.setString(1, summaryId);
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
     public void saveForeshadowing(Foreshadowing f) {
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(

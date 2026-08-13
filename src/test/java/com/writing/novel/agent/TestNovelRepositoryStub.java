@@ -49,6 +49,7 @@ public class TestNovelRepositoryStub implements NovelRepository {
     @Override public List<Chapter> findRecentChapters(String p, int c) { return List.of(); }
     @Override public void saveSummary(Summary s) {}
     @Override public List<Summary> findSummariesByProject(String p) { return List.of(); }
+    @Override public void deleteSummary(String summaryId) {}
     @Override public void saveForeshadowing(Foreshadowing f) {}
     @Override public List<Foreshadowing> findForeshadowingsByProject(String p) { return List.of(); }
     @Override public List<Foreshadowing> findUnresolvedForeshadowings(String p) { return List.of(); }

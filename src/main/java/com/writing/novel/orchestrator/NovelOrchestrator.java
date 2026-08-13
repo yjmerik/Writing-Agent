@@ -682,6 +682,8 @@ public class NovelOrchestrator {
         // 用 MemoryManager 压缩为卷级摘要
         memoryManager.summarize(projectId, fromChapter, toChapter,
                 "卷" + volume.getVolumeIndex() + "「" + volume.getTitle() + "」的详细内容：\n" + combined);
+        // so-fix: 卷级摘要生成后，删除被其覆盖的细粒度摘要（避免范围重叠致前情摘要重复）
+        removeSupersededSummaries(projectId, fromChapter, toChapter);
         // p3-04: 卷末触发质量评价（反馈闭环）
         try {
             var report = qualityEvaluationAgent.evaluate(projectId);
@@ -1315,6 +1317,33 @@ public class NovelOrchestrator {
             fresh.setSourceChapterVersion(srcVersion);
             fresh.setDirty(false);
             repository.saveSummary(fresh);
+            // so-fix: 细粒度摘要生成后也清理被覆盖的更细粒度旧摘要
+            removeSupersededSummaries(projectId, from, to, fresh.getId());
+        }
+    }
+
+    /**
+     * so-fix: 删除被 [fromChapter, toChapter] 完全覆盖的更细粒度摘要，
+     * 避免范围重叠导致前情摘要内容重复（10章评估发现的 consistency 降分根因）。
+     * 保留刚生成的摘要自身（exceptId）和比当前范围更粗的摘要。
+     */
+    private void removeSupersededSummaries(String projectId, int fromChapter, int toChapter) {
+        removeSupersededSummaries(projectId, fromChapter, toChapter, null);
+    }
+
+    private void removeSupersededSummaries(String projectId, int fromChapter, int toChapter, String exceptId) {
+        int currentSpan = toChapter - fromChapter + 1;
+        for (var s : repository.findSummariesByProject(projectId)) {
+            if (exceptId != null && exceptId.equals(s.getId())) continue;
+            int span = s.getToChapter() - s.getFromChapter() + 1;
+            // 只删除比当前摘要更细粒度且被完全覆盖的（防止误删卷级摘要）
+            if (span < currentSpan
+                    && s.getFromChapter() >= fromChapter
+                    && s.getToChapter() <= toChapter) {
+                log.info("清理被覆盖的细粒度摘要: [{}-{}] (被 [{}-{}] 覆盖)",
+                        s.getFromChapter(), s.getToChapter(), fromChapter, toChapter);
+                repository.deleteSummary(s.getId());
+            }
         }
     }
 

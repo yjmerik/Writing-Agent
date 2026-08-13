@@ -23,6 +23,26 @@ public class SqliteNovelRepository implements NovelRepository {
         this.cp = cp;
     }
 
+    /**
+     * B1: 在单个事务中执行多个写操作。中途异常自动回滚。
+     * 用法: repo.runInTransaction(conn -> { saveChapter(conn, ch); saveContinuityIssue(conn, issue); return null; })
+     */
+    public <T> T runInTransaction(java.util.function.Function<Connection, T> work) {
+        Connection conn = null;
+        try {
+            conn = cp.getConnection();
+            conn.setAutoCommit(false);
+            T result = work.apply(conn);
+            conn.commit();
+            return result;
+        } catch (Exception e) {
+            if (conn != null) try { conn.rollback(); } catch (SQLException ignored) {}
+            throw e instanceof RuntimeException re ? re : new RuntimeException(e);
+        } finally {
+            if (conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
+        }
+    }
+
     @Override
     public String saveProject(Project p) {
         String sql = "INSERT INTO projects (id,title,concept,tags,mode,state,current_chapter_index,genre,created_at,updated_at) " +
@@ -219,12 +239,18 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public String saveChapter(Chapter c) {
+        try (Connection conn = cp.getConnection()) {
+            return saveChapter(conn, c);
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** B1: 事务内保存章节——使用传入连接 */
+    public String saveChapter(Connection conn, Chapter c) {
         String sql = "INSERT INTO chapters (id,project_id,chapter_index,title,content,word_count," +
                 "version,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?) " +
                 "ON CONFLICT(id) DO UPDATE SET title=excluded.title, content=excluded.content, " +
                 "word_count=excluded.word_count, version=excluded.version, updated_at=excluded.updated_at";
-        try (Connection conn = cp.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, c.getId()); ps.setString(2, c.getProjectId());
             ps.setInt(3, c.getChapterIndex()); ps.setString(4, c.getTitle());
             ps.setString(5, c.getContent()); ps.setInt(6, c.getWordCount());
@@ -548,10 +574,16 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public void saveContinuityIssue(ContinuityIssue i) {
-        try (Connection conn = cp.getConnection();
-             PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO continuity_issues (id,project_id,detected_at_chapter,type,severity,description,resolved,created_at) " +
-                     "VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET resolved=excluded.resolved")) {
+        try (Connection conn = cp.getConnection()) {
+            saveContinuityIssue(conn, i);
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** B1: 事务内保存连续性问题 */
+    public void saveContinuityIssue(Connection conn, ContinuityIssue i) {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "INSERT INTO continuity_issues (id,project_id,detected_at_chapter,type,severity,description,resolved,created_at) " +
+                "VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET resolved=excluded.resolved")) {
             ps.setString(1, i.getId()); ps.setString(2, i.getProjectId());
             ps.setInt(3, i.getDetectedAtChapter());
             ps.setString(4, i.getType().name()); ps.setString(5, i.getSeverity().name());

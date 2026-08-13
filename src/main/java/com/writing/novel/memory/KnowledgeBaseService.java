@@ -15,10 +15,19 @@ public class KnowledgeBaseService {
 
     private final NovelRepository repository;
     private final VectorRetrievalService vectorRetrieval;
+    /** p10-w1-01: 写入后 bump，使 ContextAssembler 的 worldbuilding/knowledgeQuote 稳定段缓存失效 */
+    private final MemoryRevision memoryRevision;
 
     public KnowledgeBaseService(NovelRepository repository, VectorRetrievalService vectorRetrieval) {
+        this(repository, vectorRetrieval, null);
+    }
+
+    /** p10-w1-01: 带记忆版本号的构造器（生产装配用） */
+    public KnowledgeBaseService(NovelRepository repository, VectorRetrievalService vectorRetrieval,
+                                MemoryRevision memoryRevision) {
         this.repository = repository;
         this.vectorRetrieval = vectorRetrieval;
+        this.memoryRevision = memoryRevision;
     }
 
     public void saveEntry(KnowledgeEntry entry) {
@@ -26,6 +35,7 @@ public class KnowledgeBaseService {
         vectorRetrieval.index(new IndexedText(
                 entry.getId(), entry.getProjectId(),
                 entry.getName() + "：" + entry.getContent(), "WORLDBUILDING"));
+        invalidate(entry.getProjectId());
     }
 
     public List<KnowledgeEntry> findAllEntries(String projectId) {
@@ -50,6 +60,14 @@ public class KnowledgeBaseService {
                 + nullSafe(character.getSpeakingStyle()) + nullSafe(character.getKnowledgeDomains());
         vectorRetrieval.index(new IndexedText(
                 character.getId(), character.getProjectId(), indexText, "CHARACTER"));
+        invalidate(character.getProjectId());
+    }
+
+    /** p10-w1-01: 写入后使该项目稳定段缓存失效（memoryRevision==null 时为空操作，向后兼容） */
+    private void invalidate(String projectId) {
+        if (memoryRevision != null) {
+            memoryRevision.bump(projectId);
+        }
     }
 
     public List<Character> findAllCharacters(String projectId) {

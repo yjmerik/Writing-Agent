@@ -58,6 +58,9 @@ public class WritingPreferences {
     private int targetChapters;                     // 默认 24：目标总章数（百万字≈240章）
     private boolean layeredOutline;                 // 默认 false：是否使用分层大纲模式
 
+    // p10-w1-04: 成本预算熔断——累计 LLM 成本超此值则暂停（PAUSED），0 表示不限制
+    private double costBudgetYuan;
+
     private Instant updatedAt;
 
     public WritingPreferences(String projectId) {
@@ -191,5 +194,7 @@ public class WritingPreferences {
     public void setTargetChapters(int t) { this.targetChapters = t; this.updatedAt = Instant.now(); }
     public boolean isLayeredOutline() { return layeredOutline; }
     public void setLayeredOutline(boolean l) { this.layeredOutline = l; this.updatedAt = Instant.now(); }
+    public double getCostBudgetYuan() { return costBudgetYuan; }
+    public void setCostBudgetYuan(double v) { this.costBudgetYuan = v; this.updatedAt = Instant.now(); }
     public Instant getUpdatedAt() { return updatedAt; }
 }

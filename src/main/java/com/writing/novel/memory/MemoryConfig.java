@@ -27,8 +27,9 @@ public class MemoryConfig {
 
     @Bean
     public KnowledgeBaseService knowledgeBaseService(NovelRepository repository,
-                                                      VectorRetrievalService vectorRetrieval) {
-        return new KnowledgeBaseService(repository, vectorRetrieval);
+                                                      VectorRetrievalService vectorRetrieval,
+                                                      MemoryRevision memoryRevision) {
+        return new KnowledgeBaseService(repository, vectorRetrieval, memoryRevision);
     }
 
     @Bean
@@ -59,8 +60,9 @@ public class MemoryConfig {
     @Bean
     public com.writing.novel.service.WritingTaskExecutor writingTaskExecutor(
             com.writing.novel.orchestrator.NovelOrchestrator orchestrator,
-            NovelRepository repository) {
-        return new com.writing.novel.service.WritingTaskExecutor(orchestrator, repository);
+            NovelRepository repository,
+            com.writing.novel.telemetry.CostBudgetMonitor costBudgetMonitor) {
+        return new com.writing.novel.service.WritingTaskExecutor(orchestrator, repository, costBudgetMonitor);
     }
 
     @Bean
@@ -72,9 +74,10 @@ public class MemoryConfig {
                                               ClimaxDiversityTracker climaxDiversityTracker,
                                               NarrativeThreadTracker narrativeThreadTracker,
                                               DiversityTracker diversityTracker,
-                                              ClicheDetector clicheDetector) {
+                                              ClicheDetector clicheDetector,
+                                              MemoryRevision memoryRevision) {
         return new ContextAssembler(repository, knowledgeBase, summaryService,
                 vectorRetrieval, entityGraphService, climaxDiversityTracker,
-                narrativeThreadTracker, diversityTracker, clicheDetector);
+                narrativeThreadTracker, diversityTracker, clicheDetector, memoryRevision);
     }
 }

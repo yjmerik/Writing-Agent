@@ -48,6 +48,11 @@ public class VectorRetrievalService {
         vectorStore.delete(id);
     }
 
+    /** p10-w1-03: 按 id 前缀批量删除（章节重写清旧 chunk），返回删除条数 */
+    public int removeByIdPrefix(String idPrefix) {
+        return vectorStore.deleteByPrefix(idPrefix);
+    }
+
     /** p12-K3: 批量持久化 flush */
     public void flush() {
         vectorStore.flush();

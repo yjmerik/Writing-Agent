@@ -16,6 +16,10 @@ public class ModelConfig {
     private boolean streaming = true;
     /** 模型级风格指引（自动拼接到 systemPrompt 末尾，用于约束 LLM 创作倾向） */
     private String styleGuide;
+    /** p10-w1-04: 输入定价（元/千 token），默认 0.001（DeepSeek 参考价） */
+    private double inputPriceYuanPerKTokens = 0.001;
+    /** p10-w1-04: 输出定价（元/千 token），默认 0.002（DeepSeek 参考价） */
+    private double outputPriceYuanPerKTokens = 0.002;
 
     public String getBaseUrl() { return baseUrl; }
     public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
@@ -33,4 +37,8 @@ public class ModelConfig {
     public void setStreaming(boolean streaming) { this.streaming = streaming; }
     public String getStyleGuide() { return styleGuide; }
     public void setStyleGuide(String styleGuide) { this.styleGuide = styleGuide; }
+    public double getInputPriceYuanPerKTokens() { return inputPriceYuanPerKTokens; }
+    public void setInputPriceYuanPerKTokens(double v) { this.inputPriceYuanPerKTokens = v; }
+    public double getOutputPriceYuanPerKTokens() { return outputPriceYuanPerKTokens; }
+    public void setOutputPriceYuanPerKTokens(double v) { this.outputPriceYuanPerKTokens = v; }
 }

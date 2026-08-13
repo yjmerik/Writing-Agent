@@ -2,9 +2,85 @@
 
 ## Current State
 
-**Last Updated:** 2026-08-10
-**Phase:** 百万字可靠性优化（docs/specs/2026-08-09-million-character-reliability.md）
-**Tests:** 138 pass, 0 failures, 1 skipped (`RealLlmSmokeTest`，需 `REAL_LLM=true`)
+**Last Updated:** 2026-08-13
+**Phase:** Phase 10 — 百万字长篇架构优化（故事真典+检索收窄+可靠作业）
+**Active spec:** docs/specs/2026-08-13-million-word-architecture.md（三波 23 feature）
+**Tests:** **181 pass, 0 failures, 1 skipped**（W1 全部完成并融入）
+
+## W1 第一波（止血与正确性）— 全部完成 ✅
+
+7 个 feature 全部实现 + 单元测试绿 + 全量回归 181/0：
+
+| id | feature | 测试 | 关键改动 |
+|---|---|---|---|
+| p10-w1-01 | stableSectionCache 写联动失效 | StableSectionCacheInvalidationTest (3) | MemoryRevision bean + cached() 版本号校验；KnowledgeBase/NoveOrchestrator 写后 bump |
+| p10-w1-02 | 脏卷摘要重算 | VersionedMemoryTest 更新 | recomputeExistingSummary 原地重算卷级 dirty 摘要（不清细粒度） |
+| p10-w1-03 | 向量去污 + top-K 联动 | VectorChunkCleanupOnRewriteTest (3) | VectorStore.deleteByPrefix + 重写清旧 chunk + topK 随预算 5~20 + embedding 告警 |
+| p10-w1-04 | 成本预算熔断 + 真实计价 | WritingJobReliabilityTest (4) | ModelConfig.pricing + CostBudgetMonitor + 超预算→PAUSED |
+| p10-w1-05 | 分类型退避 + 限流降级 | WritingJobReliabilityTest (2) | RateLimitException + 429 退避分级 + DefaultLlmGateway 降级 fallback |
+| p10-w1-06 | 章节状态机 | ChapterStateMachineTest (3) | Chapter.Status 枚举 + 持久化 + doWriteOneChapter 设置 POST_PROCESSING/DONE |
+| p10-w1-07 | 重写互斥 | (重写互斥完成) | checkContinuityAfterWriting 返回 boolean，reader review 互斥跳过 |
+
+### 端到端验证 ✅ PASS
+- **e2e record 3 章（真实 LLM，W1 全部新代码运行）**：
+  - **3 章全部生成，taskStatus=COMPLETED，10490 字，44 次 LLM 调用，0 错误，0 章节失败**
+  - 平均 3496 字/章（min 2958 / max 4338）
+  - W1 状态机（POST_PROCESSING→DONE）、重写互斥、缓存失效、按模型成本计价、退避降级、向量去污、脏摘要重算 全程正常运行
+- **compare-baseline PASS**：章节数 3≥3、总字数 10490≥8653、平均 3496≥2523、失败 0、错误 0 → **质量未退化**
+- record 已录制新 fixture（W1 后的 prompt 指纹），replay 恢复可用。
+
+### 已知遗留（W1 范围内）
+- p10-w1-07 的"后处理 9 Agent 并行"未实现（共享 repo 写并发风险高），仅完成重写互斥；并行基于章节状态机后续做。
+- p10-w1-06 的"后处理失败幂等重跑"实现为状态机字段 + 可观测（POST_PROCESSING log warn），完整重跑入口后续做。
+
+## W2 第二波（故事真典+检索收窄）— 基石完成，链条待续
+
+W2 的两个独立基石已落地（不依赖 LLM prompt 改动，不影响产出质量基线）：
+
+| id | feature | 测试 | 关键改动 |
+|---|---|---|---|
+| p10-w2-01 | story_facts 表 + 领域模型 + 持久化 | StoryBibleTest (5) | StoryFact domain（6 类事实 + supercession 审计链）+ story_facts 表 + StoryFactRepository |
+| p10-w2-06 | recentSummary 进入 token 预算裁剪 | HierarchicalMemoryBudgetTest (2) | applyTokenBudget 加 recentSummarySection 裁剪（截断 4000 token，修 GAP#7） |
+
+**W2 剩余 5 个 feature（w2-02/03/04/05/07）为"影响产出质量"的核心改动**：
+- 涉及新 Agent（FactHarvester + LLM prompt 模板）、NovelOrchestrator 构造器重构（接入真典填充与消费）、多 checker 改走检索收窄。
+- 按 spec 约束：prompt/上下文组装/Agent 逻辑改动必须 `./scripts/e2e.sh` + `compare-baseline.py` PASS。
+- 应在专门会话逐 feature TDD + e2e 验证推进，不在本会话仓促堆砌。
+
+## W3 第三波（结构演进+闭环修复，9 feature）— 待续
+依赖 W2 真典链条完成。后续会话推进。
+
+## 百万字长篇架构 Review（2026-08-13）
+
+对四大子系统（情节/大纲/伏笔、记忆/上下文、角色/一致性/质量门禁、写作循环/成本/容错）做代码级审查（带 file:line 证据），结论：系统在 ~30 章/≈9.6 万字验证通过，但向百万字（400 章）扩展存在**5 道扩展墙 + 4 个系统性根因**。
+
+### 五道扩展墙（何时崩）
+- ~40 章：延迟卷大纲丢结构化字段 → 伏笔/爽点/张力追踪集体失明
+- ~80-120 章：recentSummarySection 不参与预算裁剪 + stableSectionCache 永不失效 → 上下文装不下也记不准
+- ~150-200 章：全书摘要级联再压缩 → 记忆地平线坍塌
+- ~200+ 章：checker/tracker 全量加载进单次 LLM 调用 → token 爆炸/检测失明
+- 全程：3 次失败即永久中止 + 无限流降级 → 任一 API 限流即中断
+
+### 核心架构动作：故事真典（Story Bible）
+系统缺失"可变的事实真相层"——信息要么是有损压缩摘要（会衰减）要么是已发布正文（不可改）。引入 `story_facts`（可累积/可纠错/可检索的事实层）同时解决长程记忆坍塌与修复闭环。用户已确认采用"完整真典"路线。
+
+### 六大支柱（详见 spec）
+1. 故事真典（★关键，替代 book_summary 为主长程记忆）
+2. RelevanceGateway 检索收窄（消灭全量加载反模式）
+3. 分层无衰减记忆 + token 预算 + 缓存失效
+4. 可演进结构规划 + 归档衰减
+5. 可靠写作作业（成本熔断/分类型退避/模型降级/并行/状态机/重写互斥）
+6. 闭环修复（三分类仲裁 + ConsistencyGuard 入闭环 + 重写复检）
+
+### 分波交付（已登记 Phase 10，23 feature）
+- **W1 止血正确性（7 feature，先行）**：stableSectionCache 失效、脏卷摘要重算、向量去污+topK、成本熔断、退避降级、章节状态机、后处理并行+重写互斥
+- **W2 真典+检索收窄（7 feature）**：story_facts、播种、FactHarvester、RelevanceGateway、检查器收窄、摘要分层预算、真典替代 book_summary
+- **W3 结构演进+闭环修复（9 feature）**：总纲重规划、延迟卷补全、ArchiveCompactor、分页、弧光时间线、多样性长窗、线索状态机、闭环修复、FINAL 终审
+
+### 决策记录
+- 完整真典（非轻量挂 KnowledgeEntry）：一个机制解最多 gap，性价比最高
+- 三波全规划、先做 W1：W1 含 2 个已存在的正确性 bug（stableSectionCache/GAP#8、脏卷摘要/GAP#10），风险最低收益立竿见影
+- 不改正文回溯重写：靠真典纠错 + 标记 needsManualReview
 
 ## 百万字可靠性 — P0/P1/P2/P3 完成
 

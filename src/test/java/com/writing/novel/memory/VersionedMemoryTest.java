@@ -176,9 +176,14 @@ class VersionedMemoryTest {
         assertTrue(fineAfter.getContent().contains("重写后"), "细粒度摘要应含重算内容: " + fineAfter.getContent());
         assertEquals(3, fineAfter.getSourceChapterVersion(), "摘要来源版本应跟随章节新版本");
 
-        // 卷级摘要：span>3 不重算 → 保持 dirty（组装时被过滤）
-        Summary volumeAfter = after.stream().filter(s -> s.getToChapter() == 5)
-                .findFirst().orElseThrow();
-        assertTrue(volumeAfter.isDirty(), "卷级摘要未重算应保持 dirty");
+        // 卷级摘要：p10-w1-02 现在也重算（原地更新、不清细粒度）→ dirty=false 且内容更新
+        Summary volumeAfter = after.stream()
+                .filter(s -> s.getToChapter() == 5 && !s.isDirty())
+                .findFirst().orElseThrow(() -> new AssertionError("卷级摘要应重算为干净摘要"));
+        assertFalse(volumeAfter.isDirty(), "卷级摘要重算后应清 dirty（修复 GAP#10 静默历史丢失）");
+        assertTrue(volumeAfter.getContent().contains("重写后"),
+                "卷级摘要应含重算内容: " + volumeAfter.getContent());
+        // 注：本测试只建第1章，卷摘要 toChapter=5 无对应章节，sourceChapterVersion=0 是预期；
+        // 关键验证是 dirty 已清 + 内容已更新（不再静默消失）。
     }
 }

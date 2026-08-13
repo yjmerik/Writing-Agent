@@ -395,6 +395,10 @@ public class NovelOrchestrator {
         var existing = repository.findChapterByIndex(projectId, chapterIndex);
         int idempotentMinLen = repository.findWritingPreferences(projectId).map(pref -> pref.getMinChapterLength()).orElse(2000);
         if (existing.isPresent() && existing.get().getWordCount() >= idempotentMinLen) {
+            // p10-w1-06: 后处理未完成的章节（POST_PROCESSING）标记可观测，便于识别需重跑的章节
+            if (existing.get().getStatus() == com.writing.novel.domain.Chapter.Status.POST_PROCESSING) {
+                log.warn("第{}章后处理未完成（status=POST_PROCESSING），可能需重跑后处理", chapterIndex);
+            }
             // 已有有效章节，推进索引并返回
             p.setCurrentChapterIndex(chapterIndex);
             repository.saveProject(p);
@@ -459,8 +463,14 @@ public class NovelOrchestrator {
         p.setCurrentChapterIndex(chapterIndex);
         repository.saveProject(p);
 
+        // p10-w1-06: 正文已落库，进入后处理阶段——status=POST_PROCESSING 持久化
+        // 后处理若中途失败，重启后可识别 POST_PROCESSING 章节（而非误判为完成）
+        chapter.setStatus(com.writing.novel.domain.Chapter.Status.POST_PROCESSING);
+        repository.saveChapter(chapter);
+
         // 写完后做连续性检查（发现问题记录到 DB，不中断写作）
-        checkContinuityAfterWriting(projectId, chapterIndex, chapter);
+        // p10-w1-07: 返回是否已触发 continuity 重写——若已重写，reader review 不再重写（互斥，防成本翻倍）
+        boolean rewrittenByContinuity = checkContinuityAfterWriting(projectId, chapterIndex, chapter);
 
         // 图数据库：LLM 提取本章实体和关系
         try {
@@ -485,7 +495,8 @@ public class NovelOrchestrator {
             try {
                 var review = readerReviewAgent.review(chapterIndex, chapter.getContent());
                 log.info("读者检验(章{}): {}/10 — {}", chapterIndex, review.getScore(), review.getSummary());
-                if (!review.isPassed()) {
+                // p10-w1-07: continuity 已重写则互斥跳过（单章最多 1 次重写，避免最坏情况成本翻倍）
+                if (!rewrittenByContinuity && !review.isPassed()) {
                     log.info("章节评分 {} < {}，自动重写", review.getScore(), readerReviewAgent.getPassThreshold());
                     var reviewSynopsis = findSynopsis(outline, chapterIndex);
                     int originalLength = chapter.getContent().length();
@@ -644,6 +655,9 @@ public class NovelOrchestrator {
                     "第" + chapterIndex + "章「" + chapter.getTitle() + "」已完成，待审核"));
         }
 
+        // p10-w1-06: 全部后处理完成 → status=DONE（章节真正就绪）
+        chapter.setStatus(com.writing.novel.domain.Chapter.Status.DONE);
+        repository.saveChapter(chapter);
         return chapter;
     }
 
@@ -799,7 +813,8 @@ public class NovelOrchestrator {
      * 发现 HIGH 级矛盾时触发 1 次重写（把矛盾描述加入 prompt 要求修正）。
      * 每 5 章检查一次风格漂移。
      */
-    private void checkContinuityAfterWriting(String projectId, int chapterIndex, Chapter chapter) {
+    private boolean checkContinuityAfterWriting(String projectId, int chapterIndex, Chapter chapter) {
+        boolean rewritten = false; // p10-w1-07: 标记是否触发重写（不提前 return，保持伏笔检测等后续流程）
         try {
             String settings = collectSettingsForCheck(projectId);
             var issues = continuityChecker.check(projectId, chapterIndex, chapter.getContent(), settings);
@@ -821,11 +836,11 @@ public class NovelOrchestrator {
                             i.resolve();
                             repository.saveContinuityIssue(i);
                         });
+                rewritten = true; // p10-w1-07: continuity 已触发重写，告知调用方 reader review 互斥跳过
             }
         } catch (Exception e) {
             log.warn("连续性检查失败: {}", e.getMessage());
         }
-
         // p5-c1: 伏笔回收检测——本章是否回收了某个未回收伏笔
         try {
             checkForeshadowingResolution(projectId, chapterIndex, chapter);
@@ -929,6 +944,7 @@ public class NovelOrchestrator {
                 log.warn("风格检查失败: {}", e.getMessage());
             }
         }
+        return rewritten;
     }
 
     /**
@@ -1309,6 +1325,39 @@ public class NovelOrchestrator {
     }
 
     /**
+     * p10-w1-02: 原地重算一条已有摘要（用于卷级 dirty 重算）。
+     * 与 generateSummary 的区别：更新现有 Summary（保留 id、不清细粒度摘要），
+     * 避免重写一章触发 removeSupersededSummaries 误删该卷细粒度摘要。
+     * 修复 GAP#10：卷级 dirty 摘要此前永不重算 → 该卷剧情在后续章节上下文中静默消失。
+     */
+    private void recomputeExistingSummary(String projectId, Summary existing) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = existing.getFromChapter(); i <= existing.getToChapter(); i++) {
+            repository.findChapterByIndex(projectId, i)
+                    .ifPresent(c -> sb.append(c.getContent()).append("\n"));
+        }
+        if (sb.isEmpty()) {
+            // 无正文可重算——至少清 dirty 避免永久悬挂（保留旧内容）
+            existing.setDirty(false);
+            repository.saveSummary(existing);
+            return;
+        }
+        Summary fresh = memoryManager.summarize(projectId,
+                existing.getFromChapter(), existing.getToChapter(), sb.toString());
+        int srcVersion = repository.findChapterByIndex(projectId, existing.getToChapter())
+                .map(com.writing.novel.domain.Chapter::getVersion).orElse(0);
+        existing.setContent(fresh.getContent());
+        existing.setSourceChapterVersion(srcVersion);
+        existing.setDirty(false);
+        repository.saveSummary(existing);
+        // summarize 会落库一条临时 fresh——删除避免与现有卷摘要重复（同 updateBookSummary 模式）
+        repository.deleteSummary(fresh.getId());
+        log.info("卷级摘要已重算(范围{}-{}): {}",
+                existing.getFromChapter(), existing.getToChapter(),
+                existing.getContent().length() > 40 ? existing.getContent().substring(0, 40) + "..." : existing.getContent());
+    }
+
+    /**
      * so-fix: 删除被 [fromChapter, toChapter] 完全覆盖的更细粒度摘要，
      * 避免范围重叠导致前情摘要内容重复（10章评估发现的 consistency 降分根因）。
      * 保留刚生成的摘要自身（exceptId）和比当前范围更粗的摘要。
@@ -1370,6 +1419,8 @@ public class NovelOrchestrator {
             String base = marker >= 0 ? premise.substring(0, marker).trim() : premise.trim();
             outline.setPremise(base + digest.toString());
             repository.saveOutline(outline);
+            // p10-w1-01: premise 变更后使稳定段缓存失效，后续章节组装能读到新总纲
+            contextAssembler.invalidateProject(projectId);
             log.info("master outline 已更新已写卷摘要（{} 卷）", volumeSums.size());
         } catch (Exception e) {
             log.warn("更新 master outline 已写卷摘要失败: {}", e.getMessage());
@@ -1439,8 +1490,11 @@ public class NovelOrchestrator {
                     // 细粒度摘要——立即重算（重算后 dirty 清 false）
                     log.info("重算覆盖第{}章的摘要(范围{}-{})", chapterIndex, s.getFromChapter(), s.getToChapter());
                     generateSummary(projectId, s.getFromChapter(), s.getToChapter());
+                } else {
+                    // p10-w1-02: 卷级摘要也立即重算（原地更新、不清细粒度），
+                    // 修复"dirty 卷摘要永不重算 → 该卷剧情在后续章节上下文静默消失"
+                    recomputeExistingSummary(projectId, s);
                 }
-                // 卷级摘要(span>3)保持 dirty——ContextAssembler 过滤，不注入过期内容
             }
         }
     }

@@ -1,8 +1,10 @@
 package com.writing.novel.service;
 
+import com.writing.novel.domain.WritingPreferences;
 import com.writing.novel.domain.WritingTask;
 import com.writing.novel.orchestrator.NovelOrchestrator;
 import com.writing.novel.spi.NovelRepository;
+import com.writing.novel.telemetry.CostBudgetMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 
 /**
  * p13-mc-p0: 异步写作任务执行器——后台线程执行写作循环。
@@ -27,6 +30,8 @@ public class WritingTaskExecutor {
 
     private final NovelOrchestrator orchestrator;
     private final NovelRepository repository;
+    /** p10-w1-04: 成本预算熔断；null 时不启用（向后兼容） */
+    private final CostBudgetMonitor costBudgetMonitor;
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
     /** 内存中的取消标志（taskId → cancelled） */
@@ -36,8 +41,15 @@ public class WritingTaskExecutor {
     private final Map<String, String> activeTasks = new ConcurrentHashMap<>();
 
     public WritingTaskExecutor(NovelOrchestrator orchestrator, NovelRepository repository) {
+        this(orchestrator, repository, null);
+    }
+
+    /** p10-w1-04: 带成本预算监控的构造器（生产装配用） */
+    public WritingTaskExecutor(NovelOrchestrator orchestrator, NovelRepository repository,
+                               CostBudgetMonitor costBudgetMonitor) {
         this.orchestrator = orchestrator;
         this.repository = repository;
+        this.costBudgetMonitor = costBudgetMonitor;
         sweepOrphanedTasks();
     }
 
@@ -107,13 +119,28 @@ public class WritingTaskExecutor {
             log.info("写作任务开始: {}", task.getId());
             final String taskId = task.getId();
             final String projectId = task.getProjectId();
+            // p10-w1-04: 成本预算——每章前经 cancelChecker 检查是否超预算（及时熔断，不改 runWritingLoop 签名）
+            final double budget = repository.findWritingPreferences(projectId)
+                    .map(WritingPreferences::getCostBudgetYuan).orElse(0.0);
+            final BooleanSupplier costOver = (costBudgetMonitor != null && budget > 0)
+                    ? () -> costBudgetMonitor.isOverBudget(projectId, budget)
+                    : () -> false;
             int written = orchestrator.runWritingLoop(projectId, maxChapters,
-                    () -> isCancelled(taskId));
+                    () -> isCancelled(taskId) || costOver.getAsBoolean());
 
-            // mc-p0-03: 诚实终态——区分写满、熔断、取消
+            // mc-p0-03: 诚实终态——区分写满、熔断、取消、预算超限
+            boolean overBudget = costOver.getAsBoolean();
             if (isCancelled(taskId)) {
                 // mc-p0-01: 循环退出后才写 CANCELLED 到 DB（不与 COMPLETED 竞态）
                 task.setStatus(WritingTask.Status.CANCELLED);
+            } else if (overBudget && written < maxChapters) {
+                // p10-w1-04: 成本预算超限 → PAUSED（非失败，用户加预算可续写）
+                double spent = costBudgetMonitor != null ? costBudgetMonitor.total(projectId) : 0;
+                task.setStatus(WritingTask.Status.PAUSED);
+                task.setErrorMessage("成本预算超限: 累计 " + Math.round(spent * 100) / 100.0
+                        + " 元 >= 预算 " + budget + " 元（加预算后可续写）");
+                log.warn("写作任务因成本预算超限暂停: taskId={}, 累计={}元, 预算={}元",
+                        taskId, Math.round(spent * 100) / 100.0, budget);
             } else if (written < maxChapters) {
                 var project = repository.findProject(projectId);
                 var outline = repository.findOutlineByProject(projectId);

@@ -34,6 +34,8 @@ public class ContextAssembler {
     private final DiversityTracker diversityTracker;
     private final ClimaxDiversityTracker climaxDiversityTracker;
     private final ClicheDetector clicheDetector;
+    /** p10-w1-01: 记忆版本号——null 时退化为永不失效（向后兼容旧构造器/测试） */
+    private final MemoryRevision memoryRevision;
 
     public ContextAssembler(NovelRepository repository,
                             KnowledgeBaseService knowledgeBase,
@@ -44,6 +46,21 @@ public class ContextAssembler {
                             NarrativeThreadTracker narrativeThreadTracker,
                             DiversityTracker diversityTracker,
                             ClicheDetector clicheDetector) {
+        this(repository, knowledgeBase, summaryService, vectorRetrieval, entityGraphService,
+                climaxDiversityTracker, narrativeThreadTracker, diversityTracker, clicheDetector, null);
+    }
+
+    /** p10-w1-01: 带记忆版本号的构造器（生产装配用，启用稳定段缓存失效） */
+    public ContextAssembler(NovelRepository repository,
+                            KnowledgeBaseService knowledgeBase,
+                            SummaryService summaryService,
+                            VectorRetrievalService vectorRetrieval,
+                            EntityGraphService entityGraphService,
+                            ClimaxDiversityTracker climaxDiversityTracker,
+                            NarrativeThreadTracker narrativeThreadTracker,
+                            DiversityTracker diversityTracker,
+                            ClicheDetector clicheDetector,
+                            MemoryRevision memoryRevision) {
         this.repository = repository;
         this.knowledgeBase = knowledgeBase;
         this.summaryService = summaryService;
@@ -53,10 +70,17 @@ public class ContextAssembler {
         this.diversityTracker = diversityTracker;
         this.climaxDiversityTracker = climaxDiversityTracker;
         this.clicheDetector = clicheDetector;
+        this.memoryRevision = memoryRevision;
     }
 
-    /** D1: 稳定段缓存——key=projectId:sectionName，value=段文本（每章 DB 查询+拼接削减） */
-    private final java.util.Map<String, String> stableSectionCache = new java.util.concurrent.ConcurrentHashMap<>();
+    /** D1+p10-w1-01: 稳定段缓存——key=projectId:sectionName，value=(段文本, 缓存时版本号)。
+     *  写入方 bump MemoryRevision 后，下次组装比较版本号不一致即重算，修复"缓存永驻"正确性 bug。 */
+    private static final class CacheEntry {
+        final String value;
+        final long revision;
+        CacheEntry(String value, long revision) { this.value = value; this.revision = revision; }
+    }
+    private final java.util.Map<String, CacheEntry> stableSectionCache = new java.util.concurrent.ConcurrentHashMap<>();
 
     public WritingContext assemble(String projectId, int chapterIndex,
                                    String chapterTitle, String chapterSynopsis,
@@ -87,7 +111,7 @@ public class ContextAssembler {
         ctx.setRecentTextSection(buildRecentText(projectId, chapterIndex));
 
         String queryText = chapterSynopsis != null ? chapterSynopsis : chapterTitle;
-        assembleRetrievedContext(projectId, queryText, ctx);
+        assembleRetrievedContext(projectId, queryText, ctx, maxContextTokens);
         ctx.setRelevantForeshadowings(buildForeshadowings(projectId, chapterIndex));
         // 查找当前章节的结构化大纲信息（beats/climax/cast）
         ChapterSynopsis fullSynopsis = findFullSynopsis(projectId, chapterIndex);
@@ -150,10 +174,26 @@ public class ContextAssembler {
         });
     }
 
-    /** D1: 稳定段缓存读写——key=projectId:sectionName */
+    /** p10-w1-01: 使该项目全部稳定段缓存失效（下次组装重算）。
+     *  写入方（如 NovelOrchestrator 改 outline.premise）经此触发，memoryRevision==null 时为空操作。 */
+    public void invalidateProject(String projectId) {
+        if (memoryRevision != null) {
+            memoryRevision.bump(projectId);
+        }
+    }
+
+    /** D1+p10-w1-01: 稳定段缓存读写——比较记忆版本号，写入方 bump 后自动失效重算。
+     *  memoryRevision==null（旧构造器）时版本号恒 0，退化为永不失效，向后兼容。 */
     private String cached(String section, String projectId, java.util.function.Supplier<String> builder) {
         String key = projectId + ":" + section;
-        return stableSectionCache.computeIfAbsent(key, k -> builder.get());
+        long rev = memoryRevision != null ? memoryRevision.current(projectId) : 0L;
+        CacheEntry hit = stableSectionCache.get(key);
+        if (hit != null && hit.revision == rev) {
+            return hit.value;
+        }
+        String value = builder.get();
+        stableSectionCache.put(key, new CacheEntry(value, rev));
+        return value;
     }
 
     /** 世界观按类型多样选样：每种 type 最多 2 条，优先级排序 */
@@ -317,16 +357,23 @@ public class ContextAssembler {
         return sb.toString();
     }
 
-    private void assembleRetrievedContext(String projectId, String queryText, WritingContext ctx) {
+    private void assembleRetrievedContext(String projectId, String queryText, WritingContext ctx, int maxContextTokens) {
         List<Character> allChars = knowledgeBase.findAllCharacters(projectId);
         if (allChars.isEmpty()) return;
+
+        // p10-w1-03: top-K 随组装预算动态（5~20），大窗口多召回历史相关情节，修复固定 5 召回率过低
+        int topK = Math.max(RETRIEVAL_TOP_K, Math.min(20, maxContextTokens / 4000));
 
         // 向量检索相关人物（try-catch 防止 embedding API 失败中断写作）
         List<String> relevantIds;
         try {
-            var searchResults = vectorRetrieval.search(queryText, projectId, RETRIEVAL_TOP_K);
+            var searchResults = vectorRetrieval.search(queryText, projectId, topK);
             relevantIds = searchResults.stream().map(r -> r.id()).toList();
         } catch (Exception e) {
+            // p10-w1-03: embedding 失败不再静默——记录告警，便于发现检索层故障（此前静默丢历史召回）
+            System.getLogger(ContextAssembler.class.getName())
+                    .log(System.Logger.Level.WARNING,
+                            "向量检索失败，本次组装跳过相关设定召回（不中断写作）: " + e.getMessage());
             relevantIds = List.of();
         }
 
@@ -933,6 +980,12 @@ public class ContextAssembler {
         if (total > budget && ctx.getRecentTextSection() != null) {
             // 上章原文截断到 800 token
             ctx.setRecentTextSection(TokenBudget.truncateToTokens(ctx.getRecentTextSection(), 800));
+            total = sumTokens(ctx);
+        }
+        // p10-w2-06: 前情摘要（全书+卷+细粒度）进入裁剪序列——此前无界增长挤占关键设定空间（GAP#7）。
+        // 截断到 4000 token（仍保留近期卷摘要全文 + 早期卷首句），不让历史摘要独占预算。
+        if (total > budget && ctx.getRecentSummarySection() != null) {
+            ctx.setRecentSummarySection(TokenBudget.truncateToTokens(ctx.getRecentSummarySection(), 4000));
             total = sumTokens(ctx);
         }
         // 伏笔最后才截断（截断到 500 token 而非清空）

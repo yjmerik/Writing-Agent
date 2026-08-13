@@ -231,7 +231,7 @@ public class SqliteNovelRepository implements NovelRepository {
     public List<Character> findCharactersByProject(String projectId) {
         List<Character> list = new ArrayList<>();
         try (Connection conn = cp.getConnection();
-             PreparedStatement ps = conn.prepareStatement("SELECT * FROM characters WHERE project_id=?")) {
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM characters WHERE project_id=? LIMIT 200")) {
             ps.setString(1, projectId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(mapCharacter(rs));
@@ -657,7 +657,7 @@ public class SqliteNovelRepository implements NovelRepository {
         List<ContinuityIssue> list = new ArrayList<>();
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "SELECT * FROM continuity_issues WHERE project_id=? ORDER BY created_at DESC")) {
+                     "SELECT * FROM continuity_issues WHERE project_id=? ORDER BY created_at DESC LIMIT 200")) {
             ps.setString(1, projectId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(mapIssue(rs));
@@ -855,12 +855,37 @@ public class SqliteNovelRepository implements NovelRepository {
         List<EntityEdge> list = new ArrayList<>();
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "SELECT * FROM entity_edges WHERE project_id=?")) {
+                     "SELECT * FROM entity_edges WHERE project_id=? LIMIT 500")) {
             ps.setString(1, projectId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(mapEdge(rs));
         } catch (SQLException e) { throw new RuntimeException(e); }
         return list;
+    }
+
+    /** p10-w3-03: 物理删除过期实体边（已失效 validTo<beforeChapter），返回删除数 */
+    @Override
+    public int deleteExpiredEdges(String projectId, int beforeChapter) {
+        String sql = "DELETE FROM entity_edges WHERE project_id=? AND valid_to_chapter>0 AND valid_to_chapter<?";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            ps.setInt(2, beforeChapter);
+            return ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** p10-w3-03: 归档旧的非 HIGH 连续性问题（resolved=1），返回归档数 */
+    @Override
+    public int archiveOldLowSeverityIssues(String projectId, int beforeChapter) {
+        String sql = "UPDATE continuity_issues SET resolved=1 WHERE project_id=? AND resolved=0 "
+                + "AND severity!='HIGH' AND detected_at_chapter<?";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            ps.setInt(2, beforeChapter);
+            return ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
     // --- EvaluationRecord ---
@@ -1151,6 +1176,11 @@ public class SqliteNovelRepository implements NovelRepository {
         return list;
     }
 
+    @Override
+    public List<GenerationLog> findGenerationLogsByProject(String projectId) {
+        return findAllGenerationLogs(projectId);
+    }
+
     private GenerationLog mapGenerationLog(ResultSet rs) throws SQLException {
         return new GenerationLog(
                 rs.getString("project_id"),
@@ -1190,7 +1220,7 @@ public class SqliteNovelRepository implements NovelRepository {
         List<NarrativeThread> list = new ArrayList<>();
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "SELECT * FROM narrative_threads WHERE project_id=? ORDER BY first_seen_chapter")) {
+                     "SELECT * FROM narrative_threads WHERE project_id=? ORDER BY first_seen_chapter LIMIT 100")) {
             ps.setString(1, projectId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(mapNarrativeThread(rs));

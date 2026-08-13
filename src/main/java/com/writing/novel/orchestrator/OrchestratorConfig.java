@@ -59,7 +59,9 @@ public class OrchestratorConfig {
                                                  PlotMotifTracker plotMotifTracker,
                                                  com.writing.novel.service.ExpositionDetector expositionDetector,
                                                  com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository,
-                                                 com.writing.novel.agent.FactHarvesterAgent factHarvester) {
+                                                 com.writing.novel.agent.FactHarvesterAgent factHarvester,
+                                                 com.writing.novel.service.ArchiveCompactor archiveCompactor,
+                                                 com.writing.novel.telemetry.CostBudgetMonitor costBudgetMonitor) {
         NovelOrchestrator orchestrator = new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
@@ -71,6 +73,8 @@ public class OrchestratorConfig {
                 relationshipEvolutionTracker, passageEditor, plotMotifTracker, expositionDetector);
         orchestrator.setStoryFactRepository(storyFactRepository);
         orchestrator.setFactHarvester(factHarvester);
+        orchestrator.setArchiveCompactor(archiveCompactor);
+        orchestrator.setCostBudgetMonitor(costBudgetMonitor);
         return orchestrator;
     }
 

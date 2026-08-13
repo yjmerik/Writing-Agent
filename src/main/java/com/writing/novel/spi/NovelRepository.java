@@ -105,6 +105,12 @@ public interface NovelRepository {
     List<EntityEdge> findEdgesByTarget(String entityId);
     List<EntityEdge> findEdgesByProject(String projectId);
 
+    // --- p10-w3-03: ArchiveCompactor 归档衰减（修根因 B：图表只增不减）---
+    /** 物理删除过期实体边（validTo>0 且 < beforeChapter），返回删除数。默认 0（实现可选） */
+    default int deleteExpiredEdges(String projectId, int beforeChapter) { return 0; }
+    /** 归档旧的非 HIGH 连续性问题（resolved=1），返回归档数。默认 0 */
+    default int archiveOldLowSeverityIssues(String projectId, int beforeChapter) { return 0; }
+
     // --- EvaluationRecord ---
     void saveEvaluationRecord(EvaluationRecord record);
     Optional<EvaluationRecord> findLatestEvaluation(String projectId);
@@ -126,6 +132,8 @@ public interface NovelRepository {
 
     // --- GenerationLog (创意多样性) ---
     void saveGenerationLog(GenerationLog log);
+    /** 按项目查询生成日志 */
+    List<GenerationLog> findGenerationLogsByProject(String projectId);
     List<GenerationLog> findRecentGenerationLogs(String projectId, String agentType, int limit);
     List<GenerationLog> findAllGenerationLogs(String projectId);
 

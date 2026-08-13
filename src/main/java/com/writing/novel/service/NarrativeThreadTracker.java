@@ -41,7 +41,9 @@ public class NarrativeThreadTracker {
                 thread.markActive(chapterIndex);
                 repository.saveNarrativeThread(thread);
             } else {
-                thread.markSuspended(chapterIndex);
+                // p10-w3-07: 未提及改用 markPending（保持 ACTIVE，仅累积悬挂计数），
+                // 长线不因一章未提及即 SUSPENDED；超阈值（15章）才在 getThreadSection 告警
+                thread.markPending(chapterIndex);
                 repository.saveNarrativeThread(thread);
             }
         }
@@ -67,16 +69,21 @@ public class NarrativeThreadTracker {
         var threads = repository.findAllNarrativeThreads(projectId);
         var active = threads.stream()
                 .filter(t -> t.getStatus() != ThreadStatus.RESOLVED)
+                // p10-w3-07: cap 未回收线索（百万字下无界增长会塞满上下文），优先 suspenseChapters 高的
+                .sorted((a, b) -> Integer.compare(b.getSuspenseChapters(), a.getSuspenseChapters()))
+                .limit(10)
                 .collect(Collectors.toList());
 
         if (active.isEmpty()) return "";
 
+        // p10-w3-07: 阈值从 3 放宽到 15——长线容忍更长未跟进窗口，避免持续噪声告警
+        int overdueThreshold = 15;
         var overdue = active.stream()
-                .filter(t -> t.isOverdue(3))
+                .filter(t -> t.isOverdue(overdueThreshold))
                 .collect(Collectors.toList());
 
         var normal = active.stream()
-                .filter(t -> !t.isOverdue(3))
+                .filter(t -> !t.isOverdue(overdueThreshold))
                 .collect(Collectors.toList());
 
         StringBuilder sb = new StringBuilder();
@@ -88,8 +95,8 @@ public class NarrativeThreadTracker {
                 sb.append("  - ").append(t.getName())
                   .append("（第").append(t.getFirstSeenChapter())
                   .append("-").append(t.getLastSeenChapter()).append("章）");
-                if (t.getStatus() == ThreadStatus.SUSPENDED) {
-                    sb.append(" ⚠️ 悬挂").append(t.getSuspenseChapters()).append("章");
+                if (t.getSuspenseChapters() > 0) {
+                    sb.append(" ⚠️ 已").append(t.getSuspenseChapters()).append("章未跟进");
                 }
                 sb.append("\n");
             }

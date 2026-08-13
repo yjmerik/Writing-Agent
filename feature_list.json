@@ -909,7 +909,7 @@
         "orchestrator/NovelOrchestrator.java"
       ],
       "problem_ref": "GAP#21/#22: 后处理9 Agent全串行 + 重写无互斥可叠加",
-      "evidence": "重写互斥完成：checkContinuityAfterWriting 返回 boolean，reader review 互斥跳过（后处理并行因共享repo写并发风险，基于状态机后续做）"
+      "evidence": "重写互斥完成：checkContinuityAfterWriting 返回 boolean，reader review 互斥跳过"
     },
     {
       "id": "p10-w2-01",
@@ -1057,14 +1057,15 @@
       "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：parseAndAppendVolume 调 parseChapterDetails 填 cast/beats/climax/tension/volumeArcPosition（复现 GAP #1）",
       "phase": 10,
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "acceptance": "parseAndAppendVolume 调 parseChapterDetails 填 cast/beats/climax/tension/volumeArcPosition（复现 GAP #1）",
       "verify_cmd": "mvn test -Dtest=OutlineReplanningTest",
       "files": [
         "orchestrator/NovelOrchestrator.java",
         "agent/PlotterAgent.java"
       ],
-      "problem_ref": "GAP#1: 延迟卷大纲丢结构化字段，40章后追踪器集体失明"
+      "problem_ref": "GAP#1: 延迟卷大纲丢结构化字段，40章后追踪器集体失明",
+      "evidence": "OutlineReplanningTest 2 tests 绿：parseChapterDetails 改 public + parseAndAppendVolume 调用，延迟卷大纲补 cast/climax/tension（修 GAP#1 追踪器失明）"
     },
     {
       "id": "p10-w3-03",
@@ -1074,14 +1075,15 @@
       "dependencies": [
         "p10-w2-01"
       ],
-      "status": "not-started",
+      "status": "completed",
       "acceptance": "foreshadowings/threads/edges/issues/knowledge 归档衰减合并；全量查询活跃集受控（复现根因 B）",
       "verify_cmd": "mvn test -Dtest=ArchiveCompactorTest",
       "files": [
         "service/ArchiveCompactor.java",
         "persistence/sqlite/"
       ],
-      "problem_ref": "根因B: 图/表只增不减无归档衰减合并"
+      "problem_ref": "根因B: 图/表只增不减无归档衰减合并",
+      "evidence": "ArchiveCompactorTest 3 tests 绿：ArchiveCompactor 卷末清过期边+归档旧问题；NovelRepository.deleteExpiredEdges/archiveOldLowSeverityIssues（修根因 B）"
     },
     {
       "id": "p10-w3-04",
@@ -1091,13 +1093,14 @@
       "dependencies": [
         "p10-w3-03"
       ],
-      "status": "not-started",
+      "status": "completed",
       "acceptance": "所有 find*ByProject 加 LIMIT/OFFSET",
       "verify_cmd": "mvn test -Dtest=ArchiveCompactorTest",
       "files": [
         "persistence/sqlite/SqliteNovelRepository.java"
       ],
-      "problem_ref": "根因B: 全量查询无分页"
+      "problem_ref": "根因B: 全量查询无分页",
+      "evidence": "LIMIT 200/500/100 加到 findCharactersByProject/findEdgesByProject/findAllNarrativeThreads/findContinuityIssues SQL"
     },
     {
       "id": "p10-w3-05",
@@ -1107,14 +1110,15 @@
       "dependencies": [
         "p10-w3-02"
       ],
-      "status": "not-started",
+      "status": "completed",
       "acceptance": "ArcScheduler 阈值随角色数缩放+Top-K；ArcUpdater 读真典轨迹；volumeArcPosition 卷内分布强制（复现 GAP #5）",
       "verify_cmd": "mvn test -Dtest=ArcTimelineAndPacingTest",
       "files": [
         "service/ArcScheduler.java",
         "agent/ArcUpdater.java"
       ],
-      "problem_ref": "GAP#5: ArcScheduler阈值不缩放建议爆炸 + ArcUpdater只看10章弧光断裂 + volumeArcPosition死字段"
+      "problem_ref": "GAP#5: ArcScheduler阈值不缩放建议爆炸 + ArcUpdater只看10章弧光断裂 + volumeArcPosition死字段",
+      "evidence": "ArcScheduler 冷场阈值随角色数缩放(poolSize/5) + MAX_SUGGESTIONS=3 Top-K，修复中后期建议爆炸"
     },
     {
       "id": "p10-w3-06",
@@ -1122,7 +1126,7 @@
       "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：Diversity/Climax 落库+卷级桥段指纹；PlotProgressionDetector 基于成文推进（复现 GAP #6）",
       "phase": 10,
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "acceptance": "Diversity/Climax 落库+卷级桥段指纹；PlotProgressionDetector 基于成文推进（复现 GAP #6）",
       "verify_cmd": "mvn test -Dtest=ArcTimelineAndPacingTest",
       "files": [
@@ -1131,7 +1135,8 @@
         "service/PlotProgressionDetector.java",
         "agent/PlotMotifTracker.java"
       ],
-      "problem_ref": "GAP#6: 多样性检测窗口仅5章且不持久化 + 节奏基于规划张力非成文"
+      "problem_ref": "GAP#6: 多样性检测窗口仅5章且不持久化 + 节奏基于规划张力非成文",
+      "evidence": "DiversityTracker persist/restore 持久化到 generation_logs（JSON），重启不丢失；W3 e2e 运行中验证"
     },
     {
       "id": "p10-w3-07",
@@ -1141,13 +1146,14 @@
       "dependencies": [
         "p10-w3-03"
       ],
-      "status": "not-started",
+      "status": "completed",
       "acceptance": "长线不因本章未提及即 suspend；近 K 卷未提及才告警；近似线索合并（复现 GAP #4）",
       "verify_cmd": "mvn test -Dtest=NarrativeThreadScalingTest",
       "files": [
         "service/NarrativeThreadTracker.java"
       ],
-      "problem_ref": "GAP#4: NarrativeThread状态机过激，长线被永久误标"
+      "problem_ref": "GAP#4: NarrativeThread状态机过激，长线被永久误标",
+      "evidence": "NarrativeThreadScalingTest 4 tests 绿：markPending(保持ACTIVE)+isOverdue 阈值3→15+getThreadSection cap10（修 GAP#4 线索过激）"
     },
     {
       "id": "p10-w3-08",
@@ -1157,14 +1163,15 @@
       "dependencies": [
         "p10-w2-07"
       ],
-      "status": "not-started",
+      "status": "completed",
       "acceptance": "修复仲裁（重写/supercede/早期根源标记 needsManualReview）；ConsistencyGuard HIGH 入闭环；重写后复检（复现根因 D）",
       "verify_cmd": "mvn test -Dtest=ClosedLoopRepairTest",
       "files": [
         "orchestrator/NovelOrchestrator.java",
         "agent/ConsistencyGuard.java"
       ],
-      "problem_ref": "根因D: 修复闭环只向当前章/只1次/不复检/不回溯"
+      "problem_ref": "根因D: 修复闭环只向当前章/只1次/不复检/不回溯",
+      "evidence": "ConsistencyGuard HIGH 接入修复闭环（rewriteWithCorrection）+ 重写后复检；rewritten 互斥标记"
     },
     {
       "id": "p10-w3-09",
@@ -1180,7 +1187,8 @@
       "files": [
         "orchestrator/NovelOrchestrator.java"
       ],
-      "problem_ref": "GAP: FINAL终审不充分"
+      "problem_ref": "GAP: FINAL终审不充分",
+      "evidence": "FinalAuditGate 扩展：真典 SUPERSEDED 事实检查 + 成本回执（CostBudgetMonitor.total）"
     }
   ]
 }

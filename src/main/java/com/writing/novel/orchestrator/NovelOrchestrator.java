@@ -65,6 +65,10 @@ public class NovelOrchestrator {
     private com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository;
     /** p10-w2-03: 事实收割 Agent——null 时跳过（向后兼容） */
     private com.writing.novel.agent.FactHarvesterAgent factHarvester;
+    /** p10-w3-03: 归档衰减器——null 时跳过（向后兼容） */
+    private com.writing.novel.service.ArchiveCompactor archiveCompactor;
+    /** p10-w3-09: 成本预算监控器——null 时跳过成本回执（向后兼容） */
+    private com.writing.novel.telemetry.CostBudgetMonitor costBudgetMonitor;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -146,6 +150,16 @@ public class NovelOrchestrator {
     /** p10-w2-03: 注入事实收割 Agent（@Bean 装配用）；不调则保持 null，收割安全跳过 */
     public void setFactHarvester(com.writing.novel.agent.FactHarvesterAgent factHarvester) {
         this.factHarvester = factHarvester;
+    }
+
+    /** p10-w3-03: 注入归档衰减器（@Bean 装配用）；不调则卷末跳过归档 */
+    public void setArchiveCompactor(com.writing.novel.service.ArchiveCompactor archiveCompactor) {
+        this.archiveCompactor = archiveCompactor;
+    }
+
+    /** p10-w3-09: 注入成本预算监控器（@Bean 装配用）；不调则门禁跳过成本回执 */
+    public void setCostBudgetMonitor(com.writing.novel.telemetry.CostBudgetMonitor costBudgetMonitor) {
+        this.costBudgetMonitor = costBudgetMonitor;
     }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
@@ -667,6 +681,11 @@ public class NovelOrchestrator {
             log.warn("场景分类失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
+        // p10-w3-06: 持久化多样性追踪状态（重启后不丢失，修复纯内存 Map 跨进程清零）
+        try {
+            diversityTracker.persist(projectId, repository);
+        } catch (Exception ignored) {}
+
         // p10-a2: 更新角色最近出场章节
         try {
             if (arcScheduler != null) {
@@ -770,6 +789,11 @@ public class NovelOrchestrator {
                     generateVolumeSummary(projectId, v, firstChapter, lastChapter);
                 } catch (Exception e) {
                     log.warn("卷摘要生成失败: {}", e.getMessage());
+                }
+                // p10-w3-03: 卷末归档衰减——清理过期边 + 旧问题（根因 B：图表只增不减）
+                if (archiveCompactor != null) {
+                    try { archiveCompactor.compact(projectId, chapterIndex); }
+                    catch (Exception e) { log.warn("卷末归档失败: {}", e.getMessage()); }
                 }
                 break;
             }
@@ -975,6 +999,28 @@ public class NovelOrchestrator {
                 for (var issue : guardIssues) {
                     repository.saveContinuityIssue(issue);
                     log.warn("一致性守卫(章{}): {}", chapterIndex, issue.getDescription());
+                }
+                // p10-w3-08: ConsistencyGuard 的 HIGH 接入修复闭环（之前只 save 不修）
+                // 在同一章未被 continuity 重写过时触发重写（rewritten 标记来自 continuity 检查）
+                boolean hasHigh = guardIssues.stream().anyMatch(
+                        i -> i.getSeverity() == ContinuityIssue.Severity.HIGH);
+                if (hasHigh && !rewritten && chapter.getContent().length() > 500) {
+                    String desc = guardIssues.stream()
+                            .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH)
+                            .map(ContinuityIssue::getDescription)
+                            .reduce((a, b) -> a + "；" + b).orElse("");
+                    rewriteWithCorrection(projectId, chapterIndex, chapter, desc, "");
+                    rewritten = true; // 标记已重写，reader review 互斥
+                    // p10-w3-08: 重写后复检——若仍有 HIGH，标记 issue 但不再重写（最多 1 次）
+                    try {
+                        var recheck = consistencyGuard.check(projectId, chapterIndex, chapter.getContent());
+                        for (var issue : recheck) {
+                            repository.saveContinuityIssue(issue);
+                            if (issue.getSeverity() == ContinuityIssue.Severity.HIGH) {
+                                log.warn("重写后仍存一致性守卫 HIGH(章{}): {}", chapterIndex, issue.getDescription());
+                            }
+                        }
+                    } catch (Exception ignored) {}
                 }
             }
         } catch (Exception e) {
@@ -1247,6 +1293,9 @@ public class NovelOrchestrator {
      * @return 本次新写的章节数
      */
     public int runWritingLoop(String projectId, int maxChapters, java.util.function.BooleanSupplier cancelChecker) {
+        // p10-w3-06: 从持久化恢复多样性追踪状态（重启后不丢失）
+        try { diversityTracker.restore(projectId, repository); } catch (Exception ignored) {}
+
         int written = 0;
         int consecutiveFailures = 0;
         int consecutiveHighIssues = 0;
@@ -1631,6 +1680,22 @@ public class NovelOrchestrator {
                 // 软性不阻塞
             }
 
+            // p10-w3-09: 真典一致性——检查是否有过多 SUPERSEDED 事实（剧变频繁，质量警告）
+            if (storyFactRepository != null) {
+                var allFacts = storyFactRepository.findAll(projectId);
+                long superseded = allFacts.stream()
+                        .filter(f -> f.getStatus() == com.writing.novel.domain.StoryFact.Status.SUPERSEDED).count();
+                if (superseded > 20) {
+                    log.warn("成书门禁 SOFT WARN: 真典 {} 条事实被取代（剧情设定频繁变更，建议审查一致性）", superseded);
+                }
+            }
+
+            // p10-w3-09: 成本回执
+            if (costBudgetMonitor != null) {
+                double totalCost = costBudgetMonitor.total(projectId);
+                log.info("成书门禁成本回执: 项目{} 累计 LLM 成本约 {} 元", projectId, Math.round(totalCost * 100) / 100.0);
+            }
+
             log.info("成书门禁 PASS: 伏笔={}, HIGH issues={}, 字数={}",
                     criticalUnresolved.size(), highIssues, totalWords);
             return true;
@@ -1813,7 +1878,13 @@ public class NovelOrchestrator {
                         .anyMatch(s -> s.getChapterIndex() == chIdx);
                 if (exists) continue;
                 ChapterSynopsis syn = new ChapterSynopsis(projectId, chIdx, title, body);
-                syn.setBeats(body);
+                // p10-w3-02: 解析结构化字段（cast/beats/climax/tension/foreshadowing），
+                // 修复延迟生成的卷大纲丢字段致 40 章后 ClimaxDiversityTracker 等追踪器失明（GAP#1）
+                if (plotter != null) {
+                    plotter.parseChapterDetails(syn, body);
+                } else {
+                    syn.setBeats(body);
+                }
                 volume.addSynopsis(syn);
                 parsed++;
             } catch (Exception ignored) {}

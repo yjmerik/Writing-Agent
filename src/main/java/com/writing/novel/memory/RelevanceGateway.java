@@ -1,0 +1,85 @@
+package com.writing.novel.memory;
+
+import com.writing.novel.domain.Character;
+import com.writing.novel.domain.StoryFact;
+import com.writing.novel.persistence.sqlite.StoryFactRepository;
+import com.writing.novel.spi.NovelRepository;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * p10-w2-04: 检索收窄门面——替代消费者直接 findAll* 全量加载（根因 A）。
+ * <p>
+ * 百万字下各 checker/tracker 若全量加载角色/事实/边，单次 LLM 输入 token 爆炸且检测失明。
+ * 本门面按 cast/synopsis/chapterIndex 返回相关切片（cap），让 ContextAssembler/ContinuityChecker/
+ * ConsistencyGuard 等消费者经此收窄输入。factRepo==null 时事实切片为空（向后兼容）。
+ */
+@Component
+public class RelevanceGateway {
+
+    private final NovelRepository repository;
+    private final StoryFactRepository factRepo;
+
+    public RelevanceGateway(NovelRepository repository, StoryFactRepository factRepo) {
+        this.repository = repository;
+        this.factRepo = factRepo;
+    }
+
+    /**
+     * 本章相关角色：cast 精确/别名匹配 + 主角保底，cap（不回退全量）。
+     * 修复 buildCharacterVoiceSection cast 匹配失败即全量回退的 GAP（百万字下 token 爆炸）。
+     */
+    public List<Character> relevantCharacters(String projectId, List<String> cast, int cap) {
+        List<Character> all = repository.findCharactersByProject(projectId);
+        if (all.isEmpty()) return List.of();
+        List<Character> out = new ArrayList<>();
+        // 1. cast 精确/包含匹配
+        if (cast != null) {
+            for (Character c : all) {
+                if (out.size() >= cap) break;
+                if (matchesCast(c, cast) && !out.contains(c)) out.add(c);
+            }
+        }
+        // 2. 主角保底（主角不依赖 cast 命中，避免名字漂移失锚）
+        for (Character c : all) {
+            if (out.size() >= cap) break;
+            String role = c.getRole();
+            if (role != null && (role.contains("主角") || role.contains("男主") || role.contains("女主"))
+                    && !out.contains(c)) {
+                out.add(0, c);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * 本章相关事实：cast 关联的 ACTIVE 事实（subject/assertion 含 cast 名字），cap。
+     * 无 cast 时按 importance 降序取 top-cap。
+     */
+    public List<StoryFact> relevantFacts(String projectId, List<String> cast, int cap) {
+        if (factRepo == null) return List.of();
+        List<StoryFact> all = factRepo.findActive(projectId);
+        if (all.isEmpty()) return List.of();
+        if (cast == null || cast.isEmpty()) {
+            return all.size() > cap ? all.subList(0, cap) : all;
+        }
+        List<StoryFact> out = new ArrayList<>();
+        for (StoryFact f : all) {
+            if (out.size() >= cap) break;
+            if (cast.stream().anyMatch(name ->
+                    (f.getSubject() != null && f.getSubject().contains(name))
+                            || (f.getAssertion() != null && f.getAssertion().contains(name)))) {
+                out.add(f);
+            }
+        }
+        return out;
+    }
+
+    private boolean matchesCast(Character c, List<String> cast) {
+        String name = c.getName();
+        if (name == null) return false;
+        return cast.stream().anyMatch(n -> n != null && (n.contains(name) || name.contains(n)));
+    }
+}

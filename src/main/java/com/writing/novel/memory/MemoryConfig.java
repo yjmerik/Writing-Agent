@@ -75,9 +75,20 @@ public class MemoryConfig {
                                               NarrativeThreadTracker narrativeThreadTracker,
                                               DiversityTracker diversityTracker,
                                               ClicheDetector clicheDetector,
-                                              MemoryRevision memoryRevision) {
-        return new ContextAssembler(repository, knowledgeBase, summaryService,
+                                              MemoryRevision memoryRevision,
+                                              com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository,
+                                              RelevanceGateway relevanceGateway) {
+        ContextAssembler assembler = new ContextAssembler(repository, knowledgeBase, summaryService,
                 vectorRetrieval, entityGraphService, climaxDiversityTracker,
                 narrativeThreadTracker, diversityTracker, clicheDetector, memoryRevision);
+        assembler.setStoryFactRepository(storyFactRepository);
+        assembler.setRelevanceGateway(relevanceGateway);
+        return assembler;
+    }
+
+    @Bean
+    public RelevanceGateway relevanceGateway(NovelRepository repository,
+                                              com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository) {
+        return new RelevanceGateway(repository, storyFactRepository);
     }
 }

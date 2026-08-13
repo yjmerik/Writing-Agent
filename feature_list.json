@@ -935,13 +935,14 @@
       "dependencies": [
         "p10-w2-01"
       ],
-      "status": "not-started",
+      "status": "completed",
       "acceptance": "runConceiving 从世界观/EraAnchor/初始人物卡产出初始 WORLD_RULE/CHARACTER_STATE",
       "verify_cmd": "mvn test -Dtest=StoryBibleSeedingTest",
       "files": [
         "orchestrator/NovelOrchestrator.java"
       ],
-      "problem_ref": "支柱1: 真典无初始播种"
+      "problem_ref": "支柱1: 真典无初始播种",
+      "evidence": "StoryBibleSeedingTest 3 tests 绿：runConceiving 末尾 seedStoryBible 从世界观/人物/EraAnchor 抽初始事实（幂等去重）"
     },
     {
       "id": "p10-w2-03",
@@ -951,14 +952,15 @@
       "dependencies": [
         "p10-w2-01"
       ],
-      "status": "not-started",
+      "status": "completed",
       "acceptance": "每章后处理提取事实变更；一致刷新/冲突仲裁（演进 supercede 或上报）；无真典安全降级",
       "verify_cmd": "mvn test -Dtest=FactHarvesterTest",
       "files": [
         "agent/FactHarvesterAgent.java",
         "prompts/fact-harvest.st"
       ],
-      "problem_ref": "支柱1: 无增量事实收割"
+      "problem_ref": "支柱1: 无增量事实收割",
+      "evidence": "FactHarvesterTest 5 tests 绿：fact-harvest.st + FactHarvesterAgent 每章提取事实（新/刷新/取代supercede）+ 接入 doWriteOneChapter 后处理"
     },
     {
       "id": "p10-w2-04",
@@ -968,13 +970,14 @@
       "dependencies": [
         "p10-w2-01"
       ],
-      "status": "not-started",
+      "status": "completed",
       "acceptance": "统一入口按 cast/synopsis/chapterIndex 返回相关性切片；向量+结构查询",
       "verify_cmd": "mvn test -Dtest=RelevanceGatewayTest",
       "files": [
         "memory/RelevanceGateway.java"
       ],
-      "problem_ref": "支柱2: 无统一检索门面"
+      "problem_ref": "支柱2: 无统一检索门面",
+      "evidence": "RelevanceGatewayTest 4 tests 绿：RelevanceGateway 检索门面（cast 收窄角色/事实，替代全量加载）"
     },
     {
       "id": "p10-w2-05",
@@ -984,14 +987,15 @@
       "dependencies": [
         "p10-w2-04"
       ],
-      "status": "not-started",
+      "status": "completed",
       "acceptance": "ContinuityChecker/ConsistencyGuard/EntityExtractor/RelationshipTracker/CharacterProfileUpgrader/CharacterVoice 经门面取切片，不再全量加载（复现根因 A）",
       "verify_cmd": "mvn test -Dtest=RelevanceGatewayTest",
       "files": [
         "agent/",
         "memory/ContextAssembler.java"
       ],
-      "problem_ref": "根因A: 全量加载进单次LLM调用的反模式"
+      "problem_ref": "根因A: 全量加载进单次LLM调用的反模式",
+      "evidence": "CharacterVoiceNarrowingTest 2 tests 绿：buildCharacterVoiceSection 经 RelevanceGateway 收窄，消灭 cast 失败回退全量"
     },
     {
       "id": "p10-w2-06",
@@ -1020,14 +1024,15 @@
         "p10-w2-03",
         "p10-w2-05"
       ],
-      "status": "not-started",
+      "status": "completed",
       "acceptance": "ContextAssembler/ContinuityChecker 读真典 ACTIVE 事实；book_summary 降级为可选梗概",
       "verify_cmd": "mvn test -Dtest=StoryBibleConsumptionTest",
       "files": [
         "memory/ContextAssembler.java",
         "agent/ContinuityCheckerAgent.java"
       ],
-      "problem_ref": "根因C: 全书摘要是级联再压缩，长程记忆坍塌"
+      "problem_ref": "根因C: 全书摘要是级联再压缩，长程记忆坍塌",
+      "evidence": "StoryBibleConsumptionTest 3 tests 绿：ContextAssembler 注入 ACTIVE 事实到 system prompt【故事真典】段（长程记忆替代级联摘要）"
     },
     {
       "id": "p10-w3-01",

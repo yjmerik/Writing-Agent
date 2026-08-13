@@ -61,6 +61,10 @@ public class NovelOrchestrator {
     private final PassageEditor passageEditor;
     private final PlotMotifTracker plotMotifTracker;
     private final com.writing.novel.service.ExpositionDetector expositionDetector;
+    /** p10-w2-02: 故事真典仓库——null 时跳过播种/收割（向后兼容旧构造器/测试） */
+    private com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository;
+    /** p10-w2-03: 事实收割 Agent——null 时跳过（向后兼容） */
+    private com.writing.novel.agent.FactHarvesterAgent factHarvester;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -134,14 +138,92 @@ public class NovelOrchestrator {
         this.expositionDetector = expositionDetector;
     }
 
+    /** p10-w2-02: 注入故事真典仓库（@Bean 装配用）；不调则保持 null，播种/收割安全跳过 */
+    public void setStoryFactRepository(com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository) {
+        this.storyFactRepository = storyFactRepository;
+    }
+
+    /** p10-w2-03: 注入事实收割 Agent（@Bean 装配用）；不调则保持 null，收割安全跳过 */
+    public void setFactHarvester(com.writing.novel.agent.FactHarvesterAgent factHarvester) {
+        this.factHarvester = factHarvester;
+    }
+
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
     public void runConceiving(String projectId) {
         EventContext.setProjectId(projectId);
         try {
             doConceiving(projectId);
+            seedStoryBible(projectId); // p10-w2-02: 构思完成后从世界观/人物/时代锚点播种真典
         } finally {
             EventContext.clear();
         }
+    }
+
+    /**
+     * p10-w2-02: 故事真典播种——从世界观条目 + 初始人物卡 + 时代锚点抽取初始事实入典。
+     * 确定性规则抽取（不调 LLM），为长程记忆提供结构化真相基线；后续 FactHarvester 每章增量更新。
+     * storyFactRepository==null（旧测试/未注入）时安全跳过。
+     */
+    private void seedStoryBible(String projectId) {
+        if (storyFactRepository == null) return;
+        try {
+            var project = repository.findProject(projectId).orElse(null);
+            if (project == null) return;
+            int seeded = 0;
+
+            // 1. 世界观条目 → WORLD_RULE（POWER_SYSTEM/RULE/FACTION/HISTORY/CUSTOM）/ OBJECT_STATE（ITEM）
+            for (var entry : repository.findKnowledgeEntriesByProject(projectId)) {
+                StoryFact.FactType type = switch (entry.getType() == null ? "" : entry.getType()) {
+                    case "POWER_SYSTEM", "RULE", "FACTION", "HISTORY", "CUSTOM" -> StoryFact.FactType.WORLD_RULE;
+                    case "ITEM" -> StoryFact.FactType.OBJECT_STATE;
+                    default -> null;
+                };
+                if (type != null) {
+                    seeded += saveFactIfAbsent(projectId, type, entry.getName(),
+                            entry.getName() + "：" + entry.getContent(),
+                            type == StoryFact.FactType.WORLD_RULE ? 4 : 3);
+                }
+            }
+
+            // 2. 主角 → CHARACTER_STATE（初始状态，importance=5）
+            for (var c : repository.findCharactersByProject(projectId)) {
+                String role = c.getRole();
+                if (role != null && (role.contains("主角") || role.contains("男主") || role.contains("女主"))) {
+                    StringBuilder assertion = new StringBuilder(c.getName() + "（" + role + "）");
+                    if (c.getAbility() != null) assertion.append("，初始能力：").append(c.getAbility());
+                    if (c.getMotivation() != null) assertion.append("，动机：").append(c.getMotivation());
+                    seeded += saveFactIfAbsent(projectId, StoryFact.FactType.CHARACTER_STATE,
+                            c.getName(), assertion.toString(), 5);
+                }
+            }
+
+            // 3. 时代锚点 → WORLD_RULE 铁律（EraAnchor 规则推导，防朝代年号混用）
+            var entries = repository.findKnowledgeEntriesByProject(projectId);
+            String era = com.writing.novel.service.EraAnchorService.deriveEraAnchor(entries, project.getConcept());
+            if (era != null && !era.isBlank() && !era.startsWith("⚠️")) {
+                seeded += saveFactIfAbsent(projectId, StoryFact.FactType.WORLD_RULE, "时代锚点",
+                        "时代一致性铁律：" + era + "（正文禁止其他朝代年号/器物/官制）", 5);
+            }
+
+            log.info("故事真典播种完成(项目{}): {} 条初始事实", projectId, seeded);
+        } catch (Exception e) {
+            log.warn("故事真典播种失败(项目{}): {}", projectId, e.getMessage());
+        }
+    }
+
+    /**
+     * p10-w2-02: 幂等保存——若已有同 factType+subject 的 ACTIVE 事实则跳过（重复 runConceiving 不重复入库）。
+     * 返回 1（新增）或 0（已存在）。
+     */
+    private int saveFactIfAbsent(String projectId, StoryFact.FactType type, String subject,
+                                 String assertion, int importance) {
+        boolean exists = storyFactRepository.findActiveBySubject(projectId, subject).stream()
+                .anyMatch(f -> f.getFactType() == type);
+        if (exists) return 0;
+        StoryFact f = new StoryFact(projectId, type, subject, assertion, 1);
+        f.setImportance(importance);
+        storyFactRepository.save(f);
+        return 1;
     }
 
     private void doConceiving(String projectId) {
@@ -477,6 +559,19 @@ public class NovelOrchestrator {
             entityGraphService.extractFromChapter(projectId, chapter);
         } catch (Exception e) {
             log.warn("实体提取失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+
+        // p10-w2-03: 故事真典增量收割——从本章提取事实变更入典（长程记忆，替代级联摘要）
+        try {
+            if (factHarvester != null) {
+                var harvestResult = factHarvester.harvest(projectId, chapter);
+                if (harvestResult.total() > 0) {
+                    log.info("真典收割(章{}): +{} 新增 / {} 刷新 / {} 取代",
+                            chapterIndex, harvestResult.added(), harvestResult.validated(), harvestResult.superseded());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("真典收割失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
         // p8-2: 叙事线索提取与追踪

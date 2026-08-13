@@ -36,6 +36,10 @@ public class ContextAssembler {
     private final ClicheDetector clicheDetector;
     /** p10-w1-01: 记忆版本号——null 时退化为永不失效（向后兼容旧构造器/测试） */
     private final MemoryRevision memoryRevision;
+    /** p10-w2-07: 故事真典仓库——null 时跳过真典注入（向后兼容） */
+    private com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository;
+    /** p10-w2-05: 检索收窄门面——null 时回退全量（向后兼容旧构造器/测试） */
+    private RelevanceGateway relevanceGateway;
 
     public ContextAssembler(NovelRepository repository,
                             KnowledgeBaseService knowledgeBase,
@@ -106,6 +110,7 @@ public class ContextAssembler {
                 .ifPresent(style -> ctx.setStyleSection(buildStyleSection(style)));
 
         ctx.setWorldbuildingSection(buildWorldbuildingSection(projectId));
+        ctx.setBibleSection(buildBibleSection(projectId)); // p10-w2-07: 真典事实注入 system prompt
         ctx.setVolumeOutlineSection(buildVolumeOutline(projectId, chapterIndex));
         ctx.setRecentSummarySection(buildRecentSummary(projectId, chapterIndex));
         ctx.setRecentTextSection(buildRecentText(projectId, chapterIndex));
@@ -172,6 +177,35 @@ public class ContextAssembler {
             });
             return sb.toString().trim();
         });
+    }
+
+    /** p10-w2-07: 注入故事真典仓库（@Bean 装配用）；不调则保持 null，真典段不注入 */
+    public void setStoryFactRepository(com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository) {
+        this.storyFactRepository = storyFactRepository;
+    }
+
+    /** p10-w2-05: 注入检索收窄门面（@Bean 装配用）；不调则回退全量（向后兼容） */
+    public void setRelevanceGateway(RelevanceGateway relevanceGateway) {
+        this.relevanceGateway = relevanceGateway;
+    }
+
+    /**
+     * p10-w2-07: 故事真典段——注入 ACTIVE 事实（importance 降序，cap 25），作为长程记忆核心。
+     * 替代级联压缩的 book_summary：结构化事实不衰减，第 400 章仍能准确召回第 1 卷设定。
+     * storyFactRepository==null 时返回空（向后兼容）。
+     */
+    private String buildBibleSection(String projectId) {
+        if (storyFactRepository == null) return "";
+        var facts = storyFactRepository.findActive(projectId);
+        if (facts.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        int cap = Math.min(facts.size(), 25);
+        for (int i = 0; i < cap; i++) {
+            var f = facts.get(i);
+            sb.append("■ [").append(f.getFactType()).append("] ").append(f.getSubject())
+                    .append("：").append(f.getAssertion()).append("\n");
+        }
+        return sb.toString().trim();
     }
 
     /** p10-w1-01: 使该项目全部稳定段缓存失效（下次组装重算）。
@@ -739,21 +773,21 @@ public class ContextAssembler {
         if ("none".equals(differentiation)) return "";
 
         var allChars = knowledgeBase.findAllCharacters(projectId);
-        var withVoice = allChars.stream()
+        // p10-w2-05: 经 RelevanceGateway 收窄（cast 匹配 + 主角保底 + 无全量回退），
+        // 替代 cast 过滤失败即回退全量的旧逻辑（百万字下 token 爆炸）
+        List<Character> relevant;
+        if (relevanceGateway != null && synopsis != null && synopsis.getCast() != null && !synopsis.getCast().isBlank()) {
+            List<String> castList = java.util.Arrays.asList(synopsis.getCast().split("[,，、\\s]+"));
+            relevant = relevanceGateway.relevantCharacters(projectId, castList, 8);
+        } else {
+            relevant = allChars; // 无 cast 或无 gateway：旧路径（短篇规模可接受）
+        }
+        var withVoice = relevant.stream()
                 .filter(c -> c.getSpeakingStyle() != null && !c.getSpeakingStyle().isBlank())
                 .toList();
         if (withVoice.isEmpty()) return "";
 
-        // 按 cast 过滤（如果 synopsis 有 cast 信息）
         List<Character> filtered = withVoice;
-        if (synopsis != null && synopsis.getCast() != null && !synopsis.getCast().isBlank()) {
-            String cast = synopsis.getCast();
-            filtered = withVoice.stream()
-                    .filter(c -> cast.contains(c.getName()) || c.getName().contains(cast))
-                    .toList();
-            // 如果 cast 过滤后为空（可能 cast 格式不匹配），回退到全部
-            if (filtered.isEmpty()) filtered = withVoice;
-        }
 
         StringBuilder sb = new StringBuilder();
         sb.append("【角色说话风格要求（必须严格遵守差异化，不同角色的语气/语速/用词须有明显区别）】\n");

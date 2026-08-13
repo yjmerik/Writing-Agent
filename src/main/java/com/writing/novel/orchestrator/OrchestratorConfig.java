@@ -57,8 +57,10 @@ public class OrchestratorConfig {
                                                  RelationshipEvolutionTracker relationshipEvolutionTracker,
                                                  PassageEditor passageEditor,
                                                  PlotMotifTracker plotMotifTracker,
-                                                 com.writing.novel.service.ExpositionDetector expositionDetector) {
-        return new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
+                                                 com.writing.novel.service.ExpositionDetector expositionDetector,
+                                                 com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository,
+                                                 com.writing.novel.agent.FactHarvesterAgent factHarvester) {
+        NovelOrchestrator orchestrator = new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
                 characterProfileUpgrader, climaxDiversityTracker, plotProgressionDetector,
@@ -67,5 +69,16 @@ public class OrchestratorConfig {
                 foreshadowingResolutionDetector, sceneClassifier, diversityTracker, arcScheduler,
                 consistencyGuard, consistencyGate, foreshadowingImportanceAuditor, clicheDetector,
                 relationshipEvolutionTracker, passageEditor, plotMotifTracker, expositionDetector);
+        orchestrator.setStoryFactRepository(storyFactRepository);
+        orchestrator.setFactHarvester(factHarvester);
+        return orchestrator;
+    }
+
+    @Bean
+    public com.writing.novel.agent.FactHarvesterAgent factHarvesterAgent(
+            com.writing.novel.llm.LlmGateway llmGateway,
+            com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository,
+            com.writing.novel.llm.prompt.PromptTemplateService promptTemplateService) {
+        return new com.writing.novel.agent.FactHarvesterAgent(llmGateway, storyFactRepository, promptTemplateService);
     }
 }

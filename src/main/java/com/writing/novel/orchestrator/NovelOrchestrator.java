@@ -742,10 +742,9 @@ public class NovelOrchestrator {
 
     /** p6-4: 卷末从最近章节重新评估 StyleProfile */
     private void updateStyleProfile(String projectId, int fromChapter, int toChapter) {
-        var chapters = repository.findChaptersByProject(projectId);
-        // 取本卷最后5章的正文采样
+        // B2: 只加载最近 5 章，不全表加载
+        var chapters = repository.findChaptersByIndexRange(projectId, toChapter - 4, toChapter);
         var recentText = chapters.stream()
-                .filter(c -> c.getChapterIndex() >= toChapter - 4 && c.getChapterIndex() <= toChapter)
                 .map(c -> {
                     String content = c.getContent();
                     return content != null ? content.substring(0, Math.min(300, content.length())) : "";

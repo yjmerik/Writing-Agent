@@ -61,6 +61,10 @@ public interface NovelRepository {
     /** SUM 聚合求总字数——不全量加载正文 */
     int getTotalWordCount(String projectId);
     List<Chapter> findRecentChapters(String projectId, int count);
+    /** B2: 按章号范围加载（不全表） */
+    List<Chapter> findChaptersByIndexRange(String projectId, int fromIndex, int toIndex);
+    /** B2: 章节计数（不加载正文） */
+    int countChaptersByProject(String projectId);
 
     // --- Summary ---
     void saveSummary(Summary summary);

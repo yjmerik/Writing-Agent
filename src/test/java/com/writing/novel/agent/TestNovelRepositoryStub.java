@@ -47,6 +47,8 @@ public class TestNovelRepositoryStub implements NovelRepository {
     @Override public List<Chapter> findChapterMetaByProject(String p) { return List.of(); }
     @Override public int getTotalWordCount(String p) { return 0; }
     @Override public List<Chapter> findRecentChapters(String p, int c) { return List.of(); }
+    @Override public List<Chapter> findChaptersByIndexRange(String p, int from, int to) { return List.of(); }
+    @Override public int countChaptersByProject(String p) { return 0; }
     @Override public void saveSummary(Summary s) {}
     @Override public List<Summary> findSummariesByProject(String p) { return List.of(); }
     @Override public void deleteSummary(String summaryId) {}

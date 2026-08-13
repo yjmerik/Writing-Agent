@@ -329,9 +329,46 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public List<Chapter> findRecentChapters(String projectId, int count) {
-        List<Chapter> all = findChaptersByProject(projectId);
-        if (all.size() <= count) return all;
-        return all.subList(all.size() - count, all.size());
+        // B2: 直接 SQL 分页，不再全表加载（原 findChaptersByProject + subList）
+        List<Chapter> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM chapters WHERE project_id=? ORDER BY chapter_index DESC LIMIT ?")) {
+            ps.setString(1, projectId);
+            ps.setInt(2, count);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapChapter(rs));
+            java.util.Collections.reverse(list); // 恢复升序
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    /** B2: 按章号范围加载（仅加载指定范围，不全表） */
+    @Override
+    public List<Chapter> findChaptersByIndexRange(String projectId, int fromIndex, int toIndex) {
+        List<Chapter> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT * FROM chapters WHERE project_id=? AND chapter_index>=? AND chapter_index<=? ORDER BY chapter_index")) {
+            ps.setString(1, projectId);
+            ps.setInt(2, fromIndex);
+            ps.setInt(3, toIndex);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapChapter(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    /** B2: 章节计数（不加载正文，替代 findChaptersByProject().size()） */
+    @Override
+    public int countChaptersByProject(String projectId) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT COUNT(*) FROM chapters WHERE project_id=?")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getInt(1) : 0;
+        } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
     // --- Task 10: 大纲/摘要/伏笔/风格/连续性/检查点 ---

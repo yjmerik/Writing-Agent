@@ -155,7 +155,7 @@ public class ForeshadowingImportanceAuditor {
             }
             if (max > 0) return max;
         }
-        // 回退：已写章节数
-        return repository.findChaptersByProject(projectId).size();
+        // B2: 用 COUNT 查询代替全表加载
+        return repository.countChaptersByProject(projectId);
     }
 }

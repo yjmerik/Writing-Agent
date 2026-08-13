@@ -240,5 +240,9 @@ public class SqliteSchemaInitializer {
         // mc-p2-01: versioned memory——summaries 派生版本与脏标记
         safeAddColumn(st, "ALTER TABLE summaries ADD COLUMN source_chapter_version INTEGER DEFAULT 0");
         safeAddColumn(st, "ALTER TABLE summaries ADD COLUMN dirty INTEGER DEFAULT 0");
+        // cd-fix: chapter_synopses 持久化 cast/beats/climax（之前解析后丢失）
+        safeAddColumn(st, "ALTER TABLE chapter_synopses ADD COLUMN cast TEXT");
+        safeAddColumn(st, "ALTER TABLE chapter_synopses ADD COLUMN beats TEXT");
+        safeAddColumn(st, "ALTER TABLE chapter_synopses ADD COLUMN climax TEXT");
     }
 }

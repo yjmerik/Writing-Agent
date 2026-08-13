@@ -570,7 +570,52 @@ public class ContextAssembler {
               .append("  - 禁止「喘息章」节奏——每一段都要推进剧情或深化人物，不得纯氛围渲染\n");
         }
 
+        // cd-01: 配角刻画深度——禁止配角沦为功能性工具人
+        String depthConstraint = buildCharacterDepthConstraint(projectId, synopsis);
+        if (depthConstraint != null && !depthConstraint.isBlank()) {
+            sb.append(depthConstraint);
+        }
+
+        // pd-01: 事件递进模式多样性——禁止与前章相同的事件触发→展开→结局结构
+        if (chapterIndex > 1) {
+            sb.append("□ 【事件结构多样性】本章不得与前章使用相同的「事件触发→调查验证→爆发收束」递进模板。\n")
+              .append("  如果前章以「异象出现→主角验证→人物死亡/失踪」推进，本章必须换用不同的叙事结构\n")
+              .append("  （如：对话博弈推动、倒叙揭秘、多视角交叉、主动设局而非被动反应）。\n");
+        }
+
         return sb.toString();
+    }
+
+    /**
+     * cd-01: 配角刻画深度约束——要求出场配角展现独立性格/动机，而非纯功能性。
+     */
+    private String buildCharacterDepthConstraint(String projectId, ChapterSynopsis synopsis) {
+        try {
+            if (synopsis == null || synopsis.getCast() == null || synopsis.getCast().isBlank()) return "";
+            String cast = synopsis.getCast();
+            var supporting = knowledgeBase.findAllCharacters(projectId).stream()
+                    .filter(c -> !isMainCharacter(c))
+                    .filter(c -> cast.contains(c.getName()))
+                    .toList();
+            if (supporting.isEmpty()) return "";
+            StringBuilder sb = new StringBuilder();
+            sb.append("□ 【配角刻画深度】本章出场的配角不得沦为推动情节的功能性工具人：\n");
+            for (var c : supporting) {
+                sb.append("  ■ ").append(c.getName());
+                if (c.getPersonality() != null && !c.getPersonality().isBlank()) {
+                    sb.append("（性格：").append(c.getPersonality()).append("）");
+                }
+                if (c.getMotivation() != null && !c.getMotivation().isBlank()) {
+                    sb.append("（动机：").append(c.getMotivation()).append("）");
+                }
+                sb.append("\n");
+            }
+            sb.append("  每个出场配角至少有 1 处展现独立性格或个人动机的反应/台词/行为，"
+                    + "不得只作为信息提供者或情节推进器。\n");
+            return sb.toString();
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     /**

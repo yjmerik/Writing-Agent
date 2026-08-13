@@ -343,11 +343,12 @@ public class SqliteNovelRepository implements NovelRepository {
     private void saveSynopsis(Connection conn, String volumeId, ChapterSynopsis s) {
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO chapter_synopses (id,project_id,volume_id,chapter_index,title,synopsis,writing_notes," +
-                "plot_purpose,tension_level,volume_arc_position) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title, " +
+                "plot_purpose,tension_level,volume_arc_position,cast,beats,climax) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title, " +
                 "synopsis=excluded.synopsis, writing_notes=excluded.writing_notes, " +
                 "plot_purpose=excluded.plot_purpose, tension_level=excluded.tension_level, " +
-                "volume_arc_position=excluded.volume_arc_position")) {
+                "volume_arc_position=excluded.volume_arc_position, cast=excluded.cast, " +
+                "beats=excluded.beats, climax=excluded.climax")) {
             ps.setString(1, s.getId()); ps.setString(2, s.getProjectId());
             ps.setString(3, volumeId); ps.setInt(4, s.getChapterIndex());
             ps.setString(5, s.getTitle()); ps.setString(6, s.getSynopsis());
@@ -355,6 +356,9 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setString(8, s.getPlotPurpose());
             ps.setInt(9, s.getTensionLevel());
             ps.setString(10, s.getVolumeArcPosition());
+            ps.setString(11, s.getCast());
+            ps.setString(12, s.getBeats());
+            ps.setString(13, s.getClimax());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
@@ -388,6 +392,9 @@ public class SqliteNovelRepository implements NovelRepository {
                             try { s.setPlotPurpose(srs.getString("plot_purpose")); } catch (Exception ignored) {}
                             try { s.setTensionLevel(srs.getInt("tension_level")); } catch (Exception ignored) {}
                             try { s.setVolumeArcPosition(srs.getString("volume_arc_position")); } catch (Exception ignored) {}
+                            try { s.setCast(srs.getString("cast")); } catch (Exception ignored) {}
+                            try { s.setBeats(srs.getString("beats")); } catch (Exception ignored) {}
+                            try { s.setClimax(srs.getString("climax")); } catch (Exception ignored) {}
                             v.addSynopsis(s);
                         }
                     }

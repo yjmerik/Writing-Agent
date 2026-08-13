@@ -16,6 +16,8 @@ public class Project {
     private Instant updatedAt;
     /** 当前已写到第几章（全局递增） */
     private int currentChapterIndex;
+    /** C2: 全书摘要——卷末压缩的≤3句全书梗概，注入上下文最顶部（修复记忆地平线） */
+    private String bookSummary;
 
     public Project(String title, String concept, String tags) {
         this.id = UUID.randomUUID().toString();
@@ -49,4 +51,6 @@ public class Project {
     public Instant getUpdatedAt() { return updatedAt; }
     public int getCurrentChapterIndex() { return currentChapterIndex; }
     public void setCurrentChapterIndex(int i) { this.currentChapterIndex = i; touch(); }
+    public String getBookSummary() { return bookSummary; }
+    public void setBookSummary(String s) { this.bookSummary = s; touch(); }
 }

@@ -197,6 +197,10 @@ public class ContextAssembler {
     }
 
     private String buildRecentSummary(String projectId, int chapterIndex) {
+        // C2: 全书摘要——注入最顶部，不受 VOLUME_DETAIL_LIMIT 裁剪（修复记忆地平线坍塌）
+        String bookSummary = repository.findProject(projectId)
+                .map(p -> p.getBookSummary()).orElse(null);
+
         int lookBackTo = Math.max(1, chapterIndex - 1);
         // 细粒度摘要：最近 window 章
         List<Summary> recentSummaries = summaryService.findRecent(projectId, lookBackTo, RECENT_SUMMARY_WINDOW);
@@ -216,13 +220,17 @@ public class ContextAssembler {
                 fineGrained.add(s); // 细粒度仅最近 window
             }
         }
-        if (fineGrained.isEmpty() && volumeLevel.isEmpty()) return "";
+        if (fineGrained.isEmpty() && volumeLevel.isEmpty() && (bookSummary == null || bookSummary.isBlank())) return "";
 
         // p12-K4: 卷摘要按章节倒序排列，最近 3 卷详细，更早的截断
         volumeLevel.sort((a, b) -> Integer.compare(b.getFromChapter(), a.getFromChapter()));
         int VOLUME_DETAIL_LIMIT = 3;
 
         StringBuilder sb = new StringBuilder();
+        // C2: 全书摘要——最顶部注入（不受裁剪），确保第 100 章后仍知道全书主线
+        if (bookSummary != null && !bookSummary.isBlank()) {
+            sb.append("【全书梗概（截至当前）】").append(bookSummary).append("\n\n");
+        }
         // 先注入卷级摘要（远期剧情概览）
         if (!volumeLevel.isEmpty()) {
             sb.append("【前卷概览】\n");
@@ -234,9 +242,9 @@ public class ContextAssembler {
                     // 最近 3 卷详细
                     sb.append(s.getContent());
                 } else {
-                    // 更早的卷截断到前 100 字
+                    // C2: 更早的卷截断放宽到 300 字（原 100 字信息损失过大）
                     String content = s.getContent();
-                    sb.append(content.length() > 100 ? content.substring(0, 100) + "..." : content);
+                    sb.append(content.length() > 300 ? content.substring(0, 300) + "..." : content);
                     sb.append("（早期卷，已精简）");
                 }
                 sb.append("\n");

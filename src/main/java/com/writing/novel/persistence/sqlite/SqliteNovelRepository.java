@@ -45,12 +45,12 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public String saveProject(Project p) {
-        String sql = "INSERT INTO projects (id,title,concept,tags,mode,state,current_chapter_index,genre,created_at,updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?) " +
+        String sql = "INSERT INTO projects (id,title,concept,tags,mode,state,current_chapter_index,genre,created_at,updated_at,book_summary) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?) " +
                 "ON CONFLICT(id) DO UPDATE SET title=excluded.title, concept=excluded.concept, " +
                 "tags=excluded.tags, mode=excluded.mode, state=excluded.state, " +
                 "current_chapter_index=excluded.current_chapter_index, genre=excluded.genre, " +
-                "updated_at=excluded.updated_at";
+                "updated_at=excluded.updated_at, book_summary=excluded.book_summary";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, p.getId());
@@ -63,6 +63,7 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setString(8, p.getGenre() != null ? p.getGenre().name() : null);
             ps.setString(9, p.getCreatedAt().toString());
             ps.setString(10, p.getUpdatedAt().toString());
+            ps.setString(11, p.getBookSummary());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -90,6 +91,7 @@ public class SqliteNovelRepository implements NovelRepository {
                     p.setGenre(GenreProfile.valueOf(genreStr));
                 }
             } catch (Exception ignored) {}
+            try { p.setBookSummary(rs.getString("book_summary")); } catch (Exception ignored) {}
             return Optional.of(p);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -375,14 +377,14 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public void saveOutline(Outline o) {
-        try (Connection conn = cp.getConnection();
-             PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO outlines (project_id, premise) VALUES (?,?) " +
-                     "ON CONFLICT(project_id) DO UPDATE SET premise=excluded.premise")) {
-            ps.setString(1, o.getProjectId()); ps.setString(2, o.getPremise());
-            ps.executeUpdate();
-        } catch (SQLException e) { throw new RuntimeException(e); }
+        // C3: 单连接（原两连接 latent bug）
         try (Connection conn = cp.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO outlines (project_id, premise) VALUES (?,?) " +
+                    "ON CONFLICT(project_id) DO UPDATE SET premise=excluded.premise")) {
+                ps.setString(1, o.getProjectId()); ps.setString(2, o.getPremise());
+                ps.executeUpdate();
+            }
             for (Volume v : o.getVolumes()) {
                 saveVolume(conn, v);
             }
@@ -428,12 +430,20 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public Optional<Outline> findOutlineByProject(String projectId) {
-        try (Connection conn = cp.getConnection();
-             PreparedStatement ps = conn.prepareStatement("SELECT premise FROM outlines WHERE project_id=?")) {
-            ps.setString(1, projectId);
-            ResultSet rs = ps.executeQuery();
-            if (!rs.next()) return Optional.empty();
-            Outline o = new Outline(projectId, rs.getString("premise"));
+        try (Connection conn = cp.getConnection()) {
+            // C3: 3 次查询替代 2+N 次（N=卷数），消除 N+1
+            // Query 1: outline premise
+            String premise = null;
+            try (PreparedStatement ps = conn.prepareStatement("SELECT premise FROM outlines WHERE project_id=?")) {
+                ps.setString(1, projectId);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) premise = rs.getString("premise");
+            }
+            if (premise == null) return Optional.empty(); // 兼容 premise 为 null 的旧库
+            Outline o = new Outline(projectId, premise);
+
+            // Query 2: volumes
+            java.util.Map<String, Volume> volumeById = new java.util.LinkedHashMap<>();
             try (PreparedStatement vps = conn.prepareStatement(
                     "SELECT * FROM volumes WHERE project_id=? ORDER BY volume_index")) {
                 vps.setString(1, projectId);
@@ -442,26 +452,36 @@ public class SqliteNovelRepository implements NovelRepository {
                     Volume v = new Volume(projectId, vrs.getInt("volume_index"),
                             vrs.getString("title"), vrs.getString("summary"));
                     setField(v, "id", vrs.getString("id"));
-                    try (PreparedStatement sps = conn.prepareStatement(
-                            "SELECT * FROM chapter_synopses WHERE volume_id=? ORDER BY chapter_index")) {
-                        sps.setString(1, v.getId());
-                        ResultSet srs = sps.executeQuery();
-                        while (srs.next()) {
-                            ChapterSynopsis s = new ChapterSynopsis(projectId,
-                                    srs.getInt("chapter_index"), srs.getString("title"),
-                                    srs.getString("synopsis"));
-                            setField(s, "id", srs.getString("id"));
-                            s.setWritingNotes(srs.getString("writing_notes"));
-                            try { s.setPlotPurpose(srs.getString("plot_purpose")); } catch (Exception ignored) {}
-                            try { s.setTensionLevel(srs.getInt("tension_level")); } catch (Exception ignored) {}
-                            try { s.setVolumeArcPosition(srs.getString("volume_arc_position")); } catch (Exception ignored) {}
-                            try { s.setCast(srs.getString("cast")); } catch (Exception ignored) {}
-                            try { s.setBeats(srs.getString("beats")); } catch (Exception ignored) {}
-                            try { s.setClimax(srs.getString("climax")); } catch (Exception ignored) {}
-                            v.addSynopsis(s);
-                        }
-                    }
+                    volumeById.put(vrs.getString("id"), v);
                     o.addVolume(v);
+                }
+            }
+
+            // Query 3: ALL synopses in one JOIN（替代 N 次 per-volume 查询）
+            if (!volumeById.isEmpty()) {
+                try (PreparedStatement sps = conn.prepareStatement(
+                        "SELECT cs.* FROM chapter_synopses cs " +
+                        "JOIN volumes v ON cs.volume_id = v.id " +
+                        "WHERE v.project_id=? ORDER BY v.volume_index, cs.chapter_index")) {
+                    sps.setString(1, projectId);
+                    ResultSet srs = sps.executeQuery();
+                    while (srs.next()) {
+                        String volId = srs.getString("volume_id");
+                        Volume v = volumeById.get(volId);
+                        if (v == null) continue;
+                        ChapterSynopsis s = new ChapterSynopsis(projectId,
+                                srs.getInt("chapter_index"), srs.getString("title"),
+                                srs.getString("synopsis"));
+                        setField(s, "id", srs.getString("id"));
+                        s.setWritingNotes(srs.getString("writing_notes"));
+                        try { s.setPlotPurpose(srs.getString("plot_purpose")); } catch (Exception ignored) {}
+                        try { s.setTensionLevel(srs.getInt("tension_level")); } catch (Exception ignored) {}
+                        try { s.setVolumeArcPosition(srs.getString("volume_arc_position")); } catch (Exception ignored) {}
+                        try { s.setCast(srs.getString("cast")); } catch (Exception ignored) {}
+                        try { s.setBeats(srs.getString("beats")); } catch (Exception ignored) {}
+                        try { s.setClimax(srs.getString("climax")); } catch (Exception ignored) {}
+                        v.addSynopsis(s);
+                    }
                 }
             }
             return Optional.of(o);

@@ -686,6 +686,8 @@ public class NovelOrchestrator {
         removeSupersededSummaries(projectId, fromChapter, toChapter);
         // C1: master outline 演进——把已写卷摘要追加到 outline.premise，让后续 planVolume 知道前文发生了什么
         updateMasterOutlineWithWrittenDigest(projectId);
+        // C2: 全书摘要——用"上一版全书摘要 + 本卷摘要"重新压缩为 ≤3 句
+        updateBookSummary(projectId, fromChapter, toChapter);
         // p3-04: 卷末触发质量评价（反馈闭环）
         try {
             var report = qualityEvaluationAgent.evaluate(projectId);
@@ -1371,6 +1373,36 @@ public class NovelOrchestrator {
             log.info("master outline 已更新已写卷摘要（{} 卷）", volumeSums.size());
         } catch (Exception e) {
             log.warn("更新 master outline 已写卷摘要失败: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * C2: 更新全书摘要——卷末把"上一版全书摘要 + 本卷摘要"压缩为≤3句全书梗概，
+     * 存入 project.book_summary，由 ContextAssembler 注入上下文最顶部（修复记忆地平线坍塌）。
+     */
+    private void updateBookSummary(String projectId, int fromChapter, int toChapter) {
+        try {
+            var project = repository.findProject(projectId).orElse(null);
+            if (project == null) return;
+            String prevBookSummary = project.getBookSummary();
+            // 取本卷摘要
+            var volSummary = repository.findSummariesByProject(projectId).stream()
+                    .filter(s -> s.getFromChapter() == fromChapter && s.getToChapter() == toChapter)
+                    .map(s -> s.getContent()).findFirst().orElse("");
+            if (volSummary.isBlank()) return;
+
+            String input = (prevBookSummary != null && !prevBookSummary.isBlank()
+                    ? "当前全书摘要：\n" + prevBookSummary + "\n\n" : "")
+                    + "新完成的卷（第" + fromChapter + "-" + toChapter + "章）摘要：\n" + volSummary;
+            String compressed = memoryManager.summarize(projectId, 1, toChapter,
+                    "请将以下内容压缩为不超过3句话的全书整体梗概（包含主角、核心冲突、当前进展）：\n" + input)
+                    .getContent();
+            project.setBookSummary(compressed);
+            repository.saveProject(project);
+            log.info("全书摘要已更新(ch{}): {}", toChapter,
+                    compressed.length() > 60 ? compressed.substring(0, 60) + "..." : compressed);
+        } catch (Exception e) {
+            log.warn("更新全书摘要失败: {}", e.getMessage());
         }
     }
 

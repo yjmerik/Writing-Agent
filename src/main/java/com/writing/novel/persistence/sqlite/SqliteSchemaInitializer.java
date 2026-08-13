@@ -244,5 +244,7 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE chapter_synopses ADD COLUMN cast TEXT");
         safeAddColumn(st, "ALTER TABLE chapter_synopses ADD COLUMN beats TEXT");
         safeAddColumn(st, "ALTER TABLE chapter_synopses ADD COLUMN climax TEXT");
+        // C2: 全书摘要——卷末压缩为≤3句的"全书一句话摘要"，修复记忆地平线坍塌
+        safeAddColumn(st, "ALTER TABLE projects ADD COLUMN book_summary TEXT");
     }
 }

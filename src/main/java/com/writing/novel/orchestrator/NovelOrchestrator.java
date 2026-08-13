@@ -684,6 +684,8 @@ public class NovelOrchestrator {
                 "卷" + volume.getVolumeIndex() + "「" + volume.getTitle() + "」的详细内容：\n" + combined);
         // so-fix: 卷级摘要生成后，删除被其覆盖的细粒度摘要（避免范围重叠致前情摘要重复）
         removeSupersededSummaries(projectId, fromChapter, toChapter);
+        // C1: master outline 演进——把已写卷摘要追加到 outline.premise，让后续 planVolume 知道前文发生了什么
+        updateMasterOutlineWithWrittenDigest(projectId);
         // p3-04: 卷末触发质量评价（反馈闭环）
         try {
             var report = qualityEvaluationAgent.evaluate(projectId);
@@ -1329,6 +1331,49 @@ public class NovelOrchestrator {
         }
     }
 
+    /**
+     * C1: master outline 演进——卷末后把已写卷摘要追加到 outline.premise，
+     * 让后续 planVolume 知道前文实际发生了什么（而非只看原始静态总纲）。
+     */
+    private void updateMasterOutlineWithWrittenDigest(String projectId) {
+        try {
+            var outlineOpt = repository.findOutlineByProject(projectId);
+            if (outlineOpt.isEmpty()) return;
+            var outline = outlineOpt.get();
+            String premise = outline.getPremise();
+            if (premise == null) premise = "";
+
+            // 从卷级摘要重建"已写卷摘要"段
+            var volumeSums = repository.findSummariesByProject(projectId).stream()
+                    .filter(s -> s.getToChapter() - s.getFromChapter() + 1 > 3)
+                    .sorted(java.util.Comparator.comparingInt(s -> s.getFromChapter()))
+                    .toList();
+            if (volumeSums.isEmpty()) return;
+
+            StringBuilder digest = new StringBuilder("\n\n【已写卷摘要（实际已发生剧情）】\n");
+            int count = 0;
+            for (var s : volumeSums) {
+                count++;
+                String c = s.getContent();
+                if (c == null) continue;
+                // 超过 10 卷时，早期卷合并
+                if (count <= volumeSums.size() - 10) continue; // 跳过早期卷
+                digest.append("卷").append(count).append("(ch").append(s.getFromChapter()).append("-")
+                        .append(s.getToChapter()).append("): ")
+                        .append(c.length() > 80 ? c.substring(0, 80) + "..." : c).append("\n");
+            }
+
+            // 删除旧的【已写卷摘要】段（如果有），追加新的
+            int marker = premise.indexOf("【已写卷摘要");
+            String base = marker >= 0 ? premise.substring(0, marker).trim() : premise.trim();
+            outline.setPremise(base + digest.toString());
+            repository.saveOutline(outline);
+            log.info("master outline 已更新已写卷摘要（{} 卷）", volumeSums.size());
+        } catch (Exception e) {
+            log.warn("更新 master outline 已写卷摘要失败: {}", e.getMessage());
+        }
+    }
+
     private void startNextVolumeOrFinish(String projectId) {
         Project p = loadProject(projectId);
         Outline outline = repository.findOutlineByProject(projectId).orElse(null);
@@ -1465,12 +1510,23 @@ public class NovelOrchestrator {
 
             log.info("分层大纲延迟生成: 卷{}, 第{}-{}章", volumeNumber, nextStartChapter, nextEndChapter);
 
-            // 获取前文摘要（最近卷的摘要）
+            // C1: previousSummary 聚合最近 3 个卷级摘要（不再只取最后一条记录）
             String previousSummary = "";
-            var summaries = repository.findSummariesByProject(projectId);
-            if (!summaries.isEmpty()) {
-                previousSummary = summaries.stream()
-                        .reduce((a, b) -> b).get().getContent(); // 取最后一条
+            var volumeSums = repository.findSummariesByProject(projectId).stream()
+                    .filter(s -> s.getToChapter() - s.getFromChapter() + 1 > 3) // 卷级
+                    .sorted((a, b) -> Integer.compare(b.getFromChapter(), a.getFromChapter()))
+                    .limit(3)
+                    .sorted(java.util.Comparator.comparingInt(s -> s.getFromChapter()))
+                    .toList();
+            if (!volumeSums.isEmpty()) {
+                StringBuilder psum = new StringBuilder();
+                for (var s : volumeSums) {
+                    String c = s.getContent();
+                    if (c != null) psum.append("卷(").append(s.getFromChapter()).append("-")
+                            .append(s.getToChapter()).append("): ")
+                            .append(c.length() > 100 ? c.substring(0, 100) + "..." : c).append("\n");
+                }
+                previousSummary = psum.toString();
             }
 
             // 获取已有角色列表

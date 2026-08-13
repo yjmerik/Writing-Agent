@@ -120,7 +120,7 @@ public class PlotterAgent {
     public String planMasterOutline(String projectId, String concept, int totalChapters,
                                      String worldSummary, String genreRules,
                                      String protagonistName, String characterSummary) {
-        int volumeCount = Math.max(2, totalChapters / 20); // 每 20 章约 1 卷
+        int volumeCount = Math.max(2, totalChapters / 8); // C1: 每 8 章 1 卷（与 tryExtendLayeredOutline 对齐）
         String systemPrompt = promptService.render("master-outline", Map.of(
                 "concept", concept,
                 "worldSummary", worldSummary != null ? worldSummary : "（暂无世界观摘要）",

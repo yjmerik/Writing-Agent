@@ -39,9 +39,17 @@ public class CloudApiEmbeddingProvider implements EmbeddingProvider {
 
     @Override
     public float[] embed(String text) {
+        return embedBatch(java.util.List.of(text)).get(0);
+    }
+
+    /** D2: 批量嵌入——input 传 array，按 response index 字段排序返回 */
+    @Override
+    public java.util.List<float[]> embedBatch(java.util.List<String> texts) {
+        if (texts.isEmpty()) return java.util.List.of();
         ObjectNode body = MAPPER.createObjectNode();
         body.put("model", model);
-        body.put("input", text);
+        var arr = body.putArray("input");
+        for (String t : texts) arr.add(t);
 
         Request request = new Request.Builder()
                 .url(baseUrl + "/embeddings")
@@ -56,15 +64,23 @@ public class CloudApiEmbeddingProvider implements EmbeddingProvider {
                         + " " + response.body().string());
             }
             JsonNode root = MAPPER.readTree(response.body().string());
-            JsonNode embeddingNode = root.path("data").path(0).path("embedding");
-            float[] vector = new float[embeddingNode.size()];
-            for (int i = 0; i < vector.length; i++) {
-                vector[i] = (float) embeddingNode.get(i).asDouble();
+            int n = root.path("data").size();
+            java.util.Map<Integer, float[]> byIndex = new java.util.TreeMap<>();
+            for (int i = 0; i < n; i++) {
+                JsonNode item = root.path("data").get(i);
+                JsonNode emb = item.path("embedding");
+                float[] vector = new float[emb.size()];
+                for (int j = 0; j < vector.length; j++) vector[j] = (float) emb.get(j).asDouble();
+                byIndex.put(item.path("index").asInt(i), vector);
+                if (dimension < 0) dimension = vector.length;
             }
-            if (dimension < 0) {
-                dimension = vector.length;
+            java.util.List<float[]> result = new java.util.ArrayList<>();
+            for (int i = 0; i < texts.size(); i++) {
+                float[] v = byIndex.get(i);
+                if (v == null) throw new RuntimeException("Embedding 响应缺少 index=" + i);
+                result.add(v);
             }
-            return vector;
+            return result;
         } catch (IOException e) {
             throw new RuntimeException("Embedding 调用异常", e);
         }

@@ -250,40 +250,39 @@ public class ChapterWriterAgent {
         return content.replaceAll("第\\d+章", "第" + chapterIndex + "章");
     }
 
-    /** 按段落分块索引章节正文，每块 ~800 字，确保中后段情节也能被召回 */
+    /** 按段落分块索引章节正文，每块 ~800 字，确保中后段情节也能被召回。D2: 批量索引（一次embedding调用） */
     private void indexChapterInChunks(String projectId, Chapter chapter, String content) {
         String prefix = "第" + chapter.getChapterIndex() + "章 " + chapter.getTitle() + "：";
         String fullText = prefix + content;
         int chunkSize = 800;
+        java.util.List<IndexedText> chunks = new java.util.ArrayList<>();
 
         if (fullText.length() <= chunkSize) {
             // 短章节整体索引
-            vectorRetrieval.index(new IndexedText(
-                    chapter.getId(), projectId, fullText, "CHAPTER"));
-            return;
-        }
-
-        // 按段落分割，合并到 ~800 字一块
-        String[] paragraphs = content.split("\n");
-        StringBuilder current = new StringBuilder(prefix);
-        int chunkNum = 0;
-        for (String para : paragraphs) {
-            if (current.length() + para.length() > chunkSize && current.length() > prefix.length()) {
-                // 当前块已够大，索引它
-                vectorRetrieval.index(new IndexedText(
+            chunks.add(new IndexedText(chapter.getId(), projectId, fullText, "CHAPTER"));
+        } else {
+            // 按段落分割，合并到 ~800 字一块
+            String[] paragraphs = content.split("\n");
+            StringBuilder current = new StringBuilder(prefix);
+            int chunkNum = 0;
+            for (String para : paragraphs) {
+                if (current.length() + para.length() > chunkSize && current.length() > prefix.length()) {
+                    chunks.add(new IndexedText(
+                            chapter.getId() + "#chunk" + chunkNum,
+                            projectId, current.toString(), "CHAPTER"));
+                    chunkNum++;
+                    current = new StringBuilder("第" + chapter.getChapterIndex() + "章（续）：");
+                }
+                current.append(para).append("\n");
+            }
+            if (current.length() > prefix.length()) {
+                chunks.add(new IndexedText(
                         chapter.getId() + "#chunk" + chunkNum,
                         projectId, current.toString(), "CHAPTER"));
-                chunkNum++;
-                current = new StringBuilder("第" + chapter.getChapterIndex() + "章（续）：");
             }
-            current.append(para).append("\n");
         }
-        // 索引最后一块
-        if (current.length() > prefix.length()) {
-            vectorRetrieval.index(new IndexedText(
-                    chapter.getId() + "#chunk" + chunkNum,
-                    projectId, current.toString(), "CHAPTER"));
-        }
+        // D2: 一次性批量索引（embedding 调用 5-8 次 → 1 次）
+        vectorRetrieval.indexBatch(chunks);
     }
 
     /** 从 StyleProfile 提取风格指引（tone + dosAndDonts）作为 styleGuide 变量 */

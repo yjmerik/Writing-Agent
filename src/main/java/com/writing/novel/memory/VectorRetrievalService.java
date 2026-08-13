@@ -25,6 +25,16 @@ public class VectorRetrievalService {
         vectorStore.upsert(text.id(), text.projectId(), text.text(), vector);
     }
 
+    /** D2: 批量索引——一次 embedding 调用索引多个文本（~5-8 次/章 → 1 次） */
+    public void indexBatch(List<IndexedText> texts) {
+        if (texts.isEmpty()) return;
+        var vectors = embeddingProvider.embedBatch(texts.stream().map(IndexedText::text).toList());
+        for (int i = 0; i < texts.size(); i++) {
+            IndexedText t = texts.get(i);
+            vectorStore.upsert(t.id(), t.projectId(), t.text(), vectors.get(i));
+        }
+    }
+
     public List<VectorSearchResult> search(String queryText, String projectId, int topK) {
         float[] queryVector = embeddingProvider.embed(queryText);
         return vectorStore.search(queryVector, projectId, topK);

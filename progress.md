@@ -123,6 +123,30 @@
 
 根因已定位：`SummaryService` 生成了重叠的章节范围（`[1-3]` 与 `[1-8]` 包含关系、`[4-6]` 与 `[1-8]` 重叠）。需修复为非重叠范围管理——粗粒度摘要生成时应取代被覆盖的细粒度摘要。
 
+## 架构审查 → 4 阶段修复（10 个差距 → 打通 30/100/200 章扩展墙）
+
+基于 Agent 全子系统代码级审查，10 个扩展墙差距按 4 阶段修复，全部经测试验证：
+
+### Phase A 安全地基（3 feature）
+- **A1 门禁 fail-closed**：`runFinalAuditGate` catch→return false（原 return true 静默放行劣质书）
+- **A2 PRAGMA 每连接**：foreign_keys/busy_timeout/synchronous 不再只设第一个连接（原 `pragmasInitialized` bug，ConnectionProviderPragmaTest 验证 3 连接）
+- **A3 去重 style-guardian**：删除只 log 不持久化的冗余块（每 5 章省一次 LLM 调用）
+
+### Phase B 数据完整性（2 feature）
+- **B1 章节事务**：`runInTransaction` + connection overloads，中途异常整体回滚（ChapterTransactionTest 3 用例）
+- **B2 分页加载**：`findRecentChapters` SQL LIMIT / `countChaptersByProject` / `findChaptersByIndexRange` —— 消除 400 章 OOM 风险
+
+### Phase C 长程记忆（3 feature）— 10 章 e2e 验证激活
+- **C1 master outline 演进**：卷末重建"已写卷摘要"写入 premise（10 章验证 EVOLVED ✅）+ 卷结构对齐 8 章/卷 + planVolume 聚合前 3 卷摘要
+- **C2 全书摘要层**：projects.book_summary 列，卷末 LLM 压缩 ≤3 句全书梗概注入上下文顶部（10 章验证 134 字 ✅）+ 旧卷截断 100→300 字 + 修复临时 Summary 重复
+- **C3 outline N+1 消除**：`findOutlineByProject` 2+N 查询→3 查询（JOIN）+ `saveOutline` 单连接
+
+### Phase D 成本与性能（2 feature）
+- **D1 稳定段缓存**：ContextAssembler 的 premise/worldbuilding/knowledgeQuote 按项目缓存（每章减少 DB 查询+拼接）
+- **D2 embedding 批量化**：章节索引 5-8 次 HTTP 调用→1 次（`embedBatch` 按 index 排序 + `indexBatch`）
+
+### 全量测试：**166 tests，0 失败**
+
 ## 历史：Phase 9 完成情况
 
 ## 百万字可靠性 — P0 修复完成（审查回流）

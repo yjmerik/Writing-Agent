@@ -1394,13 +1394,15 @@ public class NovelOrchestrator {
             String input = (prevBookSummary != null && !prevBookSummary.isBlank()
                     ? "当前全书摘要：\n" + prevBookSummary + "\n\n" : "")
                     + "新完成的卷（第" + fromChapter + "-" + toChapter + "章）摘要：\n" + volSummary;
-            String compressed = memoryManager.summarize(projectId, 1, toChapter,
-                    "请将以下内容压缩为不超过3句话的全书整体梗概（包含主角、核心冲突、当前进展）：\n" + input)
-                    .getContent();
-            project.setBookSummary(compressed);
+            // C2: 用 memoryManager 压缩，但删除产生的临时 Summary 记录（只取内容存入 project.book_summary）
+            var tempSummary = memoryManager.summarize(projectId, 1, toChapter,
+                    "请将以下内容压缩为不超过3句话的全书整体梗概（包含主角、核心冲突、当前进展）：\n" + input);
+            repository.deleteSummary(tempSummary.getId()); // 删除临时摘要，避免与卷级摘要重复
+            project.setBookSummary(tempSummary.getContent());
             repository.saveProject(project);
             log.info("全书摘要已更新(ch{}): {}", toChapter,
-                    compressed.length() > 60 ? compressed.substring(0, 60) + "..." : compressed);
+                    tempSummary.getContent().length() > 60
+                            ? tempSummary.getContent().substring(0, 60) + "..." : tempSummary.getContent());
         } catch (Exception e) {
             log.warn("更新全书摘要失败: {}", e.getMessage());
         }

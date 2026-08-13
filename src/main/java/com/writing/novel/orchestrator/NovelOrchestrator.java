@@ -853,24 +853,7 @@ public class NovelOrchestrator {
             log.warn("伏笔悬置检测失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
-        // p10-d1: 风格一致性检查（每 5 章）——检测文风漂移和高频套路词
-        if (chapterIndex % 5 == 0) {
-            try {
-                var profile = repository.findStyleProfileByProject(projectId);
-                if (profile.isPresent()) {
-                    String baseline = "基调：" + profile.get().getTone()
-                            + "，叙事：" + profile.get().getVoice()
-                            + "，注意事项：" + profile.get().getDosAndDonts();
-                    String content = chapter.getContent();
-                    if (content.length() > 3000) content = content.substring(0, 3000);
-                    String report = styleGuardian.checkConsistency(projectId, content, baseline);
-                    log.info("风格检查(章{}): {}", chapterIndex,
-                            report.length() > 100 ? report.substring(0, 100) : report);
-                }
-            } catch (Exception e) {
-                log.warn("风格检查失败(章{}): {}", chapterIndex, e.getMessage());
-            }
-        }
+        // A3: 已删除冗余的风格检查块（原 p10-d1，只 log 不持久化）——保留下方 p3-02 块（含评分+持久化）
 
         // p10-a3+c2: 一致性守卫——能力越界 + 凭空证据检测
         try {
@@ -919,9 +902,9 @@ public class NovelOrchestrator {
                 var styleOpt = repository.findStyleProfileByProject(projectId);
                 if (styleOpt.isPresent()) {
                     var style = styleOpt.get();
-                    String baseline = (style.getTone() != null ? style.getTone() : "")
-                            + (style.getVoice() != null ? " " + style.getVoice() : "")
-                            + (style.getDosAndDonts() != null ? " " + style.getDosAndDonts() : "");
+                    String baseline = "基调：" + (style.getTone() != null ? style.getTone() : "")
+                            + "，叙事：" + (style.getVoice() != null ? style.getVoice() : "")
+                            + "，注意事项：" + (style.getDosAndDonts() != null ? style.getDosAndDonts() : "");
                     String report = styleGuardian.checkConsistency(projectId, chapter.getContent(), baseline);
                     // 解析评分：格式 "风格一致性评分：XX/100"
                     if (report != null) {
@@ -1425,8 +1408,9 @@ public class NovelOrchestrator {
                     criticalUnresolved.size(), highIssues, totalWords);
             return true;
         } catch (Exception e) {
-            log.warn("成书门禁异常，默认通过: {}", e.getMessage());
-            return true;
+            // A1: 门禁异常时 fail-closed——宁可误拦不可放行劣质书
+            log.error("成书门禁异常，fail-closed 默认不通过: {}", e.getMessage(), e);
+            return false;
         }
     }
 

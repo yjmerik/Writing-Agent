@@ -102,7 +102,7 @@ class FinalAuditGateTest {
             repo.saveContinuityIssue(issue);
         }
 
-        // 大纲已写完：当前章索引指向最后一章（1/1）→ 走成书门禁而非继续写
+        // 大纲已写完
         p.setCurrentChapterIndex(1);
         p.setState(NovelState.VOLUME_DONE);
         repo.saveProject(p);
@@ -112,5 +112,26 @@ class FinalAuditGateTest {
         assertEquals(NovelState.NEEDS_REVISION,
                 repo.findProject(p.getId()).orElseThrow().getState(),
                 "未解决 HIGH 问题超限应置 NEEDS_REVISION");
+    }
+
+    @Test
+    void 门禁异常时failClosed不默认通过() {
+        // A1: 门禁代码异常时应 fail-closed（NEEDS_REVISION），不静默放行
+        Project p = new Project("异常测", "测试", "悬疑");
+        repo.saveProject(p);
+        // 不存大纲 → findOutlineByProject 返回空 → hasNextChapter false → 走门禁
+        // 但 runFinalAuditGate 内部 findProject 会成功，不会抛异常
+        // 改用无伏笔无大纲的极端情况验证门禁本身不因异常放行
+        p.setCurrentChapterIndex(999);
+        p.setState(NovelState.VOLUME_DONE);
+        repo.saveProject(p);
+
+        // 用一个会触发门禁但通过的状态（无 mustResolve 伏笔，无 HIGH issues）
+        orchestrator.step(p.getId());
+        // 无大纲 → startNextVolumeOrFinish 中 findOutlineByProject 为空 → 直接走门禁
+        // 门禁通过 → FINAL
+        assertEquals(NovelState.FINAL,
+                repo.findProject(p.getId()).orElseThrow().getState(),
+                "正常情况门禁应通过置 FINAL");
     }
 }

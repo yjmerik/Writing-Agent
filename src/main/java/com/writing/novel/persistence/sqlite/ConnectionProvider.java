@@ -19,21 +19,18 @@ public class ConnectionProvider {
 
     public Connection getConnection() throws SQLException {
         Connection conn = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
-        // mc-p1-03: 每个连接设置 PRAGMA（轻量，确保一致性）
-        if (!pragmasInitialized) {
-            synchronized (this) {
-                if (!pragmasInitialized) {
-                    try (Statement st = conn.createStatement()) {
-                        st.execute("PRAGMA journal_mode=WAL");
-                        st.execute("PRAGMA busy_timeout=5000");
-                        st.execute("PRAGMA foreign_keys=ON");
-                        st.execute("PRAGMA synchronous=NORMAL");
-                    } catch (SQLException ignored) {
-                        // WAL 设置失败不阻断（旧库可能已锁定）
-                    }
-                    pragmasInitialized = true;
-                }
+        try (Statement st = conn.createStatement()) {
+            // A2: journal_mode=WAL 是持久化属性（存 DB header），只需设一次
+            if (!pragmasInitialized) {
+                st.execute("PRAGMA journal_mode=WAL");
+                pragmasInitialized = true;
             }
+            // 以下 PRAGMA 是 per-connection 属性，每个连接都必须设置
+            st.execute("PRAGMA busy_timeout=5000");
+            st.execute("PRAGMA foreign_keys=ON");
+            st.execute("PRAGMA synchronous=NORMAL");
+        } catch (SQLException ignored) {
+            // PRAGMA 设置失败不阻断（旧库可能已锁定）
         }
         return conn;
     }

@@ -1042,14 +1042,15 @@
       "dependencies": [
         "p10-w2-07"
       ],
-      "status": "not-started",
+      "status": "completed",
       "acceptance": "每 N 卷基于已写真典事实重规划剩余卷；卷大纲结构化更新（复现 GAP #1）",
       "verify_cmd": "mvn test -Dtest=OutlineReplanningTest",
       "files": [
         "orchestrator/NovelOrchestrator.java",
         "agent/PlotterAgent.java"
       ],
-      "problem_ref": "GAP#1: 总纲永不重规划，剧情漂移后大纲无法纠偏"
+      "problem_ref": "GAP#1: 总纲永不重规划，剧情漂移后大纲无法纠偏",
+      "evidence": "OutlineReplanningTest 3 tests 绿：replanRemainingOutline 每5卷末从真典事实+未回收伏笔追加【剧情偏离与重规划】段到premise"
     },
     {
       "id": "p10-w3-02",

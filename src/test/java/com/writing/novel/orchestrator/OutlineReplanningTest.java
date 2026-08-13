@@ -4,10 +4,12 @@ import com.writing.novel.agent.PlotterAgent;
 import com.writing.novel.domain.ChapterSynopsis;
 import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
+import com.writing.novel.domain.StoryFact;
 import com.writing.novel.domain.Volume;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
+import com.writing.novel.persistence.sqlite.StoryFactRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -80,5 +82,41 @@ class OutlineReplanningTest {
         assertTrue(ch1.getClimax().contains("金丹"), "ch1 climax=" + ch1.getClimax());
         assertEquals(8, ch1.getTensionLevel(), "ch1 应解析张力");
         assertNotNull(ch1.getCast(), "ch1 应解析 cast");
+    }
+
+    @Test
+    void replanRemainingOutline追加剧情偏离段到premise() throws Exception {
+        // 创建 NovelOrchestrator（StoryFactRepository 注入 true）
+        com.writing.novel.persistence.sqlite.StoryFactRepository factRepo = new com.writing.novel.persistence.sqlite.StoryFactRepository(
+                new com.writing.novel.persistence.sqlite.ConnectionProvider(tempDir.resolve("replan.db").toString()));
+        new com.writing.novel.persistence.sqlite.SqliteSchemaInitializer(new com.writing.novel.persistence.sqlite.ConnectionProvider(tempDir.resolve("replan.db").toString())).initialize();
+        NovelOrchestrator orch = new NovelOrchestrator(repo, new ProjectService(repo),
+                null, null, plotter,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null);
+        orch.setStoryFactRepository(factRepo);
+
+        Outline outline = new Outline(pid, "原始总纲\n第1章 开局\n第2章 发展\n第3章 高潮");
+        repo.saveOutline(outline);
+
+        // 加一条真典事实
+        factRepo.save(new com.writing.novel.domain.StoryFact(pid, com.writing.novel.domain.StoryFact.FactType.CHARACTER_STATE, "季衡", "金丹期", 30));
+        // 加一条 mustResolve 伏笔
+        com.writing.novel.domain.Foreshadowing f = new com.writing.novel.domain.Foreshadowing(pid, "季衡身世之秘", "埋于第1章", 1);
+        f.setMustResolve(true);
+        repo.saveForeshadowing(f);
+
+        Method m = NovelOrchestrator.class.getDeclaredMethod("replanRemainingOutline", String.class, int.class);
+        m.setAccessible(true);
+        m.invoke(orch, pid, 40); // 第 40 章，卷 5 末
+
+        Outline after = repo.findOutlineByProject(pid).orElseThrow();
+        assertTrue(after.getPremise().contains("剧情偏离与重规划"),
+                "总纲应追加【剧情偏离与重规划】段");
+        assertTrue(after.getPremise().contains("金丹期"),
+                "应包含真典事实");
+        assertTrue(after.getPremise().contains("季衡身世之秘"),
+                "应包含未回收 mustResolve 伏笔");
     }
 }

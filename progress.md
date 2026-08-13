@@ -2,10 +2,44 @@
 
 ## Current State
 
-**Last Updated:** 2026-08-13
+**Last Updated:** 2026-08-14
 **Phase:** Phase 10 — 百万字长篇架构优化（故事真典+检索收窄+可靠作业）
 **Active spec:** docs/specs/2026-08-13-million-word-architecture.md（三波 23 feature）
-**Tests:** **181 pass, 0 failures, 1 skipped**（W1 全部完成并融入）
+**Tests:** **214 pass, 0 failures, 1 skipped**（W1+W2+W3 全部融入）
+
+## 整体进度：22/23 feature 完成 ✅
+
+### W1 第一波（止血与正确性）— 7/7 ✅
+stableSectionCache 失效 / 脏摘要重算 / 向量去污 / 成本熔断 / 退避降级 / 状态机 / 重写互斥
+
+### W2 第二波（故事真典+检索收窄）— 7/7 ✅
+story_facts 表 / 真典播种 / FactHarvester 收割 / RelevanceGateway / 检查器收窄 / 摘要预算 / 真典消费
+
+### W3 第三波（结构演进+闭环修复）— 8/9 ✅
+- 延迟卷大纲补全结构化字段（修 GAP#1 追踪器失明）
+- ArchiveCompactor 归档衰减（修根因 B）
+- 全量查询分页 LIMIT
+- ArcScheduler 冷场阈值缩放 + Top-K（修 GAP#5）
+- DiversityTracker 持久化（重启不丢）
+- 叙事线索状态机修正（修 GAP#4）
+- ConsistencyGuard HIGH 入闭环 + 重写后复检（修根因 D）
+- FINAL 终审扩展（真典一致性 + 成本回执）
+
+**剩余：w3-01 总纲中段重规划**（需 LLM 重规划，单独立 spec 推进）
+
+### 端到端验证（3 轮，全部 PASS）
+| 轮次 | 字數 | LLM 调用 | 错误 | 失败 | compare-baseline |
+|---|---|---|---|---|---|
+| W1 | 10490 | 44 | 0 | 0 | PASS |
+| W2 | 12370 | 47 | 0 | 0 | PASS |
+| W3 | 10822 | - | 0 | 0 | PASS |
+
+### 3 次 commit
+```
+9255cf4 W1 止血正确性全部 + W2 真典基石
+d728b37 W2 故事真典链条（播种/收割/消费）+ 检索收窄
+3724be2 W3 结构演进（延迟卷补全/叙事线索/归档/多样性/分页/弧光/闭环修复/FINAL）
+```
 
 ## W1 第一波（止血与正确性）— 全部完成 ✅
 

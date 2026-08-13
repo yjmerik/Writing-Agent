@@ -101,6 +101,7 @@ public class TestNovelRepositoryStub implements NovelRepository {
     @Override public void saveGenerationLog(GenerationLog log) {}
     @Override public List<GenerationLog> findRecentGenerationLogs(String p, String a, int l) { return List.of(); }
     @Override public List<GenerationLog> findAllGenerationLogs(String p) { return List.of(); }
+    @Override public List<GenerationLog> findGenerationLogsByProject(String p) { return List.of(); }
 
     // --- NarrativeThread ---
     @Override public void saveNarrativeThread(NarrativeThread t) {}

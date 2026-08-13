@@ -2,8 +2,9 @@
 
 ## Current Objective
 
-- **Goal**: 百万字长篇架构优化（`docs/specs/2026-08-13-million-word-architecture.md`，Phase 10，三波 23 feature）。基于代码级架构 review 修复 5 道扩展墙 + 4 个系统性根因，核心动作是引入「故事真典」事实真相层。
-- **Current status**: **W1 全部 7 feature 完成（止血正确性）+ W2 基石 2 个（真典模型/摘要预算）= 9/23 feature，188 tests 0 failures，端到端 record 3 章 PASS（真实 LLM，10490 字，0 失败，compare-baseline 质量未退化）**。剩余 W2 核心 5 个 + W3 9 个为"影响产出质量"的大改动，需 e2e 对比基线，应在专门会话逐 feature 推进。
+- **Goal**: 百万字长篇架构优化（`docs/specs/2026-08-13-million-word-architecture.md`，Phase 10，三波 23 feature）。
+- **Current status**: **22/23 feature 完成，214 tests 0 failures，3 轮 e2e 全部 PASS**。W1(7)+W2(7)+W3(8) 已实现并端到端验证。剩余 w3-01（总纲中段重规划，需 LLM 重规划，单独立 spec 推进）。
+- **Branch / commit**: `phase-10-w1-w2-foundation`（3 个 commit，见 progress.md）。
 - **Branch / commit**: main（未 commit，工作区有 W1+W2 改动）；最近提交见 `git log`。
 - **上一阶段（mc spec）状态**: P0/P1/P2/P3 全部完成，详见下方历史。
 

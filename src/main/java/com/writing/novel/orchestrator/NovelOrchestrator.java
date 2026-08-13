@@ -795,6 +795,11 @@ public class NovelOrchestrator {
                     try { archiveCompactor.compact(projectId, chapterIndex); }
                     catch (Exception e) { log.warn("卷末归档失败: {}", e.getMessage()); }
                 }
+                // p10-w3-01: 每完成 5 卷触发总纲中段重规划——基于已写真典事实重规划剩余未写卷
+                if (v.getVolumeIndex() > 0 && v.getVolumeIndex() % 5 == 0) {
+                    try { replanRemainingOutline(projectId, chapterIndex); }
+                    catch (Exception e) { log.warn("总纲重规划失败: {}", e.getMessage()); }
+                }
                 break;
             }
         }
@@ -1615,6 +1620,75 @@ public class NovelOrchestrator {
             log.info("卷末成书门禁: {} → {}", passed ? "PASS" : "FAIL", passed ? "FINAL" : "NEEDS_REVISION");
         }
         repository.saveProject(p);
+    }
+
+    /**
+     * p10-w3-01: 总纲中段重规划——每完成 N 卷基于已写真典事实 + 已写章节摘要重规划剩余未写卷。
+     * 实际剧情一旦偏离原总纲，重规划让后续卷的大纲随剧情演进调整，而非机械按原总纲生成。
+     */
+    private void replanRemainingOutline(String projectId, int currentChapter) {
+        try {
+            var outlineOpt = repository.findOutlineByProject(projectId);
+            if (outlineOpt.isEmpty()) return;
+            var outline = outlineOpt.get();
+            String premise = outline.getPremise();
+            if (premise == null) premise = "";
+
+            // 收集已写卷摘要（最近 3 卷，每卷截 200 字，加上 bible facts）
+            StringBuilder writtenSummary = new StringBuilder("【已写剧情摘要】\n");
+            var volumeSums = repository.findSummariesByProject(projectId).stream()
+                    .filter(s -> s.getToChapter() - s.getFromChapter() + 1 > 3)
+                    .sorted((a, b) -> Integer.compare(b.getToChapter(), a.getToChapter()))
+                    .limit(3)
+                    .sorted(java.util.Comparator.comparingInt(s -> s.getFromChapter()))
+                    .toList();
+            for (var s : volumeSums) {
+                String c = s.getContent();
+                if (c != null) {
+                    writtenSummary.append("卷(ch").append(s.getFromChapter()).append("-")
+                            .append(s.getToChapter()).append("): ")
+                            .append(c.length() > 200 ? c.substring(0, 200) : c).append("\n");
+                }
+            }
+
+            // 收集真典事实（importance≥3 的 ACTIVE 事实）
+            if (storyFactRepository != null) {
+                var facts = storyFactRepository.findActive(projectId);
+                var importantFacts = facts.stream()
+                        .filter(f -> f.getImportance() >= 3).limit(15).toList();
+                if (!importantFacts.isEmpty()) {
+                    writtenSummary.append("【已确立的关键事实（后续章节必须遵守）】\n");
+                    for (var f : importantFacts) {
+                        writtenSummary.append("■ ").append(f.getSubject())
+                                .append("：").append(f.getAssertion()).append("\n");
+                    }
+                }
+            }
+
+            // 收集未回收 mustResolve 伏笔（约束不可丢弃）
+            var unresolvedForeshadowings = repository.findUnresolvedForeshadowings(projectId).stream()
+                    .filter(com.writing.novel.domain.Foreshadowing::isMustResolve)
+                    .limit(10).toList();
+            if (!unresolvedForeshadowings.isEmpty()) {
+                writtenSummary.append("【未回收关键伏笔（重规划时不可丢弃）】\n");
+                for (var f : unresolvedForeshadowings) {
+                    writtenSummary.append("■ ").append(f.getDescription()).append("\n");
+                }
+            }
+
+            // 更新 outline.premise：保留已有的原始总纲头部，追加【剧情偏离与重规划】段
+            String update = "\n\n【剧情偏离与重规划（卷" + (currentChapter / 8) + "后）】\n"
+                    + "截至第" + currentChapter + "章已发生剧情偏离原总纲，以下为后续章节应遵循的调整：\n"
+                    + writtenSummary.toString().trim()
+                    + "\n（后续章节大纲将在延迟生成时根据以上调整自动适配）";
+            outline.setPremise(premise + update);
+            repository.saveOutline(outline);
+            // p10-w1-01: premise 变更后使稳定段缓存失效
+            contextAssembler.invalidateProject(projectId);
+            log.info("总纲中段重规划完成(项目{}, 当前章{}): 已追加重规划信息", projectId, currentChapter);
+        } catch (Exception e) {
+            log.warn("总纲中段重规划失败(项目{}): {}", projectId, e.getMessage());
+        }
     }
 
     /**

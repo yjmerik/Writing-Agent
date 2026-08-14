@@ -3,7 +3,7 @@
 ## Current State
 
 **Last Updated:** 2026-08-14
-**Phase:** **Phase 11 过程化质量门禁架构（Quality Gate Architecture）** — **Q0 地基补齐 6/6 + Q1 前置门禁 4/4 = 10/21 完成**（commit e3b4dd8..2afe9bc，全量 BUILD SUCCESS）；Q2 质检委员会+仲裁 / Q3 可观测回归 共 11 feature 待实现。Phase 10 百万字架构 22/23 落地（余 p10-w3-09 由 p11-q3-06 吸收）。
+**Phase:** **Phase 11 过程化质量门禁架构（Quality Gate Architecture）** — **14/21 完成**：Q0 地基补齐 6/6 + Q1 前置门禁 4/4 + Q2 质检委员会 2（QualityCouncil/Arbiter）+ Q3 可观测 2（fail-loud/baseline 门禁），commit e3b4dd8..57ea186，全量 BUILD SUCCESS。**剩余 7**：q2-03 合并重写接入 / q2-04 重写预算 / q2-05 熔断配置 / q3-01 事件遥测 / q3-02 diagnose 质量分类 / q3-05 测试网 / q3-06 FinalAuditGate。Phase 10 余 p10-w3-09 由 p11-q3-06 吸收。
 **Tests:** 本次会话仅新增 spec 文档 + 改 `feature_list.json`（数据文件），未触碰任何 `.java`/`.st`/`.yml`，编译与测试基线不受影响，故未重跑 `mvn test`。
 
 ---

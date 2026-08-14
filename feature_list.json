@@ -1481,8 +1481,8 @@
       "dependencies": [
         "p11-q3-01"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "diagnose.sh 加质量诊断分类(重写成功率/issue根因Top/熔断次数/FINAL失败原因/quality_risk标记)；合成 events 验证输出正确",
       "files": [
         "scripts/diagnose.sh"
       ],

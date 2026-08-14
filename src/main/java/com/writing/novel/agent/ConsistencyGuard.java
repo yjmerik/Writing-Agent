@@ -33,6 +33,7 @@ public class ConsistencyGuard {
     private final PromptTemplateService promptService;
     private final RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ConsistencyGuard.class);
 
     public ConsistencyGuard(LlmGateway gateway, NovelRepository repository,
                             PromptTemplateService promptService) {
@@ -98,7 +99,8 @@ public class ConsistencyGuard {
         try {
             var resp = gateway.complete(req);
             issues.addAll(parseIssues(resp.getContent(), projectId, chapterIndex));
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("一致性守卫处理异常（p11-q3-03 fail-loud，不再静默吞）: {}", e.getMessage());
         }
         return issues;
     }
@@ -171,7 +173,8 @@ public class ConsistencyGuard {
                     }
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("一致性守卫处理异常（p11-q3-03 fail-loud，不再静默吞）: {}", e.getMessage());
         }
         return issues;
     }

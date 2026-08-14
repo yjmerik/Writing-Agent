@@ -6,5 +6,5 @@
   "minAvgWordCount": 2523,
   "maxChapterFailures": 0,
   "maxLlmErrors": 0,
-  "minEvaluationScore": null
+  "minEvaluationScore": 7
 }

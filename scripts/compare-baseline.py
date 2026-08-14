@@ -59,6 +59,16 @@ def main() -> int:
     return 0
 
 
+def _extract_eval_score(report) -> int | None:
+    """p11-q3-04: 从 e2e-report.evaluation 提取 overallScore（bless 时自动建质量门禁）"""
+    ev = report.get("evaluation")
+    if isinstance(ev, dict):
+        score = ev.get("overallScore") or ev.get("score")
+        if score is not None:
+            return score
+    return None
+
+
 def bless(report_path: str, baseline_path: str) -> int:
     report = json.load(open(report_path, encoding="utf-8"))
     baseline = {
@@ -69,7 +79,7 @@ def bless(report_path: str, baseline_path: str) -> int:
         "minAvgWordCount": int(report["wordCount"]["avg"] * 0.7),
         "maxChapterFailures": 0,
         "maxLlmErrors": 0,
-        "minEvaluationScore": None,
+        "minEvaluationScore": _extract_eval_score(report),
     }
     import os
     os.makedirs(os.path.dirname(baseline_path) or ".", exist_ok=True)

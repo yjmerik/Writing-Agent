@@ -9,6 +9,7 @@ import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.memory.RelevanceGateway;
+import com.writing.novel.persistence.sqlite.StoryFactRepository;
 import com.writing.novel.spi.NovelRepository;
 
 import java.util.ArrayList;
@@ -30,19 +31,28 @@ public class CharacterProfileUpgrader {
     private final NovelRepository repository;
     private final PromptTemplateService promptService;
     private final RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面
+    private final StoryFactRepository factRepo;      // p11-q0-03: 真典写入（可变状态权威源）
 
     public CharacterProfileUpgrader(LlmGateway gateway, NovelRepository repository,
                                      PromptTemplateService promptService) {
-        this(gateway, repository, promptService, null);
+        this(gateway, repository, promptService, null, null);
     }
 
     /** p11-q0-01: 注入 RelevanceGateway，collectExcerpts 按最近窗口收窄 */
     public CharacterProfileUpgrader(LlmGateway gateway, NovelRepository repository,
                                      PromptTemplateService promptService, RelevanceGateway relevanceGateway) {
+        this(gateway, repository, promptService, relevanceGateway, null);
+    }
+
+    /** p11-q0-03: 注入真典仓库，建档时播种初始 CHARACTER_STATE（真典为可变状态权威） */
+    public CharacterProfileUpgrader(LlmGateway gateway, NovelRepository repository,
+                                     PromptTemplateService promptService, RelevanceGateway relevanceGateway,
+                                     StoryFactRepository factRepo) {
         this.gateway = gateway;
         this.repository = repository;
         this.promptService = promptService;
         this.relevanceGateway = relevanceGateway;
+        this.factRepo = factRepo;
     }
 
     /**
@@ -110,11 +120,36 @@ public class CharacterProfileUpgrader {
             Character profile = generateProfile(projectId, candidate.getName(), excerpts);
             if (profile != null) {
                 repository.saveCharacter(profile);
+                // p11-q0-03: 建档即播种初始 CHARACTER_STATE 到真典（可变状态由真典承载，避免后续 Character 卡漂移）
+                seedCanonState(projectId, profile, currentChapter);
                 upgraded.add(candidate.getName());
             }
         }
 
         return upgraded;
+    }
+
+    /**
+     * p11-q0-03: 建档即把角色的初始可变状态（能力/动机）播种为真典 CHARACTER_STATE。
+     * 真典成为可变状态权威源（与 ArcUpdater 成长弧同步、FactHarvester 每章收割互补），
+     * Character 卡的 ability/motivation 作为初始档案兼容保留。
+     */
+    private void seedCanonState(String projectId, Character profile, int currentChapter) {
+        if (factRepo == null) return;
+        boolean exists = factRepo.findActiveBySubject(projectId, profile.getName()).stream()
+                .anyMatch(f -> f.getFactType() == StoryFact.FactType.CHARACTER_STATE);
+        if (exists) return; // 已有真典状态则不覆盖（避免重建档覆盖演进）
+        StringBuilder assertion = new StringBuilder();
+        if (profile.getAbility() != null && !profile.getAbility().isBlank()) {
+            assertion.append("初始能力：").append(profile.getAbility());
+        }
+        if (profile.getMotivation() != null && !profile.getMotivation().isBlank()) {
+            if (assertion.length() > 0) assertion.append("；");
+            assertion.append("初始动机：").append(profile.getMotivation());
+        }
+        if (assertion.length() == 0) return;
+        factRepo.save(new StoryFact(projectId, StoryFact.FactType.CHARACTER_STATE,
+                profile.getName(), assertion.toString(), currentChapter));
     }
 
     /** 从角色出场章节中采集出场段落 */

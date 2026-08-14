@@ -1237,8 +1237,8 @@
       "dependencies": [
         "p11-q0-02"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "CharacterSingleSourceTest 4 pass；ArcUpdater 成长弧演进写真典 CHARACTER_STATE(无变化刷新/变化supersede)；CharacterProfileUpgrader 建档播种初始真典状态(已有则不覆盖)；真典为可变状态权威源,Character卡兼容保留；全量 BUILD SUCCESS",
       "files": [
         "agent/CharacterProfileUpgrader.java",
         "memory/ContextAssembler.java"

@@ -91,8 +91,9 @@ public class AgentConfig {
     @Bean
     public CharacterProfileUpgrader characterProfileUpgrader(LlmGateway gateway, NovelRepository repo,
                                                               PromptTemplateService promptService,
-                                                              RelevanceGateway relevanceGateway) {
-        return new CharacterProfileUpgrader(gateway, repo, promptService, relevanceGateway);
+                                                              RelevanceGateway relevanceGateway,
+                                                              com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository) {
+        return new CharacterProfileUpgrader(gateway, repo, promptService, relevanceGateway, storyFactRepository);
     }
 
     @Bean
@@ -107,8 +108,9 @@ public class AgentConfig {
 
     @Bean
     public ArcUpdater arcUpdater(LlmGateway gateway, NovelRepository repo,
-                                  PromptTemplateService promptService) {
-        return new ArcUpdater(gateway, repo, promptService);
+                                  PromptTemplateService promptService,
+                                  com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository) {
+        return new ArcUpdater(gateway, repo, promptService, storyFactRepository);
     }
 
     @Bean

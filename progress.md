@@ -5,6 +5,17 @@
 **Last Updated:** 2026-08-14
 **Phase:** **Phase 11 过程化质量门禁架构 — 21/21 feature 全部完成 ✅ + 真实 e2e 验证 PASS**
 
+
+### 新题材创作验证（2026-08-14，爱情/古风悬疑「绣里江山」3 章，DeepSeek）
+- **质量结论 overallScore 8/10**：worldbuilding 9 / consistency·style·plot·characters 8 / dialogue·pattern_diversity 7。世界观（明代织造/两京制/壬辰贡案）与题材高度扣合，正文（"针藏锋"）公案语感扎实、绣娘专业视角推理可信
+- **质检链全程运行**：ConceiveGate/真典播种(8条)/PlanGate/ConsistencyGuard/读者检验/场景分类/桥段重复/说明文密度/真典收割(+4/3取代)
+- **发现的失败分类（候选 feature，按失败回流协议）**：
+  1. 章节标题丢失：正文含"## 第1章 针藏锋"但 Chapter.title="第1章"（延迟卷大纲 parseChapter 标题未提取 markdown 标题）
+  2. 章1 读者检验 5/10"检验解析失败"：ReaderReview JSON 解析 fallback 无重试
+  3. 大纲 premise 含 LLM 客套前言（"好的，作为您的专属..."）未剥离，会污染后续 prompt
+  4. 新项目 targetChapters=400（schema 默认）vs 构思要求 24 章——规划规模与用户意图不符
+  5. CharacterDesigner 解析失败留 2 张"未命名"空人物卡（应丢弃而非保存）
+  6. UI 新建表单未暴露 preset 选择（romance 预设 dialogueDensity=0.5 本更适合爱情题材，当前 UI 路径走 GenreDetector 推断）
 ### 真实 e2e 验证（2026-08-14，DeepSeek 官方端点）
 - **写作**：凤鸣九州 61→63 章（第62章「锁衣里的名字」2309字 9/10 分；第63章「白骨识人」3341字 8/10 分），每章 ~12 次 LLM 质检调用
 - **质检链全部真实运行**：PlanGate 预检(quality_risk)→伏笔悬置告警(253条)→ConsistencyGuard 抓到真实穿帮(「坐标」时代用语/俄语词«одновременно»混入)→读者检验 9/10→场景分类→桥段重复检测→说明文密度

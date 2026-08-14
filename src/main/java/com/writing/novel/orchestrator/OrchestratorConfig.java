@@ -64,7 +64,8 @@ public class OrchestratorConfig {
                                                  com.writing.novel.telemetry.CostBudgetMonitor costBudgetMonitor,
                                                  com.writing.novel.memory.RelevanceGateway relevanceGateway,
                                                  com.writing.novel.service.RepairArbiter repairArbiter,
-                                                 com.writing.novel.service.ConceiveGate conceiveGate) {
+                                                 com.writing.novel.service.ConceiveGate conceiveGate,
+                                                 com.writing.novel.service.PlanGate planGate) {
         NovelOrchestrator orchestrator = new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
@@ -81,6 +82,7 @@ public class OrchestratorConfig {
         orchestrator.setRelevanceGateway(relevanceGateway);
         orchestrator.setRepairArbiter(repairArbiter);
         orchestrator.setConceiveGate(conceiveGate);
+        orchestrator.setPlanGate(planGate);
         return orchestrator;
     }
 

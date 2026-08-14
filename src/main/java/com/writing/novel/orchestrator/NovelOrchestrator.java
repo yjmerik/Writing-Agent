@@ -66,6 +66,7 @@ public class NovelOrchestrator {
     private com.writing.novel.memory.RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面（setter 注入）
     private com.writing.novel.service.RepairArbiter repairArbiter; // p11-q0-04: 闭环三分类仲裁（setter 注入）
     private com.writing.novel.service.ConceiveGate conceiveGate; // p11-q1-01: 构思期质量门禁（setter 注入）
+    private com.writing.novel.service.PlanGate planGate; // p11-q1-04: 章节梗概预检（setter 注入）
     /** p10-w2-03: 事实收割 Agent——null 时跳过（向后兼容） */
     private com.writing.novel.agent.FactHarvesterAgent factHarvester;
     /** p10-w3-03: 归档衰减器——null 时跳过（向后兼容） */
@@ -163,6 +164,11 @@ public class NovelOrchestrator {
     /** p11-q1-01: 注入构思期质量门禁（@Bean 装配用）；不调则保持 null，构思期跳过门禁 */
     public void setConceiveGate(com.writing.novel.service.ConceiveGate conceiveGate) {
         this.conceiveGate = conceiveGate;
+    }
+
+    /** p11-q1-04: 注入章节梗概预检（@Bean 装配用）；不调则保持 null，写正文前跳过预检 */
+    public void setPlanGate(com.writing.novel.service.PlanGate planGate) {
+        this.planGate = planGate;
     }
 
     /** p10-w2-03: 注入事实收割 Agent（@Bean 装配用）；不调则保持 null，收割安全跳过 */
@@ -601,6 +607,14 @@ public class NovelOrchestrator {
             String motifConstraint = plotMotifTracker.getRecentMotifConstraint(projectId, chapterIndex);
             if (!motifConstraint.isBlank()) {
                 enhancedNotes = (enhancedNotes != null ? enhancedNotes + "\n" : "") + motifConstraint;
+            }
+        }
+
+        // p11-q1-04: PlanGate 章节梗概预检——写正文前校验梗概质量，不过关标记 quality_risk
+        if (planGate != null) {
+            var synGate = planGate.checkSynopsis(synopsis);
+            if (!synGate.pass()) {
+                markQualityRisk(projectId, "PlanGate(章" + chapterIndex + ")", synGate.feedback());
             }
         }
 

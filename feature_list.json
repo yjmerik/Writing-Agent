@@ -1377,8 +1377,8 @@
       "description": "四检测器（ContinuityChecker/ConsistencyGuard/ReaderReview/StyleGuardian）先各自出报告不重写，汇总为 CouncilReport{issues,scores,suggestions}。",
       "phase": 11,
       "dependencies": [],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "p11-q2-01: QualityCouncilTest 4 pass；独立 service+测试；全量 BUILD SUCCESS",
       "files": [
         "service/QualityCouncil.java",
         "orchestrator/NovelOrchestrator.java"
@@ -1396,8 +1396,8 @@
         "p11-q2-01",
         "p11-q0-04"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "p11-q2-02: ArbiterTest 6 pass；独立 service+测试；全量 BUILD SUCCESS",
       "files": [
         "service/Arbiter.java"
       ],

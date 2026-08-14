@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": "Phase 11 启动 — 过程化质量门禁架构（ConceiveGate/PlanGate 前置门禁 + QualityCouncil/Arbiter 统一仲裁 + 真典作为检测真相层补齐 + 质量可观测回归网），Q0 地基补齐先行；Phase 10 余 p10-w3-09 由 p11-q3-06 吸收。spec: docs/specs/2026-08-14-quality-gate-architecture.md",
+  "current_phase": "Phase 11 过程化质量门禁架构 21/21 全部完成（Q0 地基+Q1 门禁+Q2 委员会+Q3 可观测），全量 BUILD SUCCESS。下一步：e2e record + compare-baseline 验证真实产出质量",
   "features": [
     {
       "id": "p1-01",

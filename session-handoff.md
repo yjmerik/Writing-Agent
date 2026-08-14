@@ -3,7 +3,7 @@
 ## Current Objective
 
 - **Goal**: 过程化质量门禁架构（`docs/specs/2026-08-14-quality-gate-architecture.md`，Phase 11，四波 21 feature）。在现有实现上增强创作质量的过程化控制与长程一致性——大纲生成/章节审查过程中实时质检、根据结果优化调整、过程中发现而非最后反复改。
-- **Current status**: **Phase 11 实现中：14/21 feature 完成**（Q0 地基 6/6 + Q1 前置门禁 4/4 + Q2 质检委员会 QualityCouncil/Arbiter 2 + Q3 fail-loud/baseline 门禁 2），commit e3b4dd8..57ea186，全量 mvn test BUILD SUCCESS（需 ALIYUN_LLM_API_KEY）。**剩余 7**：q2-03 合并重写接入 / q2-04 重写预算 / q2-05 熔断配置 / q3-01 质量事件遥测 / q3-02 diagnose 质量分类 / q3-05 测试网 / q3-06 FinalAuditGate（吸收 p10-w3-09）。
+- **Current status**: **Phase 11 全部完成：21/21 feature ✅**（Q0 地基 6 + Q1 前置门禁 4 + Q2 质检委员会+合并重写 5 + Q3 可观测回归 6），commit e3b4dd8..ee44bc9，全量 mvn test BUILD SUCCESS（需 ALIYUN_LLM_API_KEY=$DASHSCOPE_API_KEY）。p10-w3-09 由 p11-q3-06 吸收完成。下一步可跑 `./scripts/e2e.sh --mode record` 验证真实产出质量 + `compare-baseline.py` 对比。
 - **Branch / commit**: main；本次会话改动为 `docs/specs/2026-08-14-quality-gate-architecture.md`（新）、`feature_list.json`（+21 feature）、`progress.md`、`session-handoff.md`，未 commit。
 - **上一阶段（Phase 10 / mc spec）状态**: 见 `progress.md` 历史。
 

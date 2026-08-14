@@ -288,16 +288,21 @@ public class NovelOrchestrator {
 
         // p11-q1-01: WorldBuilder 门禁——力量体系/势力不重复/完整性校验，不过关带反馈重生成（最多 2 次）
         if (conceiveGate != null) {
+            boolean wbPassed = false;
+            String wbFeedback = "";
             for (int wbRetry = 0; wbRetry < 2; wbRetry++) {
                 var wbEntries = repository.findKnowledgeEntriesByProject(projectId);
                 var wbGate = conceiveGate.checkWorldbuilding(wbEntries, p.getTags());
-                if (wbGate.pass()) break;
-                log.warn("WorldBuilder 门禁未过(重试{}/2): {}", wbRetry + 1, wbGate.feedback());
+                if (wbGate.pass()) { wbPassed = true; break; }
+                wbFeedback = wbGate.feedback();
+                log.warn("WorldBuilder 门禁未过(重试{}/2): {}", wbRetry + 1, wbFeedback);
                 repository.deleteKnowledgeEntriesByProject(projectId); // 清旧避免重生成累积
                 worldBuilder.build(projectId, p.getConcept(), p.getTags(),
                         (wbDiversityGuide == null ? "" : wbDiversityGuide + "\n")
-                                + "【质量门禁反馈】" + wbGate.feedback());
+                                + "【质量门禁反馈】" + wbFeedback);
             }
+            // p11-q1-03: 软门禁——重试上限后仍不过，标记 quality_risk（不阻塞）
+            if (!wbPassed) markQualityRisk(projectId, "WorldBuilder", wbFeedback);
         }
 
         // 记录世界观生成
@@ -366,7 +371,7 @@ public class NovelOrchestrator {
             if (conceiveGate != null) {
                 var charGate = conceiveGate.checkCharacters(repository.findCharactersByProject(projectId));
                 if (!charGate.pass()) {
-                    log.warn("CharacterDesigner 门禁未过: {}", charGate.feedback());
+                    markQualityRisk(projectId, "CharacterDesigner", charGate.feedback());
                 }
             }
         }
@@ -426,7 +431,7 @@ public class NovelOrchestrator {
                 if (outlineOpt.isPresent()) {
                     var outlineGate = conceiveGate.checkOutline(outlineOpt.get());
                     if (!outlineGate.pass()) {
-                        log.warn("Outline 门禁未过: {}", outlineGate.feedback());
+                        markQualityRisk(projectId, "Outline", outlineGate.feedback());
                         if (!useLayered || targetChapters <= 40) {
                             plotter.plan(projectId, p.getConcept(), theme, targetChapters, theme,
                                     genreRules + "【门禁反馈】" + outlineGate.feedback(), plotDiversity);
@@ -1230,6 +1235,21 @@ public class NovelOrchestrator {
                     "【待人工确认】" + issue.getDescription(), chapterIndex));
         } catch (Exception e) {
             log.warn("真典纠正失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+    }
+
+    /**
+     * p11-q1-03: 软门禁——门禁重试上限后仍不过，标记 quality_risk（记 ContinuityIssue，不阻塞推进）。
+     * INTERACTIVE 模式下，doConceiving 末尾的 PAUSED_AT_CHECKPOINT 会让人工看到这些 quality_risk 并介入。
+     */
+    private void markQualityRisk(String projectId, String stage, String feedback) {
+        try {
+            repository.saveContinuityIssue(new ContinuityIssue(projectId, 0,
+                    ContinuityIssue.Type.STRUCTURE, ContinuityIssue.Severity.MEDIUM,
+                    "[quality_risk]" + stage + "门禁未过：" + feedback));
+            log.warn("quality_risk 标记({}): {}", stage, feedback);
+        } catch (Exception e) {
+            log.warn("quality_risk 标记失败: {}", e.getMessage());
         }
     }
 

@@ -1342,8 +1342,8 @@
       "dependencies": [
         "p11-q1-01"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "GatePolicyTest pass；markQualityRisk 软门禁(quality_risk ContinuityIssue STRUCTURE/MEDIUM,不阻塞)；WorldBuilder/Character/Outline 门禁失败接入；INTERACTIVE 复用 PAUSED；全量 BUILD SUCCESS",
       "files": [
         "orchestrator/NovelOrchestrator.java",
         "domain/Chapter.java",

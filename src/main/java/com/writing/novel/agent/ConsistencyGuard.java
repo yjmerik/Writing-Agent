@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.writing.novel.domain.Character;
 import com.writing.novel.domain.ContinuityIssue;
+import com.writing.novel.domain.StoryFact;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
@@ -77,8 +78,13 @@ public class ConsistencyGuard {
         String content = chapterContent.length() > 5000
                 ? chapterContent.substring(0, 5000) : chapterContent;
 
+        // p11-q0-02: 消费真典 ACTIVE 事实作为能力越界/凭空证据的校验依据
+        var facts = relevanceGateway != null
+                ? relevanceGateway.relevantFacts(projectId, cast, 15)
+                : java.util.Collections.<StoryFact>emptyList();
         String systemPrompt = promptService.render("consistency-guard", Map.of(
                 "characterAbilities", abilities,
+                "storyCanon", formatCanon(facts),
                 "chapterContent", content));
 
         var req = LlmRequest.builder()
@@ -95,6 +101,14 @@ public class ConsistencyGuard {
         } catch (Exception ignored) {
         }
         return issues;
+    }
+
+    /** p11-q0-02: 格式化真典事实为校验依据文本 */
+    private String formatCanon(List<StoryFact> facts) {
+        if (facts == null || facts.isEmpty()) return "（无已确立事实）";
+        return facts.stream()
+                .map(f -> "- " + f.getSubject() + "（" + f.getFactType() + "）：" + f.getAssertion())
+                .collect(Collectors.joining("\n"));
     }
 
     private List<ContinuityIssue> parseIssues(String json, String projectId, int chapterIndex) {

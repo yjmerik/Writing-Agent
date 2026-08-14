@@ -22,6 +22,9 @@
 角色能力设定：
 {{characterAbilities}}
 
+故事真典（已确立的事实，本章必须严格遵守）：
+{{storyCanon}}
+
 章节正文：
 {{chapterContent}}
 

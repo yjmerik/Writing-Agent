@@ -3,6 +3,7 @@ package com.writing.novel.agent;
 import com.writing.novel.domain.Character;
 import com.writing.novel.domain.Entity;
 import com.writing.novel.domain.EntityType;
+import com.writing.novel.domain.StoryFact;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
@@ -83,6 +84,12 @@ public class CharacterProfileUpgrader {
 
         if (candidates.isEmpty()) return upgraded;
 
+        // p11-q0-02: 读取真典 CHARACTER_STATE（角色当前状态），建档时遵循真相避免与已确立事实矛盾
+        var canonStates = relevanceGateway != null
+                ? relevanceGateway.relevantFacts(projectId, null, 20).stream()
+                        .filter(f -> f.getFactType() == StoryFact.FactType.CHARACTER_STATE).toList()
+                : java.util.Collections.<StoryFact>emptyList();
+
         // p11-fix: debug 日志
         log.info("角色升级 candidates: {}", candidates.stream()
                 .map(e -> e.getName() + "(ch" + e.getFirstSeenChapter() + "-" + e.getLastSeenChapter() + ")").toList());
@@ -90,6 +97,12 @@ public class CharacterProfileUpgrader {
         // 3. 每个候选：采集出场段落 → 生成 Character 档案
         for (Entity candidate : candidates) {
             String excerpts = collectExcerpts(projectId, candidate.getName(), currentChapter);
+            // p11-q0-02: 附加该候选的真典已确立状态（避免新档案与真相矛盾）
+            String canonFor = canonStates.stream()
+                    .filter(f -> f.getSubject() != null && f.getSubject().contains(candidate.getName()))
+                    .map(f -> "【真典已确立】" + f.getAssertion())
+                    .collect(Collectors.joining("\n"));
+            if (!canonFor.isBlank()) excerpts = excerpts + "\n" + canonFor;
             log.info("角色升级 {} excerpts: {} 字", candidate.getName(), excerpts.length());
             if (excerpts.length() < 30) continue; // p11-H2: 50→30（降低门槛）
 

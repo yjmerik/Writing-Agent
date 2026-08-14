@@ -65,8 +65,9 @@ public class AgentConfig {
 
     @Bean
     public QualityEvaluationAgent qualityEvaluationAgent(LlmGateway gateway, NovelRepository repo,
-                                                         PromptTemplateService promptService) {
-        return new QualityEvaluationAgent(gateway, repo, promptService);
+                                                         PromptTemplateService promptService,
+                                                         RelevanceGateway relevanceGateway) {
+        return new QualityEvaluationAgent(gateway, repo, promptService, relevanceGateway);
     }
 
     @Bean

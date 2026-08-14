@@ -1289,6 +1289,17 @@ public class NovelOrchestrator {
                   .append("（埋于第").append(f.getPlantedAtChapter()).append("章）\n");
             }
         }
+        // p11-q0-02: 故事真典 ACTIVE 事实——长程一致性校验依据（替代级联压缩摘要）
+        if (relevanceGateway != null) {
+            var facts = relevanceGateway.relevantFacts(projectId, cast, 15);
+            if (!facts.isEmpty()) {
+                sb.append("\n=== 故事真典（已确立事实，新章节必须严格遵守） ===\n");
+                for (var f : facts) {
+                    sb.append("- ").append(f.getSubject()).append("（").append(f.getFactType())
+                            .append("）：").append(f.getAssertion()).append("\n");
+                }
+            }
+        }
         return sb.toString();
     }
 

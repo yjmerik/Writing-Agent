@@ -1,6 +1,7 @@
 package com.writing.novel.agent;
 
 import com.writing.novel.domain.ContinuityIssue;
+import com.writing.novel.domain.StoryFact;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
@@ -61,6 +62,12 @@ public class ContinuityCheckerAgent {
         String nameCheck = buildNameDriftCheckSection(projectId);
         if (nameCheck != null && !nameCheck.isBlank()) {
             msg.append("\n\n").append(nameCheck);
+        }
+
+        // p11-q0-02: 故事真典（已确立事实）——长程一致性校验依据，替代级联压缩的摘要
+        String canon = buildCanonSection(projectId);
+        if (canon != null && !canon.isBlank()) {
+            msg.append("\n\n").append(canon);
         }
 
         var req = LlmRequest.builder()
@@ -167,6 +174,22 @@ public class ContinuityCheckerAgent {
         } catch (Exception e) {
             return "";
         }
+    }
+
+    /**
+     * p11-q0-02: 故事真典段——消费 ACTIVE 事实作为连续性校验依据。
+     * 经 RelevanceGateway 取 importance 降序的相关事实（主角保底），作为长程一致性核对依据。
+     */
+    private String buildCanonSection(String projectId) {
+        if (relevanceGateway == null) return "";
+        List<StoryFact> facts = relevanceGateway.relevantFacts(projectId, null, 15);
+        if (facts.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder("【故事真典（已确立的事实，新章节必须严格遵守）】\n");
+        for (StoryFact f : facts) {
+            sb.append("- ").append(f.getSubject()).append("（").append(f.getFactType())
+                    .append("）：").append(f.getAssertion()).append("\n");
+        }
+        return sb.toString().trim();
     }
 
     private List<ContinuityIssue> parseIssues(String text, String projectId, int chapterIndex) {

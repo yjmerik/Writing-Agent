@@ -56,6 +56,15 @@ public class EntityExtractorAgent {
                 ? relevanceGateway.relevantEntities(projectId, null, 40)
                 : existingEntities;
         String existingJson = formatExistingEntities(llmReference);
+        // p11-q0-02: 附加真典已确立的角色/物品事实（避免重复提取已确立内容）
+        if (relevanceGateway != null) {
+            String canon = relevanceGateway.relevantFacts(projectId, null, 20).stream()
+                    .filter(f -> f.getFactType() == StoryFact.FactType.OBJECT_STATE
+                            || f.getFactType() == StoryFact.FactType.CHARACTER_STATE)
+                    .map(f -> f.getSubject() + ":" + f.getAssertion())
+                    .collect(Collectors.joining("; "));
+            if (!canon.isBlank()) existingJson = existingJson + "\n已确立事实: " + canon;
+        }
 
         // p9-5: 截断正文到 3000 字，避免超 token 导致 LLM 返回空
         String chapterContent = chapter.getContent();

@@ -61,7 +61,8 @@ public class OrchestratorConfig {
                                                  com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository,
                                                  com.writing.novel.agent.FactHarvesterAgent factHarvester,
                                                  com.writing.novel.service.ArchiveCompactor archiveCompactor,
-                                                 com.writing.novel.telemetry.CostBudgetMonitor costBudgetMonitor) {
+                                                 com.writing.novel.telemetry.CostBudgetMonitor costBudgetMonitor,
+                                                 com.writing.novel.memory.RelevanceGateway relevanceGateway) {
         NovelOrchestrator orchestrator = new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
@@ -75,6 +76,7 @@ public class OrchestratorConfig {
         orchestrator.setFactHarvester(factHarvester);
         orchestrator.setArchiveCompactor(archiveCompactor);
         orchestrator.setCostBudgetMonitor(costBudgetMonitor);
+        orchestrator.setRelevanceGateway(relevanceGateway);
         return orchestrator;
     }
 

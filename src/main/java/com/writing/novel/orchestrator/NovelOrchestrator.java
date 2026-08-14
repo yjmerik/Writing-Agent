@@ -63,6 +63,7 @@ public class NovelOrchestrator {
     private final com.writing.novel.service.ExpositionDetector expositionDetector;
     /** p10-w2-02: 故事真典仓库——null 时跳过播种/收割（向后兼容旧构造器/测试） */
     private com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository;
+    private com.writing.novel.memory.RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面（setter 注入）
     /** p10-w2-03: 事实收割 Agent——null 时跳过（向后兼容） */
     private com.writing.novel.agent.FactHarvesterAgent factHarvester;
     /** p10-w3-03: 归档衰减器——null 时跳过（向后兼容） */
@@ -145,6 +146,11 @@ public class NovelOrchestrator {
     /** p10-w2-02: 注入故事真典仓库（@Bean 装配用）；不调则保持 null，播种/收割安全跳过 */
     public void setStoryFactRepository(com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository) {
         this.storyFactRepository = storyFactRepository;
+    }
+
+    /** p11-q0-01: 注入检索收窄门面（@Bean 装配用）；不调则保持 null，collectSettingsForCheck 降级全量 */
+    public void setRelevanceGateway(com.writing.novel.memory.RelevanceGateway relevanceGateway) {
+        this.relevanceGateway = relevanceGateway;
     }
 
     /** p10-w2-03: 注入事实收割 Agent（@Bean 装配用）；不调则保持 null，收割安全跳过 */
@@ -566,7 +572,7 @@ public class NovelOrchestrator {
 
         // 写完后做连续性检查（发现问题记录到 DB，不中断写作）
         // p10-w1-07: 返回是否已触发 continuity 重写——若已重写，reader review 不再重写（互斥，防成本翻倍）
-        boolean rewrittenByContinuity = checkContinuityAfterWriting(projectId, chapterIndex, chapter);
+        boolean rewrittenByContinuity = checkContinuityAfterWriting(projectId, chapterIndex, chapter, parseCast(synopsis.getCast()));
 
         // 图数据库：LLM 提取本章实体和关系
         try {
@@ -937,10 +943,10 @@ public class NovelOrchestrator {
      * 发现 HIGH 级矛盾时触发 1 次重写（把矛盾描述加入 prompt 要求修正）。
      * 每 5 章检查一次风格漂移。
      */
-    private boolean checkContinuityAfterWriting(String projectId, int chapterIndex, Chapter chapter) {
+    private boolean checkContinuityAfterWriting(String projectId, int chapterIndex, Chapter chapter, List<String> cast) {
         boolean rewritten = false; // p10-w1-07: 标记是否触发重写（不提前 return，保持伏笔检测等后续流程）
         try {
-            String settings = collectSettingsForCheck(projectId);
+            String settings = collectSettingsForCheck(projectId, cast);
             var issues = continuityChecker.check(projectId, chapterIndex, chapter.getContent(), settings);
 
             // HIGH 级矛盾纠偏：触发 1 次重写
@@ -1000,7 +1006,7 @@ public class NovelOrchestrator {
         // p10-a3+c2: 一致性守卫——能力越界 + 凭空证据检测
         try {
             if (consistencyGuard != null) {
-                var guardIssues = consistencyGuard.check(projectId, chapterIndex, chapter.getContent());
+                var guardIssues = consistencyGuard.check(projectId, chapterIndex, chapter.getContent(), cast);
                 for (var issue : guardIssues) {
                     repository.saveContinuityIssue(issue);
                     log.warn("一致性守卫(章{}): {}", chapterIndex, issue.getDescription());
@@ -1018,7 +1024,7 @@ public class NovelOrchestrator {
                     rewritten = true; // 标记已重写，reader review 互斥
                     // p10-w3-08: 重写后复检——若仍有 HIGH，标记 issue 但不再重写（最多 1 次）
                     try {
-                        var recheck = consistencyGuard.check(projectId, chapterIndex, chapter.getContent());
+                        var recheck = consistencyGuard.check(projectId, chapterIndex, chapter.getContent(), cast);
                         for (var issue : recheck) {
                             repository.saveContinuityIssue(issue);
                             if (issue.getSeverity() == ContinuityIssue.Severity.HIGH) {
@@ -1259,10 +1265,13 @@ public class NovelOrchestrator {
         return sb.toString().trim();
     }
 
-    /** 收集设定摘要供连续性检查参考 */
-    private String collectSettingsForCheck(String projectId) {
+    /** 收集设定摘要供连续性检查参考。p11-q0-01: 经 RelevanceGateway 按本章 cast 收窄角色 */
+    private String collectSettingsForCheck(String projectId, List<String> cast) {
         StringBuilder sb = new StringBuilder();
-        for (var c : repository.findCharactersByProject(projectId)) {
+        var characters = relevanceGateway != null
+                ? relevanceGateway.relevantCharacters(projectId, cast, 10)
+                : repository.findCharactersByProject(projectId);
+        for (var c : characters) {
             sb.append(c.getName()).append("（").append(c.getRole()).append("）");
             if (c.getPersonality() != null) sb.append(" 性格：").append(c.getPersonality());
             if (c.getAbility() != null) sb.append(" 能力：").append(c.getAbility());
@@ -1281,6 +1290,13 @@ public class NovelOrchestrator {
             }
         }
         return sb.toString();
+    }
+
+    /** p11-q0-01: 解析 synopsis.cast（逗号/顿号/空格分隔）为名字列表，供收窄 */
+    private static List<String> parseCast(String cast) {
+        if (cast == null || cast.isBlank()) return List.of();
+        return java.util.Arrays.stream(cast.split("[,，、/\\s]+"))
+                .map(String::trim).filter(s -> !s.isEmpty()).toList();
     }
 
     /**

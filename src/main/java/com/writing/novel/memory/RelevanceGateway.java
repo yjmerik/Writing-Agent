@@ -1,12 +1,14 @@
 package com.writing.novel.memory;
 
 import com.writing.novel.domain.Character;
+import com.writing.novel.domain.Entity;
 import com.writing.novel.domain.StoryFact;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
 import com.writing.novel.spi.NovelRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -75,6 +77,42 @@ public class RelevanceGateway {
             }
         }
         return out;
+    }
+
+    /**
+     * p11-q0-01: 本章相关实体：按 keywords（角色名/关键名词）匹配实体名或别名，cap。
+     * 无 keywords 时按 lastSeenChapter 倒序取最近 cap 个（recency 收窄）。
+     * 供 EntityExtractor 收窄进 LLM 的参考清单（token 受控）。
+     * 注意：Java 层去重仍需全量实体，本方法仅收窄"进 LLM 的参考视图"。
+     */
+    public List<Entity> relevantEntities(String projectId, List<String> keywords, int cap) {
+        List<Entity> all = repository.findEntitiesByProject(projectId);
+        if (all.isEmpty()) return List.of();
+        if (keywords == null || keywords.isEmpty()) {
+            return all.stream()
+                    .sorted(Comparator.comparingInt(Entity::getLastSeenChapter).reversed())
+                    .limit(cap)
+                    .toList();
+        }
+        List<Entity> out = new ArrayList<>();
+        for (Entity e : all) {
+            if (out.size() >= cap) break;
+            if (matchesKeywords(e.getName(), keywords) || aliasMatchesKeywords(e, keywords)) {
+                out.add(e);
+            }
+        }
+        return out;
+    }
+
+    private boolean matchesKeywords(String name, List<String> keywords) {
+        if (name == null) return false;
+        return keywords.stream().anyMatch(k -> k != null && !k.isBlank()
+                && (name.contains(k) || k.contains(name)));
+    }
+
+    private boolean aliasMatchesKeywords(Entity e, List<String> keywords) {
+        if (e.getAliases() == null) return false;
+        return e.getAliases().stream().anyMatch(a -> matchesKeywords(a, keywords));
     }
 
     private boolean matchesCast(Character c, List<String> cast) {

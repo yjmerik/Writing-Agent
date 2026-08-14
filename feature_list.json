@@ -1197,8 +1197,8 @@
       "description": "ConsistencyGuard/ContinuityChecker/EntityExtractor/CharacterProfileUpgrader 构造器注入 RelevanceGateway，按 cast/synopsis/chapterIndex 取相关性切片，禁止全量 findAll*。补 p10-w2-05 未落地。",
       "phase": 11,
       "dependencies": [],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "RelevanceGatewayNarrowingTest 5 pass；4 检查器(ConsistencyGuard/ContinuityChecker/EntityExtractor/CharacterProfileUpgrader)构造器注入 RelevanceGateway(保留旧构造器兼容)；collectSettingsForCheck/ConsistencyGuard.check 按 cast 收窄；全量 mvn test BUILD SUCCESS(0 失败，2 SpringBoot 测试需 ALIYUN_LLM_API_KEY)",
       "files": [
         "agent/ConsistencyGuard.java",
         "agent/ContinuityCheckerAgent.java",

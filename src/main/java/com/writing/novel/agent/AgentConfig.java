@@ -4,6 +4,7 @@ import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.KnowledgeBaseService;
+import com.writing.novel.memory.RelevanceGateway;
 import com.writing.novel.memory.SummaryService;
 import com.writing.novel.memory.VectorRetrievalService;
 import com.writing.novel.service.ClimaxDiversityTracker;
@@ -45,8 +46,9 @@ public class AgentConfig {
 
     @Bean
     public ContinuityCheckerAgent continuityCheckerAgent(LlmGateway gateway, NovelRepository repo,
-                                                          PromptTemplateService promptService) {
-        return new ContinuityCheckerAgent(gateway, repo, promptService);
+                                                          PromptTemplateService promptService,
+                                                          RelevanceGateway relevanceGateway) {
+        return new ContinuityCheckerAgent(gateway, repo, promptService, relevanceGateway);
     }
 
     @Bean
@@ -69,8 +71,9 @@ public class AgentConfig {
 
     @Bean
     public EntityExtractorAgent entityExtractorAgent(LlmGateway gateway, NovelRepository repo,
-                                                     PromptTemplateService promptService) {
-        return new EntityExtractorAgent(gateway, repo, promptService);
+                                                     PromptTemplateService promptService,
+                                                     RelevanceGateway relevanceGateway) {
+        return new EntityExtractorAgent(gateway, repo, promptService, relevanceGateway);
     }
 
     @Bean
@@ -86,8 +89,9 @@ public class AgentConfig {
 
     @Bean
     public CharacterProfileUpgrader characterProfileUpgrader(LlmGateway gateway, NovelRepository repo,
-                                                              PromptTemplateService promptService) {
-        return new CharacterProfileUpgrader(gateway, repo, promptService);
+                                                              PromptTemplateService promptService,
+                                                              RelevanceGateway relevanceGateway) {
+        return new CharacterProfileUpgrader(gateway, repo, promptService, relevanceGateway);
     }
 
     @Bean
@@ -158,8 +162,9 @@ public class AgentConfig {
 
     @Bean
     public ConsistencyGuard consistencyGuard(LlmGateway gateway, NovelRepository repo,
-                                              PromptTemplateService promptService) {
-        return new ConsistencyGuard(gateway, repo, promptService);
+                                              PromptTemplateService promptService,
+                                              RelevanceGateway relevanceGateway) {
+        return new ConsistencyGuard(gateway, repo, promptService, relevanceGateway);
     }
 
     @Bean

@@ -7,6 +7,7 @@ import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
+import com.writing.novel.memory.RelevanceGateway;
 import com.writing.novel.spi.NovelRepository;
 
 import java.util.ArrayList;
@@ -27,12 +28,20 @@ public class CharacterProfileUpgrader {
     private final LlmGateway gateway;
     private final NovelRepository repository;
     private final PromptTemplateService promptService;
+    private final RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面
 
     public CharacterProfileUpgrader(LlmGateway gateway, NovelRepository repository,
                                      PromptTemplateService promptService) {
+        this(gateway, repository, promptService, null);
+    }
+
+    /** p11-q0-01: 注入 RelevanceGateway，collectExcerpts 按最近窗口收窄 */
+    public CharacterProfileUpgrader(LlmGateway gateway, NovelRepository repository,
+                                     PromptTemplateService promptService, RelevanceGateway relevanceGateway) {
         this.gateway = gateway;
         this.repository = repository;
         this.promptService = promptService;
+        this.relevanceGateway = relevanceGateway;
     }
 
     /**
@@ -97,8 +106,10 @@ public class CharacterProfileUpgrader {
 
     /** 从角色出场章节中采集出场段落 */
     private String collectExcerpts(String projectId, String name, int currentChapter) {
-        // p11-fix: 从全部章节中搜索角色出场，而不是只看最近10章
-        var chapters = repository.findChaptersByProject(projectId);
+        // p11-q0-01: 经 recent 窗口收窄（候选已过滤 lastSeenChapter<=currentChapter-8，最近窗口足够），
+        // 避免 findChaptersByProject 全量 O(N) 扫描（百万字下性能与 token 双赢）
+        int window = Math.min(50, Math.max(currentChapter, 1));
+        var chapters = repository.findRecentChapters(projectId, window);
         StringBuilder sb = new StringBuilder();
         for (var ch : chapters) {
             String content = ch.getContent();

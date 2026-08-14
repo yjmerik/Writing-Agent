@@ -5,6 +5,7 @@ import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
+import com.writing.novel.memory.RelevanceGateway;
 import com.writing.novel.spi.NovelRepository;
 
 import java.util.ArrayList;
@@ -21,12 +22,20 @@ public class ContinuityCheckerAgent {
     private final LlmGateway gateway;
     private final NovelRepository repository;
     private final PromptTemplateService promptService;
+    private final RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面
 
     public ContinuityCheckerAgent(LlmGateway gateway, NovelRepository repository,
                                   PromptTemplateService promptService) {
+        this(gateway, repository, promptService, null);
+    }
+
+    /** p11-q0-01: 注入 RelevanceGateway，按相关性收窄查找（如主角定位） */
+    public ContinuityCheckerAgent(LlmGateway gateway, NovelRepository repository,
+                                  PromptTemplateService promptService, RelevanceGateway relevanceGateway) {
         this.gateway = gateway;
         this.repository = repository;
         this.promptService = promptService;
+        this.relevanceGateway = relevanceGateway;
     }
 
     public List<ContinuityIssue> check(String projectId, int chapterIndex,
@@ -144,7 +153,11 @@ public class ContinuityCheckerAgent {
     private String buildNameDriftCheckSection(String projectId) {
         if (repository == null) return "";
         try {
-            var mc = repository.findCharactersByProject(projectId).stream()
+            // p11-q0-01: 经 RelevanceGateway 收窄定位主角（gateway 主角保底），不再全量 findAll*
+            var characters = relevanceGateway != null
+                    ? relevanceGateway.relevantCharacters(projectId, null, 5)
+                    : repository.findCharactersByProject(projectId);
+            var mc = characters.stream()
                     .filter(c -> c.getRole() != null && c.getRole().contains("主角"))
                     .map(c -> c.getName()).findFirst().orElse(null);
             if (mc == null || mc.isBlank()) return "";

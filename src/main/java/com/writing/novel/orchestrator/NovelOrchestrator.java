@@ -1588,12 +1588,15 @@ public class NovelOrchestrator {
                         .toList().isEmpty();
                 if (hasHighIssue) {
                     consecutiveHighIssues++;
-                    if (consecutiveHighIssues >= 10) {
-                        // 连续 10 章 HIGH 问题，暂停写作
-                        log.warn("连续 {} 章 HIGH 问题，暂停写作", consecutiveHighIssues);
+                    // p11-q2-05: 熔断阈值可配置（回收 3→10 权宜放宽），从 WritingPreferences 读
+                    int cbThreshold = repository.findWritingPreferences(projectId)
+                            .map(pr -> pr.getCircuitBreakerThreshold()).orElse(10);
+                    if (consecutiveHighIssues >= cbThreshold) {
+                        // 连续 HIGH 问题达阈值，暂停写作
+                        log.warn("连续 {} 章 HIGH 问题（阈值 {}），暂停写作", consecutiveHighIssues, cbThreshold);
                         // p11-q3-01: 质量事件遥测——质量熔断可观测
                         EventLog.emit("QUALITY_CIRCUIT_BREAKER", Map.of(
-                                "consecutiveHighIssues", consecutiveHighIssues, "threshold", 10));
+                                "consecutiveHighIssues", consecutiveHighIssues, "threshold", cbThreshold));
                         break;
                     }
                 } else {

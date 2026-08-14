@@ -60,6 +60,8 @@ public class WritingPreferences {
 
     // p10-w1-04: 成本预算熔断——累计 LLM 成本超此值则暂停（PAUSED），0 表示不限制
     private double costBudgetYuan;
+    private int rewriteBudget = 1;                 // p11-q2-04: 单章重写预算（次），0=禁用重写
+    private int circuitBreakerThreshold = 10;      // p11-q2-05: 连续 HIGH 问题熔断阈值（回收 3→10 权宜放宽，可配置）
 
     private Instant updatedAt;
 
@@ -196,5 +198,9 @@ public class WritingPreferences {
     public void setLayeredOutline(boolean l) { this.layeredOutline = l; this.updatedAt = Instant.now(); }
     public double getCostBudgetYuan() { return costBudgetYuan; }
     public void setCostBudgetYuan(double v) { this.costBudgetYuan = v; this.updatedAt = Instant.now(); }
+    public int getRewriteBudget() { return rewriteBudget; }
+    public void setRewriteBudget(int v) { this.rewriteBudget = v; this.updatedAt = Instant.now(); }
+    public int getCircuitBreakerThreshold() { return circuitBreakerThreshold; }
+    public void setCircuitBreakerThreshold(int v) { this.circuitBreakerThreshold = v; this.updatedAt = Instant.now(); }
     public Instant getUpdatedAt() { return updatedAt; }
 }

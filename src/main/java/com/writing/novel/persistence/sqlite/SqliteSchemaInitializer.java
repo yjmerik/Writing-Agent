@@ -107,6 +107,8 @@ public class SqliteSchemaInitializer {
                 "target_chapters INTEGER DEFAULT 400, " +
                 "layered_outline INTEGER DEFAULT 1, " +
                 "cost_budget_yuan REAL DEFAULT 0, " +
+                "rewrite_budget INTEGER DEFAULT 1, " +
+                "circuit_breaker_threshold INTEGER DEFAULT 10, " +
                 "updated_at TEXT)",
 
         // 生成日志表（创意多样性追踪）
@@ -258,6 +260,9 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE projects ADD COLUMN book_summary TEXT");
         // p10-w1-04: 成本预算熔断
         safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN cost_budget_yuan REAL DEFAULT 0");
+        // p11-q2-04/05: 重写预算 + 质量熔断阈值（可配置）
+        safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN rewrite_budget INTEGER DEFAULT 1");
+        safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN circuit_breaker_threshold INTEGER DEFAULT 10");
         // p10-w1-06: 章节状态机
         safeAddColumn(st, "ALTER TABLE chapters ADD COLUMN status TEXT DEFAULT 'DONE'");
     }

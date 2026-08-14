@@ -1430,8 +1430,8 @@
       "dependencies": [
         "p11-q2-03"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "WritingPreferences.rewriteBudget 字段(默认1)+schema+持久化",
       "files": [
         "domain/WritingPreferences.java",
         "service/Arbiter.java"
@@ -1448,8 +1448,8 @@
       "dependencies": [
         "p11-q2-03"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "circuitBreakerThreshold 字段(默认10,回收3→10)+熔断从 prefs 读可配置",
       "files": [
         "orchestrator/NovelOrchestrator.java"
       ],

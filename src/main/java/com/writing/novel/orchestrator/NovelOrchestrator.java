@@ -65,6 +65,7 @@ public class NovelOrchestrator {
     private com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository;
     private com.writing.novel.memory.RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面（setter 注入）
     private com.writing.novel.service.RepairArbiter repairArbiter; // p11-q0-04: 闭环三分类仲裁（setter 注入）
+    private com.writing.novel.service.ConceiveGate conceiveGate; // p11-q1-01: 构思期质量门禁（setter 注入）
     /** p10-w2-03: 事实收割 Agent——null 时跳过（向后兼容） */
     private com.writing.novel.agent.FactHarvesterAgent factHarvester;
     /** p10-w3-03: 归档衰减器——null 时跳过（向后兼容） */
@@ -157,6 +158,11 @@ public class NovelOrchestrator {
     /** p11-q0-04: 注入闭环三分类仲裁器（@Bean 装配用）；不调则保持 null，复检仍 HIGH 仅 log */
     public void setRepairArbiter(com.writing.novel.service.RepairArbiter repairArbiter) {
         this.repairArbiter = repairArbiter;
+    }
+
+    /** p11-q1-01: 注入构思期质量门禁（@Bean 装配用）；不调则保持 null，构思期跳过门禁 */
+    public void setConceiveGate(com.writing.novel.service.ConceiveGate conceiveGate) {
+        this.conceiveGate = conceiveGate;
     }
 
     /** p10-w2-03: 注入事实收割 Agent（@Bean 装配用）；不调则保持 null，收割安全跳过 */
@@ -279,6 +285,20 @@ public class NovelOrchestrator {
         String wbDiversityGuide = creativeDiversityService != null
                 ? creativeDiversityService.getDiversityGuide(projectId, "WORLDBUILDER") : "";
         worldBuilder.build(projectId, p.getConcept(), p.getTags(), wbDiversityGuide);
+
+        // p11-q1-01: WorldBuilder 门禁——力量体系/势力不重复/完整性校验，不过关带反馈重生成（最多 2 次）
+        if (conceiveGate != null) {
+            for (int wbRetry = 0; wbRetry < 2; wbRetry++) {
+                var wbEntries = repository.findKnowledgeEntriesByProject(projectId);
+                var wbGate = conceiveGate.checkWorldbuilding(wbEntries, p.getTags());
+                if (wbGate.pass()) break;
+                log.warn("WorldBuilder 门禁未过(重试{}/2): {}", wbRetry + 1, wbGate.feedback());
+                repository.deleteKnowledgeEntriesByProject(projectId); // 清旧避免重生成累积
+                worldBuilder.build(projectId, p.getConcept(), p.getTags(),
+                        (wbDiversityGuide == null ? "" : wbDiversityGuide + "\n")
+                                + "【质量门禁反馈】" + wbGate.feedback());
+            }
+        }
 
         // 记录世界观生成
         if (creativeDiversityService != null) {

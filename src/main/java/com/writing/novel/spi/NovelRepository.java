@@ -118,6 +118,8 @@ public interface NovelRepository {
     default int deleteDuplicateKnowledgeEntries(String projectId) { return 0; }
     /** 长期悬置（planted<beforeChapter）且非 mustResolve 的 LOW 优先级伏笔标记放弃（resolved=1）。默认 0 */
     default int retireStaleForeshadowings(String projectId, int beforeChapter) { return 0; }
+    /** p11-q1-01: 删除项目全部知识条目（ConceiveGate 重生成前清旧，避免累积）。默认 0 */
+    default int deleteKnowledgeEntriesByProject(String projectId) { return 0; }
 
     // --- EvaluationRecord ---
     void saveEvaluationRecord(EvaluationRecord record);

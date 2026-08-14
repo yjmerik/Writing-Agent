@@ -926,6 +926,17 @@ public class SqliteNovelRepository implements NovelRepository {
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
+    /** p11-q1-01: 删除项目全部知识条目（ConceiveGate 重生成前清旧，避免累积） */
+    @Override
+    public int deleteKnowledgeEntriesByProject(String projectId) {
+        String sql = "DELETE FROM knowledge_entries WHERE project_id=?";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            return ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
     // --- EvaluationRecord ---
 
     @Override

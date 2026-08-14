@@ -1307,8 +1307,8 @@
       "description": "新增 QualityGate 抽象与 ConceiveGate；WorldBuilder 生成后做力量体系自洽/势力不重复/题材(EraAnchor)一致性校验，不过关带反馈重生成。",
       "phase": 11,
       "dependencies": [],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "ConceiveGateTest 5 pass；ConceiveGate.checkWorldbuilding(力量体系/重名/完整性规则档)；doConceiving WorldBuilder 后插门禁+最多2次带反馈重生成(deleteKnowledgeEntriesByProject 清旧)；全量 BUILD SUCCESS",
       "files": [
         "service/ConceiveGate.java",
         "orchestrator/NovelOrchestrator.java"

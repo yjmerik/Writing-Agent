@@ -6,6 +6,11 @@
 **Phase:** **Phase 11 过程化质量门禁架构 — 21/21 feature 全部完成 ✅ + 真实 e2e 验证 PASS**
 
 
+### Phase 12 失败回流修复（6/6 完成，commit 78deccd，回归验证 PASS）
+- p12-01 标题解析（cleanText 剥离 #）/ p12-02 premise 客套剥离 / p12-03 ReaderReview 重试 / p12-04 丢弃空卡 / p12-05 默认 24 章 / p12-06 UI 预设选择
+- 回归验证（新项目「锦灰堆」preset=romance）：genre=ROMANCE、targetChapters=24、dialogueDensity=0.5、premise 无客套、7 人物卡 0 未命名
+- Phase12FixTest 4 pass；全量 mvn test BUILD SUCCESS（须 bash source scripts/load-env.sh 提供 DEEPSEEK_API_KEY）
+
 ### 新题材创作验证（2026-08-14，爱情/古风悬疑「绣里江山」3 章，DeepSeek）
 - **质量结论 overallScore 8/10**：worldbuilding 9 / consistency·style·plot·characters 8 / dialogue·pattern_diversity 7。世界观（明代织造/两京制/壬辰贡案）与题材高度扣合，正文（"针藏锋"）公案语感扎实、绣娘专业视角推理可信
 - **质检链全程运行**：ConceiveGate/真典播种(8条)/PlanGate/ConsistencyGuard/读者检验/场景分类/桥段重复/说明文密度/真典收割(+4/3取代)

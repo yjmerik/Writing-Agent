@@ -67,6 +67,7 @@ public class NovelOrchestrator {
     private com.writing.novel.service.RepairArbiter repairArbiter; // p11-q0-04: 闭环三分类仲裁（setter 注入）
     private com.writing.novel.service.ConceiveGate conceiveGate; // p11-q1-01: 构思期质量门禁（setter 注入）
     private com.writing.novel.service.PlanGate planGate; // p11-q1-04: 章节梗概预检（setter 注入）
+    private com.writing.novel.service.QualityCouncil qualityCouncil; // p11-q2-03: 质检委员会合并重写（setter 注入）
     /** p10-w2-03: 事实收割 Agent——null 时跳过（向后兼容） */
     private com.writing.novel.agent.FactHarvesterAgent factHarvester;
     /** p10-w3-03: 归档衰减器——null 时跳过（向后兼容） */
@@ -169,6 +170,11 @@ public class NovelOrchestrator {
     /** p11-q1-04: 注入章节梗概预检（@Bean 装配用）；不调则保持 null，写正文前跳过预检 */
     public void setPlanGate(com.writing.novel.service.PlanGate planGate) {
         this.planGate = planGate;
+    }
+
+    /** p11-q2-03: 注入质检委员会（@Bean 装配用）；不调则保持 null，guard 重写不合并 */
+    public void setQualityCouncil(com.writing.novel.service.QualityCouncil qualityCouncil) {
+        this.qualityCouncil = qualityCouncil;
     }
 
     /** p10-w2-03: 注入事实收割 Agent（@Bean 装配用）；不调则保持 null，收割安全跳过 */
@@ -1018,9 +1024,11 @@ public class NovelOrchestrator {
      */
     private boolean checkContinuityAfterWriting(String projectId, int chapterIndex, Chapter chapter, List<String> cast) {
         boolean rewritten = false; // p10-w1-07: 标记是否触发重写（不提前 return，保持伏笔检测等后续流程）
+        java.util.List<ContinuityIssue> continuityIssuesRef = java.util.List.of(); // p11-q2-03: 供 guard 合并重写引用
         try {
             String settings = collectSettingsForCheck(projectId, cast);
             var issues = continuityChecker.check(projectId, chapterIndex, chapter.getContent(), settings);
+            continuityIssuesRef = issues;
 
             // HIGH 级矛盾纠偏：触发 1 次重写
             boolean hasHighIssue = issues.stream()
@@ -1102,10 +1110,21 @@ public class NovelOrchestrator {
                 boolean hasHigh = guardIssues.stream().anyMatch(
                         i -> i.getSeverity() == ContinuityIssue.Severity.HIGH);
                 if (hasHigh && !rewritten && chapter.getContent().length() > 500) {
-                    String desc = guardIssues.stream()
-                            .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH)
-                            .map(ContinuityIssue::getDescription)
-                            .reduce((a, b) -> a + "；" + b).orElse("");
+                    // p11-q2-03: 合并重写——用 QualityCouncil 汇总 continuity+guard 问题生成合并纠偏指令
+                    // （解除"guard HIGH 时只喂 guard 问题"的分散模式，多维问题一次重写联合修正）
+                    String desc;
+                    if (qualityCouncil != null) {
+                        var council = qualityCouncil.collect(continuityIssuesRef, guardIssues, 10, null, null);
+                        desc = council.combinedFeedback().isBlank()
+                                ? guardIssues.stream().filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH)
+                                        .map(ContinuityIssue::getDescription).reduce((a, b) -> a + "；" + b).orElse("")
+                                : council.combinedFeedback();
+                    } else {
+                        desc = guardIssues.stream()
+                                .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH)
+                                .map(ContinuityIssue::getDescription)
+                                .reduce((a, b) -> a + "；" + b).orElse("");
+                    }
                     rewriteWithCorrection(projectId, chapterIndex, chapter, desc, "");
                     rewritten = true; // 标记已重写，reader review 互斥
                     // p10-w3-08: 重写后复检——若仍有 HIGH，标记 issue 但不再重写（最多 1 次）

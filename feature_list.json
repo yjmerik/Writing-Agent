@@ -1413,8 +1413,8 @@
       "dependencies": [
         "p11-q2-02"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "checkContinuityAfterWriting 的 guard HIGH 重写用 QualityCouncil.collect 合并 continuity+guard 问题(合并纠偏指令)；continuity issues 提升方法变量供引用；全量 BUILD SUCCESS",
       "files": [
         "orchestrator/NovelOrchestrator.java"
       ],

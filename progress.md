@@ -3,7 +3,15 @@
 ## Current State
 
 **Last Updated:** 2026-08-14
-**Phase:** **Phase 11 过程化质量门禁架构（Quality Gate Architecture）— 21/21 feature 全部完成 ✅**，commit e3b4dd8..ee44bc9，全量 mvn test BUILD SUCCESS（需 ALIYUN_LLM_API_KEY=$DASHSCOPE_API_KEY）。Q0 地基补齐 6 + Q1 前置门禁 4 + Q2 质检委员会+合并重写 5 + Q3 可观测回归 6。Phase 10 余 p10-w3-09 由 p11-q3-06 吸收完成。
+**Phase:** **Phase 11 过程化质量门禁架构 — 21/21 feature 全部完成 ✅ + 真实 e2e 验证 PASS**
+
+### 真实 e2e 验证（2026-08-14，DeepSeek 官方端点）
+- **写作**：凤鸣九州 61→63 章（第62章「锁衣里的名字」2309字 9/10 分；第63章「白骨识人」3341字 8/10 分），每章 ~12 次 LLM 质检调用
+- **质检链全部真实运行**：PlanGate 预检(quality_risk)→伏笔悬置告警(253条)→ConsistencyGuard 抓到真实穿帮(「坐标」时代用语/俄语词«одновременно»混入)→读者检验 9/10→场景分类→桥段重复检测→说明文密度
+- **质量事件遥测**：QUALITY_GATE×2 + QUALITY_REVIEW×2(62:9分/63:8分) 全部正确 emit；diagnose.sh 质量诊断输出正常
+- **页面**：工作区 5 tab 渲染正常，侧栏进度自动更新 63 章；章节 API 数据链完整（IAB 浏览器点击交互受限为环境限制，非应用问题）
+- **LLM 配置**：application.yml 8 任务块切换 ${DEEPSEEK_END_POINT}/${DEEPSEEK_MODEL}/${DEEPSEEK_API_KEY}（token-plan 403 无权限），已提交 df0fab1
+- **发现的可改进点**（非阻塞）：① maxChapters 语义为「写 N 章」而非「写到第 N 章」，易误触发连续写作（建议 API 加 startChapter 或文档澄清）② CONSISTENCY_ISSUE 事件仅在仲裁动作时 emit，检测发现（如 MEDIUM 穿帮）不发事件——可扩展 ③ 第62章 PlanGate 报 beats 缺失但 synopsis 是老项目延迟生成——存量数据无 beats 字段属预期，commit e3b4dd8..ee44bc9，全量 mvn test BUILD SUCCESS（需 ALIYUN_LLM_API_KEY=$DASHSCOPE_API_KEY）。Q0 地基补齐 6 + Q1 前置门禁 4 + Q2 质检委员会+合并重写 5 + Q3 可观测回归 6。Phase 10 余 p10-w3-09 由 p11-q3-06 吸收完成。
 **Tests:** 本次会话仅新增 spec 文档 + 改 `feature_list.json`（数据文件），未触碰任何 `.java`/`.st`/`.yml`，编译与测试基线不受影响，故未重跑 `mvn test`。
 
 ---

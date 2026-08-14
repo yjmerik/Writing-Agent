@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": "Phase 10 启动 — 百万字长篇架构优化（故事真典+检索收窄+可靠作业），先做第一波 W1",
+  "current_phase": "Phase 11 启动 — 过程化质量门禁架构（ConceiveGate/PlanGate 前置门禁 + QualityCouncil/Arbiter 统一仲裁 + 真典作为检测真相层补齐 + 质量可观测回归网），Q0 地基补齐先行；Phase 10 余 p10-w3-09 由 p11-q3-06 吸收。spec: docs/specs/2026-08-14-quality-gate-architecture.md",
   "features": [
     {
       "id": "p1-01",
@@ -1190,6 +1190,373 @@
       ],
       "problem_ref": "GAP: FINAL终审不充分",
       "evidence": "FinalAuditGate 扩展：真典 SUPERSEDED 事实检查 + 成本回执（CostBudgetMonitor.total）"
+    },
+    {
+      "id": "p11-q0-01",
+      "name": "检查器接入 RelevanceGateway 收窄",
+      "description": "ConsistencyGuard/ContinuityChecker/EntityExtractor/CharacterProfileUpgrader 构造器注入 RelevanceGateway，按 cast/synopsis/chapterIndex 取相关性切片，禁止全量 findAll*。补 p10-w2-05 未落地。",
+      "phase": 11,
+      "dependencies": [],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "agent/ConsistencyGuard.java",
+        "agent/ContinuityCheckerAgent.java",
+        "memory/RelevanceGateway.java"
+      ],
+      "problem_ref": "证据C: W2-05 标 completed 但 RelevanceGateway 仅被 ContextAssembler/MemoryConfig 引用，检查器 0 引用、构造器未注入",
+      "acceptance": "ConsistencyGuard/ContinuityChecker/EntityExtractor/CharacterProfileUpgrader 构造器注入并经门面取切片，不再全量 findAll*；输入 token 受控",
+      "verify_cmd": "mvn test -Dtest=RelevanceGatewayNarrowingTest",
+      "type": "bug"
+    },
+    {
+      "id": "p11-q0-02",
+      "name": "检查器消费真典 ACTIVE 事实",
+      "description": "5 个检查器 + QualityEvaluation 注入并消费真典相关 ACTIVE 事实作为校验依据。补 p10-w2-07 未落地。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q0-01"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "agent/ConsistencyGuard.java",
+        "agent/ContinuityCheckerAgent.java",
+        "memory/RelevanceGateway.java"
+      ],
+      "problem_ref": "证据C: W2-07 标 completed 但 5 检查器对 StoryFact 引用数全为 0",
+      "acceptance": "5 检查器注入并消费真典相关 ACTIVE 事实作为校验依据（grep StoryFact 引用 >0）",
+      "verify_cmd": "mvn test -Dtest=CanonConsumedByCheckersTest",
+      "type": "bug"
+    },
+    {
+      "id": "p11-q0-03",
+      "name": "人物单轨化（真典承载可变状态）",
+      "description": "CharacterProfileUpgrader 改写真典 CHARACTER_STATE 而非覆盖 Character.ability/growthArc；ContextAssembler 可变状态读真典；Character 留稳定身份。落地 million-word spec line 61 未做项。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q0-02"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "agent/CharacterProfileUpgrader.java",
+        "memory/ContextAssembler.java"
+      ],
+      "problem_ref": "证据C: spec line 61 承诺 Character 留稳定身份、真典接可变状态，实际 CharacterProfileUpgrader:149-153 仍覆盖式写 Character，双轨无裁决",
+      "acceptance": "CharacterProfileUpgrader 写真典 CHARACTER_STATE 不覆盖 Character；ContextAssembler 可变状态读真典；Character 留稳定身份（迁移期双读兼容）",
+      "verify_cmd": "mvn test -Dtest=CharacterSingleSourceTest",
+      "type": "bug"
+    },
+    {
+      "id": "p11-q0-04",
+      "name": "闭环三分类仲裁落地",
+      "description": "矛盾按 正文错→重写 / 真典演进→supercede / 早期根源→NEEDS_MANUAL_REVIEW+纠正真典 三分类仲裁；激活从未赋值的 NEEDS_MANUAL_REVIEW。补 p10-w3-08 只实现 1/3。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q0-02"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "domain/Chapter.java"
+      ],
+      "problem_ref": "证据C: W3-08 标 completed 但 rewriteWithCorrection 只做重写；NEEDS_MANUAL_REVIEW 全代码库仅出现在枚举定义无赋值点",
+      "acceptance": "仲裁三分类（重写/supercede/早期根源标记 NEEDS_MANUAL_REVIEW+纠正真典），NEEDS_MANUAL_REVIEW 出现赋值点",
+      "verify_cmd": "mvn test -Dtest=ClosedLoopRepairClassificationTest",
+      "type": "bug"
+    },
+    {
+      "id": "p11-q0-05",
+      "name": "continuity 重写后复检",
+      "description": "continuity HIGH 触发的重写完成后重跑 ContinuityChecker，使引入的新矛盾可见。补 spec W3-08 承诺未做项。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q0-04"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据B: NovelOrchestrator.java:957-962 continuity 重写后只标 resolved 不重跑检查，重写引入的新矛盾无人发现",
+      "acceptance": "continuity HIGH 重写后重跑 ContinuityChecker，引入的新矛盾可见且记 issue",
+      "verify_cmd": "mvn test -Dtest=RewriteRecheckTest",
+      "type": "bug"
+    },
+    {
+      "id": "p11-q0-06",
+      "name": "归档衰减补齐 5 类",
+      "description": "ArchiveCompactor 增加 foreshadowings/narrative_threads/knowledge_entries 归档衰减合并。补 p10-w3-03 只做 2/5。",
+      "phase": 11,
+      "dependencies": [],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "service/ArchiveCompactor.java"
+      ],
+      "problem_ref": "证据C: W3-03 标 completed 但 ArchiveCompactor 只 deleteExpiredEdges + archiveOldLowSeverityIssues 2 类",
+      "acceptance": "ArchiveCompactor 增加 foreshadowings/narrative_threads/knowledge_entries 归档（合并/RETIRED/语义去重），共 5 类",
+      "verify_cmd": "mvn test -Dtest=ArchiveCompactorTest",
+      "type": "bug"
+    },
+    {
+      "id": "p11-q1-01",
+      "name": "ConceiveGate 抽象 + WorldBuilder 门禁",
+      "description": "新增 QualityGate 抽象与 ConceiveGate；WorldBuilder 生成后做力量体系自洽/势力不重复/题材(EraAnchor)一致性校验，不过关带反馈重生成。",
+      "phase": 11,
+      "dependencies": [],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "service/ConceiveGate.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据A: WorldBuilder 生成解析即入库零语义门禁（doConceiving:269）",
+      "acceptance": "QualityGate 抽象；世界观生成后力量体系自洽/势力不重复/题材一致性校验，不过关带反馈重生成",
+      "verify_cmd": "mvn test -Dtest=ConceiveGateTest"
+    },
+    {
+      "id": "p11-q1-02",
+      "name": "CharacterDesigner + Outline 门禁",
+      "description": "CharacterGate（人物去重/动机自洽/能力体系内/对手张力）+ OutlineGate（分卷节奏/伏笔密度/主线钩子/章节量达标）。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q1-01"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "service/ConceiveGate.java"
+      ],
+      "problem_ref": "证据A: CharacterDesigner/Plotter 生成即采纳零门禁（doConceiving:297/381）",
+      "acceptance": "人物去重/动机自洽/能力体系内/对手张力；分卷节奏/伏笔密度/主线钩子/章节量达标",
+      "verify_cmd": "mvn test -Dtest=ConceiveGateTest"
+    },
+    {
+      "id": "p11-q1-03",
+      "name": "软门禁策略 + quality_risk + 人机暂停",
+      "description": "门禁不过→带反馈重生成最多 gateMaxRetries 次→仍不过放行并标记 quality_risk；INTERACTIVE 模式 PAUSED_AT_CHECKPOINT 供人工 resume。不硬阻塞。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q1-01"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "domain/Chapter.java",
+        "persistence/sqlite/"
+      ],
+      "problem_ref": "用户决策: 软门禁+人机协同（次数上限+标记+可手动优化），不硬阻塞推进",
+      "acceptance": "gateMaxRetries 次后放行并标记 quality_risk；INTERACTIVE 模式 PAUSED 供 resume；不硬阻塞",
+      "verify_cmd": "mvn test -Dtest=GatePolicyTest"
+    },
+    {
+      "id": "p11-q1-04",
+      "name": "PlanGate 章节梗概预检",
+      "description": "写正文前对 ChapterSynopsis 预检：vs 真典冲突（能力/关系/时间线）、是否推进挂得最久的线索/伏笔、cast 与 ArcScheduler 一致；不过关重生成梗概而非写完正文再重写。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q0-02"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "service/PlanGate.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据A: 章节梗概写正文前无可行性/一致性预检，占位梗概也被直接写（createPlaceholderVolume:1897）",
+      "acceptance": "写正文前梗概 vs 真典冲突/线索推进/cast 合理性预检；不过关重生成梗概",
+      "verify_cmd": "mvn test -Dtest=PlanGateTest"
+    },
+    {
+      "id": "p11-q2-01",
+      "name": "QualityCouncil 评审汇总",
+      "description": "四检测器（ContinuityChecker/ConsistencyGuard/ReaderReview/StyleGuardian）先各自出报告不重写，汇总为 CouncilReport{issues,scores,suggestions}。",
+      "phase": 11,
+      "dependencies": [],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "service/QualityCouncil.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据B: 检测器串行互斥互不可见（NovelOrchestrator.java:940-1093）",
+      "acceptance": "四检测器先出报告不重写，汇总为 CouncilReport{issues,scores,suggestions}",
+      "verify_cmd": "mvn test -Dtest=QualityCouncilTest"
+    },
+    {
+      "id": "p11-q2-02",
+      "name": "Arbiter 仲裁器 + 三分类",
+      "description": "Arbiter 汇总判级→去重→合并 correctionBrief→三分类根因→动作决策 PASS/REWRITE/BLOCK。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q2-01",
+        "p11-q0-04"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "service/Arbiter.java"
+      ],
+      "problem_ref": "用户决策: 统一仲裁+合并重写；证据B: 互斥致多维问题只修一个",
+      "acceptance": "汇总判级→合并 correctionBrief→三分类根因→动作 PASS/REWRITE/BLOCK",
+      "verify_cmd": "mvn test -Dtest=ArbiterTest"
+    },
+    {
+      "id": "p11-q2-03",
+      "name": "合并重写 + 全量复检",
+      "description": "一次重写喂入全部检测器问题（correctionBrief）；重写后全部检测器复检；解除 rewrittenByContinuity 互斥（预算统一调度）。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q2-02"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据B: 单章最多1次重写且互斥（:569/608/1018）；continuity 重写不复检",
+      "acceptance": "一次重写喂入全部问题；重写后全部检测器复检；解除互斥（预算统一调度）",
+      "verify_cmd": "mvn test -Dtest=MergedRewriteRecheckTest"
+    },
+    {
+      "id": "p11-q2-04",
+      "name": "重写预算可配置",
+      "description": "per-project 0/1/2 重写预算，仲裁层统一调度；超预算降级为标记 quality_risk。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q2-03"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "domain/WritingPreferences.java",
+        "service/Arbiter.java"
+      ],
+      "problem_ref": "用户决策: 成本可控；把硬编码互斥改为可配置预算统一调度",
+      "acceptance": "per-project 0/1/2 重写预算，仲裁层统一调度；超预算降级为标记 quality_risk",
+      "verify_cmd": "mvn test -Dtest=RewriteBudgetPolicyTest"
+    },
+    {
+      "id": "p11-q2-05",
+      "name": "质量熔断策略回收",
+      "description": "连续 HIGH 熔断阈值可配置（回收 3→10 权宜放宽）；新增重写失败率熔断。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q2-03"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据B/D: 熔断阈值 3→10 权宜放宽（:1414-1422），最多容忍连续 9 章 HIGH",
+      "acceptance": "阈值可配置；新增重写失败率熔断；熔断发 QUALITY_CIRCUIT_BREAKER 事件",
+      "verify_cmd": "mvn test -Dtest=QualityCircuitBreakerTest"
+    },
+    {
+      "id": "p11-q3-01",
+      "name": "质量事件遥测",
+      "description": "EventLog 新增 7 类质量事件（CONCEIVE_GATE/PLAN_GATE/QUALITY_REVIEW/REWRITE_TRIGGERED/CONSISTENCY_ISSUE/QUALITY_CIRCUIT_BREAKER/FINAL_GATE）；EventContext 扩展。",
+      "phase": 11,
+      "dependencies": [],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "telemetry/EventLog.java",
+        "telemetry/EventContext.java"
+      ],
+      "problem_ref": "证据D: EventLog 仅 4 类机械事件，质量决策全部只落 app.log，diagnose.sh 看不见质量问题",
+      "acceptance": "EventLog 新增 7 类质量事件并正确 emit；EventContext 扩展",
+      "verify_cmd": "mvn test -Dtest=QualityEventLogTest"
+    },
+    {
+      "id": "p11-q3-02",
+      "name": "diagnose.sh 质量诊断分类",
+      "description": "diagnose.sh 输出重写成功率/最常见 issue 根因/熔断次数/FINAL 失败原因/quality_risk 标记章节。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q3-01"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "scripts/diagnose.sh"
+      ],
+      "problem_ref": "证据D: diagnose.sh 只能诊断 LLM/章节机械故障，无法诊断质量闭环",
+      "acceptance": "diagnose.sh 输出重写成功率/issue 根因/熔断次数/FINAL 失败原因/quality_risk 章节（手动验证）",
+      "verify_cmd": "./scripts/diagnose.sh"
+    },
+    {
+      "id": "p11-q3-03",
+      "name": "fail-loud 消除静默吞异常",
+      "description": "消除 ConsistencyGuard(:76/141) 两处 catch(Exception ignored) 与 rewriteWithCorrection(:1118-1132) 静默 return/丢弃；失败必发 CONSISTENCY_ISSUE(DETECT_FAILED) 事件 + 计数。",
+      "phase": 11,
+      "dependencies": [],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "agent/ConsistencyGuard.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据D: ConsistencyGuard 两处 catch(Exception ignored) 静默失明；rewriteWithCorrection 多处静默 return",
+      "acceptance": "ConsistencyGuard/rewriteWithCorrection 失败必发事件 + 计数，无 catch(Exception ignored)",
+      "verify_cmd": "mvn test -Dtest=FailLoudTest",
+      "type": "bug"
+    },
+    {
+      "id": "p11-q3-04",
+      "name": "compare-baseline 重新启用质量评分门禁",
+      "description": "golden.json 设 minEvaluationScore（如 7.0）；compare-baseline.py:40 跳过逻辑改为校验生效。",
+      "phase": 11,
+      "dependencies": [],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "baselines/golden.json",
+        "scripts/compare-baseline.py"
+      ],
+      "problem_ref": "证据D: golden.json minEvaluationScore=null，compare-baseline 完全不门禁质量评分",
+      "acceptance": "golden.json 设 minEvaluationScore；compare-baseline 校验生效（FAIL 可捕获）",
+      "verify_cmd": "python3 scripts/compare-baseline.py"
+    },
+    {
+      "id": "p11-q3-05",
+      "name": "质量闭环测试网",
+      "description": "补质检反馈重写三路径/ConsistencyGuard 检测单测/仲裁复检/门禁测试；集成测试不再把 readerReviewAgent 置 null、不再永远正向 stub。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q2-03"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "src/test/java/com/writing/novel/"
+      ],
+      "problem_ref": "证据D: 质检反馈重写三路径零专门测试；集成测试置 readerReviewAgent=null",
+      "acceptance": "质检反馈重写三路径/ConsistencyGuard 单测/仲裁复检/门禁测试补齐；集成测试不再置 null",
+      "verify_cmd": "mvn test"
+    },
+    {
+      "id": "p11-q3-06",
+      "name": "FinalAuditGate 扩展（吸收 p10-w3-09）",
+      "description": "FINAL 跑连续性全局扫描 + 未回收 mustResolve 伏笔 + 真典一致性（SUPERSEDED>20 告警）+ 成本回执。吸收 p10-w3-09。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q0-04",
+        "p11-q3-01"
+      ],
+      "status": "not-started",
+      "evidence": "",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "p10-w3-09 not-started: 卷边界全局扫描 + FINAL 真终审",
+      "acceptance": "真典 SUPERSEDED>20 告警 + 成本回执 + 卷边界全局扫描；p10-w3-09 标 completed",
+      "verify_cmd": "mvn test -Dtest=FinalAuditGateTest"
     }
   ]
 }

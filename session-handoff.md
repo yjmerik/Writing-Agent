@@ -2,11 +2,17 @@
 
 ## Current Objective
 
-- **Goal**: 百万字长篇架构优化（`docs/specs/2026-08-13-million-word-architecture.md`，Phase 10，三波 23 feature）。
-- **Current status**: **22/23 feature 完成，214 tests 0 failures，3 轮 e2e 全部 PASS**。W1(7)+W2(7)+W3(8) 已实现并端到端验证。剩余 w3-01（总纲中段重规划，需 LLM 重规划，单独立 spec 推进）。
-- **Branch / commit**: `phase-10-w1-w2-foundation`（3 个 commit，见 progress.md）。
-- **Branch / commit**: main（未 commit，工作区有 W1+W2 改动）；最近提交见 `git log`。
-- **上一阶段（mc spec）状态**: P0/P1/P2/P3 全部完成，详见下方历史。
+- **Goal**: 过程化质量门禁架构（`docs/specs/2026-08-14-quality-gate-architecture.md`，Phase 11，四波 21 feature）。在现有实现上增强创作质量的过程化控制与长程一致性——大纲生成/章节审查过程中实时质检、根据结果优化调整、过程中发现而非最后反复改。
+- **Current status**: **Phase 11 spec 已落 + 21 feature 已登记 backlog；Q0 地基补齐待实现**。本次会话仅产出设计文档与 backlog（未改源码，未重跑 mvn test）。Phase 10 百万字架构 22/23 落地，但代码级验证发现 W2-05/W2-07/W3-08/W3-03 等检测侧 feature **声称 completed 实际未落地**，已作为 Phase 11 Q0 重新登记补齐；余 p10-w3-09 由 p11-q3-06 吸收。
+- **Branch / commit**: main；本次会话改动为 `docs/specs/2026-08-14-quality-gate-architecture.md`（新）、`feature_list.json`（+21 feature）、`progress.md`、`session-handoff.md`，未 commit。
+- **上一阶段（Phase 10 / mc spec）状态**: 见 `progress.md` 历史。
+
+## Phase 11 四大支柱（详见 spec）
+
+1. **过程化前置门禁（ConceiveGate + PlanGate）**：大纲/梗概生成后实时质检，软门禁（次数上限→标记 `quality_risk`→INTERACTIVE 人机暂停，不硬阻塞）。
+2. **章节质检委员会 + 统一仲裁（QualityCouncil + Arbiter）**：四检测器各出报告→合并纠偏指令→一次重写喂入全部问题→重写后全量复检（解除现有互斥）。
+3. **真典作为一致性检测的唯一真相层**：检查器收窄+读真典+人物单轨化+三分类仲裁（补齐 Phase 10 未落地）。
+4. **可观测质量遥测 + 稳定性硬化 + 回归网**：7 类质量事件、diagnose 质量分类、fail-loud、重新启用 `minEvaluationScore` 门禁。
 
 ## 架构 Review 结论速览（2026-08-13）
 
@@ -16,14 +22,14 @@
 
 ## Next Steps（下次会话入口）
 
-1. **开始 W1 第一波（止血正确性）**——按 Bugfix gate，每个 feature 先写复现 failing test：
-   - `p10-w1-01` stableSectionCache 写联动失效（**正确性 bug，最高优先**）
-   - `p10-w1-02` 脏卷摘要重算路径（**静默历史丢失**）
-   - `p10-w1-03` 向量去污 + top-K 联动预算
-   - `p10-w1-04..07` 成本熔断/退避降级/章节状态机/后处理并行+重写互斥
-2. W1 完成后跑 `./scripts/e2e.sh --mode record --chapters 30` 验证无中断 + 模拟 429 验证降级。
-3. W1 全绿后进入 W2（故事真典 + 检索收窄），需先做 `p10-w2-01` story_facts 表。
-4. 每个 feature 完成按 End-of-Session 程序更新 feature_list.json（status→completed + evidence）。
+1. **开始 Phase 11 Q0 地基补齐**（无跨波依赖，先行）——按 Bugfix gate，每个 feature 先写复现 failing test：
+   - `p11-q0-01` 检查器接入 RelevanceGateway 收窄（**修复 W2-05 未落地，最高优先**：5 检查器构造器注入门面、不再全量 `findAll*`）
+   - `p11-q0-02` 检查器消费真典 ACTIVE 事实（修复 W2-07 未落地，依赖 q0-01）
+   - `p11-q0-06` ArchiveCompactor 归档补齐 5 类（独立，可并行）
+2. Q0 全绿后进入 Q1（ConceiveGate/PlanGate 前置门禁，依赖 q0-02 真典）与 Q2（QualityCouncil/Arbiter，依赖 q0-04 三分类）。
+3. Q3（可观测遥测 + fail-loud + minEvaluationScore 门禁 + 测试网）横切，部分可先行（q3-01/q3-03/q3-04 无依赖）。
+4. 每完成一个 feature：按 End-of-Session 程序更新 `feature_list.json`（status→completed + evidence）与 `progress.md`。
+5. **重点约束**：Q0 全部为 `type=bug`，必须先写复现 failing test 再改实现（Bugfix gate）；涉及 prompt/上下文/Agent 逻辑的 feature（Q1/Q2）完成后须 `./scripts/e2e.sh` + `compare-baseline.py` PASS。
 
 ## 审查 5 类阻断问题 → 修复状态
 

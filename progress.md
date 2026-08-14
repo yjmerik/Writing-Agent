@@ -3,29 +3,51 @@
 ## Current State
 
 **Last Updated:** 2026-08-14
-**Phase:** Phase 10 — 百万字长篇架构优化（故事真典+检索收窄+可靠作业）
-**Active spec:** docs/specs/2026-08-13-million-word-architecture.md（三波 23 feature）
-**Tests:** **214 pass, 0 failures, 1 skipped**（W1+W2+W3 全部融入）
+**Phase:** **Phase 11 过程化质量门禁架构（Quality Gate Architecture）** — spec 已落，21 feature 已登记 backlog，Q0 地基补齐待实现。Phase 10 百万字架构 22/23 落地（余 p10-w3-09 由 p11-q3-06 吸收）。
+**Tests:** 本次会话仅新增 spec 文档 + 改 `feature_list.json`（数据文件），未触碰任何 `.java`/`.st`/`.yml`，编译与测试基线不受影响，故未重跑 `mvn test`。
 
-## 整体进度：22/23 feature 完成 ✅
+---
+
+## 本次会话（2026-08-14）：架构评估 + Phase 11 设计
+
+**任务**：对创作质量、长程稳定性、一致性架构做深度评估与优化设计（用户目标：大纲生成/章节审查的过程化实时质检 + 根据结果优化调整 + 增强稳定性，过程发现而非最后反复改）。
+
+**产出**：
+- 设计文档：`docs/specs/2026-08-14-quality-gate-architecture.md`（决策完备，四大支柱 + 21 feature）
+- backlog：Phase 11 共 **21 feature** 已登记 `feature_list.json`（Q0×6 / Q1×4 / Q2×5 / Q3×6）
+
+**关键发现（代码级证据）**——Phase 10 多个「声称 completed」的质量闭环 feature **实际未落地**（grep + 构造器签名验证，2026-08-14）：
+- W2-05 检查器走 RelevanceGateway 收窄：**未落地**（RelevanceGateway 仅被 ContextAssembler/MemoryConfig 引用，5 检查器 0 引用、构造器未注入）
+- W2-07 检查器读真典 ACTIVE 事实：**未落地**（5 检查器对 StoryFact 引用数全为 0）
+- W3-08 闭环三分类仲裁：**只实现 1/3**（NEEDS_MANUAL_REVIEW 全代码库仅枚举定义、无赋值点）
+- W3-03 ArchiveCompactor 归档 5 类：**只做 2/5**
+- spec line 61 人物单轨化：**未做**（CharacterProfileUpgrader 仍覆盖式写 Character，双轨无裁决）
+- 进度漂移订正：实际 not-started 的是 **p10-w3-09**（FINAL 真终审），非此前多处误写的 w3-01（w3-01 已 completed）
+
+**四大支柱**：
+1. **过程化前置门禁（ConceiveGate + PlanGate）** — 大纲/梗概生成中实时质检（软门禁：次数上限→标记 `quality_risk`→人机暂停，不硬阻塞）
+2. **章节质检委员会 + 统一仲裁（QualityCouncil + Arbiter）** — 各出报告→合并纠偏→一次重写→全量复检
+3. **真典作为一致性检测的唯一真相层** — 检查器收窄+读真典+人物单轨+三分类（补齐 Phase 10 未落地）
+4. **可观测质量遥测 + 稳定性硬化 + 回归网** — 7 类质量事件、diagnose 质量分类、fail-loud、重新启用 `minEvaluationScore` 门禁
+
+**用户已确认决策**：软门禁+人机协同 / 统一仲裁+合并重写 / 真相层全做 / 落 spec+拆 feature。
+
+**下次入口**：Phase 11 **Q0 地基补齐先行**（`p11-q0-01` 检查器接入 RelevanceGateway，无跨波依赖）。每 feature 遵 Bugfix gate（先写复现 failing test，后改实现）。
+
+---
+
+## Phase 10 进度（历史，已合并 main）
+
+整体 22/23 完成；W1(7)+W2(7)+W3(8) 已实现并端到端 3 轮 e2e PASS。**注意**：W2-05/W2-07/W3-08/W3-03 在 `feature_list.json` 标 completed，但其「检测侧」改造经 2026-08-14 代码级验证**未真正落地**，已作为 Phase 11 Q0 重新登记补齐。
 
 ### W1 第一波（止血与正确性）— 7/7 ✅
 stableSectionCache 失效 / 脏摘要重算 / 向量去污 / 成本熔断 / 退避降级 / 状态机 / 重写互斥
 
-### W2 第二波（故事真典+检索收窄）— 7/7 ✅
+### W2 第二波（故事真典+检索收窄）— 7/7 ✅（注：检测侧 w2-05/w2-07 实际未落地，见 Phase 11 Q0）
 story_facts 表 / 真典播种 / FactHarvester 收割 / RelevanceGateway / 检查器收窄 / 摘要预算 / 真典消费
 
-### W3 第三波（结构演进+闭环修复）— 8/9 ✅
-- 延迟卷大纲补全结构化字段（修 GAP#1 追踪器失明）
-- ArchiveCompactor 归档衰减（修根因 B）
-- 全量查询分页 LIMIT
-- ArcScheduler 冷场阈值缩放 + Top-K（修 GAP#5）
-- DiversityTracker 持久化（重启不丢）
-- 叙事线索状态机修正（修 GAP#4）
-- ConsistencyGuard HIGH 入闭环 + 重写后复检（修根因 D）
-- FINAL 终审扩展（真典一致性 + 成本回执）
-
-**剩余：w3-01 总纲中段重规划**（需 LLM 重规划，单独立 spec 推进）
+### W3 第三波（结构演进+闭环修复）— 8/9，剩余 p10-w3-09（由 p11-q3-06 吸收）
+（注：w3-08 三分类实际只实现 1/3、w3-03 归档只 2/5，见 Phase 11 Q0）
 
 ### 端到端验证（3 轮，全部 PASS）
 | 轮次 | 字數 | LLM 调用 | 错误 | 失败 | compare-baseline |

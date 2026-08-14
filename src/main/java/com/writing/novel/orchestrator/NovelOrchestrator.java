@@ -64,6 +64,7 @@ public class NovelOrchestrator {
     /** p10-w2-02: 故事真典仓库——null 时跳过播种/收割（向后兼容旧构造器/测试） */
     private com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository;
     private com.writing.novel.memory.RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面（setter 注入）
+    private com.writing.novel.service.RepairArbiter repairArbiter; // p11-q0-04: 闭环三分类仲裁（setter 注入）
     /** p10-w2-03: 事实收割 Agent——null 时跳过（向后兼容） */
     private com.writing.novel.agent.FactHarvesterAgent factHarvester;
     /** p10-w3-03: 归档衰减器——null 时跳过（向后兼容） */
@@ -151,6 +152,11 @@ public class NovelOrchestrator {
     /** p11-q0-01: 注入检索收窄门面（@Bean 装配用）；不调则保持 null，collectSettingsForCheck 降级全量 */
     public void setRelevanceGateway(com.writing.novel.memory.RelevanceGateway relevanceGateway) {
         this.relevanceGateway = relevanceGateway;
+    }
+
+    /** p11-q0-04: 注入闭环三分类仲裁器（@Bean 装配用）；不调则保持 null，复检仍 HIGH 仅 log */
+    public void setRepairArbiter(com.writing.novel.service.RepairArbiter repairArbiter) {
+        this.repairArbiter = repairArbiter;
     }
 
     /** p10-w2-03: 注入事实收割 Agent（@Bean 装配用）；不调则保持 null，收割安全跳过 */
@@ -1027,9 +1033,11 @@ public class NovelOrchestrator {
                         var recheck = consistencyGuard.check(projectId, chapterIndex, chapter.getContent(), cast);
                         for (var issue : recheck) {
                             repository.saveContinuityIssue(issue);
-                            if (issue.getSeverity() == ContinuityIssue.Severity.HIGH) {
-                                log.warn("重写后仍存一致性守卫 HIGH(章{}): {}", chapterIndex, issue.getDescription());
-                            }
+                                if (issue.getSeverity() == ContinuityIssue.Severity.HIGH) {
+                                    log.warn("重写后仍存一致性守卫 HIGH(章{}): {}", chapterIndex, issue.getDescription());
+                                    // p11-q0-04: 重写后仍存 → 三分类仲裁（激活 NEEDS_MANUAL_REVIEW）
+                                    applyRepairClassification(projectId, chapterIndex, chapter, issue, true);
+                                }
                         }
                     } catch (Exception ignored) {}
                 }
@@ -1135,6 +1143,38 @@ public class NovelOrchestrator {
             }
         } catch (Exception e) {
             log.warn("纠偏重写失败，保留原版本: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * p11-q0-04: 三分类仲裁——重写/真典supercede/早期根源标记 NEEDS_MANUAL_REVIEW。
+     * 重写后仍存或跨章根源型 HIGH 矛盾，激活 NEEDS_MANUAL_REVIEW（此前枚举从未赋值）。
+     */
+    private void applyRepairClassification(String projectId, int chapterIndex, Chapter chapter,
+                                            ContinuityIssue issue, boolean alreadyRewritten) {
+        if (repairArbiter == null) return;
+        var action = repairArbiter.classify(issue, alreadyRewritten);
+        switch (action) {
+            case MANUAL_REVIEW -> {
+                chapter.setStatus(Chapter.Status.NEEDS_MANUAL_REVIEW);
+                repository.saveChapter(chapter);
+                log.warn("章{} 标记 NEEDS_MANUAL_REVIEW（根源性矛盾待人工）：{}", chapterIndex, issue.getDescription());
+            }
+            case SUPERSEDE_CANON -> correctCanon(projectId, chapterIndex, issue);
+            case REWRITE -> { /* 已重写，不再重写（最多 1 次） */ }
+        }
+    }
+
+    /** p11-q0-04: 把矛盾纠正为真典 PLOT_COMMITMENT（待人工确认），让后续章节知晓该矛盾 */
+    private void correctCanon(String projectId, int chapterIndex, ContinuityIssue issue) {
+        if (storyFactRepository == null) return;
+        try {
+            storyFactRepository.save(new com.writing.novel.domain.StoryFact(projectId,
+                    com.writing.novel.domain.StoryFact.FactType.PLOT_COMMITMENT,
+                    "矛盾待确认(章" + chapterIndex + ")",
+                    "【待人工确认】" + issue.getDescription(), chapterIndex));
+        } catch (Exception e) {
+            log.warn("真典纠正失败(章{}): {}", chapterIndex, e.getMessage());
         }
     }
 

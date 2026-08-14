@@ -1256,8 +1256,8 @@
       "dependencies": [
         "p11-q0-02"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "ClosedLoopRepairClassificationTest 5 pass；RepairArbiter 三分类(REWRITE/SUPERSEDE_CANON/MANUAL_REVIEW)；重写后仍HIGH/时间线→MANUAL_REVIEW 激活 Chapter.NEEDS_MANUAL_REVIEW(此前从未赋值,现:1159)；世界观→SUPERSEDE_CANON correctCanon 记真典；全量 BUILD SUCCESS",
       "files": [
         "orchestrator/NovelOrchestrator.java",
         "domain/Chapter.java"

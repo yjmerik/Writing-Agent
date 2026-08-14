@@ -62,7 +62,8 @@ public class OrchestratorConfig {
                                                  com.writing.novel.agent.FactHarvesterAgent factHarvester,
                                                  com.writing.novel.service.ArchiveCompactor archiveCompactor,
                                                  com.writing.novel.telemetry.CostBudgetMonitor costBudgetMonitor,
-                                                 com.writing.novel.memory.RelevanceGateway relevanceGateway) {
+                                                 com.writing.novel.memory.RelevanceGateway relevanceGateway,
+                                                 com.writing.novel.service.RepairArbiter repairArbiter) {
         NovelOrchestrator orchestrator = new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
@@ -77,6 +78,7 @@ public class OrchestratorConfig {
         orchestrator.setArchiveCompactor(archiveCompactor);
         orchestrator.setCostBudgetMonitor(costBudgetMonitor);
         orchestrator.setRelevanceGateway(relevanceGateway);
+        orchestrator.setRepairArbiter(repairArbiter);
         return orchestrator;
     }
 

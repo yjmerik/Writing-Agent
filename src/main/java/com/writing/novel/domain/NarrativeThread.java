@@ -48,6 +48,15 @@ public class NarrativeThread {
         this.updatedAt = Instant.now();
     }
 
+    /**
+     * p10-w3-07: 本章未提及但保持 ACTIVE——长线（如主角宿敌阴谋）不该因一章未提及即 SUSPENDED。
+     * 仅累积 suspenseChapters，配合放宽的 isOverdue 阈值（15）在长期未跟进时才告警。
+     */
+    public void markPending(int chapterIndex) {
+        this.suspenseChapters++;
+        this.updatedAt = Instant.now();
+    }
+
     /** 线索被回收/结束 */
     public void markResolved(int chapterIndex) {
         this.status = ThreadStatus.RESOLVED;
@@ -55,9 +64,12 @@ public class NarrativeThread {
         this.updatedAt = Instant.now();
     }
 
-    /** 是否悬挂过久（超过阈值） */
+    /**
+     * 是否悬挂过久（超过阈值）。
+     * p10-w3-07: 去掉 status==SUSPENDED 依赖——长线保持 ACTIVE 但悬挂计数累积，超阈值即告警。
+     */
     public boolean isOverdue(int threshold) {
-        return status == ThreadStatus.SUSPENDED && suspenseChapters >= threshold;
+        return suspenseChapters >= threshold;
     }
 
     // Getters / Setters

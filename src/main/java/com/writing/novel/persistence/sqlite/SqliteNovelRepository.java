@@ -231,7 +231,7 @@ public class SqliteNovelRepository implements NovelRepository {
     public List<Character> findCharactersByProject(String projectId) {
         List<Character> list = new ArrayList<>();
         try (Connection conn = cp.getConnection();
-             PreparedStatement ps = conn.prepareStatement("SELECT * FROM characters WHERE project_id=?")) {
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM characters WHERE project_id=? LIMIT 200")) {
             ps.setString(1, projectId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(mapCharacter(rs));
@@ -249,16 +249,17 @@ public class SqliteNovelRepository implements NovelRepository {
     /** B1: 事务内保存章节——使用传入连接 */
     public String saveChapter(Connection conn, Chapter c) {
         String sql = "INSERT INTO chapters (id,project_id,chapter_index,title,content,word_count," +
-                "version,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?) " +
+                "version,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?) " +
                 "ON CONFLICT(id) DO UPDATE SET title=excluded.title, content=excluded.content, " +
-                "word_count=excluded.word_count, version=excluded.version, updated_at=excluded.updated_at";
+                "word_count=excluded.word_count, version=excluded.version, status=excluded.status, updated_at=excluded.updated_at";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, c.getId()); ps.setString(2, c.getProjectId());
             ps.setInt(3, c.getChapterIndex()); ps.setString(4, c.getTitle());
             ps.setString(5, c.getContent()); ps.setInt(6, c.getWordCount());
             ps.setInt(7, c.getVersion());
-            ps.setString(8, c.getCreatedAt().toString());
-            ps.setString(9, c.getUpdatedAt().toString());
+            ps.setString(8, c.getStatus() != null ? c.getStatus().name() : "DONE");
+            ps.setString(9, c.getCreatedAt().toString());
+            ps.setString(10, c.getUpdatedAt().toString());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
         return c.getId();
@@ -656,7 +657,7 @@ public class SqliteNovelRepository implements NovelRepository {
         List<ContinuityIssue> list = new ArrayList<>();
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "SELECT * FROM continuity_issues WHERE project_id=? ORDER BY created_at DESC")) {
+                     "SELECT * FROM continuity_issues WHERE project_id=? ORDER BY created_at DESC LIMIT 200")) {
             ps.setString(1, projectId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(mapIssue(rs));
@@ -854,12 +855,37 @@ public class SqliteNovelRepository implements NovelRepository {
         List<EntityEdge> list = new ArrayList<>();
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "SELECT * FROM entity_edges WHERE project_id=?")) {
+                     "SELECT * FROM entity_edges WHERE project_id=? LIMIT 500")) {
             ps.setString(1, projectId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(mapEdge(rs));
         } catch (SQLException e) { throw new RuntimeException(e); }
         return list;
+    }
+
+    /** p10-w3-03: 物理删除过期实体边（已失效 validTo<beforeChapter），返回删除数 */
+    @Override
+    public int deleteExpiredEdges(String projectId, int beforeChapter) {
+        String sql = "DELETE FROM entity_edges WHERE project_id=? AND valid_to_chapter>0 AND valid_to_chapter<?";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            ps.setInt(2, beforeChapter);
+            return ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** p10-w3-03: 归档旧的非 HIGH 连续性问题（resolved=1），返回归档数 */
+    @Override
+    public int archiveOldLowSeverityIssues(String projectId, int beforeChapter) {
+        String sql = "UPDATE continuity_issues SET resolved=1 WHERE project_id=? AND resolved=0 "
+                + "AND severity!='HIGH' AND detected_at_chapter<?";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            ps.setInt(2, beforeChapter);
+            return ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
     // --- EvaluationRecord ---
@@ -1039,8 +1065,8 @@ public class SqliteNovelRepository implements NovelRepository {
                 "enable_feedback_injection,feedback_window,dialogue_differentiation," +
                 "plot_stall_window,character_upgrade_span,min_chapter_length," +
                 "max_beats_per_chapter,max_chapter_length,chapter_length_variation,fast_pace_window," +
-                "foreshadow_suspense_threshold,target_chapters,layered_outline,updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET " +
+                "foreshadow_suspense_threshold,target_chapters,layered_outline,cost_budget_yuan,updated_at) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET " +
                 "dialogue_density=excluded.dialogue_density, " +
                 "enable_dialogue_enforcement=excluded.enable_dialogue_enforcement, " +
                 "enable_climax_rotation=excluded.enable_climax_rotation, " +
@@ -1061,6 +1087,7 @@ public class SqliteNovelRepository implements NovelRepository {
                 "foreshadow_suspense_threshold=excluded.foreshadow_suspense_threshold, " +
                 "target_chapters=excluded.target_chapters, " +
                 "layered_outline=excluded.layered_outline, " +
+                "cost_budget_yuan=excluded.cost_budget_yuan, " +
                 "updated_at=excluded.updated_at";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -1085,7 +1112,8 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setInt(19, p.getForeshadowSuspenseThreshold());
             ps.setInt(20, p.getTargetChapters());
             ps.setInt(21, p.isLayeredOutline() ? 1 : 0);
-            ps.setString(22, p.getUpdatedAt().toString());
+            ps.setDouble(22, p.getCostBudgetYuan());
+            ps.setString(23, p.getUpdatedAt().toString());
             ps.executeUpdate();
         } catch (SQLException ex) { throw new RuntimeException(ex); }
     }
@@ -1148,6 +1176,11 @@ public class SqliteNovelRepository implements NovelRepository {
         return list;
     }
 
+    @Override
+    public List<GenerationLog> findGenerationLogsByProject(String projectId) {
+        return findAllGenerationLogs(projectId);
+    }
+
     private GenerationLog mapGenerationLog(ResultSet rs) throws SQLException {
         return new GenerationLog(
                 rs.getString("project_id"),
@@ -1187,7 +1220,7 @@ public class SqliteNovelRepository implements NovelRepository {
         List<NarrativeThread> list = new ArrayList<>();
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "SELECT * FROM narrative_threads WHERE project_id=? ORDER BY first_seen_chapter")) {
+                     "SELECT * FROM narrative_threads WHERE project_id=? ORDER BY first_seen_chapter LIMIT 100")) {
             ps.setString(1, projectId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(mapNarrativeThread(rs));
@@ -1268,6 +1301,7 @@ public class SqliteNovelRepository implements NovelRepository {
         try { p.setForeshadowSuspenseThreshold(rs.getInt("foreshadow_suspense_threshold")); } catch (Exception ignored) { p.setForeshadowSuspenseThreshold(8); }
         try { p.setTargetChapters(rs.getInt("target_chapters")); } catch (Exception ignored) { p.setTargetChapters(24); }
         try { p.setLayeredOutline(rs.getInt("layered_outline") == 1); } catch (Exception ignored) { p.setLayeredOutline(false); }
+        try { p.setCostBudgetYuan(rs.getDouble("cost_budget_yuan")); } catch (Exception ignored) { p.setCostBudgetYuan(0); }
         return p;
     }
     private KnowledgeEntry mapEntry(ResultSet rs) throws SQLException {
@@ -1312,6 +1346,11 @@ public class SqliteNovelRepository implements NovelRepository {
         if (content != null) c.setContent(content);
         // mc-p1-01: 用 DB 中的真实 version 覆盖（setContent 会 bump version，需修正）
         setField(c, "version", rs.getInt("version"));
+        // p10-w1-06: 读取章节状态（兼容旧库无列/无效值，默认 DONE）
+        try {
+            String st = rs.getString("status");
+            if (st != null && !st.isEmpty()) c.setStatus(Chapter.Status.valueOf(st));
+        } catch (Exception ignored) { /* 旧库无 status 列 */ }
         return c;
     }
 

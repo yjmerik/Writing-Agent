@@ -2,9 +2,28 @@
 
 ## Current Objective
 
-- **Goal**: 百万字可靠性优化（`docs/specs/2026-08-09-million-character-reliability.md`，18 个 feature：mc-p0..mc-p3），依据审查报告修复 5 类阻断问题，并做端到端验证。
-- **Current status**: **P0/P1/P2/P3 全部完成**。快速验证（3 章 record→replay→质量评估）闭环通过；基线已 bless（minEvaluationScore=7）。
-- **Branch / commit**: main；最近提交见 `git log`。
+- **Goal**: 百万字长篇架构优化（`docs/specs/2026-08-13-million-word-architecture.md`，Phase 10，三波 23 feature）。
+- **Current status**: **22/23 feature 完成，214 tests 0 failures，3 轮 e2e 全部 PASS**。W1(7)+W2(7)+W3(8) 已实现并端到端验证。剩余 w3-01（总纲中段重规划，需 LLM 重规划，单独立 spec 推进）。
+- **Branch / commit**: `phase-10-w1-w2-foundation`（3 个 commit，见 progress.md）。
+- **Branch / commit**: main（未 commit，工作区有 W1+W2 改动）；最近提交见 `git log`。
+- **上一阶段（mc spec）状态**: P0/P1/P2/P3 全部完成，详见下方历史。
+
+## 架构 Review 结论速览（2026-08-13）
+
+- 系统在 ~30 章/≈9.6 万字验证通过，向百万字（400 章）扩展有 5 道扩展墙（~40/120/200/200+/全程）。
+- 4 个系统性根因：A 全量加载进单次 LLM 调用 / B 图表只增不减 / C 历史记忆级联压缩衰减 / D 修复闭环只向当前章只1次。
+- 核心动作：引入 `story_facts`（可累积/可纠错/可检索的事实真相层）替代 book_summary 为主长程记忆，并作为修复闭环的纠错对象。
+
+## Next Steps（下次会话入口）
+
+1. **开始 W1 第一波（止血正确性）**——按 Bugfix gate，每个 feature 先写复现 failing test：
+   - `p10-w1-01` stableSectionCache 写联动失效（**正确性 bug，最高优先**）
+   - `p10-w1-02` 脏卷摘要重算路径（**静默历史丢失**）
+   - `p10-w1-03` 向量去污 + top-K 联动预算
+   - `p10-w1-04..07` 成本熔断/退避降级/章节状态机/后处理并行+重写互斥
+2. W1 完成后跑 `./scripts/e2e.sh --mode record --chapters 30` 验证无中断 + 模拟 429 验证降级。
+3. W1 全绿后进入 W2（故事真典 + 检索收窄），需先做 `p10-w2-01` story_facts 表。
+4. 每个 feature 完成按 End-of-Session 程序更新 feature_list.json（status→completed + evidence）。
 
 ## 审查 5 类阻断问题 → 修复状态
 

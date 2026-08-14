@@ -28,6 +28,7 @@ public class WritingContext {
     private String knowledgeQuoteSection;     // 引用素材
     private String narrativeThreadSection;    // 叙事线索追踪
     private String feedbackSection;           // 历史反馈（ContinuityIssue 注入）
+    private String bibleSection;              // p10-w2-07: 故事真典（ACTIVE 事实，长程记忆，替代级联摘要）
 
     /** system prompt：故事原旨 + 风格 + 世界观 + 相关设定 + 出场人物 */
     public String toSystemPrompt() {
@@ -42,6 +43,10 @@ public class WritingContext {
         }
         if (worldbuildingSection != null && !worldbuildingSection.isBlank()) {
             sb.append("【世界观设定】\n").append(worldbuildingSection).append("\n\n");
+        }
+        // p10-w2-07: 故事真典——已确立的事实（长程记忆核心），本章必须与之一致，不得自相矛盾
+        if (bibleSection != null && !bibleSection.isBlank()) {
+            sb.append("【故事真典（已确立的事实，本章必须严格遵守）】\n").append(bibleSection).append("\n\n");
         }
         if (entityConsistencySection != null && !entityConsistencySection.isBlank()) {
             sb.append(entityConsistencySection).append("\n\n");
@@ -154,4 +159,6 @@ public class WritingContext {
     public void setNarrativeThreadSection(String s) { this.narrativeThreadSection = s; }
     public String getFeedbackSection() { return feedbackSection; }
     public void setFeedbackSection(String s) { this.feedbackSection = s; }
+    public String getBibleSection() { return bibleSection; }
+    public void setBibleSection(String s) { this.bibleSection = s; }
 }

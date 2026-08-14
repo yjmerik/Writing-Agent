@@ -1,5 +1,9 @@
 package com.writing.novel.service;
 
+import com.writing.novel.spi.NovelRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -8,8 +12,11 @@ import java.util.Map;
 /**
  * 多维度多样性追踪器——追踪多个维度的重复，生成轮换约束。
  * 扩展 ClimaxDiversityTracker，增加开场方式和冲突模式维度。
+ * p10-w3-06: 用 generation_logs 持久化状态（之前纯内存 Map 重启清零，长程多样性统计不可用）。
  */
 public class DiversityTracker {
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private static final int HISTORY_SIZE = 5;
 
@@ -99,5 +106,31 @@ public class DiversityTracker {
             sb.append("第").append(chapters.get(i)).append("章:").append(s).append(" ");
         }
         return sb.toString().trim();
+    }
+
+    /** p10-w3-06: 持久化到 generation_logs（JSON 序列化，覆盖上次保存） */
+    public void persist(String projectId, NovelRepository repo) {
+        try {
+            String json = MAPPER.writeValueAsString(dimensions);
+            repo.saveGenerationLog(new com.writing.novel.domain.GenerationLog(
+                    projectId, "DIVERSITY_TRACKER", "", json, 0));
+        } catch (JsonProcessingException ignored) {}
+    }
+
+    /** p10-w3-06: 从 generation_logs 恢复（重启后不丢失多样性统计） */
+    public void restore(String projectId, NovelRepository repo) {
+        try {
+            var logs = repo.findGenerationLogsByProject(projectId);
+            for (var log : logs) {
+                if ("DIVERSITY_TRACKER".equals(log.getAgentType()) && log.getKeyElements() != null) {
+                    Map<String, LinkedHashMap<Integer, List<String>>> loaded = MAPPER.readValue(
+                            log.getKeyElements(),
+                            new TypeReference<Map<String, LinkedHashMap<Integer, List<String>>>>() {});
+                    dimensions.clear();
+                    dimensions.putAll(loaded);
+                    return;
+                }
+            }
+        } catch (Exception ignored) {}
     }
 }

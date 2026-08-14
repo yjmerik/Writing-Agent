@@ -21,6 +21,16 @@ public interface VectorStore {
     void delete(String id);
 
     /**
+     * p10-w1-03: 删除 id 以指定前缀开头的全部向量，返回删除条数。
+     * 用于章节重写时清理该章旧版本 chunk（chapterId 与 chapterId#chunkN），
+     * 避免新旧正文并存导致向量检索召回自相矛盾的旧情节。
+     * 默认空操作（其他实现可选实现）。
+     */
+    default int deleteByPrefix(String idPrefix) {
+        return 0;
+    }
+
+    /**
      * 语义检索 top-K 最相似的文本块。
      * @param queryVector 查询向量
      * @param projectId   限定项目范围

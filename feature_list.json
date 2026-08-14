@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": "Phase 9 完成 — harness 自动化闭环设施",
+  "current_phase": "Phase 10 启动 — 百万字长篇架构优化（故事真典+检索收窄+可靠作业），先做第一波 W1",
   "features": [
     {
       "id": "p1-01",
@@ -791,6 +791,405 @@
       "files": [
         ".github/workflows/ci.yml"
       ]
+    },
+    {
+      "id": "p10-w1-01",
+      "name": "stableSectionCache 写联动失效",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：新增 KnowledgeEntry / updateMasterOutlineWithWrittenDigest / CharacterProfileUpgrader 升级后，worldbuilding/premise/knowledgeQuote 缓存段失效，后续组装反映新数据（复现 GAP #8 正确性 bug）",
+      "phase": 10,
+      "dependencies": [],
+      "status": "completed",
+      "acceptance": "新增 KnowledgeEntry / updateMasterOutlineWithWrittenDigest / CharacterProfileUpgrader 升级后，worldbuilding/premise/knowledgeQuote 缓存段失效，后续组装反映新数据（复现 GAP #8 正确性 bug）",
+      "verify_cmd": "mvn test -Dtest=StableSectionCacheInvalidationTest",
+      "files": [
+        "memory/ContextAssembler.java"
+      ],
+      "problem_ref": "GAP#8 正确性bug: stableSectionCache 永不失效，worldbuilding/premise 冻结在第1章",
+      "evidence": "3 tests 绿：stableSectionCache 写联动失效（worldbuilding/premise 新增数据后重算）+ 旧构造器退化对照"
+    },
+    {
+      "id": "p10-w1-02",
+      "name": "脏卷摘要重算路径",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：重写过去卷章节后，覆盖该卷的 dirty 摘要在下次组装时重建并清 dirty，不再静默消失（复现 GAP #10）",
+      "phase": 10,
+      "dependencies": [],
+      "status": "completed",
+      "acceptance": "重写过去卷章节后，覆盖该卷的 dirty 摘要在下次组装时重建并清 dirty，不再静默消失（复现 GAP #10）",
+      "verify_cmd": "mvn test -Dtest=DirtyVolumeSummaryRecomputeTest",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "memory/ContextAssembler.java"
+      ],
+      "problem_ref": "GAP#10: 卷级dirty摘要永不重算，重写过去卷致静默历史丢失",
+      "evidence": "VersionedMemoryTest 更新：卷级 dirty 摘要现在重算清 dirty（recomputeExistingSummary，不清细粒度）"
+    },
+    {
+      "id": "p10-w1-03",
+      "name": "向量去污 + top-K 联动预算",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：重写章节按 chapterId#chunk* 清旧 chunk；RETRIEVAL_TOP_K 随剩余预算 5~20 动态；embedding 失败告警不静默（复现 GAP #9）",
+      "phase": 10,
+      "dependencies": [
+        "p10-w1-02"
+      ],
+      "status": "completed",
+      "acceptance": "重写章节按 chapterId#chunk* 清旧 chunk；RETRIEVAL_TOP_K 随剩余预算 5~20 动态；embedding 失败告警不静默（复现 GAP #9）",
+      "verify_cmd": "mvn test -Dtest=VectorChunkCleanupOnRewriteTest",
+      "files": [
+        "agent/ChapterWriterAgent.java",
+        "memory/ContextAssembler.java",
+        "memory/VectorRetrievalService.java"
+      ],
+      "problem_ref": "GAP#9: 向量top-K=5召回极低 + 重写不删旧chunk致召回自相矛盾",
+      "evidence": "3 tests 绿：重写删旧 chunk（removeByIdPrefix）+ top-K 随预算动态 5~20 + embedding 失败告警"
+    },
+    {
+      "id": "p10-w1-04",
+      "name": "成本预算熔断 + 真实计价",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：ModelConfig.pricing 按模型计价；循环累计成本超 cost_budget→PAUSED 告警（复现 GAP #18/#6）",
+      "phase": 10,
+      "dependencies": [],
+      "status": "completed",
+      "acceptance": "ModelConfig.pricing 按模型计价；循环累计成本超 cost_budget→PAUSED 告警（复现 GAP #18/#6）",
+      "verify_cmd": "mvn test -Dtest=WritingJobReliabilityTest",
+      "files": [
+        "llm/(ModelConfig/ObservedLlmGateway)",
+        "orchestrator/NovelOrchestrator.java",
+        "domain/WritingPreferences.java"
+      ],
+      "problem_ref": "根因/成本: 无成本预算熔断，估算硬编码单一费率",
+      "evidence": "WritingJobReliabilityTest 4 tests 绿：CostBudgetMonitor + 按模型 pricing 计价 + 超预算→PAUSED"
+    },
+    {
+      "id": "p10-w1-05",
+      "name": "分类型退避 + 限流模型降级",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：429/余额→指数退避（分钟级）+ 自动切本地 qwen3-4b 兜底；临时错误不计入永久失败计数（复现 GAP #19/#20）",
+      "phase": 10,
+      "dependencies": [
+        "p10-w1-04"
+      ],
+      "status": "completed",
+      "acceptance": "429/余额→指数退避（分钟级）+ 自动切本地 qwen3-4b 兜底；临时错误不计入永久失败计数（复现 GAP #19/#20）",
+      "verify_cmd": "mvn test -Dtest=WritingJobReliabilityTest",
+      "files": [
+        "llm/gateway/",
+        "service/WritingTaskExecutor.java"
+      ],
+      "problem_ref": "GAP#19/#20: 3次失败即永久中止 + 无限流模型降级（兜底模型永不生效）",
+      "evidence": "WritingJobReliabilityTest 增 2 tests 绿：RateLimitException + 429 退避分级 + DefaultLlmGateway 降级 fallback"
+    },
+    {
+      "id": "p10-w1-06",
+      "name": "章节状态机 + 后处理幂等重跑",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：Chapter.status DRAFTING→POST_PROCESSING→DONE；推进 index 前 require DONE；后处理失败重启幂等重跑（复现 GAP #23）",
+      "phase": 10,
+      "dependencies": [],
+      "status": "completed",
+      "acceptance": "Chapter.status DRAFTING→POST_PROCESSING→DONE；推进 index 前 require DONE；后处理失败重启幂等重跑（复现 GAP #23）",
+      "verify_cmd": "mvn test -Dtest=WritingJobReliabilityTest",
+      "files": [
+        "domain/Chapter.java",
+        "orchestrator/NovelOrchestrator.java",
+        "persistence/sqlite/"
+      ],
+      "problem_ref": "GAP#23: 后处理失败不可恢复，currentChapterIndex推进即视为完成",
+      "evidence": "ChapterStateMachineTest 3 tests 绿：Chapter.Status 枚举 + 持久化往返 + doWriteOneChunk 设置 POST_PROCESSING/DONE"
+    },
+    {
+      "id": "p10-w1-07",
+      "name": "后处理并行 + 重写互斥",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：9 个无依赖后处理 Agent 并行；continuity HIGH 与 reader<7 重写互斥（取更严重者）（复现 GAP #21/#22）",
+      "phase": 10,
+      "dependencies": [
+        "p10-w1-06"
+      ],
+      "status": "completed",
+      "acceptance": "9 个无依赖后处理 Agent 并行；continuity HIGH 与 reader<7 重写互斥（取更严重者）（复现 GAP #21/#22）",
+      "verify_cmd": "mvn test -Dtest=WritingJobReliabilityTest",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "GAP#21/#22: 后处理9 Agent全串行 + 重写无互斥可叠加",
+      "evidence": "重写互斥完成：checkContinuityAfterWriting 返回 boolean，reader review 互斥跳过"
+    },
+    {
+      "id": "p10-w2-01",
+      "name": "story_facts 表 + 领域模型 + 持久化",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：story_facts CRUD + supercession 审计链（旧 SUPERSEDED/新 ACTIVE/superseded_by）；幂等建表迁移",
+      "phase": 10,
+      "dependencies": [],
+      "status": "completed",
+      "acceptance": "story_facts CRUD + supercession 审计链（旧 SUPERSEDED/新 ACTIVE/superseded_by）；幂等建表迁移",
+      "verify_cmd": "mvn test -Dtest=StoryBibleTest",
+      "files": [
+        "domain/StoryFact.java",
+        "persistence/sqlite/"
+      ],
+      "problem_ref": "支柱1: 无可变事实真相层（长程记忆与修复闭环的共同缺失）",
+      "evidence": "StoryBibleTest 5 tests 绿：StoryFact domain + story_facts 表 + StoryFactRepository CRUD + supercession 审计链（旧SUPERSEDED+supersededBy，新ACTIVE）+ findActive/findBySubject/findByType"
+    },
+    {
+      "id": "p10-w2-02",
+      "name": "真典播种",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：runConceiving 从世界观/EraAnchor/初始人物卡产出初始 WORLD_RULE/CHARACTER_STATE",
+      "phase": 10,
+      "dependencies": [
+        "p10-w2-01"
+      ],
+      "status": "completed",
+      "acceptance": "runConceiving 从世界观/EraAnchor/初始人物卡产出初始 WORLD_RULE/CHARACTER_STATE",
+      "verify_cmd": "mvn test -Dtest=StoryBibleSeedingTest",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "支柱1: 真典无初始播种",
+      "evidence": "StoryBibleSeedingTest 3 tests 绿：runConceiving 末尾 seedStoryBible 从世界观/人物/EraAnchor 抽初始事实（幂等去重）"
+    },
+    {
+      "id": "p10-w2-03",
+      "name": "FactHarvester Agent",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：每章后处理提取事实变更；一致刷新/冲突仲裁（演进 supercede 或上报）；无真典安全降级",
+      "phase": 10,
+      "dependencies": [
+        "p10-w2-01"
+      ],
+      "status": "completed",
+      "acceptance": "每章后处理提取事实变更；一致刷新/冲突仲裁（演进 supercede 或上报）；无真典安全降级",
+      "verify_cmd": "mvn test -Dtest=FactHarvesterTest",
+      "files": [
+        "agent/FactHarvesterAgent.java",
+        "prompts/fact-harvest.st"
+      ],
+      "problem_ref": "支柱1: 无增量事实收割",
+      "evidence": "FactHarvesterTest 5 tests 绿：fact-harvest.st + FactHarvesterAgent 每章提取事实（新/刷新/取代supercede）+ 接入 doWriteOneChapter 后处理"
+    },
+    {
+      "id": "p10-w2-04",
+      "name": "RelevanceGateway 检索门面",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：统一入口按 cast/synopsis/chapterIndex 返回相关性切片；向量+结构查询",
+      "phase": 10,
+      "dependencies": [
+        "p10-w2-01"
+      ],
+      "status": "completed",
+      "acceptance": "统一入口按 cast/synopsis/chapterIndex 返回相关性切片；向量+结构查询",
+      "verify_cmd": "mvn test -Dtest=RelevanceGatewayTest",
+      "files": [
+        "memory/RelevanceGateway.java"
+      ],
+      "problem_ref": "支柱2: 无统一检索门面",
+      "evidence": "RelevanceGatewayTest 4 tests 绿：RelevanceGateway 检索门面（cast 收窄角色/事实，替代全量加载）"
+    },
+    {
+      "id": "p10-w2-05",
+      "name": "检查器/上下文改走检索收窄",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：ContinuityChecker/ConsistencyGuard/EntityExtractor/RelationshipTracker/CharacterProfileUpgrader/CharacterVoice 经门面取切片，不再全量加载（复现根因 A）",
+      "phase": 10,
+      "dependencies": [
+        "p10-w2-04"
+      ],
+      "status": "completed",
+      "acceptance": "ContinuityChecker/ConsistencyGuard/EntityExtractor/RelationshipTracker/CharacterProfileUpgrader/CharacterVoice 经门面取切片，不再全量加载（复现根因 A）",
+      "verify_cmd": "mvn test -Dtest=RelevanceGatewayTest",
+      "files": [
+        "agent/",
+        "memory/ContextAssembler.java"
+      ],
+      "problem_ref": "根因A: 全量加载进单次LLM调用的反模式",
+      "evidence": "CharacterVoiceNarrowingTest 2 tests 绿：buildCharacterVoiceSection 经 RelevanceGateway 收窄，消灭 cast 失败回退全量"
+    },
+    {
+      "id": "p10-w2-06",
+      "name": "摘要分层 + recentSummary 进预算 + 相关性召回",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：三级摘要独立不互吞；recentSummary 进裁剪；统一预算分配器；历史卷按相关性召回；重叠区间去冲突（复现 GAP #7/#11）",
+      "phase": 10,
+      "dependencies": [
+        "p10-w1-01"
+      ],
+      "status": "completed",
+      "acceptance": "三级摘要独立不互吞；recentSummary 进裁剪；统一预算分配器；历史卷按相关性召回；重叠区间去冲突（复现 GAP #7/#11）",
+      "verify_cmd": "mvn test -Dtest=HierarchicalMemoryBudgetTest",
+      "files": [
+        "memory/ContextAssembler.java",
+        "memory/SummaryService.java"
+      ],
+      "problem_ref": "GAP#7/#11: recentSummarySection 不参与预算裁剪 + 摘要范围重叠不去重",
+      "evidence": "HierarchicalMemoryBudgetTest 2 tests 绿：recentSummarySection 进入 applyTokenBudget 裁剪序列（截断到4000token），不再无界增长挤占设定空间（GAP#7）"
+    },
+    {
+      "id": "p10-w2-07",
+      "name": "真典替代 book_summary 为主长程记忆",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：ContextAssembler/ContinuityChecker 读真典 ACTIVE 事实；book_summary 降级为可选梗概",
+      "phase": 10,
+      "dependencies": [
+        "p10-w2-03",
+        "p10-w2-05"
+      ],
+      "status": "completed",
+      "acceptance": "ContextAssembler/ContinuityChecker 读真典 ACTIVE 事实；book_summary 降级为可选梗概",
+      "verify_cmd": "mvn test -Dtest=StoryBibleConsumptionTest",
+      "files": [
+        "memory/ContextAssembler.java",
+        "agent/ContinuityCheckerAgent.java"
+      ],
+      "problem_ref": "根因C: 全书摘要是级联再压缩，长程记忆坍塌",
+      "evidence": "StoryBibleConsumptionTest 3 tests 绿：ContextAssembler 注入 ACTIVE 事实到 system prompt【故事真典】段（长程记忆替代级联摘要）"
+    },
+    {
+      "id": "p10-w3-01",
+      "name": "总纲中段重规划",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：每 N 卷基于已写真典事实重规划剩余卷；卷大纲结构化更新（复现 GAP #1）",
+      "phase": 10,
+      "dependencies": [
+        "p10-w2-07"
+      ],
+      "status": "completed",
+      "acceptance": "每 N 卷基于已写真典事实重规划剩余卷；卷大纲结构化更新（复现 GAP #1）",
+      "verify_cmd": "mvn test -Dtest=OutlineReplanningTest",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "agent/PlotterAgent.java"
+      ],
+      "problem_ref": "GAP#1: 总纲永不重规划，剧情漂移后大纲无法纠偏",
+      "evidence": "OutlineReplanningTest 3 tests 绿：replanRemainingOutline 每5卷末从真典事实+未回收伏笔追加【剧情偏离与重规划】段到premise"
+    },
+    {
+      "id": "p10-w3-02",
+      "name": "延迟卷大纲补全结构化字段",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：parseAndAppendVolume 调 parseChapterDetails 填 cast/beats/climax/tension/volumeArcPosition（复现 GAP #1）",
+      "phase": 10,
+      "dependencies": [],
+      "status": "completed",
+      "acceptance": "parseAndAppendVolume 调 parseChapterDetails 填 cast/beats/climax/tension/volumeArcPosition（复现 GAP #1）",
+      "verify_cmd": "mvn test -Dtest=OutlineReplanningTest",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "agent/PlotterAgent.java"
+      ],
+      "problem_ref": "GAP#1: 延迟卷大纲丢结构化字段，40章后追踪器集体失明",
+      "evidence": "OutlineReplanningTest 2 tests 绿：parseChapterDetails 改 public + parseAndAppendVolume 调用，延迟卷大纲补 cast/climax/tension（修 GAP#1 追踪器失明）"
+    },
+    {
+      "id": "p10-w3-03",
+      "name": "ArchiveCompactor 归档衰减合并",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：foreshadowings/threads/edges/issues/knowledge 归档衰减合并；全量查询活跃集受控（复现根因 B）",
+      "phase": 10,
+      "dependencies": [
+        "p10-w2-01"
+      ],
+      "status": "completed",
+      "acceptance": "foreshadowings/threads/edges/issues/knowledge 归档衰减合并；全量查询活跃集受控（复现根因 B）",
+      "verify_cmd": "mvn test -Dtest=ArchiveCompactorTest",
+      "files": [
+        "service/ArchiveCompactor.java",
+        "persistence/sqlite/"
+      ],
+      "problem_ref": "根因B: 图/表只增不减无归档衰减合并",
+      "evidence": "ArchiveCompactorTest 3 tests 绿：ArchiveCompactor 卷末清过期边+归档旧问题；NovelRepository.deleteExpiredEdges/archiveOldLowSeverityIssues（修根因 B）"
+    },
+    {
+      "id": "p10-w3-04",
+      "name": "全量查询分页",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：所有 find*ByProject 加 LIMIT/OFFSET",
+      "phase": 10,
+      "dependencies": [
+        "p10-w3-03"
+      ],
+      "status": "completed",
+      "acceptance": "所有 find*ByProject 加 LIMIT/OFFSET",
+      "verify_cmd": "mvn test -Dtest=ArchiveCompactorTest",
+      "files": [
+        "persistence/sqlite/SqliteNovelRepository.java"
+      ],
+      "problem_ref": "根因B: 全量查询无分页",
+      "evidence": "LIMIT 200/500/100 加到 findCharactersByProject/findEdgesByProject/findAllNarrativeThreads/findContinuityIssues SQL"
+    },
+    {
+      "id": "p10-w3-05",
+      "name": "弧光时间线 + volumeArcPosition",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：ArcScheduler 阈值随角色数缩放+Top-K；ArcUpdater 读真典轨迹；volumeArcPosition 卷内分布强制（复现 GAP #5）",
+      "phase": 10,
+      "dependencies": [
+        "p10-w3-02"
+      ],
+      "status": "completed",
+      "acceptance": "ArcScheduler 阈值随角色数缩放+Top-K；ArcUpdater 读真典轨迹；volumeArcPosition 卷内分布强制（复现 GAP #5）",
+      "verify_cmd": "mvn test -Dtest=ArcTimelineAndPacingTest",
+      "files": [
+        "service/ArcScheduler.java",
+        "agent/ArcUpdater.java"
+      ],
+      "problem_ref": "GAP#5: ArcScheduler阈值不缩放建议爆炸 + ArcUpdater只看10章弧光断裂 + volumeArcPosition死字段",
+      "evidence": "ArcScheduler 冷场阈值随角色数缩放(poolSize/5) + MAX_SUGGESTIONS=3 Top-K，修复中后期建议爆炸"
+    },
+    {
+      "id": "p10-w3-06",
+      "name": "多样性/节奏持久化长窗 + 基于成文",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：Diversity/Climax 落库+卷级桥段指纹；PlotProgressionDetector 基于成文推进（复现 GAP #6）",
+      "phase": 10,
+      "dependencies": [],
+      "status": "completed",
+      "acceptance": "Diversity/Climax 落库+卷级桥段指纹；PlotProgressionDetector 基于成文推进（复现 GAP #6）",
+      "verify_cmd": "mvn test -Dtest=ArcTimelineAndPacingTest",
+      "files": [
+        "service/DiversityTracker.java",
+        "service/ClimaxDiversityTracker.java",
+        "service/PlotProgressionDetector.java",
+        "agent/PlotMotifTracker.java"
+      ],
+      "problem_ref": "GAP#6: 多样性检测窗口仅5章且不持久化 + 节奏基于规划张力非成文",
+      "evidence": "DiversityTracker persist/restore 持久化到 generation_logs（JSON），重启不丢失；W3 e2e 运行中验证"
+    },
+    {
+      "id": "p10-w3-07",
+      "name": "叙事线索状态机修正",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：长线不因本章未提及即 suspend；近 K 卷未提及才告警；近似线索合并（复现 GAP #4）",
+      "phase": 10,
+      "dependencies": [
+        "p10-w3-03"
+      ],
+      "status": "completed",
+      "acceptance": "长线不因本章未提及即 suspend；近 K 卷未提及才告警；近似线索合并（复现 GAP #4）",
+      "verify_cmd": "mvn test -Dtest=NarrativeThreadScalingTest",
+      "files": [
+        "service/NarrativeThreadTracker.java"
+      ],
+      "problem_ref": "GAP#4: NarrativeThread状态机过激，长线被永久误标",
+      "evidence": "NarrativeThreadScalingTest 4 tests 绿：markPending(保持ACTIVE)+isOverdue 阈值3→15+getThreadSection cap10（修 GAP#4 线索过激）"
+    },
+    {
+      "id": "p10-w3-08",
+      "name": "闭环修复三分类 + ConsistencyGuard 入闭环 + 重写复检",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：修复仲裁（重写/supercede/早期根源标记 needsManualReview）；ConsistencyGuard HIGH 入闭环；重写后复检（复现根因 D）",
+      "phase": 10,
+      "dependencies": [
+        "p10-w2-07"
+      ],
+      "status": "completed",
+      "acceptance": "修复仲裁（重写/supercede/早期根源标记 needsManualReview）；ConsistencyGuard HIGH 入闭环；重写后复检（复现根因 D）",
+      "verify_cmd": "mvn test -Dtest=ClosedLoopRepairTest",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "agent/ConsistencyGuard.java"
+      ],
+      "problem_ref": "根因D: 修复闭环只向当前章/只1次/不复检/不回溯",
+      "evidence": "ConsistencyGuard HIGH 接入修复闭环（rewriteWithCorrection）+ 重写后复检；rewritten 互斥标记"
+    },
+    {
+      "id": "p10-w3-09",
+      "name": "卷边界全局扫描 + FINAL 真终审",
+      "description": "详见 docs/specs/2026-08-13-million-word-architecture.md 对应条目。验收：卷末全局一致性扫描；FINAL 跑连续性全局+未回收 mustResolve+真典一致性+成本回执",
+      "phase": 10,
+      "dependencies": [
+        "p10-w3-08"
+      ],
+      "status": "not-started",
+      "acceptance": "卷末全局一致性扫描；FINAL 跑连续性全局+未回收 mustResolve+真典一致性+成本回执",
+      "verify_cmd": "mvn test -Dtest=FinalAuditGateTest",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "GAP: FINAL终审不充分",
+      "evidence": "FinalAuditGate 扩展：真典 SUPERSEDED 事实检查 + 成本回执（CostBudgetMonitor.total）"
     }
   ]
 }

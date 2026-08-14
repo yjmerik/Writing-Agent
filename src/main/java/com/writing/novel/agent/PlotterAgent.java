@@ -311,7 +311,8 @@ public class PlotterAgent {
     }
 
     /** 从章节原始内容中拆分场景节拍、爽点、出场人物 */
-    private void parseChapterDetails(ChapterSynopsis cs, String rawContent) {
+    /** p10-w3-02: 改 public 供 NovelOrchestrator.parseAndAppendVolume 复用（延迟卷大纲补全结构化字段） */
+    public void parseChapterDetails(ChapterSynopsis cs, String rawContent) {
         // 处理 markdown 加粗标记：**爽点** → 爽点
         String clean = rawContent.replaceAll("\\*\\*", "");
 

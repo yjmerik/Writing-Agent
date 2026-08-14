@@ -23,6 +23,11 @@ public class OpenAiCompatibleClient implements LlmClient {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private final OkHttpClient httpClient;
 
+    /** p10-w1-05: 退避时长（可被测试调小避免长睡）——5xx/网络 基数 */
+    static volatile long backoffUnitMs = 1000L;
+    /** p10-w1-05: 429 限流退避基数（更长：指数到分钟级） */
+    static volatile long rateLimitBackoffMs = 5000L;
+
     public OpenAiCompatibleClient() {
         this.httpClient = new OkHttpClient.Builder()
                 .connectTimeout(Duration.ofSeconds(30))
@@ -72,15 +77,20 @@ public class OpenAiCompatibleClient implements LlmClient {
                 }
                 // 429/5xx 可重试
                 if (attempt < 2) {
+                    boolean rateLimited = response.code() == 429;
                     response.close();
-                    sleepBackoff(attempt);
+                    sleepBackoff(attempt, rateLimited);
                     continue;
+                }
+                // p10-w1-05: 429 重试耗尽 → RateLimitException（上层降级到 fallback 模型，不计永久失败）
+                if (response.code() == 429) {
+                    throw new RateLimitException("LLM 限流（429）重试耗尽: " + response.code());
                 }
                 throw new RuntimeException("LLM 调用失败（重试耗尽）: HTTP " + response.code()
                         + " " + response.body().string());
             } catch (IOException e) {
                 if (attempt < 2) {
-                    sleepBackoff(attempt);
+                    sleepBackoff(attempt, false);
                     continue;
                 }
                 throw new RuntimeException("LLM 调用异常（重试耗尽）", e);
@@ -89,9 +99,14 @@ public class OpenAiCompatibleClient implements LlmClient {
         throw new RuntimeException("LLM 调用失败：不应到达此处");
     }
 
-    /** 指数退避：1s, 2s */
-    private void sleepBackoff(int attempt) {
-        try { Thread.sleep(1000L * (attempt + 1)); } catch (InterruptedException ignored) {
+    /**
+     * p10-w1-05: 分类型指数退避。
+     * 限流(429)：rateLimitBackoffMs * (attempt+1)，更长（指数到分钟级）；
+     * 5xx/网络：backoffUnitMs * (attempt+1)。
+     */
+    private void sleepBackoff(int attempt, boolean rateLimited) {
+        long unit = rateLimited ? rateLimitBackoffMs : backoffUnitMs;
+        try { Thread.sleep(unit * (attempt + 1)); } catch (InterruptedException ignored) {
             Thread.currentThread().interrupt();
         }
     }

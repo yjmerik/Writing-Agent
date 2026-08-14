@@ -53,6 +53,21 @@ public class EmbeddedVectorStore implements VectorStore, Serializable {
         markDirty();
     }
 
+    /** p10-w1-03: 按前缀批量删除（章节重写清旧 chunk），返回删除条数 */
+    @Override
+    public synchronized int deleteByPrefix(String idPrefix) {
+        int removed = 0;
+        var it = index.keySet().iterator();
+        while (it.hasNext()) {
+            if (it.next().startsWith(idPrefix)) {
+                it.remove();
+                removed++;
+            }
+        }
+        if (removed > 0) markDirty();
+        return removed;
+    }
+
     /** p12-K3: 标记脏 + 达阈值自动 flush */
     private void markDirty() {
         dirty = true;

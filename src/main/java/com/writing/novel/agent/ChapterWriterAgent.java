@@ -252,6 +252,11 @@ public class ChapterWriterAgent {
 
     /** 按段落分块索引章节正文，每块 ~800 字，确保中后段情节也能被召回。D2: 批量索引（一次embedding调用） */
     private void indexChapterInChunks(String projectId, Chapter chapter, String content) {
+        // p10-w1-03: 重索引前清理该章旧版本 chunk（chapterId 与 chapterId#chunkN），
+        // 避免重写后新旧正文并存导致向量检索召回自相矛盾的旧情节（复现 GAP#9）
+        if (vectorRetrieval != null) {
+            vectorRetrieval.removeByIdPrefix(chapter.getId());
+        }
         String prefix = "第" + chapter.getChapterIndex() + "章 " + chapter.getTitle() + "：";
         String fullText = prefix + content;
         int chunkSize = 800;

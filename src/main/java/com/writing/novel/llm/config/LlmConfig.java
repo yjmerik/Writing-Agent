@@ -6,6 +6,7 @@ import com.writing.novel.llm.client.OpenAiCompatibleClient;
 import com.writing.novel.llm.gateway.DefaultLlmGateway;
 import com.writing.novel.llm.gateway.ObservedLlmGateway;
 import com.writing.novel.llm.gateway.RecordReplayLlmGateway;
+import com.writing.novel.telemetry.CostBudgetMonitor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +28,8 @@ public class LlmConfig {
     @Bean
     public LlmGateway llmGateway(LlmProperties properties, LlmClient client,
                                  @Value("${llm.replay.mode:off}") String replayMode,
-                                 @Value("${llm.replay.dir:data/fixtures/llm}") String replayDir) {
+                                 @Value("${llm.replay.dir:data/fixtures/llm}") String replayDir,
+                                 CostBudgetMonitor costBudgetMonitor) {
         // mc-p0-04: 启动时校验凭据（replay 模式跳过）
         properties.setReplayMode(replayMode.equalsIgnoreCase("replay"));
         properties.validateKeys();
@@ -40,6 +42,7 @@ public class LlmConfig {
                     gateway, RecordReplayLlmGateway.Mode.REPLAY, Path.of(replayDir));
             default -> { /* off：直连真实网关 */ }
         }
-        return new ObservedLlmGateway(gateway);
+        // p10-w1-04: 注入 pricing + 成本累计，按 taskType 模型真实计价
+        return new ObservedLlmGateway(gateway, properties, costBudgetMonitor);
     }
 }

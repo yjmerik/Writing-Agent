@@ -44,6 +44,7 @@ public class SqliteSchemaInitializer {
         "CREATE TABLE IF NOT EXISTS chapters (" +
             "id TEXT PRIMARY KEY, project_id TEXT, chapter_index INTEGER, " +
             "title TEXT, content TEXT, word_count INTEGER, version INTEGER, " +
+            "status TEXT DEFAULT 'DONE', " +
             "created_at TEXT, updated_at TEXT)",
 
         "CREATE TABLE IF NOT EXISTS summaries (" +
@@ -103,9 +104,10 @@ public class SqliteSchemaInitializer {
             "chapter_length_variation TEXT DEFAULT 'VARIED', " +
             "fast_pace_window INTEGER DEFAULT 4, " +
             "foreshadow_suspense_threshold INTEGER DEFAULT 8, " +
-            "target_chapters INTEGER DEFAULT 400, " +
-            "layered_outline INTEGER DEFAULT 1, " +
-            "updated_at TEXT)",
+                "target_chapters INTEGER DEFAULT 400, " +
+                "layered_outline INTEGER DEFAULT 1, " +
+                "cost_budget_yuan REAL DEFAULT 0, " +
+                "updated_at TEXT)",
 
         // 生成日志表（创意多样性追踪）
         "CREATE TABLE IF NOT EXISTS generation_logs (" +
@@ -130,7 +132,15 @@ public class SqliteSchemaInitializer {
             "id TEXT PRIMARY KEY, project_id TEXT, status TEXT, " +
             "current_chapter INTEGER, total_chapters INTEGER, " +
             "chapters_written INTEGER, total_words INTEGER, " +
-            "error_message TEXT, created_at TEXT, updated_at TEXT)"
+            "error_message TEXT, created_at TEXT, updated_at TEXT)",
+
+        // p10-w2-01: 故事真典——可累积可纠错的事实真相层
+        "CREATE TABLE IF NOT EXISTS story_facts (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, fact_type TEXT, " +
+            "subject TEXT, assertion TEXT, chapter_established INTEGER, " +
+            "source_chapter_version INTEGER DEFAULT 0, importance INTEGER DEFAULT 3, " +
+            "status TEXT DEFAULT 'ACTIVE', superseded_by TEXT, " +
+            "last_validated_chapter INTEGER, created_at TEXT, updated_at TEXT)"
     };
 
     private final ConnectionProvider cp;
@@ -246,5 +256,9 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE chapter_synopses ADD COLUMN climax TEXT");
         // C2: 全书摘要——卷末压缩为≤3句的"全书一句话摘要"，修复记忆地平线坍塌
         safeAddColumn(st, "ALTER TABLE projects ADD COLUMN book_summary TEXT");
+        // p10-w1-04: 成本预算熔断
+        safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN cost_budget_yuan REAL DEFAULT 0");
+        // p10-w1-06: 章节状态机
+        safeAddColumn(st, "ALTER TABLE chapters ADD COLUMN status TEXT DEFAULT 'DONE'");
     }
 }

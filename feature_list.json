@@ -1463,8 +1463,8 @@
       "description": "EventLog 新增 7 类质量事件（CONCEIVE_GATE/PLAN_GATE/QUALITY_REVIEW/REWRITE_TRIGGERED/CONSISTENCY_ISSUE/QUALITY_CIRCUIT_BREAKER/FINAL_GATE）；EventContext 扩展。",
       "phase": 11,
       "dependencies": [],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "QualityEventLogTest pass；5类质量事件(QUALITY_REVIEW/REWRITE_TRIGGERED/CONSISTENCY_ISSUE/QUALITY_CIRCUIT_BREAKER/QUALITY_GATE)接入决策点(markQualityRisk/reader review/熔断/applyRepairClassification)；全量 BUILD SUCCESS",
       "files": [
         "telemetry/EventLog.java",
         "telemetry/EventContext.java"

@@ -677,6 +677,9 @@ public class NovelOrchestrator {
             try {
                 var review = readerReviewAgent.review(chapterIndex, chapter.getContent());
                 log.info("读者检验(章{}): {}/10 — {}", chapterIndex, review.getScore(), review.getSummary());
+                // p11-q3-01: 质量事件遥测——读者检验评分可观测
+                EventLog.emit("QUALITY_REVIEW", Map.of("score", review.getScore(),
+                        "passed", review.isPassed(), "summary", EventLog.truncate(review.getSummary(), 150)));
                 // p10-w1-07: continuity 已重写则互斥跳过（单章最多 1 次重写，避免最坏情况成本翻倍）
                 if (!rewrittenByContinuity && !review.isPassed()) {
                     log.info("章节评分 {} < {}，自动重写", review.getScore(), readerReviewAgent.getPassThreshold());
@@ -696,6 +699,9 @@ public class NovelOrchestrator {
                         log.info("重写后检验(章{}): {}/10", chapterIndex, reReview.getScore());
                         // p11-I1: 持久化重写后的最终评价
                         review = reReview;
+                        // p11-q3-01: 质量事件遥测——重写决策可观测
+                        EventLog.emit("REWRITE_TRIGGERED", Map.of("reason", "reader_review",
+                                "afterScore", reReview.getScore()));
                     } else if (newContent != null) {
                         log.warn("重写内容过短({}字 < 原版{}字的70%)，保留原版", newContent.length(), originalLength);
                     }
@@ -1228,6 +1234,10 @@ public class NovelOrchestrator {
                                             ContinuityIssue issue, boolean alreadyRewritten) {
         if (repairArbiter == null) return;
         var action = repairArbiter.classify(issue, alreadyRewritten);
+        // p11-q3-01: 质量事件遥测——一致性问题 + 仲裁动作可观测
+        EventLog.emit("CONSISTENCY_ISSUE", Map.of(
+                "type", issue.getType().name(), "severity", issue.getSeverity().name(),
+                "action", action.name(), "desc", EventLog.truncate(issue.getDescription(), 150)));
         switch (action) {
             case MANUAL_REVIEW -> {
                 chapter.setStatus(Chapter.Status.NEEDS_MANUAL_REVIEW);
@@ -1262,6 +1272,9 @@ public class NovelOrchestrator {
                     ContinuityIssue.Type.STRUCTURE, ContinuityIssue.Severity.MEDIUM,
                     "[quality_risk]" + stage + "门禁未过：" + feedback));
             log.warn("quality_risk 标记({}): {}", stage, feedback);
+            // p11-q3-01: 质量事件遥测——门禁失败可观测
+            EventLog.emit("QUALITY_GATE", Map.of(
+                    "stage", stage, "feedback", EventLog.truncate(feedback, 200)));
         } catch (Exception e) {
             log.warn("quality_risk 标记失败: {}", e.getMessage());
         }
@@ -1578,6 +1591,9 @@ public class NovelOrchestrator {
                     if (consecutiveHighIssues >= 10) {
                         // 连续 10 章 HIGH 问题，暂停写作
                         log.warn("连续 {} 章 HIGH 问题，暂停写作", consecutiveHighIssues);
+                        // p11-q3-01: 质量事件遥测——质量熔断可观测
+                        EventLog.emit("QUALITY_CIRCUIT_BREAKER", Map.of(
+                                "consecutiveHighIssues", consecutiveHighIssues, "threshold", 10));
                         break;
                     }
                 } else {

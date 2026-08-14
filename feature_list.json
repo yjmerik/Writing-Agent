@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": "Phase 11 过程化质量门禁架构 21/21 全部完成（Q0 地基+Q1 门禁+Q2 委员会+Q3 可观测），全量 BUILD SUCCESS。下一步：e2e record + compare-baseline 验证真实产出质量",
+  "current_phase": "Phase 12 新题材验证失败回流（6 feature）",
   "features": [
     {
       "id": "p1-01",
@@ -1557,6 +1557,103 @@
       "problem_ref": "p10-w3-09 not-started: 卷边界全局扫描 + FINAL 真终审",
       "acceptance": "真典 SUPERSEDED>20 告警 + 成本回执 + 卷边界全局扫描；p10-w3-09 标 completed",
       "verify_cmd": "mvn test -Dtest=FinalAuditGateTest"
+    },
+    {
+      "id": "p12-01",
+      "name": "延迟卷大纲标题解析修复",
+      "description": "parseAndAppendVolume 行首正则不匹配 markdown ## 标题（只清 ** 未清 #）→ 解析0章走占位卷（标题第N章/beats缺失）",
+      "phase": 12,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "parseAndAppendVolume cleanText 同时剥离 #（markdown ## 标题可解析，不再走占位卷）",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "2026-08-14 新题材验证失败分类",
+      "acceptance": "cleanText 同时剥离 # 与 **，markdown 标题行可解析出真实标题，不再走占位",
+      "verify_cmd": "mvn test -Dtest=LayeredOutlineParsingTest",
+      "type": "bug"
+    },
+    {
+      "id": "p12-02",
+      "name": "masterOutline 剥离 LLM 客套前言",
+      "description": "premise 含\"好的，作为您的...\"前言污染后续全部 prompt",
+      "phase": 12,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "PlotterAgent.stripPreamble 剥离【总纲】前客套话；Phase12FixTest pass",
+      "files": [
+        "agent/PlotterAgent.java"
+      ],
+      "problem_ref": "2026-08-14 新题材验证失败分类",
+      "acceptance": "planMasterOutline/plan 返回前剥离【总纲】之前的客套文本",
+      "verify_cmd": "mvn test -Dtest=PlotterAgentTest",
+      "type": "bug"
+    },
+    {
+      "id": "p12-03",
+      "name": "ReaderReview 解析失败重试",
+      "description": "章1\"检验解析失败\"→5/10 假象，解析 fallback 无重试",
+      "phase": 12,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "ReaderReview 解析失败降温+严格JSON指令重试1次；Phase12FixTest 2用例",
+      "files": [
+        "agent/ReaderReviewAgent.java"
+      ],
+      "problem_ref": "2026-08-14 新题材验证失败分类",
+      "acceptance": "解析失败时以温度0+严格JSON指令重试1次，仍失败才fallback",
+      "verify_cmd": "mvn test -Dtest=ReaderReviewRetryTest",
+      "type": "bug"
+    },
+    {
+      "id": "p12-04",
+      "name": "丢弃未命名空人物卡",
+      "description": "CharacterDesigner 解析失败 fallback 保存\"未命名\"空卡",
+      "phase": 12,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "未命名/空名人物卡丢弃不保存；Phase12FixTest pass",
+      "files": [
+        "agent/CharacterDesignerAgent.java"
+      ],
+      "problem_ref": "2026-08-14 新题材验证失败分类",
+      "acceptance": "姓名为空/未命名时不保存返回空",
+      "verify_cmd": "mvn test -Dtest=CharacterDesignerAgentTest",
+      "type": "bug"
+    },
+    {
+      "id": "p12-05",
+      "name": "targetChapters 默认 400→24",
+      "description": "构造器 400 与注释(默认24)不符，新项目规划400章与用户意图相悖",
+      "phase": 12,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "WritingPreferences 构造器 targetChapters 400→24",
+      "files": [
+        "domain/WritingPreferences.java"
+      ],
+      "problem_ref": "2026-08-14 新题材验证失败分类",
+      "acceptance": "新项目默认 24 章，可通过 preferences 调大",
+      "verify_cmd": "mvn test -Dtest=ProjectServiceTest",
+      "type": "bug"
+    },
+    {
+      "id": "p12-06",
+      "name": "UI 新建表单暴露题材预设",
+      "description": "romance 等预设未在 UI 暴露（API 已支持 preset 字段）",
+      "phase": 12,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "前端表单增加 6 题材预设选择（romance等），build 成功",
+      "files": [
+        "frontend/src/pages/ProjectListPage.tsx",
+        "frontend/src/api/client.ts"
+      ],
+      "problem_ref": "2026-08-14 新题材验证失败分类",
+      "acceptance": "表单增加预设选择（古风言情/修仙/悬疑/历史/惊悚/通用），提交带 preset 字段",
+      "verify_cmd": "cd frontend && npm run build",
+      "type": null
     }
   ]
 }

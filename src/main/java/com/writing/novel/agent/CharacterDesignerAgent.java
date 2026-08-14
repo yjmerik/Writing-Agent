@@ -55,6 +55,10 @@ public class CharacterDesignerAgent {
 
         var resp = gateway.complete(req);
         Character c = parseCharacter(resp.getContent(), projectId);
+        // p12-04: 解析失败得到"未命名"空卡时丢弃，不污染人物库
+        if (c.getName() == null || c.getName().isBlank() || "未命名".equals(c.getName())) {
+            return null;
+        }
         knowledgeBase.saveCharacter(c);
         return c;
     }

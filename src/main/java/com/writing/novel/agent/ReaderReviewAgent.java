@@ -43,7 +43,22 @@ public class ReaderReviewAgent {
                 .build();
 
         var resp = gateway.complete(req);
-        return parseReport(resp.getContent(), chapterIndex);
+        ReviewReport report = parseReport(resp.getContent(), chapterIndex);
+        // p12-03: 解析失败时降温+严格 JSON 指令重试 1 次（之前直接 5/10 假象）
+        if ("检验解析失败".equals(report.getSummary())) {
+            var retryReq = LlmRequest.builder()
+                    .taskType(LlmTaskType.GENERAL)
+                    .systemPrompt(systemPrompt)
+                    .userMessage(chapterContent + "\n\n【重要】请只输出合法 JSON（含 scores.engagement/coherence/character/hook 与 overall/summary/improvement 字段），不要任何其他文字或代码块标记。")
+                    .temperature(0.0)
+                    .maxTokens(1500)
+                    .build();
+            try {
+                report = parseReport(gateway.complete(retryReq).getContent(), chapterIndex);
+            } catch (Exception ignored) {
+            }
+        }
+        return report;
     }
 
     private ReviewReport parseReport(String json, int chapterIndex) {

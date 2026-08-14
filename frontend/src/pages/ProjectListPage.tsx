@@ -250,6 +250,16 @@ export default function ProjectListPage() {
             <Form.Item name="tags" label="类型标签">
               <Input placeholder="逗号分隔，如：穿越,历史,权谋,朝堂" />
             </Form.Item>
+            <Form.Item name="preset" label="题材预设（可选 — 按题材优化对话密度/文风/引用）">
+              <Select size="large" allowClear placeholder="自动推断（不选则按标签推断题材）">
+                <Select.Option value="romance">💕 古风言情 — 高对话密度、情感节拍、诗词典故</Select.Option>
+                <Select.Option value="cultivation">⚔️ 修仙玄幻 — 境界体系、爽点轮换、战斗张力</Select.Option>
+                <Select.Option value="mystery">🔍 悬疑推理 — 线索管理、伏笔密度、逻辑链</Select.Option>
+                <Select.Option value="historical">📜 历史权谋 — 时代锚点、典章语感、朝堂博弈</Select.Option>
+                <Select.Option value="thriller">⚡ 惊悚 — 高张力、危机节奏</Select.Option>
+                <Select.Option value="general">📖 通用 — 不做题材特化</Select.Option>
+              </Select>
+            </Form.Item>
             <Form.Item name="mode" label="运行模式">
               <Select size="large">
                 <Select.Option value="SOLO">🤖 自动模式 — 全自动生成，无需干预</Select.Option>

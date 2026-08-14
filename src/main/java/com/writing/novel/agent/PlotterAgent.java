@@ -139,7 +139,7 @@ public class PlotterAgent {
                 .maxTokens(16000)
                 .build();
         var resp = gateway.complete(req);
-        return resp.getContent();
+        return stripPreamble(resp.getContent()); // p12-02: 剥离 LLM 客套前言
     }
 
     /**
@@ -191,7 +191,7 @@ public class PlotterAgent {
                 .maxTokens(12000)
                 .build();
         var resp = gateway.complete(req);
-        return resp.getContent();
+        return stripPreamble(resp.getContent()); // p12-02: 剥离 LLM 客套前言
     }
 
     private Outline parseOutline(String text, String projectId) {
@@ -401,5 +401,20 @@ public class PlotterAgent {
             if (digits[i].equals(s)) return i;
         }
         return 1; // 兜底
+    }
+
+    /**
+     * p12-02: 剥离 LLM 客套前言（如"好的，作为您的专属长篇小说大纲规划专家…"）。
+     * 客套话污染 outline.premise 后会进入后续所有 prompt。以首个【总纲】/【卷N】/# 标题为界截断。
+     */
+    static String stripPreamble(String content) {
+        if (content == null) return "";
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("(?:【总纲】|【卷\\d+】|^#\\s)")
+                .matcher(content);
+        if (m.find() && m.start() > 0) {
+            return content.substring(m.start()).trim();
+        }
+        return content.trim();
     }
 }

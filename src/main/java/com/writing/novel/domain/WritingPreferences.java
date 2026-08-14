@@ -87,7 +87,7 @@ public class WritingPreferences {
         this.fastPaceWindow = 4;
         this.foreshadowSuspenseThreshold = 8;
         // mc-p1-05: 默认对齐百万字首版目标（spec: 400 章 × ≥2500 字/章）
-        this.targetChapters = 400;
+        this.targetChapters = 24; // p12-05: 默认 24（与注释一致；百万字项目经 preferences 调大，避免新项目误规划 400 章）
         this.layeredOutline = true;
         this.updatedAt = Instant.now();
     }

@@ -2131,7 +2131,8 @@ public class NovelOrchestrator {
 
         // mc-p3-01: 行首锚定 + 兼容 markdown 加粗(**第N章 标题**)；
         // 标题非空、遇 ：/: / 换行即止；行内"预计第N章回收"不触发截断
-        String cleanText = text == null ? "" : text.replace("**", "");
+        // p12-01: 同时剥离 markdown 标记（** 加粗 + # 标题）——行首锚定正则 ^第N章 不匹配 "## 第1章"，导致解析 0 章走占位卷（标题丢失/beats 缺失）
+        String cleanText = text == null ? "" : text.replace("**", "").replace("#", "");
         java.util.regex.Pattern chapterPattern = java.util.regex.Pattern.compile(
                 "(?m)^\\s*第(\\d+)章\\s*(.+?)(?:[：:]|\\n|$)(.*?)(?=^\\s*第\\d+章|\\z)",
                 java.util.regex.Pattern.DOTALL);

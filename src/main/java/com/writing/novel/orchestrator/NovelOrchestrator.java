@@ -973,6 +973,19 @@ public class NovelOrchestrator {
                             repository.saveContinuityIssue(i);
                         });
                 rewritten = true; // p10-w1-07: continuity 已触发重写，告知调用方 reader review 互斥跳过
+                // p11-q0-05: 重写后重跑 ContinuityChecker 复检（之前只标 resolved 不重跑，重写引入的新矛盾不可见）
+                try {
+                    var recheck = continuityChecker.check(projectId, chapterIndex,
+                            chapter.getContent(), collectSettingsForCheck(projectId, cast));
+                    for (var issue : recheck) {
+                        if (issue.getSeverity() == ContinuityIssue.Severity.HIGH) {
+                            log.warn("重写后新引入连续性 HIGH(章{}): {}", chapterIndex, issue.getDescription());
+                            applyRepairClassification(projectId, chapterIndex, chapter, issue, true);
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn("连续性复检失败(章{}): {}", chapterIndex, e.getMessage());
+                }
             }
         } catch (Exception e) {
             log.warn("连续性检查失败: {}", e.getMessage());

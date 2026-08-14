@@ -1275,8 +1275,8 @@
       "dependencies": [
         "p11-q0-04"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "RewriteRecheckTest pass；continuity HIGH 重写后重跑 ContinuityChecker 复检(CONTINUITY_CHECK 调用>=2,之前只标resolved不重跑)；复检HIGH走applyRepairClassification；全量 BUILD SUCCESS",
       "files": [
         "orchestrator/NovelOrchestrator.java"
       ],

@@ -1291,8 +1291,8 @@
       "description": "ArchiveCompactor 增加 foreshadowings/narrative_threads/knowledge_entries 归档衰减合并。补 p10-w3-03 只做 2/5。",
       "phase": 11,
       "dependencies": [],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "ArchiveCompactorTest 6 pass(含3新归档测试)；补齐 foreshadowings(retireStale)/narrative_threads(deleteResolved)/knowledge_entries(deleteDuplicate) 归档,共 5 类(W3-03 只 2/5)；全量 BUILD SUCCESS",
       "files": [
         "service/ArchiveCompactor.java"
       ],

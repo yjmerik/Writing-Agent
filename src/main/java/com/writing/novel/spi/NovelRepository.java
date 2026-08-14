@@ -111,6 +111,14 @@ public interface NovelRepository {
     /** 归档旧的非 HIGH 连续性问题（resolved=1），返回归档数。默认 0 */
     default int archiveOldLowSeverityIssues(String projectId, int beforeChapter) { return 0; }
 
+    // --- p11-q0-06: 归档衰减补齐（foreshadowings/narrative_threads/knowledge_entries，W3-03 只做 2/5）---
+    /** 物理删除已回收（RESOLVED）的叙事线索，避免 narrative_threads 表无界增长。默认 0 */
+    default int deleteResolvedNarrativeThreads(String projectId) { return 0; }
+    /** 删除同项目内重名的知识条目（按 name 去重保留其一）。默认 0 */
+    default int deleteDuplicateKnowledgeEntries(String projectId) { return 0; }
+    /** 长期悬置（planted<beforeChapter）且非 mustResolve 的 LOW 优先级伏笔标记放弃（resolved=1）。默认 0 */
+    default int retireStaleForeshadowings(String projectId, int beforeChapter) { return 0; }
+
     // --- EvaluationRecord ---
     void saveEvaluationRecord(EvaluationRecord record);
     Optional<EvaluationRecord> findLatestEvaluation(String projectId);

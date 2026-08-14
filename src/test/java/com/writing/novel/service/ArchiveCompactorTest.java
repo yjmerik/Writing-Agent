@@ -5,6 +5,10 @@ import com.writing.novel.domain.EntityEdge;
 import com.writing.novel.domain.RelationshipType;
 import com.writing.novel.domain.EntityType;
 import com.writing.novel.domain.ContinuityIssue;
+import com.writing.novel.domain.Foreshadowing;
+import com.writing.novel.domain.KnowledgeEntry;
+import com.writing.novel.domain.NarrativeThread;
+import com.writing.novel.domain.ThreadStatus;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
@@ -77,6 +81,49 @@ class ArchiveCompactorTest {
         assertTrue(unresolved.stream().anyMatch(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH));
         assertTrue(unresolved.stream().anyMatch(i -> i.getDescription().equals("近期")));
         assertFalse(unresolved.stream().anyMatch(i -> i.getDescription().equals("旧 LOW")), "旧 LOW 应已归档");
+    }
+
+    @Test
+    void p11_q0_06_已回收叙事线索被删除_活跃线索保留() {
+        var resolved = new NarrativeThread(pid, "已结束线索", 1, "desc");
+        resolved.setStatus(ThreadStatus.RESOLVED);
+        repo.saveNarrativeThread(resolved);
+        var active = new NarrativeThread(pid, "活跃线索", 1, "desc");
+        repo.saveNarrativeThread(active);
+
+        var result = compactor.compact(pid, 50);
+        assertEquals(1, result.threadsDeleted(), "应删除 1 条已回收线索");
+        var remaining = repo.findAllNarrativeThreads(pid);
+        assertEquals(1, remaining.size());
+        assertEquals("活跃线索", remaining.get(0).getName());
+    }
+
+    @Test
+    void p11_q0_06_重名知识条目去重保留一个() {
+        repo.saveKnowledgeEntry(new KnowledgeEntry(pid, "POWER_SYSTEM", "灵气", "内容A"));
+        repo.saveKnowledgeEntry(new KnowledgeEntry(pid, "POWER_SYSTEM", "灵气", "内容B"));
+        repo.saveKnowledgeEntry(new KnowledgeEntry(pid, "FACTION", "宗门", "内容C"));
+
+        var result = compactor.compact(pid, 50);
+        assertEquals(1, result.knowledgeDeduped(), "应去重 1 条重名知识");
+        assertEquals(2, repo.findKnowledgeEntriesByProject(pid).size());
+    }
+
+    @Test
+    void p11_q0_06_长期悬置非关键LOW伏笔放弃_mustResolve保留() {
+        var stale = new Foreshadowing(pid, "悬置伏笔", "ctx", 5);
+        stale.setPriority(Foreshadowing.Priority.LOW);
+        stale.setMustResolve(false);
+        repo.saveForeshadowing(stale);
+        var critical = new Foreshadowing(pid, "关键伏笔", "ctx", 5);
+        critical.setPriority(Foreshadowing.Priority.HIGH);
+        critical.setMustResolve(true);
+        repo.saveForeshadowing(critical);
+
+        var result = compactor.compact(pid, 50); // 50-30=20 > planted 5 → stale 放弃
+        assertEquals(1, result.foreshadowingsRetired());
+        var unresolved = repo.findUnresolvedForeshadowings(pid);
+        assertEquals(1, unresolved.size(), "仅关键伏笔保留未回收");
     }
 
     @Test

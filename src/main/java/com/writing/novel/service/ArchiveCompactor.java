@@ -19,6 +19,8 @@ public class ArchiveCompactor {
     private static final int EDGE_KEEP_WINDOW = 5;
     /** 旧问题归档阈值：detected_at 早于 (当前章 - ISSUE_KEEP_WINDOW) 的非 HIGH 归档 */
     private static final int ISSUE_KEEP_WINDOW = 20;
+    /** p11-q0-06: 悬置伏笔阈值：planted 早于 (当前章 - FORESHADOW_STALE_WINDOW) 的非关键 LOW 伏笔放弃 */
+    private static final int FORESHADOW_STALE_WINDOW = 30;
 
     private final NovelRepository repository;
 
@@ -26,21 +28,27 @@ public class ArchiveCompactor {
         this.repository = repository;
     }
 
-    public record CompactResult(int edgesDeleted, int issuesArchived) {}
+    /** p11-q0-06: 扩展为 5 类归档（W3-03 只做 2/5：edges/issues） */
+    public record CompactResult(int edgesDeleted, int issuesArchived, int threadsDeleted,
+                                int knowledgeDeduped, int foreshadowingsRetired) {}
 
-    /** 卷末调用：清理过期边 + 旧问题 */
+    /** 卷末调用：清理过期边 + 旧问题 + 已回收线索 + 重名知识 + 悬置伏笔（p11-q0-06 补齐 5 类） */
     public CompactResult compact(String projectId, int currentChapter) {
         try {
             int edges = repository.deleteExpiredEdges(projectId, currentChapter - EDGE_KEEP_WINDOW);
             int issues = repository.archiveOldLowSeverityIssues(projectId, currentChapter - ISSUE_KEEP_WINDOW);
-            if (edges > 0 || issues > 0) {
-                log.info("归档衰减(项目{}, 当前章{}): 删除过期边 {} 条, 归档旧问题 {} 条",
-                        projectId, currentChapter, edges, issues);
+            // p11-q0-06: 补齐 foreshadowings/narrative_threads/knowledge_entries 归档
+            int threads = repository.deleteResolvedNarrativeThreads(projectId);
+            int knowledge = repository.deleteDuplicateKnowledgeEntries(projectId);
+            int foreshadowings = repository.retireStaleForeshadowings(projectId, currentChapter - FORESHADOW_STALE_WINDOW);
+            if (edges + issues + threads + knowledge + foreshadowings > 0) {
+                log.info("归档衰减(项目{}, 当前章{}): 过期边 {}, 旧问题 {}, 已回收线索 {}, 重名知识 {}, 悬置伏笔 {}",
+                        projectId, currentChapter, edges, issues, threads, knowledge, foreshadowings);
             }
-            return new CompactResult(edges, issues);
+            return new CompactResult(edges, issues, threads, knowledge, foreshadowings);
         } catch (Exception e) {
             log.warn("归档衰减失败(项目{}): {}", projectId, e.getMessage());
-            return new CompactResult(0, 0);
+            return new CompactResult(0, 0, 0, 0, 0);
         }
     }
 }

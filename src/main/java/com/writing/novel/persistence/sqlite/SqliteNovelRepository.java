@@ -888,6 +888,44 @@ public class SqliteNovelRepository implements NovelRepository {
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
+    /** p11-q0-06: 物理删除已回收（RESOLVED）叙事线索，避免 narrative_threads 表无界增长 */
+    @Override
+    public int deleteResolvedNarrativeThreads(String projectId) {
+        String sql = "DELETE FROM narrative_threads WHERE project_id=? AND status='RESOLVED'";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            return ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** p11-q0-06: 同项目重名知识条目去重（按 name 分组保留 MIN(id)，删除其余） */
+    @Override
+    public int deleteDuplicateKnowledgeEntries(String projectId) {
+        String sql = "DELETE FROM knowledge_entries WHERE project_id=? AND id NOT IN "
+                + "(SELECT MIN(id) FROM knowledge_entries WHERE project_id=? GROUP BY name)";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            ps.setString(2, projectId);
+            return ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** p11-q0-06: 长期悬置（planted<beforeChapter）非 mustResolve 的 LOW 伏笔标记放弃（resolved=1） */
+    @Override
+    public int retireStaleForeshadowings(String projectId, int beforeChapter) {
+        String sql = "UPDATE foreshadowings SET resolved=1, resolved_at_chapter=? "
+                + "WHERE project_id=? AND resolved=0 AND must_resolve=0 AND priority='LOW' AND planted_at_chapter<?";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, beforeChapter);
+            ps.setString(2, projectId);
+            ps.setInt(3, beforeChapter);
+            return ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
     // --- EvaluationRecord ---
 
     @Override

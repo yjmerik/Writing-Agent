@@ -362,6 +362,13 @@ public class NovelOrchestrator {
                         chars.stream().map(c -> c.getName() + ":" + c.getRole())
                                 .reduce((a, b) -> a + ";" + b).orElse("[]"), 0);
             }
+            // p11-q1-02: CharacterDesigner 门禁——人物重名/主角存在/能力设定校验
+            if (conceiveGate != null) {
+                var charGate = conceiveGate.checkCharacters(repository.findCharactersByProject(projectId));
+                if (!charGate.pass()) {
+                    log.warn("CharacterDesigner 门禁未过: {}", charGate.feedback());
+                }
+            }
         }
 
         // 大纲（幂等：已有有效大纲则跳过，fallback 大纲需重新生成）
@@ -411,6 +418,21 @@ public class NovelOrchestrator {
             } else {
                 // 传统模式——一次性生成全部大纲（≤40章适用）
                 plotter.plan(projectId, p.getConcept(), theme, targetChapters, theme, genreRules, plotDiversity);
+            }
+
+            // p11-q1-02: Outline 门禁——总纲/分卷校验，不过关重 plan 一次（传统模式）
+            if (conceiveGate != null) {
+                var outlineOpt = repository.findOutlineByProject(projectId);
+                if (outlineOpt.isPresent()) {
+                    var outlineGate = conceiveGate.checkOutline(outlineOpt.get());
+                    if (!outlineGate.pass()) {
+                        log.warn("Outline 门禁未过: {}", outlineGate.feedback());
+                        if (!useLayered || targetChapters <= 40) {
+                            plotter.plan(projectId, p.getConcept(), theme, targetChapters, theme,
+                                    genreRules + "【门禁反馈】" + outlineGate.feedback(), plotDiversity);
+                        }
+                    }
+                }
             }
 
             // 记录大纲生成

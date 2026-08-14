@@ -1325,8 +1325,8 @@
       "dependencies": [
         "p11-q1-01"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "ConceiveGateTest 8 pass；ConceiveGate.checkCharacters(主角/重名/能力)+checkOutline(总纲/分卷)；doConceiving Character/Outline 后插门禁(Outline 不过关重plan一次)；全量 BUILD SUCCESS",
       "files": [
         "service/ConceiveGate.java"
       ],

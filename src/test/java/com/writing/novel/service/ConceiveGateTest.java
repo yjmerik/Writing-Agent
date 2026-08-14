@@ -59,4 +59,28 @@ class ConceiveGateTest {
         assertFalse(result.pass());
         assertTrue(result.issues().stream().anyMatch(i -> i.contains("过少")));
     }
+
+    @Test
+    void p11_q1_02_人物门禁_主角缺失或无能力不通过() {
+        assertFalse(gate.checkCharacters(List.of()).pass(), "空人物不通过");
+        var noAbility = new com.writing.novel.domain.Character("p", "李四", "主角");
+        assertFalse(gate.checkCharacters(List.of(noAbility)).pass(), "主角无能力不通过");
+        var ok = new com.writing.novel.domain.Character("p", "季衡", "主角");
+        ok.setAbility("剑修");
+        assertTrue(gate.checkCharacters(List.of(ok)).pass(), "完整主角通过");
+    }
+
+    @Test
+    void p11_q1_02_人物门禁_重名不通过() {
+        var a = new com.writing.novel.domain.Character("p", "季衡", "主角");
+        a.setAbility("剑修");
+        var b = new com.writing.novel.domain.Character("p", "季衡", "配角");
+        assertFalse(gate.checkCharacters(List.of(a, b)).pass());
+    }
+
+    @Test
+    void p11_q1_02_大纲门禁_总纲分卷缺失不通过() {
+        assertFalse(gate.checkOutline(null).pass());
+        assertFalse(gate.checkOutline(new com.writing.novel.domain.Outline("p", "")).pass());
+    }
 }

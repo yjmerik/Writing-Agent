@@ -1,6 +1,8 @@
 package com.writing.novel.service;
 
+import com.writing.novel.domain.Character;
 import com.writing.novel.domain.KnowledgeEntry;
+import com.writing.novel.domain.Outline;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -48,5 +50,45 @@ public class ConceiveGate {
         String feedback = "世界观质量问题：" + String.join("；", issues)
                 + "。请重新生成更完整、不重复、含力量体系的世界观设定。";
         return new GateResult(false, issues, feedback);
+    }
+
+    /**
+     * p11-q1-02: 校验人物产出：主角存在/人物不重名/主角有能力设定。
+     */
+    public GateResult checkCharacters(java.util.List<Character> characters) {
+        if (characters == null || characters.isEmpty()) {
+            return new GateResult(false, List.of("人物卡为空"), "人物卡为空，需重新设计主角/对手/配角。");
+        }
+        List<String> issues = new ArrayList<>();
+        boolean hasProtagonist = characters.stream()
+                .anyMatch(c -> c.getRole() != null && c.getRole().contains("主角"));
+        if (!hasProtagonist) issues.add("缺少主角");
+        Set<String> names = new HashSet<>();
+        for (Character c : characters) {
+            if (c.getName() == null) continue;
+            if (!names.add(c.getName())) issues.add("重复人物：" + c.getName());
+        }
+        characters.stream()
+                .filter(c -> c.getRole() != null && c.getRole().contains("主角"))
+                .findFirst()
+                .ifPresent(mc -> {
+                    if (mc.getAbility() == null || mc.getAbility().isBlank()) issues.add("主角缺少能力设定");
+                });
+        if (issues.isEmpty()) return GateResult.ok();
+        return new GateResult(false, issues, "人物质量问题：" + String.join("；", issues) + "。");
+    }
+
+    /**
+     * p11-q1-02: 校验大纲产出：总纲（premise）存在/分卷规划存在。
+     */
+    public GateResult checkOutline(Outline outline) {
+        if (outline == null) {
+            return new GateResult(false, List.of("大纲为空"), "大纲为空，需重新规划分卷与章节。");
+        }
+        List<String> issues = new ArrayList<>();
+        if (outline.getPremise() == null || outline.getPremise().isBlank()) issues.add("缺少总纲（premise）");
+        if (outline.getVolumes() == null || outline.getVolumes().isEmpty()) issues.add("缺少分卷规划");
+        if (issues.isEmpty()) return GateResult.ok();
+        return new GateResult(false, issues, "大纲质量问题：" + String.join("；", issues) + "。");
     }
 }

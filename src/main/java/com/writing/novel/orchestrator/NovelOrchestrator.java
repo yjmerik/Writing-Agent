@@ -1905,6 +1905,7 @@ public class NovelOrchestrator {
                     .filter(Foreshadowing::isMustResolve).toList();
             if (criticalUnresolved.size() > 3) {
                 log.warn("成书门禁 FAIL: {} 条 mustResolve 伏笔未回收", criticalUnresolved.size());
+                EventLog.emit("FINAL_GATE", Map.of("passed", false, "reason", "mustResolve_foreshadowing", "count", criticalUnresolved.size()));
                 return false;
             }
 
@@ -1944,6 +1945,7 @@ public class NovelOrchestrator {
 
             log.info("成书门禁 PASS: 伏笔={}, HIGH issues={}, 字数={}",
                     criticalUnresolved.size(), highIssues, totalWords);
+            EventLog.emit("FINAL_GATE", Map.of("passed", true, "mustResolve", criticalUnresolved.size(), "highIssues", highIssues));
             return true;
         } catch (Exception e) {
             // A1: 门禁异常时 fail-closed——宁可误拦不可放行劣质书

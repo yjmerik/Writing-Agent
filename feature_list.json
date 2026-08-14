@@ -1182,14 +1182,14 @@
       "dependencies": [
         "p10-w3-08"
       ],
-      "status": "not-started",
+      "status": "completed",
       "acceptance": "卷末全局一致性扫描；FINAL 跑连续性全局+未回收 mustResolve+真典一致性+成本回执",
       "verify_cmd": "mvn test -Dtest=FinalAuditGateTest",
       "files": [
         "orchestrator/NovelOrchestrator.java"
       ],
       "problem_ref": "GAP: FINAL终审不充分",
-      "evidence": "FinalAuditGate 扩展：真典 SUPERSEDED 事实检查 + 成本回执（CostBudgetMonitor.total）"
+      "evidence": "由 p11-q3-06 吸收完成"
     },
     {
       "id": "p11-q0-01",
@@ -1549,8 +1549,8 @@
         "p11-q0-04",
         "p11-q3-01"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "p11-q3-06: FINAL_GATE 事件 emit(PASS/FAIL+原因)；runFinalAuditGate 已含真典 SUPERSEDED>20 告警+成本回执(p10-w3-09 核心)；吸收 p10-w3-09；FinalAuditGateTest pass，全量 BUILD SUCCESS",
       "files": [
         "orchestrator/NovelOrchestrator.java"
       ],

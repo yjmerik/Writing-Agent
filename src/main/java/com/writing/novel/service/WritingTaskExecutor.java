@@ -193,4 +193,14 @@ public class WritingTaskExecutor {
     public WritingTask getTask(String taskId) {
         return repository.findWritingTask(taskId).orElse(null);
     }
+
+    public boolean hasActiveTask(String projectId) {
+        return activeTasks.containsKey(projectId);
+    }
+
+    public boolean cancelByProject(String projectId) {
+        String taskId = activeTasks.get(projectId);
+        if (taskId == null) return false;
+        return cancel(taskId);
+    }
 }

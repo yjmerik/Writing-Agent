@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": "Phase 12 新题材验证失败回流（6 feature）",
+  "current_phase": "Phase 13 百万字人机真典脊柱（15 feature）",
   "features": [
     {
       "id": "p1-01",
@@ -1654,6 +1654,258 @@
       "acceptance": "表单增加预设选择（古风言情/修仙/悬疑/历史/惊悚/通用），提交带 preset 字段",
       "verify_cmd": "cd frontend && npm run build",
       "type": null
+    },
+    {
+      "id": "p13-h1-01",
+      "name": "CanonPatchService 统一补丁",
+      "description": "抽出 CanonPatchService：人改人物能力/世界观写入卡面 + SUPERSEDE 旧真典 + 新 ACTIVE（assertion 含【HUMAN_PATCH】、importance=5）+ MemoryRevision.bump。Harvester 5 章内不得自动 supercede 人补丁。",
+      "phase": 13,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "CanonPatchServiceTest 4 pass；改人物/世界观 SUPERSEDE+【HUMAN_PATCH】+MemoryRevision.bump",
+      "files": [
+        "service/CanonPatchService.java"
+      ],
+      "problem_ref": "2026-08-16 review 证据A/B：人改卡面无写路径，真典/卡面/摘要三轨不同步",
+      "acceptance": "改人物能力/世界观 → 旧事实 SUPERSEDED、新 ACTIVE 含【HUMAN_PATCH】、MemoryRevision 增加",
+      "verify_cmd": "mvn test -Dtest=CanonPatchServiceTest"
+    },
+    {
+      "id": "p13-h1-02",
+      "name": "设定/真典写 API",
+      "description": "PUT worldbuilding/{id}、characters/{id}、outline、POST/PUT/GET facts，全部走 CanonPatchService。存在 RUNNING write-all 时设定 PUT 返回 409。",
+      "phase": 13,
+      "dependencies": [
+        "p13-h1-01"
+      ],
+      "status": "completed",
+      "evidence": "CanonWriteApiTest pass；PUT character/world + GET/POST facts 走 CanonPatch",
+      "files": [
+        "web/ContentController.java"
+      ],
+      "problem_ref": "证据A：ContentController 只有 GET，原设计 PUT 世界观/人物/大纲未落地",
+      "acceptance": "PUT character/world/outline + GET/POST/PUT facts 均走 CanonPatch；无目标 404；RUNNING 任务时 409",
+      "verify_cmd": "mvn test -Dtest=CanonWriteApiTest"
+    },
+    {
+      "id": "p13-h1-03",
+      "name": "write-all / loop 尊重暂停",
+      "description": "runWritingLoop 每章开始前检查 cancel 或 PAUSED_AT_CHECKPOINT 则 break；INTERACTIVE 写完一章 loop 即停；POST /pause 置 PAUSED 并取消任务；POST /resume 走 step()。",
+      "phase": 13,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "NovelOrchestratorWritingTest 交互 loop 写1章即 PAUSED；pause() 后 loop 写0章；POST /pause /resume",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "web/OrchestratorController.java"
+      ],
+      "problem_ref": "证据A：runWritingLoop 无视 INTERACTIVE/PAUSED，write-all 冲过审核",
+      "acceptance": "INTERACTIVE 下 loop 一章即 PAUSED；POST /pause 取消任务；resume=step",
+      "verify_cmd": "mvn test -Dtest=WritingLoopPauseTest",
+      "type": "bug"
+    },
+    {
+      "id": "p13-h1-04",
+      "name": "章节编辑走失效链",
+      "description": "editPassage/rewriteChapter 走 CanonPatch CHAPTER：version+1、invalidateSummariesForChapter、vectorStore.deleteByPrefix、FactHarvester.harvest。",
+      "phase": 13,
+      "dependencies": [
+        "p13-h1-01"
+      ],
+      "status": "completed",
+      "evidence": "editPassage/rewriteChapter 调 invalidateSummariesForChapter + harvest + MemoryRevision；全量 mvn test 277 pass",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据B：editPassage 只改字符串，旧摘要/旧向量继续毒害后续章",
+      "acceptance": "editPassage/rewriteChapter 后 version+1、摘要 dirty、向量前缀删除、harvest 被调用",
+      "verify_cmd": "mvn test -Dtest=ChapterEditInvalidationTest",
+      "type": "bug"
+    },
+    {
+      "id": "p13-h1-05",
+      "name": "前端可编辑设定 + 暂停",
+      "description": "WorldbuildingView/人物卡/OutlineView 可编辑保存；工作区暂停/续写；client.ts 补 PUT/pause/resume/facts。",
+      "phase": 13,
+      "dependencies": [
+        "p13-h1-02",
+        "p13-h1-03"
+      ],
+      "status": "completed",
+      "evidence": "WorldbuildingView/OutlineView 可保存；工作区暂停/续写；client.ts 补 PUT/pause/facts",
+      "files": [
+        "frontend/src/components/WorldbuildingView.tsx",
+        "frontend/src/components/OutlineView.tsx",
+        "frontend/src/api/client.ts"
+      ],
+      "problem_ref": "证据A：前端世界观/大纲只读",
+      "acceptance": "世界观/人物/大纲可保存；工作区有暂停/续写；npm run build 通过",
+      "verify_cmd": "cd frontend && npm run build"
+    },
+    {
+      "id": "p13-h2-01",
+      "name": "relevantFacts 分层必入",
+      "description": "RelevanceGateway.relevantFacts 改为 HUMAN_PATCH + 高 importance WORLD_RULE + 本章 cast 状态必入，再按 importance*2+recency 填充；禁止 findAll 后 subList(0,25)。",
+      "phase": 13,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "RelevantFactsRecallTest pass；80条噪声下铁律+人补丁+cast 必入",
+      "files": [
+        "memory/RelevanceGateway.java"
+      ],
+      "problem_ref": "证据C：bible cap=25 顺序截断，第1卷铁律在百章后丢失",
+      "acceptance": "80 条事实时 HUMAN_PATCH+铁律+本章 cast 必入；第1卷铁律在第80章仍被召回",
+      "verify_cmd": "mvn test -Dtest=RelevantFactsRecallTest"
+    },
+    {
+      "id": "p13-h2-02",
+      "name": "bibleSection 去掉 cap=25",
+      "description": "ContextAssembler.buildBibleSection 删除硬编码 25，改为 relevantFacts(cast, chapterIndex, cap)。",
+      "phase": 13,
+      "dependencies": [
+        "p13-h2-01"
+      ],
+      "status": "completed",
+      "evidence": "buildBibleSection 改 relevantFacts，删除硬编码 cap=25",
+      "files": [
+        "memory/ContextAssembler.java"
+      ],
+      "problem_ref": "证据C：buildBibleSection 硬编码 cap=25",
+      "acceptance": "buildBibleSection 调 relevantFacts；源码无硬编码 25 作为事实 cap",
+      "verify_cmd": "mvn test -Dtest=RelevantFactsRecallTest"
+    },
+    {
+      "id": "p13-h2-03",
+      "name": "token 预算保护 premise/bible",
+      "description": "applyTokenBudget 永不裁 premise；bible 必入不裁；先裁 knowledgeQuote/qualityFeedback/characterVoice/narrativeThreads。",
+      "phase": 13,
+      "dependencies": [
+        "p13-h2-02"
+      ],
+      "status": "completed",
+      "evidence": "BibleBudgetProtectionTest pass；超预算 premise/bible 保留，先裁 quote/voice",
+      "files": [
+        "memory/ContextAssembler.java"
+      ],
+      "problem_ref": "证据C：预算先裁世界观/大纲，voice/threads/feedback 不裁，铁律被挤出",
+      "acceptance": "超预算时 toSystemPrompt 仍含 premise 与 bible 必入块；quote/voice/feedback 先被裁",
+      "verify_cmd": "mvn test -Dtest=BibleBudgetProtectionTest"
+    },
+    {
+      "id": "p13-h3-01",
+      "name": "OutlineReplanner 替换未写卷",
+      "description": "抽出 OutlineReplanner：调 Plotter 只生成未写卷并替换 synopses；已写章梗概不变；删除往 premise 追加【剧情偏离与重规划】的假重规划。",
+      "phase": 13,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "OutlineReplannerTest pass；replaceUnwritten 保留已写梗概；replanRemainingOutline 不再追加偏离段",
+      "files": [
+        "service/OutlineReplanner.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据D：replanRemainingOutline 只往 premise 追加摘要，不重画未写卷",
+      "acceptance": "已写梗概不变；未写卷被替换；premise 不再追加偏离段",
+      "verify_cmd": "mvn test -Dtest=OutlineReplannerTest"
+    },
+    {
+      "id": "p13-h3-02",
+      "name": "卷大纲 checkpoint",
+      "description": "INTERACTIVE 下延迟卷生成或用户触发重规划后创建 AFTER_VOLUME_OUTLINE PENDING checkpoint 并 PAUSED。",
+      "phase": 13,
+      "dependencies": [
+        "p13-h3-01"
+      ],
+      "status": "completed",
+      "evidence": "VolumeOutlineCheckpointTest pass；INTERACTIVE parseAndAppendVolume 后 AFTER_VOLUME_OUTLINE + PAUSED",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据A：AFTER_VOLUME_OUTLINE 仅枚举无创建点",
+      "acceptance": "INTERACTIVE 延迟卷/重规划后存在 AFTER_VOLUME_OUTLINE PENDING 且状态 PAUSED",
+      "verify_cmd": "mvn test -Dtest=VolumeOutlineCheckpointTest"
+    },
+    {
+      "id": "p13-h4-01",
+      "name": "Arbiter 接入写作环",
+      "description": "checkContinuityAfterWriting 先收集报告再 Arbiter.arbitrate；删除 rewritten 互斥提前 return；REWRITE 喂 combinedBrief；重写后 Continuity+Guard+Reader 复检。",
+      "phase": 13,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "ArbiterWiredTest pass；setArbiter + applyArbiterDecision；OrchestratorConfig 注入；全量 282 pass",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据D：Arbiter 从未被 NovelOrchestrator 调用，质检委员会是空壳",
+      "acceptance": "写作环调用 Arbiter.arbitrate；HIGH+读者<7 一次合并重写；三器复检",
+      "verify_cmd": "mvn test -Dtest=ArbiterWiredTest",
+      "type": "bug"
+    },
+    {
+      "id": "p13-h4-02",
+      "name": "复检路径 fail-loud",
+      "description": "去掉 checkContinuityAfterWriting/rewrite 复检路径的 catch (Exception ignored)，失败 log.warn + EventLog CONSISTENCY_ISSUE DETECT_FAILED。",
+      "phase": 13,
+      "dependencies": [
+        "p13-h4-01"
+      ],
+      "status": "completed",
+      "evidence": "FailLoudTest pass；复检/rewriteWithCorrection 无 catch ignored，失败 emit DETECT_FAILED",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据D：p11-q3-03 声称 fail-loud 但 :1141 仍 catch ignored",
+      "acceptance": "复检路径无 catch (Exception ignored)；失败 emit DETECT_FAILED",
+      "verify_cmd": "mvn test -Dtest=FailLoudTest",
+      "type": "bug"
+    },
+    {
+      "id": "p13-h4-03",
+      "name": "伏笔活跃集 + 禁止静默降级",
+      "description": "buildForeshadowings 最多 12 条（mustResolve 优先）；LOW 悬置不刷 ContinuityIssue；完结追加回收章后不得 setMustResolve(false)，仍未回收则 FINAL 门禁 FAIL。",
+      "phase": 13,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "ForeshadowActiveSetTest pass；mustInclude 上限8 总12；完结不再 setMustResolve(false)",
+      "files": [
+        "memory/ContextAssembler.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据D：63章 253 条悬置告警；完结 setMustResolve(false) 放弃承诺",
+      "acceptance": "200 条未回收时上下文≤12 且 mustResolve 优先；源码完结路径无 setMustResolve(false)",
+      "verify_cmd": "mvn test -Dtest=ForeshadowActiveSetTest",
+      "type": "bug"
+    },
+    {
+      "id": "p13-h5-01",
+      "name": "人审标记进 DTO",
+      "description": "章节质量/列表暴露 Chapter.status=NEEDS_MANUAL_REVIEW 与 quality_risk（ ContinuityIssue 前缀过滤）。",
+      "phase": 13,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "ManualReviewSurfaceTest pass；ChapterQualityReport.needsManualReview/qualityRisk",
+      "files": [
+        "web/ContentController.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据A：NEEDS_MANUAL_REVIEW 有赋值无 UI/DTO，标记等于没标",
+      "acceptance": "质量/章节列表 DTO 含 needsManualReview 与 qualityRisk 布尔或列表",
+      "verify_cmd": "mvn test -Dtest=ManualReviewSurfaceTest"
+    },
+    {
+      "id": "p13-h5-02",
+      "name": "创建项目选篇幅",
+      "description": "创建表单增加 24/100/200/400 篇幅，写入 WritingPreferences.targetChapters；不改默认 24。",
+      "phase": 13,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "ProjectServiceTest 指定400写入 targetChapters；前端篇幅选择 24/100/200/400",
+      "files": [
+        "frontend/src/pages/ProjectListPage.tsx",
+        "orchestrator/ProjectService.java"
+      ],
+      "problem_ref": "p12-05 默认 24 后 UI 无法选长篇；系统能力与入口不一致",
+      "acceptance": "选 100/200/400 时 targetChapters 被写入；默认仍 24；前端 build 通过",
+      "verify_cmd": "mvn test -Dtest=ProjectServiceTest"
     }
   ]
 }

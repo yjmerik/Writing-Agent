@@ -2,6 +2,18 @@
 
 ## Current State
 
+**Last Updated:** 2026-08-16
+**Phase:** **Phase 13 百万字人机真典脊柱 — 15/15 feature 完成**
+
+### Phase 13（2026-08-16）
+
+- Spec：`docs/specs/2026-08-16-million-word-human-canon.md`
+- **15/15 完成**：H1 人机脊柱 / H2 真典召回 / H3 真重规划+卷 checkpoint / H4 Arbiter+fail-loud+伏笔活跃集 / H5 人审标记+篇幅
+- 验证：`mvn test` 282 pass / 0 fail / 1 skip
+- 入口能力：暂停后续写、改人物/世界观/总纲会写真典【HUMAN_PATCH】、第80章仍能召回第1卷铁律、伏笔上下文≤12
+
+---
+
 **Last Updated:** 2026-08-14
 **Phase:** **Phase 11 过程化质量门禁架构 — 21/21 feature 全部完成 ✅ + 真实 e2e 验证 PASS**
 

@@ -110,7 +110,6 @@ public class ContextAssembler {
                 .ifPresent(style -> ctx.setStyleSection(buildStyleSection(style)));
 
         ctx.setWorldbuildingSection(buildWorldbuildingSection(projectId));
-        ctx.setBibleSection(buildBibleSection(projectId)); // p10-w2-07: 真典事实注入 system prompt
         ctx.setVolumeOutlineSection(buildVolumeOutline(projectId, chapterIndex));
         ctx.setRecentSummarySection(buildRecentSummary(projectId, chapterIndex));
         ctx.setRecentTextSection(buildRecentText(projectId, chapterIndex));
@@ -118,8 +117,8 @@ public class ContextAssembler {
         String queryText = chapterSynopsis != null ? chapterSynopsis : chapterTitle;
         assembleRetrievedContext(projectId, queryText, ctx, maxContextTokens);
         ctx.setRelevantForeshadowings(buildForeshadowings(projectId, chapterIndex));
-        // 查找当前章节的结构化大纲信息（beats/climax/cast）
         ChapterSynopsis fullSynopsis = findFullSynopsis(projectId, chapterIndex);
+        ctx.setBibleSection(buildBibleSection(projectId, chapterIndex, fullSynopsis));
         ctx.setTaskSection(buildTaskSection(chapterTitle, chapterSynopsis, writingNotes, fullSynopsis));
 
         // 实体一致性注入
@@ -189,23 +188,32 @@ public class ContextAssembler {
         this.relevanceGateway = relevanceGateway;
     }
 
-    /**
-     * p10-w2-07: 故事真典段——注入 ACTIVE 事实（importance 降序，cap 25），作为长程记忆核心。
-     * 替代级联压缩的 book_summary：结构化事实不衰减，第 400 章仍能准确召回第 1 卷设定。
-     * storyFactRepository==null 时返回空（向后兼容）。
-     */
-    private String buildBibleSection(String projectId) {
-        if (storyFactRepository == null) return "";
-        var facts = storyFactRepository.findActive(projectId);
+    private String buildBibleSection(String projectId, int chapterIndex, ChapterSynopsis synopsis) {
+        List<String> cast = parseCast(synopsis);
+        List<StoryFact> facts;
+        if (relevanceGateway != null) {
+            facts = relevanceGateway.relevantFacts(projectId, cast, chapterIndex, 40);
+        } else if (storyFactRepository != null) {
+            facts = storyFactRepository.findActive(projectId);
+            if (facts.size() > 40) facts = facts.subList(0, 40);
+        } else {
+            return "";
+        }
         if (facts.isEmpty()) return "";
         StringBuilder sb = new StringBuilder();
-        int cap = Math.min(facts.size(), 25);
-        for (int i = 0; i < cap; i++) {
-            var f = facts.get(i);
+        for (var f : facts) {
             sb.append("■ [").append(f.getFactType()).append("] ").append(f.getSubject())
                     .append("：").append(f.getAssertion()).append("\n");
         }
         return sb.toString().trim();
+    }
+
+    private List<String> parseCast(ChapterSynopsis synopsis) {
+        if (synopsis == null || synopsis.getCast() == null || synopsis.getCast().isBlank()) {
+            return List.of();
+        }
+        return java.util.Arrays.stream(synopsis.getCast().split("[,，、\\s]+"))
+                .map(String::trim).filter(s -> !s.isEmpty()).toList();
     }
 
     /** p10-w1-01: 使该项目全部稳定段缓存失效（下次组装重算）。
@@ -460,17 +468,12 @@ public class ContextAssembler {
         if (unresolved.isEmpty()) return "";
 
         final int currentChapter = chapterIndex;
-        final int LIMIT = 10;
-
-        // p10-c1: 排序策略改革——
-        // 1. HIGH priority 或 mustResolve 的伏笔优先注入
-        // 2. p12-K4: HIGH 伏笔也设上限（最多 15 条），超过的按挂得最久优先
-        // 3. 其余按"挂得最久"（currentChapter - plantedAtChapter）降序，取 top LIMIT
+        final int LIMIT = 12;
         var mustInclude = unresolved.stream()
                 .filter(f -> f.getPriority() == Foreshadowing.Priority.HIGH || f.isMustResolve())
                 .sorted((a, b) -> Integer.compare(
                         b.suspenseChapters(currentChapter), a.suspenseChapters(currentChapter)))
-                .limit(15)
+                .limit(8)
                 .toList();
         var others = unresolved.stream()
                 .filter(f -> f.getPriority() != Foreshadowing.Priority.HIGH && !f.isMustResolve())
@@ -568,6 +571,7 @@ public class ContextAssembler {
     // --- 图数据库：实体一致性注入 ---
 
     private String buildEntityConsistencySection(String projectId, int chapterIndex) {
+        if (entityGraphService == null) return "";
         return entityGraphService.recallConsistencySection(projectId, chapterIndex);
     }
 
@@ -990,20 +994,31 @@ public class ContextAssembler {
         return sb.toString();
     }
 
-    /** Token 预算控制：超限时按优先级从低到高裁剪 */
-    private void applyTokenBudget(WritingContext ctx, int budget) {
+    void applyTokenBudget(WritingContext ctx, int budget) {
         int total = sumTokens(ctx);
         if (total <= budget) return;
 
-        // p5-c4: 调整优先级——伏笔不再最先丢弃（长程连续性需要）
-        // 新优先级（从低到高）：设定>世界观>大纲>上章原文>伏笔
-        // 伏笔保留到最后，因为它是长程连续性的核心
+        if (total > budget && ctx.getKnowledgeQuoteSection() != null) {
+            ctx.setKnowledgeQuoteSection("");
+            total = sumTokens(ctx);
+        }
+        if (total > budget && ctx.getQualityFeedbackSection() != null) {
+            ctx.setQualityFeedbackSection("");
+            total = sumTokens(ctx);
+        }
+        if (total > budget && ctx.getCharacterVoiceSection() != null) {
+            ctx.setCharacterVoiceSection("");
+            total = sumTokens(ctx);
+        }
+        if (total > budget && ctx.getNarrativeThreadSection() != null) {
+            ctx.setNarrativeThreadSection(TokenBudget.truncateToTokens(ctx.getNarrativeThreadSection(), 400));
+            total = sumTokens(ctx);
+        }
         if (total > budget && ctx.getRelevantSettings() != null) {
             ctx.setRelevantSettings("");
             total = sumTokens(ctx);
         }
         if (total > budget && ctx.getWorldbuildingSection() != null) {
-            // 世界观截断到 2000 token
             ctx.setWorldbuildingSection(TokenBudget.truncateToTokens(ctx.getWorldbuildingSection(), 2000));
             total = sumTokens(ctx);
         }
@@ -1012,17 +1027,13 @@ public class ContextAssembler {
             total = sumTokens(ctx);
         }
         if (total > budget && ctx.getRecentTextSection() != null) {
-            // 上章原文截断到 800 token
             ctx.setRecentTextSection(TokenBudget.truncateToTokens(ctx.getRecentTextSection(), 800));
             total = sumTokens(ctx);
         }
-        // p10-w2-06: 前情摘要（全书+卷+细粒度）进入裁剪序列——此前无界增长挤占关键设定空间（GAP#7）。
-        // 截断到 4000 token（仍保留近期卷摘要全文 + 早期卷首句），不让历史摘要独占预算。
         if (total > budget && ctx.getRecentSummarySection() != null) {
             ctx.setRecentSummarySection(TokenBudget.truncateToTokens(ctx.getRecentSummarySection(), 4000));
             total = sumTokens(ctx);
         }
-        // 伏笔最后才截断（截断到 500 token 而非清空）
         if (total > budget && ctx.getRelevantForeshadowings() != null) {
             ctx.setRelevantForeshadowings(TokenBudget.truncateToTokens(ctx.getRelevantForeshadowings(), 500));
         }

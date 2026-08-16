@@ -3,10 +3,13 @@ package com.writing.novel.web;
 import com.writing.novel.domain.*;
 import com.writing.novel.domain.Character;
 import com.writing.novel.orchestrator.NovelOrchestrator;
+import com.writing.novel.service.CanonPatchService;
+import com.writing.novel.service.WritingTaskExecutor;
 import com.writing.novel.spi.NovelRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/projects/{id}")
@@ -14,10 +17,15 @@ public class ContentController {
 
     private final NovelRepository repository;
     private final NovelOrchestrator orchestrator;
+    private final CanonPatchService canonPatch;
+    private final WritingTaskExecutor writingTaskExecutor;
 
-    public ContentController(NovelRepository repository, NovelOrchestrator orchestrator) {
+    public ContentController(NovelRepository repository, NovelOrchestrator orchestrator,
+                             CanonPatchService canonPatch, WritingTaskExecutor writingTaskExecutor) {
         this.repository = repository;
         this.orchestrator = orchestrator;
+        this.canonPatch = canonPatch;
+        this.writingTaskExecutor = writingTaskExecutor;
     }
 
     @GetMapping("/worldbuilding")
@@ -28,6 +36,62 @@ public class ContentController {
     @GetMapping("/characters")
     public List<Character> characters(@PathVariable String id) {
         return repository.findCharactersByProject(id);
+    }
+
+    @PutMapping("/characters/{charId}")
+    public Character updateCharacter(@PathVariable String id, @PathVariable String charId,
+                                     @RequestBody Map<String, String> body) {
+        rejectIfWriting(id);
+        Character patch = new Character(id, body.get("name"), body.get("role"));
+        if (body.get("personality") != null) patch.setPersonality(body.get("personality"));
+        if (body.get("ability") != null) patch.setAbility(body.get("ability"));
+        if (body.get("motivation") != null) patch.setMotivation(body.get("motivation"));
+        if (body.get("appearance") != null) patch.setAppearance(body.get("appearance"));
+        if (body.get("relationships") != null) patch.setRelationships(body.get("relationships"));
+        if (body.get("growthArc") != null) patch.setGrowthArc(body.get("growthArc"));
+        return (Character) canonPatch.patchCharacter(id, charId, patch, chapterOf(id)).entity();
+    }
+
+    @PutMapping("/worldbuilding/{entryId}")
+    public KnowledgeEntry updateWorld(@PathVariable String id, @PathVariable String entryId,
+                                      @RequestBody Map<String, String> body) {
+        rejectIfWriting(id);
+        KnowledgeEntry patch = new KnowledgeEntry(id,
+                body.getOrDefault("type", "CUSTOM"),
+                body.getOrDefault("name", ""),
+                body.getOrDefault("content", ""));
+        return (KnowledgeEntry) canonPatch.patchWorld(id, entryId, patch, chapterOf(id)).entity();
+    }
+
+    @PutMapping("/outline")
+    public Outline updateOutline(@PathVariable String id, @RequestBody Outline incoming) {
+        rejectIfWriting(id);
+        return (Outline) canonPatch.patchOutline(id, incoming, chapterOf(id)).entity();
+    }
+
+    @GetMapping("/facts")
+    public List<com.writing.novel.domain.StoryFact> facts(@PathVariable String id) {
+        return canonPatch.listActive(id);
+    }
+
+    @PostMapping("/facts")
+    public com.writing.novel.domain.StoryFact addFact(@PathVariable String id,
+                                                      @RequestBody Map<String, String> body) {
+        rejectIfWriting(id);
+        var type = com.writing.novel.domain.StoryFact.FactType.valueOf(
+                body.getOrDefault("factType", "PLOT_COMMITMENT"));
+        return canonPatch.addFact(id, type, body.getOrDefault("subject", "补丁"),
+                body.getOrDefault("assertion", ""), chapterOf(id));
+    }
+
+    @PutMapping("/facts/{factId}")
+    public com.writing.novel.domain.StoryFact updateFact(@PathVariable String id,
+                                                         @PathVariable String factId,
+                                                         @RequestBody Map<String, String> body) {
+        rejectIfWriting(id);
+        Integer importance = body.containsKey("importance") ? Integer.parseInt(body.get("importance")) : null;
+        return (com.writing.novel.domain.StoryFact) canonPatch.patchFact(
+                id, factId, body.get("assertion"), importance, chapterOf(id)).entity();
     }
 
     @GetMapping("/outline")
@@ -84,5 +148,15 @@ public class ContentController {
     @GetMapping("/memory/summary")
     public List<Summary> summaries(@PathVariable String id) {
         return repository.findSummariesByProject(id);
+    }
+
+    private void rejectIfWriting(String projectId) {
+        if (writingTaskExecutor != null && writingTaskExecutor.hasActiveTask(projectId)) {
+            throw new IllegalStateException("请先暂停写作再修改设定");
+        }
+    }
+
+    private int chapterOf(String projectId) {
+        return canonPatch.currentChapter(projectId);
     }
 }

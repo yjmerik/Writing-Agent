@@ -26,7 +26,7 @@ public class ProjectController {
         if ((title == null || title.isBlank()) && req.concept() != null && !req.concept().isBlank()) {
             title = req.concept().length() > 10 ? req.concept().substring(0, 10) + "…" : req.concept();
         }
-        return projectService.create(title, req.concept(), req.tags(), mode, req.preset());
+        return projectService.create(title, req.concept(), req.tags(), mode, req.preset(), req.targetChapters());
     }
 
     @GetMapping

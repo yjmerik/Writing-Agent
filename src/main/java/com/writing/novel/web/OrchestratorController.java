@@ -35,6 +35,19 @@ public class OrchestratorController {
         return status(id);
     }
 
+    @PostMapping("/pause")
+    public Map<String, Object> pause(@PathVariable String id) {
+        orchestrator.pause(id);
+        writingTaskExecutor.cancelByProject(id);
+        return status(id);
+    }
+
+    @PostMapping("/resume")
+    public Map<String, Object> resume(@PathVariable String id) {
+        orchestrator.step(id);
+        return status(id);
+    }
+
     @GetMapping("/status")
     public Map<String, Object> status(@PathVariable String id) {
         Project p = projectService.find(id).orElseThrow();

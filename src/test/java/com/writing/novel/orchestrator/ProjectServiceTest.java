@@ -18,12 +18,14 @@ class ProjectServiceTest {
 
     @TempDir Path tempDir;
     private ProjectService service;
+    private SqliteNovelRepository repo;
 
     @BeforeEach
     void setUp() {
         ConnectionProvider cp = new ConnectionProvider(tempDir.resolve("p.db").toString());
         new SqliteSchemaInitializer(cp).initialize();
-        service = new ProjectService(new SqliteNovelRepository(cp));
+        repo = new SqliteNovelRepository(cp);
+        service = new ProjectService(repo);
     }
 
     @Test
@@ -49,5 +51,14 @@ class ProjectServiceTest {
 
         Project found = service.find(p.getId()).orElseThrow();
         assertEquals(ProjectMode.INTERACTIVE, found.getMode());
+    }
+
+    @Test
+    void 创建时可指定篇幅写入偏好() {
+        Project p = service.create("t", "c", "tag", ProjectMode.SOLO, null, 400);
+        assertEquals(400, repo.findWritingPreferences(p.getId()).orElseThrow().getTargetChapters());
+        Project shortP = service.create("s", "c", "tag");
+        assertTrue(repo.findWritingPreferences(shortP.getId()).isEmpty()
+                || repo.findWritingPreferences(shortP.getId()).orElseThrow().getTargetChapters() == 24);
     }
 }

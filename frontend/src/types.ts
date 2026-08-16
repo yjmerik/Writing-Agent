@@ -131,6 +131,7 @@ export interface CreateProjectRequest {
   tags: string;
   mode: ProjectMode;
   preset?: string;
+  targetChapters?: number;
 }
 
 export type CheckpointType = 'AFTER_INITIAL_SETUP' | 'AFTER_VOLUME_OUTLINE' | 'AFTER_CHAPTER' | 'ON_CONTINUITY_FIX';

@@ -260,6 +260,14 @@ export default function ProjectListPage() {
                 <Select.Option value="general">📖 通用 — 不做题材特化</Select.Option>
               </Select>
             </Form.Item>
+            <Form.Item name="targetChapters" label="篇幅">
+              <Select size="large" allowClear placeholder="默认 24 章（短篇验证）">
+                <Select.Option value={24}>24 章 · 短篇</Select.Option>
+                <Select.Option value={100}>100 章 · 中篇</Select.Option>
+                <Select.Option value={200}>200 章 · 长篇</Select.Option>
+                <Select.Option value={400}>400 章 · 百万字</Select.Option>
+              </Select>
+            </Form.Item>
             <Form.Item name="mode" label="运行模式">
               <Select size="large">
                 <Select.Option value="SOLO">🤖 自动模式 — 全自动生成，无需干预</Select.Option>

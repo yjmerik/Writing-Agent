@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Tree, Spin, Empty, Card, Typography, Button, Space } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { Tree, Spin, Empty, Card, Typography, Button, Space, Input, message } from 'antd';
+import { ReloadOutlined, SaveOutlined } from '@ant-design/icons';
 import type { DataNode } from 'antd/es/tree';
 import { api } from '../api/client';
 import type { Outline } from '../types';
@@ -10,11 +10,14 @@ const { Paragraph } = Typography;
 export default function OutlineView({ projectId }: { projectId: string }) {
   const [outline, setOutline] = useState<Outline | null>(null);
   const [loading, setLoading] = useState(true);
+  const [premiseDraft, setPremiseDraft] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setOutline(await api.getOutline(projectId));
+      const o = await api.getOutline(projectId);
+      setOutline(o);
+      setPremiseDraft(o?.premise || '');
     } finally {
       setLoading(false);
     }
@@ -32,7 +35,23 @@ export default function OutlineView({ projectId }: { projectId: string }) {
       {!outline ? (
         <Empty description="暂无大纲，请先运行「构思」阶段（生成后点刷新）" />
       ) : (
+        <>
+        <div style={{ marginBottom: 16 }}>
+          <Typography.Text strong>总纲</Typography.Text>
+          <Input.TextArea rows={4} value={premiseDraft} onChange={(e) => setPremiseDraft(e.target.value)} style={{ marginTop: 8 }} />
+          <Button size="small" icon={<SaveOutlined />} style={{ marginTop: 8 }}
+            onClick={async () => {
+              try {
+                await api.updateOutline(projectId, { ...outline, premise: premiseDraft });
+                message.success('总纲已保存并写入真典');
+                load();
+              } catch (e) {
+                message.error((e as Error).message);
+              }
+            }}>保存总纲</Button>
+        </div>
         <OutlineTree outline={outline} />
+        </>
       )}
     </Card>
   );

@@ -116,6 +116,24 @@ export default function ProjectWorkspace() {
                     onClick={() => handleModeSwitch(project.mode === 'SOLO' ? 'INTERACTIVE' : 'SOLO')}>
                     切换
                   </Button>
+                  {project.state !== 'FINAL' && project.state !== 'PAUSED_AT_CHECKPOINT' && (
+                    <Button size="small" type="link" style={{ padding: 0, height: 'auto', fontSize: 11 }}
+                      onClick={async () => {
+                        try { await api.pause(project.id); message.success('已暂停'); load(); }
+                        catch (e) { message.error((e as Error).message); }
+                      }}>
+                      暂停
+                    </Button>
+                  )}
+                  {project.state === 'PAUSED_AT_CHECKPOINT' && (
+                    <Button size="small" type="link" style={{ padding: 0, height: 'auto', fontSize: 11 }}
+                      onClick={async () => {
+                        try { await api.resume(project.id); message.success('已继续'); load(); }
+                        catch (e) { message.error((e as Error).message); }
+                      }}>
+                      续写
+                    </Button>
+                  )}
                 </Space>
               </Descriptions.Item>
               <Descriptions.Item label={<span style={{ color: '#999', fontSize: 12 }}>进度</span>}>

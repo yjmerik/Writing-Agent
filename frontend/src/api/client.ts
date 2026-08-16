@@ -78,11 +78,38 @@ export const api = {
   getWorldbuilding: (id: string) =>
     request<KnowledgeEntry[]>(`/projects/${id}/worldbuilding`),
 
+  updateWorldbuilding: (id: string, entryId: string, body: Partial<KnowledgeEntry>) =>
+    request<KnowledgeEntry>(`/projects/${id}/worldbuilding/${entryId}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+
   getCharacters: (id: string) =>
     request<Character[]>(`/projects/${id}/characters`),
 
+  updateCharacter: (id: string, charId: string, body: Partial<Character>) =>
+    request<Character>(`/projects/${id}/characters/${charId}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+
   getOutline: (id: string) =>
     request<Outline | null>(`/projects/${id}/outline`),
+
+  updateOutline: (id: string, outline: Partial<Outline>) =>
+    request<Outline>(`/projects/${id}/outline`, {
+      method: 'PUT',
+      body: JSON.stringify(outline),
+    }),
+
+  getFacts: (id: string) =>
+    request<Array<{ id: string; subject: string; assertion: string; factType: string }>>(`/projects/${id}/facts`),
+
+  pause: (id: string) =>
+    request<ProjectStatus>(`/projects/${id}/pause`, { method: 'POST' }),
+
+  resume: (id: string) =>
+    request<ProjectStatus>(`/projects/${id}/resume`, { method: 'POST' }),
 
   getChapters: (id: string) =>
     request<Chapter[]>(`/projects/${id}/chapters`),

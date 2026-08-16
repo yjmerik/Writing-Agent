@@ -68,6 +68,7 @@ public class NovelOrchestrator {
     private com.writing.novel.service.ConceiveGate conceiveGate; // p11-q1-01: 构思期质量门禁（setter 注入）
     private com.writing.novel.service.PlanGate planGate; // p11-q1-04: 章节梗概预检（setter 注入）
     private com.writing.novel.service.QualityCouncil qualityCouncil; // p11-q2-03: 质检委员会合并重写（setter 注入）
+    private com.writing.novel.service.Arbiter arbiter;
     /** p10-w2-03: 事实收割 Agent——null 时跳过（向后兼容） */
     private com.writing.novel.agent.FactHarvesterAgent factHarvester;
     /** p10-w3-03: 归档衰减器——null 时跳过（向后兼容） */
@@ -175,6 +176,10 @@ public class NovelOrchestrator {
     /** p11-q2-03: 注入质检委员会（@Bean 装配用）；不调则保持 null，guard 重写不合并 */
     public void setQualityCouncil(com.writing.novel.service.QualityCouncil qualityCouncil) {
         this.qualityCouncil = qualityCouncil;
+    }
+
+    public void setArbiter(com.writing.novel.service.Arbiter arbiter) {
+        this.arbiter = arbiter;
     }
 
     /** p10-w2-03: 注入事实收割 Agent（@Bean 装配用）；不调则保持 null，收割安全跳过 */
@@ -497,6 +502,17 @@ public class NovelOrchestrator {
         }
     }
 
+    public void pause(String projectId) {
+        Project p = loadProject(projectId);
+        if (p.getState() == NovelState.FINAL || p.getState() == NovelState.NEEDS_REVISION) {
+            throw new IllegalStateException("已完结项目不能暂停: " + p.getState());
+        }
+        p.setState(NovelState.PAUSED_AT_CHECKPOINT);
+        repository.saveProject(p);
+        repository.saveCheckpoint(new Checkpoint(projectId,
+                Checkpoint.Type.ON_CONTINUITY_FIX, "用户暂停，可修改设定后继续"));
+    }
+
     private void resumeFromCheckpoint(String projectId) {
         Project p = loadProject(projectId);
         // p7-1: 智能恢复——根据最近的 PENDING checkpoint 类型决定下一步状态
@@ -679,7 +695,7 @@ public class NovelOrchestrator {
         // p8-3: 读者检验 Agentic Loop——每章写后检验，低分自动重写（最多1次）
         // p9-1: 重写长度保护——拒绝比原版短70%的重写
         // p11-I1: 评价结果持久化
-        if (readerReviewAgent != null) {
+        if (readerReviewAgent != null && arbiter == null) {
             try {
                 var review = readerReviewAgent.review(chapterIndex, chapter.getContent());
                 log.info("读者检验(章{}): {}/10 — {}", chapterIndex, review.getScore(), review.getSummary());
@@ -1030,10 +1046,9 @@ public class NovelOrchestrator {
             var issues = continuityChecker.check(projectId, chapterIndex, chapter.getContent(), settings);
             continuityIssuesRef = issues;
 
-            // HIGH 级矛盾纠偏：触发 1 次重写
             boolean hasHighIssue = issues.stream()
                     .anyMatch(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH);
-            if (hasHighIssue && chapter.getContent().length() > 500) {
+            if (arbiter == null && hasHighIssue && chapter.getContent().length() > 500) {
                 String issueDesc = issues.stream()
                         .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH)
                         .map(ContinuityIssue::getDescription)
@@ -1077,6 +1092,7 @@ public class NovelOrchestrator {
             int threshold = repository.findWritingPreferences(projectId)
                     .map(p -> p.getForeshadowSuspenseThreshold()).orElse(8);
             var stale = repository.findUnresolvedForeshadowings(projectId).stream()
+                    .filter(f -> f.isMustResolve() || f.getPriority() == Foreshadowing.Priority.HIGH)
                     .filter(f -> f.isStale(chapterIndex, threshold))
                     .toList();
             for (var f : stale) {
@@ -1109,7 +1125,7 @@ public class NovelOrchestrator {
                 // 在同一章未被 continuity 重写过时触发重写（rewritten 标记来自 continuity 检查）
                 boolean hasHigh = guardIssues.stream().anyMatch(
                         i -> i.getSeverity() == ContinuityIssue.Severity.HIGH);
-                if (hasHigh && !rewritten && chapter.getContent().length() > 500) {
+                if (arbiter == null && hasHigh && !rewritten && chapter.getContent().length() > 500) {
                     // p11-q2-03: 合并重写——用 QualityCouncil 汇总 continuity+guard 问题生成合并纠偏指令
                     // （解除"guard HIGH 时只喂 guard 问题"的分散模式，多维问题一次重写联合修正）
                     String desc;
@@ -1138,11 +1154,20 @@ public class NovelOrchestrator {
                                     applyRepairClassification(projectId, chapterIndex, chapter, issue, true);
                                 }
                         }
-                    } catch (Exception ignored) {}
+                    } catch (Exception e) {
+                        log.warn("一致性守卫复检失败(章{}): {}", chapterIndex, e.getMessage());
+                        EventLog.emit("CONSISTENCY_ISSUE", Map.of(
+                                "severity", "DETECT_FAILED", "desc", EventLog.truncate(e.getMessage(), 150)));
+                    }
                 }
             }
         } catch (Exception e) {
             log.warn("一致性守卫失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+
+        if (arbiter != null) {
+            rewritten = applyArbiterDecision(projectId, chapterIndex, chapter, cast,
+                    continuityIssuesRef, rewritten);
         }
 
         // p10-d2: 一致性门禁——章号/时代用语检查（纯规则）
@@ -1242,7 +1267,78 @@ public class NovelOrchestrator {
             }
         } catch (Exception e) {
             log.warn("纠偏重写失败，保留原版本: {}", e.getMessage());
+            EventLog.emit("CONSISTENCY_ISSUE", Map.of(
+                    "severity", "DETECT_FAILED", "desc", EventLog.truncate(e.getMessage(), 150)));
         }
+    }
+
+    private boolean applyArbiterDecision(String projectId, int chapterIndex, Chapter chapter,
+                                         List<String> cast,
+                                         java.util.List<ContinuityIssue> continuityIssues,
+                                         boolean alreadyRewritten) {
+        java.util.List<ContinuityIssue> guardIssues = java.util.List.of();
+        try {
+            if (consistencyGuard != null) {
+                guardIssues = consistencyGuard.check(projectId, chapterIndex, chapter.getContent(), cast);
+            }
+        } catch (Exception e) {
+            log.warn("仲裁前守卫失败(章{}): {}", chapterIndex, e.getMessage());
+            EventLog.emit("CONSISTENCY_ISSUE", Map.of(
+                    "severity", "DETECT_FAILED", "desc", EventLog.truncate(e.getMessage(), 150)));
+        }
+        int readerOverall = 10;
+        String suggestion = null;
+        if (readerReviewAgent != null) {
+            try {
+                var review = readerReviewAgent.review(chapterIndex, chapter.getContent());
+                readerOverall = review.getScore();
+                suggestion = review.getImprovementSuggestion();
+                repository.saveChapterReview(ChapterReview.from(projectId, review));
+            } catch (Exception e) {
+                log.warn("仲裁前读者检验失败(章{}): {}", chapterIndex, e.getMessage());
+            }
+        }
+        var council = (qualityCouncil != null ? qualityCouncil : new com.writing.novel.service.QualityCouncil())
+                .collect(continuityIssues, guardIssues, readerOverall, suggestion, null);
+        int budget = repository.findWritingPreferences(projectId)
+                .map(com.writing.novel.domain.WritingPreferences::getRewriteBudget).orElse(1);
+        var decision = arbiter.arbitrate(council, budget, alreadyRewritten);
+        if (decision.action() == com.writing.novel.service.Arbiter.Action.REWRITE
+                && chapter.getContent().length() > 500) {
+            rewriteWithCorrection(projectId, chapterIndex, chapter, decision.correctionBrief(), "");
+            alreadyRewritten = true;
+            try {
+                var recheckC = continuityChecker.check(projectId, chapterIndex, chapter.getContent(),
+                        collectSettingsForCheck(projectId, cast));
+                for (var issue : recheckC) {
+                    if (issue.getSeverity() == ContinuityIssue.Severity.HIGH) {
+                        applyRepairClassification(projectId, chapterIndex, chapter, issue, true);
+                    }
+                }
+                if (consistencyGuard != null) {
+                    var recheckG = consistencyGuard.check(projectId, chapterIndex, chapter.getContent(), cast);
+                    for (var issue : recheckG) {
+                        repository.saveContinuityIssue(issue);
+                        if (issue.getSeverity() == ContinuityIssue.Severity.HIGH) {
+                            applyRepairClassification(projectId, chapterIndex, chapter, issue, true);
+                        }
+                    }
+                }
+                if (readerReviewAgent != null) {
+                    readerReviewAgent.review(chapterIndex, chapter.getContent());
+                }
+            } catch (Exception e) {
+                log.warn("仲裁后复检失败(章{}): {}", chapterIndex, e.getMessage());
+                EventLog.emit("CONSISTENCY_ISSUE", Map.of(
+                        "severity", "DETECT_FAILED", "desc", EventLog.truncate(e.getMessage(), 150)));
+            }
+        } else if (decision.action() == com.writing.novel.service.Arbiter.Action.BLOCK) {
+            continuityIssues.stream()
+                    .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH)
+                    .findFirst()
+                    .ifPresent(i -> applyRepairClassification(projectId, chapterIndex, chapter, i, true));
+        }
+        return alreadyRewritten;
     }
 
     /**
@@ -1500,6 +1596,10 @@ public class NovelOrchestrator {
                 break;
             }
             Project p = loadProject(projectId);
+            if (p.getState() == NovelState.PAUSED_AT_CHECKPOINT) {
+                log.info("写作循环遇暂停，已写 {} 章", written);
+                break;
+            }
             Outline outline = repository.findOutlineByProject(projectId).orElse(null);
             if (outline == null) break;
 
@@ -1561,9 +1661,7 @@ public class NovelOrchestrator {
                             ContinuityIssue.Type.FORESHADOWING,
                             ContinuityIssue.Severity.HIGH,
                             resolveCmd.toString()));
-                    // 降级伏笔 mustResolve（防下一轮仍卡住），但保留 HIGH priority
                     for (var f : criticalUnresolved) {
-                        f.setMustResolve(false);
                         repository.saveForeshadowing(f);
                     }
                     // 不转 FINAL，让循环继续写一章（会因 hasNextChapter 仍 false 而 fallback）
@@ -1870,16 +1968,21 @@ public class NovelOrchestrator {
                 }
             }
 
-            // 更新 outline.premise：保留已有的原始总纲头部，追加【剧情偏离与重规划】段
-            String update = "\n\n【剧情偏离与重规划（卷" + (currentChapter / 8) + "后）】\n"
-                    + "截至第" + currentChapter + "章已发生剧情偏离原总纲，以下为后续章节应遵循的调整：\n"
-                    + writtenSummary.toString().trim()
-                    + "\n（后续章节大纲将在延迟生成时根据以上调整自动适配）";
-            outline.setPremise(premise + update);
+            if (plotter != null) {
+                int nextStart = currentChapter + 1;
+                String generated = plotter.planVolume(
+                        outline.getPremise(), writtenSummary.toString(),
+                        "后续卷", "根据已写剧情重规划未写卷",
+                        nextStart, nextStart + 7, "");
+                Outline scratch = new Outline(projectId, outline.getPremise());
+                int nextVol = outline.getVolumes().stream().mapToInt(Volume::getVolumeIndex).max().orElse(0) + 1;
+                parseAndAppendVolume(scratch, generated, projectId, nextVol, nextStart);
+                new com.writing.novel.service.OutlineReplanner()
+                        .replaceUnwritten(outline, currentChapter, scratch.getVolumes());
+            }
             repository.saveOutline(outline);
-            // p10-w1-01: premise 变更后使稳定段缓存失效
-            contextAssembler.invalidateProject(projectId);
-            log.info("总纲中段重规划完成(项目{}, 当前章{}): 已追加重规划信息", projectId, currentChapter);
+            if (contextAssembler != null) contextAssembler.invalidateProject(projectId);
+            log.info("总纲中段重规划完成(项目{}, 当前章{}): 未写卷已替换", projectId, currentChapter);
         } catch (Exception e) {
             log.warn("总纲中段重规划失败(项目{}): {}", projectId, e.getMessage());
         }
@@ -2161,6 +2264,15 @@ public class NovelOrchestrator {
             } catch (Exception ignored) {}
         }
         log.info("解析追加卷{}: {} 章", volumeNumber, parsed);
+        if (parsed > 0) {
+            Project project = repository.findProject(projectId).orElse(null);
+            if (project != null && project.getMode() == ProjectMode.INTERACTIVE) {
+                project.setState(NovelState.PAUSED_AT_CHECKPOINT);
+                repository.saveProject(project);
+                repository.saveCheckpoint(new Checkpoint(projectId,
+                        Checkpoint.Type.AFTER_VOLUME_OUTLINE, "卷" + volumeNumber + "大纲已生成，待审核"));
+            }
+        }
         return parsed;
     }
 
@@ -2197,8 +2309,9 @@ public class NovelOrchestrator {
             try {
                 invalidateSummariesForChapter(projectId, chapterIndex);
             } catch (Exception ignored) {}
+            if (contextAssembler != null) contextAssembler.invalidateProject(projectId);
+            try { if (factHarvester != null) factHarvester.harvest(projectId, existing); } catch (Exception ignored) {}
 
-            // 重新提取实体和伏笔
             try { entityGraphService.extractFromChapter(projectId, existing); } catch (Exception ignored) {}
             try { foreshadowingExtractor.extract(projectId, existing); } catch (Exception ignored) {}
 
@@ -2322,9 +2435,11 @@ public class NovelOrchestrator {
         log.info("段落编辑完成(章{}段{}): {}→{}字", chapterIndex, paragraphIndex,
                 content.length(), newContent.length());
 
-        // 重跑检测器
+        try { invalidateSummariesForChapter(projectId, chapterIndex); } catch (Exception ignored) {}
+        if (contextAssembler != null) contextAssembler.invalidateProject(projectId);
         try { entityGraphService.extractFromChapter(projectId, chapter); } catch (Exception ignored) {}
         try { foreshadowingExtractor.extract(projectId, chapter); } catch (Exception ignored) {}
+        try { if (factHarvester != null) factHarvester.harvest(projectId, chapter); } catch (Exception ignored) {}
 
         return chapter;
     }
@@ -2375,6 +2490,11 @@ public class NovelOrchestrator {
                 .filter(i -> i.getDetectedAtChapter() == chapterIndex)
                 .toList();
         report.setIssues(issues);
+        report.setNeedsManualReview(chapter.getStatus() == Chapter.Status.NEEDS_MANUAL_REVIEW);
+        report.setQualityRisk(issues.stream().anyMatch(i ->
+                i.getDescription() != null && i.getDescription().startsWith("[quality_risk]"))
+                || repository.findUnresolvedIssues(projectId).stream().anyMatch(i ->
+                i.getDescription() != null && i.getDescription().startsWith("[quality_risk]")));
 
         // 套路词统计
         try {

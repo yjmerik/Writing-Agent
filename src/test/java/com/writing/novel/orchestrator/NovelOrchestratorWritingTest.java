@@ -135,4 +135,26 @@ class NovelOrchestratorWritingTest {
         assertEquals(NovelState.PAUSED_AT_CHECKPOINT, found.getState());
         assertFalse(repo.findPendingCheckpoints(p.getId()).isEmpty(), "应有待审核 checkpoint");
     }
+
+    @Test
+    void 交互模式连续写作只写一章就暂停() {
+        Project p = projectService.create("t", "c", "tag", ProjectMode.INTERACTIVE);
+        orchestrator.runConceiving(p.getId());
+        orchestrator.step(p.getId());
+        orchestrator.step(p.getId());
+
+        int written = orchestrator.runWritingLoop(p.getId(), 5);
+        assertEquals(1, written);
+        assertEquals(NovelState.PAUSED_AT_CHECKPOINT, repo.findProject(p.getId()).orElseThrow().getState());
+    }
+
+    @Test
+    void pause将项目置为暂停() {
+        Project p = projectService.create("t", "c", "tag");
+        orchestrator.runConceiving(p.getId());
+        orchestrator.step(p.getId());
+        orchestrator.pause(p.getId());
+        assertEquals(NovelState.PAUSED_AT_CHECKPOINT, repo.findProject(p.getId()).orElseThrow().getState());
+        assertEquals(0, orchestrator.runWritingLoop(p.getId(), 3));
+    }
 }

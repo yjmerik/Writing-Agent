@@ -1948,14 +1948,15 @@
       "dependencies": [
         "p14-02"
       ],
-      "status": "not-started",
+      "status": "completed",
       "type": "bug",
       "files": [
         "orchestrator/NovelOrchestrator.java"
       ],
       "problem_ref": "QA P5 UI 超时误报；写一章后处理期间看不到暂停",
       "acceptance": "harvest 阻塞时 editPassage/writeChapter 仍返回；INTERACTIVE 立即 PAUSED",
-      "verify_cmd": "mvn test -Dtest=EditPassageReturnsBeforeHarvestTest,InteractivePauseAfterPersistTest"
+      "verify_cmd": "mvn test -Dtest=EditPassageReturnsBeforeHarvestTest,InteractivePauseAfterPersistTest",
+      "evidence": "EditPassageReturnsBeforeHarvestTest + InteractivePauseAfterPersistTest + NovelOrchestratorWritingTest pass"
     },
     {
       "id": "p14-04",

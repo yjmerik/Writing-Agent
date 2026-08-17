@@ -25,6 +25,12 @@ import java.util.Map;
 public class NovelOrchestrator {
 
     private static final Logger log = LoggerFactory.getLogger(NovelOrchestrator.class);
+    private static final java.util.concurrent.ExecutorService POST_PROCESS =
+            java.util.concurrent.Executors.newCachedThreadPool(r -> {
+                Thread t = new Thread(r, "chapter-postprocess");
+                t.setDaemon(true);
+                return t;
+            });
 
     private final NovelRepository repository;
     private final ProjectService projectService;
@@ -669,6 +675,14 @@ public class NovelOrchestrator {
         chapter.setStatus(com.writing.novel.domain.Chapter.Status.POST_PROCESSING);
         repository.saveChapter(chapter);
 
+        if (p.getMode() == ProjectMode.INTERACTIVE) {
+            p.setState(NovelState.PAUSED_AT_CHECKPOINT);
+            repository.saveProject(p);
+            repository.saveCheckpoint(new Checkpoint(projectId,
+                    Checkpoint.Type.AFTER_CHAPTER,
+                    "第" + chapterIndex + "章「" + chapter.getTitle() + "」已完成，待审核"));
+        }
+
         // 写完后做连续性检查（发现问题记录到 DB，不中断写作）
         // p10-w1-07: 返回是否已触发 continuity 重写——若已重写，reader review 不再重写（互斥，防成本翻倍）
         boolean rewrittenByContinuity = checkContinuityAfterWriting(projectId, chapterIndex, chapter, parseCast(synopsis.getCast()));
@@ -870,15 +884,6 @@ public class NovelOrchestrator {
         checkAndGenerateVolumeSummary(projectId, outline, chapterIndex);
 
         // p12-K3: 向量库 flush 已在 ChapterWriterAgent.indexChapterInChunks 后完成
-
-        // p7-1: INTERACTIVE 模式——每章写完后暂停等待审核
-        if (p.getMode() == ProjectMode.INTERACTIVE) {
-            p.setState(NovelState.PAUSED_AT_CHECKPOINT);
-            repository.saveProject(p);
-            repository.saveCheckpoint(new Checkpoint(projectId,
-                    Checkpoint.Type.AFTER_CHAPTER,
-                    "第" + chapterIndex + "章「" + chapter.getTitle() + "」已完成，待审核"));
-        }
 
         // p10-w1-06: 全部后处理完成 → status=DONE（章节真正就绪）
         chapter.setStatus(com.writing.novel.domain.Chapter.Status.DONE);
@@ -2436,12 +2441,21 @@ public class NovelOrchestrator {
         repository.saveChapter(chapter);
         log.info("段落编辑完成(章{}段{}): {}→{}字", chapterIndex, resolvedIndex,
                 content.length(), newContent.length());
-
-        try { invalidateSummariesForChapter(projectId, chapterIndex); } catch (Exception ignored) {}
         if (contextAssembler != null) contextAssembler.invalidateProject(projectId);
-        try { entityGraphService.extractFromChapter(projectId, chapter); } catch (Exception ignored) {}
-        try { foreshadowingExtractor.extract(projectId, chapter); } catch (Exception ignored) {}
-        try { if (factHarvester != null) factHarvester.harvest(projectId, chapter); } catch (Exception ignored) {}
+
+        final Chapter snapshot = chapter;
+        POST_PROCESS.execute(() -> {
+            try { invalidateSummariesForChapter(projectId, chapterIndex); } catch (Exception ignored) {}
+            try {
+                if (entityGraphService != null) entityGraphService.extractFromChapter(projectId, snapshot);
+            } catch (Exception ignored) {}
+            try {
+                if (foreshadowingExtractor != null) foreshadowingExtractor.extract(projectId, snapshot);
+            } catch (Exception ignored) {}
+            try {
+                if (factHarvester != null) factHarvester.harvest(projectId, snapshot);
+            } catch (Exception ignored) {}
+        });
 
         return chapter;
     }

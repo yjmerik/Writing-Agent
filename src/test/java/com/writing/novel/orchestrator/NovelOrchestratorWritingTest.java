@@ -24,9 +24,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class NovelOrchestratorWritingTest {
 
     @TempDir Path tempDir;
-    private NovelOrchestrator orchestrator;
-    private SqliteNovelRepository repo;
-    private ProjectService projectService;
+    protected NovelOrchestrator orchestrator;
+    protected SqliteNovelRepository repo;
+    protected ProjectService projectService;
 
     @BeforeEach
     void setUp() {

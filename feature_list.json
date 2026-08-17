@@ -1964,7 +1964,7 @@
       "description": "client 轮询 GET /writing-tasks/{taskId}；按钮改为连续写作（最多 N 章）。",
       "phase": 14,
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "type": "bug",
       "files": [
         "frontend/src/api/client.ts",
@@ -1972,7 +1972,8 @@
       ],
       "problem_ref": "后端已异步返回 taskId，前端仍读 chaptersWritten",
       "acceptance": "writeAll 首次响应用 taskId 轮询；文案无写完全书除非 N=剩余",
-      "verify_cmd": "mvn test -Dtest=WritingTaskExecutorTest"
+      "verify_cmd": "mvn test -Dtest=WritingTaskExecutorTest",
+      "evidence": "client.writeAll polls writing-tasks; RunConsole copy is 最多 50 章"
     },
     {
       "id": "p14-05",

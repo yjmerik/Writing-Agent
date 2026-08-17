@@ -67,14 +67,14 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
     try {
       const result = await api.writeAll(projectId);
       const words = result.totalWords;
-      message.success(`连续写作完成！共写 ${result.chaptersWritten} 章，全书 ${result.currentChapter} 章 ${words} 字`);
+      message.success(`连续写作完成！共写 ${result.chaptersWritten} 章，当前第 ${result.currentChapter} 章 ${words} 字`);
       setLastResult(
-        `✅ 连续写作完成\n` +
+        `✅ 连续写作${result.status === 'CANCELLED' ? '已取消' : '完成'}\n` +
         `本次新写：${result.chaptersWritten} 章\n` +
-        `全书章节：${result.currentChapter} 章\n` +
+        `当前章节：${result.currentChapter} 章\n` +
         `总字数：${words.toLocaleString()} 字\n` +
-        `状态：${result.state === 'FINAL' ? '✅ 已完结' : result.state}\n` +
-        `💡 切换到「章节阅读」Tab 查看全部正文`,
+        `任务状态：${result.status}\n` +
+        `💡 切换到「章节管理」Tab 查看正文`,
       );
       onChanged();
     } catch (e) {
@@ -134,7 +134,7 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
         </Button>
         <Popconfirm
           title="连续写作"
-          description="将自动写完所有章节，可能耗时数十分钟。确定开始？"
+          description="将连续写作最多 50 章（或到目标章数），可能耗时数十分钟。确定开始？"
           onConfirm={handleWriteAll}
           okText="开始连续写作"
           cancelText="取消"
@@ -147,7 +147,7 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
             loading={batchWriting}
             disabled={busy}
           >
-            {batchWriting ? '连续写作中（每章 1-2 分钟）…' : '⚡ 连续写作（写完全书）'}
+            {batchWriting ? '连续写作中（每章 1-2 分钟）…' : '⚡ 连续写作（最多 50 章）'}
           </Button>
         </Popconfirm>
       </Space>

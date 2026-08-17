@@ -124,13 +124,33 @@ export const api = {
   writeChapter: (id: string) =>
     request<Chapter>(`/projects/${id}/write-chapter`, { method: 'POST' }),
 
-  /** 连续写作：批量写所有章节（慢操作，可能几十分钟） */
-  writeAll: (id: string, maxChapters = 50) =>
-    request<{ projectId: string; chaptersWritten: number; state: string; currentChapter: number; totalWords: number }>(
+  startWriteAll: (id: string, maxChapters = 50) =>
+    request<{ projectId: string; taskId: string; status: string; totalChapters: number; message: string }>(
       `/projects/${id}/write-all?maxChapters=${maxChapters}`,
       { method: 'POST' },
-      3600000, // 超时 1 小时
     ),
+
+  getWritingTask: (id: string, taskId: string) =>
+    request<{
+      taskId: string; projectId: string; status: string;
+      currentChapter: number; chaptersWritten: number; totalChapters: number;
+      totalWords: number; errorMessage: string;
+    }>(`/projects/${id}/writing-tasks/${taskId}`),
+
+  writeAll: async (id: string, maxChapters = 50) => {
+    const started = await api.startWriteAll(id, maxChapters);
+    const taskId = started.taskId;
+    const deadline = Date.now() + 3600000;
+    while (Date.now() < deadline) {
+      const task = await api.getWritingTask(id, taskId);
+      if (task.status === 'DONE' || task.status === 'CANCELLED' || task.status === 'FAILED') {
+        if (task.status === 'FAILED') throw new Error(task.errorMessage || '连续写作失败');
+        return task;
+      }
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+    throw new Error('连续写作超时');
+  },
 
   /** 质量评价（慢操作，调 LLM 分析） */
   evaluate: (id: string) =>

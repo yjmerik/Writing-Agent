@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": "Phase 13 百万字人机真典脊柱（15 feature）",
+  "current_phase": "Phase 14 人机真典硬化（6 feature）",
   "features": [
     {
       "id": "p1-01",
@@ -1906,6 +1906,105 @@
       "problem_ref": "p12-05 默认 24 后 UI 无法选长篇；系统能力与入口不一致",
       "acceptance": "选 100/200/400 时 targetChapters 被写入；默认仍 24；前端 build 通过",
       "verify_cmd": "mvn test -Dtest=ProjectServiceTest"
+    },
+    {
+      "id": "p14-01",
+      "name": "deleteProject 按表正确级联",
+      "description": "deleteProject 事务删除：projects 用 id；其余有 project_id 的表全删；PreparedStatement；覆盖 outlines/facts/tasks 等。",
+      "phase": 14,
+      "dependencies": [],
+      "status": "completed",
+      "type": "bug",
+      "files": [
+        "persistence/sqlite/SqliteNovelRepository.java"
+      ],
+      "problem_ref": "QA L11: DELETE 500 no such column project_id",
+      "acceptance": "建含 outline/world/facts 的项目后 deleteProject 不抛；projects/outlines/story_facts/knowledge_entries 对该 id 为 0 行",
+      "verify_cmd": "mvn test -Dtest=SqliteNovelRepositoryDeleteTest",
+      "evidence": "SqliteNovelRepositoryDeleteTest 1 pass; delete uses projects.id + all project_id tables in a transaction"
+    },
+    {
+      "id": "p14-02",
+      "name": "异常 fail-loud + 构思完整性门闩",
+      "description": "null message 返回内部错误:类名；构思缺世界观/人物/大纲不得离开 CONCEIVING。",
+      "phase": 14,
+      "dependencies": [],
+      "status": "not-started",
+      "type": "bug",
+      "files": [
+        "web/GlobalExceptionHandler.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "QA P16: 构思 500 内部错误且世界观仍 0",
+      "acceptance": "NPE 响应含异常类名；WorldBuilder 空产出时仍 CONCEIVING",
+      "verify_cmd": "mvn test -Dtest=ConceivingCompletenessTest,GlobalExceptionHandlerTest"
+    },
+    {
+      "id": "p14-03",
+      "name": "写章/改段落先返回后处理异步 + INTERACTIVE 立即暂停",
+      "description": "正文落库后立即返回并挂 AFTER_CHAPTER；抽取/收割异步；pause 不回滚已写正文。",
+      "phase": 14,
+      "dependencies": [
+        "p14-02"
+      ],
+      "status": "not-started",
+      "type": "bug",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "QA P5 UI 超时误报；写一章后处理期间看不到暂停",
+      "acceptance": "harvest 阻塞时 editPassage/writeChapter 仍返回；INTERACTIVE 立即 PAUSED",
+      "verify_cmd": "mvn test -Dtest=EditPassageReturnsBeforeHarvestTest,InteractivePauseAfterPersistTest"
+    },
+    {
+      "id": "p14-04",
+      "name": "前端对接异步 write-all + 文案",
+      "description": "client 轮询 GET /writing-tasks/{taskId}；按钮改为连续写作（最多 N 章）。",
+      "phase": 14,
+      "dependencies": [],
+      "status": "not-started",
+      "type": "bug",
+      "files": [
+        "frontend/src/api/client.ts",
+        "frontend/src/components/RunConsole.tsx"
+      ],
+      "problem_ref": "后端已异步返回 taskId，前端仍读 chaptersWritten",
+      "acceptance": "writeAll 首次响应用 taskId 轮询；文案无写完全书除非 N=剩余",
+      "verify_cmd": "mvn test -Dtest=WritingTaskExecutorTest"
+    },
+    {
+      "id": "p14-05",
+      "name": "检查点按 id 批准、列出全部 PENDING",
+      "description": "UI 列出全部 PENDING 各带批准；批准指定 id；仍有 PENDING 则保持 PAUSED。",
+      "phase": 14,
+      "dependencies": [],
+      "status": "not-started",
+      "type": "bug",
+      "files": [
+        "frontend/src/components/InteractiveReview.tsx",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "QA P8 批准后落到 PLANNING，旧 checkpoint 处理不一致",
+      "acceptance": "两条 PENDING 批准较新的，旧的仍 PENDING 且 state=PAUSED",
+      "verify_cmd": "mvn test -Dtest=ApproveSpecificCheckpointTest"
+    },
+    {
+      "id": "p14-06",
+      "name": "人物全字段 + 真典 UI + CULTURE + 新建 Modal",
+      "description": "人物卡全字段可编辑；真典列表增改；CULTURE=文化；侧栏新建打开创建框。",
+      "phase": 14,
+      "dependencies": [
+        "p14-01"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/WorldbuildingView.tsx",
+        "frontend/src/pages/ProjectWorkspace.tsx",
+        "frontend/src/pages/ProjectListPage.tsx"
+      ],
+      "problem_ref": "QA: 人物只改能力；facts 无入口；CULTURE 原文；新建只回列表",
+      "acceptance": "PUT personality 写真典；facts 可增改；CULTURE 显示文化",
+      "verify_cmd": "mvn test -Dtest=CanonPatchServiceTest"
     }
   ]
 }

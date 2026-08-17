@@ -2,6 +2,19 @@
 
 ## Current State
 
+**Last Updated:** 2026-08-17
+**Phase:** **Phase 14 人机真典硬化 — 1/6（p14-01 完成）**
+
+### Phase 14（2026-08-17）
+
+- Spec：`docs/specs/2026-08-17-human-canon-hardening.md`
+- Plan：`docs/superpowers/plans/2026-08-17-human-canon-hardening.md`
+- **p14-01 完成**：`deleteProject` 事务级联；`projects` 用 `id`；其余有 `project_id` 的表全删
+- 验证：`mvn test -Dtest=SqliteNovelRepositoryDeleteTest` 1 pass
+- Next：p14-02 构思 fail-loud
+
+---
+
 **Last Updated:** 2026-08-16
 **Phase:** **Phase 13 百万字人机真典脊柱 — 15/15 feature 完成**
 

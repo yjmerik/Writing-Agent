@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Card, Tag, Empty, Spin, Row, Col, Descriptions, Divider, Button, Space, Input, message } from 'antd';
+import { Card, Tag, Empty, Spin, Row, Col, Descriptions, Divider, Button, Space, Input, message, List, Typography } from 'antd';
 import { ReloadOutlined, SaveOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
 import type { KnowledgeEntry, Character } from '../types';
+
+const { Text } = Typography;
 
 const TYPE_LABELS: Record<string, string> = {
   GEOGRAPHY: '地理',
@@ -12,6 +14,7 @@ const TYPE_LABELS: Record<string, string> = {
   RULE: '规则',
   ITEM: '物品',
   CUSTOM: '其他',
+  CULTURE: '文化',
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -22,11 +25,14 @@ const TYPE_COLORS: Record<string, string> = {
   RULE: 'purple',
   ITEM: 'gold',
   CUSTOM: 'default',
+  CULTURE: 'cyan',
 };
 
 export default function WorldbuildingView({ projectId }: { projectId: string }) {
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [characters, setCharacters] = useState<Character[]>([]);
+  const [facts, setFacts] = useState<Array<{ id: string; subject: string; assertion: string; factType: string }>>([]);
+  const [newFact, setNewFact] = useState('');
   const [loading, setLoading] = useState(true);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
@@ -34,12 +40,14 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [e, c] = await Promise.all([
+      const [e, c, f] = await Promise.all([
         api.getWorldbuilding(projectId),
         api.getCharacters(projectId),
+        api.getFacts(projectId).catch(() => []),
       ]);
       setEntries(e || []);
       setCharacters(c || []);
+      setFacts(f || []);
     } finally {
       setLoading(false);
     }
@@ -111,33 +119,73 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
             <Col span={12} key={c.id}>
               <Card size="small" title={c.name} extra={<Tag>{c.role}</Tag>}>
                 <Descriptions column={1} size="small">
-                  {c.personality && <Descriptions.Item label="性格">{c.personality}</Descriptions.Item>}
-                  <Descriptions.Item label="能力">
-                    <Input
-                      size="small"
-                      defaultValue={c.ability || ''}
-                      onBlur={async (ev) => {
-                        const v = ev.target.value;
-                        if (v === (c.ability || '')) return;
-                        try {
-                          await api.updateCharacter(projectId, c.id, { ability: v });
-                          message.success(`${c.name} 能力已写入真典`);
-                          load();
-                        } catch (err) {
-                          message.error((err as Error).message);
-                        }
-                      }}
-                    />
-                  </Descriptions.Item>
-                  {c.motivation && <Descriptions.Item label="动机">{c.motivation}</Descriptions.Item>}
-                  {c.appearance && <Descriptions.Item label="外貌">{c.appearance}</Descriptions.Item>}
-                  {c.relationships && <Descriptions.Item label="关系">{c.relationships}</Descriptions.Item>}
-                  {c.growthArc && <Descriptions.Item label="成长弧">{c.growthArc}</Descriptions.Item>}
+                  {([
+                    ['性格', 'personality', c.personality],
+                    ['能力', 'ability', c.ability],
+                    ['动机', 'motivation', c.motivation],
+                    ['外貌', 'appearance', c.appearance],
+                    ['关系', 'relationships', c.relationships],
+                    ['成长弧', 'growthArc', c.growthArc],
+                  ] as const).map(([label, field, val]) => (
+                    <Descriptions.Item key={field} label={label}>
+                      <Input.TextArea
+                        size="small"
+                        rows={2}
+                        defaultValue={val || ''}
+                        onBlur={async (ev) => {
+                          const v = ev.target.value;
+                          if (v === (val || '')) return;
+                          try {
+                            await api.updateCharacter(projectId, c.id, { [field]: v });
+                            message.success(`${c.name} ${label}已写入真典`);
+                            load();
+                          } catch (err) {
+                            message.error((err as Error).message);
+                          }
+                        }}
+                      />
+                    </Descriptions.Item>
+                  ))}
                 </Descriptions>
               </Card>
             </Col>
           ))}
         </Row>
+      )}
+
+      <Divider />
+      <h2>📜 真典</h2>
+      <Space style={{ marginBottom: 8 }} wrap>
+        <Input
+          style={{ width: 360 }}
+          placeholder="新增铁律，如：嘉靖年间不得出现望远镜"
+          value={newFact}
+          onChange={(e) => setNewFact(e.target.value)}
+        />
+        <Button size="small" type="primary" onClick={async () => {
+          if (!newFact.trim()) return;
+          try {
+            await api.addFact(projectId, { factType: 'WORLD_RULE', subject: '人补丁', assertion: newFact.trim() });
+            message.success('真典已写入');
+            setNewFact('');
+            load();
+          } catch (err) {
+            message.error((err as Error).message);
+          }
+        }}>添加</Button>
+      </Space>
+      {facts.length === 0 ? <Empty description="暂无真典条目" /> : (
+        <List
+          size="small"
+          dataSource={facts}
+          renderItem={(f) => (
+            <List.Item>
+              <Tag>{f.factType}</Tag>
+              <Text strong>{f.subject}</Text>
+              <span style={{ marginLeft: 8 }}>{f.assertion}</span>
+            </List.Item>
+          )}
+        />
       )}
     </div>
   );

@@ -3,7 +3,7 @@
 ## Current State
 
 **Last Updated:** 2026-08-17
-**Phase:** **Phase 14 人机真典硬化 — 5/6（p14-01–05 完成）**
+**Phase:** **Phase 14 人机真典硬化 — 6/6 feature 完成**
 
 ### Phase 14（2026-08-17）
 
@@ -16,7 +16,7 @@
 - **p14-03 完成**：editPassage 后处理异步；INTERACTIVE 正文落库后立即 PAUSED
 - **p14-04 完成**：writeAll 轮询 taskId；按钮改为最多 50 章
 - **p14-05 完成**：approveCheckpoint 按 id；仍有 PENDING 保持暂停
-- Next：p14-06 人机 UI
+- **p14-06 完成**：人物全字段、真典入口、CULTURE、侧栏新建打开创建框
 
 ---
 

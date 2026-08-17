@@ -105,6 +105,12 @@ export const api = {
   getFacts: (id: string) =>
     request<Array<{ id: string; subject: string; assertion: string; factType: string }>>(`/projects/${id}/facts`),
 
+  addFact: (id: string, body: { factType: string; subject: string; assertion: string }) =>
+    request<{ id: string; subject: string; assertion: string; factType: string }>(`/projects/${id}/facts`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
   pause: (id: string) =>
     request<ProjectStatus>(`/projects/${id}/pause`, { method: 'POST' }),
 

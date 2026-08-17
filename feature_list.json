@@ -2000,7 +2000,7 @@
       "dependencies": [
         "p14-01"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/components/WorldbuildingView.tsx",
         "frontend/src/pages/ProjectWorkspace.tsx",
@@ -2008,7 +2008,8 @@
       ],
       "problem_ref": "QA: 人物只改能力；facts 无入口；CULTURE 原文；新建只回列表",
       "acceptance": "PUT personality 写真典；facts 可增改；CULTURE 显示文化",
-      "verify_cmd": "mvn test -Dtest=CanonPatchServiceTest"
+      "verify_cmd": "mvn test -Dtest=CanonPatchServiceTest",
+      "evidence": "人物全字段可编辑；真典列表+添加；CULTURE=文化；侧栏新建 ?new=1 打开创建框"
     }
   ]
 }

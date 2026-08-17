@@ -96,7 +96,7 @@ export default function ProjectWorkspace() {
             <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/')} style={{ flex: 1 }}>
               返回列表
             </Button>
-            <Button icon={<PlusOutlined />} onClick={() => navigate('/')} style={{ flex: 1 }}>
+            <Button icon={<PlusOutlined />} onClick={() => navigate('/?new=1')} style={{ flex: 1 }}>
               新建
             </Button>
           </div>

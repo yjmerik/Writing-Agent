@@ -115,16 +115,49 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public void deleteProject(String id) {
-        try (Connection conn = cp.getConnection();
-             Statement st = conn.createStatement()) {
-            for (String t : new String[]{"projects","knowledge_entries","characters","chapters",
-                    "summaries","foreshadowings","style_profiles","continuity_issues","checkpoints",
-                    "entities","entity_edges","evaluation_records"}) {
-                st.execute("DELETE FROM " + t + " WHERE project_id='" + id.replace("'","''") + "'");
+        try (Connection conn = cp.getConnection()) {
+            boolean oldAuto = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            try {
+                java.util.List<String> tables = new java.util.ArrayList<>();
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")) {
+                    ResultSet rs = ps.executeQuery();
+                    while (rs.next()) tables.add(rs.getString(1));
+                }
+                for (String t : tables) {
+                    if ("projects".equals(t)) continue;
+                    if (!hasColumn(conn, t, "project_id")) continue;
+                    try (PreparedStatement del = conn.prepareStatement(
+                            "DELETE FROM " + t + " WHERE project_id=?")) {
+                        del.setString(1, id);
+                        del.executeUpdate();
+                    }
+                }
+                try (PreparedStatement del = conn.prepareStatement("DELETE FROM projects WHERE id=?")) {
+                    del.setString(1, id);
+                    del.executeUpdate();
+                }
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(oldAuto);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static boolean hasColumn(Connection conn, String table, String column) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement("PRAGMA table_info(" + table + ")")) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                if (column.equalsIgnoreCase(rs.getString("name"))) return true;
+            }
+        }
+        return false;
     }
 
     @Override

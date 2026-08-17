@@ -2395,21 +2395,13 @@ public class NovelOrchestrator {
         String content = chapter.getContent();
         if (content == null || content.isBlank()) return chapter;
 
-        String[] paragraphs = content.split("\n");
-        if (paragraphIndex < 0 || paragraphIndex >= paragraphs.length) {
-            throw new IllegalArgumentException("段落号越界: " + paragraphIndex + "（共" + paragraphs.length + "段）");
-        }
+        String[] paragraphs = content.split("\n", -1);
+        int resolvedIndex = com.writing.novel.service.PassageLocator.resolve(
+                content, paragraphIndex, selectedText);
+        String targetParagraph = paragraphs[resolvedIndex];
 
-        // 定位验证：选中文本应与段落匹配
-        String targetParagraph = paragraphs[paragraphIndex];
-        if (selectedText != null && !selectedText.isBlank()
-                && !targetParagraph.contains(selectedText.substring(0, Math.min(10, selectedText.length())))) {
-            throw new IllegalArgumentException("段落定位失败：选中文本与段落不匹配，请刷新页面重试");
-        }
-
-        // 提取上下文（前2段+后2段）
-        String contextBefore = extractContext(paragraphs, paragraphIndex, -1, 2);
-        String contextAfter = extractContext(paragraphs, paragraphIndex, 1, 2);
+        String contextBefore = extractContext(paragraphs, resolvedIndex, -1, 2);
+        String contextAfter = extractContext(paragraphs, resolvedIndex, 1, 2);
 
         // 调用 PassageEditor
         String editedPassage = passageEditor.editPassage(
@@ -2422,7 +2414,7 @@ public class NovelOrchestrator {
         // 拼接：前段不变 + 新段落 + 后段不变
         StringBuilder newContent = new StringBuilder();
         for (int i = 0; i < paragraphs.length; i++) {
-            if (i == paragraphIndex) {
+            if (i == resolvedIndex) {
                 if ("INSERT".equalsIgnoreCase(mode)) {
                     newContent.append(paragraphs[i]).append("\n").append(editedPassage);
                 } else {
@@ -2442,7 +2434,7 @@ public class NovelOrchestrator {
 
         chapter.setContent(newContent.toString());
         repository.saveChapter(chapter);
-        log.info("段落编辑完成(章{}段{}): {}→{}字", chapterIndex, paragraphIndex,
+        log.info("段落编辑完成(章{}段{}): {}→{}字", chapterIndex, resolvedIndex,
                 content.length(), newContent.length());
 
         try { invalidateSummariesForChapter(projectId, chapterIndex); } catch (Exception ignored) {}

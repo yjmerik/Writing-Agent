@@ -257,10 +257,16 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
                       <div style={{ marginTop: 4 }}>{selectedParagraph.text.substring(0, 100)}
                         {selectedParagraph.text.length > 100 ? '...' : ''}</div>
                     </div>
+                    <div style={{ marginBottom: 6, color: '#888', fontSize: 12 }}>编辑方式（选好后再点右下角执行）</div>
                     <Space style={{ marginBottom: 8 }}>
                       {(['REWRITE', 'EXPAND', 'INSERT'] as const).map(m => (
                         <Button key={m} size="small" type={editMode === m ? 'primary' : 'default'}
-                          onClick={() => setEditMode(m)}>
+                          onClick={() => {
+                            setEditMode(m);
+                            if (editMode === m) {
+                              message.info('已是该方式，请填写指令后点「执行」');
+                            }
+                          }}>
                           {m === 'REWRITE' ? '改写' : m === 'EXPAND' ? '扩充' : '在其后插入'}
                         </Button>
                       ))}

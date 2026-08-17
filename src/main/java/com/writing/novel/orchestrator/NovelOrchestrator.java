@@ -479,6 +479,16 @@ public class NovelOrchestrator {
         // 伏笔抽取：从大纲文本中提取伏笔条目（p3-03）
         extractForeshadowingsFromOutline(projectId);
 
+        java.util.List<String> missing = new java.util.ArrayList<>();
+        if (repository.findKnowledgeEntriesByProject(projectId).isEmpty()) missing.add("世界观");
+        if (repository.findCharactersByProject(projectId).isEmpty()) missing.add("人物");
+        if (repository.findOutlineByProject(projectId).isEmpty()) missing.add("大纲");
+        if (!missing.isEmpty()) {
+            p.setState(NovelState.CONCEIVING);
+            repository.saveProject(p);
+            throw new IllegalStateException("构思未完成，缺少: " + String.join("、", missing));
+        }
+
         if (p.getMode() == ProjectMode.INTERACTIVE) {
             p.setState(NovelState.PAUSED_AT_CHECKPOINT);
             repository.saveCheckpoint(new Checkpoint(projectId,

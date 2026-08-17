@@ -1929,7 +1929,7 @@
       "description": "null message 返回内部错误:类名；构思缺世界观/人物/大纲不得离开 CONCEIVING。",
       "phase": 14,
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "type": "bug",
       "files": [
         "web/GlobalExceptionHandler.java",
@@ -1937,7 +1937,8 @@
       ],
       "problem_ref": "QA P16: 构思 500 内部错误且世界观仍 0",
       "acceptance": "NPE 响应含异常类名；WorldBuilder 空产出时仍 CONCEIVING",
-      "verify_cmd": "mvn test -Dtest=ConceivingCompletenessTest,GlobalExceptionHandlerTest"
+      "verify_cmd": "mvn test -Dtest=ConceivingCompletenessTest,GlobalExceptionHandlerTest",
+      "evidence": "GlobalExceptionHandlerTest + ConceivingCompletenessTest + NovelOrchestratorConceiveTest pass"
     },
     {
       "id": "p14-03",

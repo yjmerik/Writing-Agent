@@ -3,7 +3,7 @@
 ## Current State
 
 **Last Updated:** 2026-08-17
-**Phase:** **Phase 14 人机真典硬化 — 1/6（p14-01 完成）**
+**Phase:** **Phase 14 人机真典硬化 — 2/6（p14-01/02 完成）**
 
 ### Phase 14（2026-08-17）
 
@@ -11,7 +11,9 @@
 - Plan：`docs/superpowers/plans/2026-08-17-human-canon-hardening.md`
 - **p14-01 完成**：`deleteProject` 事务级联；`projects` 用 `id`；其余有 `project_id` 的表全删
 - 验证：`mvn test -Dtest=SqliteNovelRepositoryDeleteTest` 1 pass
-- Next：p14-02 构思 fail-loud
+- **p14-02 完成**：null 异常返回「内部错误: ClassName」；构思缺世界观/人物/大纲保持 CONCEIVING
+- 验证：`mvn test -Dtest=GlobalExceptionHandlerTest,ConceivingCompletenessTest,NovelOrchestratorConceiveTest` 3 pass
+- Next：p14-03 先落库后处理异步
 
 ---
 

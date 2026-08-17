@@ -17,6 +17,7 @@
 - **p14-04 完成**：writeAll 轮询 taskId；按钮改为最多 50 章
 - **p14-05 完成**：approveCheckpoint 按 id；仍有 PENDING 保持暂停
 - **p14-06 完成**：人物全字段、真典入口、CULTURE、侧栏新建打开创建框
+- **UI e2e 2026-08-18**：删除 QA 项目 PASS；侧栏新建开 Modal PASS；真典添加 PASS；连续写作文案「最多 50 章」PASS。债册春秋仍 2 章 PAUSED。
 
 ---
 

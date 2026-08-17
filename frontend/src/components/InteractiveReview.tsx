@@ -91,11 +91,12 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
     }
   };
 
-  const handleApprove = async () => {
-    if (!currentCheckpoint) { message.warning('无待审核项'); return; }
+  const handleApprove = async (checkpointId?: string) => {
+    const id = checkpointId ?? currentCheckpoint?.id;
+    if (!id) { message.warning('无待审核项'); return; }
     setLoading(true);
     try {
-      await api.approveCheckpoint(projectId, currentCheckpoint.id);
+      await api.approveCheckpoint(projectId, id);
       message.success('已批准');
       await refresh();
       onChanged();
@@ -170,14 +171,15 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
     <div>
       <Spin spinning={loading}>
         {/* 状态栏 */}
-        {isPaused && hasPendingCheckpoint && (
+        {isPaused && hasPendingCheckpoint && checkpoints.map(cp => (
           <Alert
+            key={cp.id}
             type="warning"
-            message={`⏸ 待审核：${currentCheckpoint.description}`}
+            message={`⏸ 待审核：${cp.description}`}
             description={
               <Space>
-                <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleApprove} loading={loading}>
-                  ✅ 批准并继续
+                <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => handleApprove(cp.id)} loading={loading}>
+                  ✅ 批准
                 </Button>
                 <Button danger icon={<CloseCircleOutlined />} onClick={handleReject} loading={loading}>
                   ❌ 拒绝并重写
@@ -189,7 +191,7 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
             }
             style={{ marginBottom: 16 }}
           />
-        )}
+        ))}
 
         {/* 状态提示 */}
         {status?.state === 'FINAL' && (

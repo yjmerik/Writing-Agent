@@ -1981,7 +1981,7 @@
       "description": "UI 列出全部 PENDING 各带批准；批准指定 id；仍有 PENDING 则保持 PAUSED。",
       "phase": 14,
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "type": "bug",
       "files": [
         "frontend/src/components/InteractiveReview.tsx",
@@ -1989,7 +1989,8 @@
       ],
       "problem_ref": "QA P8 批准后落到 PLANNING，旧 checkpoint 处理不一致",
       "acceptance": "两条 PENDING 批准较新的，旧的仍 PENDING 且 state=PAUSED",
-      "verify_cmd": "mvn test -Dtest=ApproveSpecificCheckpointTest"
+      "verify_cmd": "mvn test -Dtest=ApproveSpecificCheckpointTest",
+      "evidence": "ApproveSpecificCheckpointTest pass; InteractiveReview lists all PENDING"
     },
     {
       "id": "p14-06",

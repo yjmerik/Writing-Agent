@@ -3,7 +3,7 @@
 ## Current State
 
 **Last Updated:** 2026-08-17
-**Phase:** **Phase 14 人机真典硬化 — 4/6（p14-01–04 完成）**
+**Phase:** **Phase 14 人机真典硬化 — 5/6（p14-01–05 完成）**
 
 ### Phase 14（2026-08-17）
 
@@ -15,7 +15,8 @@
 - 验证：`mvn test -Dtest=GlobalExceptionHandlerTest,ConceivingCompletenessTest,NovelOrchestratorConceiveTest` 3 pass
 - **p14-03 完成**：editPassage 后处理异步；INTERACTIVE 正文落库后立即 PAUSED
 - **p14-04 完成**：writeAll 轮询 taskId；按钮改为最多 50 章
-- Next：p14-05 检查点按 id 批准
+- **p14-05 完成**：approveCheckpoint 按 id；仍有 PENDING 保持暂停
+- Next：p14-06 人机 UI
 
 ---
 

@@ -505,6 +505,26 @@ public class NovelOrchestrator {
         repository.saveProject(p);
     }
 
+    public void approveCheckpoint(String projectId, String checkpointId) {
+        Checkpoint cp = repository.findCheckpoint(checkpointId)
+                .orElseThrow(() -> new IllegalArgumentException("Checkpoint 不存在: " + checkpointId));
+        cp.approve();
+        repository.saveCheckpoint(cp);
+        if (!repository.findPendingCheckpoints(projectId).isEmpty()) {
+            Project p = loadProject(projectId);
+            p.setState(NovelState.PAUSED_AT_CHECKPOINT);
+            repository.saveProject(p);
+            return;
+        }
+        Project p = loadProject(projectId);
+        NovelState target = switch (cp.getType()) {
+            case AFTER_INITIAL_SETUP, AFTER_VOLUME_OUTLINE -> NovelState.PLANNING;
+            case AFTER_CHAPTER, ON_CONTINUITY_FIX -> NovelState.WRITING;
+        };
+        p.setState(target);
+        repository.saveProject(p);
+    }
+
     /** 从当前状态推进一步 */
     public void step(String projectId) {
         Project p = loadProject(projectId);

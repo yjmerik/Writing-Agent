@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": "Phase 14 人机真典硬化（6 feature）",
+  "current_phase": "Phase 15 人机设定扩容与作业可观测（6 feature）",
   "features": [
     {
       "id": "p1-01",
@@ -2010,6 +2010,106 @@
       "acceptance": "PUT personality 写真典；facts 可增改；CULTURE 显示文化",
       "verify_cmd": "mvn test -Dtest=CanonPatchServiceTest",
       "evidence": "人物全字段可编辑；真典列表+添加；CULTURE=文化；侧栏新建 ?new=1 打开创建框"
+    },
+    {
+      "id": "p15-01",
+      "name": "POST 世界观/人物 + UI 添加 + write-chapter 也 409",
+      "description": "POST /worldbuilding 与 POST /characters 走 CanonPatch；rejectIfWriting 含 write-chapter active task。UI 添加设定/人物。",
+      "phase": 15,
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "web/ContentController.java",
+        "frontend/src/components/WorldbuildingView.tsx"
+      ],
+      "problem_ref": "构思后不能新增世界观/人物卡",
+      "acceptance": "POST 后 GET 多一条且真典 ACTIVE；write-all/write-chapter active 时 409",
+      "verify_cmd": "mvn test -Dtest=HitlCreateWorldCharacterTest",
+      "evidence": "HitlCreateWorldCharacterTest 3 pass；POST world/character + beginWork 409"
+    },
+    {
+      "id": "p15-02",
+      "name": "Agent 增量补设定/人物 + 实体提升为人设",
+      "description": "暂停态 expand/world、expand/characters 不覆盖旧卡；promote entityId 成 Character。",
+      "phase": 15,
+      "dependencies": [
+        "p15-01"
+      ],
+      "status": "not-started",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "agent/CharacterProfileUpgrader.java"
+      ],
+      "problem_ref": "WorldBuilder/CharacterDesigner 只在 conceiving；图实体不升卡",
+      "acceptance": "expand 不改已有 character id；promote 出新卡",
+      "verify_cmd": "mvn test -Dtest=HitlExpandAgentsTest"
+    },
+    {
+      "id": "p15-03",
+      "name": "未写梗概可编 + POST replan",
+      "description": "大纲 UI 编辑 chapterIndex>current 的梗概；POST /replan 只替换未写卷。",
+      "phase": 15,
+      "dependencies": [
+        "p15-01"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/OutlineView.tsx",
+        "web/ContentController.java"
+      ],
+      "problem_ref": "大纲树只读；改大纲不触发 Replanner",
+      "acceptance": "已写梗概不变；未写被替换",
+      "verify_cmd": "mvn test -Dtest=UnwrittenSynopsisEditTest"
+    },
+    {
+      "id": "p15-04",
+      "name": "真典改/废 + 伏笔人種人收 + 人审清状态",
+      "description": "真典 PUT/废止；GET/POST foreshadowings 与 resolve；NEEDS_MANUAL_REVIEW 可标 DONE。",
+      "phase": 15,
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "web/ContentController.java",
+        "frontend/src/components/WorldbuildingView.tsx",
+        "frontend/src/components/InteractiveReview.tsx"
+      ],
+      "problem_ref": "真典不能改；伏笔无 UI；人审无动作",
+      "acceptance": "废止后 active 不含；resolve 后 RESOLVED；人审可清 DONE",
+      "verify_cmd": "mvn test -Dtest=HitlCanonForeshadowReviewTest"
+    },
+    {
+      "id": "p15-05",
+      "name": "构思/写章任务轮询 + write-all 取消 + 删项目护栏",
+      "description": "POST /run 立即 taskId；前端轮询；RunConsole 取消；DELETE 在 active task 时 409。",
+      "phase": 15,
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "web/OrchestratorController.java",
+        "service/WritingTaskExecutor.java",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/RunConsole.tsx"
+      ],
+      "problem_ref": "构思 300s abort；write-all 无取消；删项目无护栏",
+      "acceptance": "POST /run 立即返回 taskId；cancel 后 CANCELLED；DELETE 409",
+      "verify_cmd": "mvn test -Dtest=ConceiveTaskTest"
+    },
+    {
+      "id": "p15-06",
+      "name": "偏好 PUT + checkpointSpan",
+      "description": "滑条/开关走 PUT /preferences；checkpointSpan 1/0/-1，默认 1。",
+      "phase": 15,
+      "dependencies": [
+        "p15-05"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/pages/ProjectWorkspace.tsx",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "偏好每下 chat LLM；每章暂停无法调成卷末/仅手动",
+      "acceptance": "滑条不调 LLM；span=0 写章不自动 PAUSED",
+      "verify_cmd": "mvn test -Dtest=CheckpointSpanTest"
     }
   ]
 }

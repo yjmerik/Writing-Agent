@@ -2,9 +2,9 @@
 
 ## Current Objective
 
-- **Goal**: Phase 14 人机真典硬化 — 让百万字作业可删/可构思 fail-loud/可中途人改。
-- **Current status**: **6/6 feature 完成** + 浏览器 UI e2e 2026-08-18。
-- **Spec**: `docs/specs/2026-08-17-human-canon-hardening.md`
+- **Goal**: Phase 15 人机设定扩容与作业可观测。
+- **Current status**: spec 已确认，**0/6 not-started**。下一入口 `p15-01`。
+- **Spec**: `docs/specs/2026-08-18-hitl-expansion.md`
 - **Branch**: `phase-11-quality-gate-architecture`（未 push）
 
 ## Completed
@@ -28,6 +28,6 @@ SKIP: 写完全书确认、推进构思、写一章、全书评价（贵/会改�
 
 ## Next Steps
 
-1. 全量 `mvn test` 若尚未在本机跑过。
-2. 需要时 push 或开 PR。
-3. 新需求走 spec 协议；不要先加检测器。
+1. 从 `p15-01` 起 TDD：`POST /worldbuilding` + `POST /characters` + UI 添加。
+2. 增量 WorldBuilder 禁止 `deleteKnowledgeEntriesByProject`。
+3. 不要先加检测器。

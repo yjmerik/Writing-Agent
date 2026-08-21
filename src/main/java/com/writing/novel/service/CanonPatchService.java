@@ -124,6 +124,31 @@ public class CanonPatchService {
         return new PatchResult(newer, List.of(newer), true);
     }
 
+    public PatchResult createWorld(String projectId, KnowledgeEntry entry, int currentChapter) {
+        repository.saveKnowledgeEntry(entry);
+        StoryFact.FactType factType = "ITEM".equals(entry.getType())
+                ? StoryFact.FactType.OBJECT_STATE : StoryFact.FactType.WORLD_RULE;
+        List<StoryFact> written = new ArrayList<>();
+        if (entry.getContent() != null && !entry.getContent().isBlank()) {
+            written.add(writeHumanFact(projectId, factType, entry.getName(),
+                    entry.getName() + "：" + entry.getContent(), currentChapter));
+        }
+        bump(projectId);
+        return new PatchResult(entry, written, true);
+    }
+
+    public PatchResult createCharacter(String projectId, Character created, int currentChapter) {
+        repository.saveCharacter(created);
+        List<StoryFact> written = new ArrayList<>();
+        String assertion = created.getAbility() != null && !created.getAbility().isBlank()
+                ? "能力/境界：" + created.getAbility()
+                : "角色：" + (created.getRole() != null ? created.getRole() : created.getName());
+        written.add(writeHumanFact(projectId, StoryFact.FactType.CHARACTER_STATE,
+                created.getName(), assertion, currentChapter));
+        bump(projectId);
+        return new PatchResult(created, written, true);
+    }
+
     public StoryFact addFact(String projectId, StoryFact.FactType type, String subject,
                              String assertion, int currentChapter) {
         StoryFact created = writeHumanFact(projectId, type, subject, assertion, currentChapter);

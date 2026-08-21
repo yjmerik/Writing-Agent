@@ -2,6 +2,17 @@
 
 ## Current State
 
+**Last Updated:** 2026-08-18
+**Phase:** **Phase 15 人机设定扩容 — 1/6（p15-01 完成）**
+
+### Phase 15（2026-08-18）
+
+- Spec：`docs/specs/2026-08-18-hitl-expansion.md`（用户确认方案 B）
+- 下一入口：`p15-01` POST 世界观/人物 + UI 添加
+- 锁定：已写章不回溯；INTERACTIVE 默认仍每章暂停；增量 WorldBuilder 禁止清空旧条目
+
+---
+
 **Last Updated:** 2026-08-17
 **Phase:** **Phase 14 人机真典硬化 — 6/6 feature 完成**
 

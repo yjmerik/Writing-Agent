@@ -198,6 +198,14 @@ public class WritingTaskExecutor {
         return activeTasks.containsKey(projectId);
     }
 
+    public void beginWork(String projectId, String workId) {
+        activeTasks.put(projectId, workId);
+    }
+
+    public void endWork(String projectId, String workId) {
+        activeTasks.remove(projectId, workId);
+    }
+
     public boolean cancelByProject(String projectId) {
         String taskId = activeTasks.get(projectId);
         if (taskId == null) return false;

@@ -33,6 +33,8 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
   const [characters, setCharacters] = useState<Character[]>([]);
   const [facts, setFacts] = useState<Array<{ id: string; subject: string; assertion: string; factType: string }>>([]);
   const [newFact, setNewFact] = useState('');
+  const [newWorld, setNewWorld] = useState({ type: 'FACTION', name: '', content: '' });
+  const [newChar, setNewChar] = useState({ name: '', role: '配角', ability: '' });
   const [loading, setLoading] = useState(true);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
@@ -69,6 +71,22 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
         <Button size="small" icon={<ReloadOutlined />} onClick={load}>刷新</Button>
       </Space>
       <h2>🌍 世界观设定</h2>
+      <Space style={{ marginBottom: 12 }} wrap>
+        <Input style={{ width: 100 }} value={newWorld.type} onChange={(e) => setNewWorld({ ...newWorld, type: e.target.value })} placeholder="类型" />
+        <Input style={{ width: 140 }} value={newWorld.name} onChange={(e) => setNewWorld({ ...newWorld, name: e.target.value })} placeholder="名称" />
+        <Input style={{ width: 240 }} value={newWorld.content} onChange={(e) => setNewWorld({ ...newWorld, content: e.target.value })} placeholder="内容" />
+        <Button size="small" type="primary" onClick={async () => {
+          if (!newWorld.name.trim() || !newWorld.content.trim()) return;
+          try {
+            await api.createWorldbuilding(projectId, newWorld);
+            message.success('设定已添加并写入真典');
+            setNewWorld({ type: 'FACTION', name: '', content: '' });
+            load();
+          } catch (err) {
+            message.error((err as Error).message);
+          }
+        }}>添加设定</Button>
+      </Space>
       {entries.length === 0 ? (
         <Empty description="暂无世界观设定，请先运行「构思」阶段" />
       ) : (
@@ -111,6 +129,22 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
 
       <Divider />
       <h2>👥 人物卡</h2>
+      <Space style={{ marginBottom: 12 }} wrap>
+        <Input style={{ width: 140 }} value={newChar.name} onChange={(e) => setNewChar({ ...newChar, name: e.target.value })} placeholder="姓名" />
+        <Input style={{ width: 100 }} value={newChar.role} onChange={(e) => setNewChar({ ...newChar, role: e.target.value })} placeholder="定位" />
+        <Input style={{ width: 200 }} value={newChar.ability} onChange={(e) => setNewChar({ ...newChar, ability: e.target.value })} placeholder="能力" />
+        <Button size="small" type="primary" onClick={async () => {
+          if (!newChar.name.trim()) return;
+          try {
+            await api.createCharacter(projectId, newChar);
+            message.success('人物已添加并写入真典');
+            setNewChar({ name: '', role: '配角', ability: '' });
+            load();
+          } catch (err) {
+            message.error((err as Error).message);
+          }
+        }}>添加人物</Button>
+      </Space>
       {characters.length === 0 ? (
         <Empty description="暂无人物" />
       ) : (

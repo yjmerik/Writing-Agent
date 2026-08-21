@@ -33,9 +33,32 @@ public class ContentController {
         return repository.findKnowledgeEntriesByProject(id);
     }
 
+    @PostMapping("/worldbuilding")
+    public KnowledgeEntry createWorld(@PathVariable String id, @RequestBody Map<String, String> body) {
+        rejectIfWriting(id);
+        KnowledgeEntry entry = new KnowledgeEntry(id,
+                body.getOrDefault("type", "CUSTOM"),
+                body.getOrDefault("name", ""),
+                body.getOrDefault("content", ""));
+        return (KnowledgeEntry) canonPatch.createWorld(id, entry, chapterOf(id)).entity();
+    }
+
     @GetMapping("/characters")
     public List<Character> characters(@PathVariable String id) {
         return repository.findCharactersByProject(id);
+    }
+
+    @PostMapping("/characters")
+    public Character createCharacter(@PathVariable String id, @RequestBody Map<String, String> body) {
+        rejectIfWriting(id);
+        Character created = new Character(id, body.get("name"), body.getOrDefault("role", "配角"));
+        if (body.get("personality") != null) created.setPersonality(body.get("personality"));
+        if (body.get("ability") != null) created.setAbility(body.get("ability"));
+        if (body.get("motivation") != null) created.setMotivation(body.get("motivation"));
+        if (body.get("appearance") != null) created.setAppearance(body.get("appearance"));
+        if (body.get("relationships") != null) created.setRelationships(body.get("relationships"));
+        if (body.get("growthArc") != null) created.setGrowthArc(body.get("growthArc"));
+        return (Character) canonPatch.createCharacter(id, created, chapterOf(id)).entity();
     }
 
     @PutMapping("/characters/{charId}")
@@ -111,7 +134,12 @@ public class ContentController {
 
     @PostMapping("/write-chapter")
     public Chapter writeChapter(@PathVariable String id) {
-        return orchestrator.runWritingOneChapter(id);
+        if (writingTaskExecutor != null) writingTaskExecutor.beginWork(id, "write-chapter");
+        try {
+            return orchestrator.runWritingOneChapter(id);
+        } finally {
+            if (writingTaskExecutor != null) writingTaskExecutor.endWork(id, "write-chapter");
+        }
     }
 
     /** p7-1: 重写指定章节（不限项目状态） */

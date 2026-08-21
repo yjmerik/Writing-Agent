@@ -78,6 +78,12 @@ export const api = {
   getWorldbuilding: (id: string) =>
     request<KnowledgeEntry[]>(`/projects/${id}/worldbuilding`),
 
+  createWorldbuilding: (id: string, body: Partial<KnowledgeEntry>) =>
+    request<KnowledgeEntry>(`/projects/${id}/worldbuilding`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
   updateWorldbuilding: (id: string, entryId: string, body: Partial<KnowledgeEntry>) =>
     request<KnowledgeEntry>(`/projects/${id}/worldbuilding/${entryId}`, {
       method: 'PUT',
@@ -86,6 +92,12 @@ export const api = {
 
   getCharacters: (id: string) =>
     request<Character[]>(`/projects/${id}/characters`),
+
+  createCharacter: (id: string, body: Partial<Character>) =>
+    request<Character>(`/projects/${id}/characters`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
 
   updateCharacter: (id: string, charId: string, body: Partial<Character>) =>
     request<Character>(`/projects/${id}/characters/${charId}`, {

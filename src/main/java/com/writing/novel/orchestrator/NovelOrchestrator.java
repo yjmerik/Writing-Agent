@@ -505,6 +505,41 @@ public class NovelOrchestrator {
         repository.saveProject(p);
     }
 
+    public com.writing.novel.domain.Character expandCharacters(String projectId, String instruction) {
+        var existing = repository.findCharactersByProject(projectId);
+        String req = (instruction == null || instruction.isBlank())
+                ? "补充一名有独立动机的配角，姓名不得与已有人物重复。"
+                : instruction;
+        com.writing.novel.domain.Character created = characterDesigner.design(projectId, req, existing, "");
+        if (created == null) {
+            throw new IllegalStateException("未能生成新人物");
+        }
+        return created;
+    }
+
+    public java.util.List<KnowledgeEntry> expandWorld(String projectId, String instruction) {
+        Project p = loadProject(projectId);
+        String extra = instruction == null ? "" : instruction;
+        worldBuilder.build(projectId,
+                (p.getConcept() == null ? "" : p.getConcept()) + "\n【增量追加，禁止覆盖已有名称】" + extra,
+                p.getTags() != null ? p.getTags() : "",
+                "【增量】只新增条目，不要重复已有设定名称。");
+        return repository.findKnowledgeEntriesByProject(projectId);
+    }
+
+    public com.writing.novel.domain.Character promoteEntity(String projectId, String entityId) {
+        Entity e = repository.findEntity(entityId)
+                .orElseThrow(() -> new IllegalArgumentException("实体不存在: " + entityId));
+        for (com.writing.novel.domain.Character c : repository.findCharactersByProject(projectId)) {
+            if (e.getName() != null && e.getName().equals(c.getName())) {
+                return c;
+            }
+        }
+        com.writing.novel.domain.Character created = new com.writing.novel.domain.Character(projectId, e.getName(), "配角");
+        repository.saveCharacter(created);
+        return created;
+    }
+
     public void approveCheckpoint(String projectId, String checkpointId) {
         Checkpoint cp = repository.findCheckpoint(checkpointId)
                 .orElseThrow(() -> new IllegalArgumentException("Checkpoint 不存在: " + checkpointId));

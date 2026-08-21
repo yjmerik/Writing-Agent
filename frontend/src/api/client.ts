@@ -99,6 +99,18 @@ export const api = {
       body: JSON.stringify(body),
     }),
 
+  expandCharacters: (id: string, instruction: string) =>
+    request<Character>(`/projects/${id}/expand/characters`, {
+      method: 'POST',
+      body: JSON.stringify({ instruction }),
+    }),
+
+  expandWorld: (id: string, instruction: string) =>
+    request<KnowledgeEntry[]>(`/projects/${id}/expand/world`, {
+      method: 'POST',
+      body: JSON.stringify({ instruction }),
+    }),
+
   updateCharacter: (id: string, charId: string, body: Partial<Character>) =>
     request<Character>(`/projects/${id}/characters/${charId}`, {
       method: 'PUT',

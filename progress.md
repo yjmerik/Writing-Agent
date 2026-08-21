@@ -3,7 +3,7 @@
 ## Current State
 
 **Last Updated:** 2026-08-18
-**Phase:** **Phase 15 人机设定扩容 — 1/6（p15-01 完成）**
+**Phase:** **Phase 15 人机设定扩容 — 2/6（p15-01/02 完成）**
 
 ### Phase 15（2026-08-18）
 

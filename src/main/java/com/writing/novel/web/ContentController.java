@@ -132,6 +132,26 @@ public class ContentController {
         return repository.findChapterByIndex(id, chapterIndex).orElse(null);
     }
 
+    @PostMapping("/expand/characters")
+    public Character expandCharacters(@PathVariable String id, @RequestBody(required = false) Map<String, String> body) {
+        rejectIfWriting(id);
+        String instruction = body != null ? body.getOrDefault("instruction", "") : "";
+        return orchestrator.expandCharacters(id, instruction);
+    }
+
+    @PostMapping("/expand/world")
+    public List<KnowledgeEntry> expandWorld(@PathVariable String id, @RequestBody(required = false) Map<String, String> body) {
+        rejectIfWriting(id);
+        String instruction = body != null ? body.getOrDefault("instruction", "") : "";
+        return orchestrator.expandWorld(id, instruction);
+    }
+
+    @PostMapping("/characters/promote/{entityId}")
+    public Character promoteEntity(@PathVariable String id, @PathVariable String entityId) {
+        rejectIfWriting(id);
+        return orchestrator.promoteEntity(id, entityId);
+    }
+
     @PostMapping("/write-chapter")
     public Chapter writeChapter(@PathVariable String id) {
         if (writingTaskExecutor != null) writingTaskExecutor.beginWork(id, "write-chapter");

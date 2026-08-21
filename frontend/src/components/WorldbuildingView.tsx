@@ -86,6 +86,15 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
             message.error((err as Error).message);
           }
         }}>添加设定</Button>
+        <Button size="small" onClick={async () => {
+          try {
+            await api.expandWorld(projectId, '请追加一条尚未出现的势力或规则，不要重复已有名称。');
+            message.success('Agent 已增量补设定');
+            load();
+          } catch (err) {
+            message.error((err as Error).message);
+          }
+        }}>请 Agent 补设定</Button>
       </Space>
       {entries.length === 0 ? (
         <Empty description="暂无世界观设定，请先运行「构思」阶段" />
@@ -144,6 +153,15 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
             message.error((err as Error).message);
           }
         }}>添加人物</Button>
+        <Button size="small" onClick={async () => {
+          try {
+            await api.expandCharacters(projectId, '补充一名有独立动机的配角，姓名不得与已有人物重复。');
+            message.success('Agent 已增量补人物');
+            load();
+          } catch (err) {
+            message.error((err as Error).message);
+          }
+        }}>请 Agent 补人物</Button>
       </Space>
       {characters.length === 0 ? (
         <Empty description="暂无人物" />

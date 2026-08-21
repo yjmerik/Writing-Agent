@@ -2035,14 +2035,15 @@
       "dependencies": [
         "p15-01"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "orchestrator/NovelOrchestrator.java",
         "agent/CharacterProfileUpgrader.java"
       ],
       "problem_ref": "WorldBuilder/CharacterDesigner 只在 conceiving；图实体不升卡",
       "acceptance": "expand 不改已有 character id；promote 出新卡",
-      "verify_cmd": "mvn test -Dtest=HitlExpandAgentsTest"
+      "verify_cmd": "mvn test -Dtest=HitlExpandAgentsTest",
+      "evidence": "HitlExpandAgentsTest 2 pass；expand 不覆盖旧卡；promote 出新卡"
     },
     {
       "id": "p15-03",

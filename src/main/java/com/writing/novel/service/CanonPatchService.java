@@ -212,6 +212,18 @@ public class CanonPatchService {
         return repository.findProject(projectId).map(p -> p.getCurrentChapterIndex()).orElse(0);
     }
 
+    public StoryFact retireFact(String projectId, String factId) {
+        StoryFact existing = factRepo.findById(factId)
+                .orElseThrow(() -> new IllegalArgumentException("真典事实不存在: " + factId));
+        if (!projectId.equals(existing.getProjectId())) {
+            throw new IllegalArgumentException("真典事实不属于该项目: " + factId);
+        }
+        existing.retire();
+        factRepo.save(existing);
+        bump(projectId);
+        return existing;
+    }
+
     public List<StoryFact> listActive(String projectId) {
         return factRepo == null ? List.of() : factRepo.findActive(projectId);
     }

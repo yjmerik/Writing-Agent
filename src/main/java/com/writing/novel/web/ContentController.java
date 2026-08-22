@@ -117,6 +117,39 @@ public class ContentController {
                 id, factId, body.get("assertion"), importance, chapterOf(id)).entity();
     }
 
+    @PostMapping("/facts/{factId}/retire")
+    public com.writing.novel.domain.StoryFact retireFact(@PathVariable String id, @PathVariable String factId) {
+        rejectIfWriting(id);
+        return canonPatch.retireFact(id, factId);
+    }
+
+    @GetMapping("/foreshadowings")
+    public List<Foreshadowing> foreshadowings(@PathVariable String id) {
+        return repository.findForeshadowingsByProject(id);
+    }
+
+    @PostMapping("/foreshadowings")
+    public Foreshadowing createForeshadowing(@PathVariable String id, @RequestBody Map<String, Object> body) {
+        rejectIfWriting(id);
+        String content = String.valueOf(body.getOrDefault("content", body.getOrDefault("description", "")));
+        Foreshadowing planted = new Foreshadowing(id, content, "HUMAN", chapterOf(id));
+        planted.setMustResolve(Boolean.parseBoolean(String.valueOf(body.getOrDefault("mustResolve", "false"))));
+        repository.saveForeshadowing(planted);
+        return planted;
+    }
+
+    @PostMapping("/foreshadowings/{fid}/resolve")
+    public Foreshadowing resolveForeshadowing(@PathVariable String id, @PathVariable String fid) {
+        rejectIfWriting(id);
+        Foreshadowing existing = repository.findForeshadowingsByProject(id).stream()
+                .filter(f -> fid.equals(f.getId()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("伏笔不存在: " + fid));
+        existing.resolve(chapterOf(id));
+        repository.saveForeshadowing(existing);
+        return existing;
+    }
+
     @PostMapping("/chapters/{chapterIndex}/resolve-review")
     public Chapter resolveManualReview(@PathVariable String id, @PathVariable int chapterIndex) {
         rejectIfWriting(id);

@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": "Phase 15 人机设定扩容与作业可观测（6 feature）",
+  "current_phase": "Phase 15 人机设定扩容与作业可观测（7 feature）",
   "features": [
     {
       "id": "p1-01",
@@ -2053,14 +2053,15 @@
       "dependencies": [
         "p15-01"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/components/OutlineView.tsx",
         "web/ContentController.java"
       ],
       "problem_ref": "大纲树只读；改大纲不触发 Replanner",
       "acceptance": "已写梗概不变；未写被替换",
-      "verify_cmd": "mvn test -Dtest=UnwrittenSynopsisEditTest"
+      "verify_cmd": "mvn test -Dtest=UnwrittenSynopsisEditTest",
+      "evidence": "UnwrittenSynopsisEditTest 2 pass；PUT 保护已写梗概/卷名；POST /replan 只替换未写且 INTERACTIVE 挂 AFTER_VOLUME_OUTLINE；全量 mvn test 303 pass / 0 fail / 1 skip"
     },
     {
       "id": "p15-04",
@@ -2068,7 +2069,7 @@
       "description": "真典 PUT/废止；GET/POST foreshadowings 与 resolve；NEEDS_MANUAL_REVIEW 可标 DONE。",
       "phase": 15,
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "web/ContentController.java",
         "frontend/src/components/WorldbuildingView.tsx",
@@ -2076,7 +2077,8 @@
       ],
       "problem_ref": "真典不能改；伏笔无 UI；人审无动作",
       "acceptance": "废止后 active 不含；resolve 后 RESOLVED；人审可清 DONE",
-      "verify_cmd": "mvn test -Dtest=HitlCanonForeshadowReviewTest"
+      "verify_cmd": "mvn test -Dtest=HitlCanonForeshadowReviewTest",
+      "evidence": "HitlCanonForeshadowReviewTest 3 pass；retire/foreshadow resolve/resolve-review 全绿"
     },
     {
       "id": "p15-05",
@@ -2084,7 +2086,7 @@
       "description": "POST /run 立即 taskId；前端轮询；RunConsole 取消；DELETE 在 active task 时 409。",
       "phase": 15,
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "web/OrchestratorController.java",
         "service/WritingTaskExecutor.java",
@@ -2093,7 +2095,8 @@
       ],
       "problem_ref": "构思 300s abort；write-all 无取消；删项目无护栏",
       "acceptance": "POST /run 立即返回 taskId；cancel 后 CANCELLED；DELETE 409",
-      "verify_cmd": "mvn test -Dtest=ConceiveTaskTest"
+      "verify_cmd": "mvn test -Dtest=ConceiveTaskTest",
+      "evidence": "ConceiveTaskTest 3 pass；CONCEIVING /run 立即 taskId；DELETE 409；write-all cancel 生效"
     },
     {
       "id": "p15-06",
@@ -2103,14 +2106,33 @@
       "dependencies": [
         "p15-05"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/pages/ProjectWorkspace.tsx",
         "orchestrator/NovelOrchestrator.java"
       ],
       "problem_ref": "偏好每下 chat LLM；每章暂停无法调成卷末/仅手动",
       "acceptance": "滑条不调 LLM；span=0 写章不自动 PAUSED",
-      "verify_cmd": "mvn test -Dtest=CheckpointSpanTest"
+      "verify_cmd": "mvn test -Dtest=CheckpointSpanTest",
+      "evidence": "CheckpointSpanTest 2 pass；PUT checkpointSpan 不走 chat；span=0 写章不自动暂停"
+    },
+    {
+      "id": "p15-07",
+      "name": "隔离 E2E record/replay fixture",
+      "description": "e2e.sh 通过 E2E_FIXTURE_DIR（默认 data/e2e-fixtures/llm）显式传递 llm.replay.dir，避免共享 fixture 跨录制轮次混用。",
+      "phase": 15,
+      "dependencies": [
+        "p15-05"
+      ],
+      "status": "completed",
+      "files": [
+        "scripts/e2e.sh",
+        "scripts/e2e-fixture-dir-test.sh"
+      ],
+      "problem_ref": "E2E replay chapter 3 request fingerprint mismatch caused by shared fixture corpus",
+      "acceptance": "record 和 replay 使用同一 E2E_FIXTURE_DIR 时，三章 replay 的 taskStatus=COMPLETED、llmErrors=0、chapterFailures=0。",
+      "verify_cmd": "bash scripts/e2e-fixture-dir-test.sh && E2E_FIXTURE_DIR=data/e2e-fixtures/replay-proof-20260822 ./scripts/e2e.sh --mode replay",
+      "evidence": "2026-08-22: fixture harness pass；record/replay 各 3 章、10802 字、50 LLM calls、0 errors；mvn test 320 pass / 0 fail / 1 skip；compare-baseline PASS"
     }
   ]
 }

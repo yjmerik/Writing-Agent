@@ -2,6 +2,36 @@
 
 ## Current State
 
+**Last Updated:** 2026-08-22
+**Phase:** **Phase 15 人机设定扩容与作业可观测 — 7/7 完成**
+
+### Phase 15（2026-08-22 收尾）
+
+- **p15-07**：E2E fixture 隔离 → DONE。`E2E_FIXTURE_DIR` 默认 `data/e2e-fixtures/llm`，并传入 Spring `llm.replay.dir`；`e2e-fixture-dir-test.sh` 覆盖默认和覆盖目录。
+- 验证：隔离目录 `data/e2e-fixtures/replay-proof-20260822` 的 record/replay 均完成 3 章、10,802 字、50 LLM calls、0 errors；`mvn test` 320 pass / 0 fail / 1 skip；`compare-baseline.py` PASS。
+- **p15-04**：真典 PUT/废止、伏笔 GET/POST/resolve、人审 `resolve-review` → DONE。`HitlCanonForeshadowReviewTest` 3 pass
+- **p15-05**：CONCEIVING 的 `POST /run` 立即返回 taskId 并后台构思；write-all 可取消；active task 时 DELETE 409。`ConceiveTaskTest` 3 pass
+- **p15-06**：滑条/开关走 PUT `/preferences`；`checkpointSpan` 1/0/-1。`CheckpointSpanTest` 2 pass
+- 验证：全量 `mvn test` 311 pass / 0 fail / 1 skip；`cd frontend && npm run build` 通过
+- E2E replay：构思和三章写作均可通过隔离 fixture 目录确定性回放。
+
+---
+
+**Last Updated:** 2026-08-22
+**Phase:** **Phase 15 人机设定扩容 — 3/6（p15-01/02/03 完成）**
+
+### Phase 15（2026-08-22）
+
+- **p15-03 完成**：未写梗概可编 + POST /replan
+  - PUT `/outline` 只覆盖 `chapterIndex > current`；已写梗概/已写卷名只读
+  - `POST /replan` 调 `OutlineReplanner.replaceUnwritten`；INTERACTIVE 挂 `AFTER_VOLUME_OUTLINE` 并 PAUSED
+  - `saveOutline` 按卷/梗概 id 剪枝，避免重规划后旧未写行残留
+  - 大纲 UI：未写卷/章可编；「重规划未写卷」
+- 验证：`mvn test -Dtest=UnwrittenSynopsisEditTest` 2 pass；全量 `mvn test` 303 pass / 0 fail / 1 skip；`cd frontend && npm run build` 通过
+- 下一入口：`p15-04` 真典改/废 + 伏笔人種人收 + 人审清状态
+
+---
+
 **Last Updated:** 2026-08-18
 **Phase:** **Phase 15 人机设定扩容 — 2/6（p15-01/02 完成）**
 

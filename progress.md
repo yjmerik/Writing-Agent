@@ -3,6 +3,20 @@
 ## Current State
 
 **Last Updated:** 2026-08-22
+**Phase:** **Phase 15 人机设定扩容与作业可观测 — 9/9 完成（p15-08/09 实现入库）**
+
+### Phase 15（2026-08-22 复审收尾：原子提交 + 回放确定性）
+
+- **p15-08**：上下文顺序与主角锚点确定化 → DONE（`7603ee1`）。同级反馈截断 tie-break（severity→章节倒序→type→description）；精确「主角」独占首位与锚点行、substring 配角追加队尾（WritingContext 无精确主角时回退 substring 锚点）；爽点轮换提示按 enum 序列化。
+- **p15-09**：replay fixture 完整请求保留 + miss 诊断 → DONE（`9a866a6`）。record fixture 存完整 systemPrompt/userMessage（preview 保留）；replay miss 转储 `<指纹>.miss.json`（taskType/missedAt/expectedFixture/完整请求）后仍 fail-fast。
+- **复审补入库**（此前登记 evidence 但实现未提交的部分，按 spec 原子提交、混合文件 hunk 级拆分）：p15-03 后端/前端（`8e19ac4`/`a8cc932`：overwriteUnwrittenOnly + prune + POST /replan + 大纲 UI 编辑/重规划）、p15-04 后端/前端（`f65a90b`/`0f33e25`：retireFact + 伏笔端点 + 真典编辑/伏笔面板/人审动作）、p15-05 删除护栏（`b2e9793`：DELETE 409）、p15-06 后端/前端（`8a7e580`/`3dbe851`：checkpointSpan 1/0/-1 + PUT 偏好 + 选择器）、p15-07 e2e runner（`2ee2e57`：stub embedding + 轮询异步 /run 任务 + 每章 600s 预算）。
+- **test 稳定性**：`EditPassageReturnsBeforeHarvestTest` 的 @TempDir 清理与后台 harvest 线程竞态（全量套件时长变化暴露为确定性失败）→ latch 释放+完成等待修复（`fec6b53`）；join 不可用（POST_PROCESS 空闲池线程常驻）。
+- **housekeeping**：删除生成态 `.omo/`（含早期误入库的 41 个 run-continuation JSON）并 gitignore `.omo/`（`6699296`/`03794d5`）。
+- 验证（2026-08-22 实跑）：各 feature `verify_cmd` 全绿；`mvn compile -q` exit 0；全量 `mvn test` **337 pass / 0 fail / 0 error / 1 skip**；`cd frontend && npm run build` 通过；`e2e-fixture-dir-test.sh` pass；`E2E_FIXTURE_DIR=data/e2e-fixtures/replay-proof-20260822 ./scripts/e2e.sh --mode replay` 3 章 10,802 字 50 LLM calls 0 errors；`compare-baseline.py` PASS（未 --bless）。
+
+---
+
+**Last Updated:** 2026-08-22
 **Phase:** **Phase 15 人机设定扩容与作业可观测 — 7/7 完成**
 
 ### Phase 15（2026-08-22 收尾）

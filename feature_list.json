@@ -2141,7 +2141,7 @@
       "phase": 15,
       "type": "bug",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "memory/ContextAssembler.java",
         "memory/RelevanceGateway.java",
@@ -2150,7 +2150,7 @@
       "problem_ref": "E2E replay 指纹失配排查（p15-07）暴露：同级反馈超限截断依赖 DB 返回序；substring 主角判定让「重要配角（主角盟友线）」抢走首位与锚点行，章节 prompt 指纹漂移",
       "acceptance": "mvn test -Dtest=ContextOrderDeterminismTest,RelevanceGatewayAnchorTest,ContextAssemblerTest 通过：检索命中顺序不影响 relevantCharacters 规范序；cast 命中/无 cast 时精确主角居首；锚点行取精确主角；同级反馈超限按描述稳定截断",
       "verify_cmd": "mvn test -Dtest='ContextOrderDeterminismTest,RelevanceGatewayAnchorTest,ContextAssemblerTest'",
-      "evidence": "2026-08-22 登记（spec: docs/specs/2026-08-22-replay-determinism.md）：实现与测试已在工作树、随本登记后的实现提交入库。测试对：ContextOrderDeterminismTest（规范序契约）、RelevanceGatewayAnchorTest（锚点首位/无 cast/锚点行 3 用例）、ContextAssemblerTest#同章同级反馈超过上限时按描述稳定选择。mvn 验证尚未在本登记会话执行，由实现提交会话回填 run 证据"
+      "evidence": "2026-08-22 实现入库 commit 7603ee1：mvn test -Dtest='ContextOrderDeterminismTest,RelevanceGatewayAnchorTest,ContextAssemblerTest,ClimaxDiversityTrackerTest' 12 pass / 0 fail（规范序/锚点首位/无 cast 锚点/同级超限稳定截断/爽点序化）；上下文组装基线门禁：E2E_FIXTURE_DIR=data/e2e-fixtures/replay-proof-20260822 ./scripts/e2e.sh --mode replay 3 章 10802 字 50 LLM calls 0 errors + compare-baseline.py PASS；全量 mvn test 337 pass / 0 fail / 1 skip"
     },
     {
       "id": "p15-09",
@@ -2159,14 +2159,14 @@
       "phase": 15,
       "type": "harness",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "llm/gateway/RecordReplayLlmGateway.java"
       ],
       "problem_ref": "replay 指纹失配只报缺失 fixture 文件名，且 fixture 仅存截断 preview，无法离线比对完整请求定位漂移来源",
       "acceptance": "mvn test -Dtest=RecordReplayLlmGatewayTest 通过：record fixture JSON 含完整 systemPrompt/userMessage；replay miss 转储恰好一个含完整请求的 .miss.json 且仍抛 IllegalStateException",
       "verify_cmd": "mvn test -Dtest=RecordReplayLlmGatewayTest",
-      "evidence": "2026-08-22 登记（spec: docs/specs/2026-08-22-replay-determinism.md）：实现（全文字段 + dumpMissedRequest）与 RecordReplayLlmGatewayTest 新增 2 用例（回放miss时转储完整请求供指纹诊断/录制fixture保存完整请求）已在工作树、随本登记后的实现提交入库。mvn 验证尚未在本登记会话执行，由实现提交会话回填 run 证据"
+      "evidence": "2026-08-22 实现入库 commit 9a866a6：mvn test -Dtest=RecordReplayLlmGatewayTest 8 pass / 0 fail（新增 2 用例：回放miss时转储完整请求供指纹诊断、录制fixture保存完整请求，断言 .miss.json 恰好 1 个且含完整 systemPrompt/userMessage 并仍抛 IllegalStateException）；全量 mvn test 337 pass / 0 fail / 1 skip"
     }
   ]
 }

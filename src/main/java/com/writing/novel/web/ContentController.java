@@ -117,6 +117,19 @@ public class ContentController {
                 id, factId, body.get("assertion"), importance, chapterOf(id)).entity();
     }
 
+    @PostMapping("/chapters/{chapterIndex}/resolve-review")
+    public Chapter resolveManualReview(@PathVariable String id, @PathVariable int chapterIndex) {
+        rejectIfWriting(id);
+        Chapter chapter = repository.findChapterByIndex(id, chapterIndex)
+                .orElseThrow(() -> new IllegalArgumentException("章节不存在: " + chapterIndex));
+        if (chapter.getStatus() != Chapter.Status.NEEDS_MANUAL_REVIEW) {
+            throw new IllegalStateException("仅 NEEDS_MANUAL_REVIEW 状态的章节可处理人工复核");
+        }
+        chapter.setStatus(Chapter.Status.DONE);
+        repository.saveChapter(chapter);
+        return chapter;
+    }
+
     @GetMapping("/outline")
     public Outline outline(@PathVariable String id) {
         return repository.findOutlineByProject(id).orElse(null);

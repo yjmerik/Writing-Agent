@@ -505,6 +505,24 @@ public class NovelOrchestrator {
         repository.saveProject(p);
     }
 
+    private boolean shouldPauseAfterChapter(String projectId, int chapterIndex) {
+        int span = repository.findWritingPreferences(projectId)
+                .map(com.writing.novel.domain.WritingPreferences::getCheckpointSpan)
+                .orElse(1);
+        if (span == 0) return false;
+        if (span < 0) {
+            return repository.findOutlineByProject(projectId)
+                    .map(outline -> outline.getVolumes().stream()
+                            .anyMatch(volume -> {
+                                var synopses = volume.getSynopses();
+                                return !synopses.isEmpty()
+                                        && synopses.get(synopses.size() - 1).getChapterIndex() == chapterIndex;
+                            }))
+                    .orElse(false);
+        }
+        return chapterIndex % span == 0;
+    }
+
     public Outline replanRemaining(String projectId) {
         Project project = loadProject(projectId);
         replanRemainingOutline(projectId, project.getCurrentChapterIndex());
@@ -737,7 +755,7 @@ public class NovelOrchestrator {
         chapter.setStatus(com.writing.novel.domain.Chapter.Status.POST_PROCESSING);
         repository.saveChapter(chapter);
 
-        if (p.getMode() == ProjectMode.INTERACTIVE) {
+        if (p.getMode() == ProjectMode.INTERACTIVE && shouldPauseAfterChapter(projectId, chapterIndex)) {
             p.setState(NovelState.PAUSED_AT_CHECKPOINT);
             repository.saveProject(p);
             repository.saveCheckpoint(new Checkpoint(projectId,

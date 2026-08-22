@@ -62,6 +62,7 @@ public class WritingPreferences {
     private double costBudgetYuan;
     private int rewriteBudget = 1;                 // p11-q2-04: 单章重写预算（次），0=禁用重写
     private int circuitBreakerThreshold = 10;      // p11-q2-05: 连续 HIGH 问题熔断阈值（回收 3→10 权宜放宽，可配置）
+    private int checkpointSpan = 1;
 
     private Instant updatedAt;
 
@@ -89,6 +90,7 @@ public class WritingPreferences {
         // mc-p1-05: 默认对齐百万字首版目标（spec: 400 章 × ≥2500 字/章）
         this.targetChapters = 24; // p12-05: 默认 24（与注释一致；百万字项目经 preferences 调大，避免新项目误规划 400 章）
         this.layeredOutline = true;
+        this.checkpointSpan = 1;
         this.updatedAt = Instant.now();
     }
 
@@ -120,6 +122,7 @@ public class WritingPreferences {
                 case "foreshadowSuspenseThreshold" -> this.foreshadowSuspenseThreshold = ((Number) value).intValue();
                 case "targetChapters" -> this.targetChapters = ((Number) value).intValue();
                 case "layeredOutline" -> this.layeredOutline = (Boolean) value;
+                case "checkpointSpan" -> this.checkpointSpan = ((Number) value).intValue();
             }
         });
         this.updatedAt = Instant.now();
@@ -148,6 +151,7 @@ public class WritingPreferences {
         m.put("foreshadowSuspenseThreshold", foreshadowSuspenseThreshold);
         m.put("targetChapters", targetChapters);
         m.put("layeredOutline", layeredOutline);
+        m.put("checkpointSpan", checkpointSpan);
         m.put("updatedAt", updatedAt.toString());
         return m;
     }
@@ -202,5 +206,7 @@ public class WritingPreferences {
     public void setRewriteBudget(int v) { this.rewriteBudget = v; this.updatedAt = Instant.now(); }
     public int getCircuitBreakerThreshold() { return circuitBreakerThreshold; }
     public void setCircuitBreakerThreshold(int v) { this.circuitBreakerThreshold = v; this.updatedAt = Instant.now(); }
+    public int getCheckpointSpan() { return checkpointSpan; }
+    public void setCheckpointSpan(int v) { this.checkpointSpan = v; this.updatedAt = Instant.now(); }
     public Instant getUpdatedAt() { return updatedAt; }
 }

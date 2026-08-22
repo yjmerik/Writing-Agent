@@ -1204,8 +1204,8 @@ public class SqliteNovelRepository implements NovelRepository {
                 "plot_stall_window,character_upgrade_span,min_chapter_length," +
                 "max_beats_per_chapter,max_chapter_length,chapter_length_variation,fast_pace_window," +
                 "foreshadow_suspense_threshold,target_chapters,layered_outline,cost_budget_yuan," +
-                "rewrite_budget,circuit_breaker_threshold,updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET " +
+                "rewrite_budget,circuit_breaker_threshold,checkpoint_span,updated_at) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET " +
                 "dialogue_density=excluded.dialogue_density, " +
                 "enable_dialogue_enforcement=excluded.enable_dialogue_enforcement, " +
                 "enable_climax_rotation=excluded.enable_climax_rotation, " +
@@ -1229,6 +1229,7 @@ public class SqliteNovelRepository implements NovelRepository {
                 "cost_budget_yuan=excluded.cost_budget_yuan, " +
                 "rewrite_budget=excluded.rewrite_budget, " +
                 "circuit_breaker_threshold=excluded.circuit_breaker_threshold, " +
+                "checkpoint_span=excluded.checkpoint_span, " +
                 "updated_at=excluded.updated_at";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -1256,7 +1257,8 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setDouble(22, p.getCostBudgetYuan());
             ps.setInt(23, p.getRewriteBudget());
             ps.setInt(24, p.getCircuitBreakerThreshold());
-            ps.setString(25, p.getUpdatedAt().toString());
+            ps.setInt(25, p.getCheckpointSpan());
+            ps.setString(26, p.getUpdatedAt().toString());
             ps.executeUpdate();
         } catch (SQLException ex) { throw new RuntimeException(ex); }
     }
@@ -1447,6 +1449,7 @@ public class SqliteNovelRepository implements NovelRepository {
         try { p.setCostBudgetYuan(rs.getDouble("cost_budget_yuan")); } catch (Exception ignored) { p.setCostBudgetYuan(0); }
         try { p.setRewriteBudget(rs.getInt("rewrite_budget")); } catch (Exception ignored) { p.setRewriteBudget(1); }
         try { p.setCircuitBreakerThreshold(rs.getInt("circuit_breaker_threshold")); } catch (Exception ignored) { p.setCircuitBreakerThreshold(10); }
+        try { p.setCheckpointSpan(rs.getInt("checkpoint_span")); } catch (Exception ignored) { p.setCheckpointSpan(1); }
         return p;
     }
     private KnowledgeEntry mapEntry(ResultSet rs) throws SQLException {

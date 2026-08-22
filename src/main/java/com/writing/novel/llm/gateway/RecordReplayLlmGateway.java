@@ -103,6 +103,7 @@ public class RecordReplayLlmGateway implements LlmGateway {
 
     private LlmResponse loadFixture(Path fixture, LlmRequest request) {
         if (!Files.exists(fixture)) {
+            dumpMissedRequest(fixture, request);
             throw new IllegalStateException(
                     "回放 fixture 缺失: " + fixture + "（taskType=" + request.getTaskType()
                             + "）。请先以 llm.replay.mode=record 运行同一流程补录。");
@@ -143,6 +144,8 @@ public class RecordReplayLlmGateway implements LlmGateway {
             ObjectNode node = MAPPER.createObjectNode();
             node.put("taskType", request.getTaskType().name());
             node.put("recordedAt", Instant.now().toString());
+            node.put("systemPrompt", nullSafe(request.getSystemPrompt()));
+            node.put("userMessage", nullSafe(request.getUserMessage()));
             node.put("systemPromptPreview", preview(request.getSystemPrompt()));
             node.put("userMessagePreview", preview(request.getUserMessage()));
             node.put("content", response.getContent());
@@ -154,6 +157,25 @@ public class RecordReplayLlmGateway implements LlmGateway {
         } catch (IOException e) {
             // 录制失败不影响业务返回，仅告警
             log.warn("LLM fixture 录制失败: {}", e.getMessage());
+        }
+    }
+
+    private void dumpMissedRequest(Path fixture, LlmRequest request) {
+        try {
+            Files.createDirectories(fixtureDir);
+            String name = fixture.getFileName().toString().replaceFirst("\\.json$", "") + ".miss.json";
+            ObjectNode node = MAPPER.createObjectNode();
+            node.put("taskType", request.getTaskType().name());
+            node.put("missedAt", Instant.now().toString());
+            node.put("expectedFixture", fixture.getFileName().toString());
+            node.put("systemPrompt", nullSafe(request.getSystemPrompt()));
+            node.put("userMessage", nullSafe(request.getUserMessage()));
+            Files.writeString(fixtureDir.resolve(name),
+                    MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(node),
+                    StandardCharsets.UTF_8);
+            log.warn("回放 miss 已转储完整请求: {}", name);
+        } catch (Exception e) {
+            log.warn("miss 转储失败: {}", e.getMessage());
         }
     }
 

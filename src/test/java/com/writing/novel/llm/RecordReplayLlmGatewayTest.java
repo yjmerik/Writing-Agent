@@ -81,6 +81,32 @@ class RecordReplayLlmGatewayTest {
     }
 
     @Test
+    void 回放miss时转储完整请求供指纹诊断() throws Exception {
+        LlmGateway replayer = new RecordReplayLlmGateway(
+                explodingDelegate(), RecordReplayLlmGateway.Mode.REPLAY, fixtureDir);
+        assertThrows(IllegalStateException.class,
+                () -> replayer.complete(request("发散的请求")));
+        String[] misses = fixtureDir.toFile().list((d, n) -> n.endsWith(".miss.json"));
+        assertEquals(1, misses != null ? misses.length : 0, "应转储一个 .miss.json");
+        String dumped = java.nio.file.Files.readString(fixtureDir.resolve(misses[0]));
+        assertTrue(dumped.contains("你是测试助手"), "miss 转储应含完整 systemPrompt");
+        assertTrue(dumped.contains("发散的请求"), "miss 转储应含完整 userMessage");
+    }
+
+    @Test
+    void 录制fixture保存完整请求() throws Exception {
+        AtomicInteger calls = new AtomicInteger();
+        LlmGateway recorder = new RecordReplayLlmGateway(
+                fixedDelegate("内容", calls), RecordReplayLlmGateway.Mode.RECORD, fixtureDir);
+        recorder.complete(request("完整请求"));
+        String[] fixtures = fixtureDir.toFile().list((d, n) -> n.endsWith(".json"));
+        assertEquals(1, fixtures.length);
+        String json = java.nio.file.Files.readString(fixtureDir.resolve(fixtures[0]));
+        assertTrue(json.contains("你是测试助手"), "fixture 应含完整 systemPrompt");
+        assertTrue(json.contains("完整请求"), "fixture 应含完整 userMessage");
+    }
+
+    @Test
     void 不同请求产生不同fixture互不串扰() {
         AtomicInteger calls = new AtomicInteger();
         LlmGateway recorder = new RecordReplayLlmGateway(

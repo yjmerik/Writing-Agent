@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": "Phase 15 人机设定扩容与作业可观测（7 feature）",
+  "current_phase": "Phase 15 人机设定扩容与作业可观测（9 feature）",
   "features": [
     {
       "id": "p1-01",
@@ -2133,6 +2133,40 @@
       "acceptance": "record 和 replay 使用同一 E2E_FIXTURE_DIR 时，三章 replay 的 taskStatus=COMPLETED、llmErrors=0、chapterFailures=0。",
       "verify_cmd": "bash scripts/e2e-fixture-dir-test.sh && E2E_FIXTURE_DIR=data/e2e-fixtures/replay-proof-20260822 ./scripts/e2e.sh --mode replay",
       "evidence": "2026-08-22: fixture harness pass；record/replay 各 3 章、10802 字、50 LLM calls、0 errors；mvn test 320 pass / 0 fail / 1 skip；compare-baseline PASS"
+    },
+    {
+      "id": "p15-08",
+      "name": "上下文顺序与主角锚点确定化",
+      "description": "反馈段同级排序补全 tie-break（severity→章节倒序→type→description）；relevantCharacters 顺序规范化为角色卡全集顺序；精确「主角」独占首位与锚点提醒行，substring 配角追加队尾（WritingContext 无精确主角时回退 substring 锚点）。",
+      "phase": 15,
+      "type": "bug",
+      "dependencies": [],
+      "status": "in-progress",
+      "files": [
+        "memory/ContextAssembler.java",
+        "memory/RelevanceGateway.java",
+        "memory/WritingContext.java"
+      ],
+      "problem_ref": "E2E replay 指纹失配排查（p15-07）暴露：同级反馈超限截断依赖 DB 返回序；substring 主角判定让「重要配角（主角盟友线）」抢走首位与锚点行，章节 prompt 指纹漂移",
+      "acceptance": "mvn test -Dtest=ContextOrderDeterminismTest,RelevanceGatewayAnchorTest,ContextAssemblerTest 通过：检索命中顺序不影响 relevantCharacters 规范序；cast 命中/无 cast 时精确主角居首；锚点行取精确主角；同级反馈超限按描述稳定截断",
+      "verify_cmd": "mvn test -Dtest='ContextOrderDeterminismTest,RelevanceGatewayAnchorTest,ContextAssemblerTest'",
+      "evidence": "2026-08-22 登记（spec: docs/specs/2026-08-22-replay-determinism.md）：实现与测试已在工作树、随本登记后的实现提交入库。测试对：ContextOrderDeterminismTest（规范序契约）、RelevanceGatewayAnchorTest（锚点首位/无 cast/锚点行 3 用例）、ContextAssemblerTest#同章同级反馈超过上限时按描述稳定选择。mvn 验证尚未在本登记会话执行，由实现提交会话回填 run 证据"
+    },
+    {
+      "id": "p15-09",
+      "name": "replay fixture 完整请求保留 + miss 诊断",
+      "description": "record fixture 新增 systemPrompt/userMessage 全文字段（preview 保留）；replay miss 时在 fixture 目录转储 <指纹>.miss.json（taskType/missedAt/expectedFixture/完整请求）后仍 fail-fast 抛 IllegalStateException。",
+      "phase": 15,
+      "type": "harness",
+      "dependencies": [],
+      "status": "in-progress",
+      "files": [
+        "llm/gateway/RecordReplayLlmGateway.java"
+      ],
+      "problem_ref": "replay 指纹失配只报缺失 fixture 文件名，且 fixture 仅存截断 preview，无法离线比对完整请求定位漂移来源",
+      "acceptance": "mvn test -Dtest=RecordReplayLlmGatewayTest 通过：record fixture JSON 含完整 systemPrompt/userMessage；replay miss 转储恰好一个含完整请求的 .miss.json 且仍抛 IllegalStateException",
+      "verify_cmd": "mvn test -Dtest=RecordReplayLlmGatewayTest",
+      "evidence": "2026-08-22 登记（spec: docs/specs/2026-08-22-replay-determinism.md）：实现（全文字段 + dumpMissedRequest）与 RecordReplayLlmGatewayTest 新增 2 用例（回放miss时转储完整请求供指纹诊断/录制fixture保存完整请求）已在工作树、随本登记后的实现提交入库。mvn 验证尚未在本登记会话执行，由实现提交会话回填 run 证据"
     }
   ]
 }

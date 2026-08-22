@@ -1,5 +1,6 @@
 package com.writing.novel.service;
 
+import com.writing.novel.domain.NovelState;
 import com.writing.novel.domain.WritingPreferences;
 import com.writing.novel.domain.WritingTask;
 import com.writing.novel.orchestrator.NovelOrchestrator;
@@ -112,6 +113,52 @@ public class WritingTaskExecutor {
         log.info("异步写作任务已启动: projectId={}, taskId={}, maxChapters={}",
                 projectId, task.getId(), maxChapters);
         return task;
+    }
+
+    public synchronized WritingTask startConceiving(String projectId) {
+        String activeTaskId = activeTasks.get(projectId);
+        if (activeTaskId != null) {
+            // p15-05: 原任务仍在运行时，重复启动直接返回原任务（不取消、不替换、不等待）
+            log.info("项目 {} 已有进行中的构思任务 {}，直接返回原任务", projectId, activeTaskId);
+            return getTask(activeTaskId);
+        }
+        WritingTask task = new WritingTask(projectId, 0);
+        repository.saveWritingTask(task);
+        cancelFlags.put(task.getId(), false);
+        activeTasks.put(projectId, task.getId());
+        executor.submit(() -> executeConceive(task));
+        return task;
+    }
+
+    private void executeConceive(WritingTask task) {
+        try {
+            if (isCancelled(task.getId())) {
+                task.setStatus(WritingTask.Status.CANCELLED);
+            } else {
+                orchestrator.step(task.getProjectId());
+                var state = repository.findProject(task.getProjectId())
+                        .map(p -> p.getState()).orElse(NovelState.CONCEIVING);
+                if (isCancelled(task.getId())) {
+                    task.setStatus(WritingTask.Status.CANCELLED);
+                } else if (state == NovelState.CONCEIVING) {
+                    task.setStatus(WritingTask.Status.FAILED);
+                    task.setErrorMessage("构思未完成，仍停留在 CONCEIVING");
+                } else {
+                    task.setStatus(WritingTask.Status.COMPLETED);
+                }
+            }
+            repository.saveWritingTask(task);
+        } catch (Exception e) {
+            log.error("构思任务失败: {}", task.getId(), e);
+            task.setStatus(WritingTask.Status.FAILED);
+            task.setErrorMessage(e.getMessage() != null
+                    ? e.getMessage().substring(0, Math.min(200, e.getMessage().length())) : "未知错误");
+            repository.saveWritingTask(task);
+        } finally {
+            // p15-05: 条件删除——旧 worker 退出时不得移除已被新任务接管的映射
+            activeTasks.remove(task.getProjectId(), task.getId());
+            cancelFlags.remove(task.getId());
+        }
     }
 
     private void executeWriting(WritingTask task, int maxChapters) {

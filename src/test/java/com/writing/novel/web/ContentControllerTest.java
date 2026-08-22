@@ -101,6 +101,21 @@ class ContentControllerTest {
         org.junit.jupiter.api.Assertions.assertFalse(writingTaskExecutor.hasActiveTask(id), "失败后应条件清理活动槽位");
     }
 
+    @Test
+    void 写一章遇活动任务时409且不替换owner() throws Exception {
+        String id = createAndConceive();
+        mvc.perform(post("/api/projects/" + id + "/run"));  // PLANNING → WRITING
+        writingTaskExecutor.beginWork(id, "write-all");
+        try {
+            mvc.perform(post("/api/projects/" + id + "/write-chapter"))
+                    .andExpect(status().isConflict());
+            org.junit.jupiter.api.Assertions.assertTrue(writingTaskExecutor.hasActiveTask(id), "原 owner 应保留");
+            org.junit.jupiter.api.Assertions.assertNull(findWriteChapterTask(id), "被拒绝的写章不应持久化任务");
+        } finally {
+            writingTaskExecutor.endWork(id, "write-all");
+        }
+    }
+
     private WritingTask findWriteChapterTask(String id) {
         return repository.findWritingTasksByProject(id).stream()
                 .filter(t -> t.getType() == WritingTask.Type.WRITE_CHAPTER)
@@ -123,7 +138,7 @@ class ContentControllerTest {
                         .content(om.writeValueAsString(req)))
                 .andReturn().getResponse().getContentAsString();
         String id = om.readTree(json).get("id").asText();
-        mvc.perform(post("/api/projects/" + id + "/run"));
+        RunTaskSupport.runAndAwait(mvc, om, id);
         return id;
     }
 }

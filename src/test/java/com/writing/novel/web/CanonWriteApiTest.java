@@ -75,7 +75,7 @@ class CanonWriteApiTest {
                         .content(om.writeValueAsString(req)))
                 .andReturn().getResponse().getContentAsString();
         String id = om.readTree(json).get("id").asText();
-        mvc.perform(post("/api/projects/" + id + "/run"));
+        RunTaskSupport.runAndAwait(mvc, om, id);
         return id;
     }
 }

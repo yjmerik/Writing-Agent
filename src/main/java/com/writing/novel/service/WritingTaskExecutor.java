@@ -132,8 +132,12 @@ public class WritingTaskExecutor {
 
     /**
      * p15-05: 单章写作任务——同步执行窗口内登记 RUNNING WRITE_CHAPTER 任务并占用活动作业槽位。
+     * 单活动作业保证：项目已有活动任务时拒绝（IllegalStateException → 409），不得覆盖原 owner。
      */
-    public WritingTask startWriteChapter(String projectId) {
+    public synchronized WritingTask startWriteChapter(String projectId) {
+        if (activeTasks.containsKey(projectId)) {
+            throw new IllegalStateException("已有进行中的写作任务，请先暂停或取消再写单章");
+        }
         WritingTask task = new WritingTask(projectId, 1, WritingTask.Type.WRITE_CHAPTER);
         repository.saveWritingTask(task);
         cancelFlags.put(task.getId(), false);
@@ -142,23 +146,27 @@ public class WritingTaskExecutor {
     }
 
     /**
-     * p15-05: 单章任务收尾——终态落库后条件清理活动映射（不得移除被新任务接管的映射）。
+     * p15-05: 单章任务收尾——终态落库后条件清理活动映射（不得移除被新任务接管的映射）；
+     * 清理在 finally 中执行，终态落库抛异常也必须释放自己的映射与取消标志。
      */
     public void finishWriteChapter(String projectId, WritingTask task,
                                    WritingTask.Status status, String errorMessage) {
-        task.setStatus(status);
-        if (errorMessage != null) {
-            task.setErrorMessage(errorMessage.length() > 200
-                    ? errorMessage.substring(0, 200) : errorMessage);
+        try {
+            task.setStatus(status);
+            if (errorMessage != null) {
+                task.setErrorMessage(errorMessage.length() > 200
+                        ? errorMessage.substring(0, 200) : errorMessage);
+            }
+            if (status == WritingTask.Status.COMPLETED) {
+                task.setChaptersWritten(1);
+                task.setCurrentChapter(repository.findProject(projectId)
+                        .map(p -> p.getCurrentChapterIndex()).orElse(0));
+            }
+            repository.saveWritingTask(task);
+        } finally {
+            activeTasks.remove(projectId, task.getId());
+            cancelFlags.remove(task.getId());
         }
-        if (status == WritingTask.Status.COMPLETED) {
-            task.setChaptersWritten(1);
-            task.setCurrentChapter(repository.findProject(projectId)
-                    .map(p -> p.getCurrentChapterIndex()).orElse(0));
-        }
-        repository.saveWritingTask(task);
-        activeTasks.remove(projectId, task.getId());
-        cancelFlags.remove(task.getId());
     }
 
     private void executeConceive(WritingTask task) {

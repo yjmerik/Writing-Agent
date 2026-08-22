@@ -44,8 +44,7 @@ class FullStackSmokeTest {
         String id = om.readTree(json).get("id").asText();
 
         // 2. 运行构思（CONCEIVING → PLANNING）
-        mvc.perform(post("/api/projects/" + id + "/run"))
-                .andExpect(status().isOk());
+        RunTaskSupport.runAndAwait(mvc, om, id);
         mvc.perform(get("/api/projects/" + id + "/status"))
                 .andExpect(jsonPath("$.state").value("PLANNING"));
 

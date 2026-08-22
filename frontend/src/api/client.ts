@@ -140,6 +140,9 @@ export const api = {
       body: JSON.stringify(outline),
     }),
 
+  replanOutline: (id: string) =>
+    request<Outline>(`/projects/${id}/replan`, { method: 'POST' }),
+
   getFacts: (id: string) =>
     request<Array<{ id: string; subject: string; assertion: string; factType: string }>>(`/projects/${id}/facts`),
 

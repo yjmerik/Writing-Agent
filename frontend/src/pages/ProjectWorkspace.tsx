@@ -244,7 +244,7 @@ export default function ProjectWorkspace() {
           items={[
             { key: 'run', label: '🎮 运行控制台', children: <RunConsole projectId={project.id} projectState={project.state} onChanged={load} /> },
             { key: 'world', label: '🌍 世界观与人物', children: <WorldbuildingView key={`world-${project.currentChapterIndex}`} projectId={project.id} /> },
-            { key: 'outline', label: '📋 大纲', children: <OutlineView key={`outline-${project.state}`} projectId={project.id} /> },
+            { key: 'outline', label: '📋 大纲', children: <OutlineView key={`outline-${project.state}-${project.currentChapterIndex}`} projectId={project.id} currentChapter={project.currentChapterIndex} /> },
             { key: 'review', label: '📖 章节管理', children: <InteractiveReview key={`review-${project.currentChapterIndex}`} projectId={project.id} onChanged={load} /> },
             { key: 'quality', label: '🔍 质量评价', children: <QualityView projectId={project.id} /> },
           ]}

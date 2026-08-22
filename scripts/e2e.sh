@@ -30,6 +30,7 @@ else
 fi
 
 E2E_DIR="data/e2e"
+FIXTURE_DIR="${E2E_FIXTURE_DIR:-data/e2e-fixtures/llm}"
 BASE="http://localhost:$PORT"
 REPLAY_MODE="off"
 case "$MODE" in
@@ -39,7 +40,7 @@ case "$MODE" in
   *) echo "非法 mode: $MODE"; exit 1 ;;
 esac
 
-echo "=== E2E: mode=$MODE chapters=$CHAPTERS port=$PORT ==="
+echo "=== E2E: mode=$MODE chapters=$CHAPTERS port=$PORT fixtures=$FIXTURE_DIR ==="
 # 备份上一轮 record 的 DB（防止 replay 覆盖 record 数据）
 if [ -f "$E2E_DIR/novel.db" ]; then cp "$E2E_DIR/novel.db" "$E2E_DIR/novel-record.db"; fi
 rm -rf "$E2E_DIR"
@@ -47,7 +48,7 @@ mkdir -p "$E2E_DIR"
 
 mvn -q spring-boot:run \
   -Dspring-boot.run.jvmArguments="-Dnovel.events.file=$E2E_DIR/events.jsonl" \
-  -Dspring-boot.run.arguments="--server.port=$PORT --llm.replay.mode=$REPLAY_MODE --persistence.sqlite.db-path=$E2E_DIR/novel.db --persistence.vector-store.index-path=$E2E_DIR/vectors.idx" \
+  -Dspring-boot.run.arguments="--server.port=$PORT --llm.replay.mode=$REPLAY_MODE --llm.replay.dir=$FIXTURE_DIR --persistence.sqlite.db-path=$E2E_DIR/novel.db --persistence.vector-store.index-path=$E2E_DIR/vectors.idx" \
   > "$E2E_DIR/server.log" 2>&1 &
 SERVER_PID=$!
 trap 'kill $SERVER_PID 2>/dev/null || true; wait $SERVER_PID 2>/dev/null || true' EXIT

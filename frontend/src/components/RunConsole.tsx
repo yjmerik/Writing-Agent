@@ -18,6 +18,7 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
   const [running, setRunning] = useState(false);
   const [writing, setWriting] = useState(false);
   const [batchWriting, setBatchWriting] = useState(false);
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const busy = running || writing || batchWriting;
   const [lastResult, setLastResult] = useState<string | null>(null);
 
@@ -65,7 +66,7 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
     setBatchWriting(true);
     setLastResult(null);
     try {
-      const result = await api.writeAll(projectId);
+      const result = await api.writeAll(projectId, 50, setActiveTaskId);
       const words = result.totalWords;
       message.success(`连续写作完成！共写 ${result.chaptersWritten} 章，当前第 ${result.currentChapter} 章 ${words} 字`);
       setLastResult(
@@ -80,6 +81,7 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
     } catch (e) {
       message.error(`连续写作失败: ${(e as Error).message}`);
     } finally {
+      setActiveTaskId(null);
       setBatchWriting(false);
     }
   }, [projectId, onChanged]);
@@ -150,6 +152,16 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
             {batchWriting ? '连续写作中（每章 1-2 分钟）…' : '⚡ 连续写作（最多 50 章）'}
           </Button>
         </Popconfirm>
+        {batchWriting && activeTaskId && (
+          <Button danger onClick={async () => {
+            try {
+              await api.cancelWritingTask(projectId, activeTaskId);
+              message.info('已发送取消');
+            } catch (e) {
+              message.error((e as Error).message);
+            }
+          }}>取消连续写作</Button>
+        )}
       </Space>
 
       {lastResult && (

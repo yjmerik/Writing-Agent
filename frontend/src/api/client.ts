@@ -69,8 +69,21 @@ export const api = {
     request<void>(`/projects/${id}`, { method: 'DELETE' }),
 
   // --- 运行控制 ---
-  run: (id: string) =>
-    request<ProjectStatus>(`/projects/${id}/run`, { method: 'POST' }),
+  run: async (id: string) => {
+    const started = await request<{ taskId?: string; status?: string; state?: string; currentChapter?: number }>(
+      `/projects/${id}/run`,
+      { method: 'POST' },
+    );
+    if (started.taskId) {
+      const deadline = Date.now() + 3600000;
+      while (Date.now() < deadline) {
+        const task = await request<{ status: string; error?: string }>(`/projects/${id}/writing-tasks/${started.taskId}`);
+        if (task.status && task.status !== 'RUNNING') break;
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+    }
+    return request<ProjectStatus>(`/projects/${id}/status`);
+  },
 
   getStatus: (id: string) => request<ProjectStatus>(`/projects/${id}/status`),
 
@@ -160,6 +173,9 @@ export const api = {
       { method: 'POST' },
     ),
 
+  cancelWritingTask: (id: string, taskId: string) =>
+    request<{ taskId: string; status: string }>(`/projects/${id}/writing-tasks/${taskId}/cancel`, { method: 'POST' }),
+
   getWritingTask: (id: string, taskId: string) =>
     request<{
       taskId: string; projectId: string; status: string;
@@ -167,13 +183,14 @@ export const api = {
       totalWords: number; errorMessage: string;
     }>(`/projects/${id}/writing-tasks/${taskId}`),
 
-  writeAll: async (id: string, maxChapters = 50) => {
+  writeAll: async (id: string, maxChapters = 50, onStarted?: (taskId: string) => void) => {
     const started = await api.startWriteAll(id, maxChapters);
     const taskId = started.taskId;
+    onStarted?.(taskId);
     const deadline = Date.now() + 3600000;
     while (Date.now() < deadline) {
       const task = await api.getWritingTask(id, taskId);
-      if (task.status === 'DONE' || task.status === 'CANCELLED' || task.status === 'FAILED') {
+      if (task.status === 'DONE' || task.status === 'COMPLETED' || task.status === 'CANCELLED' || task.status === 'FAILED' || task.status === 'PAUSED') {
         if (task.status === 'FAILED') throw new Error(task.errorMessage || '连续写作失败');
         return task;
       }

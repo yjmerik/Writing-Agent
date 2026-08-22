@@ -103,7 +103,7 @@ public class WritingTaskExecutor {
             }
         }
 
-        WritingTask task = new WritingTask(projectId, maxChapters);
+        WritingTask task = new WritingTask(projectId, maxChapters, WritingTask.Type.WRITE_ALL);
         repository.saveWritingTask(task);
         cancelFlags.put(task.getId(), false);
         activeTasks.put(projectId, task.getId());
@@ -122,12 +122,43 @@ public class WritingTaskExecutor {
             log.info("项目 {} 已有进行中的构思任务 {}，直接返回原任务", projectId, activeTaskId);
             return getTask(activeTaskId);
         }
-        WritingTask task = new WritingTask(projectId, 0);
+        WritingTask task = new WritingTask(projectId, 0, WritingTask.Type.CONCEIVE);
         repository.saveWritingTask(task);
         cancelFlags.put(task.getId(), false);
         activeTasks.put(projectId, task.getId());
         executor.submit(() -> executeConceive(task));
         return task;
+    }
+
+    /**
+     * p15-05: 单章写作任务——同步执行窗口内登记 RUNNING WRITE_CHAPTER 任务并占用活动作业槽位。
+     */
+    public WritingTask startWriteChapter(String projectId) {
+        WritingTask task = new WritingTask(projectId, 1, WritingTask.Type.WRITE_CHAPTER);
+        repository.saveWritingTask(task);
+        cancelFlags.put(task.getId(), false);
+        activeTasks.put(projectId, task.getId());
+        return task;
+    }
+
+    /**
+     * p15-05: 单章任务收尾——终态落库后条件清理活动映射（不得移除被新任务接管的映射）。
+     */
+    public void finishWriteChapter(String projectId, WritingTask task,
+                                   WritingTask.Status status, String errorMessage) {
+        task.setStatus(status);
+        if (errorMessage != null) {
+            task.setErrorMessage(errorMessage.length() > 200
+                    ? errorMessage.substring(0, 200) : errorMessage);
+        }
+        if (status == WritingTask.Status.COMPLETED) {
+            task.setChaptersWritten(1);
+            task.setCurrentChapter(repository.findProject(projectId)
+                    .map(p -> p.getCurrentChapterIndex()).orElse(0));
+        }
+        repository.saveWritingTask(task);
+        activeTasks.remove(projectId, task.getId());
+        cancelFlags.remove(task.getId());
     }
 
     private void executeConceive(WritingTask task) {

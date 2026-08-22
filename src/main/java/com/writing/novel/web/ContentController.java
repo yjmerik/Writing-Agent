@@ -152,13 +152,21 @@ public class ContentController {
         return orchestrator.promoteEntity(id, entityId);
     }
 
+    /** p15-05: 单章写作——登记 WRITE_CHAPTER 任务，正文落库后返回 Chapter；失败置 FAILED 并重抛 */
     @PostMapping("/write-chapter")
     public Chapter writeChapter(@PathVariable String id) {
-        if (writingTaskExecutor != null) writingTaskExecutor.beginWork(id, "write-chapter");
-        try {
+        if (writingTaskExecutor == null) {
             return orchestrator.runWritingOneChapter(id);
-        } finally {
-            if (writingTaskExecutor != null) writingTaskExecutor.endWork(id, "write-chapter");
+        }
+        WritingTask task = writingTaskExecutor.startWriteChapter(id);
+        try {
+            Chapter chapter = orchestrator.runWritingOneChapter(id);
+            writingTaskExecutor.finishWriteChapter(id, task, WritingTask.Status.COMPLETED, null);
+            return chapter;
+        } catch (Exception e) {
+            String msg = e.getMessage() != null ? e.getMessage() : "未知错误";
+            writingTaskExecutor.finishWriteChapter(id, task, WritingTask.Status.FAILED, msg);
+            throw e;
         }
     }
 

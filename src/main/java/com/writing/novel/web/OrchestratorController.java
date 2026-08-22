@@ -1,6 +1,7 @@
 package com.writing.novel.web;
 
 import com.writing.novel.agent.QualityEvaluationAgent;
+import com.writing.novel.domain.NovelState;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.WritingTask;
 import com.writing.novel.orchestrator.NovelOrchestrator;
@@ -31,6 +32,16 @@ public class OrchestratorController {
 
     @PostMapping("/run")
     public Map<String, Object> run(@PathVariable String id) {
+        Project project = projectService.find(id).orElseThrow();
+        if (project.getState() == NovelState.CONCEIVING) {
+            WritingTask task = writingTaskExecutor.startConceiving(id);
+            return Map.of(
+                    "projectId", id,
+                    "taskId", task.getId(),
+                    "type", task.getType().name(),
+                    "status", task.getStatus().name()
+            );
+        }
         orchestrator.step(id);
         return status(id);
     }
@@ -71,6 +82,7 @@ public class OrchestratorController {
         return Map.of(
                 "projectId", id,
                 "taskId", task.getId(),
+                "type", task.getType().name(),
                 "status", task.getStatus().name(),
                 "totalChapters", task.getTotalChapters(),
                 "message", "异步写作已启动，请轮询任务状态"
@@ -85,6 +97,7 @@ public class OrchestratorController {
         return Map.of(
                 "taskId", task.getId(),
                 "projectId", task.getProjectId(),
+                "type", task.getType().name(),
                 "status", task.getStatus().name(),
                 "currentChapter", task.getCurrentChapter(),
                 "chaptersWritten", task.getChaptersWritten(),

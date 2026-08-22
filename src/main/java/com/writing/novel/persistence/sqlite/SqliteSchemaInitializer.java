@@ -129,9 +129,10 @@ public class SqliteSchemaInitializer {
             "character_score INTEGER, hook INTEGER, " +
             "summary TEXT, issues TEXT, improvement TEXT, created_at TEXT)",
 
-        // p12-K2: 异步写作任务表
+        // p12-K2: 异步写作任务表（p15-05: task_type 区分构思/单章/全卷任务）
         "CREATE TABLE IF NOT EXISTS writing_tasks (" +
             "id TEXT PRIMARY KEY, project_id TEXT, status TEXT, " +
+            "task_type TEXT DEFAULT 'WRITE_ALL', " +
             "current_chapter INTEGER, total_chapters INTEGER, " +
             "chapters_written INTEGER, total_words INTEGER, " +
             "error_message TEXT, created_at TEXT, updated_at TEXT)",
@@ -265,5 +266,7 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN circuit_breaker_threshold INTEGER DEFAULT 10");
         // p10-w1-06: 章节状态机
         safeAddColumn(st, "ALTER TABLE chapters ADD COLUMN status TEXT DEFAULT 'DONE'");
+        // p15-05: 写作任务类型（旧库无此列时补列，存量行默认 WRITE_ALL）
+        safeAddColumn(st, "ALTER TABLE writing_tasks ADD COLUMN task_type TEXT DEFAULT 'WRITE_ALL'");
     }
 }

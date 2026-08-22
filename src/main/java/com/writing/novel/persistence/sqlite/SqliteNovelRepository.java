@@ -1069,22 +1069,24 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public void saveWritingTask(WritingTask t) {
-        String sql = "INSERT INTO writing_tasks (id,project_id,status,current_chapter,total_chapters," +
+        String sql = "INSERT INTO writing_tasks (id,project_id,status,task_type,current_chapter,total_chapters," +
                 "chapters_written,total_words,error_message,created_at,updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
-                "status=excluded.status, current_chapter=excluded.current_chapter, " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
+                "status=excluded.status, task_type=excluded.task_type, " +
+                "current_chapter=excluded.current_chapter, " +
                 "total_chapters=excluded.total_chapters, chapters_written=excluded.chapters_written, " +
                 "total_words=excluded.total_words, error_message=excluded.error_message, " +
                 "updated_at=excluded.updated_at";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, t.getId()); ps.setString(2, t.getProjectId());
-            ps.setString(3, t.getStatus().name()); ps.setInt(4, t.getCurrentChapter());
-            ps.setInt(5, t.getTotalChapters()); ps.setInt(6, t.getChaptersWritten());
-            ps.setInt(7, t.getTotalWords());
-            ps.setString(8, t.getErrorMessage());
-            ps.setString(9, t.getCreatedAt().toString());
-            ps.setString(10, t.getUpdatedAt().toString());
+            ps.setString(3, t.getStatus().name()); ps.setString(4, t.getType().name());
+            ps.setInt(5, t.getCurrentChapter());
+            ps.setInt(6, t.getTotalChapters()); ps.setInt(7, t.getChaptersWritten());
+            ps.setInt(8, t.getTotalWords());
+            ps.setString(9, t.getErrorMessage());
+            ps.setString(10, t.getCreatedAt().toString());
+            ps.setString(11, t.getUpdatedAt().toString());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
@@ -1126,7 +1128,8 @@ public class SqliteNovelRepository implements NovelRepository {
     }
 
     private WritingTask mapWritingTask(ResultSet rs) throws SQLException {
-        WritingTask t = new WritingTask(rs.getString("project_id"), rs.getInt("total_chapters"));
+        WritingTask t = new WritingTask(rs.getString("project_id"), rs.getInt("total_chapters"),
+                WritingTask.Type.valueOf(rs.getString("task_type")));
         setField(t, "id", rs.getString("id"));
         t.setStatus(WritingTask.Status.valueOf(rs.getString("status")));
         t.setCurrentChapter(rs.getInt("current_chapter"));

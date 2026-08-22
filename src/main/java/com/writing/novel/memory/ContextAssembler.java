@@ -11,6 +11,7 @@ import com.writing.novel.spi.NovelRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 /**
@@ -949,13 +950,12 @@ public class ContextAssembler {
         var issues = repository.findUnresolvedIssues(projectId).stream()
                 .filter(i -> i.getDetectedAtChapter() >= fromChapter)
                 .filter(i -> i.getDetectedAtChapter() < chapterIndex) // 不含本章
-                .sorted((a, b) -> {
-                    // HIGH 优先，然后按章节倒序
-                    int sa = a.getSeverity() == ContinuityIssue.Severity.HIGH ? 0 : 1;
-                    int sb2 = b.getSeverity() == ContinuityIssue.Severity.HIGH ? 0 : 1;
-                    if (sa != sb2) return sa - sb2;
-                    return Integer.compare(b.getDetectedAtChapter(), a.getDetectedAtChapter());
-                })
+                .sorted(Comparator
+                        .comparingInt((ContinuityIssue issue) ->
+                                issue.getSeverity() == ContinuityIssue.Severity.HIGH ? 0 : 1)
+                        .thenComparing(Comparator.comparingInt(ContinuityIssue::getDetectedAtChapter).reversed())
+                        .thenComparing(issue -> issue.getType().name())
+                        .thenComparing(ContinuityIssue::getDescription))
                 .limit(8) // 最多 8 条
                 .toList();
 

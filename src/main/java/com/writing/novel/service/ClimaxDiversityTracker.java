@@ -44,7 +44,9 @@ public class ClimaxDiversityTracker {
 
         StringBuilder sb = new StringBuilder();
         sb.append("□ 爽点类型轮换：最近3章已使用【");
-        sb.append(String.join("、", recentlyUsed.stream().map(this::toChinese).toList()));
+        sb.append(String.join("、", recentlyUsed.stream()
+                .sorted(Comparator.comparingInt(Enum::ordinal))
+                .map(this::toChinese).toList()));
         sb.append("】，本章禁止使用以上类型\n");
 
         if (!unused.isEmpty()) {

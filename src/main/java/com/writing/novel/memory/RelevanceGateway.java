@@ -45,12 +45,20 @@ public class RelevanceGateway {
             }
         }
         // 2. 主角保底（主角不依赖 cast 命中，避免名字漂移失锚）
+        // p15-fix: 仅精确"主角"可占首位；substring 匹配者追加队尾——锚点位漂移会改变 prompt 指纹，破坏 record→replay 确定性
+        for (Character c : all) {
+            if (out.size() >= cap) break;
+            String role = c.getRole();
+            if ("主角".equals(role) && !out.contains(c)) {
+                out.add(0, c);
+            }
+        }
         for (Character c : all) {
             if (out.size() >= cap) break;
             String role = c.getRole();
             if (role != null && (role.contains("主角") || role.contains("男主") || role.contains("女主"))
-                    && !out.contains(c)) {
-                out.add(0, c);
+                    && !"主角".equals(role) && !out.contains(c)) {
+                out.add(c);
             }
         }
         return out;

@@ -140,4 +140,24 @@ class ContextAssemblerTest {
         assertTrue(system.contains("天道"));
         assertTrue(user.contains("张三"));
     }
+
+    @Test
+    void 同章同级反馈超过上限时按描述稳定选择() {
+        Project p = new Project("t", "c", "tag");
+        repo.saveProject(p);
+        repo.saveWritingPreferences(new WritingPreferences(p.getId()));
+
+        for (int index = 9; index >= 1; index--) {
+            repo.saveContinuityIssue(new ContinuityIssue(
+                    p.getId(), 1, ContinuityIssue.Type.CHARACTER,
+                    ContinuityIssue.Severity.HIGH, "反馈-" + index));
+        }
+
+        WritingContext context = assembler.assemble(p.getId(), 2, "第二章", "梗概", null);
+
+        for (int index = 1; index <= 8; index++) {
+            assertTrue(context.getFeedbackSection().contains("反馈-" + index));
+        }
+        assertFalse(context.getFeedbackSection().contains("反馈-9"));
+    }
 }

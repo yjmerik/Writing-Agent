@@ -87,10 +87,16 @@ public class WritingContext {
     public String toUserPrompt() {
         StringBuilder sb = new StringBuilder();
         // 开头强锚定主角名，防止 LLM 从"上一章原文"中继承错误的名字（滚雪球效应）
+        // p15-fix: 精确"主角"角色优先；substring 匹配者（"重要配角（主角盟友线）"）不得抢锚点
         if (relevantCharacters != null && !relevantCharacters.isEmpty()) {
             var mainChars = relevantCharacters.stream()
-                    .filter(c -> c.getRole() != null && c.getRole().contains("主角"))
+                    .filter(c -> "主角".equals(c.getRole()))
                     .toList();
+            if (mainChars.isEmpty()) {
+                mainChars = relevantCharacters.stream()
+                        .filter(c -> c.getRole() != null && c.getRole().contains("主角"))
+                        .toList();
+            }
             if (!mainChars.isEmpty()) {
                 sb.append("⚠️ 重要提醒：本章主角的名字是「")
                   .append(mainChars.get(0).getName()).append("」，")

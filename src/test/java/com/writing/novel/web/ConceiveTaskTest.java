@@ -81,6 +81,17 @@ class ConceiveTaskTest {
         }
     }
 
+    @Test
+    void deleteProject_conflictWhenTaskActive() throws Exception {
+        String id = createProject();
+        writingTaskExecutor.beginWork(id, "write-all");
+        try {
+            mvc.perform(delete("/api/projects/" + id))
+                    .andExpect(status().isConflict());
+        } finally {
+            writingTaskExecutor.endWork(id, "write-all");
+        }
+    }
 
     private String createProject() throws Exception {
         CreateProjectRequest req = new CreateProjectRequest("task", "c", "tag", "SOLO", null);

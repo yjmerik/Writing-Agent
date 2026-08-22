@@ -3,6 +3,7 @@ package com.writing.novel.web;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.ProjectMode;
 import com.writing.novel.orchestrator.ProjectService;
+import com.writing.novel.service.WritingTaskExecutor;
 import com.writing.novel.web.dto.CreateProjectRequest;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +14,11 @@ import java.util.List;
 public class ProjectController {
 
     private final ProjectService projectService;
+    private final WritingTaskExecutor writingTaskExecutor;
 
-    public ProjectController(ProjectService projectService) {
+    public ProjectController(ProjectService projectService, WritingTaskExecutor writingTaskExecutor) {
         this.projectService = projectService;
+        this.writingTaskExecutor = writingTaskExecutor;
     }
 
     @PostMapping
@@ -48,6 +51,9 @@ public class ProjectController {
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable String id) {
+        if (writingTaskExecutor != null && writingTaskExecutor.hasActiveTask(id)) {
+            throw new IllegalStateException("请先暂停或取消写作");
+        }
         projectService.delete(id);
     }
 }

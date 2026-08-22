@@ -11,6 +11,7 @@ import type {
   ProjectMode,
   Checkpoint,
   ChapterQualityReport,
+  Foreshadowing,
 } from '../types';
 
 const BASE = '/api';
@@ -151,6 +152,30 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(body),
     }),
+
+  updateFact: (id: string, factId: string, assertion: string) =>
+    request<{ id: string; assertion: string }>(`/projects/${id}/facts/${factId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ assertion }),
+    }),
+
+  retireFact: (id: string, factId: string) =>
+    request<{ id: string }>(`/projects/${id}/facts/${factId}/retire`, { method: 'POST' }),
+
+  getForeshadowings: (id: string) =>
+    request<Foreshadowing[]>(`/projects/${id}/foreshadowings`),
+
+  addForeshadowing: (id: string, body: { content: string; mustResolve?: boolean }) =>
+    request<Foreshadowing>(`/projects/${id}/foreshadowings`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  resolveForeshadowing: (id: string, fid: string) =>
+    request<Foreshadowing>(`/projects/${id}/foreshadowings/${fid}/resolve`, { method: 'POST' }),
+
+  resolveManualReview: (id: string, chapterIndex: number) =>
+    request<Chapter>(`/projects/${id}/chapters/${chapterIndex}/resolve-review`, { method: 'POST' }),
 
   pause: (id: string) =>
     request<ProjectStatus>(`/projects/${id}/pause`, { method: 'POST' }),

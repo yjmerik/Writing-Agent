@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, Tag, Empty, Spin, Row, Col, Descriptions, Divider, Button, Space, Input, message, List, Typography } from 'antd';
 import { ReloadOutlined, SaveOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
-import type { KnowledgeEntry, Character } from '../types';
+import type { KnowledgeEntry, Character, Foreshadowing } from '../types';
 
 const { Text } = Typography;
 
@@ -32,7 +32,9 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [facts, setFacts] = useState<Array<{ id: string; subject: string; assertion: string; factType: string }>>([]);
+  const [foreshadowings, setForeshadowings] = useState<Foreshadowing[]>([]);
   const [newFact, setNewFact] = useState('');
+  const [newForeshadow, setNewForeshadow] = useState('');
   const [newWorld, setNewWorld] = useState({ type: 'FACTION', name: '', content: '' });
   const [newChar, setNewChar] = useState({ name: '', role: '配角', ability: '' });
   const [loading, setLoading] = useState(true);
@@ -42,14 +44,16 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [e, c, f] = await Promise.all([
+      const [e, c, f, fs] = await Promise.all([
         api.getWorldbuilding(projectId),
         api.getCharacters(projectId),
         api.getFacts(projectId).catch(() => []),
+        api.getForeshadowings(projectId).catch(() => []),
       ]);
       setEntries(e || []);
       setCharacters(c || []);
       setFacts(f || []);
+      setForeshadowings(fs || []);
     } finally {
       setLoading(false);
     }
@@ -231,10 +235,83 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
           size="small"
           dataSource={facts}
           renderItem={(f) => (
-            <List.Item>
+            <List.Item
+              actions={[
+                <Button key="save" size="small" type="link" onClick={async () => {
+                  try {
+                    await api.updateFact(projectId, f.id, drafts[f.id] ?? f.assertion);
+                    message.success('真典已更新');
+                    load();
+                  } catch (err) {
+                    message.error((err as Error).message);
+                  }
+                }}>保存</Button>,
+                <Button key="retire" size="small" type="link" danger onClick={async () => {
+                  try {
+                    await api.retireFact(projectId, f.id);
+                    message.success('已废止');
+                    load();
+                  } catch (err) {
+                    message.error((err as Error).message);
+                  }
+                }}>废止</Button>,
+              ]}
+            >
               <Tag>{f.factType}</Tag>
               <Text strong>{f.subject}</Text>
-              <span style={{ marginLeft: 8 }}>{f.assertion}</span>
+              <Input.TextArea
+                rows={2}
+                style={{ marginTop: 6 }}
+                value={drafts[f.id] ?? f.assertion}
+                onChange={(ev) => setDrafts((d) => ({ ...d, [f.id]: ev.target.value }))}
+              />
+            </List.Item>
+          )}
+        />
+      )}
+
+      <Divider />
+      <h2>🧵 伏笔</h2>
+      <Space style={{ marginBottom: 8 }} wrap>
+        <Input
+          style={{ width: 360 }}
+          placeholder="人種伏笔，如：账册缺页尚未对上人"
+          value={newForeshadow}
+          onChange={(e) => setNewForeshadow(e.target.value)}
+        />
+        <Button size="small" type="primary" onClick={async () => {
+          if (!newForeshadow.trim()) return;
+          try {
+            await api.addForeshadowing(projectId, { content: newForeshadow.trim(), mustResolve: true });
+            message.success('伏笔已种下');
+            setNewForeshadow('');
+            load();
+          } catch (err) {
+            message.error((err as Error).message);
+          }
+        }}>人種</Button>
+      </Space>
+      {foreshadowings.length === 0 ? <Empty description="暂无伏笔" /> : (
+        <List
+          size="small"
+          dataSource={foreshadowings}
+          renderItem={(item) => (
+            <List.Item
+              actions={item.resolved ? [] : [
+                <Button key="resolve" size="small" type="link" onClick={async () => {
+                  try {
+                    await api.resolveForeshadowing(projectId, item.id);
+                    message.success('已回收');
+                    load();
+                  } catch (err) {
+                    message.error((err as Error).message);
+                  }
+                }}>人收</Button>,
+              ]}
+            >
+              <Tag color={item.resolved ? 'default' : 'red'}>{item.resolved ? '已回收' : '未回收'}</Tag>
+              {item.mustResolve && <Tag color="orange">必须回收</Tag>}
+              <span>{item.description}</span>
             </List.Item>
           )}
         />

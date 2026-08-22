@@ -86,8 +86,18 @@ export interface Chapter {
   content: string;
   wordCount: number;
   version: number;
+  status?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Foreshadowing {
+  id: string;
+  projectId: string;
+  description: string;
+  resolved: boolean;
+  mustResolve: boolean;
+  plantedAtChapter: number;
 }
 
 /** p11-I3: 章节质量报告 */
@@ -114,6 +124,8 @@ export interface ChapterQualityReport {
   }>;
   clicheCount: number;
   topCliches: string[];
+  needsManualReview?: boolean;
+  qualityRisk?: boolean;
 }
 
 export interface Summary {

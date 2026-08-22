@@ -224,7 +224,12 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
                   >
                     <List.Item.Meta
                       title={<Text strong>第{ch.chapterIndex}章 {ch.title.replace(/\*\*/g, '')}</Text>}
-                      description={<Tag>{ch.wordCount} 字</Tag>}
+                      description={
+                        <Space size={4}>
+                          <Tag>{ch.wordCount} 字</Tag>
+                          {ch.status === 'NEEDS_MANUAL_REVIEW' && <Tag color="red">待人审</Tag>}
+                        </Space>
+                      }
                     />
                   </List.Item>
                 )}
@@ -241,6 +246,18 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
                   <Space>
                     <Tag color="blue">{currentChapter.wordCount} 字</Tag>
                     <Tag color="purple">v{currentChapter.version}</Tag>
+                    {currentChapter.status === 'NEEDS_MANUAL_REVIEW' && (
+                      <Button size="small" type="primary" onClick={async () => {
+                        try {
+                          await api.resolveManualReview(projectId, currentChapter.chapterIndex);
+                          message.success('已标为处理完毕');
+                          refresh();
+                          onChanged();
+                        } catch (err) {
+                          message.error((err as Error).message);
+                        }
+                      }}>已处理</Button>
+                    )}
                     <Button size="small" icon={<EditOutlined />} onClick={() => { setRewriteInstructions(''); setRewriteModalOpen(true); }}>
                       重写此章
                     </Button>

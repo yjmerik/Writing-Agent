@@ -275,6 +275,12 @@ export const api = {
   getPreferences: (id: string) =>
     request<Record<string, unknown>>(`/projects/${id}/preferences`),
 
+  updatePreferences: (id: string, body: Record<string, unknown>) =>
+    request<Record<string, unknown>>(`/projects/${id}/preferences`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+
   /** 对话式修改偏好 */
   chatPreferences: (id: string, message: string) =>
     request<{ reply: string; preferences: Record<string, unknown> }>(

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Layout, Tabs, Button, Descriptions, Tag, Space, message, Spin, Collapse, Input, Slider, Switch } from 'antd';
+import { Layout, Tabs, Button, Descriptions, Tag, Space, message, Spin, Collapse, Input, Slider, Switch, Select } from 'antd';
 import { ArrowLeftOutlined, PlusOutlined, SettingOutlined, SendOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
 import type { Project, ProjectMode } from '../types';
@@ -166,9 +166,7 @@ export default function ProjectWorkspace() {
                         value={Math.round((prefs.dialogueDensity as number) * 100)}
                         onChange={async (v) => {
                           try {
-                            const r = await api.chatPreferences(id!, `对话密度设为${v}%`);
-                            setPrefs(r.preferences);
-                            setChatReply(r.reply);
+                            setPrefs(await api.updatePreferences(id!, { dialogueDensity: v / 100 }));
                           } catch { /* ignore */ }
                         }}
                       />
@@ -179,8 +177,7 @@ export default function ProjectWorkspace() {
                           checked={prefs.enableClimaxRotation as boolean}
                           onChange={async (v) => {
                             try {
-                              const r = await api.chatPreferences(id!, v ? '开启爽点轮换' : '关闭爽点轮换');
-                              setPrefs(r.preferences);
+                              setPrefs(await api.updatePreferences(id!, { enableClimaxRotation: v }));
                             } catch { /* ignore */ }
                           }}
                         />
@@ -192,8 +189,7 @@ export default function ProjectWorkspace() {
                           checked={prefs.enableCharacterVoice as boolean}
                           onChange={async (v) => {
                             try {
-                              const r = await api.chatPreferences(id!, v ? '开启角色声音' : '关闭角色声音');
-                              setPrefs(r.preferences);
+                              setPrefs(await api.updatePreferences(id!, { enableCharacterVoice: v }));
                             } catch { /* ignore */ }
                           }}
                         />
@@ -205,10 +201,27 @@ export default function ProjectWorkspace() {
                           checked={prefs.enableKnowledgeQuotes as boolean}
                           onChange={async (v) => {
                             try {
-                              const r = await api.chatPreferences(id!, v ? '开启引用素材' : '关闭引用素材');
-                              setPrefs(r.preferences);
+                              setPrefs(await api.updatePreferences(id!, { enableKnowledgeQuotes: v }));
                             } catch { /* ignore */ }
                           }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                        <span style={{ color: '#666' }}>检查点间隔</span>
+                        <Select
+                          size="small"
+                          style={{ width: 110 }}
+                          value={(prefs.checkpointSpan as number) ?? 1}
+                          onChange={async (v) => {
+                            try {
+                              setPrefs(await api.updatePreferences(id!, { checkpointSpan: v }));
+                            } catch { /* ignore */ }
+                          }}
+                          options={[
+                            { value: 1, label: '每章' },
+                            { value: 0, label: '仅手动' },
+                            { value: -1, label: '卷末' },
+                          ]}
                         />
                       </div>
                     </div>

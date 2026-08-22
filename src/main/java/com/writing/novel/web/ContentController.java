@@ -130,6 +130,12 @@ public class ContentController {
         return chapter;
     }
 
+    @PostMapping("/replan")
+    public Outline replan(@PathVariable String id) {
+        rejectIfWriting(id);
+        return orchestrator.replanRemaining(id);
+    }
+
     @GetMapping("/outline")
     public Outline outline(@PathVariable String id) {
         return repository.findOutlineByProject(id).orElse(null);

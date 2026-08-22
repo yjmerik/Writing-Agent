@@ -419,8 +419,13 @@ public class SqliteNovelRepository implements NovelRepository {
                 ps.setString(1, o.getProjectId()); ps.setString(2, o.getPremise());
                 ps.executeUpdate();
             }
+            java.util.Set<String> keptVolumeIds = new java.util.HashSet<>();
             for (Volume v : o.getVolumes()) {
                 saveVolume(conn, v);
+                keptVolumeIds.add(v.getId());
+            }
+            if (!keptVolumeIds.isEmpty()) {
+                pruneMissingVolumes(conn, o.getProjectId(), keptVolumeIds);
             }
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
@@ -434,8 +439,56 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setString(5, v.getSummary());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
+        java.util.Set<String> keptSynopsisIds = new java.util.HashSet<>();
         for (ChapterSynopsis s : v.getSynopses()) {
             saveSynopsis(conn, v.getId(), s);
+            keptSynopsisIds.add(s.getId());
+        }
+        try {
+            pruneMissingSynopses(conn, v.getId(), keptSynopsisIds);
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    private void pruneMissingSynopses(Connection conn, String volumeId, java.util.Set<String> keptIds) throws SQLException {
+        if (keptIds.isEmpty()) {
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM chapter_synopses WHERE volume_id=?")) {
+                ps.setString(1, volumeId);
+                ps.executeUpdate();
+            }
+            return;
+        }
+        String placeholders = String.join(",", java.util.Collections.nCopies(keptIds.size(), "?"));
+        try (PreparedStatement ps = conn.prepareStatement(
+                "DELETE FROM chapter_synopses WHERE volume_id=? AND id NOT IN (" + placeholders + ")")) {
+            ps.setString(1, volumeId);
+            int i = 2;
+            for (String id : keptIds) {
+                ps.setString(i++, id);
+            }
+            ps.executeUpdate();
+        }
+    }
+
+    private void pruneMissingVolumes(Connection conn, String projectId, java.util.Set<String> keptIds) throws SQLException {
+        String placeholders = String.join(",", java.util.Collections.nCopies(keptIds.size(), "?"));
+        try (PreparedStatement ps = conn.prepareStatement(
+                "DELETE FROM chapter_synopses WHERE volume_id IN (SELECT id FROM volumes WHERE project_id=? AND id NOT IN (" + placeholders + "))")) {
+            ps.setString(1, projectId);
+            int i = 2;
+            for (String id : keptIds) {
+                ps.setString(i++, id);
+            }
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement(
+                "DELETE FROM volumes WHERE project_id=? AND id NOT IN (" + placeholders + ")")) {
+            ps.setString(1, projectId);
+            int i = 2;
+            for (String id : keptIds) {
+                ps.setString(i++, id);
+            }
+            ps.executeUpdate();
         }
     }
 

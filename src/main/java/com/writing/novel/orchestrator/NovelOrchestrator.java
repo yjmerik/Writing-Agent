@@ -505,6 +505,13 @@ public class NovelOrchestrator {
         repository.saveProject(p);
     }
 
+    public Outline replanRemaining(String projectId) {
+        Project project = loadProject(projectId);
+        replanRemainingOutline(projectId, project.getCurrentChapterIndex());
+        return repository.findOutlineByProject(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("大纲不存在: " + projectId));
+    }
+
     public com.writing.novel.domain.Character expandCharacters(String projectId, String instruction) {
         var existing = repository.findCharactersByProject(projectId);
         String req = (instruction == null || instruction.isBlank())

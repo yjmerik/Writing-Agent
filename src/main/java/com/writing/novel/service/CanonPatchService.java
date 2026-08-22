@@ -9,8 +9,13 @@ import com.writing.novel.persistence.sqlite.StoryFactRepository;
 import com.writing.novel.spi.NovelRepository;
 import org.springframework.stereotype.Component;
 
+import com.writing.novel.domain.ChapterSynopsis;
+import com.writing.novel.domain.Volume;
+
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * p13-h1-01: 人机真典补丁——卡面写入 + 真典 SUPERSEDE + 记忆失效走同一入口。
@@ -94,8 +99,7 @@ public class CanonPatchService {
             existing.setPremise(incoming.getPremise());
         }
         if (incoming.getVolumes() != null && !incoming.getVolumes().isEmpty()) {
-            existing.getVolumes().clear();
-            incoming.getVolumes().forEach(existing::addVolume);
+            overwriteUnwrittenOnly(existing, incoming, currentChapter);
         }
         repository.saveOutline(existing);
         List<StoryFact> written = new ArrayList<>();
@@ -105,6 +109,54 @@ public class CanonPatchService {
         }
         bump(projectId);
         return new PatchResult(existing, written, true);
+    }
+
+    private void overwriteUnwrittenOnly(Outline existing, Outline incoming, int currentChapter) {
+        Map<Integer, ChapterSynopsis> incomingByChapter = new LinkedHashMap<>();
+        Map<Integer, Volume> incomingByVolume = new LinkedHashMap<>();
+        for (Volume volume : incoming.getVolumes()) {
+            incomingByVolume.put(volume.getVolumeIndex(), volume);
+            for (ChapterSynopsis synopsis : volume.getSynopses()) {
+                incomingByChapter.put(synopsis.getChapterIndex(), synopsis);
+            }
+        }
+        for (Volume volume : existing.getVolumes()) {
+            boolean hasWritten = volume.getSynopses().stream()
+                    .anyMatch(s -> s.getChapterIndex() <= currentChapter);
+            Volume patchVolume = incomingByVolume.get(volume.getVolumeIndex());
+            if (patchVolume != null && !hasWritten) {
+                if (patchVolume.getTitle() != null) volume.setTitle(patchVolume.getTitle());
+                if (patchVolume.getSummary() != null) volume.setSummary(patchVolume.getSummary());
+            }
+            for (ChapterSynopsis synopsis : volume.getSynopses()) {
+                if (synopsis.getChapterIndex() <= currentChapter) continue;
+                ChapterSynopsis patch = incomingByChapter.remove(synopsis.getChapterIndex());
+                if (patch == null) continue;
+                if (patch.getTitle() != null) synopsis.setTitle(patch.getTitle());
+                if (patch.getSynopsis() != null) synopsis.setSynopsis(patch.getSynopsis());
+                if (patch.getWritingNotes() != null) synopsis.setWritingNotes(patch.getWritingNotes());
+            }
+        }
+        for (Volume patchVolume : incoming.getVolumes()) {
+            Volume target = existing.getVolumes().stream()
+                    .filter(v -> v.getVolumeIndex() == patchVolume.getVolumeIndex())
+                    .findFirst().orElse(null);
+            for (ChapterSynopsis patch : patchVolume.getSynopses()) {
+                if (patch.getChapterIndex() <= currentChapter) continue;
+                if (!incomingByChapter.containsKey(patch.getChapterIndex())) continue;
+                incomingByChapter.remove(patch.getChapterIndex());
+                if (target == null) {
+                    target = new Volume(existing.getProjectId(), patchVolume.getVolumeIndex(),
+                            patchVolume.getTitle(), patchVolume.getSummary());
+                    existing.addVolume(target);
+                }
+                ChapterSynopsis created = new ChapterSynopsis(
+                        existing.getProjectId(), patch.getChapterIndex(),
+                        patch.getTitle(), patch.getSynopsis());
+                if (patch.getWritingNotes() != null) created.setWritingNotes(patch.getWritingNotes());
+                target.addSynopsis(created);
+            }
+        }
     }
 
     public PatchResult patchFact(String projectId, String factId, String assertion, Integer importance, int currentChapter) {

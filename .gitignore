@@ -31,5 +31,7 @@ logs/
 
 # Frontend build output (produced by `npm run build` in frontend/)
 src/main/resources/static/
-omo
+
+# Agent harness state (generated session/run artifacts)
+.omo/
 e2e-report.json

@@ -77,7 +77,8 @@ export const api = {
     if (started.taskId) {
       const deadline = Date.now() + 3600000;
       while (Date.now() < deadline) {
-        const task = await request<{ status: string; error?: string }>(`/projects/${id}/writing-tasks/${started.taskId}`);
+        const task = await request<{ status: string; errorMessage?: string; error?: string }>(`/projects/${id}/writing-tasks/${started.taskId}`);
+        if (task.status === 'FAILED') throw new Error(task.errorMessage || '构思任务失败');
         if (task.status && task.status !== 'RUNNING') break;
         await new Promise((r) => setTimeout(r, 1000));
       }

@@ -18,11 +18,14 @@ import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
 import com.writing.novel.spi.EmbeddingProvider;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -32,6 +35,11 @@ class EditPassageReturnsBeforeHarvestTest {
     @TempDir Path tempDir;
     private NovelOrchestrator orchestrator;
     private SqliteNovelRepository repo;
+    // 后台 harvest 阻塞至 @AfterEach 释放并等待完成，避免 @TempDir 清理与后台任务竞态
+    // （不能用 join：POST_PROCESS 线程池的空闲线程常驻不退出）
+    private final CountDownLatch harvestRelease = new CountDownLatch(1);
+    private final CountDownLatch harvestStarted = new CountDownLatch(1);
+    private final CountDownLatch harvestDone = new CountDownLatch(1);
 
     @BeforeEach
     void setUp() {
@@ -73,10 +81,21 @@ class EditPassageReturnsBeforeHarvestTest {
         orchestrator.setFactHarvester(new FactHarvesterAgent(gateway, facts, promptSvc) {
             @Override
             public HarvestResult harvest(String projectId, Chapter chapter) {
-                try { Thread.sleep(2000); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+                harvestStarted.countDown();
+                try { harvestRelease.await(5, TimeUnit.SECONDS); } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                harvestDone.countDown();
                 return new HarvestResult(0, 0, 0);
             }
         });
+    }
+
+    @AfterEach
+    void releaseHarvest() throws InterruptedException {
+        if (!harvestStarted.await(5, TimeUnit.SECONDS)) return;
+        harvestRelease.countDown();
+        harvestDone.await(5, TimeUnit.SECONDS);
     }
 
     @Test

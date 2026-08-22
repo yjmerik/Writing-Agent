@@ -48,7 +48,7 @@ mkdir -p "$E2E_DIR"
 
 mvn -q spring-boot:run \
   -Dspring-boot.run.jvmArguments="-Dnovel.events.file=$E2E_DIR/events.jsonl" \
-  -Dspring-boot.run.arguments="--server.port=$PORT --llm.replay.mode=$REPLAY_MODE --llm.replay.dir=$FIXTURE_DIR --persistence.sqlite.db-path=$E2E_DIR/novel.db --persistence.vector-store.index-path=$E2E_DIR/vectors.idx" \
+  -Dspring-boot.run.arguments="--server.port=$PORT --llm.replay.mode=$REPLAY_MODE --llm.replay.dir=$FIXTURE_DIR --persistence.embedding=stub --persistence.sqlite.db-path=$E2E_DIR/novel.db --persistence.vector-store.index-path=$E2E_DIR/vectors.idx" \
   > "$E2E_DIR/server.log" 2>&1 &
 SERVER_PID=$!
 trap 'kill $SERVER_PID 2>/dev/null || true; wait $SERVER_PID 2>/dev/null || true' EXIT
@@ -78,11 +78,38 @@ curl --noproxy '*' -sf -X PUT "$BASE/api/projects/$PROJECT_ID/preferences" \
   -d "{\"targetChapters\":$CHAPTERS,\"layeredOutline\":true}" > /dev/null 2>&1 || true
 
 echo "▶ 构思阶段（世界观/人物/大纲）..."
-curl --noproxy '*' -sf -X POST "$BASE/api/projects/$PROJECT_ID/run" > /dev/null
+CONCEIVE_JSON=$(curl --noproxy '*' -sf -X POST "$BASE/api/projects/$PROJECT_ID/run")
+CONCEIVE_TASK=$(echo "$CONCEIVE_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('taskId') or '')")
+if [ "$MODE" = "replay" ]; then
+  CONCEIVE_LIMIT=180
+else
+  CONCEIVE_LIMIT=1200
+fi
+if [ -n "$CONCEIVE_TASK" ]; then
+  CT_STATE=""
+  for i in $(seq 1 "$CONCEIVE_LIMIT"); do
+    CT_STATE=$(curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/writing-tasks/$CONCEIVE_TASK" | python3 -c "import json,sys; print(json.load(sys.stdin).get('status',''))")
+    case "$CT_STATE" in
+      COMPLETED) break ;;
+      FAILED|CANCELLED)
+        echo "❌ 构思任务终态: $CT_STATE"; exit 1 ;;
+    esac
+    if [ $(( i % 30 )) -eq 0 ]; then
+      echo "  构思仍在进行（${i}s）..."
+    fi
+    sleep 1
+  done
+  if [ "$CT_STATE" != "COMPLETED" ]; then
+    echo "❌ 构思超时（${CONCEIVE_LIMIT}s），终态=$CT_STATE"; exit 1
+  fi
+fi
 STATE=$(curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/status" | python3 -c "import json,sys; print(json.load(sys.stdin)['state'])")
 if [ "$STATE" = "PLANNING" ]; then
   curl --noproxy '*' -sf -X POST "$BASE/api/projects/$PROJECT_ID/run" > /dev/null
   STATE=$(curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/status" | python3 -c "import json,sys; print(json.load(sys.stdin)['state'])")
+fi
+if [ "$STATE" = "CONCEIVING" ]; then
+  echo "❌ 构思后仍停留在 CONCEIVING"; exit 1
 fi
 echo "✅ 构思完成，状态: $STATE"
 
@@ -92,11 +119,11 @@ echo "$WRITE_RESULT"
 TASK_ID=$(echo "$WRITE_RESULT" | python3 -c "import json,sys; print(json.load(sys.stdin)['taskId'])")
 
 # 异步写作——轮询任务直到终态
-# replay（3 章）固定 10 分钟上限；record/live 按章节数缩放
+# replay（3 章）固定 10 分钟上限；record/live 为每章预留 10 分钟，覆盖完整质检流水线。
 if [ "$MODE" = "replay" ]; then
   POLL_LIMIT=600
 else
-  POLL_LIMIT=$(( CHAPTERS * 240 ))
+  POLL_LIMIT=$(( CHAPTERS * 600 ))
   [ "$POLL_LIMIT" -lt 600 ] && POLL_LIMIT=600
 fi
 TASK_JSON=""

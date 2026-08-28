@@ -39,6 +39,9 @@ public class OpenAiCompatibleClient implements LlmClient {
                 // 超时必须给足：单次请求上限 30 分钟
                 .callTimeout(Duration.ofMinutes(30))
                 .retryOnConnectionFailure(true)      // 网络抖动自动重试
+                // e2e 实证：复用 keep-alive 连接发送 >10 分钟的长响应请求会被对端重置
+                // （StreamResetException: CANCEL），而新连接稳定成功——LLM 长生成必须每请求新连接
+                .connectionPool(new okhttp3.ConnectionPool(0, 1, java.util.concurrent.TimeUnit.MILLISECONDS))
                 .build();
     }
 

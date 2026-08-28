@@ -293,6 +293,13 @@ public class ContextAssembler {
     }
 
     private String buildRecentSummary(String projectId, int chapterIndex) {
+        // p19-03: 全书结构化快照——主线进度/阵营/人物状态/时间线的状态板，注入最顶
+        StringBuilder snapshotSb = new StringBuilder();
+        repository.findProject(projectId).map(p -> p.getBookSnapshot()).ifPresent(snap -> {
+            if (snap != null && !snap.isBlank()) {
+                snapshotSb.append("【全书快照】").append(snap).append("\n\n");
+            }
+        });
         // C2: 全书摘要——注入最顶部，不受 VOLUME_DETAIL_LIMIT 裁剪（修复记忆地平线坍塌）
         String bookSummary = repository.findProject(projectId)
                 .map(p -> p.getBookSummary()).orElse(null);
@@ -316,7 +323,8 @@ public class ContextAssembler {
                 fineGrained.add(s); // 细粒度仅最近 window
             }
         }
-        if (fineGrained.isEmpty() && volumeLevel.isEmpty() && (bookSummary == null || bookSummary.isBlank())) return "";
+        if (fineGrained.isEmpty() && volumeLevel.isEmpty() && (bookSummary == null || bookSummary.isBlank())
+                && snapshotSb.length() == 0) return "";
 
         // p12-K4: 卷摘要按章节倒序排列，最近 3 卷详细，更早的截断
         volumeLevel.sort((a, b) -> Integer.compare(b.getFromChapter(), a.getFromChapter()));
@@ -366,7 +374,7 @@ public class ContextAssembler {
                 sb.append("\n");
             }
         }
-        return sb.toString().trim();
+        return (snapshotSb.length() > 0 ? snapshotSb.toString() : "") + sb.toString().trim();
     }
 
     private String buildRecentText(String projectId, int chapterIndex) {

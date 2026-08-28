@@ -84,6 +84,11 @@ public class WritingTaskExecutor {
      * mc-p0-05: 单项目单活动作业——等待旧任务退出后再启动新任务。
      */
     public synchronized WritingTask startWriting(String projectId, int maxChapters) {
+        return startWriting(projectId, maxChapters, null);
+    }
+
+    /** p18-03: 带作者指令的连续写作启动——指令随任务传递，逐章沿用 */
+    public synchronized WritingTask startWriting(String projectId, int maxChapters, String instruction) {
         // mc-p0-05: 如果该项目有正在运行的任务，设置取消标志并等待其退出
         String activeTaskId = activeTasks.get(projectId);
         if (activeTaskId != null) {
@@ -104,6 +109,7 @@ public class WritingTaskExecutor {
         }
 
         WritingTask task = new WritingTask(projectId, maxChapters, WritingTask.Type.WRITE_ALL);
+        task.setInstruction(instruction);
         repository.saveWritingTask(task);
         cancelFlags.put(task.getId(), false);
         activeTasks.put(projectId, task.getId());
@@ -212,7 +218,7 @@ public class WritingTaskExecutor {
                     ? () -> costBudgetMonitor.isOverBudget(projectId, budget)
                     : () -> false;
             int written = orchestrator.runWritingLoop(projectId, maxChapters,
-                    () -> isCancelled(taskId) || costOver.getAsBoolean());
+                    () -> isCancelled(taskId) || costOver.getAsBoolean(), task.getInstruction());
 
             // mc-p0-03: 诚实终态——区分写满、熔断、取消、预算超限
             boolean overBudget = costOver.getAsBoolean();

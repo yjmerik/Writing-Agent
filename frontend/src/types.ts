@@ -149,6 +149,16 @@ export interface CreateProjectRequest {
 export type CheckpointType = 'AFTER_INITIAL_SETUP' | 'AFTER_VOLUME_OUTLINE' | 'AFTER_CHAPTER' | 'ON_CONTINUITY_FIX';
 export type CheckpointStatus = 'PENDING' | 'APPROVED' | 'MODIFIED' | 'REJECTED';
 
+/** p18-02: 章后审核 checkpoint 的质量 payload（JSON 字符串，AFTER_CHAPTER 类型携带） */
+export interface CheckpointPayload {
+  chapterIndex?: number;
+  title?: string;
+  wordCount?: number;
+  preview?: string;
+  score?: number;
+  unresolvedHigh?: number;
+}
+
 export interface Checkpoint {
   id: string;
   projectId: string;
@@ -156,4 +166,5 @@ export interface Checkpoint {
   description: string;
   status: CheckpointStatus;
   createdAt: string;
+  payload?: string | null;
 }

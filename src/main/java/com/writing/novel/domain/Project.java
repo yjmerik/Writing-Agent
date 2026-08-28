@@ -53,4 +53,9 @@ public class Project {
     public void setCurrentChapterIndex(int i) { this.currentChapterIndex = i; touch(); }
     public String getBookSummary() { return bookSummary; }
     public void setBookSummary(String s) { this.bookSummary = s; touch(); }
+
+    /** p19-03: 全书结构化快照（JSON：主线进度/活跃阵营/关键人物状态/时间线锚点/已跨里程碑） */
+    private String bookSnapshot;
+    public String getBookSnapshot() { return bookSnapshot; }
+    public void setBookSnapshot(String s) { this.bookSnapshot = s; touch(); }
 }

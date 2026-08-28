@@ -206,13 +206,16 @@ public class ContentController {
 
     /** p15-05: 单章写作——登记 WRITE_CHAPTER 任务，正文落库后返回 Chapter；失败置 FAILED 并重抛 */
     @PostMapping("/write-chapter")
-    public Chapter writeChapter(@PathVariable String id) {
+    public Chapter writeChapter(@PathVariable String id,
+                                 @RequestBody(required = false) java.util.Map<String, String> body) {
+        // p18-03: 写前指令——作者对下一章的定向要求，透传本章 writingNotes
+        String instruction = body != null ? body.get("instruction") : null;
         if (writingTaskExecutor == null) {
-            return orchestrator.runWritingOneChapter(id);
+            return orchestrator.runWritingOneChapter(id, instruction);
         }
         WritingTask task = writingTaskExecutor.startWriteChapter(id);
         try {
-            Chapter chapter = orchestrator.runWritingOneChapter(id);
+            Chapter chapter = orchestrator.runWritingOneChapter(id, instruction);
             writingTaskExecutor.finishWriteChapter(id, task, WritingTask.Status.COMPLETED, null);
             return chapter;
         } catch (Exception e) {

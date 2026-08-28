@@ -46,6 +46,8 @@ import java.util.List;
 
         for (Character c : characters) {
             if (c.getRole() != null && c.getRole().contains("主角")) continue;
+            // p19-01: 死人不调度出场
+            if (c.isDeceased()) continue;
 
             Integer lastSeen = c.getLastSeenChapter();
             int gap = lastSeen != null ? currentChapter - lastSeen : currentChapter;

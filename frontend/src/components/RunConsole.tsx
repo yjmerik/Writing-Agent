@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { Steps, Button, Space, message, Alert, Card, Popconfirm } from 'antd';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { Steps, Button, Space, message, Alert, Card, Popconfirm, Input, Progress } from 'antd';
 import { PlayCircleOutlined, FileAddOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
 import type { ProjectStatus, NovelState, Chapter } from '../types';
@@ -21,6 +21,16 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const busy = running || writing || batchWriting;
   const [lastResult, setLastResult] = useState<string | null>(null);
+  // p18-03: 写前指令（作者对下一章/本次批写的定向要求）
+  const [instruction, setInstruction] = useState('');
+  // p18-04: SSE 实时逐章进度
+  const [liveProgress, setLiveProgress] = useState<{ chapter: number; words: number; failed?: string } | null>(null);
+  const [liveLog, setLiveLog] = useState<string[]>([]);
+  const unsubRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    return () => { unsubRef.current?.(); };
+  }, []);
 
   const handleRun = useCallback(async () => {
     setRunning(true);
@@ -40,13 +50,13 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
     } finally {
       setRunning(false);
     }
-  }, [projectId, onChanged]);
+  }, [projectId, onChanged, instruction]);
 
   const handleWriteChapter = useCallback(async () => {
     setWriting(true);
     setLastResult(null);
     try {
-      const chapter: Chapter = await api.writeChapter(projectId);
+      const chapter: Chapter = await api.writeChapter(projectId, instruction.trim() || undefined);
       if (chapter) {
         message.success(`第${chapter.chapterIndex}章「${chapter.title}」已完成（${chapter.wordCount}字）`);
         setLastResult(`新章节：第${chapter.chapterIndex}章「${chapter.title}」（${chapter.wordCount}字）\n💡 切换到「章节阅读」Tab 查看正文`);
@@ -65,8 +75,22 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
   const handleWriteAll = useCallback(async () => {
     setBatchWriting(true);
     setLastResult(null);
+    setLiveProgress(null);
+    setLiveLog([]);
+    // p18-04: SSE 实时进度（不支持时静默降级到轮询）
+    unsubRef.current?.();
+    unsubRef.current = api.subscribeEvents(projectId, (name, data) => {
+      if (name === 'CHAPTER_WRITTEN') {
+        setLiveProgress({ chapter: data.chapterIndex ?? data.chapter ?? 0, words: data.wordCount ?? 0 });
+        setLiveLog((prev) => [...prev.slice(-6), `✅ 第${data.chapterIndex ?? '?'}章完成（${data.wordCount ?? '?'} 字）`]);
+      } else if (name === 'CHAPTER_FAILED') {
+        setLiveLog((prev) => [...prev.slice(-6), `⚠️ 第${data.chapterIndex ?? '?'}章失败：${(data.errorClass || '') + ' ' + (data.message || '').slice(0, 60)}`]);
+      } else if (name === 'QUALITY_CIRCUIT_BREAKER') {
+        setLiveLog((prev) => [...prev.slice(-6), `🛑 质量熔断：连续 ${data.consecutiveHighIssues ?? '?'} 章 HIGH`]);
+      }
+    });
     try {
-      const result = await api.writeAll(projectId, 50, setActiveTaskId);
+      const result = await api.writeAll(projectId, 50, setActiveTaskId, instruction.trim() || undefined);
       const words = result.totalWords;
       message.success(`连续写作完成！共写 ${result.chaptersWritten} 章，当前第 ${result.currentChapter} 章 ${words} 字`);
       setLastResult(
@@ -83,8 +107,10 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
     } finally {
       setActiveTaskId(null);
       setBatchWriting(false);
+      unsubRef.current?.();
+      unsubRef.current = null;
     }
-  }, [projectId, onChanged]);
+  }, [projectId, onChanged, instruction]);
 
   return (
     <Card>
@@ -114,7 +140,30 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
         style={{ marginBottom: 24 }}
       />
 
-      <Space size="large" wrap>
+      <div style={{ marginBottom: 12 }}>
+            <Input.TextArea
+              rows={1}
+              value={instruction}
+              onChange={(e) => setInstruction(e.target.value)}
+              placeholder="写前指令（可选）：对本章/本次连续写作的定向要求，如『本章重点写主角与师父的诀别』"
+              maxLength={200}
+              style={{ marginBottom: 8 }}
+            />
+            {batchWriting && liveProgress && (
+              <div>
+                <Progress
+                  percent={Math.min(99, Math.round((liveProgress.chapter % 50) / 50 * 100))}
+                  size="small"
+                  status="active"
+                  format={() => `已写到第 ${liveProgress.chapter} 章（${liveProgress.words?.toLocaleString?.() ?? liveProgress.words} 字）`}
+                />
+                {liveLog.map((line, i) => (
+                  <div key={i} style={{ fontSize: 12, color: '#666' }}>{line}</div>
+                ))}
+              </div>
+            )}
+          </div>
+          <Space size="large" wrap>
         <Button
           type="primary"
           size="large"

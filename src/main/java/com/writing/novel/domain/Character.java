@@ -5,6 +5,10 @@ import java.util.UUID;
 
 /** 人物卡：一个角色的核心设定 */
 public class Character {
+
+    /** p19-01: 角色存续状态——死亡/退场后不再被调度出场，注入链标注防止"死人复活" */
+    public enum Status { ACTIVE, DECEASED, DEPARTED }
+
     private String id;
     private String projectId;
     private String name;
@@ -28,6 +32,10 @@ public class Character {
     private String arcStage;           // 弧光当前阶段（如"蛰伏→觉醒→考验→蜕变→完成"）
     private Integer lastSeenChapter;   // 最近一次出场章节号
 
+    // p19-01: 存续状态（null 视为 ACTIVE，兼容存量数据）
+    private Status status;
+    private Integer deathChapter;
+
     private int version;
     private Instant updatedAt;
 
@@ -39,6 +47,12 @@ public class Character {
         this.version = 1;
         this.updatedAt = Instant.now();
     }
+
+    public Status getStatus() { return status == null ? Status.ACTIVE : status; }
+    public void setStatus(Status status) { this.status = status; }
+    public Integer getDeathChapter() { return deathChapter; }
+    public void setDeathChapter(Integer deathChapter) { this.deathChapter = deathChapter; }
+    public boolean isDeceased() { return status == Status.DECEASED; }
 
     public String getId() { return id; }
     public String getProjectId() { return projectId; }

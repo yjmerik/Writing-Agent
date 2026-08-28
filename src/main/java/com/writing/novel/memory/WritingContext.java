@@ -60,7 +60,15 @@ public class WritingContext {
         if (!relevantCharacters.isEmpty()) {
             sb.append("【出场人物（必须严格遵守以下设定，不得改名或改变性格）】\n");
             for (Character c : relevantCharacters) {
-                sb.append("■ ").append(c.getName()).append("（").append(c.getRole()).append("）\n");
+                sb.append("■ ").append(c.getName()).append("（").append(c.getRole()).append("）");
+                // p19-01: 存续状态标注——已故/已退场角色不得以活人身份登场（回忆/遗物除外）
+                if (c.isDeceased()) {
+                    sb.append("【已故·第").append(c.getDeathChapter() != null ? c.getDeathChapter() : "?")
+                      .append("章殁——除回忆/闪回/遗物外不得出场】");
+                } else if (c.getStatus() == Character.Status.DEPARTED) {
+                    sb.append("【已退场——无铺垫不得突然回归】");
+                }
+                sb.append("\n");
                 if (c.getPersonality() != null) sb.append("  性格：").append(c.getPersonality()).append("\n");
                 if (c.getAbility() != null) sb.append("  能力：").append(c.getAbility()).append("\n");
                 if (c.getMotivation() != null) sb.append("  动机：").append(c.getMotivation()).append("\n");

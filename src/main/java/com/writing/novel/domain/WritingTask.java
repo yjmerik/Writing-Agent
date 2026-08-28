@@ -9,6 +9,12 @@ import java.util.UUID;
  * p15-05: 任务类型（CONCEIVE 构思 / WRITE_CHAPTER 单章 / WRITE_ALL 全卷）
  */
 public class WritingTask {
+
+    /** p18-03: 作者写前指令（进程内传递，不持久化）——write-all 逐章沿用 */
+    private transient String instruction;
+
+    public String getInstruction() { return instruction; }
+    public void setInstruction(String instruction) { this.instruction = instruction; }
     public enum Status { RUNNING, PAUSED, COMPLETED, FAILED, CANCELLED }
     public enum Type { CONCEIVE, WRITE_CHAPTER, WRITE_ALL }
 

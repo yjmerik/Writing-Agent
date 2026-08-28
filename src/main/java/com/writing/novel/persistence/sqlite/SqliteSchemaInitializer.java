@@ -27,6 +27,7 @@ public class SqliteSchemaInitializer {
             "speaking_style TEXT, knowledge_domains TEXT, " +
             "strategy_level INTEGER, countermeasures TEXT, independent_will TEXT, blind_spot TEXT, " +
             "arc_stage TEXT, last_seen_chapter INTEGER, " +
+            "status TEXT, death_chapter INTEGER, " +
             "version INTEGER, updated_at TEXT)",
 
         "CREATE TABLE IF NOT EXISTS outlines (" +
@@ -68,7 +69,7 @@ public class SqliteSchemaInitializer {
 
         "CREATE TABLE IF NOT EXISTS checkpoints (" +
             "id TEXT PRIMARY KEY, project_id TEXT, type TEXT, " +
-            "description TEXT, status TEXT, created_at TEXT)",
+            "description TEXT, status TEXT, created_at TEXT, payload TEXT)",
 
         // 图数据库：实体表
         "CREATE TABLE IF NOT EXISTS entities (" +
@@ -223,7 +224,10 @@ public class SqliteSchemaInitializer {
             // evaluation_records: 按 project_id 查
             "CREATE INDEX IF NOT EXISTS idx_eval_project ON evaluation_records(project_id)",
             // writing_preferences: 按 project_id 查（主键已有，但显式声明）
-            "CREATE INDEX IF NOT EXISTS idx_prefs_project ON writing_preferences(project_id)"
+            "CREATE INDEX IF NOT EXISTS idx_prefs_project ON writing_preferences(project_id)",
+            // p19-02: story_facts 按 project_id + status 过滤——findActive/findActiveBySubject 每章高频调用，
+            // 千行级事实无索引时全表扫（400 章 × 5+ 次/章劣化）
+            "CREATE INDEX IF NOT EXISTS idx_story_facts_project_status ON story_facts(project_id, status)"
         };
         for (String idx : indexes) {
             try {
@@ -235,6 +239,8 @@ public class SqliteSchemaInitializer {
     }
 
     private void applyMigrations(Statement st) {
+        // p18-02: checkpoints 表新增 payload 列（审批质量信息）
+        safeAddColumn(st, "ALTER TABLE checkpoints ADD COLUMN payload TEXT");
         // p10-c1: foreshadowings 表新增列
         safeAddColumn(st, "ALTER TABLE foreshadowings ADD COLUMN priority TEXT DEFAULT 'MEDIUM'");
         safeAddColumn(st, "ALTER TABLE foreshadowings ADD COLUMN expected_resolve_chapter INTEGER");
@@ -264,6 +270,11 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE chapter_synopses ADD COLUMN climax TEXT");
         // C2: 全书摘要——卷末压缩为≤3句的"全书一句话摘要"，修复记忆地平线坍塌
         safeAddColumn(st, "ALTER TABLE projects ADD COLUMN book_summary TEXT");
+        // p19-03: 全书结构化快照
+        safeAddColumn(st, "ALTER TABLE projects ADD COLUMN book_snapshot TEXT");
+        // p19-01: 角色存续状态
+        safeAddColumn(st, "ALTER TABLE characters ADD COLUMN status TEXT");
+        safeAddColumn(st, "ALTER TABLE characters ADD COLUMN death_chapter INTEGER");
         // p10-w1-04: 成本预算熔断
         safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN cost_budget_yuan REAL DEFAULT 0");
         // p11-q2-04/05: 重写预算 + 质量熔断阈值（可配置）

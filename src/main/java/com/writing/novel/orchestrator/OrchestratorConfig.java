@@ -94,7 +94,11 @@ public class OrchestratorConfig {
     public com.writing.novel.agent.FactHarvesterAgent factHarvesterAgent(
             com.writing.novel.llm.LlmGateway llmGateway,
             com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository,
-            com.writing.novel.llm.prompt.PromptTemplateService promptTemplateService) {
-        return new com.writing.novel.agent.FactHarvesterAgent(llmGateway, storyFactRepository, promptTemplateService);
+            com.writing.novel.llm.prompt.PromptTemplateService promptTemplateService,
+            EntityGraphService entityGraphService) {
+        com.writing.novel.agent.FactHarvesterAgent factHarvester =
+                new com.writing.novel.agent.FactHarvesterAgent(llmGateway, storyFactRepository, promptTemplateService);
+        factHarvester.setEntityGraphService(entityGraphService); // p19-02: subject 别名规范化
+        return factHarvester;
     }
 }

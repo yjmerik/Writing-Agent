@@ -505,6 +505,49 @@ public class NovelOrchestrator {
         repository.saveProject(p);
     }
 
+
+    /** p18-02: AFTER_CHAPTER checkpoint 的质量 payload（JSON）——审批面板直接展示，不再只有一句话 */
+    String buildChapterCheckpointPayload(String projectId, Chapter chapter) {
+        try {
+            String content = chapter.getContent() != null ? chapter.getContent() : "";
+            String preview = content.length() > 200 ? content.substring(0, 200) : content;
+            var m = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+            m.put("chapterIndex", chapter.getChapterIndex());
+            m.put("title", chapter.getTitle() != null ? chapter.getTitle() : "");
+            m.put("wordCount", chapter.getWordCount() > 0 ? chapter.getWordCount() : content.length());
+            m.put("preview", preview);
+            return m.toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** p18-02: 读者评审完成后富集 pending checkpoint 的 payload（score/unresolvedHigh/summary） */
+    void enrichChapterCheckpointPayload(String projectId, int chapterIndex) {
+        try {
+            var pending = repository.findPendingCheckpoints(projectId).stream()
+                    .filter(c -> c.getStatus() == Checkpoint.Status.PENDING)
+                    .filter(c -> c.getType() == Checkpoint.Type.AFTER_CHAPTER)
+                    .filter(c -> c.getDescription() != null && c.getDescription().startsWith("第" + chapterIndex + "章"))
+                    .findFirst();
+            if (pending.isEmpty()) return;
+            Checkpoint cp = pending.get();
+            var root = new com.fasterxml.jackson.databind.ObjectMapper().readTree(
+                    cp.getPayload() != null ? cp.getPayload() : "{}");
+            var node = (com.fasterxml.jackson.databind.node.ObjectNode) root;
+            repository.findChapterReview(projectId, chapterIndex).ifPresent(r ->
+                    node.put("score", r.getOverallScore()));
+            long unresolvedHigh = repository.findUnresolvedIssues(projectId).stream()
+                    .filter(i -> i.getDetectedAtChapter() == chapterIndex)
+                    .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH).count();
+            node.put("unresolvedHigh", unresolvedHigh);
+            cp.setPayload(node.toString());
+            repository.saveCheckpoint(cp);
+        } catch (Exception e) {
+            log.debug("checkpoint payload 富集失败(章{}): {}", chapterIndex, e.getMessage());
+        }
+    }
+
     private boolean shouldPauseAfterChapter(String projectId, int chapterIndex) {
         int span = repository.findWritingPreferences(projectId)
                 .map(com.writing.novel.domain.WritingPreferences::getCheckpointSpan)
@@ -638,15 +681,31 @@ public class NovelOrchestrator {
 
     /** 写一章 */
     public Chapter runWritingOneChapter(String projectId) {
+        return runWritingOneChapter(projectId, null);
+    }
+
+    /** p18-03: 带作者指令的单章写作——指令前置于本章 writingNotes（【作者指令】段） */
+    public Chapter runWritingOneChapter(String projectId, String instruction) {
         EventContext.setProjectId(projectId);
         try {
-            return doWriteOneChapter(projectId);
+            return doWriteOneChapter(projectId, instruction);
         } finally {
             EventContext.clear();
         }
     }
 
+    /** p18-03: 作者指令注入 writingNotes（空指令原样返回）；静态便于单测 */
+    public static String prependAuthorInstruction(String notes, String instruction) {
+        if (instruction == null || instruction.isBlank()) return notes;
+        String base = notes != null ? notes : "";
+        return "【作者指令】" + instruction.trim() + (base.isEmpty() ? "" : "\n" + base);
+    }
+
     private Chapter doWriteOneChapter(String projectId) {
+        return doWriteOneChapter(projectId, null);
+    }
+
+    private Chapter doWriteOneChapter(String projectId, String instruction) {
         Project p = loadProject(projectId);
         Outline outline = repository.findOutlineByProject(projectId).orElseThrow(
                 () -> new IllegalStateException("无大纲，无法写作"));
@@ -713,7 +772,8 @@ public class NovelOrchestrator {
         }
 
         // p10-a2: 角色弧光调度——注入配角出场建议
-        String enhancedNotes = synopsis.getWritingNotes();
+        // p18-03: 作者写前指令优先注入（【作者指令】段），再叠加弧光/桥段等自动 notes
+        String enhancedNotes = prependAuthorInstruction(synopsis.getWritingNotes(), instruction);
         if (arcScheduler != null) {
             String arcSuggestion = arcScheduler.scheduleAppearance(projectId, chapterIndex);
             if (!arcSuggestion.isBlank()) {
@@ -758,9 +818,11 @@ public class NovelOrchestrator {
         if (p.getMode() == ProjectMode.INTERACTIVE && shouldPauseAfterChapter(projectId, chapterIndex)) {
             p.setState(NovelState.PAUSED_AT_CHECKPOINT);
             repository.saveProject(p);
-            repository.saveCheckpoint(new Checkpoint(projectId,
+            Checkpoint chapterCp = new Checkpoint(projectId,
                     Checkpoint.Type.AFTER_CHAPTER,
-                    "第" + chapterIndex + "章「" + chapter.getTitle() + "」已完成，待审核"));
+                    "第" + chapterIndex + "章「" + chapter.getTitle() + "」已完成，待审核");
+            chapterCp.setPayload(buildChapterCheckpointPayload(projectId, chapter));
+            repository.saveCheckpoint(chapterCp);
         }
 
         // 写完后做连续性检查（发现问题记录到 DB，不中断写作）
@@ -838,6 +900,7 @@ public class NovelOrchestrator {
                 // p11-I1: 持久化章节评价报告
                 try {
                     repository.saveChapterReview(ChapterReview.from(projectId, review));
+            enrichChapterCheckpointPayload(projectId, review.getChapterIndex());
                 } catch (Exception pe) {
                     log.warn("章节评价持久化失败(章{}): {}", chapterIndex, pe.getMessage());
                 }
@@ -1025,6 +1088,15 @@ public class NovelOrchestrator {
         updateMasterOutlineWithWrittenDigest(projectId);
         // C2: 全书摘要——用"上一版全书摘要 + 本卷摘要"重新压缩为 ≤3 句
         updateBookSummary(projectId, fromChapter, toChapter);
+        // p19-03: 全书结构化快照——主线进度/阵营/人物状态/时间线的长程状态板
+        try {
+            String volumeSummary = repository.findSummariesByProject(projectId).stream()
+                    .filter(s -> s.getToChapter() == toChapter && s.getFromChapter() == fromChapter)
+                    .map(s -> s.getContent()).findFirst().orElse("");
+            updateBookSnapshot(projectId, toChapter, volumeSummary);
+        } catch (Exception e) {
+            log.debug("全书快照更新调度失败: {}", e.getMessage());
+        }
         // p3-04: 卷末触发质量评价（反馈闭环）
         try {
             var report = qualityEvaluationAgent.evaluate(projectId);
@@ -1396,6 +1468,7 @@ public class NovelOrchestrator {
                 readerOverall = review.getScore();
                 suggestion = review.getImprovementSuggestion();
                 repository.saveChapterReview(ChapterReview.from(projectId, review));
+            enrichChapterCheckpointPayload(projectId, review.getChapterIndex());
             } catch (Exception e) {
                 log.warn("仲裁前读者检验失败(章{}): {}", chapterIndex, e.getMessage());
             }
@@ -1690,6 +1763,11 @@ public class NovelOrchestrator {
      * @return 本次新写的章节数
      */
     public int runWritingLoop(String projectId, int maxChapters, java.util.function.BooleanSupplier cancelChecker) {
+        return runWritingLoop(projectId, maxChapters, cancelChecker, null);
+    }
+
+    /** p18-03: 带作者指令的连续写作——指令逐章沿用（用户对本次批写的定向要求） */
+    public int runWritingLoop(String projectId, int maxChapters, java.util.function.BooleanSupplier cancelChecker, String instruction) {
         // p10-w3-06: 从持久化恢复多样性追踪状态（重启后不丢失）
         try { diversityTracker.restore(projectId, repository); } catch (Exception ignored) {}
 
@@ -1737,7 +1815,7 @@ public class NovelOrchestrator {
 
             // 异常容错：单章失败不崩溃整个 loop
             try {
-                Chapter ch = runWritingOneChapter(projectId);
+                Chapter ch = runWritingOneChapter(projectId, instruction);
                 if (ch == null) break;
                 written++;
                 consecutiveFailures = 0; // 成功则重置失败计数
@@ -2008,6 +2086,50 @@ public class NovelOrchestrator {
      * C2: 更新全书摘要——卷末把"上一版全书摘要 + 本卷摘要"压缩为≤3句全书梗概，
      * 存入 project.book_summary，由 ContextAssembler 注入上下文最顶部（修复记忆地平线坍塌）。
      */
+    /**
+     * p19-03: 全书结构化快照——卷末用上一版快照+本卷摘要+关键真典增量更新。
+     * 失败/非 JSON 输出保留旧版，不阻塞写作；包级可见供测试。
+     */
+    void updateBookSnapshot(String projectId, int toChapter, String volumeSummary) {
+        try {
+            Project p = loadProject(projectId);
+            String previous = p.getBookSnapshot() != null ? p.getBookSnapshot() : "（暂无，首版）";
+            String keyFacts = "";
+            if (storyFactRepository != null) {
+                keyFacts = storyFactRepository.findActive(projectId).stream()
+                        .filter(f -> f.getImportance() >= 4)
+                        .sorted(java.util.Comparator.comparingInt(
+                                f -> -f.getImportance()))
+                        .limit(15)
+                        .map(f -> "- " + f.getSubject() + "：" + f.getAssertion())
+                        .collect(java.util.stream.Collectors.joining("\n"));
+                if (keyFacts.isEmpty()) keyFacts = "（无）";
+            }
+            var mm = memoryManager;
+            if (mm == null) return;
+            var temp = mm.summarize(projectId, 1, toChapter,
+                    previous + "\n\n" + (volumeSummary != null ? volumeSummary : "") + "\n\n" + keyFacts);
+            String content = temp != null ? temp.getContent() : null;
+            if (content == null || content.isBlank()) return;
+            // 校验 JSON 含必需字段，坏输出保留旧版
+            int start = content.indexOf('{');
+            int end = content.lastIndexOf('}');
+            if (start < 0 || end <= start) return;
+            String json = content.substring(start, end + 1);
+            var node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(json);
+            if (node.path("mainlineProgress").isMissingNode()) return;
+            repository.deleteSummary(temp.getId());
+            p.setBookSnapshot(json);
+            repository.saveProject(p);
+            log.info("全书快照已更新(ch{}): {}", toChapter,
+                    node.path("mainlineProgress").asText().length() > 40
+                            ? node.path("mainlineProgress").asText().substring(0, 40) + "..."
+                            : node.path("mainlineProgress").asText());
+        } catch (Exception e) {
+            log.warn("全书快照更新失败(保留旧版): {}", e.getMessage());
+        }
+    }
+
     private void updateBookSummary(String projectId, int fromChapter, int toChapter) {
         try {
             var project = repository.findProject(projectId).orElse(null);
@@ -2674,12 +2796,25 @@ public class NovelOrchestrator {
         return types;
     }
 
+    /** p17-02: 当前项目题材（反馈词题材化用） */
+    private com.writing.novel.domain.GenreProfile currentGenre() {
+        try {
+            String pid = EventContext.projectId();
+            if (pid == null) return null;
+            return repository.findProject(pid).map(p -> p.getGenre()).orElse(null);
+        } catch (Exception e) { return null; }
+    }
+
     /** 从评分报告中提取低分维度的改进方向 */
     private String buildImprovementNotes(com.writing.novel.agent.QualityEvaluationAgent.EvaluationReport report) {
         if (report == null) return "";
         StringBuilder sb = new StringBuilder();
         if (report.consistency < 7) sb.append("一致性需改进；");
-        if (report.plot < 7) sb.append("情节爽点密度需提升；");
+        // p17-02: 慢节奏题材按张力而非爽点给反馈，避免评审闭环把严肃题材推向爽文
+        if (report.plot < 7) {
+            boolean fast = java.util.Optional.ofNullable(currentGenre()).map(g -> g.isFastPaced()).orElse(true);
+            sb.append(fast ? "情节爽点密度需提升；" : "情节冲突张力与推进感需加强；");
+        }
         if (report.characters < 7) sb.append("人物塑造需深化；");
         if (report.style < 7) sb.append("文风需统一；");
         if (report.worldbuilding < 7) sb.append("世界观需更自洽；");

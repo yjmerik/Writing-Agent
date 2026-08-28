@@ -171,12 +171,34 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
     <div>
       <Spin spinning={loading}>
         {/* 状态栏 */}
-        {isPaused && hasPendingCheckpoint && checkpoints.map(cp => (
+        {isPaused && hasPendingCheckpoint && checkpoints.map(cp => {
+          let payload: import('../types').CheckpointPayload | null = null;
+          try { payload = cp.payload ? JSON.parse(cp.payload) : null; } catch { payload = null; }
+          return (
           <Alert
             key={cp.id}
             type="warning"
             message={`⏸ 待审核：${cp.description}`}
             description={
+              <div>
+              {payload && (
+                <div style={{ marginBottom: 8, fontSize: 13 }}>
+                  {payload.score != null && (
+                    <span style={{ marginRight: 12 }}>
+                      读者评分：<b style={{ color: payload.score >= 8 ? '#52c41a' : payload.score >= 7 ? '#faad14' : '#ff4d4f' }}>{payload.score}/10</b>
+                    </span>
+                  )}
+                  {payload.wordCount != null && <span style={{ marginRight: 12 }}>字数：{payload.wordCount.toLocaleString?.() ?? payload.wordCount}</span>}
+                  {payload.unresolvedHigh != null && payload.unresolvedHigh > 0 && (
+                    <span style={{ marginRight: 12, color: '#ff4d4f' }}>未解决 HIGH 问题：{payload.unresolvedHigh}</span>
+                  )}
+                  {payload.preview && (
+                    <div style={{ color: '#888', marginTop: 4, maxHeight: 60, overflow: 'hidden' }}>
+                      {payload.preview}…
+                    </div>
+                  )}
+                </div>
+              )}
               <Space>
                 <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => handleApprove(cp.id)} loading={loading}>
                   ✅ 批准
@@ -188,10 +210,12 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
                   📝 修改意见重写
                 </Button>
               </Space>
+              </div>
             }
             style={{ marginBottom: 16 }}
           />
-        ))}
+          );
+        })}
 
         {/* 状态提示 */}
         {status?.state === 'FINAL' && (

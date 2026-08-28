@@ -45,12 +45,13 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public String saveProject(Project p) {
-        String sql = "INSERT INTO projects (id,title,concept,tags,mode,state,current_chapter_index,genre,created_at,updated_at,book_summary) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?) " +
+        String sql = "INSERT INTO projects (id,title,concept,tags,mode,state,current_chapter_index,genre,created_at,updated_at,book_summary,book_snapshot) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?) " +
                 "ON CONFLICT(id) DO UPDATE SET title=excluded.title, concept=excluded.concept, " +
                 "tags=excluded.tags, mode=excluded.mode, state=excluded.state, " +
                 "current_chapter_index=excluded.current_chapter_index, genre=excluded.genre, " +
-                "updated_at=excluded.updated_at, book_summary=excluded.book_summary";
+                "updated_at=excluded.updated_at, book_summary=excluded.book_summary, " +
+                "book_snapshot=excluded.book_snapshot";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, p.getId());
@@ -64,6 +65,7 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setString(9, p.getCreatedAt().toString());
             ps.setString(10, p.getUpdatedAt().toString());
             ps.setString(11, p.getBookSummary());
+            ps.setString(12, p.getBookSnapshot());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -92,6 +94,7 @@ public class SqliteNovelRepository implements NovelRepository {
                 }
             } catch (Exception ignored) {}
             try { p.setBookSummary(rs.getString("book_summary")); } catch (Exception ignored) {}
+            try { p.setBookSnapshot(rs.getString("book_snapshot")); } catch (Exception ignored) {}
             return Optional.of(p);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -217,9 +220,9 @@ public class SqliteNovelRepository implements NovelRepository {
         String sql = "INSERT INTO characters (id,project_id,name,role,personality,ability,motivation," +
                 "appearance,relationships,growth_arc,speaking_style,knowledge_domains," +
                 "strategy_level,countermeasures,independent_will,blind_spot," +
-                "arc_stage,last_seen_chapter," +
+                "arc_stage,last_seen_chapter,status,death_chapter," +
                 "version,updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
                 "name=excluded.name, role=excluded.role, personality=excluded.personality, " +
                 "ability=excluded.ability, motivation=excluded.motivation, appearance=excluded.appearance, " +
                 "relationships=excluded.relationships, growth_arc=excluded.growth_arc, " +
@@ -227,6 +230,7 @@ public class SqliteNovelRepository implements NovelRepository {
                 "strategy_level=excluded.strategy_level, countermeasures=excluded.countermeasures, " +
                 "independent_will=excluded.independent_will, blind_spot=excluded.blind_spot, " +
                 "arc_stage=excluded.arc_stage, last_seen_chapter=excluded.last_seen_chapter, " +
+                "status=excluded.status, death_chapter=excluded.death_chapter, " +
                 "version=excluded.version, updated_at=excluded.updated_at";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -244,7 +248,10 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setString(17, c.getArcStage());
             if (c.getLastSeenChapter() != null) ps.setInt(18, c.getLastSeenChapter());
             else ps.setNull(18, Types.INTEGER);
-            ps.setInt(19, c.getVersion()); ps.setString(20, c.getUpdatedAt().toString());
+            ps.setString(19, c.getStatus() != null ? c.getStatus().name() : null);
+            if (c.getDeathChapter() != null) ps.setInt(20, c.getDeathChapter());
+            else ps.setNull(20, Types.INTEGER);
+            ps.setInt(21, c.getVersion()); ps.setString(22, c.getUpdatedAt().toString());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
         return c.getId();
@@ -768,12 +775,13 @@ public class SqliteNovelRepository implements NovelRepository {
     public String saveCheckpoint(Checkpoint c) {
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO checkpoints (id,project_id,type,description,status,created_at) " +
-                     "VALUES (?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET status=excluded.status")) {
+                     "INSERT INTO checkpoints (id,project_id,type,description,status,created_at,payload) " +
+                     "VALUES (?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET status=excluded.status, payload=excluded.payload")) {
             ps.setString(1, c.getId()); ps.setString(2, c.getProjectId());
             ps.setString(3, c.getType().name()); ps.setString(4, c.getDescription());
             ps.setString(5, c.getStatus().name());
             ps.setString(6, c.getCreatedAt().toString());
+            ps.setString(7, c.getPayload());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
         return c.getId();
@@ -1510,6 +1518,13 @@ public class SqliteNovelRepository implements NovelRepository {
         c.setGrowthArc(rs.getString("growth_arc"));
         c.setSpeakingStyle(rs.getString("speaking_style"));
         c.setKnowledgeDomains(rs.getString("knowledge_domains"));
+        // p19-01: 存续状态（旧库无列时 null=ACTIVE）
+        try {
+            String st = rs.getString("status");
+            if (st != null && !st.isBlank()) c.setStatus(Character.Status.valueOf(st));
+            int dc = rs.getInt("death_chapter");
+            if (!rs.wasNull()) c.setDeathChapter(dc);
+        } catch (Exception ignored) { }
         // p10-a1: 读取智谋建模字段（兼容旧库）
         try {
             int sl = rs.getInt("strategy_level");
@@ -1573,6 +1588,7 @@ public class SqliteNovelRepository implements NovelRepository {
                 Checkpoint.Type.valueOf(rs.getString("type")),
                 rs.getString("description"));
         setField(c, "id", rs.getString("id"));
+        c.setPayload(rs.getString("payload"));
         switch (Checkpoint.Status.valueOf(rs.getString("status"))) {
             case APPROVED -> c.approve();
             case MODIFIED -> c.modify();

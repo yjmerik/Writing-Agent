@@ -77,8 +77,9 @@ public class OrchestratorController {
      */
     @PostMapping("/write-all")
     public Map<String, Object> writeAll(@PathVariable String id,
-                                         @RequestParam(defaultValue = "50") int maxChapters) {
-        WritingTask task = writingTaskExecutor.startWriting(id, maxChapters);
+                                         @RequestParam(defaultValue = "50") int maxChapters,
+                                         @RequestParam(required = false) String instruction) {
+        WritingTask task = writingTaskExecutor.startWriting(id, maxChapters, instruction);
         return Map.of(
                 "projectId", id,
                 "taskId", task.getId(),

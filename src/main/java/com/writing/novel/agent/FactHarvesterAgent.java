@@ -29,11 +29,53 @@ public class FactHarvesterAgent {
     private final LlmGateway gateway;
     private final StoryFactRepository factRepo;
     private final PromptTemplateService promptService;
+    private com.writing.novel.service.EntityGraphService entityGraphService; // p19-02: 可选注入，subject 别名规范化
+
+    /** p19-01: 可选注入——死亡事实自动置位 Character.status（null 安全降级） */
+    private com.writing.novel.spi.NovelRepository novelRepository;
+
+    public void setNovelRepository(com.writing.novel.spi.NovelRepository novelRepository) {
+        this.novelRepository = novelRepository;
+    }
+
+    /** p19-01: 死亡关键词——CHARACTER_STATE 断言命中时自动置位 DECEASED */
+    private static final java.util.List<String> DEATH_KEYWORDS = java.util.List.of(
+            "身亡", "死亡", "战死", "殒命", "毙命", "气绝", "断气", "咽气", "殉职", "殉国", "殉情", "已死", "丧命", "遇害", "被杀", "离世", "病逝");
+
+    /** p19-01: 死亡事实 → 角色置位 DECEASED + deathChapter */
+    private void detectDeath(String projectId, String subject, String assertion, int chapterIndex) {
+        if (novelRepository == null || subject == null || assertion == null) return;
+        boolean death = DEATH_KEYWORDS.stream().anyMatch(assertion::contains);
+        if (!death) return;
+        try {
+            novelRepository.findCharactersByProject(projectId).stream()
+                    .filter(c -> subject.equals(c.getName()) || subject.contains(c.getName()))
+                    .filter(c -> !c.isDeceased())
+                    .findFirst()
+                    .ifPresent(c -> {
+                        c.setStatus(com.writing.novel.domain.Character.Status.DECEASED);
+                        c.setDeathChapter(chapterIndex);
+                        novelRepository.saveCharacter(c);
+                        log.warn("角色死亡检测: {} 于第{}章身亡（真典: {}）", c.getName(), chapterIndex,
+                                assertion.length() > 40 ? assertion.substring(0, 40) : assertion);
+                    });
+        } catch (Exception e) {
+            log.debug("死亡状态置位失败: {}", e.getMessage());
+        }
+    }
 
     public FactHarvesterAgent(LlmGateway gateway, StoryFactRepository factRepo, PromptTemplateService promptService) {
         this.gateway = gateway;
         this.factRepo = factRepo;
         this.promptService = promptService;
+    }
+
+    /**
+     * p19-02: 注入 EntityGraphService，merge 前把 subject 别名（如「林公子」）解析为规范名（「林凡」），
+     * 防止真典按别名分裂成平行 ACTIVE 事实。null 时安全降级为原精确字符串匹配行为。
+     */
+    public void setEntityGraphService(com.writing.novel.service.EntityGraphService entityGraphService) {
+        this.entityGraphService = entityGraphService;
     }
 
     public record HarvestResult(int added, int validated, int superseded) {
@@ -107,6 +149,8 @@ public class FactHarvesterAgent {
                 String subject = item.path("subject").asText();
                 String assertion = item.path("assertion").asText();
                 if (subject.isBlank() || assertion.isBlank()) continue;
+                // p19-02: 别名先解析为规范名再比对/落库，防止「林公子/林凡」分裂成平行 ACTIVE 事实
+                subject = canonicalSubject(projectId, subject);
 
                 List<StoryFact> sameSubject = factRepo.findActiveBySubject(projectId, subject).stream()
                         .filter(f -> f.getFactType() == type).toList();
@@ -115,6 +159,10 @@ public class FactHarvesterAgent {
                     f.setImportance(3);
                     factRepo.save(f);
                     added++;
+                    // p19-01: CHARACTER_STATE 新事实含死亡信号 → 角色置位
+                    if (type == StoryFact.FactType.CHARACTER_STATE) {
+                        detectDeath(projectId, subject, assertion, chapterIndex);
+                    }
                 } else {
                     StoryFact old = sameSubject.get(0);
                     if (old.getAssertion().contains(assertion) || assertion.contains(old.getAssertion())) {
@@ -131,5 +179,20 @@ public class FactHarvesterAgent {
             }
         } catch (Exception ignored) { }
         return new HarvestResult(added, validated, superseded);
+    }
+
+    /**
+     * p19-02: subject 规范化——经实体图的别名表把「林公子」解析为规范名「林凡」。
+     * 未注入 EntityGraphService（null）或图服务异常时降级为原始 subject（保持旧行为），不阻塞收割。
+     */
+    private String canonicalSubject(String projectId, String subject) {
+        if (entityGraphService == null) return subject;
+        try {
+            String resolved = entityGraphService.resolveCanonical(projectId, subject);
+            return (resolved == null || resolved.isBlank()) ? subject : resolved;
+        } catch (Exception e) {
+            log.debug("subject 规范化失败(项目{}, subject={}): {}", projectId, subject, e.getMessage());
+            return subject;
+        }
     }
 }

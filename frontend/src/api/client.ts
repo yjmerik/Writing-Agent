@@ -193,12 +193,16 @@ export const api = {
     request<Summary[]>(`/projects/${id}/memory/summary`),
 
   // --- 写作 ---
-  writeChapter: (id: string) =>
-    request<Chapter>(`/projects/${id}/write-chapter`, { method: 'POST' }),
+  /** p18-03: 写一章（可带作者指令——对下一章的定向要求） */
+  writeChapter: (id: string, instruction?: string) =>
+    request<Chapter>(`/projects/${id}/write-chapter`, {
+      method: 'POST',
+      body: JSON.stringify(instruction ? { instruction } : {}),
+    }),
 
-  startWriteAll: (id: string, maxChapters = 50) =>
+  startWriteAll: (id: string, maxChapters = 50, instruction?: string) =>
     request<{ projectId: string; taskId: string; status: string; totalChapters: number; message: string }>(
-      `/projects/${id}/write-all?maxChapters=${maxChapters}`,
+      `/projects/${id}/write-all?maxChapters=${maxChapters}` + (instruction ? `&instruction=${encodeURIComponent(instruction)}` : ''),
       { method: 'POST' },
     ),
 
@@ -212,8 +216,8 @@ export const api = {
       totalWords: number; errorMessage: string;
     }>(`/projects/${id}/writing-tasks/${taskId}`),
 
-  writeAll: async (id: string, maxChapters = 50, onStarted?: (taskId: string) => void) => {
-    const started = await api.startWriteAll(id, maxChapters);
+  writeAll: async (id: string, maxChapters = 50, onStarted?: (taskId: string) => void, instruction?: string) => {
+    const started = await api.startWriteAll(id, maxChapters, instruction);
     const taskId = started.taskId;
     onStarted?.(taskId);
     const deadline = Date.now() + 3600000;
@@ -226,6 +230,24 @@ export const api = {
       await new Promise((r) => setTimeout(r, 2000));
     }
     throw new Error('连续写作超时');
+  },
+
+  /** p18-04: SSE 订阅项目实时事件（CHAPTER_WRITTEN/CHAPTER_FAILED/QUALITY_REVIEW 等）。
+   *  返回关闭句柄；浏览器不支持 EventSource 时静默降级（保留轮询）。 */
+  subscribeEvents: (id: string, onEvent: (eventName: string, data: any) => void): (() => void) | null => {
+    if (typeof EventSource === 'undefined') return null;
+    try {
+      const es = new EventSource(`${BASE}/projects/${id}/events`);
+      const handler = (e: MessageEvent) => {
+        try { onEvent(e.type || 'EVENT', JSON.parse(e.data)); } catch { /* 忽略坏帧 */ }
+      };
+      const names = ['CHAPTER_WRITTEN', 'CHAPTER_FAILED', 'QUALITY_REVIEW',
+        'QUALITY_CIRCUIT_BREAKER', 'LLM_ERROR', 'FINAL_GATE', 'EVENT'];
+      names.forEach((n) => es.addEventListener(n, handler as EventListener));
+      return () => { names.forEach((n) => es.removeEventListener(n, handler as EventListener)); es.close(); };
+    } catch {
+      return null;
+    }
   },
 
   /** 质量评价（慢操作，调 LLM 分析） */

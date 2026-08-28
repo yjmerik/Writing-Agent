@@ -46,5 +46,7 @@ public class ModelConfig {
     public double getOutputPriceYuanPerKTokens() { return outputPriceYuanPerKTokens; }
 
     public boolean isThinkingEnabled() { return thinkingEnabled; }
+
+    public void setThinkingEnabled(boolean thinkingEnabled) { this.thinkingEnabled = thinkingEnabled; }
     public void setOutputPriceYuanPerKTokens(double v) { this.outputPriceYuanPerKTokens = v; }
 }

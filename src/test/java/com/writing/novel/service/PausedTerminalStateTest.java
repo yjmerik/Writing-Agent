@@ -65,7 +65,7 @@ class PausedTerminalStateTest {
     @Test
     void 交互模式审核点暂停终态为PAUSED而非FAILED() throws Exception {
         NovelOrchestrator orch = mock(NovelOrchestrator.class);
-        when(orch.runWritingLoop(eq(pid), eq(5), any())).thenReturn(1); // 写 1 章后循环遇暂停退出
+        when(orch.runWritingLoop(eq(pid), eq(5), any(), any())).thenReturn(1); // 写 1 章后循环遇暂停退出
 
         WritingTaskExecutor executor = new WritingTaskExecutor(orch, repo, null);
         WritingTask task = new WritingTask(pid, 5);
@@ -90,7 +90,7 @@ class PausedTerminalStateTest {
         repo.saveProject(p);
 
         NovelOrchestrator orch = mock(NovelOrchestrator.class);
-        when(orch.runWritingLoop(eq(pid), eq(5), any())).thenReturn(1);
+        when(orch.runWritingLoop(eq(pid), eq(5), any(), any())).thenReturn(1);
 
         WritingTaskExecutor executor = new WritingTaskExecutor(orch, repo, null);
         WritingTask task = new WritingTask(pid, 5);

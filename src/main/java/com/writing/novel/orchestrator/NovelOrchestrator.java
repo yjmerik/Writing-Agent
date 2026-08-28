@@ -894,7 +894,8 @@ public class NovelOrchestrator {
                         log.warn("重写内容过短({}字 < 原版{}字的70%)，保留原版", newContent.length(), originalLength);
                         // p16-05: 拒收重写——rewriteForCorrection 已把向量切到被拒版本，
                         // 用保留的原正文重放向量索引，恢复向量库与 DB 一致
-                        try { chapterWriter.reindexChapter(projectId, chapterIndex, chapter.getContent()); } catch (Exception ignored) {}
+                        try { chapterWriter.reindexChapter(projectId, chapterIndex, chapter.getContent()); }
+                        catch (Exception re) { log.warn("拒收重写后向量重放失败(章{}): {}", chapterIndex, re.getMessage()); }
                     }
                 }
                 // p11-I1: 持久化章节评价报告
@@ -1437,7 +1438,8 @@ public class NovelOrchestrator {
             } else if (newContent != null) {
                 // p16-05: 拒收重写——rewriteForCorrection 已把向量切到被拒版本，
                 // 用保留的原正文重放向量索引，恢复向量库与 DB 一致
-                try { chapterWriter.reindexChapter(projectId, chapterIndex, chapter.getContent()); } catch (Exception ignored) {}
+                try { chapterWriter.reindexChapter(projectId, chapterIndex, chapter.getContent()); }
+                catch (Exception re) { log.warn("拒收重写后向量重放失败(章{}): {}", chapterIndex, re.getMessage()); }
             }
         } catch (Exception e) {
             log.warn("纠偏重写失败，保留原版本: {}", e.getMessage());

@@ -327,32 +327,43 @@ public class ContextAssembler {
         if (bookSummary != null && !bookSummary.isBlank()) {
             sb.append("【全书梗概（截至当前）】").append(bookSummary).append("\n\n");
         }
-        // 先注入卷级摘要（远期剧情概览）
+        // p16-06-A: 分层组装，顺序 = book_summary → 最近 3 卷全文 → 细粒度摘要 → 更早卷 stub 追加在尾。
+        // applyTokenBudget 对 recentSummary 超预算时整体截尾（truncateToTokens 保头部），
+        // 字符串尾部内容最先被牺牲：把"最老卷 stub"放在最后，衔接最关键的近期细粒度摘要
+        // 位于头部保护区，天然不被远期摘要挤掉（修复"远期挤死近期"）。
+        // 信息语义不变：最近 3 卷详细 + 更早卷截 300 字。
         if (!volumeLevel.isEmpty()) {
             sb.append("【前卷概览】\n");
-            for (int i = 0; i < volumeLevel.size(); i++) {
+            // 最近 3 卷全文（远期剧情概览中最高优先级）
+            for (int i = 0; i < volumeLevel.size() && i < VOLUME_DETAIL_LIMIT; i++) {
                 Summary s = volumeLevel.get(i);
                 sb.append("第").append(s.getFromChapter()).append("-")
-                        .append(s.getToChapter()).append("章：");
-                if (i < VOLUME_DETAIL_LIMIT) {
-                    // 最近 3 卷详细
-                    sb.append(s.getContent());
-                } else {
-                    // C2: 更早的卷截断放宽到 300 字（原 100 字信息损失过大）
-                    String content = s.getContent();
-                    sb.append(content.length() > 300 ? content.substring(0, 300) + "..." : content);
-                    sb.append("（早期卷，已精简）");
-                }
-                sb.append("\n");
+                        .append(s.getToChapter()).append("章：")
+                        .append(s.getContent())
+                        .append("\n");
             }
             sb.append("\n");
         }
-        // 再注入近期细粒度摘要
+        // 近期细粒度摘要——紧随最近 3 卷之后（高保护位，整体截尾时最后才波及）
         if (!fineGrained.isEmpty()) {
             for (Summary s : fineGrained) {
                 sb.append("第").append(s.getFromChapter()).append("-")
                         .append(s.getToChapter()).append("章：")
                         .append(s.getContent()).append("\n");
+            }
+        }
+        // 更早卷 stub 追加在尾部（裁剪牺牲区：volumeLevel 按新→旧排序，越老的卷越靠后、越先被整体截尾丢弃）
+        if (volumeLevel.size() > VOLUME_DETAIL_LIMIT) {
+            sb.append("\n");
+            for (int i = VOLUME_DETAIL_LIMIT; i < volumeLevel.size(); i++) {
+                Summary s = volumeLevel.get(i);
+                sb.append("第").append(s.getFromChapter()).append("-")
+                        .append(s.getToChapter()).append("章：");
+                // C2: 更早的卷截断放宽到 300 字（原 100 字信息损失过大）
+                String content = s.getContent();
+                sb.append(content.length() > 300 ? content.substring(0, 300) + "..." : content);
+                sb.append("（早期卷，已精简）");
+                sb.append("\n");
             }
         }
         return sb.toString().trim();
@@ -582,6 +593,13 @@ public class ContextAssembler {
         StringBuilder sb = new StringBuilder();
         sb.append("【本章刚性约束（逐条检查，遗漏即违规）】\n");
 
+        // p17-02: 题材范式条件化——快节奏题材保留网文硬约束（现状），
+        // 慢节奏/严肃题材（LITERARY/HISTORICAL/ROMANCE/SCIFI/FANTASY）换用张力推进指引
+        com.writing.novel.domain.GenreProfile genre = repository.findProject(projectId)
+                .map(com.writing.novel.domain.Project::getGenre)
+                .orElse(com.writing.novel.domain.GenreProfile.GENERAL);
+        boolean fastPaced = genre == null || genre.isFastPaced();
+
         // 0. 对话约束（从 WritingPreferences 读取密度目标）
         var prefs = repository.findWritingPreferences(projectId);
         double density = prefs.map(p -> p.getDialogueDensity()).orElse(0.35);
@@ -594,20 +612,25 @@ public class ContextAssembler {
               .append("□ 禁止连续 3 段纯叙述无对话\n");
         }
 
-        // 1. 爽点约束
+        // 1. 爽点约束（p17-02: 仅快节奏题材；慢节奏题材换张力推进指引）
         boolean rotateClimax = prefs.map(p -> p.isEnableClimaxRotation()).orElse(true);
-        sb.append("□ 必须包含至少 2 个爽点");
-        if (rotateClimax) {
-            sb.append("（类型须与前章轮换）");
-        }
-        sb.append("\n");
-
-        // 1b. 爽点轮换约束（来自 ClimaxDiversityTracker 实际历史）
-        if (rotateClimax) {
-            String rotation = climaxDiversityTracker.generateRotationConstraint();
-            if (rotation != null && !rotation.isBlank()) {
-                sb.append(rotation);
+        if (fastPaced) {
+            sb.append("□ 必须包含至少 2 个爽点");
+            if (rotateClimax) {
+                sb.append("（类型须与前章轮换）");
             }
+            sb.append("\n");
+
+            // 1b. 爽点轮换约束（来自 ClimaxDiversityTracker 实际历史）
+            if (rotateClimax) {
+                String rotation = climaxDiversityTracker.generateRotationConstraint();
+                if (rotation != null && !rotation.isBlank()) {
+                    sb.append(rotation);
+                }
+            }
+        } else {
+            sb.append("□ 本章必须包含至少 1 个核心张力点（冲突升级/情感转折/真相揭示/关键抉择），")
+              .append("并在章内完成一次实质推进（不能只铺陈不推进）\n");
         }
 
         // 2. 世界观约束
@@ -629,8 +652,12 @@ public class ContextAssembler {
               .append(" 件——宁可深入刻画少数场景，也不要走马观花堆砌事件\n");
         }
 
-        // 4. 悬念结尾
-        sb.append("□ 章节结尾必须是一个悬念钩子，不能是场景自然结束\n");
+        // 4. 悬念结尾（p17-02: 仅快节奏题材强制钩子；慢节奏题材允许余韵收束）
+        if (fastPaced) {
+            sb.append("□ 章节结尾必须是一个悬念钩子，不能是场景自然结束\n");
+        } else {
+            sb.append("□ 章节结尾应留有未解张力或余韵（新问题/未决选择/情感余波），不必是强钩子，但不得是平淡收场\n");
+        }
 
         // 4b. 主角不完美约束（p9-10）
         sb.append("□ 主角在本章中必须面临至少一次真正的困境或误判（不能事事算无遗策）\n");
@@ -640,9 +667,9 @@ public class ContextAssembler {
         sb.append("□ 本章正文不超过 ").append(maxLen)
           .append(" 字。超过此限请精简次要场景和描写，宁可少写也不要注水\n");
 
-        // 5. 多维度多样性约束（开场/冲突/爽点轮换）
+        // 5. 多维度多样性约束（开场/冲突/爽点轮换；p17-02: 慢节奏题材措辞换「高潮类型」）
         if (diversityTracker != null) {
-            String diversityConstraints = diversityTracker.generateAllConstraints();
+            String diversityConstraints = diversityTracker.generateAllConstraints(fastPaced);
             if (diversityConstraints != null && !diversityConstraints.isBlank()) {
                 sb.append(diversityConstraints);
             }
@@ -668,13 +695,20 @@ public class ContextAssembler {
             sb.append(nameAnchor);
         }
 
-        // op-01: 开篇节奏加速——前 N 章强制快速抓人
+        // op-01: 开篇节奏加速——前 N 章强制快速抓人（p17-02: 仅快节奏题材爽点式高压；
+        // 慢节奏题材仍要求快速进入具体场景，但不强制爽点/钩子密度）
         if (chapterIndex <= OPENING_CHAPTERS) {
-            sb.append("□ 【开篇加速·硬约束】本章是全书前").append(OPENING_CHAPTERS)
-              .append("章之一，必须快速抓住读者：\n")
-              .append("  - 首 500 字内必须出现冲突/悬念/反转，禁止用大段环境描写或世界观解说开场\n")
-              .append("  - 本章至少 2 个爽点，冲突必须在章内升级并部分解决（不能只铺悬念不推进）\n")
-              .append("  - 禁止「喘息章」节奏——每一段都要推进剧情或深化人物，不得纯氛围渲染\n");
+            if (fastPaced) {
+                sb.append("□ 【开篇加速·硬约束】本章是全书前").append(OPENING_CHAPTERS)
+                  .append("章之一，必须快速抓住读者：\n")
+                  .append("  - 首 500 字内必须出现冲突/悬念/反转，禁止用大段环境描写或世界观解说开场\n")
+                  .append("  - 本章至少 2 个爽点，冲突必须在章内升级并部分解决（不能只铺悬念不推进）\n")
+                  .append("  - 禁止「喘息章」节奏——每一段都要推进剧情或深化人物，不得纯氛围渲染\n");
+            } else {
+                sb.append("□ 【开篇要求】本章是全书前").append(OPENING_CHAPTERS)
+                  .append("章之一：前 800 字内进入具体场景与人物处境，禁止大段设定解说/环境铺陈/家族谱系罗列开场；")
+                  .append("以事件或人物处境切入，张力随章内递进\n");
+            }
         }
 
         // cd-01: 配角刻画深度——禁止配角沦为功能性工具人
@@ -1036,7 +1070,30 @@ public class ContextAssembler {
         }
         if (total > budget && ctx.getRelevantForeshadowings() != null) {
             ctx.setRelevantForeshadowings(TokenBudget.truncateToTokens(ctx.getRelevantForeshadowings(), 500));
+            total = sumTokens(ctx);
         }
+        // p16-06-B: premise（故事原旨/总纲）最后参与裁剪——链尾=最低优先级，仅预算极端紧张时触发。
+        // 「【故事原旨】永不裁剪」的设计针对 premise 的核心段（立意/主线位于文本头部）：
+        // 这里只对超过 6000 token 的尾部冗余（如 50 卷逐卷累积的总纲）截断，核心原旨在头部自然保留。
+        // 注意：截断发生在 stableSectionCache 缓存之后的预算阶段，只改 WritingContext，
+        // 不影响 premise 缓存（MemoryRevision 失效逻辑）中保存的完整原文。
+        if (total > budget && ctx.getPremiseSection() != null) {
+            ctx.setPremiseSection(truncatePremiseHead(ctx.getPremiseSection()));
+        }
+    }
+
+    /** p16-06-B: premise 参与预算裁剪时的截断上限（token） */
+    private static final int PREMISE_MAX_TOKENS = 6000;
+
+    /**
+     * p16-06-B: premise 超 6000 token 时保头部截断并加显式标记。
+     * 与通用 truncateToTokens 的 "...（截断）" 区分开，让写作侧能识别总纲被裁。
+     */
+    private static String truncatePremiseHead(String premise) {
+        if (premise == null) return premise;
+        int maxChars = (int) (PREMISE_MAX_TOKENS * 1.5);
+        if (premise.length() <= maxChars) return premise;
+        return premise.substring(0, maxChars) + "……[总纲已截断]";
     }
 
     private int sumTokens(WritingContext ctx) {

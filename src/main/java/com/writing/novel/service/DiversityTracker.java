@@ -66,10 +66,15 @@ public class DiversityTracker {
 
     /** 生成所有维度的轮换约束 */
     public String generateAllConstraints() {
+        return generateAllConstraints(true);
+    }
+
+    /** p17-02: 慢节奏题材把「爽点类型」维度改称「高潮类型」，避免爽文范式措辞污染严肃题材 */
+    public String generateAllConstraints(boolean fastPaced) {
         StringBuilder sb = new StringBuilder();
         sb.append(generateConstraint("opening", "开场方式"));
         sb.append(generateConstraint("conflict", "冲突模式"));
-        sb.append(generateConstraint("climax", "爽点类型"));
+        sb.append(generateConstraint("climax", fastPaced ? "爽点类型" : "高潮类型"));
         sb.append(generateConstraint("scene", "场景结构类型"));
         return sb.toString();
     }

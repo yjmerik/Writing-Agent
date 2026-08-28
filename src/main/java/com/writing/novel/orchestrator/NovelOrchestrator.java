@@ -1704,81 +1704,19 @@ public class NovelOrchestrator {
                 if (extended) {
                     // 重新加载大纲
                     outline = repository.findOutlineByProject(projectId).orElse(null);
-                    if (outline == null || !hasNextChapter(outline, p.getCurrentChapterIndex())) {
-                        // 仍然没有更多章节，进入完结流程
-                        break;
+                }
+                if (outline == null || !hasNextChapter(outline, p.getCurrentChapterIndex())) {
+                    // p16-02: 大纲真正耗尽——mustResolve 伏笔未回收时先追加回收卷（有界一次），
+                    // 回收指令写进新章梗概 writingNotes（原路径写 ContinuityIssue 后直接 break，指令无人消费）
+                    if (written < maxChapters
+                            && appendForeshadowingRecoveryVolumeIfNeeded(projectId, p)) {
+                        continue; // 回收卷已追加，写作循环继续写回收章
                     }
-                } else {
+                    finishBookWithGate(projectId, p, written);
                     break;
                 }
             }
 
-            // 跳过已完成的逻辑到 hasNextChapter false 的处理
-            if (!hasNextChapter(outline, p.getCurrentChapterIndex())) {
-                // p10.1-e1: FINAL 前自动触发伏笔重要性审计（只触发一次）
-                if (foreshadowingImportanceAuditor != null && written == 0) {
-                    try {
-                        int upgraded = foreshadowingImportanceAuditor.audit(projectId);
-                        if (upgraded > 0) {
-                            log.info("FINAL前伏笔审计: {} 条升级为HIGH", upgraded);
-                        }
-                    } catch (Exception e) {
-                        log.warn("伏笔审计失败: {}", e.getMessage());
-                    }
-                }
-
-                // p10-c1: FINAL 完整性门禁——mustResolve 的关键伏笔未回收时，尝试追加回收章
-                var unresolved = repository.findUnresolvedForeshadowings(projectId);
-                var criticalUnresolved = unresolved.stream()
-                        .filter(Foreshadowing::isMustResolve)
-                        .toList();
-
-                if (!criticalUnresolved.isEmpty() && written < maxChapters
-                        && p.getCurrentChapterIndex() < 999) {
-                    // p10-c1: 有关键伏笔未回收，追加一个"伏笔回收章"而非直接完结
-                    // 标记伏笔为已过期（避免无限追加），然后尝试再写一章
-                    log.warn("全书完结前仍有 {} 条 mustResolve 伏笔未回收，追加回收章",
-                            criticalUnresolved.size());
-                    for (var f : criticalUnresolved) {
-                        if (f.getExpectedResolveChapter() == null) {
-                            f.setExpectedResolveChapter(p.getCurrentChapterIndex());
-                        }
-                    }
-                    // 给最后一章注入强制回收指令（通过 ContinuityIssue feedback）
-                    StringBuilder resolveCmd = new StringBuilder("本章为最终回收章，必须回收以下关键伏笔：\n");
-                    for (var f : criticalUnresolved) {
-                        resolveCmd.append("- ").append(f.getDescription())
-                                .append("（埋于第").append(f.getPlantedAtChapter()).append("章）\n");
-                    }
-                    resolveCmd.append("请在正文中明确揭晓/解答这些悬念。");
-                    repository.saveContinuityIssue(new ContinuityIssue(
-                            projectId, p.getCurrentChapterIndex() + 1,
-                            ContinuityIssue.Type.FORESHADOWING,
-                            ContinuityIssue.Severity.HIGH,
-                            resolveCmd.toString()));
-                    for (var f : criticalUnresolved) {
-                        repository.saveForeshadowing(f);
-                    }
-                    // 不转 FINAL，让循环继续写一章（会因 hasNextChapter 仍 false 而 fallback）
-                    // 手动推进：设 state 保持 WRITING，下一轮会再次走到这里但 criticalUnresolved 已清空
-                }
-
-                // 非关键伏笔：记录但不阻塞
-                if (unresolved.size() > 3) {
-                    log.warn("全书未回收伏笔 {} 条 > 3，记录完整性警告", unresolved.size());
-                    repository.saveContinuityIssue(new ContinuityIssue(
-                            projectId, p.getCurrentChapterIndex(),
-                            ContinuityIssue.Type.FORESHADOWING,
-                            ContinuityIssue.Severity.HIGH,
-                            "全书完结时有 " + unresolved.size() + " 条伏笔未回收"));
-                }
-                // mc-p3-02: 成书质量门禁——检查通过才 FINAL，否则 NEEDS_REVISION
-                boolean passed = runFinalAuditGate(projectId, p);
-                p.setState(passed ? NovelState.FINAL : NovelState.NEEDS_REVISION);
-                repository.saveProject(p);
-                log.info("成书门禁: {} → {}", passed ? "PASS" : "FAIL", passed ? "FINAL" : "NEEDS_REVISION");
-                break;
-            }
             if (p.getState() == NovelState.VOLUME_DONE) {
                 p.setState(NovelState.WRITING);
                 repository.saveProject(p);
@@ -1833,6 +1771,96 @@ public class NovelOrchestrator {
             }
         }
         return written;
+    }
+
+    /** p16-02: 回收卷标题标记——用于有界判定（已追加过则不再追加，重启安全） */
+    private static final String RECOVERY_VOLUME_MARKER = "伏笔回收";
+
+    /**
+     * p16-02: 大纲耗尽且 mustResolve 伏笔未回收时，追加『尾声·伏笔回收卷』。
+     * 回收指令写进新章梗概 writingNotes（ChapterWriter 的确定性输入通道），替代原
+     * 写 ContinuityIssue 后直接 break 的死路。有界：回收卷已存在时返回 false。
+     * 包级可见供测试。
+     */
+    boolean appendForeshadowingRecoveryVolumeIfNeeded(String projectId, Project p) {
+        try {
+            // p10.1-e1: 回收前先做重要性审计——被低估的关键伏笔升级后才进入回收名单
+            if (foreshadowingImportanceAuditor != null) {
+                try {
+                    int upgraded = foreshadowingImportanceAuditor.audit(projectId);
+                    if (upgraded > 0) log.info("FINAL前伏笔审计: {} 条升级为HIGH", upgraded);
+                } catch (Exception e) {
+                    log.warn("伏笔审计失败: {}", e.getMessage());
+                }
+            }
+            var criticalUnresolved = repository.findUnresolvedForeshadowings(projectId).stream()
+                    .filter(Foreshadowing::isMustResolve)
+                    .toList();
+            if (criticalUnresolved.isEmpty()) return false;
+            Outline outline = repository.findOutlineByProject(projectId).orElse(null);
+            if (outline == null) return false;
+            if (outline.getVolumes().stream()
+                    .anyMatch(v -> v.getTitle() != null && v.getTitle().contains(RECOVERY_VOLUME_MARKER))) {
+                return false; // 有界：回收卷已追加过
+            }
+
+            int startChapter = p.getCurrentChapterIndex() + 1;
+            int chapterCount = Math.min(8, Math.max(3, criticalUnresolved.size() * 2));
+            int volumeIndex = outline.getVolumes().stream()
+                    .mapToInt(Volume::getVolumeIndex).max().orElse(0) + 1;
+            Volume recovery = new Volume(projectId, volumeIndex,
+                    "尾声·" + RECOVERY_VOLUME_MARKER + "卷",
+                    "全书尾声：集中揭晓并回收关键伏笔，收束主线。");
+            for (int i = 0; i < chapterCount; i++) {
+                int chapterIndex = startChapter + i;
+                ChapterSynopsis s = new ChapterSynopsis(projectId, chapterIndex,
+                        "第" + chapterIndex + "章·伏笔回收",
+                        "全书尾声：集中揭晓并回收关键伏笔，收束主线，走向结局。");
+                StringBuilder notes = new StringBuilder("【最终回收章】必须在正文中明确揭晓/解答以下关键悬念：\n");
+                boolean any = false;
+                for (int j = i; j < criticalUnresolved.size(); j += chapterCount) {
+                    var f = criticalUnresolved.get(j);
+                    notes.append("- ").append(f.getDescription())
+                            .append("（埋于第").append(f.getPlantedAtChapter()).append("章）\n");
+                    any = true;
+                }
+                s.setWritingNotes(any ? notes.toString() : "收束主线，为全书作结；不引入新悬念。");
+                recovery.getSynopses().add(s);
+            }
+            outline.getVolumes().add(recovery);
+            repository.saveOutline(outline);
+            for (var f : criticalUnresolved) {
+                if (f.getExpectedResolveChapter() == null) {
+                    f.setExpectedResolveChapter(startChapter + chapterCount - 1);
+                    repository.saveForeshadowing(f);
+                }
+            }
+            log.warn("mustResolve 伏笔 {} 条未回收，已追加尾声回收卷（第{}-{}章）",
+                    criticalUnresolved.size(), startChapter, startChapter + chapterCount - 1);
+            return true;
+        } catch (Exception e) {
+            log.warn("追加伏笔回收卷失败: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /** p16-02: 完结流程——非关键伏笔警告 + 成书门禁，统一设置 FINAL/NEEDS_REVISION */
+    private void finishBookWithGate(String projectId, Project p, int written) {
+        var unresolved = repository.findUnresolvedForeshadowings(projectId);
+        // 非关键伏笔：记录但不阻塞
+        if (unresolved.size() > 3) {
+            log.warn("全书未回收伏笔 {} 条 > 3，记录完整性警告", unresolved.size());
+            repository.saveContinuityIssue(new ContinuityIssue(
+                    projectId, p.getCurrentChapterIndex(),
+                    ContinuityIssue.Type.FORESHADOWING,
+                    ContinuityIssue.Severity.HIGH,
+                    "全书完结时有 " + unresolved.size() + " 条伏笔未回收"));
+        }
+        // mc-p3-02: 成书质量门禁——检查通过才 FINAL，否则 NEEDS_REVISION
+        boolean passed = runFinalAuditGate(projectId, p);
+        p.setState(passed ? NovelState.FINAL : NovelState.NEEDS_REVISION);
+        repository.saveProject(p);
+        log.info("成书门禁: {} → {}", passed ? "PASS" : "FAIL", passed ? "FINAL" : "NEEDS_REVISION");
     }
 
     /** 统计项目总字数 */

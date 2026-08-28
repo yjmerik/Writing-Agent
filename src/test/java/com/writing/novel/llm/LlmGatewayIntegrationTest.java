@@ -31,6 +31,7 @@ class LlmGatewayIntegrationTest {
     void 全链路_配置路由_到HTTP调用_返回响应() {
         LlmProperties props = new LlmProperties();
         ModelConfig cfg = new ModelConfig();
+        cfg.setStreaming(false);
         cfg.setBaseUrl(server.url("/v1").toString().replaceAll("/$", ""));
         cfg.setApiKey("sk-integration");
         cfg.setModel("qwen-int");
@@ -66,12 +67,14 @@ class LlmGatewayIntegrationTest {
         LlmProperties props = new LlmProperties();
 
         ModelConfig chapterCfg = new ModelConfig();
+        chapterCfg.setStreaming(false);
         chapterCfg.setBaseUrl(server.url("/v1").toString().replaceAll("/$", ""));
         chapterCfg.setApiKey("key-a");
         chapterCfg.setModel("model-a");
         props.getModels().put("CHAPTER_WRITING", chapterCfg);
 
         ModelConfig checkerCfg = new ModelConfig();
+        checkerCfg.setStreaming(false);
         checkerCfg.setBaseUrl(server.url("/v1").toString().replaceAll("/$", ""));
         checkerCfg.setApiKey("key-b");
         checkerCfg.setModel("model-b");

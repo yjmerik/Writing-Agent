@@ -33,10 +33,11 @@ public class OpenAiCompatibleClient implements LlmClient {
     public OpenAiCompatibleClient() {
         this.httpClient = new OkHttpClient.Builder()
                 .connectTimeout(Duration.ofSeconds(30))
-                .readTimeout(Duration.ofMinutes(12))
-                // glm-5.3-flash 等思考模型对大 prompt 的推理耗时可达 3 分钟以上，
-                // 原 3 分钟 callTimeout 使 CHARACTER_DESIGN/PLOTTING 等重调用重试全超时
-                .callTimeout(Duration.ofMinutes(10)) // 单次请求最长 10 分钟
+                .readTimeout(Duration.ofMinutes(30))
+                // glm-5.3-flash 长生成（20k max_tokens 非流式）网关侧偶发 >10 分钟排队；
+                // e2e 实证 CHAPTER_WRITING 3×600s 整齐超时而同 prompt 独立进程 44s——网关排队方差大，
+                // 超时必须给足：单次请求上限 30 分钟
+                .callTimeout(Duration.ofMinutes(30))
                 .retryOnConnectionFailure(true)      // 网络抖动自动重试
                 .build();
     }

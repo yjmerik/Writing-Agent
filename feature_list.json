@@ -2167,6 +2167,334 @@
       "acceptance": "mvn test -Dtest=RecordReplayLlmGatewayTest 通过：record fixture JSON 含完整 systemPrompt/userMessage；replay miss 转储恰好一个含完整请求的 .miss.json 且仍抛 IllegalStateException",
       "verify_cmd": "mvn test -Dtest=RecordReplayLlmGatewayTest",
       "evidence": "2026-08-22 实现入库 commit 9a866a6：mvn test -Dtest=RecordReplayLlmGatewayTest 8 pass / 0 fail（新增 2 用例：回放miss时转储完整请求供指纹诊断、录制fixture保存完整请求，断言 .miss.json 恰好 1 个且含完整 systemPrompt/userMessage 并仍抛 IllegalStateException）；全量 mvn test 337 pass / 0 fail / 1 skip"
+    },
+    {
+      "id": "p16-01",
+      "name": "HIGH issue 老化 + FINAL 门禁口径修正",
+      "phase": 16,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "service/ArchiveCompactor.java",
+        "persistence/sqlite/SqliteNovelRepository.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "归档只处理非 HIGH（SqliteNovelRepository:966），HIGH 永不清理；FINAL 门禁 highIssues>10 即 NEEDS_REVISION，400 章残留历史 HIGH 必挂且无自动修复路径（NovelOrchestrator:2133）",
+      "description": "卷末 ArchiveCompactor 将 30 章前出现且此后未复发/未解决的 HIGH 标 resolved（老化，注明 aged_out）；FINAL 门禁与写作循环熔断只统计近 60 章的未解决 HIGH。",
+      "acceptance": "HighIssueAgingTest：构造 40 章前的未复发 HIGH → 归档后 resolved=1 且 reason=aged_out；FINAL 门禁用 41 条历史 HIGH + 0 近期 HIGH 判 PASS；熔断计数不含 60 章前 HIGH",
+      "verify_cmd": "mvn test -Dtest=HighIssueAgingTest",
+      "evidence": ""
+    },
+    {
+      "id": "p16-02",
+      "name": "FINAL 伏笔回收章死路修复",
+      "phase": 16,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "大纲耗尽时对 mustResolve 伏笔写『第N章必须回收』ContinuityIssue 后直接走 FINAL 门禁并 break（:1730-1764），且 tryExtendLayeredOutline 在 currentChapter>=targetChapters 时返回 false（:2211）——回收指令无人消费，门禁必 FAIL",
+      "description": "大纲耗尽且 mustResolve 伏笔 >0 时：生成 8 章『回收卷』（放宽 extend 的 targetChapters 上限一次），mustResolve 伏笔写入回收卷新章梗概的 writingNotes；写完回收卷后再走 FINAL 门禁。",
+      "acceptance": "FinalForeshadowingRecoveryTest：targetChapters 达上限 + mustResolve 伏笔存在 → 调用 extend 生成回收卷且回收指令出现在新章梗概；无 mustResolve 时行为不变（直接门禁）",
+      "verify_cmd": "mvn test -Dtest=FinalForeshadowingRecoveryTest",
+      "evidence": ""
+    },
+    {
+      "id": "p16-03",
+      "name": "FactHarvester 收窄 + fail-loud",
+      "phase": 16,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "agent/FactHarvesterAgent.java",
+        "telemetry/EventLog.java"
+      ],
+      "problem_ref": "harvest 把全部 ACTIVE 事实拼进 prompt 无 cap（FactHarvesterAgent:44-54），千条事实 ≈33k token 爆窗；失败 catch→return (0,0,0) 静默（:67-69），真典停止生长无告警",
+      "description": "收割 prompt 只注入与本章相关的事实（本章 cast 匹配 + importance desc top，硬上限 80 条）+ 声明『清单为检索子集，未列出不代表不存在』；LLM 失败记 LLM_ERROR 事件并 log.warn。",
+      "acceptance": "FactHarvesterScopedTest：500 条 ACTIVE 事实时 prompt 中事实清单 ≤80 条且含 cast 相关；LLM 抛异常时 events.jsonl 出现 LLM_ERROR 事件",
+      "verify_cmd": "mvn test -Dtest=FactHarvesterScopedTest",
+      "evidence": ""
+    },
+    {
+      "id": "p16-04",
+      "name": "其余三处全量注入 cap",
+      "phase": 16,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "agent/ForeshadowingExtractor.java",
+        "agent/ContinuityCheckerAgent.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "ForeshadowingExtractor 全量伏笔（含已回收）注入（:44-47）；ContinuityChecker.buildHistorySection 未回收线索全量注入无 cap（:119-129）；collectSettingsForCheck 全量未回收伏笔（NovelOrchestrator:1636-1643）——同族全量加载反模式漏网点",
+      "description": "三处注入分别加上限并按相关性排序：ForeshadowingExtractor 未回收优先+最近 20 条；ContinuityChecker 线索按悬挂时长取前 15；collectSettingsForCheck 未回收伏笔取前 20（mustResolve 恒在）。",
+      "acceptance": "ContextInjectionCapTest：构造 60 条伏笔/40 条线索时三处注入分别 ≤20/≤15/≤20 且 mustResolve 伏笔恒在",
+      "verify_cmd": "mvn test -Dtest=ContextInjectionCapTest",
+      "evidence": ""
+    },
+    {
+      "id": "p16-05",
+      "name": "重写/编辑路径向量 chunk 重建",
+      "phase": 16,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "agent/ChapterWriterAgent.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "向量清理+重建唯一入口在 ChapterWriterAgent.write()（:177-186）；rewriteForCorrection（:196-244）、orchestrator.rewriteChapter（NovelOrchestrator:2392-2411）、editPassage（:2476-2538）均不调用——重写后 DB 正文已变、向量库仍是旧 chunk，后续章节持续召回被否定情节",
+      "description": "三个路径统一走 indexChapterInChunks（内含 removeByIdPrefix 清旧 + 批量 embedding 入库），抽公共方法避免重复。",
+      "acceptance": "VectorCleanupOnRewritePathsTest：rewriteForCorrection/rewriteChapter/editPassage 后，向量库中该章 chunk 均为新版本内容（旧版本 0 命中）",
+      "verify_cmd": "mvn test -Dtest=VectorCleanupOnRewritePathsTest",
+      "evidence": ""
+    },
+    {
+      "id": "p16-06",
+      "name": "摘要分层裁剪 + premise 进预算",
+      "phase": 16,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "memory/ContextAssembler.java",
+        "memory/TokenBudget.java"
+      ],
+      "problem_ref": "recentSummary 组装为 book→全部卷 stub→细粒度，超预算从尾部截断（TokenBudget:47-52）——衔接最关键的最近细粒度摘要排最尾最先被牺牲；premiseSection 不在裁剪链（:997-1040），50 卷总纲 + 已写卷摘要点每章固定背 token",
+      "description": "buildRecentSummary 重构为分层：book_summary → 最近 3 卷全文 → 细粒度摘要 → 更早卷 stub（丢最老优先）；applyTokenBudget 增加 premiseSection 截断（保头部 6000 token，标注已截断）。",
+      "acceptance": "SummaryLayeredTrimTest：50 卷 + 预算受限时，最近 3 章细粒度摘要仍在、最老卷 stub 先被丢弃；超长 premise 被截断且含截断标记",
+      "verify_cmd": "mvn test -Dtest=SummaryLayeredTrimTest",
+      "evidence": ""
+    },
+    {
+      "id": "p17-01",
+      "name": "WUXIA 题材全链路",
+      "phase": 17,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "domain/GenreProfile.java",
+        "service/GenreDetector.java",
+        "service/GenreRuleProvider.java",
+        "src/main/resources/presets/wuxia.json",
+        "frontend/src/pages/ProjectListPage.tsx"
+      ],
+      "problem_ref": "GenreProfile 九分类无 WUXIA；GenreDetector 修仙关键词不含武侠词，tags『武侠江湖』项目落入 GENERAL；presets 无 wuxia——武侠三入口全部缺席，而本地兜底模型却叫 qwen3-4b-wuxia",
+      "description": "GenreProfile 增 WUXIA；GenreDetector 修仙分支前加武侠分支（武侠/江湖/侠客/门派/镖局/恩仇/剑客/武林）；GenreRuleProvider 补武侠规则（动作驱动节奏、江湖门派体系、招式比拼场景占比、侠义冲突建议）；presets/wuxia.json（沉雄遒劲、白描动作、对话密度 0.4）；前端预设下拉 +1。",
+      "acceptance": "WuxiaGenreTest：detect(武侠,江湖)=WUXIA；GenreRuleProvider 各规则方法对 WUXIA 非空且不含修仙境界词；PresetRegistry 加载 wuxia.json 且 applyToPreferences 生效；前端 npm build 通过",
+      "verify_cmd": "mvn test -Dtest=WuxiaGenreTest",
+      "evidence": ""
+    },
+    {
+      "id": "p17-02",
+      "name": "爽点/四段式/钩子题材条件化",
+      "phase": 17,
+      "type": "feature",
+      "dependencies": [
+        "p17-01"
+      ],
+      "status": "not-started",
+      "files": [
+        "memory/ContextAssembler.java",
+        "agent/ChapterWriterAgent.java",
+        "src/main/resources/prompts/chapter-writing.st",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "『必须至少2爽点』『四段式比例』『悬念钩子』在 ContextAssembler:599/633、chapter-writing.st:18-25、开篇高压约束四层无条件注入所有题材（方法不接收 genre）；plot<7 反馈词『爽点密度需提升』把历史正剧/文学推向爽文",
+      "description": "buildWritingConstraints 与 buildChapterLengthGuide 接收 genre：快节奏题材（CULTIVATION/WUXIA/THRILLER/MYSTERY 保持现状）保留爽点/四段式/钩子硬约束；慢节奏/严肃题材（LITERARY/HISTORICAL/ROMANCE）替换为题材结构指引（张力递进/收束节奏）；开篇高压仅快节奏题材；plot 低分反馈词按题材（爽点密度 vs 冲突张力）。chapter-writing.st 四段式块改由变量注入结构指引。",
+      "acceptance": "GenreConditionalConstraintsTest：HISTORICAL/LITERARY 约束不含『爽点』『四段式』『悬念钩子』且含题材结构指引；CULTIVATION/WUXIA 仍含（现状不变）；开篇高压 HISTORICAL 不强制；对应 Agent 测试与 OpeningPacingTest 回归通过",
+      "verify_cmd": "mvn test -Dtest=GenreConditionalConstraintsTest",
+      "evidence": ""
+    },
+    {
+      "id": "p17-03",
+      "name": "volume-outline 补 genreRules",
+      "phase": 17,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/resources/prompts/volume-outline.st",
+        "agent/PlotterAgent.java"
+      ],
+      "problem_ref": "volume-outline.st 硬编码『每章至少一个爽点』（:21）且无 {{genreRules}} 变量（对比 plotting.st:45-47、master-outline.st:24）——>40 章长篇走分层大纲，总纲带题材规则而逐卷细纲不带，项目越长题材约束断链越严重",
+      "description": "volume-outline.st 增 {{genreRules}} 变量（替换硬编码爽点句）；PlotterAgent.planVolume 注入题材规则；『爽点：』输出标签保留（解析兼容），字段说明按题材重释为核心张力爆发点。",
+      "acceptance": "VolumeOutlineGenreRulesTest：render 后含题材规则文本；HISTORICAL 项目 planVolume 的 prompt 不含无条件爽点要求；PlotterAgentTest 既有解析用例回归通过",
+      "verify_cmd": "mvn test -Dtest=VolumeOutlineGenreRulesTest",
+      "evidence": ""
+    },
+    {
+      "id": "p17-04",
+      "name": "ConceiveGate 题材豁免 + 风格细节债",
+      "phase": 17,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "service/ConceiveGate.java",
+        "agent/ChapterWriterAgent.java",
+        "memory/ContextAssembler.java"
+      ],
+      "problem_ref": "ConceiveGate.checkWorldbuilding 对所有题材强制 POWER_SYSTEM（:36-39），纯悬疑/现代言情被门禁打回或被迫编造；预设 styleVoice 被 extractStyleGuide 丢弃（ChapterWriterAgent:328-340）；preferredQuoteSources 声明未消费（ContextAssembler:824-862）",
+      "description": "POWER_SYSTEM 仅对 CULTIVATION/FANTASY/WUXIA(超自然武学) 强制，MYSTERY/ROMANCE/LITERARY/HISTORICAL 豁免（改为要求核心设定维度非空）；extractStyleGuide 拼 tone+voice+dosAnddonts；buildKnowledgeQuote 优先匹配 preferredQuoteSources 指定的知识条目。",
+      "acceptance": "ConceiveGateGenreExemptionTest：MYSTERY 无 POWER_SYSTEM 通过门禁；CULTIVATION 无 POWER_SYSTEM 仍 FAIL；styleGuide 渲染含 voice；preferredQuoteSources 指定来源时引用优先命中",
+      "verify_cmd": "mvn test -Dtest=ConceiveGateGenreExemptionTest",
+      "evidence": ""
+    },
+    {
+      "id": "p17-05",
+      "name": "自定义预设持久化",
+      "phase": 17,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "service/PresetRegistry.java",
+        "persistence/sqlite/SqliteNovelRepository.java",
+        "persistence/sqlite/SqliteSchemaInitializer.java",
+        "spi/NovelRepository.java"
+      ],
+      "problem_ref": "PresetRegistry.registerPreset 只存内存（:17 注释自认『可扩展为持久化』），重启即丢",
+      "description": "custom_presets 表（name 主键 + JSON 全文）；PresetRegistry 启动时从仓储加载、注册时落库。",
+      "acceptance": "CustomPresetPersistenceTest：POST 自定义预设 → 重建 PresetRegistry（模拟重启，从仓储重新加载）→ GET /api/presets 含该预设且字段完整",
+      "verify_cmd": "mvn test -Dtest=CustomPresetPersistenceTest",
+      "evidence": ""
+    },
+    {
+      "id": "p18-01",
+      "name": "PAUSED 终态修正",
+      "phase": 18,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "service/WritingTaskExecutor.java"
+      ],
+      "problem_ref": "INTERACTIVE 每章暂停使 runWritingLoop 正常退出，但 executeWriting 终态判定不识别 PAUSED_AT_CHECKPOINT，落入 FAILED『写作未完成: 写了1/50章』（WritingTaskExecutor:230-242）——正常审核点被误报为失败",
+      "description": "任务终态判定增加 PAUSED_AT_CHECKPOINT 分支 → taskStatus=PAUSED，message 说明『等待人工审批，approveCheckpoint 后可继续』；FAILED 仅用于真实异常。",
+      "acceptance": "PausedTerminalStateTest：INTERACTIVE 写 1 章暂停后任务终态=PAUSED 而非 FAILED，message 含『审批』",
+      "verify_cmd": "mvn test -Dtest=PausedTerminalStateTest",
+      "evidence": ""
+    },
+    {
+      "id": "p18-02",
+      "name": "checkpoint 审批质量 payload",
+      "phase": 18,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "domain/Checkpoint.java",
+        "orchestrator/NovelOrchestrator.java",
+        "persistence/sqlite/SqliteNovelRepository.java",
+        "frontend/src/components/InteractiveReview.tsx"
+      ],
+      "problem_ref": "Checkpoint 仅 description 一句话，不带正文/评分/问题摘要，用户需自行切 tab 查看再回来审批",
+      "description": "Checkpoint 增 payload JSON 字段（AFTER_CHAPTER：字数/ReaderReview 评分/未解决 HIGH 数/前 200 字预览/伏笔动态）；REST 返回；前端审批面板直接渲染 payload。",
+      "acceptance": "CheckpointPayloadTest：写完一章挂起的 checkpoint 携带 payload 含 wordCount/score/preview 字段；前端 npm build 通过",
+      "verify_cmd": "mvn test -Dtest=CheckpointPayloadTest",
+      "evidence": ""
+    },
+    {
+      "id": "p18-03",
+      "name": "写前指令通道",
+      "phase": 18,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "web/ContentController.java",
+        "web/OrchestratorController.java",
+        "orchestrator/NovelOrchestrator.java",
+        "frontend/src/components/RunConsole.tsx"
+      ],
+      "problem_ref": "write-chapter / write-all 不接收任何用户指令参数（ContentController:208），用户对下一章的诉求只能间接改梗概传导——Sudowrite 式『作者下指令、AI 定向生成』模式缺失",
+      "description": "POST /write-chapter?instruction= 与 write-all 携带 instruction：透传到本章 writingNotes 前缀【作者指令】；write-all 时逐章沿用。前端『写一章』增可选指令输入框。",
+      "acceptance": "WriteInstructionTest：带 instruction 写章 → ChapterWriter 组装的 writingNotes 含【作者指令】与原文；不带时行为不变",
+      "verify_cmd": "mvn test -Dtest=WriteInstructionTest",
+      "evidence": ""
+    },
+    {
+      "id": "p18-04",
+      "name": "SSE 实时进度推送",
+      "phase": 18,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "telemetry/EventLog.java",
+        "web/EventController.java",
+        "frontend/src/client.ts",
+        "frontend/src/components/RunConsole.tsx"
+      ],
+      "problem_ref": "无 SSE/WebSocket；write-all 数十分钟只显示 loading 按钮，轮询到的 currentChapter 不上屏（RunConsole:65-87）；CHAPTER_WRITTEN 等遥测只落文件无 REST 暴露",
+      "description": "EventLog 增进程内订阅总线（CopyOnWriteArrayList）；GET /api/projects/{id}/events 用 SseEmitter 按项目过滤推送 CHAPTER_WRITTEN/CHAPTER_FAILED/QUALITY_REVIEW/LLM_ERROR 事件；前端 EventSource 订阅显示逐章进度（保留轮询降级）。",
+      "acceptance": "SseEventBusTest：EventLog 写事件后订阅者收到该项目事件、其他项目不收到；SseEmitter 端点注册/超时处理无异常；前端 npm build 通过",
+      "verify_cmd": "mvn test -Dtest=SseEventBusTest",
+      "evidence": ""
+    },
+    {
+      "id": "p19-01",
+      "name": "角色生死状态链",
+      "phase": 19,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "domain/Character.java",
+        "agent/FactHarvesterAgent.java",
+        "memory/ContextAssembler.java",
+        "service/ArcScheduler.java",
+        "persistence/sqlite/SqliteNovelRepository.java"
+      ],
+      "problem_ref": "Character 无死亡/退场状态字段；死亡只可能记为真典 CHARACTER_STATE 但 cast 匹配对不在场者失效（RelevanceGateway:114-119），向量检索仍召回完整角色卡按活人注入——第 300 章『死人复活』是必然事故",
+      "description": "Character 增 status(ACTIVE/DECEASED/DEPARTED)+deathChapter；FactHarvester 提取 CHARACTER_STATE 含死亡关键词时自动置位并 supersede 真典；WritingContext 注入标注【已故·第N章殁】/【已退场】；ArcScheduler 冷场调度跳过 DECEASED。",
+      "acceptance": "CharacterStatusTest：收割『某角色身亡』事实后 Character.status=DECEASED+deathChapter；注入的出场人物段含已故标注；ArcScheduler 不再建议死人出场",
+      "verify_cmd": "mvn test -Dtest=CharacterStatusTest",
+      "evidence": ""
+    },
+    {
+      "id": "p19-02",
+      "name": "story_facts 索引 + subject 规范化",
+      "phase": 19,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "persistence/sqlite/SqliteSchemaInitializer.java",
+        "agent/FactHarvesterAgent.java"
+      ],
+      "problem_ref": "story_facts 无 (project_id,status) 索引，findActive 全表扫每章 5+ 次；FactHarvester 按 subject 精确字符串去重（:88），『林凡/林公子』别名分裂成平行 ACTIVE 事实，状态自相矛盾",
+      "description": "建索引 idx_story_facts_project_status；FactHarvester merge/supersede 前先过 EntityGraphService.resolveCanonical 规范化 subject。",
+      "acceptance": "SubjectNormalizationTest：已有实体别名『林公子→林凡』时，harvest 新事实 subject=林公子 落库为 林凡（不产生平行事实）；schema 升级后索引存在（PRAGMA index_list）",
+      "verify_cmd": "mvn test -Dtest=SubjectNormalizationTest",
+      "evidence": ""
+    },
+    {
+      "id": "p19-03",
+      "name": "全书结构化快照",
+      "phase": 19,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "domain/Project.java",
+        "orchestrator/NovelOrchestrator.java",
+        "memory/ContextAssembler.java",
+        "persistence/sqlite/SqliteNovelRepository.java",
+        "src/main/resources/prompts/"
+      ],
+      "problem_ref": "book_summary 是唯一跨卷全局视图且压成 ≤3 句（NovelOrchestrator:1985-1988）——无主线进度/阵营态势/时间线参照，第 300 章对全书结构无可靠记忆",
+      "description": "projects 增 book_snapshot TEXT（JSON：主线进度/当前阵营态势/关键人物状态/时间线锚点/已跨大节点）；卷末用上一版快照+本卷摘要 LLM 增量更新（新 prompt 模板 book-snapshot.st）；ContextAssembler 顶部注入结构化快照（book_summary 保留兜底）。",
+      "acceptance": "BookSnapshotTest：卷末后 book_snapshot 为合法 JSON 含主线进度字段；ContextAssembler 注入含【全书快照】段；snapshot 更新失败时回退旧版不阻塞写作",
+      "verify_cmd": "mvn test -Dtest=BookSnapshotTest",
+      "evidence": ""
     }
   ]
 }

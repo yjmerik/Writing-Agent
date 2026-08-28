@@ -2129,9 +2129,12 @@ public class NovelOrchestrator {
                 return false;
             }
 
-            // 硬性：未解决 HIGH issues
+            // 硬性：未解决 HIGH issues——p16-01 只统计近 60 章窗口（历史 HIGH 由卷末老化归档，
+            // 若问题仍在复发会产生新 issue 行落在窗口内；全量口径会让 400 章长跑永远到不了 FINAL）
+            int recentWindowStart = p.getCurrentChapterIndex() - 60;
             long highIssues = repository.findUnresolvedIssues(projectId).stream()
-                    .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH).count();
+                    .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH)
+                    .filter(i -> i.getDetectedAtChapter() > recentWindowStart).count();
             if (highIssues > 10) {
                 log.warn("成书门禁 FAIL: {} 条未解决 HIGH 级问题", highIssues);
                 return false;

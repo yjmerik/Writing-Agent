@@ -110,6 +110,8 @@ public interface NovelRepository {
     default int deleteExpiredEdges(String projectId, int beforeChapter) { return 0; }
     /** 归档旧的非 HIGH 连续性问题（resolved=1），返回归档数。默认 0 */
     default int archiveOldLowSeverityIssues(String projectId, int beforeChapter) { return 0; }
+    /** p16-01: 老化归档更早的未复发 HIGH 问题（resolved=1）。若问题近期复发会有新的 issue 行，旧行老化不影响门禁。默认 0 */
+    default int archiveAgedHighIssues(String projectId, int beforeChapter) { return 0; }
 
     // --- p11-q0-06: 归档衰减补齐（foreshadowings/narrative_threads/knowledge_entries，W3-03 只做 2/5）---
     /** 物理删除已回收（RESOLVED）的叙事线索，避免 narrative_threads 表无界增长。默认 0 */

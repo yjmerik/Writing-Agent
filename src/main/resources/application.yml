@@ -21,74 +21,75 @@ llm:
   replay:
     mode: "off"
     dir: data/fixtures/llm
+  # 2026-08-28 切换 GLM-5.3-Flash（思考模型，产出 reasoning_content；max-tokens 已按推理模型放大）
   default-model:
-    base-url: http://127.0.0.1:8088/v1
-    api-key: ${LOCAL_LLM_API_KEY:}
-    model: qwen3-4b-wuxia
+    base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+    api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
+    model: ${GLM_MODEL:glm-5.3-flash}
     temperature: 0.7
     max-tokens: 8192
-    context-window: 32768
+    context-window: 128000
     streaming: true
     style-guide: "严格遵循世界观设定中已确立的类型风格。不要引入与世界观类型不兼容的元素。人物名字必须与【出场人物】完全一致，绝对不得改名。"
   models:
     CHAPTER_WRITING:
-      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
-      api-key: ${DEEPSEEK_API_KEY:}
-      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+      api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
+      model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.8
-      # mc-p3-01: 推理模型 reasoning_content 消耗大量输出 token；8192 会截断 3000+ 字正文
+      # 推理模型 reasoning_content 消耗大量输出 token；8192 会截断 3000+ 字正文
       max-tokens: 20000
-      context-window: 64000
+      context-window: 128000
       style-guide: "严格遵循世界观设定中已确立的类型风格。人物名字必须与【出场人物】完全一致，绝对不得改名。不得引入与世界观不兼容的元素。"
     CONTINUITY_CHECK:
-      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
-      api-key: ${DEEPSEEK_API_KEY:}
-      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+      api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
+      model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.3
       max-tokens: 4096
-      context-window: 64000
+      context-window: 128000
     PLOTTING:
-      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
-      api-key: ${DEEPSEEK_API_KEY:}
-      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+      api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
+      model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.7
       # op-fix: 推理模型 reasoning_content 耗 token，8192 致总纲正文为空
       max-tokens: 16000
-      context-window: 64000
+      context-window: 128000
     WORLDBUILDING:
-      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
-      api-key: ${DEEPSEEK_API_KEY:}
-      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+      api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
+      model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.7
       max-tokens: 8192
-      context-window: 64000
+      context-window: 128000
     CHARACTER_DESIGN:
-      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
-      api-key: ${DEEPSEEK_API_KEY:}
-      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+      api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
+      model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.7
       max-tokens: 8192
-      context-window: 64000
+      context-window: 128000
     STYLE_GUARDIAN:
-      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
-      api-key: ${DEEPSEEK_API_KEY:}
-      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+      api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
+      model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.3
       max-tokens: 4096
-      context-window: 64000
+      context-window: 128000
     MEMORY_SUMMARY:
-      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
-      api-key: ${DEEPSEEK_API_KEY:}
-      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+      api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
+      model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.3
       max-tokens: 4096
-      context-window: 64000
+      context-window: 128000
     GENERAL:
-      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
-      api-key: ${DEEPSEEK_API_KEY:}
-      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+      api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
+      model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.3
       max-tokens: 4096
-      context-window: 64000
+      context-window: 128000
 
 

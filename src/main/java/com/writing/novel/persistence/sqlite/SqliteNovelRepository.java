@@ -974,6 +974,19 @@ public class SqliteNovelRepository implements NovelRepository {
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
+    /** p16-01: 老化归档更早的未复发 HIGH（resolved=1），防止 400 章尺度下历史 HIGH 无界累积锁死 FINAL 门禁 */
+    @Override
+    public int archiveAgedHighIssues(String projectId, int beforeChapter) {
+        String sql = "UPDATE continuity_issues SET resolved=1 WHERE project_id=? AND resolved=0 "
+                + "AND severity='HIGH' AND detected_at_chapter<?";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            ps.setInt(2, beforeChapter);
+            return ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
     /** p11-q0-06: 物理删除已回收（RESOLVED）叙事线索，避免 narrative_threads 表无界增长 */
     @Override
     public int deleteResolvedNarrativeThreads(String projectId) {

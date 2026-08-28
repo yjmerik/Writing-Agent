@@ -28,7 +28,7 @@ public class OpenAiCompatibleClient implements LlmClient {
     /** p10-w1-05: 退避时长（可被测试调小避免长睡）——5xx/网络 基数 */
     static volatile long backoffUnitMs = 1000L;
     /** p10-w1-05: 429 限流退避基数（更长：指数到分钟级） */
-    static volatile long rateLimitBackoffMs = 5000L;
+    static volatile long rateLimitBackoffMs = 30_000L;
 
     public OpenAiCompatibleClient() {
         this.httpClient = new OkHttpClient.Builder()

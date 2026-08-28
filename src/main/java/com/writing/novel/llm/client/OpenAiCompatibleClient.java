@@ -158,6 +158,11 @@ public class OpenAiCompatibleClient implements LlmClient {
         body.put("temperature", config.getTemperature());
         body.put("max_tokens", config.getMaxTokens());
         body.put("stream", stream);
+        // 思考模式开关（GLM thinking 参数）：关闭后无 reasoning_content，秒级返回；
+        // 非 GLM 端点（DeepSeek/本地）不会设置 thinking-enabled: false，不注入该字段
+        if (!config.isThinkingEnabled()) {
+            body.putObject("thinking").put("type", "disabled");
+        }
 
         ArrayNode messages = body.putArray("messages");
         if (request.getSystemPrompt() != null && !request.getSystemPrompt().isEmpty()) {

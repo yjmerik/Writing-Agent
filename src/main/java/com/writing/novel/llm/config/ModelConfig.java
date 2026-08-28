@@ -21,6 +21,10 @@ public class ModelConfig {
     /** p10-w1-04: 输出定价（元/千 token），默认 0.002（DeepSeek 参考价） */
     private double outputPriceYuanPerKTokens = 0.002;
 
+    /** 思考模式开关（GLM 系列 thinking 参数）：false 时请求体注入 thinking.type=disabled，
+     *  消除 reasoning_content 的分钟级延迟与输出 token 消耗（写作流水线 5000+ 调用必需） */
+    private boolean thinkingEnabled = true;
+
     public String getBaseUrl() { return baseUrl; }
     public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
     public String getApiKey() { return apiKey; }
@@ -40,5 +44,7 @@ public class ModelConfig {
     public double getInputPriceYuanPerKTokens() { return inputPriceYuanPerKTokens; }
     public void setInputPriceYuanPerKTokens(double v) { this.inputPriceYuanPerKTokens = v; }
     public double getOutputPriceYuanPerKTokens() { return outputPriceYuanPerKTokens; }
+
+    public boolean isThinkingEnabled() { return thinkingEnabled; }
     public void setOutputPriceYuanPerKTokens(double v) { this.outputPriceYuanPerKTokens = v; }
 }

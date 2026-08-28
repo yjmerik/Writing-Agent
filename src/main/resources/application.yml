@@ -29,6 +29,7 @@ llm:
     temperature: 0.7
     max-tokens: 8192
     context-window: 128000
+      thinking-enabled: false   # glm-5.3-flash 思考关闭：流水线速度与 token 成本
     streaming: true
     style-guide: "严格遵循世界观设定中已确立的类型风格。不要引入与世界观类型不兼容的元素。人物名字必须与【出场人物】完全一致，绝对不得改名。"
   models:
@@ -40,6 +41,7 @@ llm:
       # 推理模型 reasoning_content 消耗大量输出 token；8192 会截断 3000+ 字正文
       max-tokens: 20000
       context-window: 128000
+      thinking-enabled: false   # glm-5.3-flash 思考关闭：流水线速度与 token 成本
       style-guide: "严格遵循世界观设定中已确立的类型风格。人物名字必须与【出场人物】完全一致，绝对不得改名。不得引入与世界观不兼容的元素。"
     CONTINUITY_CHECK:
       base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
@@ -48,6 +50,7 @@ llm:
       temperature: 0.3
       max-tokens: 4096
       context-window: 128000
+      thinking-enabled: false   # glm-5.3-flash 思考关闭：流水线速度与 token 成本
     PLOTTING:
       base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
@@ -56,6 +59,7 @@ llm:
       # op-fix: 推理模型 reasoning_content 耗 token，8192 致总纲正文为空
       max-tokens: 16000
       context-window: 128000
+      thinking-enabled: false   # glm-5.3-flash 思考关闭：流水线速度与 token 成本
     WORLDBUILDING:
       base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
@@ -63,6 +67,7 @@ llm:
       temperature: 0.7
       max-tokens: 8192
       context-window: 128000
+      thinking-enabled: false   # glm-5.3-flash 思考关闭：流水线速度与 token 成本
     CHARACTER_DESIGN:
       base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
@@ -70,6 +75,7 @@ llm:
       temperature: 0.7
       max-tokens: 8192
       context-window: 128000
+      thinking-enabled: false   # glm-5.3-flash 思考关闭：流水线速度与 token 成本
     STYLE_GUARDIAN:
       base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
@@ -77,6 +83,7 @@ llm:
       temperature: 0.3
       max-tokens: 4096
       context-window: 128000
+      thinking-enabled: false   # glm-5.3-flash 思考关闭：流水线速度与 token 成本
     MEMORY_SUMMARY:
       base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
@@ -84,6 +91,7 @@ llm:
       temperature: 0.3
       max-tokens: 4096
       context-window: 128000
+      thinking-enabled: false   # glm-5.3-flash 思考关闭：流水线速度与 token 成本
     GENERAL:
       base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
@@ -91,5 +99,6 @@ llm:
       temperature: 0.3
       max-tokens: 4096
       context-window: 128000
+      thinking-enabled: false   # glm-5.3-flash 思考关闭：流水线速度与 token 成本
 
 

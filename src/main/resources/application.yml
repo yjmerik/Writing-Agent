@@ -23,7 +23,7 @@ llm:
     dir: data/fixtures/llm
   # 2026-08-28 切换 GLM-5.3-Flash（思考模型，产出 reasoning_content；max-tokens 已按推理模型放大）
   default-model:
-    base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+    base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
     api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
     model: ${GLM_MODEL:glm-5.3-flash}
     temperature: 0.7
@@ -33,7 +33,7 @@ llm:
     style-guide: "严格遵循世界观设定中已确立的类型风格。不要引入与世界观类型不兼容的元素。人物名字必须与【出场人物】完全一致，绝对不得改名。"
   models:
     CHAPTER_WRITING:
-      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
       model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.8
@@ -42,14 +42,14 @@ llm:
       context-window: 128000
       style-guide: "严格遵循世界观设定中已确立的类型风格。人物名字必须与【出场人物】完全一致，绝对不得改名。不得引入与世界观不兼容的元素。"
     CONTINUITY_CHECK:
-      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
       model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.3
       max-tokens: 4096
       context-window: 128000
     PLOTTING:
-      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
       model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.7
@@ -57,35 +57,35 @@ llm:
       max-tokens: 16000
       context-window: 128000
     WORLDBUILDING:
-      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
       model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.7
       max-tokens: 8192
       context-window: 128000
     CHARACTER_DESIGN:
-      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
       model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.7
       max-tokens: 8192
       context-window: 128000
     STYLE_GUARDIAN:
-      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
       model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.3
       max-tokens: 4096
       context-window: 128000
     MEMORY_SUMMARY:
-      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
       model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.3
       max-tokens: 4096
       context-window: 128000
     GENERAL:
-      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/paas/v4}
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
       model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.3

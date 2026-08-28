@@ -230,15 +230,25 @@ public class WritingTaskExecutor {
             } else if (written < maxChapters) {
                 var project = repository.findProject(projectId);
                 var outline = repository.findOutlineByProject(projectId);
-                boolean outlineExhausted = outline.isPresent() && project.isPresent() &&
-                        !outline.get().getVolumes().stream()
-                                .flatMap(v -> v.getSynopses().stream())
-                                .anyMatch(s -> s.getChapterIndex() > project.get().getCurrentChapterIndex());
-                if (outlineExhausted) {
-                    task.setStatus(WritingTask.Status.COMPLETED);
+                // p18-01: INTERACTIVE 模式 checkpoint 暂停是正常审核点，不是失败——
+                // 原判定落入 FAILED「写作未完成: 写了1/50章」误导用户
+                if (project.isPresent() && project.get().getState()
+                        == com.writing.novel.domain.NovelState.PAUSED_AT_CHECKPOINT) {
+                    task.setStatus(WritingTask.Status.PAUSED);
+                    task.setErrorMessage("已写 " + written + " 章后到达人工审核点（INTERACTIVE 模式），"
+                            + "审批 checkpoint 后可继续写作");
+                    log.info("写作任务暂停于审核点: taskId={}, 已写 {} 章", taskId, written);
                 } else {
-                    task.setStatus(WritingTask.Status.FAILED);
-                    task.setErrorMessage("写作未完成: 写了" + written + "/" + maxChapters + "章");
+                    boolean outlineExhausted = outline.isPresent() && project.isPresent() &&
+                            !outline.get().getVolumes().stream()
+                                    .flatMap(v -> v.getSynopses().stream())
+                                    .anyMatch(s -> s.getChapterIndex() > project.get().getCurrentChapterIndex());
+                    if (outlineExhausted) {
+                        task.setStatus(WritingTask.Status.COMPLETED);
+                    } else {
+                        task.setStatus(WritingTask.Status.FAILED);
+                        task.setErrorMessage("写作未完成: 写了" + written + "/" + maxChapters + "章");
+                    }
                 }
             } else {
                 task.setStatus(WritingTask.Status.COMPLETED);

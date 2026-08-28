@@ -118,6 +118,12 @@ public interface NovelRepository {
     default int deleteResolvedNarrativeThreads(String projectId) { return 0; }
     /** 删除同项目内重名的知识条目（按 name 去重保留其一）。默认 0 */
     default int deleteDuplicateKnowledgeEntries(String projectId) { return 0; }
+
+    // --- p17-05: 自定义预设持久化（跨项目共享） ---
+    /** 保存/更新自定义预设（name 为键，content 为 JSON 全文）。默认空实现 */
+    default void saveCustomPreset(String name, String contentJson) {}
+    /** 读取全部自定义预设（name → JSON）。默认空 */
+    default java.util.Map<String, String> findCustomPresets() { return java.util.Map.of(); }
     /** 长期悬置（planted<beforeChapter）且非 mustResolve 的 LOW 优先级伏笔标记放弃（resolved=1）。默认 0 */
     default int retireStaleForeshadowings(String projectId, int beforeChapter) { return 0; }
     /** p11-q1-01: 删除项目全部知识条目（ConceiveGate 重生成前清旧，避免累积）。默认 0 */

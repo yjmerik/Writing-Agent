@@ -31,8 +31,11 @@ public class AgentConfig {
 
     @Bean
     public PlotterAgent plotterAgent(LlmGateway gateway, NovelRepository repo,
-                                     PromptTemplateService promptService) {
-        return new PlotterAgent(gateway, repo, promptService);
+                                     PromptTemplateService promptService,
+                                     com.writing.novel.service.GenreRuleProvider genreRuleProvider) {
+        PlotterAgent plotter = new PlotterAgent(gateway, repo, promptService);
+        plotter.setGenreRuleProvider(genreRuleProvider); // p17-03: 卷大纲题材约束
+        return plotter;
     }
 
     @Bean

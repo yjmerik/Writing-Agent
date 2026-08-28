@@ -19,6 +19,11 @@ public class PlotterAgent {
     private final LlmGateway gateway;
     private final NovelRepository repository;
     private final PromptTemplateService promptService;
+    // p17-03: 题材规则提供者（可选注入，卷大纲题材约束）
+    private com.writing.novel.service.GenreRuleProvider genreRuleProvider;
+
+    /** p17-03: 注入题材规则提供者（@Bean 装配用） */
+    public void setGenreRuleProvider(com.writing.novel.service.GenreRuleProvider provider) { this.genreRuleProvider = provider; }
 
     public PlotterAgent(LlmGateway gateway, NovelRepository repository,
                         PromptTemplateService promptService) {
@@ -169,18 +174,38 @@ public class PlotterAgent {
                               String volumeTitle, String volumeSummary,
                               int startChapter, int endChapter,
                               String existingCharacters, String protagonistName) {
+        return planVolume(masterOutline, previousSummary, volumeTitle, volumeSummary,
+                startChapter, endChapter, existingCharacters, protagonistName, null);
+    }
+
+    /**
+     * p17-03: 带题材的卷大纲生成——注入 genreRules + 题材化高潮原则，修复长篇题材约束断链。
+     */
+    public String planVolume(String masterOutline, String previousSummary,
+                              String volumeTitle, String volumeSummary,
+                              int startChapter, int endChapter,
+                              String existingCharacters, String protagonistName,
+                              com.writing.novel.domain.GenreProfile genre) {
         int chapterCount = endChapter - startChapter + 1;
-        String systemPrompt = promptService.render("volume-outline", Map.of(
-                "masterOutline", masterOutline != null ? masterOutline : "（暂无总纲）",
-                "previousSummary", previousSummary != null ? previousSummary : "（第一卷，无前文）",
-                "volumeTitle", volumeTitle,
-                "volumeSummary", volumeSummary != null ? volumeSummary : "",
-                "startChapter", String.valueOf(startChapter),
-                "endChapter", String.valueOf(endChapter),
-                "startChapterPlus1", String.valueOf(startChapter + 1),
-                "chapterCount", String.valueOf(chapterCount),
-                "existingCharacters", existingCharacters != null ? existingCharacters : "（暂无）",
-                "protagonistName", protagonistName != null ? protagonistName : ""));
+        boolean fastPaced = genre == null || genre.isFastPaced();
+        String climaxPrinciple = fastPaced
+                ? "2. 每章至少一个爽点，爽点类型要多样化"
+                : "2. 每章至少一个核心张力点（冲突升级/真相揭示/关键抉择），形式要多样化";
+        String genreRules = genreRuleProvider != null && genre != null
+                ? genreRuleProvider.getPlottingRules(genre) : "";
+        String systemPrompt = promptService.render("volume-outline", java.util.Map.ofEntries(
+                java.util.Map.entry("masterOutline", masterOutline != null ? masterOutline : "（暂无总纲）"),
+                java.util.Map.entry("previousSummary", previousSummary != null ? previousSummary : "（第一卷，无前文）"),
+                java.util.Map.entry("volumeTitle", volumeTitle),
+                java.util.Map.entry("volumeSummary", volumeSummary != null ? volumeSummary : ""),
+                java.util.Map.entry("startChapter", String.valueOf(startChapter)),
+                java.util.Map.entry("endChapter", String.valueOf(endChapter)),
+                java.util.Map.entry("startChapterPlus1", String.valueOf(startChapter + 1)),
+                java.util.Map.entry("chapterCount", String.valueOf(chapterCount)),
+                java.util.Map.entry("existingCharacters", existingCharacters != null ? existingCharacters : "（暂无）"),
+                java.util.Map.entry("protagonistName", protagonistName != null ? protagonistName : ""),
+                java.util.Map.entry("climaxPrinciple", climaxPrinciple),
+                java.util.Map.entry("genreRules", genreRules != null ? genreRules : "")));
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.PLOTTING)

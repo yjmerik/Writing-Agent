@@ -999,8 +999,7 @@ public class SqliteNovelRepository implements NovelRepository {
     }
 
     /** p11-q0-06: 同项目重名知识条目去重（按 name 分组保留 MIN(id)，删除其余） */
-    @Override
-    public int deleteDuplicateKnowledgeEntries(String projectId) {
+    @Override    public int deleteDuplicateKnowledgeEntries(String projectId) {
         String sql = "DELETE FROM knowledge_entries WHERE project_id=? AND id NOT IN "
                 + "(SELECT MIN(id) FROM knowledge_entries WHERE project_id=? GROUP BY name)";
         try (Connection conn = cp.getConnection();
@@ -1011,10 +1010,36 @@ public class SqliteNovelRepository implements NovelRepository {
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
+    /** p17-05: 自定义预设持久化——upsert by name */
+    @Override
+    public void saveCustomPreset(String name, String contentJson) {
+        String sql = "INSERT INTO custom_presets (name, content, updated_at) VALUES (?,?,?) "
+                + "ON CONFLICT(name) DO UPDATE SET content=excluded.content, updated_at=excluded.updated_at";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name);
+            ps.setString(2, contentJson);
+            ps.setString(3, java.time.Instant.now().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** p17-05: 读取全部自定义预设 */
+    @Override
+    public java.util.Map<String, String> findCustomPresets() {
+        java.util.Map<String, String> result = new java.util.LinkedHashMap<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT name, content FROM custom_presets ORDER BY updated_at")) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) result.put(rs.getString("name"), rs.getString("content"));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return result;
+    }
+
     /** p11-q0-06: 长期悬置（planted<beforeChapter）非 mustResolve 的 LOW 伏笔标记放弃（resolved=1） */
     @Override
-    public int retireStaleForeshadowings(String projectId, int beforeChapter) {
-        String sql = "UPDATE foreshadowings SET resolved=1, resolved_at_chapter=? "
+    public int retireStaleForeshadowings(String projectId, int beforeChapter) {        String sql = "UPDATE foreshadowings SET resolved=1, resolved_at_chapter=? "
                 + "WHERE project_id=? AND resolved=0 AND must_resolve=0 AND priority='LOW' AND planted_at_chapter<?";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {

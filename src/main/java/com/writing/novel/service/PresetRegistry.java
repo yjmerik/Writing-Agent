@@ -14,16 +14,25 @@ import java.util.*;
  * 预设注册中心——加载内置预设 + 管理自定义预设。
  *
  * 内置预设从 classpath:presets/*.json 加载（只读）。
- * 自定义预设保存在内存中（可扩展为持久化）。
+ * p17-05: 自定义预设持久化到 custom_presets 表（跨项目共享，重启可恢复）。
  */
 @Service
 public class PresetRegistry {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private final Map<String, WritingPreset> presets = new LinkedHashMap<>();
+    private final com.writing.novel.spi.NovelRepository repository;
 
     public PresetRegistry() {
+        this(null);
+    }
+
+    /** p17-05: 带持久层的构造器（Spring 装配用；repository 可为 null=纯内存模式） */
+    @org.springframework.beans.factory.annotation.Autowired
+    public PresetRegistry(com.writing.novel.spi.NovelRepository repository) {
+        this.repository = repository;
         loadBuiltinPresets();
+        loadCustomPresets();
     }
 
     private void loadBuiltinPresets() {
@@ -43,6 +52,22 @@ public class PresetRegistry {
         }
     }
 
+    /** p17-05: 从持久层恢复自定义预设（内置同名优先，自定义不覆盖内置） */
+    private void loadCustomPresets() {
+        if (repository == null) return;
+        try {
+            repository.findCustomPresets().forEach((name, json) -> {
+                try {
+                    Map<String, Object> map = MAPPER.readValue(json,
+                            new TypeReference<Map<String, Object>>() {});
+                    WritingPreset preset = WritingPreset.fromMap(map);
+                    preset.setBuiltin(false);
+                    presets.putIfAbsent(name, preset); // 同名时内置优先
+                } catch (Exception ignored) { /* 单条损坏不阻断启动 */ }
+            });
+        } catch (Exception ignored) { /* 持久层不可用不阻断启动 */ }
+    }
+
     /** 获取所有预设 */
     public List<WritingPreset> listPresets() {
         return new ArrayList<>(presets.values());
@@ -53,10 +78,17 @@ public class PresetRegistry {
         return Optional.ofNullable(presets.get(name));
     }
 
-    /** 注册自定义预设 */
+    /** 注册自定义预设（p17-05: 落库持久化） */
     public void registerPreset(WritingPreset preset) {
         preset.setBuiltin(false);
         presets.put(preset.getName(), preset);
+        if (repository != null) {
+            try {
+                repository.saveCustomPreset(preset.getName(), MAPPER.writeValueAsString(preset.toMap()));
+            } catch (Exception e) {
+                // 持久化失败不影响内存注册
+            }
+        }
     }
 
     /** 从当前项目配置生成自定义预设 */

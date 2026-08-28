@@ -144,7 +144,11 @@ public class SqliteSchemaInitializer {
             "subject TEXT, assertion TEXT, chapter_established INTEGER, " +
             "source_chapter_version INTEGER DEFAULT 0, importance INTEGER DEFAULT 3, " +
             "status TEXT DEFAULT 'ACTIVE', superseded_by TEXT, " +
-            "last_validated_chapter INTEGER, created_at TEXT, updated_at TEXT)"
+            "last_validated_chapter INTEGER, created_at TEXT, updated_at TEXT)",
+
+        // p17-05: 自定义预设持久化（跨项目共享，name 主键 upsert）
+        "CREATE TABLE IF NOT EXISTS custom_presets (" +
+            "name TEXT PRIMARY KEY, content TEXT, updated_at TEXT)"
     };
 
     private final ConnectionProvider cp;

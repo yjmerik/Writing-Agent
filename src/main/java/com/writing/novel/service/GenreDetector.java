@@ -17,6 +17,10 @@ public class GenreDetector {
     public GenreProfile detect(String tags, String concept) {
         String text = ((tags != null ? tags : "") + " " + (concept != null ? concept : "")).toLowerCase();
 
+        // 武侠（p17-01：先于修仙判定——武侠/江湖明确出现时不落入修仙或通用）
+        if (containsAny(text, "武侠", "江湖", "侠客", "门派", "镖局", "恩仇", "剑客", "武林", "快意恩仇", "侠义")) {
+            return GenreProfile.WUXIA;
+        }
         // 玄幻/修仙
         if (containsAny(text, "玄幻", "修仙", "修真", "仙侠", "境界", "灵气", "丹药", "宗门", "渡劫", "元婴", "炼气")) {
             return GenreProfile.CULTIVATION;

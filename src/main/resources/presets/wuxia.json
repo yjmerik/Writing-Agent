@@ -1,0 +1,18 @@
+{
+  "name": "wuxia",
+  "description": "经典武侠：江湖恩仇、招式对决、侠义精神、白描写实动作",
+  "builtin": true,
+  "genreHint": "WUXIA",
+  "preferences": {
+    "dialogueDensity": 0.4,
+    "enableDialogueEnforcement": true,
+    "enableClimaxRotation": true,
+    "enableCharacterVoice": true,
+    "enableKnowledgeQuotes": true,
+    "preferredQuoteSources": ["武侠典籍", "诗词", "江湖切口"],
+    "preventTransitionOverlap": true
+  },
+  "styleTone": "沉雄遒劲、白描传神、快意而不失克制",
+  "styleVoice": "第三人称，动作白描干净利落，打斗重物理质感与节奏，江湖气息浓，避免现代语汇",
+  "styleDosAndDonts": "禁止科幻/修仙元素混入（无灵气、无境界、无法宝）；人物名字必须与设定一致；招式胜负取决于功力/经验/地利，不靠新招式名碾压；避免路人震惊体与无来由的奇遇"
+}

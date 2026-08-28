@@ -12,6 +12,14 @@ public class GenreRuleProvider {
     public String getPlottingRules(GenreProfile genre) {
         if (genre == null) return "";
         return switch (genre) {
+            case WUXIA -> """
+                题材规则（武侠）：
+                - 武学招式有来源与代价：每门武功需交代师承/秘籍，威力递进要有练习或际遇支撑
+                - 江湖门派/势力有明确格局与恩怨线，冲突由人情与利益驱动而非单纯善恶
+                - 侠义精神是主角行为底色：路见不平、信义为先，但不圣母
+                - 打斗写物理质感（兵刃/身法/呼吸/伤痛），避免招式名堆砌与一招定胜负
+                - 反套路：避免坠崖得奇遇、秘籍无敌、比武大会一路碾压""";
+
             case CULTIVATION -> """
                 题材规则（玄幻修仙）：
                 - 每卷主角只能完成一个境界/阶段的提升
@@ -83,6 +91,7 @@ public class GenreRuleProvider {
     public String getChapterWritingRules(GenreProfile genre) {
         if (genre == null) return "";
         String pacing = switch (genre) {
+            case WUXIA -> "节奏：动作与江湖事并进。开场交锋或事件引入（15%），冲突升级/追查（40%），高潮对决（30%），余波与新悬念（15%）";
             case CULTIVATION -> "节奏：标准四段式（开场钩子15%→冲突升级40%→高潮爽点30%→悬念结尾15%）";
             case MYSTERY -> "节奏：线索铺设优先。开场可慢热（20%），线索分析占核心（50%），转折（20%），新疑问（10%）";
             case ROMANCE -> "节奏：情感场景为主。情感互动占60%，外部事件30%，内心独白10%。避免过多动作描写";
@@ -102,6 +111,7 @@ public class GenreRuleProvider {
     public String getClimaxSuggestions(GenreProfile genre) {
         if (genre == null) return "";
         return switch (genre) {
+            case WUXIA -> "智斗（招式拆解/江湖智谋）/反预期（强敌破绽）/情感反转（恩义两难）/信息差（身世/秘辛）";
             case CULTIVATION -> "信息差/反预期/智斗/规则利用";
             case MYSTERY -> "信息差（线索揭示）/反预期（真相不同于推测）/智斗（推理对决）";
             case ROMANCE -> "情感反转（敌变友/误解消除）/反预期（告白时机）/信息差（暗恋揭晓）";
@@ -122,7 +132,7 @@ public class GenreRuleProvider {
         if (genre == null) return 4;
         return switch (genre) {
             case HISTORICAL, MYSTERY, THRILLER -> 3;  // 信息密度高的题材
-            case CULTIVATION, SCIFI, FANTASY -> 4;     // 行动/冒险型
+            case WUXIA, CULTIVATION, SCIFI, FANTASY -> 4; // 行动/冒险型
             case ROMANCE, LITERARY -> 4;                // 情感型
             case GENERAL -> 4;
         };
@@ -135,6 +145,7 @@ public class GenreRuleProvider {
     public String getRecommendedSceneDistribution(GenreProfile genre) {
         if (genre == null) return "";
         return switch (genre) {
+            case WUXIA -> "推荐场景分布：ACTION(行动战斗)35% / CONFRONTATION(对抗博弈)30% / REVELATION(揭示转折)20% / EMOTIONAL(情感关系)15%";
             case CULTIVATION -> "推荐场景分布：ACTION(行动战斗)40% / CONFRONTATION(对抗博弈)30% / REVELATION(揭示转折)20% / TRANSITION(过渡)10%";
             case MYSTERY -> "推荐场景分布：INVESTIGATION(调查推理)50% / REVELATION(揭示转折)20% / CONFRONTATION(对抗博弈)20% / TRANSITION(过渡)10%";
             case ROMANCE -> "推荐场景分布：EMOTIONAL(情感关系)50% / CONFRONTATION(对抗博弈)20% / REVELATION(揭示转折)15% / TRANSITION(过渡)15%";

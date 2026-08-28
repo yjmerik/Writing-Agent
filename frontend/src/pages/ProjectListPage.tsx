@@ -261,6 +261,7 @@ export default function ProjectListPage() {
             </Form.Item>
             <Form.Item name="preset" label="题材预设（可选 — 按题材优化对话密度/文风/引用）">
               <Select size="large" allowClear placeholder="自动推断（不选则按标签推断题材）">
+                <Select.Option value="wuxia">🗡️ 武侠江湖 — 招式对决、门派恩仇、侠义精神</Select.Option>
                 <Select.Option value="romance">💕 古风言情 — 高对话密度、情感节拍、诗词典故</Select.Option>
                 <Select.Option value="cultivation">⚔️ 修仙玄幻 — 境界体系、爽点轮换、战斗张力</Select.Option>
                 <Select.Option value="mystery">🔍 悬疑推理 — 线索管理、伏笔密度、逻辑链</Select.Option>

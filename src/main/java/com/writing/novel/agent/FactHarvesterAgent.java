@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
  */
 public class FactHarvesterAgent {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FactHarvesterAgent.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private final LlmGateway gateway;
     private final StoryFactRepository factRepo;
@@ -39,19 +40,34 @@ public class FactHarvesterAgent {
         public int total() { return added + validated + superseded; }
     }
 
+    /** p16-03: 收割 prompt 中既有事实清单的硬上限——千条事实全量注入 ≈33k token 会爆窗 */
+    static final int FACT_LIST_CAP = 80;
+
     public HarvestResult harvest(String projectId, Chapter chapter) {
         // 现有 ACTIVE 真典（供 LLM 去重 + Java 层比对）
+        // p16-03: 按相关性收窄——正文 cast 相关（subject 出现在正文中）优先，其余按重要性/新鲜度补足，
+        // 硬上限 FACT_LIST_CAP；未列入清单的事实仍参与 Java 层 merge 比对（findActiveBySubject 按需查）
         List<StoryFact> existing = factRepo.findActive(projectId);
-        String existingFacts = existing.stream()
+        String content = chapter.getContent() != null ? chapter.getContent() : "";
+        List<StoryFact> scoped = existing.stream()
+                .sorted(java.util.Comparator
+                        .comparing((StoryFact f) -> content.contains(f.getSubject()) ? 0 : 1)
+                        .thenComparing(java.util.Comparator.comparingInt(StoryFact::getImportance).reversed())
+                        .thenComparing(java.util.Comparator.comparingInt(StoryFact::getLastValidatedChapter).reversed()))
+                .limit(FACT_LIST_CAP)
+                .toList();
+        String existingFacts = scoped.stream()
                 .map(f -> "- [" + f.getFactType() + "] " + f.getSubject() + "：" + f.getAssertion())
                 .collect(Collectors.joining("\n"));
 
-        String content = chapter.getContent();
-        if (content != null && content.length() > 4000) content = content.substring(0, 4000);
+        String chapterContent = content;
+        if (chapterContent.length() > 4000) chapterContent = chapterContent.substring(0, 4000);
 
+        boolean truncatedList = existing.size() > scoped.size();
         String systemPrompt = promptService.render("fact-harvest", Map.of(
-                "existingFacts", existingFacts.isEmpty() ? "（暂无）" : existingFacts,
-                "chapterContent", content != null ? content : ""));
+                "existingFacts", existingFacts.isEmpty() ? "（暂无）"
+                        : (truncatedList ? "（以下为按相关性检索的既有事实子集，未列出不代表不存在）\n" : "") + existingFacts,
+                "chapterContent", chapterContent));
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.GENERAL)
@@ -65,6 +81,13 @@ public class FactHarvesterAgent {
             var resp = gateway.complete(req);
             return merge(resp.getContent(), projectId, chapter.getChapterIndex());
         } catch (Exception e) {
+            // p16-03: fail-loud——真典停止生长必须可观测，不再静默吞掉
+            log.warn("真典收割 LLM 调用失败(项目{}, 第{}章): {}", projectId, chapter.getChapterIndex(), e.getMessage());
+            com.writing.novel.telemetry.EventLog.emit("LLM_ERROR", Map.of(
+                    "taskType", LlmTaskType.GENERAL.name(),
+                    "errorClass", e.getClass().getSimpleName(),
+                    "message", com.writing.novel.telemetry.EventLog.truncate(e.getMessage(), 200),
+                    "phase", "fact-harvest"));
             return new HarvestResult(0, 0, 0);
         }
     }

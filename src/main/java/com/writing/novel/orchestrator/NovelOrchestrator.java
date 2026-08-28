@@ -1633,7 +1633,13 @@ public class NovelOrchestrator {
             sb.append("【").append(e.getName()).append("】").append(e.getContent()).append("\n");
         }
         // p5-c1: 注入未回收伏笔台账，供连续性检查器参考
-        var foreshadowings = repository.findUnresolvedForeshadowings(projectId);
+        // p16-04: cap 20——mustResolve 恒在，其余按埋设先后（早埋优先），防全量注入随章节无界增长
+        var foreshadowings = repository.findUnresolvedForeshadowings(projectId).stream()
+                .sorted(java.util.Comparator
+                        .comparing(Foreshadowing::isMustResolve).reversed()
+                        .thenComparing(Foreshadowing::getPlantedAtChapter))
+                .limit(20)
+                .toList();
         if (!foreshadowings.isEmpty()) {
             sb.append("\n=== 待回收伏笔 ===\n");
             for (var f : foreshadowings) {

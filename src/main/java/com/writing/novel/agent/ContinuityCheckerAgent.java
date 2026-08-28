@@ -93,7 +93,10 @@ public class ContinuityCheckerAgent {
      * mc-p2-02: 构建长程连续性检查依据——历史卷摘要（span>3 的卷级摘要，过滤 dirty）
      * + 叙事线索台账（未回收的线索）。检查新章节时与这些历史依据核对。
      */
-    private String buildHistorySection(String projectId) {
+    /** p16-04: 线索台账注入上限——40 条线索全量注入随章节无界增长 */
+    static final int THREAD_LEDGER_CAP = 15;
+
+    String buildHistorySection(String projectId) {
         if (repository == null) return "";
         StringBuilder sb = new StringBuilder();
 
@@ -115,9 +118,12 @@ public class ContinuityCheckerAgent {
             sb.append("\n");
         }
 
-        // 叙事线索台账：未回收线索
+        // 叙事线索台账：未回收线索（p16-04: 悬挂最久优先，cap 15）
         var threads = repository.findAllNarrativeThreads(projectId).stream()
                 .filter(t -> t.getStatus() != com.writing.novel.domain.ThreadStatus.RESOLVED)
+                .sorted(java.util.Comparator.comparingInt(
+                        t -> ((com.writing.novel.domain.NarrativeThread) t).getFirstSeenChapter()))
+                .limit(THREAD_LEDGER_CAP)
                 .toList();
         if (!threads.isEmpty()) {
             sb.append("【叙事线索台账（本章不得与以下未回收线索冲突，必要时推进或回收）】\n");

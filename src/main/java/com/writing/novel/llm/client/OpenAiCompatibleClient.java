@@ -20,6 +20,8 @@ import java.time.Duration;
  */
 public class OpenAiCompatibleClient implements LlmClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(OpenAiCompatibleClient.class);
+
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private final OkHttpClient httpClient;
 
@@ -58,6 +60,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                     .post(RequestBody.create(body.toString(), MediaType.parse("application/json")))
                     .build();
 
+            long attemptStart = System.currentTimeMillis();
             try (Response response = httpClient.newCall(httpRequest).execute()) {
                 if (response.isSuccessful()) {
                     JsonNode root = MAPPER.readTree(response.body().string());
@@ -91,6 +94,10 @@ public class OpenAiCompatibleClient implements LlmClient {
                 throw new RuntimeException("LLM 调用失败（重试耗尽）: HTTP " + response.code()
                         + " " + response.body().string());
             } catch (IOException e) {
+                long elapsed = System.currentTimeMillis() - attemptStart;
+                log.warn("LLM 调用 IOException(尝试{}/3, {}ms): {} — {}: {}",
+                        attempt + 1, elapsed, request.getTaskType(),
+                        e.getClass().getSimpleName(), e.getMessage());
                 if (attempt < 2) {
                     sleepBackoff(attempt, false);
                     continue;

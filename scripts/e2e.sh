@@ -83,7 +83,7 @@ CONCEIVE_TASK=$(echo "$CONCEIVE_JSON" | python3 -c "import json,sys; d=json.load
 if [ "$MODE" = "replay" ]; then
   CONCEIVE_LIMIT=180
 else
-  CONCEIVE_LIMIT=1200
+  CONCEIVE_LIMIT=3600
 fi
 if [ -n "$CONCEIVE_TASK" ]; then
   CT_STATE=""
@@ -121,10 +121,10 @@ TASK_ID=$(echo "$WRITE_RESULT" | python3 -c "import json,sys; print(json.load(sy
 # 异步写作——轮询任务直到终态
 # replay（3 章）固定 10 分钟上限；record/live 为每章预留 10 分钟，覆盖完整质检流水线。
 if [ "$MODE" = "replay" ]; then
-  POLL_LIMIT=600
+  POLL_LIMIT=1800
 else
-  POLL_LIMIT=$(( CHAPTERS * 600 ))
-  [ "$POLL_LIMIT" -lt 600 ] && POLL_LIMIT=600
+  POLL_LIMIT=$(( CHAPTERS * 1800 ))
+  [ "$POLL_LIMIT" -lt 600 ] && POLL_LIMIT=1800
 fi
 TASK_JSON=""
 for i in $(seq 1 "$POLL_LIMIT"); do

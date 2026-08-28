@@ -7,6 +7,7 @@ import com.writing.novel.llm.config.ModelConfig;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -94,4 +95,41 @@ class OpenAiCompatibleClientTest {
         assertTrue(body.contains("用户消息"));
         assertEquals("Bearer sk-test", recorded.getHeader("Authorization"));
     }
+
+    /** p16-e2e-fix: GLM 内容审查(1301)首次拦截时温和化 system prompt 原位重试，不消耗重试次数 */
+    @Test
+    void 内容审查首次拦截温和化重试成功() throws Exception {
+        // 第一次：1301 审查拦截；第二次：成功
+        server.enqueue(new MockResponse().setResponseCode(400)
+                .setBody("{\"error\":{\"code\":\"1301\",\"message\":\"系统检测到敏感内容\"}}"));
+        server.enqueue(new MockResponse().setResponseCode(200)
+                .setBody("{\"choices\":[{\"message\":{\"content\":\"OK\"}}],\"usage\":{\"prompt_tokens\":5,\"completion_tokens\":2}}"));
+        var req = com.writing.novel.llm.LlmRequest.builder()
+                .taskType(com.writing.novel.llm.LlmTaskType.CHARACTER_DESIGN)
+                .systemPrompt("设计反派人物").userMessage("开始").build();
+        var resp = client.complete(modelConfig(), req);
+        assertEquals("OK", resp.getContent());
+        assertEquals(2, server.getRequestCount(), "应恰好 2 次请求（拦截+温和化重试）");
+        // 第二次请求（FIFO 后出）的 system 应含安全提示
+        String firstBody = server.takeRequest(1, TimeUnit.SECONDS).getBody().readUtf8();
+        String secondBody = server.takeRequest(1, TimeUnit.SECONDS).getBody().readUtf8();
+        assertFalse(firstBody.contains("安全提示"), "首次请求不应含安全提示");
+        assertTrue(secondBody.contains("安全提示") || secondBody.contains("克制"), "重试请求应注入温和化提示");
+    }
+
+    /** p16-e2e-fix: 温和化后仍被拦截才抛 ContentFilterException */
+    @Test
+    void 温和化重试仍拦截则抛ContentFilterException() throws Exception {
+        server.enqueue(new MockResponse().setResponseCode(400)
+                .setBody("{\"error\":{\"code\":\"1301\",\"message\":\"敏感\"}}"));
+        server.enqueue(new MockResponse().setResponseCode(400)
+                .setBody("{\"error\":{\"code\":\"1301\",\"message\":\"仍敏感\"}}"));
+        var req = com.writing.novel.llm.LlmRequest.builder()
+                .taskType(com.writing.novel.llm.LlmTaskType.CHARACTER_DESIGN)
+                .systemPrompt("设计人物").userMessage("开始").build();
+        assertThrows(com.writing.novel.llm.client.ContentFilterException.class,
+                () -> client.complete(modelConfig(), req));
+        assertEquals(2, server.getRequestCount(), "温和化只重试一次，不无限循环");
+    }
+
 }

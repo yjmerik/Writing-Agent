@@ -51,8 +51,10 @@ public class OpenAiCompatibleClient implements LlmClient {
         ObjectNode body = buildRequestBody(config, request, false);
         String url = config.getBaseUrl() + "/chat/completions";
 
-        // 429/5xx 重试（3次，指数退避）
-        for (int attempt = 0; attempt < 3; attempt++) {
+        // 429/5xx 重试（3次，指数退避）；内容审查(1301)首次温和化原位重试（不消耗次数）
+        boolean softened = false;
+        int attempt = 0;
+        while (attempt < 3) {
             Request httpRequest = new Request.Builder()
                     .url(url)
                     .header("Authorization", "Bearer " + config.getApiKey())
@@ -73,9 +75,17 @@ public class OpenAiCompatibleClient implements LlmClient {
                 // 400/401/403 等客户端错误
                 if (response.code() >= 400 && response.code() < 500 && response.code() != 429) {
                     String errBody = response.body().string();
-                    // 内容审查错误抛专用异常（可恢复，上层可用温和 prompt 重试）
+                    // 内容审查（GLM 1301 等）：首次注入温和化提示原位重试一次（GLM 审查比 DeepSeek 敏感，
+                    // 构思期的冲突/复仇设定易触发 level-1 误拦；温和化后通常可过）
                     if (errBody.contains("1301") || errBody.contains("content_filter")
                             || errBody.contains("Content Filter") || errBody.contains("contentFilter")) {
+                        if (!softened) {
+                            softened = true;
+                            appendSafetyNote(body);
+                            log.warn("内容审查拦截({}), 温和化 system prompt 后原位重试: {}",
+                                    response.code(), request.getTaskType());
+                            continue; // 不消耗重试次数
+                        }
                         throw new ContentFilterException("内容审查拦截: " + errBody);
                     }
                     throw new RuntimeException("LLM 调用失败: HTTP " + response.code() + " " + errBody);
@@ -85,6 +95,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                     boolean rateLimited = response.code() == 429;
                     response.close();
                     sleepBackoff(attempt, rateLimited);
+                    attempt++;
                     continue;
                 }
                 // p10-w1-05: 429 重试耗尽 → RateLimitException（上层降级到 fallback 模型，不计永久失败）
@@ -100,12 +111,27 @@ public class OpenAiCompatibleClient implements LlmClient {
                         e.getClass().getSimpleName(), e.getMessage());
                 if (attempt < 2) {
                     sleepBackoff(attempt, false);
+                    attempt++;
                     continue;
                 }
                 throw new RuntimeException("LLM 调用异常（重试耗尽）", e);
             }
         }
         throw new RuntimeException("LLM 调用失败：不应到达此处");
+    }
+
+    /** 内容审查温和化：向 system 消息追加安全表达提示（原位修改请求体） */
+    private void appendSafetyNote(ObjectNode body) {
+        JsonNode messages = body.get("messages");
+        if (messages != null && messages.isArray() && !messages.isEmpty()) {
+            JsonNode first = messages.get(0);
+            if (first.isObject() && "system".equals(first.path("role").asText())) {
+                ((com.fasterxml.jackson.databind.node.ObjectNode) first).put("content",
+                        first.path("content").asText()
+                                + "\n\n【安全提示】请全程使用克制、含蓄的表达：冲突与死亡用侧面烘托而非直白描写，"
+                                + "避免血腥细节、自残教唆与任何敏感现实指涉。保持文学化叙述。");
+            }
+        }
     }
 
     /**

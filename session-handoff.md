@@ -2,47 +2,42 @@
 
 ## Current Objective
 
-- **Goal**: Phase 15 人机设定扩容与作业可观测 + 回放确定性收尾。
-- **Current status**: **9/9 完成**（p15-08/p15-09 已实现入库并回填实跑证据）。backlog 耗尽。
-- **Spec**: `docs/specs/2026-08-18-hitl-expansion.md`、`docs/specs/2026-08-22-isolated-e2e-fixtures.md`、`docs/specs/2026-08-22-replay-determinism.md`
+- **Goal**: Phase 16-19 百万字稳定性 + 风格确定性 + 人机交互（18 features 全部完成）+ LLM 路由切换与 E2E 全量验证。
+- **Current status**: **全部完成**。396 测试全绿；DeepSeek v4-flash E2E record/replay/compare-baseline 三关全过。
+- **Spec**: `docs/specs/2026-08-28-million-word-roadmap.md`
 - **Branch**: `phase-11-quality-gate-architecture`（未 push，无 upstream）
 
-## Completed
+## Completed（2026-08-28 ~ 08-29）
 
-前序：p15-01（HitlCreateWorldCharacterTest 3 pass）、p15-02（HitlExpandAgentsTest 2 pass）。
-
-2026-08-22 复审原子入库（此前登记 evidence 但实现留在工作树的部分 + 新登记的 p15-08/09；混合文件按 hunk 级拆分提交）：
-
-| id | commits | 证据 |
+| Phase | 内容 | 提交 |
 |---|---|---|
-| p15-03 | `8e19ac4` / `a8cc932` | UnwrittenSynopsisEditTest 2 pass（staged 状态下复验）；npm run build pass |
-| p15-04 | `f65a90b` / `0f33e25` | HitlCanonForeshadowReviewTest 3 pass；npm run build pass |
-| p15-05 | `b2e9793` | ConceiveTaskTest 3 pass（DELETE active-task 409） |
-| p15-06 | `8a7e580` / `3dbe851` | CheckpointSpanTest 2 pass；npm run build pass |
-| p15-07 | `2ee2e57` | e2e-fixture-dir-test.sh pass；隔离目录 replay 3 章 0 errors |
-| p15-08 | `7603ee1` | ContextOrderDeterminism/RelevanceGatewayAnchor/ContextAssembler/ClimaxDiversityTracker 测试 12 pass；e2e + compare-baseline PASS（上下文组装基线门禁） |
-| p15-09 | `9a866a6` | RecordReplayLlmGatewayTest 8 pass（含 miss 转储/完整请求 2 新用例） |
+| 模型切换 | glm-5.3-flash（9 块）→ 调试 8 轮修复 8 个基础设施 bug → **终态 DeepSeek v4-flash**（9a9e6fd→ae694f7 系列） | `9a9e6fd`…`ae694f7` 后续 |
+| P16 百万字止血 | HIGH 老化+FINAL 近60章口径 / 伏笔回收卷（死路修复）/ 4 处全量注入收窄+fail-loud / 重写路径向量重建 / 摘要分层裁剪+premise 预算 | `9a9e6fd` `9727f08` `4b4df2a` `d0f93af` `8716a2e` |
+| P17 风格确定性 | WUXIA 全链路 / 爽点四段式钩子题材条件化 / volume-outline genreRules / ConceiveGate 豁免+styleVoice+preferredQuoteSources / 自定义预设持久化 | `6cd62a5` `8716a2e` `4983ead` `d0f93af` |
+| P18 人机交互 | PAUSED 终态 / checkpoint 质量 payload（含前端）/ 写前指令通道（write-chapter/write-all instruction）/ SSE 实时进度（EventLog 总线+SseEventBus+前端订阅） | `4983ead` `d0f93af` `99ce1ee` |
+| P19 长篇质量 | 角色生死链（Character.Status+死亡检测+注入标注+调度豁免）/ story_facts 索引+subject 规范化 / 全书结构化快照（book_snapshot） | `99ce1ee` + p19-02 |
 
-其他：`fec6b53` 修复 `EditPassageReturnsBeforeHarvestTest` @TempDir 清理与后台 harvest 线程的竞态（latch 化；join 不可用因 POST_PROCESS 空闲池线程常驻）；`6699296`/`03794d5` 删除生成态 `.omo/`（含 41 个早期误入库文件）并 gitignore `.omo/`。
+LLM 基础设施加固（保留生效，DeepSeek 同受益）：callTimeout 30min、429 退避 30s、内容审查 1301 温和化重试、**complete() 流式聚合路径**（streaming=true 时 SSE 聚合+include_usage，fixture 录制透明）、构思三模板 2500 字输出纪律。
 
-## Verification（2026-08-22 实跑）
+## Verification（2026-08-29 实跑）
 
-- `mvn compile -q` exit 0；全量 `mvn test`：**337 pass / 0 fail / 0 error / 1 skip**
+- 全量 `mvn test`：**396 pass / 0 fail / 1 skip**（bash -c 'source scripts/load-env.sh && mvn test'——Spring 上下文测试需 DEEPSEEK_API_KEY）
 - `cd frontend && npm run build` 通过
-- `bash scripts/e2e-fixture-dir-test.sh` pass
-- `E2E_FIXTURE_DIR=data/e2e-fixtures/replay-proof-20260822 ./scripts/e2e.sh --mode replay`：3 章、10,802 字、50 LLM calls、llmErrors=0、chapterFailures=0
-- `python3 scripts/compare-baseline.py` PASS（未使用 --bless）
-- `git status` 干净
+- **E2E record**（`E2E_FIXTURE_DIR=data/e2e-fixtures/dsv4-20260829 ./scripts/e2e.sh --mode record --chapters 3`）：3 章 / 10,951 字 / 57 LLM 调用 / **0 错误 / 0 章节失败**
+- **E2E replay**：与 record 完全一致（同字数/同调用/0 错误）——确定性验证 PASS
+- `compare-baseline.py` PASS（已 `--bless`，golden 对齐 dsv4-20260829）
+- 读者评分 8/8/9；武侠题材 REST 验证（preset=wuxia→genre=WUXIA）+ SSE 端点验证通过
 
-## E2E
+## GLM 教训（如再切回必读）
 
-- `E2E_FIXTURE_DIR` 默认 `data/e2e-fixtures/llm`，可覆盖并传入 Spring `llm.replay.dir`；共享 `data/fixtures/llm` 不再参与 E2E。
-- runner 传 `--persistence.embedding=stub`、轮询异步 `/run` 任务至终态、record/live 每章 600s 预算。
-- `data/e2e-fixtures/replay-proof-20260822` 是当前有效 fixture 目录；p15-08 改动后 replay 指纹稳定。
-- replay miss 会转储 `<指纹>.miss.json`（完整请求），可离线比对定位漂移。
+1. 必须用 coding 端点 `https://open.bigmodel.cn/api/coding/paas/v4`（标准 paas 端点 1113 余额不足）
+2. `thinking-enabled: false`（yml 已删该行=默认不注入；GLM 需手动加回）否则思考模式单次 3-10 分钟
+3. **夜间（约 23 点后）网关对 >5min 非流式长响应 StreamReset CANCEL，新连接也失效**——必须走流式（completeViaStream 已就绪，把任务块 streaming 置 true 即可）
+4. 极健谈：撞 max_tokens 上限浪费 3-4 分钟且截断 JSON——2500 字输出纪律模板行已在三个构思模板中
 
-## Next Steps
+## Known Issues / Next Steps
 
-1. backlog 耗尽：按 AGENTS.md 跑 diagnose + compare-baseline 复核，或向用户要新需求；不要自造需求。
-2. 新录制请使用新的 `E2E_FIXTURE_DIR`，随后用相同路径 replay。
-3. 分支未 push；如需 push：`git push -u origin phase-11-quality-gate-architecture`。
+1. **标题解析健壮性（回流候选）**：第 3/5 章标题混入大纲伏笔标注（"回收)；埋设-…"）——卷大纲 LLM 行格式漂移 + parseAndAppendVolume 标题截取需按「。/）」截断。不影响正文与质检。
+2. P16-P19 的前端深度交互（checkpoint payload 面板美化、SSE 断线重连 UI）可继续打磨。
+3. 分支未 push；如需：`git push -u origin phase-11-quality-gate-architecture`。
+4. 百万字长跑验证：P0 缺陷已全部修复，建议后续安排 50-100 章 record 实跑验证 HIGH 老化/回收卷/摘要分层在真实长跑中的表现。

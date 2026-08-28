@@ -2174,7 +2174,7 @@
       "phase": 16,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "service/ArchiveCompactor.java",
         "persistence/sqlite/SqliteNovelRepository.java",
@@ -2184,7 +2184,7 @@
       "description": "卷末 ArchiveCompactor 将 30 章前出现且此后未复发/未解决的 HIGH 标 resolved（老化，注明 aged_out）；FINAL 门禁与写作循环熔断只统计近 60 章的未解决 HIGH。",
       "acceptance": "HighIssueAgingTest：构造 40 章前的未复发 HIGH → 归档后 resolved=1 且 reason=aged_out；FINAL 门禁用 41 条历史 HIGH + 0 近期 HIGH 判 PASS；熔断计数不含 60 章前 HIGH",
       "verify_cmd": "mvn test -Dtest=HighIssueAgingTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑：HighIssueAgingTest 3 pass（老化/历史门禁/近期门禁）；ArchiveCompactorTest 6 + FinalAuditGateTest 4 回归通过；全量 mvn test 396 pass / 0 fail / 1 skip（commit 9a9e6fd）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）"
     },
     {
       "id": "p16-02",
@@ -2192,7 +2192,7 @@
       "phase": 16,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "orchestrator/NovelOrchestrator.java"
       ],
@@ -2200,7 +2200,7 @@
       "description": "大纲耗尽且 mustResolve 伏笔 >0 时：生成 8 章『回收卷』（放宽 extend 的 targetChapters 上限一次），mustResolve 伏笔写入回收卷新章梗概的 writingNotes；写完回收卷后再走 FINAL 门禁。",
       "acceptance": "FinalForeshadowingRecoveryTest：targetChapters 达上限 + mustResolve 伏笔存在 → 调用 extend 生成回收卷且回收指令出现在新章梗概；无 mustResolve 时行为不变（直接门禁）",
       "verify_cmd": "mvn test -Dtest=FinalForeshadowingRecoveryTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑：FinalForeshadowingRecoveryTest 3 pass（回收卷追加+指令入writingNotes/有界一次/无mustResolve不追加）；FinalAuditGateTest 回归通过（commit 9727f08）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）"
     },
     {
       "id": "p16-03",
@@ -2208,7 +2208,7 @@
       "phase": 16,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "agent/FactHarvesterAgent.java",
         "telemetry/EventLog.java"
@@ -2217,7 +2217,7 @@
       "description": "收割 prompt 只注入与本章相关的事实（本章 cast 匹配 + importance desc top，硬上限 80 条）+ 声明『清单为检索子集，未列出不代表不存在』；LLM 失败记 LLM_ERROR 事件并 log.warn。",
       "acceptance": "FactHarvesterScopedTest：500 条 ACTIVE 事实时 prompt 中事实清单 ≤80 条且含 cast 相关；LLM 抛异常时 events.jsonl 出现 LLM_ERROR 事件",
       "verify_cmd": "mvn test -Dtest=FactHarvesterScopedTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑：FactHarvesterScopedTest 2 pass（500条事实清单≤80且cast相关+子集声明/LLM失败emit LLM_ERROR）；FactHarvesterTest 5 回归通过（commit 4b4df2a）"
     },
     {
       "id": "p16-04",
@@ -2225,7 +2225,7 @@
       "phase": 16,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "agent/ForeshadowingExtractor.java",
         "agent/ContinuityCheckerAgent.java",
@@ -2235,7 +2235,7 @@
       "description": "三处注入分别加上限并按相关性排序：ForeshadowingExtractor 未回收优先+最近 20 条；ContinuityChecker 线索按悬挂时长取前 15；collectSettingsForCheck 未回收伏笔取前 20（mustResolve 恒在）。",
       "acceptance": "ContextInjectionCapTest：构造 60 条伏笔/40 条线索时三处注入分别 ≤20/≤15/≤20 且 mustResolve 伏笔恒在",
       "verify_cmd": "mvn test -Dtest=ContextInjectionCapTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑：ContextInjectionCapTest 2 pass（伏笔清单≤20未回收优先/线索台账≤15悬挂最久优先）；collectSettingsForCheck cap 20 同步实现；伏笔/连续性/真典回归 21 pass（commit 4b4df2a）"
     },
     {
       "id": "p16-05",
@@ -2243,7 +2243,7 @@
       "phase": 16,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "agent/ChapterWriterAgent.java",
         "orchestrator/NovelOrchestrator.java"
@@ -2252,7 +2252,7 @@
       "description": "三个路径统一走 indexChapterInChunks（内含 removeByIdPrefix 清旧 + 批量 embedding 入库），抽公共方法避免重复。",
       "acceptance": "VectorCleanupOnRewritePathsTest：rewriteForCorrection/rewriteChapter/editPassage 后，向量库中该章 chunk 均为新版本内容（旧版本 0 命中）",
       "verify_cmd": "mvn test -Dtest=VectorCleanupOnRewritePathsTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑（agent 实现+主会话复核）：VectorCleanupOnRewritePathsTest 3 pass（rewriteForCorrection/rewriteChapter/editPassage 后旧chunk清+新chunk入库，红→绿）；*Vector*/*Rewrite*/*EditPassage* 回归 15 pass（commit d0f93af）"
     },
     {
       "id": "p16-06",
@@ -2260,7 +2260,7 @@
       "phase": 16,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "memory/ContextAssembler.java",
         "memory/TokenBudget.java"
@@ -2269,7 +2269,7 @@
       "description": "buildRecentSummary 重构为分层：book_summary → 最近 3 卷全文 → 细粒度摘要 → 更早卷 stub（丢最老优先）；applyTokenBudget 增加 premiseSection 截断（保头部 6000 token，标注已截断）。",
       "acceptance": "SummaryLayeredTrimTest：50 卷 + 预算受限时，最近 3 章细粒度摘要仍在、最老卷 stub 先被丢弃；超长 premise 被截断且含截断标记",
       "verify_cmd": "mvn test -Dtest=SummaryLayeredTrimTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑（agent 实现+主会话复核）：SummaryLayeredTrimTest 4 pass（预算受限细粒度保/最老卷stub先丢/超长premise截断保头+标记/常规premise不裁）；ContextAssembler 相关回归 24 pass（commit 8716a2e）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）"
     },
     {
       "id": "p17-01",
@@ -2277,7 +2277,7 @@
       "phase": 17,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "domain/GenreProfile.java",
         "service/GenreDetector.java",
@@ -2289,7 +2289,7 @@
       "description": "GenreProfile 增 WUXIA；GenreDetector 修仙分支前加武侠分支（武侠/江湖/侠客/门派/镖局/恩仇/剑客/武林）；GenreRuleProvider 补武侠规则（动作驱动节奏、江湖门派体系、招式比拼场景占比、侠义冲突建议）；presets/wuxia.json（沉雄遒劲、白描动作、对话密度 0.4）；前端预设下拉 +1。",
       "acceptance": "WuxiaGenreTest：detect(武侠,江湖)=WUXIA；GenreRuleProvider 各规则方法对 WUXIA 非空且不含修仙境界词；PresetRegistry 加载 wuxia.json 且 applyToPreferences 生效；前端 npm build 通过",
       "verify_cmd": "mvn test -Dtest=WuxiaGenreTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑：WuxiaGenreTest 4 pass（检测/优先级/规则/预设）；GenreDetector/ConsistencyGate/预设回归通过；npm run build 通过（commit 6cd62a5）"
     },
     {
       "id": "p17-02",
@@ -2299,7 +2299,7 @@
       "dependencies": [
         "p17-01"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "memory/ContextAssembler.java",
         "agent/ChapterWriterAgent.java",
@@ -2310,7 +2310,7 @@
       "description": "buildWritingConstraints 与 buildChapterLengthGuide 接收 genre：快节奏题材（CULTIVATION/WUXIA/THRILLER/MYSTERY 保持现状）保留爽点/四段式/钩子硬约束；慢节奏/严肃题材（LITERARY/HISTORICAL/ROMANCE）替换为题材结构指引（张力递进/收束节奏）；开篇高压仅快节奏题材；plot 低分反馈词按题材（爽点密度 vs 冲突张力）。chapter-writing.st 四段式块改由变量注入结构指引。",
       "acceptance": "GenreConditionalConstraintsTest：HISTORICAL/LITERARY 约束不含『爽点』『四段式』『悬念钩子』且含题材结构指引；CULTIVATION/WUXIA 仍含（现状不变）；开篇高压 HISTORICAL 不强制；对应 Agent 测试与 OpeningPacingTest 回归通过",
       "verify_cmd": "mvn test -Dtest=GenreConditionalConstraintsTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑：GenreConditionalConstraintsTest 3 pass（快节奏保留/慢题材无爽点钩子换张力指引/开篇高压仅快节奏）；OpeningPacingTest 3 + EraConstraintInjectionTest 2 回归通过；plot 反馈词题材化（ffad1e9 前序提交内）（commit 8716a2e）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）"
     },
     {
       "id": "p17-03",
@@ -2318,7 +2318,7 @@
       "phase": 17,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/resources/prompts/volume-outline.st",
         "agent/PlotterAgent.java"
@@ -2327,7 +2327,7 @@
       "description": "volume-outline.st 增 {{genreRules}} 变量（替换硬编码爽点句）；PlotterAgent.planVolume 注入题材规则；『爽点：』输出标签保留（解析兼容），字段说明按题材重释为核心张力爆发点。",
       "acceptance": "VolumeOutlineGenreRulesTest：render 后含题材规则文本；HISTORICAL 项目 planVolume 的 prompt 不含无条件爽点要求；PlotterAgentTest 既有解析用例回归通过",
       "verify_cmd": "mvn test -Dtest=VolumeOutlineGenreRulesTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑：VolumeOutlineGenreRulesTest 3 pass（武侠规则注入/历史不强制爽点换张力点+输出标签保留/未注入降级）；PlotterAgentTest 回归通过（commit 4983ead）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）"
     },
     {
       "id": "p17-04",
@@ -2335,7 +2335,7 @@
       "phase": 17,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "service/ConceiveGate.java",
         "agent/ChapterWriterAgent.java",
@@ -2345,7 +2345,7 @@
       "description": "POWER_SYSTEM 仅对 CULTIVATION/FANTASY/WUXIA(超自然武学) 强制，MYSTERY/ROMANCE/LITERARY/HISTORICAL 豁免（改为要求核心设定维度非空）；extractStyleGuide 拼 tone+voice+dosAnddonts；buildKnowledgeQuote 优先匹配 preferredQuoteSources 指定的知识条目。",
       "acceptance": "ConceiveGateGenreExemptionTest：MYSTERY 无 POWER_SYSTEM 通过门禁；CULTIVATION 无 POWER_SYSTEM 仍 FAIL；styleGuide 渲染含 voice；preferredQuoteSources 指定来源时引用优先命中",
       "verify_cmd": "mvn test -Dtest=ConceiveGateGenreExemptionTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑：ConceiveGateGenreExemptionTest 5 pass（悬疑通过/历史言情文学豁免/修仙奇幻武侠仍强制/完整性不放松/tags兜底）；preferredQuoteSources 消费 + styleVoice 注入；ConceiveGateTest 8 回归（commit d0f93af）"
     },
     {
       "id": "p17-05",
@@ -2353,7 +2353,7 @@
       "phase": 17,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "service/PresetRegistry.java",
         "persistence/sqlite/SqliteNovelRepository.java",
@@ -2364,7 +2364,7 @@
       "description": "custom_presets 表（name 主键 + JSON 全文）；PresetRegistry 启动时从仓储加载、注册时落库。",
       "acceptance": "CustomPresetPersistenceTest：POST 自定义预设 → 重建 PresetRegistry（模拟重启，从仓储重新加载）→ GET /api/presets 含该预设且字段完整",
       "verify_cmd": "mvn test -Dtest=CustomPresetPersistenceTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑：CustomPresetPersistenceTest 2 pass（注册后重启恢复/upsert）；WuxiaGenreTest 预设回归通过（commit 4983ead）"
     },
     {
       "id": "p18-01",
@@ -2372,7 +2372,7 @@
       "phase": 18,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "service/WritingTaskExecutor.java"
       ],
@@ -2380,7 +2380,7 @@
       "description": "任务终态判定增加 PAUSED_AT_CHECKPOINT 分支 → taskStatus=PAUSED，message 说明『等待人工审批，approveCheckpoint 后可继续』；FAILED 仅用于真实异常。",
       "acceptance": "PausedTerminalStateTest：INTERACTIVE 写 1 章暂停后任务终态=PAUSED 而非 FAILED，message 含『审批』",
       "verify_cmd": "mvn test -Dtest=PausedTerminalStateTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑：PausedTerminalStateTest 2 pass（审核点暂停=PAUSED含审批说明/非暂停未写满仍FAILED）；WritingJobReliabilityTest 6 回归（stub 同步 4 参 ffad1e9）（commit 4983ead）"
     },
     {
       "id": "p18-02",
@@ -2388,7 +2388,7 @@
       "phase": 18,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "domain/Checkpoint.java",
         "orchestrator/NovelOrchestrator.java",
@@ -2399,7 +2399,7 @@
       "description": "Checkpoint 增 payload JSON 字段（AFTER_CHAPTER：字数/ReaderReview 评分/未解决 HIGH 数/前 200 字预览/伏笔动态）；REST 返回；前端审批面板直接渲染 payload。",
       "acceptance": "CheckpointPayloadTest：写完一章挂起的 checkpoint 携带 payload 含 wordCount/score/preview 字段；前端 npm build 通过",
       "verify_cmd": "mvn test -Dtest=CheckpointPayloadTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑：CheckpointPayloadTest 3 pass（payload构建/持久化往返/评审后富集score+unresolvedHigh）；Checkpoint 相关回归 15 pass；前端审批面板渲染 payload，npm build 通过（commit 99ce1ee）"
     },
     {
       "id": "p18-03",
@@ -2407,7 +2407,7 @@
       "phase": 18,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "web/ContentController.java",
         "web/OrchestratorController.java",
@@ -2418,7 +2418,7 @@
       "description": "POST /write-chapter?instruction= 与 write-all 携带 instruction：透传到本章 writingNotes 前缀【作者指令】；write-all 时逐章沿用。前端『写一章』增可选指令输入框。",
       "acceptance": "WriteInstructionTest：带 instruction 写章 → ChapterWriter 组装的 writingNotes 含【作者指令】与原文；不带时行为不变",
       "verify_cmd": "mvn test -Dtest=WriteInstructionTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑：WriteInstructionTest 3 pass（instruction透传/无参原路径/【作者指令】前置注入）；write-all 指令逐章沿用（WritingTask.instruction）；前端指令输入框 npm build 通过（commit 99ce1ee）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）"
     },
     {
       "id": "p18-04",
@@ -2426,7 +2426,7 @@
       "phase": 18,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "telemetry/EventLog.java",
         "web/EventController.java",
@@ -2437,7 +2437,7 @@
       "description": "EventLog 增进程内订阅总线（CopyOnWriteArrayList）；GET /api/projects/{id}/events 用 SseEmitter 按项目过滤推送 CHAPTER_WRITTEN/CHAPTER_FAILED/QUALITY_REVIEW/LLM_ERROR 事件；前端 EventSource 订阅显示逐章进度（保留轮询降级）。",
       "acceptance": "SseEventBusTest：EventLog 写事件后订阅者收到该项目事件、其他项目不收到；SseEmitter 端点注册/超时处理无异常；前端 npm build 通过",
       "verify_cmd": "mvn test -Dtest=SseEventBusTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑：SseEventBusTest 3 pass（项目过滤+注销/坏sink移除/全局事件广播）；EventController SSE 端点；前端 subscribeEvents+逐章进度 npm build 通过；EventLogTest 5 回归（commit d0f93af）"
     },
     {
       "id": "p19-01",
@@ -2445,7 +2445,7 @@
       "phase": 19,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "domain/Character.java",
         "agent/FactHarvesterAgent.java",
@@ -2457,7 +2457,7 @@
       "description": "Character 增 status(ACTIVE/DECEASED/DEPARTED)+deathChapter；FactHarvester 提取 CHARACTER_STATE 含死亡关键词时自动置位并 supersede 真典；WritingContext 注入标注【已故·第N章殁】/【已退场】；ArcScheduler 冷场调度跳过 DECEASED。",
       "acceptance": "CharacterStatusTest：收割『某角色身亡』事实后 Character.status=DECEASED+deathChapter；注入的出场人物段含已故标注；ArcScheduler 不再建议死人出场",
       "verify_cmd": "mvn test -Dtest=CharacterStatusTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑：CharacterStatusTest 3 pass（死亡事实自动置位DECEASED+deathChapter/出场段标注已故+ArcScheduler不调度/退场标注）；FactHarvester/ArcScheduler 回归通过（commit 99ce1ee）"
     },
     {
       "id": "p19-02",
@@ -2465,7 +2465,7 @@
       "phase": 19,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "persistence/sqlite/SqliteSchemaInitializer.java",
         "agent/FactHarvesterAgent.java"
@@ -2474,7 +2474,7 @@
       "description": "建索引 idx_story_facts_project_status；FactHarvester merge/supersede 前先过 EntityGraphService.resolveCanonical 规范化 subject。",
       "acceptance": "SubjectNormalizationTest：已有实体别名『林公子→林凡』时，harvest 新事实 subject=林公子 落库为 林凡（不产生平行事实）；schema 升级后索引存在（PRAGMA index_list）",
       "verify_cmd": "mvn test -Dtest=SubjectNormalizationTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑（agent 实现+主会话复核）：SubjectNormalizationTest 4 pass（索引存在/别名validate不分裂/supersede挂规范名/未注入降级）；FactHarvester* 回归 7 pass；PersistenceSmokeTest Spring 装配通过（commit d0f93af）"
     },
     {
       "id": "p19-03",
@@ -2482,7 +2482,7 @@
       "phase": 19,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "domain/Project.java",
         "orchestrator/NovelOrchestrator.java",
@@ -2494,7 +2494,7 @@
       "description": "projects 增 book_snapshot TEXT（JSON：主线进度/当前阵营态势/关键人物状态/时间线锚点/已跨大节点）；卷末用上一版快照+本卷摘要 LLM 增量更新（新 prompt 模板 book-snapshot.st）；ContextAssembler 顶部注入结构化快照（book_summary 保留兜底）。",
       "acceptance": "BookSnapshotTest：卷末后 book_snapshot 为合法 JSON 含主线进度字段；ContextAssembler 注入含【全书快照】段；snapshot 更新失败时回退旧版不阻塞写作",
       "verify_cmd": "mvn test -Dtest=BookSnapshotTest",
-      "evidence": ""
+      "evidence": "2026-08-28 实跑：BookSnapshotTest 4 pass（卷末生成合法JSON含主线进度/失败保留旧版/坏输出保留/上下文顶部注入【全书快照】）；SummaryLayeredTrimTest 回归通过（commit 99ce1ee）"
     }
   ]
 }

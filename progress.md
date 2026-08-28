@@ -2,6 +2,66 @@
 
 ## Current State
 
+**Last Updated:** 2026-08-28
+**Phase:** **Phase 16-19 百万字稳定性+风格确定性+人机交互（18/18 完成）— E2E 验证进行中**
+
+### 本次会话（2026-08-28）：架构差距分析 → 模型切换 → 四阶段全量实现
+
+**输入**：四路代码级架构评审（编排器/记忆/风格/交互）定位 400 章尺度系统性缺口 → 用户指示「切换 glm-5.3-flash + 按方案全部实现 + 端到端验证」。
+
+**Spec**：`docs/specs/2026-08-28-million-word-roadmap.md`（Phase 16-19，18 features）
+
+#### 模型切换（glm-5.3-flash）
+- 8 任务类型 + default 全量路由 `glm-5.3-flash`，端点 `https://open.bigmodel.cn/api/coding/paas/v4`（标准端点 1113 余额不足，coding 订阅通道可用）
+- `thinking-enabled: false`：GLM thinking 参数关闭（思考模式单次 3-10 分钟，e2e 构思 20 分钟超时根因；关闭后秒级返回零 reasoning token）
+- callTimeout 3→10 分钟；GLM_API_KEY/GLM_END_POINT/GLM_MODEL 环境覆盖支持
+
+#### Phase 16 百万字止血（6/6）
+- p16-01 HIGH 老化（30 章未复发归档）+ FINAL 门禁近 60 章口径 → 400 章可达 FINAL
+- p16-02 伏笔回收卷：修复不可达完结路径（原写 issue 后直接 break 的死路），指令入 writingNotes，有界一次
+- p16-03/04 四处全量注入收窄：FactHarvester cap 80（cast 相关优先）+ fail-loud；伏笔清单 20/线索台账 15/检查设定 20
+- p16-05 重写/段落编辑路径向量 chunk 重建（含拒收分支恢复），消除旧情节永久污染检索
+- p16-06 摘要分层裁剪（先丢最老卷 stub，细粒度受保护）+ premise 预算截断（6000 token 保头）
+
+#### Phase 17 风格确定性（5/5）
+- p17-01 WUXIA 全链路：枚举/检测词（先于修仙）/五方法规则/禁词表（修为·境界·丹药为武侠合法词不禁）/wuxia.json 预设/前端选项
+- p17-02 爽点四段式钩子题材条件化：慢节奏题材（LITERARY/HISTORICAL/ROMANCE…）不强制爽点/悬念钩子/开篇高压，换张力指引；快节奏（含 WUXIA）现状不变；chapter-writing.st 四段式改 structureGuide/climaxCraft 变量；plot 反馈词题材化
+- p17-03 volume-outline 补 genreRules+climaxPrinciple（长篇题材约束不断链）
+- p17-04 ConceiveGate POWER_SYSTEM 仅力量体系题材强制；styleVoice 注入；preferredQuoteSources 消费
+- p17-05 自定义预设持久化（custom_presets 表）
+
+#### Phase 18 人机交互（4/4）
+- p18-01 write-all 遇审核点 → 任务 PAUSED（不再误报 FAILED）
+- p18-02 checkpoint 质量 payload（字数/评分/未解决 HIGH/预览，评审后富集）+ 前端审批面板渲染
+- p18-03 写前指令通道（write-chapter/write-all instruction 参数，【作者指令】前置 writingNotes 逐章沿用）
+- p18-04 SSE 实时进度（EventLog 订阅总线+SseEventBus 按项目路由+EventController；前端 EventSource 逐章进度条）
+
+#### Phase 19 长篇质量结构（3/3）
+- p19-01 角色生死链：Character.Status+deathChapter，FactHarvester 死亡关键词自动置位，注入标注【已故·第N章殁】，ArcScheduler 不调度死人
+- p19-02 story_facts (project_id,status) 索引 + 真典 subject 过 resolveCanonical（别名不再分裂）
+- p19-03 全书结构化快照（book_snapshot JSON：主线/阵营/人物/时间线/里程碑，卷末增量更新，顶部注入【全书快照】）
+
+#### 验证
+- 全量 `mvn test`：**393 pass / 0 fail / 1 skip（既有）**；`cd frontend && npm run build` 通过
+- 新增测试 44 个（18 feature 各自 verify_cmd 全绿）
+- 武侠 REST 验证：presets 含 wuxia；preset=wuxia 建项目 genre=WUXIA；preferences 带预设值；SSE CONNECTED 事件正常
+
+#### LLM 路由终态（2026-08-29）：切回 DeepSeek v4-flash
+- GLM-5.3-flash 跑通 8 轮 E2E 调试期间修复 8 个基础设施 bug（coding 端点切换/thinking 开关/callTimeout 3→30min/审查温和化重试/模板长度纪律/429 退避 5→30s/连接池禁用/流式聚合路径 completeViaStream）
+- 终局：GLM coding 网关**夜间对 >5min 长响应 StreamReset CANCEL**（第 9 轮 100% 复现，新连接也失效）——非代码可控，按用户决策切回 DeepSeek v4-flash
+- 流式聚合路径保留（DeepSeek 同受益：长生成逐 token 心跳防切流，fixture 录制不受影响）
+
+#### E2E 验证（DeepSeek v4-flash，2026-08-29）
+- **record**：3 章 / **10,951 字** / 57 LLM 调用 / **0 错误 / 0 章节失败**；构思+3 章全程 ~55 分钟
+- **replay**：与 record 完全一致（同字数/同调用数/0 错误）——确定性回放验证通过
+- **compare-baseline**：PASS 后 --bless（基线 fixture 目录 `data/e2e-fixtures/dsv4-20260829`）
+- 读者评分：第1章 8 / 第3章 8 / 第5章 9；正文人工抽审质量扎实（题材一致性/开头钩子/细节质感）
+- 已知瑕疵（回流候选）：第 3/5 章标题混入大纲伏笔标注文本（卷大纲行格式漂移 + parse 端标题截取健壮性）——不影响正文与质检，标题展示问题
+
+---
+
+
+
 **Last Updated:** 2026-08-22
 **Phase:** **Phase 15 人机设定扩容与作业可观测 — 9/9 完成（p15-08/09 实现入库）**
 

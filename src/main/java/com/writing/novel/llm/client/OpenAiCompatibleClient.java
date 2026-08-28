@@ -52,6 +52,12 @@ public class OpenAiCompatibleClient implements LlmClient {
 
     @Override
     public LlmResponse complete(ModelConfig config, LlmRequest request) {
+        // p16-e2e: streaming 配置为 true 时走 SSE 聚合——长生成（>5 分钟）非流式响应会被
+        // 网关/中间层 StreamReset CANCEL（e2e 实证 23 点后 100% 复现），流式逐 token 心跳保活；
+        // 对上层透明（聚合完整 content 返回），fixture 录制在 gateway 层不受影响
+        if (config.isStreaming()) {
+            return completeViaStream(config, request);
+        }
         ObjectNode body = buildRequestBody(config, request, false);
         String url = config.getBaseUrl() + "/chat/completions";
 
@@ -122,6 +128,84 @@ public class OpenAiCompatibleClient implements LlmClient {
             }
         }
         throw new RuntimeException("LLM 调用失败：不应到达此处");
+    }
+
+    /**
+     * p16-e2e: 流式聚合版 complete——SSE 逐 token 接收，聚合完整正文后以 LlmResponse 返回。
+     * 保留非流式路径的重试语义（429 退避/5xx 重试/内容审查温和化），429/错误以 SSE 错误事件或 HTTP 状态呈现。
+     */
+    private LlmResponse completeViaStream(ModelConfig config, LlmRequest request) {
+        int attempt = 0;
+        while (attempt < 3) {
+            ObjectNode body = buildRequestBody(config, request, true);
+            body.putObject("stream_options").put("include_usage", true);
+            String url = config.getBaseUrl() + "/chat/completions";
+            Request httpRequest = new Request.Builder()
+                    .url(url)
+                    .header("Authorization", "Bearer " + config.getApiKey())
+                    .header("Content-Type", "application/json")
+                    .post(RequestBody.create(body.toString(), MediaType.parse("application/json")))
+                    .build();
+            long attemptStart = System.currentTimeMillis();
+            try (Response response = httpClient.newCall(httpRequest).execute()) {
+                if (!response.isSuccessful()) {
+                    String errBody = response.body() != null ? response.body().string() : "";
+                    // 429：退避重试；耗尽抛 RateLimitException
+                    if (response.code() == 429) {
+                        if (attempt < 2) { sleepBackoff(attempt, true); attempt++; continue; }
+                        throw new RateLimitException("LLM 限流（429）重试耗尽: 429");
+                    }
+                    // 内容审查：温和化一次
+                    if ((errBody.contains("1301") || errBody.contains("content_filter")
+                            || errBody.contains("contentFilter")) && attempt < 2) {
+                        appendSafetyNoteBody(body);
+                        attempt++;
+                        log.warn("内容审查拦截（流式），温和化后重试: {}", request.getTaskType());
+                        continue;
+                    }
+                    if (response.code() >= 400 && response.code() < 500) {
+                        throw new RuntimeException("LLM 调用失败: HTTP " + response.code() + " " + errBody);
+                    }
+                    if (attempt < 2) { sleepBackoff(attempt, false); attempt++; continue; }
+                    throw new RuntimeException("LLM 调用失败（重试耗尽）: HTTP " + response.code());
+                }
+                StringBuilder content = new StringBuilder();
+                int promptTokens = 0, completionTokens = 0;
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(response.body().byteStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (line.startsWith("data: ")) {
+                            String data = line.substring(6).trim();
+                            if ("[DONE]".equals(data)) break;
+                            JsonNode chunk = MAPPER.readTree(data);
+                            JsonNode delta = chunk.path("choices").path(0).path("delta");
+                            content.append(delta.path("content").asText(""));
+                            // usage 可能在最后一个 chunk（stream_options）或 [DONE] 帧携带
+                            JsonNode usage = chunk.path("usage");
+                            if (usage.isObject()) {
+                                promptTokens = usage.path("prompt_tokens").asInt(promptTokens);
+                                completionTokens = usage.path("completion_tokens").asInt(completionTokens);
+                            }
+                        }
+                    }
+                }
+                return new LlmResponse(content.toString(), promptTokens, completionTokens);
+            } catch (java.io.IOException e) {
+                long elapsed = System.currentTimeMillis() - attemptStart;
+                log.warn("LLM 流式调用 IOException(尝试{}/3, {}ms): {} — {}: {}",
+                        attempt + 1, elapsed, request.getTaskType(),
+                        e.getClass().getSimpleName(), e.getMessage());
+                if (attempt < 2) { sleepBackoff(attempt, false); attempt++; continue; }
+                throw new RuntimeException("LLM 调用异常（重试耗尽）", e);
+            }
+        }
+        throw new RuntimeException("LLM 调用失败：不应到达此处");
+    }
+
+    /** appendSafetyNote 的 body 参数版（流式路径的 body 是局部变量） */
+    private void appendSafetyNoteBody(ObjectNode body) {
+        appendSafetyNote(body);
     }
 
     /** 内容审查温和化：向 system 消息追加安全表达提示（原位修改请求体） */

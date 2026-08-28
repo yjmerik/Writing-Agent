@@ -39,6 +39,7 @@ class OpenAiCompatibleClientTest {
         cfg.setModel("qwen-test");
         cfg.setTemperature(0.7);
         cfg.setMaxTokens(100);
+        cfg.setStreaming(false); // 现有用例验证非流式路径（重试/审查语义）
         return cfg;
     }
 
@@ -132,4 +133,27 @@ class OpenAiCompatibleClientTest {
         assertEquals(2, server.getRequestCount(), "温和化只重试一次，不无限循环");
     }
 
+
+
+    /** p16-e2e: streaming=true 时 complete() 走 SSE 聚合，返回完整正文与 usage */
+    @Test
+    void 流式路径聚合完整正文与usage() throws Exception {
+        String sse = "data: {\"choices\":[{\"delta\":{\"content\":\"你\"}}]}\n\n"
+                + "data: {\"choices\":[{\"delta\":{\"content\":\"好\"}}],\"usage\":{\"prompt_tokens\":7,\"completion_tokens\":3}}\n\n"
+                + "data: [DONE]\n\n";
+        server.enqueue(new MockResponse().setBody(sse).addHeader("Content-Type", "text/event-stream"));
+        var cfg = modelConfig();
+        cfg.setStreaming(true);
+        var req = com.writing.novel.llm.LlmRequest.builder()
+                .taskType(com.writing.novel.llm.LlmTaskType.CHAPTER_WRITING)
+                .systemPrompt("写作").userMessage("开始").build();
+        var resp = client.complete(cfg, req);
+        assertEquals("你好", resp.getContent());
+        assertEquals(7, resp.getPromptTokens());
+        assertEquals(3, resp.getCompletionTokens());
+        var recorded = server.takeRequest(1, TimeUnit.SECONDS);
+        String body = recorded.getBody().readUtf8();
+        assertTrue(body.contains("\"stream\":true"), "流式请求体应 stream=true");
+        assertTrue(body.contains("include_usage"), "流式请求应带 stream_options.include_usage");
+    }
 }

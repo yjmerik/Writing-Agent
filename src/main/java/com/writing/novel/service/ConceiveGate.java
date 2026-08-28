@@ -28,15 +28,34 @@ public class ConceiveGate {
      * 校验世界观产出：力量体系存在/势力不重复/条目完整性。
      */
     public GateResult checkWorldbuilding(List<KnowledgeEntry> entries, String tags) {
+        return checkWorldbuilding(entries, tags, null);
+    }
+
+    /**
+     * p17-04: 带题材的世界观校验——POWER_SYSTEM 仅对力量体系核心题材
+     * （CULTIVATION/FANTASY/WUXIA/SCIFI）强制；MYSTERY/ROMANCE/LITERARY/HISTORICAL/THRILLER
+     * 豁免（纯悬疑/言情/历史正剧无超自然力量体系，强制要求会迫使 LLM 编造无关设定），
+     * 但完整性要求（≥3 类设定、不重名）不变。genre 为 null 时按 tags 自动检测。
+     */
+    public GateResult checkWorldbuilding(List<KnowledgeEntry> entries, String tags,
+                                         com.writing.novel.domain.GenreProfile genre) {
         if (entries == null || entries.isEmpty()) {
             return new GateResult(false, List.of("世界观条目为空"),
-                    "世界观条目为空，需重新生成包含力量体系、势力、规则的完整设定。");
+                    "世界观条目为空，需重新生成包含核心设定、势力、规则的完整世界观。");
         }
+        com.writing.novel.domain.GenreProfile effective = genre != null ? genre
+                : new GenreDetector().detect(tags, null);
+        boolean powerSystemRequired = switch (effective) {
+            case CULTIVATION, FANTASY, WUXIA, SCIFI -> true;
+            default -> false;
+        };
         List<String> issues = new ArrayList<>();
-        // 力量体系是核心（修仙/玄幻尤其）
-        boolean hasPowerSystem = entries.stream()
-                .anyMatch(e -> "POWER_SYSTEM".equalsIgnoreCase(e.getType()));
-        if (!hasPowerSystem) issues.add("缺少力量体系（POWER_SYSTEM）设定");
+        // 力量体系是核心（修仙/玄幻/武侠/科幻）；非力量体系题材改为核心设定维度检查（下方完整性）
+        if (powerSystemRequired) {
+            boolean hasPowerSystem = entries.stream()
+                    .anyMatch(e -> "POWER_SYSTEM".equalsIgnoreCase(e.getType()));
+            if (!hasPowerSystem) issues.add("缺少力量体系（POWER_SYSTEM）设定");
+        }
         // 同类条目重名
         Set<String> seen = new HashSet<>();
         for (KnowledgeEntry e : entries) {
@@ -44,11 +63,12 @@ public class ConceiveGate {
             String key = e.getType() + "|" + e.getName();
             if (!seen.add(key)) issues.add("重复的设定条目：" + e.getName() + "（" + e.getType() + "）");
         }
-        // 完整性：条目数过少
+        // 完整性：条目数过少（豁免题材仍要求核心设定维度非空）
         if (entries.size() < 3) issues.add("世界观条目过少（" + entries.size() + "，建议≥3 类设定）");
         if (issues.isEmpty()) return GateResult.ok();
         String feedback = "世界观质量问题：" + String.join("；", issues)
-                + "。请重新生成更完整、不重复、含力量体系的世界观设定。";
+                + "。请重新生成更完整、不重复的世界观设定"
+                + (powerSystemRequired ? "（含力量体系）" : "") + "。";
         return new GateResult(false, issues, feedback);
     }
 

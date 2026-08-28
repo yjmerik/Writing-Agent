@@ -30,12 +30,27 @@ public final class EventLog {
     private static final Logger log = LoggerFactory.getLogger(EventLog.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final Object LOCK = new Object();
+    /** p18-04: 进程内订阅者（SSE 实时推送）；写文件失败/无订阅者都不影响业务 */
+    private static final java.util.List<Listener> LISTENERS = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     /** 测试/脚本可通过该系统属性重定向输出文件 */
     public static final String PATH_PROPERTY = "novel.events.file";
     private static final String DEFAULT_PATH = "data/logs/events.jsonl";
 
     private EventLog() {}
+
+    /** p18-04: 事件监听器（emit 落盘后回调，收到完整 record 含 ts/event/projectId） */
+    public interface Listener {
+        void onEvent(Map<String, Object> record);
+    }
+
+    public static void subscribe(Listener listener) {
+        if (listener != null) LISTENERS.add(listener);
+    }
+
+    public static void unsubscribe(Listener listener) {
+        LISTENERS.remove(listener);
+    }
 
     public static Path currentPath() {
         return Path.of(System.getProperty(PATH_PROPERTY, DEFAULT_PATH));
@@ -64,6 +79,10 @@ public final class EventLog {
                 }
                 Files.writeString(path, line + "\n", StandardCharsets.UTF_8,
                         StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            }
+            // p18-04: 落盘成功后通知订阅者（推送失败不影响主流程）
+            for (Listener l : LISTENERS) {
+                try { l.onEvent(record); } catch (Exception ignored) { }
             }
         } catch (Exception e) {
             log.warn("事件日志写入失败: {}", e.getMessage());

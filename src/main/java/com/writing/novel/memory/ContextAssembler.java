@@ -874,8 +874,28 @@ public class ContextAssembler {
         var entries = repository.findKnowledgeEntriesByProject(projectId);
         if (entries.isEmpty()) return "";
 
+        // p17-04: 消费 preferredQuoteSources——预设声明的引用来源（如悬疑=法医学、武侠=武侠典籍）优先前置
+        var preferred = prefs.get().getPreferredQuoteSources() == null
+                ? java.util.List.<String>of()
+                : java.util.Arrays.stream(prefs.get().getPreferredQuoteSources().split("[,，、]"))
+                        .map(String::trim).filter(s -> !s.isEmpty()).toList();
         StringBuilder sb = new StringBuilder();
         sb.append("【可用引用素材（角色可自然引用以下内容展现学识）】\n");
+        if (!preferred.isEmpty()) {
+            var preferredEntries = entries.stream()
+                    .filter(e -> preferred.stream().anyMatch(p ->
+                            (e.getName() != null && e.getName().contains(p))
+                                    || (e.getType() != null && p.contains(e.getType()))))
+                    .limit(3)
+                    .toList();
+            if (!preferredEntries.isEmpty()) {
+                sb.append("题材引用偏好（").append(String.join("、", preferred)).append("）：\n");
+                for (var e : preferredEntries) {
+                    String quote = e.getContent().length() > 60 ? e.getContent().substring(0, 60) + "..." : e.getContent();
+                    sb.append("■ ").append(e.getName()).append("：").append(quote).append("\n");
+                }
+            }
+        }
         for (var c : withKnowledge) {
             String domains = c.getKnowledgeDomains();
             // 找到匹配的知识条目

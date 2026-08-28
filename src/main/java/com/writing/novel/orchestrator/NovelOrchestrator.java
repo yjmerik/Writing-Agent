@@ -315,7 +315,7 @@ public class NovelOrchestrator {
             String wbFeedback = "";
             for (int wbRetry = 0; wbRetry < 2; wbRetry++) {
                 var wbEntries = repository.findKnowledgeEntriesByProject(projectId);
-                var wbGate = conceiveGate.checkWorldbuilding(wbEntries, p.getTags());
+                var wbGate = conceiveGate.checkWorldbuilding(wbEntries, p.getTags(), p.getGenre());
                 if (wbGate.pass()) { wbPassed = true; break; }
                 wbFeedback = wbGate.feedback();
                 log.warn("WorldBuilder 门禁未过(重试{}/2): {}", wbRetry + 1, wbFeedback);
@@ -830,6 +830,9 @@ public class NovelOrchestrator {
                                 "afterScore", reReview.getScore()));
                     } else if (newContent != null) {
                         log.warn("重写内容过短({}字 < 原版{}字的70%)，保留原版", newContent.length(), originalLength);
+                        // p16-05: 拒收重写——rewriteForCorrection 已把向量切到被拒版本，
+                        // 用保留的原正文重放向量索引，恢复向量库与 DB 一致
+                        try { chapterWriter.reindexChapter(projectId, chapterIndex, chapter.getContent()); } catch (Exception ignored) {}
                     }
                 }
                 // p11-I1: 持久化章节评价报告
@@ -1359,6 +1362,10 @@ public class NovelOrchestrator {
             if (newContent != null && newContent.length() >= 2000) {
                 chapter.setContent(newContent);
                 repository.saveChapter(chapter); // 用原 id 覆盖，不产生重复
+            } else if (newContent != null) {
+                // p16-05: 拒收重写——rewriteForCorrection 已把向量切到被拒版本，
+                // 用保留的原正文重放向量索引，恢复向量库与 DB 一致
+                try { chapterWriter.reindexChapter(projectId, chapterIndex, chapter.getContent()); } catch (Exception ignored) {}
             }
         } catch (Exception e) {
             log.warn("纠偏重写失败，保留原版本: {}", e.getMessage());
@@ -2099,10 +2106,12 @@ public class NovelOrchestrator {
 
             if (plotter != null) {
                 int nextStart = currentChapter + 1;
+                var replanGenre = repository.findProject(projectId)
+                        .map(Project::getGenre).orElse(null);
                 String generated = plotter.planVolume(
                         outline.getPremise(), writtenSummary.toString(),
                         "后续卷", "根据已写剧情重规划未写卷",
-                        nextStart, nextStart + 7, "");
+                        nextStart, nextStart + 7, "", "", replanGenre);
                 Outline scratch = new Outline(projectId, outline.getPremise());
                 int nextVol = outline.getVolumes().stream().mapToInt(Volume::getVolumeIndex).max().orElse(0) + 1;
                 parseAndAppendVolume(scratch, generated, projectId, nextVol, nextStart);
@@ -2292,11 +2301,12 @@ public class NovelOrchestrator {
                     .filter(c -> c.getRole() != null && c.getRole().contains("主角"))
                     .map(c -> c.getName()).findFirst().orElse("");
 
-            // 调用 planVolume 生成下一卷
+            // 调用 planVolume 生成下一卷（p17-03: 传入题材——卷大纲带题材规则，长篇不断链）
             String volumeText = plotter.planVolume(
                     masterOutline, previousSummary,
                     "卷" + volumeNumber, "（延迟生成，根据总纲规划）",
-                    nextStartChapter, nextEndChapter, existingCharacters, protagonistName);
+                    nextStartChapter, nextEndChapter, existingCharacters, protagonistName,
+                    p.getGenre());
 
             // 解析并追加到 outline
             Outline outline = outlineOpt.get();
@@ -2437,6 +2447,10 @@ public class NovelOrchestrator {
             existing.setContent(newContent);
             repository.saveChapter(existing);
 
+            // p16-05: 重写改变了正文——按章重建向量索引（清旧 chunk + 新正文入库）。
+            // rewriteForCorrection 内部已重建过一次，此处以持久化后的正文重放，保证向量与 DB 一致。
+            try { chapterWriter.reindexChapter(projectId, chapterIndex, existing.getContent()); } catch (Exception ignored) {}
+
             // mc-p1-02: 重写后失效覆盖该章的摘要（标记 dirty 供下次组装时重算）
             try {
                 invalidateSummariesForChapter(projectId, chapterIndex);
@@ -2556,6 +2570,11 @@ public class NovelOrchestrator {
 
         chapter.setContent(newContent.toString());
         repository.saveChapter(chapter);
+        // p16-05: 段落编辑改变了正文——按章重建向量索引（清旧 chunk + 新正文入库），
+        // 避免 editPassage 后向量库仍保留编辑前的旧情节被后续章节检索召回
+        if (chapterWriter != null) {
+            try { chapterWriter.reindexChapter(projectId, chapterIndex, chapter.getContent()); } catch (Exception ignored) {}
+        }
         log.info("段落编辑完成(章{}段{}): {}→{}字", chapterIndex, resolvedIndex,
                 content.length(), newContent.length());
         if (contextAssembler != null) contextAssembler.invalidateProject(projectId);

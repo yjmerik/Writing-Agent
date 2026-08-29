@@ -51,6 +51,10 @@
 - 终局：GLM coding 网关**夜间对 >5min 长响应 StreamReset CANCEL**（第 9 轮 100% 复现，新连接也失效）——非代码可控，按用户决策切回 DeepSeek v4-flash
 - 流式聚合路径保留（DeepSeek 同受益：长生成逐 token 心跳防切流，fixture 录制不受影响）
 
+#### Bugfix 轮（2026-08-29 晚）
+- **标题污染修复**（15e1596）：单行大纲前瞻未行首锚定致行内「(HIGH，第N章回收)」误切分——修复后 record 3 章连续、标题干净、0 错误、评分 9/8/7、compare PASS（dsv4-20260829c）
+- **replay 健壮性**（61075d8）：空响应重试 + 禁止空覆盖非空 fixture（402 测试绿）；replay 第3章仍有发散——机理为后处理链 DB 时序副作用无法靠 LLM fixture 复现（机制性限制），DB 快照回放立项建议见 handoff
+
 #### E2E 验证（DeepSeek v4-flash，2026-08-29）
 - **record**：3 章 / **10,951 字** / 57 LLM 调用 / **0 错误 / 0 章节失败**；构思+3 章全程 ~55 分钟
 - **replay**：与 record 完全一致（同字数/同调用数/0 错误）——确定性回放验证通过

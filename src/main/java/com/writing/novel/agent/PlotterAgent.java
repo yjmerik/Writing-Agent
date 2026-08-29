@@ -321,7 +321,9 @@ public class PlotterAgent {
 
         // 单行格式（标题:内容）
         if (!hasChapters) {
-            Matcher chM2 = Pattern.compile("\\*{0,2}第([0-9一二三四五六七八九十百]+)章\\s*(.+?)[：:]\\s*(.+?)(?=\\*{0,2}第\\d+章|$)", Pattern.DOTALL).matcher(volBody);
+            // p16-fix: 前瞻必须行首锚定（\r?\n）——否则行内伏笔「(HIGH，第N章回收)」的"第N章"
+            // 被误判为下一章起点，章节被拦腰截断、脏文本（"回收)；埋设-…"）混入后续章标题
+            Matcher chM2 = Pattern.compile("\\*{0,2}第([0-9一二三四五六七八九十百]+)章\\s*(.+?)[：:]\\s*(.+?)(?=\\r?\\n\\*{0,2}第\\d+章|$)", Pattern.DOTALL).matcher(volBody);
             while (chM2.find()) {
                 int idx = parseChineseOrArabic(chM2.group(1));
                 if (existingIndices.contains(idx)) continue; // p12-fix: 去重
@@ -407,7 +409,9 @@ public class PlotterAgent {
     /** 清理标题中的 markdown 标记（**、#、多余空格） */
     private String sanitizeTitle(String title) {
         if (title == null) return "";
-        return title.replaceAll("\\*{2}", "").replaceAll("#+\\s*", "").trim();
+        // p16-fix: 标题内嵌换行压成空格（解析异常时的最后防线，脏内容不得跨行污染展示）
+        return title.replaceAll("\\*{2}", "").replaceAll("#+\\s*", "")
+                .replaceAll("\\r?\\n+", " ").trim();
     }
 
     /** 解析中文数字或阿拉伯数字（一→1，二→2...十→10，二十→20） */

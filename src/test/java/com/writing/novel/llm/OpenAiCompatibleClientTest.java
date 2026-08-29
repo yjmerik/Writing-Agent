@@ -156,4 +156,40 @@ class OpenAiCompatibleClientTest {
         assertTrue(body.contains("\"stream\":true"), "流式请求体应 stream=true");
         assertTrue(body.contains("include_usage"), "流式请求应带 stream_options.include_usage");
     }
+
+
+    /** p16-replay-fix: 空响应视为可重试故障——第一次空、第二次正常，聚合出正常内容 */
+    @Test
+    void 空响应自动重试直到拿到内容() throws Exception {
+        server.enqueue(new MockResponse().setResponseCode(200).setBody(
+                "{\"choices\":[{\"message\":{\"content\":\"\"}}],\"usage\":{\"prompt_tokens\":5,\"completion_tokens\":0}}"));
+        server.enqueue(new MockResponse().setResponseCode(200).setBody(
+                "{\"choices\":[{\"message\":{\"content\":\"OK\"}}],\"usage\":{\"prompt_tokens\":5,\"completion_tokens\":2}}"));
+        var cfg = modelConfig();
+        var req = com.writing.novel.llm.LlmRequest.builder()
+                .taskType(com.writing.novel.llm.LlmTaskType.GENERAL)
+                .systemPrompt("s").userMessage("u").build();
+        var resp = client.complete(cfg, req);
+        assertEquals("OK", resp.getContent());
+        assertEquals(2, server.getRequestCount(), "空响应应触发一次重试");
+    }
+
+    /** p16-replay-fix: 流式路径空聚合同样重试 */
+    @Test
+    void 流式路径空聚合自动重试() throws Exception {
+        server.enqueue(new MockResponse().setResponseCode(200)
+                .setBody("data: {\"choices\":[{\"delta\":{\"content\":\"\"}}]}\n\ndata: [DONE]\n\n")
+                .addHeader("Content-Type", "text/event-stream"));
+        server.enqueue(new MockResponse().setResponseCode(200)
+                .setBody("data: {\"choices\":[{\"delta\":{\"content\":\"好\"}}]}\n\ndata: [DONE]\n\n")
+                .addHeader("Content-Type", "text/event-stream"));
+        var cfg = modelConfig();
+        cfg.setStreaming(true);
+        var req = com.writing.novel.llm.LlmRequest.builder()
+                .taskType(com.writing.novel.llm.LlmTaskType.GENERAL)
+                .systemPrompt("s").userMessage("u").build();
+        var resp = client.complete(cfg, req);
+        assertEquals("好", resp.getContent());
+        assertEquals(2, server.getRequestCount());
+    }
 }

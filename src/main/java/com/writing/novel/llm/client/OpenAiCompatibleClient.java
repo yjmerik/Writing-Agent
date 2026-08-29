@@ -80,6 +80,14 @@ public class OpenAiCompatibleClient implements LlmClient {
                             .path("message").path("content").asText();
                     int promptTokens = root.path("usage").path("prompt_tokens").asInt();
                     int completionTokens = root.path("usage").path("completion_tokens").asInt();
+                    // p16-replay-fix: 空响应是服务端故障（瞬时空响应会覆盖非空 fixture、
+                    // 使后处理产出漂移）——视为可重试失败，与 ChapterWriter 空内容重试同语义
+                    if (content.isBlank() && attempt < 2) {
+                        log.warn("LLM 空响应(尝试{}/3): {}，重试", attempt + 1, request.getTaskType());
+                        sleepBackoff(attempt, false);
+                        attempt++;
+                        continue;
+                    }
                     return new LlmResponse(content, promptTokens, completionTokens);
                 }
                 // 400/401/403 等客户端错误
@@ -189,6 +197,13 @@ public class OpenAiCompatibleClient implements LlmClient {
                             }
                         }
                     }
+                }
+                // p16-replay-fix: 流式空聚合同样重试——瞬时空响应是服务端故障
+                if (content.isEmpty() && attempt < 2) {
+                    log.warn("LLM 流式空聚合(尝试{}/3): {}，重试", attempt + 1, request.getTaskType());
+                    sleepBackoff(attempt, false);
+                    attempt++;
+                    continue;
                 }
                 return new LlmResponse(content.toString(), promptTokens, completionTokens);
             } catch (java.io.IOException e) {

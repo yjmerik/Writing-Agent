@@ -139,6 +139,19 @@ public class RecordReplayLlmGateway implements LlmGateway {
     }
 
     private void saveFixture(Path fixture, LlmRequest request, LlmResponse response) {
+        // p16-replay-fix: 空响应不得退化覆盖已录制的非空 fixture——record 轮同指纹二次调用
+        // 恰逢瞬时空响应时，覆盖会让 replay 丢失首次（已产生副作用的）真实响应
+        if (response.getContent() == null || response.getContent().isEmpty()) {
+            if (Files.exists(fixture)) {
+                try {
+                    JsonNode prev = MAPPER.readTree(Files.readString(fixture));
+                    if (!prev.path("content").asText("").isEmpty()) {
+                        log.warn("录制到空响应但 fixture 已有非空内容，保留原 fixture: {}", fixture.getFileName());
+                        return;
+                    }
+                } catch (IOException ignored) { }
+            }
+        }
         try {
             Files.createDirectories(fixtureDir);
             ObjectNode node = MAPPER.createObjectNode();

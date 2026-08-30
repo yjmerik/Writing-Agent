@@ -273,11 +273,35 @@ public class ChapterWriterAgent {
         }
     }
 
-    /** 纠正正文中错误的章节号（LLM 可能自创"第N章"，需统一为系统 chapterIndex） */
-    private String sanitizeChapterNumbers(String content, int chapterIndex) {
+    /**
+     * p20-09: 章节号归一化——仅归一化正文开头的章节标题。
+     * 对话、引文、跨章引用中的"第N章"保持逐字不动（旧实现全文 replaceAll 破坏正文）。
+     * 允许前导空白与 markdown 标题井号前缀；包内可见便于直接测试。
+     */
+    static String sanitizeChapterNumbers(String content, int chapterIndex) {
         if (content == null) return content;
-        // 将所有"第\d+章"替换为正确的章节号
-        return content.replaceAll("第\\d+章", "第" + chapterIndex + "章");
+        int leadingWs = 0;
+        while (leadingWs < content.length() && Character.isWhitespace(content.charAt(leadingWs))) {
+            leadingWs++;
+        }
+        int headingStart = leadingWs;
+        while (headingStart < content.length() && content.charAt(headingStart) == '#') {
+            headingStart++;
+        }
+        if (headingStart < content.length() && content.charAt(headingStart) == '第'
+                && headingStart + 1 < content.length()
+                && Character.isDigit(content.charAt(headingStart + 1))) {
+            int digitsEnd = headingStart + 1;
+            while (digitsEnd < content.length() && Character.isDigit(content.charAt(digitsEnd))) {
+                digitsEnd++;
+            }
+            if (digitsEnd < content.length() && content.charAt(digitsEnd) == '章') {
+                return content.substring(0, headingStart)
+                        + "第" + chapterIndex + "章"
+                        + content.substring(digitsEnd + 1);
+            }
+        }
+        return content;
     }
 
     /** 按段落分块索引章节正文，每块 ~800 字，确保中后段情节也能被召回。D2: 批量索引（一次embedding调用） */

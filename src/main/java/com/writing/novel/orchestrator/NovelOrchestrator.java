@@ -79,6 +79,8 @@ public class NovelOrchestrator {
     private com.writing.novel.agent.FactHarvesterAgent factHarvester;
     /** p20-02: 章节后处理模块 */
     private final ChapterPostProcessor postProcessor;
+    /** p22-04: 章节生产模块（Context→Write→Quality→Rewrite） */
+    private final ChapterProduction production;
     /** p10-w3-03: 归档衰减器——null 时跳过（向后兼容） */
     private com.writing.novel.service.ArchiveCompactor archiveCompactor;
     /** p10-w3-09: 成本预算监控器——null 时跳过成本回执（向后兼容） */
@@ -154,6 +156,11 @@ public class NovelOrchestrator {
         this.passageEditor = passageEditor;
         this.plotMotifTracker = plotMotifTracker;
         this.expositionDetector = expositionDetector;
+        // p22-04: 章节生产模块——写前装配/正文生成/质量链/纠偏重写经此模块
+        this.production = new ChapterProduction(this, repository, chapterWriter,
+                continuityChecker, readerReviewAgent, consistencyGuard, consistencyGate,
+                expositionDetector, styleGuardian, foreshadowingResolutionDetector,
+                arcScheduler, plotMotifTracker, planGate);
         // p20-02: 后处理模块——正文落库后的全部加工阶段经此模块编排
         this.postProcessor = new ChapterPostProcessor(this, repository, chapterWriter,
                 entityGraphService, narrativeThreadExtractor, readerReviewAgent,
@@ -221,6 +228,18 @@ public class NovelOrchestrator {
     boolean hasArbiter() {
         return arbiter != null;
     }
+
+    /** p22-04: 生产模块访问器（postProcessor CONTINUITY 阶段调用质量链） */
+    ChapterProduction production() {
+        return production;
+    }
+
+    // --- p22-04: 生产模块读取 late-set 策略依赖（方法与字段同名在 Java 中合法） ---
+    com.writing.novel.spi.StoryCanon storyCanon() { return storyCanon; }
+    com.writing.novel.service.RepairArbiter repairArbiter() { return repairArbiter; }
+    com.writing.novel.service.QualityCouncil qualityCouncil() { return qualityCouncil; }
+    com.writing.novel.service.Arbiter arbiterRef() { return arbiter; }
+    com.writing.novel.memory.RelevanceGateway relevanceGateway() { return relevanceGateway; }
 
     /** p10-w2-02/p22-02: 注入真典端口（@Bean 装配用）；不调则保持 null，播种安全跳过 */
     public void setStoryCanon(com.writing.novel.spi.StoryCanon storyCanon) {
@@ -850,39 +869,9 @@ public class NovelOrchestrator {
             }
         }
 
-        // p10-a2: 角色弧光调度——注入配角出场建议
-        // p18-03: 作者写前指令优先注入（【作者指令】段），再叠加弧光/桥段等自动 notes
-        String enhancedNotes = prependAuthorInstruction(synopsis.getWritingNotes(), instruction);
-        if (arcScheduler != null) {
-            String arcSuggestion = arcScheduler.scheduleAppearance(projectId, chapterIndex);
-            if (!arcSuggestion.isBlank()) {
-                enhancedNotes = (enhancedNotes != null ? enhancedNotes + "\n" : "") + arcSuggestion;
-            }
-        }
-        // p11.1-J2: 桥段去重约束
-        if (plotMotifTracker != null) {
-            String motifConstraint = plotMotifTracker.getRecentMotifConstraint(projectId, chapterIndex);
-            if (!motifConstraint.isBlank()) {
-                enhancedNotes = (enhancedNotes != null ? enhancedNotes + "\n" : "") + motifConstraint;
-            }
-        }
-
-        // p11-q1-04: PlanGate 章节梗概预检——写正文前校验梗概质量，不过关标记 quality_risk
-        if (planGate != null) {
-            var synGate = planGate.checkSynopsis(synopsis);
-            if (!synGate.pass()) {
-                markQualityRisk(projectId, "PlanGate(章" + chapterIndex + ")", synGate.feedback());
-            }
-        }
-
-        EventContext.setChapter(chapterIndex);
-        long writeStart = System.currentTimeMillis();
-        Chapter chapter = chapterWriter.write(projectId, chapterIndex,
-                synopsis.getTitle(), synopsis.getSynopsis(), enhancedNotes);
-        EventLog.emit("CHAPTER_WRITTEN", Map.of(
-                "chapterIndex", chapterIndex,
-                "wordCount", chapter.getWordCount(),
-                "durationMs", System.currentTimeMillis() - writeStart));
+        // p22-04: 写前上下文装配与正文生成经章节生产模块（prepare/write 阶段）
+        String enhancedNotes = production.prepare(projectId, chapterIndex, synopsis, instruction);
+        Chapter chapter = production.write(projectId, chapterIndex, synopsis, enhancedNotes);
 
         // 内容校验：不达标不推进索引（chapterWriter.write 已保证 ≥500 字或抛异常）
         p = loadProject(projectId); // 重新加载最新状态
@@ -1085,361 +1074,17 @@ public class NovelOrchestrator {
         }
     }
 
-    /**
-     * 写完一章后检查连续性。
-     * 发现 HIGH 级矛盾时触发 1 次重写（把矛盾描述加入 prompt 要求修正）。
-     * 每 5 章检查一次风格漂移。
-     */
-    boolean checkContinuityAfterWriting(String projectId, int chapterIndex, Chapter chapter, List<String> cast) {
-        boolean rewritten = false; // p10-w1-07: 标记是否触发重写（不提前 return，保持伏笔检测等后续流程）
-        java.util.List<ContinuityIssue> continuityIssuesRef = java.util.List.of(); // p11-q2-03: 供 guard 合并重写引用
-        try {
-            String settings = collectSettingsForCheck(projectId, cast);
-            var issues = continuityChecker.check(projectId, chapterIndex, chapter.getContent(), settings);
-            continuityIssuesRef = issues;
 
-            boolean hasHighIssue = issues.stream()
-                    .anyMatch(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH);
-            if (arbiter == null && hasHighIssue && chapter.getContent().length() > 500) {
-                String issueDesc = issues.stream()
-                        .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH)
-                        .map(ContinuityIssue::getDescription)
-                        .reduce((a, b) -> a + "；" + b)
-                        .orElse("");
-                rewriteWithCorrection(projectId, chapterIndex, chapter, issueDesc, settings);
-                // 重写后标记已处理的 HIGH issue 为 resolved（p3-01）
-                issues.stream()
-                        .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH)
-                        .forEach(i -> {
-                            i.resolve();
-                            repository.saveContinuityIssue(i);
-                        });
-                rewritten = true; // p10-w1-07: continuity 已触发重写，告知调用方 reader review 互斥跳过
-                // p11-q0-05: 重写后重跑 ContinuityChecker 复检（之前只标 resolved 不重跑，重写引入的新矛盾不可见）
-                try {
-                    var recheck = continuityChecker.check(projectId, chapterIndex,
-                            chapter.getContent(), collectSettingsForCheck(projectId, cast));
-                    for (var issue : recheck) {
-                        if (issue.getSeverity() == ContinuityIssue.Severity.HIGH) {
-                            log.warn("重写后新引入连续性 HIGH(章{}): {}", chapterIndex, issue.getDescription());
-                            applyRepairClassification(projectId, chapterIndex, chapter, issue, true);
-                        }
-                    }
-                } catch (Exception e) {
-                    log.warn("连续性复检失败(章{}): {}", chapterIndex, e.getMessage());
-                }
-            }
-        } catch (Exception e) {
-            log.warn("连续性检查失败: {}", e.getMessage());
-        }
-        // p5-c1: 伏笔回收检测——本章是否回收了某个未回收伏笔
-        try {
-            checkForeshadowingResolution(projectId, chapterIndex, chapter);
-        } catch (Exception e) {
-            log.warn("伏笔回收检测失败(章{}): {}", chapterIndex, e.getMessage());
-        }
 
-        // p11.1-J3: 伏笔悬置过久告警
-        try {
-            int threshold = repository.findWritingPreferences(projectId)
-                    .map(p -> p.getForeshadowSuspenseThreshold()).orElse(8);
-            var stale = repository.findUnresolvedForeshadowings(projectId).stream()
-                    .filter(f -> f.isMustResolve() || f.getPriority() == Foreshadowing.Priority.HIGH)
-                    .filter(f -> f.isStale(chapterIndex, threshold))
-                    .toList();
-            for (var f : stale) {
-                repository.saveContinuityIssue(new ContinuityIssue(
-                        projectId, chapterIndex,
-                        ContinuityIssue.Type.FORESHADOWING,
-                        ContinuityIssue.Severity.MEDIUM,
-                        "伏笔悬置过久：「" + f.getDescription().substring(0, Math.min(30, f.getDescription().length()))
-                        + "...」已悬置" + f.suspenseChapters(chapterIndex) + "章（埋于第"
-                        + f.getPlantedAtChapter() + "章），建议在近期章节回收"));
-            }
-            if (!stale.isEmpty()) {
-                log.warn("伏笔悬置告警(章{}): {} 条悬置过久", chapterIndex, stale.size());
-            }
-        } catch (Exception e) {
-            log.warn("伏笔悬置检测失败(章{}): {}", chapterIndex, e.getMessage());
-        }
 
-        // A3: 已删除冗余的风格检查块（原 p10-d1，只 log 不持久化）——保留下方 p3-02 块（含评分+持久化）
 
-        // p10-a3+c2: 一致性守卫——能力越界 + 凭空证据检测
-        try {
-            if (consistencyGuard != null) {
-                var guardIssues = consistencyGuard.check(projectId, chapterIndex, chapter.getContent(), cast);
-                for (var issue : guardIssues) {
-                    repository.saveContinuityIssue(issue);
-                    log.warn("一致性守卫(章{}): {}", chapterIndex, issue.getDescription());
-                }
-                // p10-w3-08: ConsistencyGuard 的 HIGH 接入修复闭环（之前只 save 不修）
-                // 在同一章未被 continuity 重写过时触发重写（rewritten 标记来自 continuity 检查）
-                boolean hasHigh = guardIssues.stream().anyMatch(
-                        i -> i.getSeverity() == ContinuityIssue.Severity.HIGH);
-                if (arbiter == null && hasHigh && !rewritten && chapter.getContent().length() > 500) {
-                    // p11-q2-03: 合并重写——用 QualityCouncil 汇总 continuity+guard 问题生成合并纠偏指令
-                    // （解除"guard HIGH 时只喂 guard 问题"的分散模式，多维问题一次重写联合修正）
-                    String desc;
-                    if (qualityCouncil != null) {
-                        var council = qualityCouncil.collect(continuityIssuesRef, guardIssues, 10, null, null);
-                        desc = council.combinedFeedback().isBlank()
-                                ? guardIssues.stream().filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH)
-                                        .map(ContinuityIssue::getDescription).reduce((a, b) -> a + "；" + b).orElse("")
-                                : council.combinedFeedback();
-                    } else {
-                        desc = guardIssues.stream()
-                                .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH)
-                                .map(ContinuityIssue::getDescription)
-                                .reduce((a, b) -> a + "；" + b).orElse("");
-                    }
-                    rewriteWithCorrection(projectId, chapterIndex, chapter, desc, "");
-                    rewritten = true; // 标记已重写，reader review 互斥
-                    // p10-w3-08: 重写后复检——若仍有 HIGH，标记 issue 但不再重写（最多 1 次）
-                    try {
-                        var recheck = consistencyGuard.check(projectId, chapterIndex, chapter.getContent(), cast);
-                        for (var issue : recheck) {
-                            repository.saveContinuityIssue(issue);
-                                if (issue.getSeverity() == ContinuityIssue.Severity.HIGH) {
-                                    log.warn("重写后仍存一致性守卫 HIGH(章{}): {}", chapterIndex, issue.getDescription());
-                                    // p11-q0-04: 重写后仍存 → 三分类仲裁（激活 NEEDS_MANUAL_REVIEW）
-                                    applyRepairClassification(projectId, chapterIndex, chapter, issue, true);
-                                }
-                        }
-                    } catch (Exception e) {
-                        log.warn("一致性守卫复检失败(章{}): {}", chapterIndex, e.getMessage());
-                        EventLog.emit("CONSISTENCY_ISSUE", Map.of(
-                                "severity", "DETECT_FAILED", "desc", EventLog.truncate(e.getMessage(), 150)));
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.warn("一致性守卫失败(章{}): {}", chapterIndex, e.getMessage());
-        }
 
-        if (arbiter != null) {
-            rewritten = applyArbiterDecision(projectId, chapterIndex, chapter, cast,
-                    continuityIssuesRef, rewritten);
-        }
-
-        // p10-d2: 一致性门禁——章号/时代用语检查（纯规则）
-        try {
-            if (consistencyGate != null) {
-                var p = loadProject(projectId);
-                var gateIssues = consistencyGate.check(projectId, chapterIndex,
-                        chapter.getContent(), p.getGenre());
-                for (var issue : gateIssues) {
-                    repository.saveContinuityIssue(issue);
-                    log.warn("一致性门禁(章{}): {}", chapterIndex, issue.getDescription());
-                }
-            }
-        } catch (Exception e) {
-            log.warn("一致性门禁失败(章{}): {}", chapterIndex, e.getMessage());
-        }
-
-        // p11.1-J4: 说明文密度检测——连续无对话段落
-        try {
-            if (expositionDetector != null) {
-                expositionDetector.detect(projectId, chapterIndex, chapter.getContent())
-                        .ifPresent(issue -> {
-                            repository.saveContinuityIssue(issue);
-                            log.warn("说明文密度(章{}): {}", chapterIndex, issue.getDescription());
-                        });
-            }
-        } catch (Exception e) {
-            log.warn("说明文密度检测失败(章{}): {}", chapterIndex, e.getMessage());
-        }
-
-        // 每 5 章检查风格漂移，解析评分并记录问题（p3-02）
-        if (chapterIndex % 5 == 0) {
-            try {
-                var styleOpt = repository.findStyleProfileByProject(projectId);
-                if (styleOpt.isPresent()) {
-                    var style = styleOpt.get();
-                    String baseline = "基调：" + (style.getTone() != null ? style.getTone() : "")
-                            + "，叙事：" + (style.getVoice() != null ? style.getVoice() : "")
-                            + "，注意事项：" + (style.getDosAndDonts() != null ? style.getDosAndDonts() : "");
-                    String report = styleGuardian.checkConsistency(projectId, chapter.getContent(), baseline);
-                    // 解析评分：格式 "风格一致性评分：XX/100"
-                    if (report != null) {
-                        var scoreMatch = java.util.regex.Pattern.compile("(\\d+)/100").matcher(report);
-                        if (scoreMatch.find()) {
-                            int score = Integer.parseInt(scoreMatch.group(1));
-                            if (score < 60) {
-                                // 风格评分低，记录为 ContinuityIssue
-                                repository.saveContinuityIssue(new ContinuityIssue(
-                                        projectId, chapterIndex,
-                                        ContinuityIssue.Type.WORLDBUILDING,
-                                        ContinuityIssue.Severity.MEDIUM,
-                                        "风格漂移（评分" + score + "/100）：" + report));
-                            }
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                log.warn("风格检查失败: {}", e.getMessage());
-            }
-        }
-        return rewritten;
-    }
-
-    /**
-     * p9-2: 伏笔回收检测——用 LLM 判断本章是否回收了未回收伏笔。
-     * 替代旧的关键词匹配检测（p5-c1，0%命中率）。
-     */
-    private void checkForeshadowingResolution(String projectId, int chapterIndex, Chapter chapter) {
-        if (foreshadowingResolutionDetector == null) return;
-        try {
-            int resolved = foreshadowingResolutionDetector.detectAndResolve(
-                    projectId, chapterIndex, chapter.getContent());
-            if (resolved > 0) {
-                log.info("伏笔回收(章{}): {} 条", chapterIndex, resolved);
-            }
-        } catch (Exception e) {
-            log.warn("伏笔回收检测失败(章{}): {}", chapterIndex, e.getMessage());
-        }
-    }
-
-    /** 带纠偏指令的重写：原地更新原 chapter（避免重复章节） */
-    private void rewriteWithCorrection(String projectId, int chapterIndex, Chapter chapter,
-                                        String issueDesc, String settings) {
-        try {
-            var outline = repository.findOutlineByProject(projectId).orElse(null);
-            if (outline == null) return;
-            var synopsis = findSynopsis(outline, chapterIndex);
-            if (synopsis == null) return;
-
-            String newContent = chapterWriter.rewriteForCorrection(
-                    projectId, chapterIndex, synopsis.getTitle(),
-                    synopsis.getSynopsis(), synopsis.getWritingNotes(), issueDesc);
-            // 重写成功则用新内容原地更新（复用原 chapter 的 id，触发 ON CONFLICT DO UPDATE）
-            if (newContent != null && newContent.length() >= 2000) {
-                chapter.setContent(newContent);
-                repository.saveChapter(chapter); // 用原 id 覆盖，不产生重复
-            } else if (newContent != null) {
-                // p16-05: 拒收重写——rewriteForCorrection 已把向量切到被拒版本，
-                // 用保留的原正文重放向量索引，恢复向量库与 DB 一致
-                try { chapterWriter.reindexChapter(projectId, chapterIndex, chapter.getContent()); }
-                catch (Exception re) { log.warn("拒收重写后向量重放失败(章{}): {}", chapterIndex, re.getMessage()); }
-            }
-        } catch (Exception e) {
-            log.warn("纠偏重写失败，保留原版本: {}", e.getMessage());
-            EventLog.emit("CONSISTENCY_ISSUE", Map.of(
-                    "severity", "DETECT_FAILED", "desc", EventLog.truncate(e.getMessage(), 150)));
-        }
-    }
-
-    private boolean applyArbiterDecision(String projectId, int chapterIndex, Chapter chapter,
-                                         List<String> cast,
-                                         java.util.List<ContinuityIssue> continuityIssues,
-                                         boolean alreadyRewritten) {
-        java.util.List<ContinuityIssue> guardIssues = java.util.List.of();
-        try {
-            if (consistencyGuard != null) {
-                guardIssues = consistencyGuard.check(projectId, chapterIndex, chapter.getContent(), cast);
-            }
-        } catch (Exception e) {
-            log.warn("仲裁前守卫失败(章{}): {}", chapterIndex, e.getMessage());
-            EventLog.emit("CONSISTENCY_ISSUE", Map.of(
-                    "severity", "DETECT_FAILED", "desc", EventLog.truncate(e.getMessage(), 150)));
-        }
-        int readerOverall = 10;
-        String suggestion = null;
-        if (readerReviewAgent != null) {
-            try {
-                var review = readerReviewAgent.review(chapterIndex, chapter.getContent());
-                readerOverall = review.getScore();
-                suggestion = review.getImprovementSuggestion();
-                repository.saveChapterReview(ChapterReview.from(projectId, review));
-            enrichChapterCheckpointPayload(projectId, review.getChapterIndex());
-            } catch (Exception e) {
-                log.warn("仲裁前读者检验失败(章{}): {}", chapterIndex, e.getMessage());
-            }
-        }
-        var council = (qualityCouncil != null ? qualityCouncil : new com.writing.novel.service.QualityCouncil())
-                .collect(continuityIssues, guardIssues, readerOverall, suggestion, null);
-        int budget = repository.findWritingPreferences(projectId)
-                .map(com.writing.novel.domain.WritingPreferences::getRewriteBudget).orElse(1);
-        var decision = arbiter.arbitrate(council, budget, alreadyRewritten);
-        if (decision.action() == com.writing.novel.service.Arbiter.Action.REWRITE
-                && chapter.getContent().length() > 500) {
-            rewriteWithCorrection(projectId, chapterIndex, chapter, decision.correctionBrief(), "");
-            alreadyRewritten = true;
-            try {
-                var recheckC = continuityChecker.check(projectId, chapterIndex, chapter.getContent(),
-                        collectSettingsForCheck(projectId, cast));
-                for (var issue : recheckC) {
-                    if (issue.getSeverity() == ContinuityIssue.Severity.HIGH) {
-                        applyRepairClassification(projectId, chapterIndex, chapter, issue, true);
-                    }
-                }
-                if (consistencyGuard != null) {
-                    var recheckG = consistencyGuard.check(projectId, chapterIndex, chapter.getContent(), cast);
-                    for (var issue : recheckG) {
-                        repository.saveContinuityIssue(issue);
-                        if (issue.getSeverity() == ContinuityIssue.Severity.HIGH) {
-                            applyRepairClassification(projectId, chapterIndex, chapter, issue, true);
-                        }
-                    }
-                }
-                if (readerReviewAgent != null) {
-                    readerReviewAgent.review(chapterIndex, chapter.getContent());
-                }
-            } catch (Exception e) {
-                log.warn("仲裁后复检失败(章{}): {}", chapterIndex, e.getMessage());
-                EventLog.emit("CONSISTENCY_ISSUE", Map.of(
-                        "severity", "DETECT_FAILED", "desc", EventLog.truncate(e.getMessage(), 150)));
-            }
-        } else if (decision.action() == com.writing.novel.service.Arbiter.Action.BLOCK) {
-            continuityIssues.stream()
-                    .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH)
-                    .findFirst()
-                    .ifPresent(i -> applyRepairClassification(projectId, chapterIndex, chapter, i, true));
-        }
-        return alreadyRewritten;
-    }
-
-    /**
-     * p11-q0-04: 三分类仲裁——重写/真典supercede/早期根源标记 NEEDS_MANUAL_REVIEW。
-     * 重写后仍存或跨章根源型 HIGH 矛盾，激活 NEEDS_MANUAL_REVIEW（此前枚举从未赋值）。
-     */
-    private void applyRepairClassification(String projectId, int chapterIndex, Chapter chapter,
-                                            ContinuityIssue issue, boolean alreadyRewritten) {
-        if (repairArbiter == null) return;
-        var action = repairArbiter.classify(issue, alreadyRewritten);
-        // p11-q3-01: 质量事件遥测——一致性问题 + 仲裁动作可观测
-        EventLog.emit("CONSISTENCY_ISSUE", Map.of(
-                "type", issue.getType().name(), "severity", issue.getSeverity().name(),
-                "action", action.name(), "desc", EventLog.truncate(issue.getDescription(), 150)));
-        switch (action) {
-            case MANUAL_REVIEW -> {
-                chapter.setStatus(Chapter.Status.NEEDS_MANUAL_REVIEW);
-                repository.saveChapter(chapter);
-                log.warn("章{} 标记 NEEDS_MANUAL_REVIEW（根源性矛盾待人工）：{}", chapterIndex, issue.getDescription());
-            }
-            case SUPERSEDE_CANON -> correctCanon(projectId, chapterIndex, issue);
-            case REWRITE -> { /* 已重写，不再重写（最多 1 次） */ }
-        }
-    }
-
-    /** p11-q0-04: 把矛盾纠正为真典 PLOT_COMMITMENT（待人工确认），让后续章节知晓该矛盾 */
-    private void correctCanon(String projectId, int chapterIndex, ContinuityIssue issue) {
-        if (storyCanon == null) return;
-        try {
-            storyCanon.saveIfAbsent(new com.writing.novel.domain.StoryFact(projectId,
-                    com.writing.novel.domain.StoryFact.FactType.PLOT_COMMITMENT,
-                    "矛盾待确认(章" + chapterIndex + ")",
-                    "【待人工确认】" + issue.getDescription(), chapterIndex));
-        } catch (Exception e) {
-            log.warn("真典纠正失败(章{}): {}", chapterIndex, e.getMessage());
-        }
-    }
 
     /**
      * p11-q1-03: 软门禁——门禁重试上限后仍不过，标记 quality_risk（记 ContinuityIssue，不阻塞推进）。
      * INTERACTIVE 模式下，doConceiving 末尾的 PAUSED_AT_CHECKPOINT 会让人工看到这些 quality_risk 并介入。
      */
-    private void markQualityRisk(String projectId, String stage, String feedback) {
+    void markQualityRisk(String projectId, String stage, String feedback) {
         try {
             repository.saveContinuityIssue(new ContinuityIssue(projectId, 0,
                     ContinuityIssue.Type.STRUCTURE, ContinuityIssue.Severity.MEDIUM,
@@ -1580,49 +1225,6 @@ public class NovelOrchestrator {
         return sb.toString().trim();
     }
 
-    /** 收集设定摘要供连续性检查参考。p11-q0-01: 经 RelevanceGateway 按本章 cast 收窄角色 */
-    private String collectSettingsForCheck(String projectId, List<String> cast) {
-        StringBuilder sb = new StringBuilder();
-        var characters = relevanceGateway != null
-                ? relevanceGateway.relevantCharacters(projectId, cast, 10)
-                : repository.findCharactersByProject(projectId);
-        for (var c : characters) {
-            sb.append(c.getName()).append("（").append(c.getRole()).append("）");
-            if (c.getPersonality() != null) sb.append(" 性格：").append(c.getPersonality());
-            if (c.getAbility() != null) sb.append(" 能力：").append(c.getAbility());
-            sb.append("\n");
-        }
-        for (var e : repository.findKnowledgeEntriesByProject(projectId)) {
-            sb.append("【").append(e.getName()).append("】").append(e.getContent()).append("\n");
-        }
-        // p5-c1: 注入未回收伏笔台账，供连续性检查器参考
-        // p16-04: cap 20——mustResolve 恒在，其余按埋设先后（早埋优先），防全量注入随章节无界增长
-        var foreshadowings = repository.findUnresolvedForeshadowings(projectId).stream()
-                .sorted(java.util.Comparator
-                        .comparing(Foreshadowing::isMustResolve).reversed()
-                        .thenComparing(Foreshadowing::getPlantedAtChapter))
-                .limit(20)
-                .toList();
-        if (!foreshadowings.isEmpty()) {
-            sb.append("\n=== 待回收伏笔 ===\n");
-            for (var f : foreshadowings) {
-                sb.append("- ").append(f.getDescription())
-                  .append("（埋于第").append(f.getPlantedAtChapter()).append("章）\n");
-            }
-        }
-        // p11-q0-02: 故事真典 ACTIVE 事实——长程一致性校验依据（替代级联压缩摘要）
-        if (relevanceGateway != null) {
-            var facts = relevanceGateway.relevantFacts(projectId, cast, 15);
-            if (!facts.isEmpty()) {
-                sb.append("\n=== 故事真典（已确立事实，新章节必须严格遵守） ===\n");
-                for (var f : facts) {
-                    sb.append("- ").append(f.getSubject()).append("（").append(f.getFactType())
-                            .append("）：").append(f.getAssertion()).append("\n");
-                }
-            }
-        }
-        return sb.toString();
-    }
 
     /** p11-q0-01: 解析 synopsis.cast（逗号/顿号/空格分隔）为名字列表，供收窄 */
     static List<String> parseCast(String cast) {

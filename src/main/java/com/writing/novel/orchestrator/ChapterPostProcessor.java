@@ -149,7 +149,7 @@ public class ChapterPostProcessor {
     private boolean stageContinuity(String projectId, int chapterIndex, Chapter chapter,
                                     ChapterSynopsis synopsis) {
         // p10-w1-07: 返回是否已触发 continuity 重写——若已重写，reader review 不再重写（互斥，防成本翻倍）
-        return orch.checkContinuityAfterWriting(projectId, chapterIndex, chapter,
+        return orch.production().qualityGate(projectId, chapterIndex, chapter,
                 NovelOrchestrator.parseCast(synopsis != null ? synopsis.getCast() : ""));
     }
 

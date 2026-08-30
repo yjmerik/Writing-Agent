@@ -12,11 +12,12 @@ class FailLoudTest {
     @Test
     void 复检与纠偏重写路径不含ignored吞异常() throws Exception {
         String src = Files.readString(Path.of(
-                "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"));
-        int start = src.indexOf("boolean checkContinuityAfterWriting");
+                "src/main/java/com/writing/novel/orchestrator/ChapterProduction.java"));
+        int start = src.indexOf("boolean qualityGate(");
         int rewrite = src.indexOf("private void rewriteWithCorrection");
         int afterRewrite = src.indexOf("private void applyRepairClassification");
-        assertTrue(start > 0 && rewrite > start && afterRewrite > rewrite);
+        assertTrue(start > 0 && rewrite > start && afterRewrite > rewrite,
+                "质量链已迁移至 ChapterProduction（p22-04），结构断言随之指向新模块");
         String checkMethod = src.substring(start, rewrite);
         String rewriteMethod = src.substring(rewrite, afterRewrite);
         assertFalse(checkMethod.contains("catch (Exception ignored)"),

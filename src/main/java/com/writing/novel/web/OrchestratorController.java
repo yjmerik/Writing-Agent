@@ -42,7 +42,14 @@ public class OrchestratorController {
                     "status", task.getStatus().name()
             );
         }
-        orchestrator.step(id);
+        // p20-06: 同步 step 也是写作入口——经协调器占坑，活动期冲突拒绝（409）
+        String workId = "step-" + java.util.UUID.randomUUID();
+        writingTaskExecutor.beginWork(id, workId);
+        try {
+            orchestrator.step(id);
+        } finally {
+            writingTaskExecutor.endWork(id, workId);
+        }
         return status(id);
     }
 
@@ -55,7 +62,14 @@ public class OrchestratorController {
 
     @PostMapping("/resume")
     public Map<String, Object> resume(@PathVariable String id) {
-        orchestrator.step(id);
+        // p20-06: resume 可推进到写章——经协调器占坑，活动期冲突拒绝（409）
+        String workId = "step-" + java.util.UUID.randomUUID();
+        writingTaskExecutor.beginWork(id, workId);
+        try {
+            orchestrator.step(id);
+        } finally {
+            writingTaskExecutor.endWork(id, workId);
+        }
         return status(id);
     }
 

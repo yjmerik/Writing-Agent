@@ -38,8 +38,8 @@ public class WritingTaskExecutor {
     /** 内存中的取消标志（taskId → cancelled） */
     private final Map<String, Boolean> cancelFlags = new ConcurrentHashMap<>();
 
-    /** 正在运行的 taskId（projectId → taskId），用于单活动作业保证 */
-    private final Map<String, String> activeTasks = new ConcurrentHashMap<>();
+    /** p20-05: 项目工作权协调器——每项目至多一个 live worker 的唯一裁决点 */
+    private final ProjectWorkCoordinator coordinator = new ProjectWorkCoordinator();
 
     public WritingTaskExecutor(NovelOrchestrator orchestrator, NovelRepository repository) {
         this(orchestrator, repository, null);
@@ -89,30 +89,21 @@ public class WritingTaskExecutor {
 
     /** p18-03: 带作者指令的连续写作启动——指令随任务传递，逐章沿用 */
     public synchronized WritingTask startWriting(String projectId, int maxChapters, String instruction) {
-        // mc-p0-05: 如果该项目有正在运行的任务，设置取消标志并等待其退出
-        String activeTaskId = activeTasks.get(projectId);
-        if (activeTaskId != null) {
-            log.info("项目 {} 已有运行中任务 {}，发送取消信号并等待退出...", projectId, activeTaskId);
-            cancelFlags.put(activeTaskId, true);
-            // 等待旧任务退出（最多 30 秒——循环会在当前章完成后检查取消标志）
-            for (int i = 0; i < 60; i++) {
-                if (activeTasks.get(projectId) == null) break;
-                try { Thread.sleep(500); } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt(); break;
-                }
-            }
-            // 如果仍未退出，强制清理
-            if (activeTasks.get(projectId) != null) {
-                log.warn("项目 {} 旧任务 {} 未在 30s 内退出，强制清理", projectId, activeTaskId);
-                activeTasks.remove(projectId);
-            }
-        }
-
+        // p20-05: 项目已有 live worker 时拒绝（409），直到当前 owner 到达终态——
+        // 不再取消旧任务/等待 30s/强制接管（stale worker 重叠的根源）
         WritingTask task = new WritingTask(projectId, maxChapters, WritingTask.Type.WRITE_ALL);
-        task.setInstruction(instruction);
-        repository.saveWritingTask(task);
+        var token = coordinator.tryAcquire(projectId, task.getId());
+        if (token.isEmpty()) {
+            throw new IllegalStateException("项目已有进行中的写作任务，请等待其完成或先取消");
+        }
+        try {
+            task.setInstruction(instruction);
+            repository.saveWritingTask(task);
+        } catch (RuntimeException e) {
+            coordinator.release(token.get());
+            throw e;
+        }
         cancelFlags.put(task.getId(), false);
-        activeTasks.put(projectId, task.getId());
 
         executor.submit(() -> executeWriting(task, maxChapters));
 
@@ -122,32 +113,40 @@ public class WritingTaskExecutor {
     }
 
     public synchronized WritingTask startConceiving(String projectId) {
-        String activeTaskId = activeTasks.get(projectId);
+        // p15-05: 原任务仍在运行时，重复启动直接返回原任务（不取消、不替换、不等待）
+        String activeTaskId = coordinator.currentOwner(projectId).orElse(null);
         if (activeTaskId != null) {
-            // p15-05: 原任务仍在运行时，重复启动直接返回原任务（不取消、不替换、不等待）
             log.info("项目 {} 已有进行中的构思任务 {}，直接返回原任务", projectId, activeTaskId);
             return getTask(activeTaskId);
         }
         WritingTask task = new WritingTask(projectId, 0, WritingTask.Type.CONCEIVE);
+        if (coordinator.tryAcquire(projectId, task.getId()).isEmpty()) {
+            return getTask(coordinator.currentOwner(projectId).orElse(task.getId()));
+        }
         repository.saveWritingTask(task);
         cancelFlags.put(task.getId(), false);
-        activeTasks.put(projectId, task.getId());
         executor.submit(() -> executeConceive(task));
         return task;
     }
 
     /**
      * p15-05: 单章写作任务——同步执行窗口内登记 RUNNING WRITE_CHAPTER 任务并占用活动作业槽位。
-     * 单活动作业保证：项目已有活动任务时拒绝（IllegalStateException → 409），不得覆盖原 owner。
+     * p20-05: 经协调器原子获取工作权——项目已有活动任务时拒绝（IllegalStateException → 409），
+     * 不得覆盖原 owner。
      */
     public synchronized WritingTask startWriteChapter(String projectId) {
-        if (activeTasks.containsKey(projectId)) {
+        WritingTask task = new WritingTask(projectId, 1, WritingTask.Type.WRITE_CHAPTER);
+        var token = coordinator.tryAcquire(projectId, task.getId());
+        if (token.isEmpty()) {
             throw new IllegalStateException("已有进行中的写作任务，请先暂停或取消再写单章");
         }
-        WritingTask task = new WritingTask(projectId, 1, WritingTask.Type.WRITE_CHAPTER);
-        repository.saveWritingTask(task);
+        try {
+            repository.saveWritingTask(task);
+        } catch (RuntimeException e) {
+            coordinator.release(token.get());
+            throw e;
+        }
         cancelFlags.put(task.getId(), false);
-        activeTasks.put(projectId, task.getId());
         return task;
     }
 
@@ -170,7 +169,7 @@ public class WritingTaskExecutor {
             }
             repository.saveWritingTask(task);
         } finally {
-            activeTasks.remove(projectId, task.getId());
+            coordinator.release(projectId, task.getId());
             cancelFlags.remove(task.getId());
         }
     }
@@ -200,8 +199,8 @@ public class WritingTaskExecutor {
                     ? e.getMessage().substring(0, Math.min(200, e.getMessage().length())) : "未知错误");
             repository.saveWritingTask(task);
         } finally {
-            // p15-05: 条件删除——旧 worker 退出时不得移除已被新任务接管的映射
-            activeTasks.remove(task.getProjectId(), task.getId());
+            // p15-05/p20-05: 条件释放——旧 worker 退出时不得移除已被新任务接管的映射
+            coordinator.release(task.getProjectId(), task.getId());
             cancelFlags.remove(task.getId());
         }
     }
@@ -272,8 +271,8 @@ public class WritingTaskExecutor {
                     e.getMessage().substring(0, Math.min(200, e.getMessage().length())) : "未知错误");
             repository.saveWritingTask(task);
         } finally {
-            // mc-p0-05: 清除活动任务标记
-            activeTasks.remove(task.getProjectId());
+            // mc-p0-05/p20-05: 条件释放工作权——不得移除已被新任务接管的映射
+            coordinator.release(task.getProjectId(), task.getId());
             cancelFlags.remove(task.getId());
         }
     }
@@ -297,19 +296,22 @@ public class WritingTaskExecutor {
     }
 
     public boolean hasActiveTask(String projectId) {
-        return activeTasks.containsKey(projectId);
+        return coordinator.hasOwner(projectId);
     }
 
+    /** p20-05: 同步工作注册——占坑失败（已有 owner）时抛 409 语义异常 */
     public void beginWork(String projectId, String workId) {
-        activeTasks.put(projectId, workId);
+        if (coordinator.tryAcquire(projectId, workId).isEmpty()) {
+            throw new IllegalStateException("已有进行中的写作任务，请先暂停或取消");
+        }
     }
 
     public void endWork(String projectId, String workId) {
-        activeTasks.remove(projectId, workId);
+        coordinator.release(projectId, workId);
     }
 
     public boolean cancelByProject(String projectId) {
-        String taskId = activeTasks.get(projectId);
+        String taskId = coordinator.currentOwner(projectId).orElse(null);
         if (taskId == null) return false;
         return cancel(taskId);
     }

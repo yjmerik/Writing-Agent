@@ -8,13 +8,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
 
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * mc-p0-05: 单项目单活动作业收敛测试。
- * 验证同项目已有 RUNNING 时启动新任务，旧任务被取消。
+ * mc-p0-05 + p20-05: 单项目单活动作业收敛测试（owner-token 语义）。
+ * p20-05 起：项目已有 live worker 时重复启动返回冲突（409 语义），
+ * 不再取消旧任务/等待 30s/强制接管；owner 到达终态后才可启动新任务。
  */
 class SingleActiveJobTest {
 
@@ -28,25 +30,41 @@ class SingleActiveJobTest {
     }
 
     @Test
-    void startWritingWithActiveTaskCancelsOld() {
-        // 构造：无已有任务（避免构造函数的 sweep 干扰）
+    void startWritingWhileActiveRejectedInsteadOfTakeover() throws Exception {
         when(mockRepo.findAllProjects()).thenReturn(java.util.List.of());
         WritingTaskExecutor executor = new WritingTaskExecutor(mockOrchestrator, mockRepo);
 
-        // 第一次启动任务
-        when(mockRepo.findActiveWritingTask("p1")).thenReturn(Optional.empty());
-        when(mockOrchestrator.runWritingLoop(eq("p1"), anyInt(), any())).thenReturn(0);
+        // 用闩锁让第一个任务的写作循环保持活动（不 sleep 编排并发）
+        CountDownLatch loopEntered = new CountDownLatch(1);
+        CountDownLatch releaseLoop = new CountDownLatch(1);
+        when(mockOrchestrator.runWritingLoop(eq("p1"), anyInt(), any(), any())).thenAnswer(inv -> {
+            loopEntered.countDown();
+            releaseLoop.await(10, java.util.concurrent.TimeUnit.SECONDS);
+            return 0;
+        });
+
         WritingTask task1 = executor.startWriting("p1", 5);
         assertNotNull(task1);
         assertEquals(WritingTask.Status.RUNNING, task1.getStatus());
+        assertTrue(loopEntered.await(5, java.util.concurrent.TimeUnit.SECONDS), "任务1应已进入写作循环");
 
-        // 等待后台线程完成（它返回 0 章，无大纲）
-        try { Thread.sleep(2000); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+        // 活动期重复启动 → 冲突拒绝，原 owner 保持
+        assertThrows(IllegalStateException.class, () -> executor.startWriting("p1", 5),
+                "活动期重复 startWriting 必须冲突拒绝，而非取消旧任务");
+        assertTrue(executor.hasActiveTask("p1"), "原 owner 应保持");
 
-        // 第二次启动任务——应该成功（旧任务已退出）
+        // 放行任务1到终态 → 工作权释放 → 新任务可启动
+        releaseLoop.countDown();
+        long deadline = System.currentTimeMillis() + 5000;
+        while (executor.hasActiveTask("p1") && System.currentTimeMillis() < deadline) {
+            Thread.sleep(20);
+        }
+        assertFalse(executor.hasActiveTask("p1"), "任务1终态后应释放工作权");
+
+        when(mockOrchestrator.runWritingLoop(eq("p1"), anyInt(), any(), any())).thenReturn(0);
         WritingTask task2 = executor.startWriting("p1", 5);
         assertNotNull(task2);
-        assertNotEquals(task1.getId(), task2.getId(), "新任务应有不同 ID");
+        assertNotEquals(task1.getId(), task2.getId(), "终态后新任务应有不同 ID");
     }
 
     @Test

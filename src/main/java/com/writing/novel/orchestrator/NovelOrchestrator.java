@@ -729,6 +729,14 @@ public class NovelOrchestrator {
         // 用于 lambda 的 final 副本
         final int finalChapterIndex = chapterIndex;
 
+        // p20-01: 前一章待人工复核时禁止继续写下一章——复核通过（NEEDS_MANUAL_REVIEW→DONE）前写作冻结
+        var previous = repository.findChapterByIndex(projectId, p.getCurrentChapterIndex());
+        if (previous.isPresent()
+                && previous.get().getStatus() == Chapter.Status.NEEDS_MANUAL_REVIEW) {
+            throw new IllegalStateException("第" + p.getCurrentChapterIndex()
+                    + "章待人工复核，处理后再继续写作");
+        }
+
         // 幂等检查：该章已存在且内容有效则跳过（断点续写时避免重复）
         var existing = repository.findChapterByIndex(projectId, chapterIndex);
         int idempotentMinLen = repository.findWritingPreferences(projectId).map(pref -> pref.getMinChapterLength()).orElse(2000);
@@ -1033,8 +1041,12 @@ public class NovelOrchestrator {
         // p12-K3: 向量库 flush 已在 ChapterWriterAgent.indexChapterInChunks 后完成
 
         // p10-w1-06: 全部后处理完成 → status=DONE（章节真正就绪）
-        chapter.setStatus(com.writing.novel.domain.Chapter.Status.DONE);
-        repository.saveChapter(chapter);
+        // p20-01: 仅从 POST_PROCESSING 推进到 DONE——applyRepairClassification 标记的
+        // NEEDS_MANUAL_REVIEW 是人工复核裁决，不得被后处理完成覆盖
+        if (chapter.getStatus() == com.writing.novel.domain.Chapter.Status.POST_PROCESSING) {
+            chapter.setStatus(com.writing.novel.domain.Chapter.Status.DONE);
+            repository.saveChapter(chapter);
+        }
         return chapter;
     }
 
@@ -1821,6 +1833,16 @@ public class NovelOrchestrator {
                 if (ch == null) break;
                 written++;
                 consecutiveFailures = 0; // 成功则重置失败计数
+
+                // p20-01: 本章被标记待人工复核 → 循环停下，复核通过前不写下一章
+                if (ch.getStatus() == Chapter.Status.NEEDS_MANUAL_REVIEW) {
+                    log.info("章{}标记待人工复核，写作循环暂停（已写 {} 章）", ch.getChapterIndex(), written);
+                    EventLog.emit("WRITING_PAUSED", Map.of(
+                            "projectId", projectId,
+                            "chapterIndex", ch.getChapterIndex(),
+                            "reason", "NEEDS_MANUAL_REVIEW"));
+                    break;
+                }
 
                 // 质量熔断：检查本章是否有 HIGH 级连续性问题
                 // p12-fix: 放宽阈值 3→10（百万字写作中 ConsistencyGuard 检测敏感，

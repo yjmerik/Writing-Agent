@@ -243,8 +243,10 @@ public class CanonPatchService {
         newer.setImportance(5);
         newer.setLastValidatedChapter(chapter);
         if (factRepo != null) {
+            // p20-08: 人工写入总是取代同 subject+type 的旧 ACTIVE 事实（含保护窗口内的
+            // HUMAN_PATCH——保护只约束自动收割，不约束人工自己），保证恰好一条 ACTIVE
             for (StoryFact old : factRepo.findActiveBySubject(projectId, subject)) {
-                if (old.getFactType() == type && !isProtectedHumanPatch(old, chapter)) {
+                if (old.getFactType() == type) {
                     factRepo.supersede(old, newer);
                     return newer;
                 }

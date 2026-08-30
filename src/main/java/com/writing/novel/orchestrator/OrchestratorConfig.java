@@ -4,6 +4,7 @@ import com.writing.novel.agent.*;
 import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.SummaryService;
 import com.writing.novel.service.ClimaxDiversityTracker;
+import com.writing.novel.service.CanonPatchService;
 import com.writing.novel.service.CreativeDiversityService;
 import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.service.GenreDetector;
@@ -95,10 +96,12 @@ public class OrchestratorConfig {
             com.writing.novel.llm.LlmGateway llmGateway,
             com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository,
             com.writing.novel.llm.prompt.PromptTemplateService promptTemplateService,
-            EntityGraphService entityGraphService) {
+            EntityGraphService entityGraphService,
+            CanonPatchService canonPatchService) {
         com.writing.novel.agent.FactHarvesterAgent factHarvester =
                 new com.writing.novel.agent.FactHarvesterAgent(llmGateway, storyFactRepository, promptTemplateService);
         factHarvester.setEntityGraphService(entityGraphService); // p19-02: subject 别名规范化
+        factHarvester.setCanonPatchService(canonPatchService); // p20-07: HUMAN_PATCH 自动冲突保护
         return factHarvester;
     }
 }

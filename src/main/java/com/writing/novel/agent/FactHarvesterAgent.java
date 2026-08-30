@@ -30,6 +30,13 @@ public class FactHarvesterAgent {
     private final StoryFactRepository factRepo;
     private final PromptTemplateService promptService;
     private com.writing.novel.service.EntityGraphService entityGraphService; // p19-02: 可选注入，subject 别名规范化
+    /** p20-07: 可选注入——HUMAN_PATCH 自动冲突保护策略（null 时退化为无保护，仅旧测试兼容） */
+    private com.writing.novel.service.CanonPatchService canonPatchService;
+
+    /** p20-07: 注入真典补丁服务，收割冲突时执行 HUMAN_PATCH 保护窗口裁决 */
+    public void setCanonPatchService(com.writing.novel.service.CanonPatchService canonPatchService) {
+        this.canonPatchService = canonPatchService;
+    }
 
     /** p19-01: 可选注入——死亡事实自动置位 Character.status（null 安全降级） */
     private com.writing.novel.spi.NovelRepository novelRepository;
@@ -169,6 +176,12 @@ public class FactHarvesterAgent {
                         old.validateAt(chapterIndex);
                         factRepo.save(old);
                         validated++;
+                    } else if (canonPatchService != null
+                            && canonPatchService.isProtectedHumanPatch(old, chapterIndex)) {
+                        // p20-07: 5 章保护窗口内的 HUMAN_PATCH 不被自动冲突取代——
+                        // 机器断言丢弃（不落库，避免同 subject+type 平行 ACTIVE），人工意图最高优先
+                        log.warn("真典收割跳过受保护人工补丁(项目{}, 章{}): subject={}", projectId,
+                                chapterIndex, subject);
                     } else {
                         // 冲突 → supercede（剧情合法演进；正文错误的情形由 ContinuityChecker 另行检测）
                         StoryFact newer = new StoryFact(projectId, type, subject, assertion, chapterIndex);

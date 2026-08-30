@@ -60,20 +60,20 @@ class RecordReplayEmptyResponseTest {
     }
 
     @Test
-    void record同指纹二次空响应不覆盖非空fixture() throws Exception {
+    void record同指纹多次调用序号共存_各自保留() throws Exception {
         LlmRequest req = request();
         var g = gateway(new String[]{"{\"issues\":[\"HIGH\"]}", ""}, "record");
-        LlmResponse first = g.complete(req);
-        assertEquals("{\"issues\":[\"HIGH\"]}", first.getContent());
-        LlmResponse second = g.complete(req); // 同指纹，瞬时空响应
-        assertEquals("", second.getContent(), "内存返回值保持真实（空）");
+        assertEquals("{\"issues\":[\"HIGH\"]}", g.complete(req).getContent());
+        assertEquals("", g.complete(req).getContent()); // 同指纹第二次（瞬时空响应）
 
-        // fixture 必须保留首次非空内容
-        var files = Files.list(tempDir.resolve("fixtures"))
-                .filter(p -> p.getFileName().toString().endsWith(".json")).toList();
-        assertEquals(1, files.size());
-        String json = Files.readString(files.get(0));
-        assertTrue(json.contains("HIGH"), "fixture 应保留首次非空响应，实际: " + json);
+        // p16-replay 序号化：两次调用各自成文件，首次非空不再被覆盖丢失
+        try (var files = Files.list(tempDir.resolve("fixtures"))) {
+            var names = files.map(p -> p.getFileName().toString())
+                    .filter(n -> n.endsWith(".json")).sorted().toList();
+            assertEquals(2, names.size(), "两次调用各自成文件: " + names);
+            assertTrue(Files.readString(tempDir.resolve("fixtures").resolve(names.get(0))).contains("HIGH"),
+                    "-1 应为首次非空响应");
+        }
     }
 
     @Test
@@ -83,13 +83,12 @@ class RecordReplayEmptyResponseTest {
         LlmRequest req = LlmRequest.builder()
                 .taskType(LlmTaskType.GENERAL)
                 .systemPrompt(fixedSys).userMessage("u").build();
-        gateway(new String[]{"{\"issues\":[\"HIGH\"]}", ""}, "record");
-        var recordGw = gateway(new String[]{"{\"issues\":[\"HIGH\"]}", ""}, "record");
-        recordGw.complete(req); // 第一次：非空 → 落盘
-        recordGw.complete(req); // 第二次：同指纹瞬时空 → 被拒绝覆盖
+        var rec = gateway(new String[]{"{\"issues\":[\"HIGH\"]}", ""}, "record");
+        rec.complete(req); // 第一次：非空 → -1
+        rec.complete(req); // 第二次：同指纹瞬时空 → -2
         var g = gateway(new String[]{""}, "replay");
-        LlmResponse replayed = g.complete(req);
-        assertEquals("{\"issues\":[\"HIGH\"]}", replayed.getContent(),
-                "replay 应拿到被保留的非空响应（与 record 首次副作用一致）");
+        assertEquals("{\"issues\":[\"HIGH\"]}", g.complete(req).getContent(),
+                "replay 第1次应回放非空响应（与 record 首次副作用一致）");
+        assertEquals("", g.complete(req).getContent(), "replay 第2次回放空响应（时序一致）");
     }
 }

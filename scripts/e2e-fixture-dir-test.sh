@@ -38,4 +38,22 @@ default_capture="$TMP_DIR/default-args"
 run_and_capture "data/e2e-fixtures/llm" "$default_capture"
 grep -F -- "--llm.replay.dir=data/e2e-fixtures/llm" "$default_capture" >/dev/null
 
+# p23-01: 未显式指定时，默认必须解析到已存在的版本化语料
+unset E2E_FIXTURE_DIR
+auto_capture="$TMP_DIR/auto-args"
+set +e
+PATH="$TMP_DIR/bin:$PATH" E2E_MVN_ARGS_FILE="$auto_capture" \
+  ./scripts/e2e.sh --mode replay --port 61999 >/dev/null 2>&1
+set -e
+AUTO_DIR=$(grep -oE -- "--llm.replay.dir=[^ ]+" "$auto_capture" | head -1 | cut -d= -f2)
+if [ -z "$AUTO_DIR" ] || [ ! -d "$AUTO_DIR" ]; then
+  echo "default fixture resolution did not yield an existing versioned corpus (got: $AUTO_DIR)" >&2
+  exit 1
+fi
+if ! ls "$AUTO_DIR"/*.json >/dev/null 2>&1; then
+  echo "resolved default corpus $AUTO_DIR contains no fixture files" >&2
+  exit 1
+fi
+echo "auto-resolved default corpus: $AUTO_DIR"
+
 echo "e2e fixture directory forwarding verified"

@@ -30,7 +30,20 @@ else
 fi
 
 E2E_DIR="data/e2e"
-FIXTURE_DIR="${E2E_FIXTURE_DIR:-data/e2e-fixtures/llm}"
+# p23-01: 未显式指定 E2E_FIXTURE_DIR 时，自动解析到 data/e2e-fixtures/ 下
+# 含 fixture 文件的最新（字典序最大=版本最新）语料目录，找不到则明确报错；
+# 显式指定的目录原样透传（缺失时由 replay 首个 fixture miss 快速失败）
+FIXTURE_DIR="${E2E_FIXTURE_DIR:-}"
+if [ -z "$FIXTURE_DIR" ]; then
+  for d in $(ls -dt data/e2e-fixtures/*/ 2>/dev/null); do
+    if ls "$d"*.json > /dev/null 2>&1; then FIXTURE_DIR="${d%/}"; fi
+  done
+  if [ -z "$FIXTURE_DIR" ]; then
+    echo "❌ 未找到可用的回放语料：请先 record（./scripts/e2e.sh --mode record）或设置 E2E_FIXTURE_DIR"
+    exit 1
+  fi
+  echo "ℹ️ 未指定 E2E_FIXTURE_DIR，自动选用最新语料: $FIXTURE_DIR"
+fi
 BASE="http://localhost:$PORT"
 REPLAY_MODE="off"
 case "$MODE" in

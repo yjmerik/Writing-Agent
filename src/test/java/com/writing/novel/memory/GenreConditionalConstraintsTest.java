@@ -19,7 +19,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * p17-02: 爽点/四段式/悬念钩子约束题材条件化。
- * 快节奏题材（CULTIVATION/WUXIA/THRILLER/MYSTERY/GENERAL）保留网文硬约束（现状不变）；
+ * 快节奏题材（CULTIVATION/THRILLER/MYSTERY/GENERAL）保留网文硬约束；
+ * p21-01: WUXIA 移入慢节奏集合——传统武侠不强制爽点/四段式/悬念钩子；
  * 慢节奏/严肃题材（LITERARY/HISTORICAL/ROMANCE 等）替换为题材结构指引，不被爽文范式污染。
  */
 class GenreConditionalConstraintsTest {
@@ -66,7 +67,7 @@ class GenreConditionalConstraintsTest {
 
     @Test
     void 快节奏题材保留爽点与悬念钩子约束_现状不变() {
-        for (GenreProfile g : new GenreProfile[]{GenreProfile.CULTIVATION, GenreProfile.WUXIA, GenreProfile.GENERAL}) {
+        for (GenreProfile g : new GenreProfile[]{GenreProfile.CULTIVATION, GenreProfile.GENERAL}) {
             String c = constraintsFor(g, 6);
             assertTrue(c.contains("爽点"), g + " 应保留爽点约束");
             assertTrue(c.contains("悬念钩子"), g + " 应保留悬念钩子约束");
@@ -75,7 +76,9 @@ class GenreConditionalConstraintsTest {
 
     @Test
     void 慢节奏题材不含爽点四段式悬念钩子_改注入张力指引() {
-        for (GenreProfile g : new GenreProfile[]{GenreProfile.HISTORICAL, GenreProfile.LITERARY, GenreProfile.ROMANCE}) {
+        // p21-01: WUXIA 归入慢节奏集合——不强制爽点/悬念钩子
+        for (GenreProfile g : new GenreProfile[]{GenreProfile.HISTORICAL, GenreProfile.LITERARY,
+                GenreProfile.ROMANCE, GenreProfile.WUXIA}) {
             String c = constraintsFor(g, 6);
             assertFalse(c.contains("爽点"), g + " 不应强制爽点");
             assertFalse(c.contains("悬念钩子"), g + " 不应强制悬念钩子");

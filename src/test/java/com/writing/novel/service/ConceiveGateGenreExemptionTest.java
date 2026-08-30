@@ -38,12 +38,16 @@ class ConceiveGateGenreExemptionTest {
     }
 
     @Test
-    void 修仙奇幻武侠仍强制POWER_SYSTEM() {
-        for (GenreProfile g : new GenreProfile[]{GenreProfile.CULTIVATION, GenreProfile.FANTASY, GenreProfile.WUXIA}) {
+    void 修仙奇幻仍强制POWER_SYSTEM_武侠豁免() {
+        // p21-01: 传统武侠（非玄幻）不强制 POWER_SYSTEM——超自然力量体系属于 CULTIVATION
+        for (GenreProfile g : new GenreProfile[]{GenreProfile.CULTIVATION, GenreProfile.FANTASY}) {
             var entries = List.of(entry("FACTION", "势力"), entry("RULE", "规则"), entry("SETTING", "场景"));
             assertFalse(gate.checkWorldbuilding(entries, "", g).pass(),
-                    g + " 无 POWER_SYSTEM 应 FAIL（力量/武学体系是核心）");
+                    g + " 无 POWER_SYSTEM 应 FAIL（力量体系是核心）");
         }
+        var wuxiaEntries = List.of(entry("FACTION", "门派"), entry("RULE", "规矩"), entry("SETTING", "襄阳"));
+        assertTrue(gate.checkWorldbuilding(wuxiaEntries, "", GenreProfile.WUXIA).pass(),
+                "WUXIA 应豁免 POWER_SYSTEM（路线图对齐）");
     }
 
     @Test

@@ -43,7 +43,9 @@ class VolumeOutlineGenreRulesTest {
     void 卷大纲prompt注入题材规则_武侠不落空() {
         plotter.planVolume("总纲", "", "卷2", "卷梗概", 9, 16, "角色A", "主角甲", GenreProfile.WUXIA);
         assertTrue(gateway.lastPrompt.contains("题材规则（武侠）"), "卷大纲 prompt 应含武侠题材规则");
-        assertTrue(gateway.lastPrompt.contains("每章至少一个爽点"), "快节奏题材保留爽点节奏要求");
+        // p21-01: 武侠不再视为快节奏题材——不强制爽点，改用张力点要求
+        assertFalse(gateway.lastPrompt.contains("每章至少一个爽点"), "武侠卷大纲不得强制爽点");
+        assertTrue(gateway.lastPrompt.contains("核心张力点"), "武侠卷大纲应以张力点要求替代爽点");
     }
 
     @Test

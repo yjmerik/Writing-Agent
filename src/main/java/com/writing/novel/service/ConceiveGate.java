@@ -33,9 +33,10 @@ public class ConceiveGate {
 
     /**
      * p17-04: 带题材的世界观校验——POWER_SYSTEM 仅对力量体系核心题材
-     * （CULTIVATION/FANTASY/WUXIA/SCIFI）强制；MYSTERY/ROMANCE/LITERARY/HISTORICAL/THRILLER
+     * （CULTIVATION/FANTASY/SCIFI）强制；MYSTERY/ROMANCE/LITERARY/HISTORICAL/THRILLER
      * 豁免（纯悬疑/言情/历史正剧无超自然力量体系，强制要求会迫使 LLM 编造无关设定），
-     * 但完整性要求（≥3 类设定、不重名）不变。genre 为 null 时按 tags 自动检测。
+     * p21-01: WUXIA 亦豁免——传统武侠（非玄幻）武学有源有代价即可，超自然修炼流属 CULTIVATION。
+     * 完整性要求（≥3 类设定、不重名）不变。genre 为 null 时按 tags 自动检测。
      */
     public GateResult checkWorldbuilding(List<KnowledgeEntry> entries, String tags,
                                          com.writing.novel.domain.GenreProfile genre) {
@@ -46,11 +47,11 @@ public class ConceiveGate {
         com.writing.novel.domain.GenreProfile effective = genre != null ? genre
                 : new GenreDetector().detect(tags, null);
         boolean powerSystemRequired = switch (effective) {
-            case CULTIVATION, FANTASY, WUXIA, SCIFI -> true;
+            case CULTIVATION, FANTASY, SCIFI -> true;
             default -> false;
         };
         List<String> issues = new ArrayList<>();
-        // 力量体系是核心（修仙/玄幻/武侠/科幻）；非力量体系题材改为核心设定维度检查（下方完整性）
+        // 力量体系是核心（修仙/玄幻/科幻）；非力量体系题材改为核心设定维度检查（下方完整性）
         if (powerSystemRequired) {
             boolean hasPowerSystem = entries.stream()
                     .anyMatch(e -> "POWER_SYSTEM".equalsIgnoreCase(e.getType()));

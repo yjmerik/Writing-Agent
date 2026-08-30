@@ -31,8 +31,12 @@ public enum GenreProfile {
         };
     }
 
-    /** p17-02: 快节奏题材——保留网文「爽点/四段式/悬念钩子」硬约束与开篇高压 */
+    /**
+     * p17-02: 快节奏题材——保留网文「爽点/四段式/悬念钩子」硬约束与开篇高压。
+     * p21-01: WUXIA 移出快节奏集合——传统武侠（非玄幻）节奏舒缓，不强制爽点/四段式；
+     * 超自然修炼流属于 CULTIVATION。
+     */
     public boolean isFastPaced() {
-        return this == WUXIA || this == CULTIVATION || this == THRILLER || this == MYSTERY || this == GENERAL;
+        return this == CULTIVATION || this == THRILLER || this == MYSTERY || this == GENERAL;
     }
 }

@@ -62,9 +62,12 @@ class ContentControllerTest {
         mvc.perform(post("/api/projects/" + id + "/run"));  // PLANNING → WRITING
         mvc.perform(post("/api/projects/" + id + "/write-chapter"));
 
+        // p21-04: /chapters 改为分页元数据——正文单章经 /chapters/{index} 懒加载
         mvc.perform(get("/api/projects/" + id + "/chapters"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").exists());
+                .andExpect(jsonPath("$.chapters[0].title").exists())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.chapters[0].content").value(""));
     }
 
     @Test

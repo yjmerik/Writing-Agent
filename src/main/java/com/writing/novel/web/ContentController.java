@@ -174,11 +174,30 @@ public class ContentController {
         return repository.findOutlineByProject(id).orElse(null);
     }
 
+    /**
+     * p21-04: 章节元数据分页——只返回标题/字数/索引等元数据（无正文）+ total/page/size。
+     * 正文经 GET /chapters/{index} 单章懒加载，避免百章级项目全量序列化正文。
+     */
     @GetMapping("/chapters")
-    public List<Chapter> chapters(@PathVariable String id) {
-        return repository.findChaptersByProject(id);
+    public Map<String, Object> chapters(@PathVariable String id,
+                                        @RequestParam(defaultValue = "0") int page,
+                                        @RequestParam(defaultValue = "50") int size) {
+        int safeSize = Math.max(1, Math.min(size, 200));
+        List<Chapter> all = repository.findChapterMetaByProject(id);
+        int total = all.size();
+        int from = Math.max(0, page * safeSize);
+        List<Chapter> pageItems = from >= total
+                ? List.of()
+                : all.subList(from, Math.min(total, from + safeSize));
+        return Map.of(
+                "chapters", pageItems,
+                "total", total,
+                "page", Math.max(0, page),
+                "size", safeSize
+        );
     }
 
+    /** p21-04: 单章正文懒加载 */
     @GetMapping("/chapters/{chapterIndex}")
     public Chapter chapter(@PathVariable String id, @PathVariable int chapterIndex) {
         return repository.findChapterByIndex(id, chapterIndex).orElse(null);

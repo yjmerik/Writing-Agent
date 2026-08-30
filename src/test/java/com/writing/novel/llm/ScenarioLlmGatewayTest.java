@@ -60,6 +60,20 @@ class ScenarioLlmGatewayTest {
     }
 
     @Test
+    void 卷大纲请求按章节范围生成逐章行() {
+        LlmRequest volumeReq = LlmRequest.builder()
+                .taskType(LlmTaskType.PLOTTING)
+                .systemPrompt("章节范围：第9章到第16章（共8章）。当前任务：为卷生成详细章节大纲。")
+                .userMessage("请规划卷大纲。")
+                .build();
+        String out = gateway.complete(volumeReq).getContent();
+        assertTrue(out.contains("第9章") && out.contains("第16章"), "应覆盖范围首尾章节");
+        assertFalse(out.contains("第17章"), "不得越过范围上限");
+        // 逐章大纲行需要可解析的节拍/爽点结构（parseChaptersInVolume 兼容）
+        assertTrue(out.contains("场景节拍") && out.contains("爽点"));
+    }
+
+    @Test
     void 同参数响应逐字可复现() {
         LlmRequest r = req(LlmTaskType.CHAPTER_WRITING, "第5章");
         String first = gateway.complete(r).getContent();

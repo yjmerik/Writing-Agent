@@ -84,6 +84,35 @@ class PausedTerminalStateTest {
     }
 
     @Test
+    void 人工复核暂停终态为PAUSED而非FAILED() throws Exception {
+        // p23-02: 第1章 NEEDS_MANUAL_REVIEW 触发写作冻结（p20-01）——任务终态应为 PAUSED
+        Project p = repo.findProject(pid).orElseThrow();
+        p.setState(NovelState.WRITING);
+        repo.saveProject(p);
+        Chapter ch1 = new Chapter(pid, 1, "第1章");
+        ch1.setContent("正文".repeat(800));
+        ch1.setStatus(Chapter.Status.NEEDS_MANUAL_REVIEW);
+        repo.saveChapter(ch1);
+
+        NovelOrchestrator orch = mock(NovelOrchestrator.class);
+        when(orch.runWritingLoop(eq(pid), eq(5), any(), any())).thenReturn(1);
+
+        WritingTaskExecutor executor = new WritingTaskExecutor(orch, repo, null);
+        WritingTask task = new WritingTask(pid, 5);
+        repo.saveWritingTask(task);
+
+        Method m = WritingTaskExecutor.class.getDeclaredMethod("executeWriting", WritingTask.class, int.class);
+        m.setAccessible(true);
+        m.invoke(executor, task, 5);
+
+        WritingTask reloaded = repo.findWritingTask(task.getId()).orElseThrow();
+        assertEquals(WritingTask.Status.PAUSED, reloaded.getStatus(),
+                "人工复核暂停应置 PAUSED，实际=" + reloaded.getStatus());
+        assertTrue(reloaded.getErrorMessage().contains("人工复核"),
+                "message 应说明待人工复核: " + reloaded.getErrorMessage());
+    }
+
+    @Test
     void 非暂停状态下未写满仍FAILED_正常失败语义不变() throws Exception {
         Project p = repo.findProject(pid).orElseThrow();
         p.setState(NovelState.WRITING);

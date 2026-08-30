@@ -243,6 +243,15 @@ public class WritingTaskExecutor {
                     task.setErrorMessage("已写 " + written + " 章后到达人工审核点（INTERACTIVE 模式），"
                             + "审批 checkpoint 后可继续写作");
                     log.info("写作任务暂停于审核点: taskId={}, 已写 {} 章", taskId, written);
+                } else if (project.isPresent()
+                        // p23-02: 待人工复核暂停同样是正常暂停（p20-01 写作冻结），非失败
+                        && repository.findChapterByIndex(projectId, project.get().getCurrentChapterIndex())
+                                .map(c -> c.getStatus() == com.writing.novel.domain.Chapter.Status.NEEDS_MANUAL_REVIEW)
+                                .orElse(false)) {
+                    task.setStatus(WritingTask.Status.PAUSED);
+                    task.setErrorMessage("第 " + project.get().getCurrentChapterIndex()
+                            + " 章待人工复核，处理后再续写");
+                    log.info("写作任务暂停于人工复核: taskId={}, 已写 {} 章", taskId, written);
                 } else {
                     boolean outlineExhausted = outline.isPresent() && project.isPresent() &&
                             !outline.get().getVolumes().stream()

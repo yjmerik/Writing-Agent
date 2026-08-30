@@ -18,12 +18,13 @@ const STATE_TEXT: Record<string, string> = {
   WRITING: '创作中',
   VOLUME_DONE: '卷完结',
   FINAL: '已完结',
+  NEEDS_REVISION: '待修订',
   PAUSED_AT_CHECKPOINT: '待审核',
 };
 
 const STATE_COLOR: Record<string, string> = {
   CONCEIVING: 'blue', PLANNING: 'cyan', WRITING: 'processing',
-  VOLUME_DONE: 'gold', FINAL: 'green', PAUSED_AT_CHECKPOINT: 'orange',
+  VOLUME_DONE: 'gold', FINAL: 'green', NEEDS_REVISION: 'red', PAUSED_AT_CHECKPOINT: 'orange',
 };
 
 export default function ProjectWorkspace() {
@@ -89,7 +90,14 @@ export default function ProjectWorkspace() {
 
   return (
     <Layout style={{ background: 'transparent', minHeight: '100vh' }}>
-      <Sider width={320} theme="light" style={{ padding: '16px 12px', background: '#fafaf8', borderRight: '1px solid #eee' }}>
+      {/* p21-06: 响应式侧栏——小于 lg 自动折叠，375px 下无页面级横向溢出 */}
+      <Sider
+        width={320}
+        breakpoint="lg"
+        collapsedWidth="0"
+        theme="light"
+        style={{ padding: '16px 12px', background: '#fafaf8', borderRight: '1px solid #eee' }}
+      >
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
           {/* 顶部操作 */}
           <div style={{ display: 'flex', gap: 8 }}>

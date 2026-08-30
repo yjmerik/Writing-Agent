@@ -11,6 +11,7 @@ const STATE_LABELS: Record<NovelState, { text: string; color: string; percent: n
   WRITING: { text: '创作中', color: 'processing', percent: 50 },
   VOLUME_DONE: { text: '卷完结', color: 'gold', percent: 75 },
   FINAL: { text: '已完结', color: 'green', percent: 100 },
+  NEEDS_REVISION: { text: '待修订', color: 'red', percent: 90 },
   PAUSED_AT_CHECKPOINT: { text: '待审核', color: 'orange', percent: 40 },
 };
 
@@ -169,7 +170,8 @@ export default function ProjectListPage() {
             onConfirm={(e) => handleDelete(record.id, e)}
             onCancel={(e) => e?.stopPropagation()}
           >
-            <Button danger size="small" icon={<DeleteOutlined />} style={{ borderRadius: 6 }} />
+            <Button danger size="small" icon={<DeleteOutlined />} style={{ borderRadius: 6 }}
+              aria-label={`删除项目「${record.title || record.concept || record.id}」`} />
           </Popconfirm>
         </Space>
       ),
@@ -222,8 +224,19 @@ export default function ProjectListPage() {
               rowKey="id"
               loading={loading}
               pagination={false}
+              scroll={{ x: true }}
               onRow={(record) => ({
                 onClick: () => navigate(`/project/${record.id}`),
+                // p21-07: 行键盘可激活
+                role: 'button',
+                tabIndex: 0,
+                'aria-label': `打开项目 ${record.title || record.concept?.slice(0, 12) || record.id}`,
+                onKeyDown: (e: React.KeyboardEvent) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    navigate(`/project/${record.id}`);
+                  }
+                },
                 style: { cursor: 'pointer', transition: 'background 0.2s' },
                 onMouseEnter: (e) => { (e.currentTarget as HTMLElement).style.background = '#faf8f4'; },
                 onMouseLeave: (e) => { (e.currentTarget as HTMLElement).style.background = ''; },

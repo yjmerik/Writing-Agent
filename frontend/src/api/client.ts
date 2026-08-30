@@ -12,6 +12,8 @@ import type {
   Checkpoint,
   ChapterQualityReport,
   Foreshadowing,
+  ChapterPage,
+  SseState,
 } from '../types';
 
 const BASE = '/api';
@@ -183,11 +185,19 @@ export const api = {
   resume: (id: string) =>
     request<ProjectStatus>(`/projects/${id}/resume`, { method: 'POST' }),
 
-  getChapters: (id: string) =>
-    request<Chapter[]>(`/projects/${id}/chapters`),
+  /**
+   * p21-04: 章节元数据分页——不含正文；正文经 getChapter 单章懒加载。
+   */
+  getChapterPage: (id: string, page = 0, size = 1000) =>
+    request<ChapterPage>(`/projects/${id}/chapters?page=${page}&size=${size}`),
 
   getChapter: (id: string, chapterIndex: number) =>
     request<Chapter | null>(`/projects/${id}/chapters/${chapterIndex}`),
+
+  /** p21-02: NEEDS_REVISION 人工修订后的显式成书门禁重试 */
+  finalAudit: (id: string) =>
+    request<{ projectId: string; passed: boolean; state: string }>(
+      `/projects/${id}/final-audit`, { method: 'POST' }, 120000),
 
   getSummaries: (id: string) =>
     request<Summary[]>(`/projects/${id}/memory/summary`),
@@ -234,20 +244,63 @@ export const api = {
 
   /** p18-04: SSE 订阅项目实时事件（CHAPTER_WRITTEN/CHAPTER_FAILED/QUALITY_REVIEW 等）。
    *  返回关闭句柄；浏览器不支持 EventSource 时静默降级（保留轮询）。 */
-  subscribeEvents: (id: string, onEvent: (eventName: string, data: any) => void): (() => void) | null => {
-    if (typeof EventSource === 'undefined') return null;
-    try {
-      const es = new EventSource(`${BASE}/projects/${id}/events`);
-      const handler = (e: MessageEvent) => {
-        try { onEvent(e.type || 'EVENT', JSON.parse(e.data)); } catch { /* 忽略坏帧 */ }
-      };
-      const names = ['CHAPTER_WRITTEN', 'CHAPTER_FAILED', 'QUALITY_REVIEW',
-        'QUALITY_CIRCUIT_BREAKER', 'LLM_ERROR', 'FINAL_GATE', 'EVENT'];
-      names.forEach((n) => es.addEventListener(n, handler as EventListener));
-      return () => { names.forEach((n) => es.removeEventListener(n, handler as EventListener)); es.close(); };
-    } catch {
+  /**
+   * p21-08: SSE 订阅——带连接状态回调与有界退避重连。
+   * 重连 6 次仍失败 → onState('fallback')（调用方降级为轮询/手动刷新）。
+   * 返回取消订阅函数（组件卸载必须调用，防泄漏）。
+   */
+  subscribeEvents: (
+    id: string,
+    onEvent: (eventName: string, data: any) => void,
+    onState?: (state: SseState) => void,
+  ): (() => void) | null => {
+    if (typeof EventSource === 'undefined') {
+      onState?.('fallback');
       return null;
     }
+    let es: EventSource | null = null;
+    let closed = false;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 6;
+    let names: string[] = [];
+    const handler = (e: MessageEvent) => {
+      try { onEvent(e.type || 'EVENT', JSON.parse(e.data)); } catch { /* 忽略坏帧 */ }
+    };
+
+    const connect = () => {
+      if (closed) return;
+      try {
+        es = new EventSource(`${BASE}/projects/${id}/events`);
+      } catch {
+        onState?.('fallback');
+        return;
+      }
+      es.onopen = () => { attempts = 0; onState?.('connected'); };
+      names = ['CHAPTER_WRITTEN', 'CHAPTER_FAILED', 'QUALITY_REVIEW',
+        'QUALITY_CIRCUIT_BREAKER', 'LLM_ERROR', 'FINAL_GATE', 'EVENT'];
+      names.forEach((n) => es!.addEventListener(n, handler as EventListener));
+      es.onerror = () => {
+        if (closed) return;
+        es?.close();
+        es = null;
+        attempts += 1;
+        if (attempts > MAX_ATTEMPTS) {
+          onState?.('fallback');
+          return;
+        }
+        onState?.('reconnecting');
+        // 有界指数退避：1s, 2s, 4s, 8s, 15s, 15s…
+        const delay = Math.min(15000, 1000 * Math.pow(2, attempts - 1));
+        setTimeout(connect, delay);
+      };
+    };
+    connect();
+
+    return () => {
+      closed = true;
+      names.forEach((n) => es?.removeEventListener(n, handler as EventListener));
+      es?.close();
+    };
   },
 
   /** 质量评价（慢操作，调 LLM 分析） */

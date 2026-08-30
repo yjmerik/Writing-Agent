@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Steps, Button, Space, message, Alert, Card, Popconfirm, Input, Progress } from 'antd';
+import { Steps, Button, Space, message, Alert, Card, Popconfirm, Input, Progress, Tag } from 'antd';
 import { PlayCircleOutlined, FileAddOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
-import type { ProjectStatus, NovelState, Chapter } from '../types';
+import type { ProjectStatus, NovelState, Chapter, SseState } from '../types';
 
 const STATES: NovelState[] = ['CONCEIVING', 'PLANNING', 'WRITING', 'VOLUME_DONE', 'FINAL'];
 const STATE_TEXT: Record<string, string> = {
@@ -11,7 +11,14 @@ const STATE_TEXT: Record<string, string> = {
   WRITING: '创作中',
   VOLUME_DONE: '卷完结',
   FINAL: '完结',
+  NEEDS_REVISION: '待修订',
   PAUSED_AT_CHECKPOINT: '暂停审核',
+};
+
+const SSE_TEXT: Record<SseState, { text: string; color: string }> = {
+  connected: { text: '实时通道已连接', color: 'green' },
+  reconnecting: { text: '实时通道重连中…', color: 'orange' },
+  fallback: { text: '实时通道不可用（结果以任务轮询为准）', color: 'default' },
 };
 
 export default function RunConsole({ projectId, projectState, onChanged }: { projectId: string; projectState: NovelState; onChanged: () => void }) {
@@ -27,10 +34,36 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
   const [liveProgress, setLiveProgress] = useState<{ chapter: number; words: number; failed?: string } | null>(null);
   const [liveLog, setLiveLog] = useState<string[]>([]);
   const unsubRef = useRef<(() => void) | null>(null);
+  // p21-08: SSE 连接状态展示
+  const [sseState, setSseState] = useState<SseState | null>(null);
+  // p21-03: 终态门禁——FINAL 禁用全部写作控制；NEEDS_REVISION 只允许修订与重审
+  const isFinal = projectState === 'FINAL';
+  const needsRevision = projectState === 'NEEDS_REVISION';
+  const terminal = isFinal || needsRevision;
+  const [auditing, setAuditing] = useState(false);
 
   useEffect(() => {
     return () => { unsubRef.current?.(); };
   }, []);
+
+  const handleFinalAudit = useCallback(async () => {
+    setAuditing(true);
+    try {
+      const r = await api.finalAudit(projectId);
+      if (r.passed) {
+        message.success('评审通过，全书已完结');
+        setLastResult('✅ 成书门禁重审通过，项目进入 FINAL');
+      } else {
+        message.warning('评审未通过，请继续修订');
+        setLastResult('⛔ 成书门禁重审未通过：请继续修订设定/正文后再次重审');
+      }
+      onChanged();
+    } catch (e) {
+      message.error(`重审失败: ${(e as Error).message}`);
+    } finally {
+      setAuditing(false);
+    }
+  }, [projectId, onChanged]);
 
   const handleRun = useCallback(async () => {
     setRunning(true);
@@ -88,7 +121,7 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
       } else if (name === 'QUALITY_CIRCUIT_BREAKER') {
         setLiveLog((prev) => [...prev.slice(-6), `🛑 质量熔断：连续 ${data.consecutiveHighIssues ?? '?'} 章 HIGH`]);
       }
-    });
+    }, (state) => setSseState(state));
     try {
       const result = await api.writeAll(projectId, 50, setActiveTaskId, instruction.trim() || undefined);
       const words = result.totalWords;
@@ -140,6 +173,29 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
         style={{ marginBottom: 24 }}
       />
 
+      {/* p21-03: 终态门禁——服务端强制 + 前端同步禁用 */}
+      {isFinal && (
+        <Alert
+          type="success"
+          message="✅ 全书已完结（FINAL）"
+          description="全书成书门禁已通过。写作命令已停用；如需修改请重写单章（章节管理 Tab）。"
+          style={{ marginBottom: 24 }}
+        />
+      )}
+      {needsRevision && (
+        <Alert
+          type="error"
+          message="⛔ 成书门禁未通过（NEEDS_REVISION）"
+          description="存在未达标的硬性门禁（如 mustResolve 伏笔未回收、近 60 章 HIGH 级矛盾超限）。请修订设定或正文，然后点击「重新评审」再次触发成书门禁。"
+          style={{ marginBottom: 24 }}
+          action={
+            <Button type="primary" danger loading={auditing} onClick={handleFinalAudit} disabled={busy}>
+              重新评审
+            </Button>
+          }
+        />
+      )}
+
       <div style={{ marginBottom: 12 }}>
             <Input.TextArea
               rows={1}
@@ -163,13 +219,13 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
               </div>
             )}
           </div>
-          <Space size="large" wrap>
+      <Space size="large" wrap align="center">
         <Button
           type="primary"
           size="large"
           icon={<PlayCircleOutlined />}
           loading={running}
-          disabled={busy}
+          disabled={busy || terminal}
           onClick={handleRun}
         >
           {running ? '运行中（调 LLM）…' : '推进状态'}
@@ -178,7 +234,7 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
           size="large"
           icon={<FileAddOutlined />}
           loading={writing}
-          disabled={busy}
+          disabled={busy || terminal}
           onClick={handleWriteChapter}
         >
           {writing ? '写作中（调 LLM）…' : '写一章'}
@@ -189,14 +245,14 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
           onConfirm={handleWriteAll}
           okText="开始连续写作"
           cancelText="取消"
-          disabled={busy}
+          disabled={busy || terminal}
         >
           <Button
             danger
             size="large"
             icon={<ThunderboltOutlined />}
             loading={batchWriting}
-            disabled={busy}
+            disabled={busy || terminal}
           >
             {batchWriting ? '连续写作中（每章 1-2 分钟）…' : '⚡ 连续写作（最多 50 章）'}
           </Button>
@@ -210,6 +266,10 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
               message.error((e as Error).message);
             }
           }}>取消连续写作</Button>
+        )}
+        {/* p21-08: SSE 连接状态 */}
+        {batchWriting && sseState && (
+          <Tag color={SSE_TEXT[sseState].color} aria-live="polite">{SSE_TEXT[sseState].text}</Tag>
         )}
       </Space>
 

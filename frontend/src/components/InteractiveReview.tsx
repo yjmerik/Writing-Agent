@@ -13,7 +13,9 @@ interface Props {
 }
 
 export default function InteractiveReview({ projectId, onChanged }: Props) {
+  // p21-05: 元数据一次加载；正文按选中章节懒加载缓存
   const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [bodies, setBodies] = useState<Record<number, Chapter>>({});
   const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const [status, setStatus] = useState<ProjectStatus | null>(null);
   const [selectedIdx, setSelectedIdx] = useState(0);
@@ -31,16 +33,18 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const [chs, cps, st] = await Promise.all([
-        api.getChapters(projectId),
+      const [page, cps, st] = await Promise.all([
+        api.getChapterPage(projectId, 0, 1000),
         api.listCheckpoints(projectId),
         api.getStatus(projectId),
       ]);
-      setChapters(chs);
+      const metas = page.chapters || [];
+      setChapters(metas);
+      setBodies({}); // 元数据刷新后正文缓存失效，由懒加载按需重建
       setCheckpoints(cps);
       setStatus(st);
-      if (chs.length > 0 && selectedIdx >= chs.length) {
-        setSelectedIdx(chs.length - 1);
+      if (metas.length > 0 && selectedIdx >= metas.length) {
+        setSelectedIdx(metas.length - 1);
       }
     } catch (e) {
       message.error(`加载失败: ${(e as Error).message}`);
@@ -55,15 +59,34 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   const hasPendingCheckpoint = checkpoints.length > 0;
   const currentCheckpoint = checkpoints[checkpoints.length - 1];
   const isInteractive = status?.mode === 'INTERACTIVE';
-  const currentChapter = chapters[selectedIdx];
+  const currentMeta = chapters[selectedIdx];
+
+  // p21-05: 选中章节正文懒加载（不重取 checkpoints/status，更不全量取章节正文）
+  useEffect(() => {
+    if (!currentMeta) return;
+    if (bodies[currentMeta.chapterIndex]) return;
+    let cancelled = false;
+    api.getChapter(projectId, currentMeta.chapterIndex)
+      .then((full) => {
+        if (cancelled || !full) return;
+        setBodies((prev) => ({ ...prev, [currentMeta.chapterIndex]: full }));
+      })
+      .catch(() => { /* 正文加载失败不阻塞元信息展示 */ });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, currentMeta?.chapterIndex]);
+
+  const currentChapter = currentMeta
+    ? (bodies[currentMeta.chapterIndex] ?? currentMeta)
+    : undefined;
 
   // p11-I3: 选中章节时获取质量报告
   useEffect(() => {
-    if (!currentChapter) { setQualityReport(null); return; }
-    api.getChapterQuality(projectId, currentChapter.chapterIndex)
+    if (!currentMeta) { setQualityReport(null); return; }
+    api.getChapterQuality(projectId, currentMeta.chapterIndex)
       .then(setQualityReport)
       .catch(() => setQualityReport(null));
-  }, [projectId, currentChapter]);
+  }, [projectId, currentMeta]);
 
   // p11-G2: 段落编辑
   const handleParagraphClick = (index: number, text: string) => {
@@ -221,6 +244,29 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
         {status?.state === 'FINAL' && (
           <Alert type="success" message={`✅ 全书已完结，共 ${status.currentChapter} 章`} style={{ marginBottom: 16 }} />
         )}
+        {status?.state === 'NEEDS_REVISION' && (
+          <Alert
+            type="error"
+            message="⛔ 成书门禁未通过（待修订）"
+            description="全书存在未达标的硬性门禁（如 mustResolve 伏笔未回收、近 60 章 HIGH 级矛盾超限）。请修订设定或正文后，点击「重新评审」再次触发成书门禁；通过后全书进入「已完结」。"
+            style={{ marginBottom: 16 }}
+            action={
+              <Button
+                type="primary"
+                danger
+                onClick={async () => {
+                  try {
+                    const r = await api.finalAudit(projectId);
+                    if (r.passed) { message.success('评审通过，全书已完结'); } else { message.warning('评审未通过，请继续修订'); }
+                    onChanged();
+                  } catch (e) { message.error((e as Error).message); }
+                }}
+              >
+                重新评审
+              </Button>
+            }
+          />
+        )}
         {status?.state === 'WRITING' && !isPaused && (
           <Alert type="info" message="📝 写作中 — 可查看和重写已完成的章节" style={{ marginBottom: 16 }} />
         )}
@@ -235,15 +281,24 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
         )}
 
         <Row gutter={16}>
-          {/* 章节列表 */}
-          <Col span={6}>
+          {/* 章节列表（p21-06: 小屏堆叠） */}
+          <Col xs={24} md={6}>
             <Card title={`📖 章节 (${chapters.length})`} size="small" style={{ maxHeight: '70vh', overflow: 'auto' }}>
               <List
                 size="small"
                 dataSource={chapters}
                 renderItem={(ch, idx) => (
                   <List.Item
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`第${ch.chapterIndex}章 ${ch.title}`}
                     onClick={() => setSelectedIdx(idx)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedIdx(idx);
+                      }
+                    }}
                     style={{ cursor: 'pointer', background: idx === selectedIdx ? '#e6f7ff' : undefined }}
                   >
                     <List.Item.Meta
@@ -261,8 +316,8 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
             </Card>
           </Col>
 
-          {/* 章节正文 */}
-          <Col span={18}>
+          {/* 章节正文（p21-06: 小屏堆叠） */}
+          <Col xs={24} md={18}>
             {currentChapter ? (
               <Card
                 title={`第${currentChapter.chapterIndex}章 ${currentChapter.title.replace(/\*\*/g, '')}`}
@@ -289,7 +344,9 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
                 }
                 style={{ maxHeight: '70vh', overflow: 'auto' }}
               >
-                {renderChapterContent(currentChapter.content)}
+                {bodies[currentMeta.chapterIndex]
+                  ? renderChapterContent(currentChapter.content)
+                  : <Spin style={{ display: 'block', margin: '40px auto' }} />}
 
                 {/* p11-G2: 段落编辑面板 */}
                 {selectedParagraph && (

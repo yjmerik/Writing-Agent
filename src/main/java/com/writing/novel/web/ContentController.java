@@ -182,7 +182,7 @@ public class ContentController {
     public Map<String, Object> chapters(@PathVariable String id,
                                         @RequestParam(defaultValue = "0") int page,
                                         @RequestParam(defaultValue = "50") int size) {
-        int safeSize = Math.max(1, Math.min(size, 200));
+        int safeSize = Math.max(1, Math.min(size, 1000)); // 元数据行极小，单页可覆盖 400 章全书目录
         List<Chapter> all = repository.findChapterMetaByProject(id);
         int total = all.size();
         int from = Math.max(0, page * safeSize);

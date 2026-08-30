@@ -8,6 +8,7 @@ export type NovelState =
   | 'WRITING'
   | 'VOLUME_DONE'
   | 'FINAL'
+  | 'NEEDS_REVISION'
   | 'PAUSED_AT_CHECKPOINT';
 
 export interface Project {
@@ -90,6 +91,17 @@ export interface Chapter {
   createdAt: string;
   updatedAt: string;
 }
+
+/** p21-04: 章节元数据分页响应（chapters 不含正文） */
+export interface ChapterPage {
+  chapters: Chapter[];
+  total: number;
+  page: number;
+  size: number;
+}
+
+/** p21-08: SSE 连接状态 */
+export type SseState = 'connected' | 'reconnecting' | 'fallback';
 
 export interface Foreshadowing {
   id: string;

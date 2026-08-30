@@ -76,4 +76,29 @@ public abstract class NovelRepositoryContractTest {
         assertEquals(1, pending.size());
         assertEquals("未回收", pending.get(0).getDescription());
     }
+
+    // --- p22-06: 归档/预设/清理能力也是契约的一部分（接口已无 silent default） ---
+
+    @Test
+    void 归档清理能力返回计数而非静默() {
+        Project p = new Project("归档书", "c", "tag");
+        repository().saveProject(p);
+        String pid = p.getId();
+
+        assertEquals(0, repository().deleteExpiredEdges(pid, 10));
+        assertEquals(0, repository().archiveOldLowSeverityIssues(pid, 10));
+        assertEquals(0, repository().archiveAgedHighIssues(pid, 10));
+        assertEquals(0, repository().deleteResolvedNarrativeThreads(pid));
+        assertEquals(0, repository().deleteDuplicateKnowledgeEntries(pid));
+        assertEquals(0, repository().retireStaleForeshadowings(pid, 10));
+        assertEquals(0, repository().deleteKnowledgeEntriesByProject(pid));
+    }
+
+    @Test
+    void 自定义预设往返() {
+        repository().saveCustomPreset("我的预设", "{\"tone\":\"冷峻\"}");
+        java.util.Map<String, String> presets = repository().findCustomPresets();
+        assertTrue(presets.containsKey("我的预设"), "实现必须持久化自定义预设");
+        assertEquals("{\"tone\":\"冷峻\"}", presets.get("我的预设"));
+    }
 }

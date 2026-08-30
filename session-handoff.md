@@ -35,9 +35,22 @@ LLM 基础设施加固（保留生效，DeepSeek 同受益）：callTimeout 30mi
 3. **夜间（约 23 点后）网关对 >5min 非流式长响应 StreamReset CANCEL，新连接也失效**——必须走流式（completeViaStream 已就绪，把任务块 streaming 置 true 即可）
 4. 极健谈：撞 max_tokens 上限浪费 3-4 分钟且截断 JSON——2500 字输出纪律模板行已在三个构思模板中
 
+## Bugfix + replay 确定性轮（2026-08-29 晚 ~ 08-30）
+
+1. **标题污染——已修复并验证**（`15e1596`）
+   - 根因：parseChaptersInVolume 单行格式前瞻 `(?=第\d+章|$)` 未行首锚定，行内伏笔「(HIGH，第3章回收)」被误判为下一章起点——吞掉真第2/4章、脏文本混入标题、gap-skip 写出 1/3/5 跳章
+   - 修复：前瞻行首锚定 + sanitizeTitle 换行防御；OutlineInlineForeshadowSplitTest 红→绿
+   - 验证：record 3 章连续、标题全干净、0 错误、评分 9/8/7、compare PASS
+2. **replay 发散——已彻底修复**（`61075d8` + `91948dd`）
+   - 根因链：DeepSeek 瞬时空响应（50 调用中 4-5 次 0 字节）+ record 同指纹重复调用时后次覆盖前次 fixture → replay 回放的不是 record 实际用于决策的响应 → 后处理产出漂移 → 后续章节 prompt 指纹 miss
+   - 修复：① client 空 content 视为可重试故障；② **调用序号化 fixture**（`<taskType>-<指纹>-<N>.json`）——同指纹每次调用独立录制/回放，回放时序与 record 完全一致；分支分叉时第 N 次缺失 fail-fast 且报错带 record 总次数（可诊断）；兼容旧无后缀 fixture
+   - 验证：dsv4-20260829d record（3章/10,574字/50调用/0错误，评分 **9/9/8**，标题干净）→ replay **逐字一致**（字数分布 min/max/avg 完全相同）→ compare PASS（已 bless）
+   - 测试：RecordReplayCallSequenceTest 5（红→绿）+ EmptyResponse 2（序号语义）+ 既有 8 回归；全量 407 pass
+   - 有效 fixture 目录：`data/e2e-fixtures/dsv4-20260829d`（序号格式）；旧目录首次调用兼容命中
+
 ## Known Issues / Next Steps
 
-1. **标题解析健壮性（回流候选）**：第 3/5 章标题混入大纲伏笔标注（"回收)；埋设-…"）——卷大纲 LLM 行格式漂移 + parseAndAppendVolume 标题截取需按「。/）」截断。不影响正文与质检。
+1. ~~标题解析健壮性~~：已修复（见 Bugfix 轮第 1 条），e2e 验证通过。
 2. P16-P19 的前端深度交互（checkpoint payload 面板美化、SSE 断线重连 UI）可继续打磨。
 3. 分支未 push；如需：`git push -u origin phase-11-quality-gate-architecture`。
 4. 百万字长跑验证：P0 缺陷已全部修复，建议后续安排 50-100 章 record 实跑验证 HIGH 老化/回收卷/摘要分层在真实长跑中的表现。

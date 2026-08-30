@@ -2,6 +2,26 @@
 
 ---
 
+## 会话记录（2026-08-30 续）：Phase 22 收口 + Phase 23 功能修复
+
+**用户指示**：暂停真实章节书写类验证（400 章 soak 实跑），优先功能改动与验证。
+
+### 本段完成
+- **p22-04 章节生产模块**：ChapterProduction（prepare/write/qualityGate + produce() 小结果接口），质量链 7 方法自 Orchestrator 原样迁移；produce 不做状态转移（单测断言）
+- **p22-05 显式策略组合**：OrchestratorPolicies 值对象构造期注入，11 个后置 setter 全部移除；OrchestratorConfig.requirePolicy 缺失能力启动即失败并指名；OrchestratorCompositionTest 4 用例。Phase 22 至此 6/6 完成
+- **p23-03 功能根因修复**：400 章 soak 首跑只产出 40 章——根因是 layeredOutline=false 走传统一次性大纲（设计上限 40 章）。修复：soak.sh 改 layeredOutline=true；ScenarioLlmGateway 补卷大纲范围感知（「章节范围：第X章到第Y章」→ 逐章行）与总纲章数感知（「预计总章数：N」→ N 章大纲，每卷 8 章）
+- **p23-02 前置功能**：场景网关 harsh 档（第 1 章注入 HIGH 矛盾）；WritingTaskExecutor 人工复核冻结的任务终态改 PAUSED（原 FAILED「写作未完成」误导）
+- **验证**：全量 mvn test 481 pass / 0 fail；e2e replay（零成本回放）与 record 基线逐字一致（10,574 字 / 3 章 / 0 错误）；compare-baseline PASS；12 章 soak 冒烟六项不变量全 PASS
+
+### 暂停中（待用户恢复）
+- p23-03 400 章全量实跑：`./scripts/soak.sh --chapters 400 --seed 20260830`
+- p23-02 reliability-e2e.sh 脚本实跑；p23-04 Playwright；p23-05 release-gate.sh
+- p23-06 真实 LLM 金丝雀（需批准）
+
+
+
+---
+
 ## 会话记录（2026-08-30）：production-readiness 架构落地（Phase 20-23）
 
 **输入**：`.omo/drafts/production-readiness-architecture.md`（已批准规划，5 组件 × 4 阶段 30 features）+ 用户指示「按架构优化文档及拆分任务实现，并端到端测试验证」。

@@ -65,7 +65,11 @@ class FullStackSmokeTest {
                 .andExpect(jsonPath("$[0]").exists());
         mvc.perform(get("/api/projects/" + id + "/outline"))
                 .andExpect(jsonPath("$.premise").exists());
+        // p21-04: /chapters 为分页元数据；正文经单章接口
         mvc.perform(get("/api/projects/" + id + "/chapters"))
-                .andExpect(jsonPath("$[0].chapterIndex").value(1));
+                .andExpect(jsonPath("$.chapters[0].chapterIndex").value(1))
+                .andExpect(jsonPath("$.total").value(1));
+        mvc.perform(get("/api/projects/" + id + "/chapters/1"))
+                .andExpect(jsonPath("$.chapterIndex").value(1));
     }
 }

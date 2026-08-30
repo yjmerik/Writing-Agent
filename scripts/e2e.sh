@@ -36,7 +36,7 @@ E2E_DIR="data/e2e"
 FIXTURE_DIR="${E2E_FIXTURE_DIR:-}"
 if [ -z "$FIXTURE_DIR" ]; then
   for d in $(ls -dt data/e2e-fixtures/*/ 2>/dev/null); do
-    if ls "$d"*.json > /dev/null 2>&1; then FIXTURE_DIR="${d%/}"; fi
+    if ls "$d"*.json > /dev/null 2>&1; then FIXTURE_DIR="${d%/}"; break; fi
   done
   if [ -z "$FIXTURE_DIR" ]; then
     echo "❌ 未找到可用的回放语料：请先 record（./scripts/e2e.sh --mode record）或设置 E2E_FIXTURE_DIR"

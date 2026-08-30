@@ -149,7 +149,13 @@ public class SqliteSchemaInitializer {
 
         // p17-05: 自定义预设持久化（跨项目共享，name 主键 upsert）
         "CREATE TABLE IF NOT EXISTS custom_presets (" +
-            "name TEXT PRIMARY KEY, content TEXT, updated_at TEXT)"
+            "name TEXT PRIMARY KEY, content TEXT, updated_at TEXT)",
+
+        // p20-03: 后处理阶段账本——每项目/章节/阶段一行，重启续跑只补未完成阶段
+        "CREATE TABLE IF NOT EXISTS post_process_ledger (" +
+            "project_id TEXT, chapter_index INTEGER, stage TEXT, " +
+            "status TEXT DEFAULT 'PENDING', updated_at TEXT, " +
+            "PRIMARY KEY (project_id, chapter_index, stage))"
     };
 
     private final ConnectionProvider cp;

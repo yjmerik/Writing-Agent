@@ -28,6 +28,15 @@ import java.util.Map;
  */
 public class ChapterPostProcessor {
 
+    /**
+     * p20-03: 后处理阶段清单——声明顺序即执行顺序/续跑顺序。
+     * 每阶段在 ledger 中独立记录 PENDING/RUNNING/COMPLETED（重启续跑用）。
+     */
+    public enum Stage {
+        CONTINUITY, ENTITY_GRAPH, FACT_HARVEST, NARRATIVE_THREADS, READER_REVIEW,
+        FORESHADOWING, DIVERSITY, ARC_TRACKING, PERIODIC, VOLUME_SUMMARY
+    }
+
     private static final Logger log = LoggerFactory.getLogger(ChapterPostProcessor.class);
 
     private final NovelOrchestrator orch;

@@ -34,6 +34,17 @@
 4. **NovelRepository 无 silent default**：归档/预设/清理 9 方法缺实现=编译失败；给测试写新 stub 时需显式声明这些能力（参考 TestNovelRepositoryStub）。
 5. **终态语义**：FINAL 全写锁 + NEEDS_REVISION 修订/重审分离（retryFinalAudit）；resolve-review 仍是 NEEDS_MANUAL_REVIEW→DONE 的恢复路径。
 
+## 增补（2026-08-30 续，用户指示暂停真实书写验证后）
+
+- **Phase 22 全部完成（6/6）**：p22-04 ChapterProduction 模块（produce 小结果接口，质量链迁移）+
+  p22-05 OrchestratorPolicies 组合（11 个后置 setter 移除，requirePolicy 启动校验）
+- **p23-03 根因修复**：soak 首跑 40 章封顶 = layeredOutline=false 走传统一次性大纲（≤40 章设计上限）；
+  已改 soak.sh 为 layeredOutline=true，且场景网关支持卷范围感知与总纲章数感知
+- **人工复核暂停任务终态改 PAUSED**（原 FAILED 误导）；场景网关 harsh 档就绪
+- **验证**：481 测试 0 失败；e2e replay 逐字一致 + compare PASS（重构行为保持）
+- **暂停中**：400 章 soak 全量实跑 / p23-02 脚本实跑 / p23-04 Playwright / p23-05 聚合器 /
+  p23-06 金丝雀——恢复后按 session-handoff 上文命令执行
+
 ## Known Issues / Next Steps（剩余 7 个 not-started feature 入口）
 
 1. **p22-04 提取章节生产模块**：p20-02 已切出 ChapterPostProcessor；下一步把「Context→write→quality→rewrite」同样收敛为小结果接口（ChapterProductionTest 为验证命令）。

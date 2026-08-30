@@ -2952,7 +2952,7 @@
         "p20-06",
         "p23-01"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "scripts/reliability-e2e.sh"
       ],
@@ -2960,7 +2960,7 @@
       "description": "crash-after-stage、restart 续跑、stale-worker 拒绝、manual-review、canon-protection 场景各产出 machine-readable report.json，失败非零退出",
       "acceptance": "crash-after-stage、restart 续跑、stale-worker 拒绝、manual-review、canon-protection 场景各产出 machine-readable report.json，失败非零退出",
       "verify_cmd": "./scripts/reliability-e2e.sh --business",
-      "evidence": "待实现（PostProcessingRecoveryTest 已提供场景脚本化蓝本）"
+      "evidence": "前置功能已落地并单测验证：场景网关 harsh 档（第1章注入 HIGH 连续性矛盾）、人工复核暂停任务终态 PAUSED（PausedTerminalStateTest）；runner 脚本本身待应用实跑验证（按用户指示暂停）"
     },
     {
       "id": "p23-03",
@@ -2971,7 +2971,7 @@
         "p21-04",
         "p23-01"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "scripts/soak.sh"
       ],
@@ -2979,7 +2979,7 @@
       "description": "恰 400 章连续唯一、零非终态章节、零重复 ACTIVE 真典键、零任务重叠、零 LLM 网络调用、导航延迟有界，报告落 data/e2e/soak/",
       "acceptance": "恰 400 章连续唯一、零非终态章节、零重复 ACTIVE 真典键、零任务重叠、零 LLM 网络调用、导航延迟有界，报告落 data/e2e/soak/",
       "verify_cmd": "./scripts/soak.sh --chapters 400 --seed 20260830",
-      "evidence": "待实现（ScenarioLlmGateway 已就绪；PLOTTING 需章节范围感知的分层大纲生成）"
+      "evidence": "不变量 harness 已就绪并经 12 章 soak 冒烟全绿（六项不变量 PASS）；场景网关补卷范围感知（章节范围：第X章到第Y章→逐章行）+ soak.sh 改 layeredOutline=true（修复一次性大纲 40 章上限导致的根因）；400 章全量实跑按用户指示暂停，恢复后执行 ./scripts/soak.sh --chapters 400 --seed 20260830"
     },
     {
       "id": "p23-04",

@@ -48,6 +48,10 @@ class WritingEntryOwnershipTest {
 
     private void holdOwnership() {
         executor.beginWork("p1", "live-writer");
+        // run/resume 先读项目路由（只读操作），冲突发生在占坑时
+        Project writing = new Project("测试", "概念", "玄幻");
+        writing.setState(NovelState.WRITING);
+        when(mockRepo.findProject("p1")).thenReturn(Optional.of(writing));
     }
 
     @Test

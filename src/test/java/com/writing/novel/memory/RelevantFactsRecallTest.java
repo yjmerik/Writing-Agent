@@ -3,6 +3,7 @@ package com.writing.novel.memory;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.StoryFact;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
@@ -29,7 +30,7 @@ class RelevantFactsRecallTest {
         new SqliteSchemaInitializer(cp).initialize();
         SqliteNovelRepository repo = new SqliteNovelRepository(cp);
         factRepo = new StoryFactRepository(cp);
-        gateway = new RelevanceGateway(repo, factRepo);
+        gateway = new RelevanceGateway(repo, new SqliteStoryCanon(factRepo));
         Project p = new Project("召回", "构思", "玄幻");
         repo.saveProject(p);
         pid = p.getId();

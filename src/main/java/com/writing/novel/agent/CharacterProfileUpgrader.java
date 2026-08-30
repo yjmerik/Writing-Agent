@@ -9,7 +9,7 @@ import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.memory.RelevanceGateway;
-import com.writing.novel.persistence.sqlite.StoryFactRepository;
+import com.writing.novel.spi.StoryCanon;
 import com.writing.novel.spi.NovelRepository;
 
 import java.util.ArrayList;
@@ -31,7 +31,7 @@ public class CharacterProfileUpgrader {
     private final NovelRepository repository;
     private final PromptTemplateService promptService;
     private final RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面
-    private final StoryFactRepository factRepo;      // p11-q0-03: 真典写入（可变状态权威源）
+    private final StoryCanon canon;      // p11-q0-03/p22-02: 真典写入（可变状态权威源）
 
     public CharacterProfileUpgrader(LlmGateway gateway, NovelRepository repository,
                                      PromptTemplateService promptService) {
@@ -44,15 +44,15 @@ public class CharacterProfileUpgrader {
         this(gateway, repository, promptService, relevanceGateway, null);
     }
 
-    /** p11-q0-03: 注入真典仓库，建档时播种初始 CHARACTER_STATE（真典为可变状态权威） */
+    /** p11-q0-03: 注入真典端口，建档时播种初始 CHARACTER_STATE（真典为可变状态权威） */
     public CharacterProfileUpgrader(LlmGateway gateway, NovelRepository repository,
                                      PromptTemplateService promptService, RelevanceGateway relevanceGateway,
-                                     StoryFactRepository factRepo) {
+                                     StoryCanon canon) {
         this.gateway = gateway;
         this.repository = repository;
         this.promptService = promptService;
         this.relevanceGateway = relevanceGateway;
-        this.factRepo = factRepo;
+        this.canon = canon;
     }
 
     /**
@@ -135,10 +135,7 @@ public class CharacterProfileUpgrader {
      * Character 卡的 ability/motivation 作为初始档案兼容保留。
      */
     private void seedCanonState(String projectId, Character profile, int currentChapter) {
-        if (factRepo == null) return;
-        boolean exists = factRepo.findActiveBySubject(projectId, profile.getName()).stream()
-                .anyMatch(f -> f.getFactType() == StoryFact.FactType.CHARACTER_STATE);
-        if (exists) return; // 已有真典状态则不覆盖（避免重建档覆盖演进）
+        if (canon == null) return;
         StringBuilder assertion = new StringBuilder();
         if (profile.getAbility() != null && !profile.getAbility().isBlank()) {
             assertion.append("初始能力：").append(profile.getAbility());
@@ -148,7 +145,8 @@ public class CharacterProfileUpgrader {
             assertion.append("初始动机：").append(profile.getMotivation());
         }
         if (assertion.length() == 0) return;
-        factRepo.save(new StoryFact(projectId, StoryFact.FactType.CHARACTER_STATE,
+        // p22-02: 幂等播种在端口内（已有同 type 事实则不覆盖演进）
+        canon.saveIfAbsent(new StoryFact(projectId, StoryFact.FactType.CHARACTER_STATE,
                 profile.getName(), assertion.toString(), currentChapter));
     }
 

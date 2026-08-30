@@ -7,6 +7,7 @@ import com.writing.novel.domain.StoryFact;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmResponse;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
@@ -66,7 +67,7 @@ class SubjectNormalizationTest {
     private FactHarvesterAgent agentWithGraphReturning(String json) {
         LlmGateway gw = mock(LlmGateway.class);
         when(gw.complete(any())).thenReturn(new LlmResponse(json, 100, 50));
-        FactHarvesterAgent agent = new FactHarvesterAgent(gw, factRepo, TestPromptHelper.create());
+        FactHarvesterAgent agent = new FactHarvesterAgent(gw, new SqliteStoryCanon(factRepo), TestPromptHelper.create());
         agent.setEntityGraphService(new EntityGraphService(repo, null));
         return agent;
     }
@@ -124,7 +125,7 @@ class SubjectNormalizationTest {
         when(gw.complete(any())).thenReturn(new LlmResponse(
                 "[{\"type\":\"CHARACTER_STATE\",\"subject\":\"林公子\",\"assertion\":\"筑基期修为（初期）\"}]",
                 100, 50));
-        FactHarvesterAgent agent = new FactHarvesterAgent(gw, factRepo, TestPromptHelper.create());
+        FactHarvesterAgent agent = new FactHarvesterAgent(gw, new SqliteStoryCanon(factRepo), TestPromptHelper.create());
         // 不调 setEntityGraphService → null 安全降级，subject 原样入库
         var result = agent.harvest(pid, chapter("林公子吐纳。"));
         assertEquals(1, result.added(), "无图服务时保持原行为（按原始 subject 新增）");

@@ -9,6 +9,7 @@ import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.client.StreamHandler;
 import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
 import com.writing.novel.telemetry.EventLog;
@@ -49,7 +50,7 @@ class FactHarvesterScopedTest {
         ConnectionProvider cp = new ConnectionProvider(tempDir.resolve("facts.db").toString());
         new SqliteSchemaInitializer(cp).initialize();
         factRepo = new StoryFactRepository(cp);
-        gateway = new CapturingGateway("[]");        agent = new FactHarvesterAgent(gateway, factRepo, com.writing.novel.agent.TestPromptHelper.create());
+        gateway = new CapturingGateway("[]");        agent = new FactHarvesterAgent(gateway, new SqliteStoryCanon(factRepo), com.writing.novel.agent.TestPromptHelper.create());
     }
 
     private void seedFacts(String projectId, int count) {
@@ -89,7 +90,7 @@ class FactHarvesterScopedTest {
         Path eventsFile = Path.of(System.getProperty(EventLog.PATH_PROPERTY));
         long before = Files.exists(eventsFile) ? Files.lines(eventsFile).count() : 0;
         gateway = new CapturingGateway(null); // null → complete 抛异常
-        agent = new FactHarvesterAgent(gateway, factRepo, com.writing.novel.agent.TestPromptHelper.create());
+        agent = new FactHarvesterAgent(gateway, new SqliteStoryCanon(factRepo), com.writing.novel.agent.TestPromptHelper.create());
 
         Chapter ch = new Chapter(projectId, 5, "第5章");
         ch.setContent("内容");

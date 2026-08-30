@@ -4,6 +4,7 @@ import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.StoryFact;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
@@ -50,7 +51,7 @@ class StoryBibleConsumptionTest {
 
         assembler = new ContextAssembler(repo, new KnowledgeBaseService(repo, vr),
                 mock(SummaryService.class), vr, eg, cl, nt, dv, cd, null);
-        assembler.setStoryFactRepository(factRepo);
+        assembler.setStoryCanon(new SqliteStoryCanon(factRepo));
 
         Project p = new Project("消费书", "构思", "玄幻");
         repo.saveProject(p);

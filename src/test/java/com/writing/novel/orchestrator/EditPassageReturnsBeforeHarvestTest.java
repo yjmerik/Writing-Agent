@@ -14,6 +14,7 @@ import com.writing.novel.memory.KnowledgeBaseService;
 import com.writing.novel.memory.SummaryService;
 import com.writing.novel.memory.VectorRetrievalService;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
@@ -78,7 +79,7 @@ class EditPassageReturnsBeforeHarvestTest {
                 summarySvc, assembler, null,
                 null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, editor, null, null);
-        orchestrator.setFactHarvester(new FactHarvesterAgent(gateway, facts, promptSvc) {
+        orchestrator.setFactHarvester(new FactHarvesterAgent(gateway, new SqliteStoryCanon(facts), promptSvc) {
             @Override
             public HarvestResult harvest(String projectId, Chapter chapter) {
                 harvestStarted.countDown();

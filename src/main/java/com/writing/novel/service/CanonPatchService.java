@@ -5,8 +5,8 @@ import com.writing.novel.domain.KnowledgeEntry;
 import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.StoryFact;
 import com.writing.novel.memory.MemoryRevision;
-import com.writing.novel.persistence.sqlite.StoryFactRepository;
 import com.writing.novel.spi.NovelRepository;
+import com.writing.novel.spi.StoryCanon;
 import org.springframework.stereotype.Component;
 
 import com.writing.novel.domain.ChapterSynopsis;
@@ -23,20 +23,20 @@ import java.util.Map;
 @Component
 public class CanonPatchService {
 
-    public static final String HUMAN_PATCH_PREFIX = "【HUMAN_PATCH】";
-    public static final int HUMAN_PATCH_PROTECT_CHAPTERS = 5;
+    public static final String HUMAN_PATCH_PREFIX = StoryCanon.HUMAN_PATCH_PREFIX;
+    public static final int HUMAN_PATCH_PROTECT_CHAPTERS = StoryCanon.HUMAN_PATCH_PROTECT_CHAPTERS;
 
     public record PatchResult(Object entity, List<StoryFact> factsWritten, boolean invalidated) {}
 
     private final NovelRepository repository;
-    private final StoryFactRepository factRepo;
+    private final StoryCanon canon; // p22-02: 只依赖真典端口
     private final MemoryRevision memoryRevision;
 
     public CanonPatchService(NovelRepository repository,
-                             StoryFactRepository factRepo,
+                             StoryCanon canon,
                              MemoryRevision memoryRevision) {
         this.repository = repository;
-        this.factRepo = factRepo;
+        this.canon = canon;
         this.memoryRevision = memoryRevision;
     }
 
@@ -160,18 +160,14 @@ public class CanonPatchService {
     }
 
     public PatchResult patchFact(String projectId, String factId, String assertion, Integer importance, int currentChapter) {
-        StoryFact old = factRepo.findById(factId)
+        StoryFact old = canon.findById(factId)
                 .orElseThrow(() -> new IllegalArgumentException("真典事实不存在: " + factId));
         if (!projectId.equals(old.getProjectId())) {
             throw new IllegalArgumentException("真典事实不属于该项目: " + factId);
         }
         String text = assertion == null || assertion.isBlank() ? old.getAssertion() : assertion;
-        StoryFact newer = new StoryFact(projectId, old.getFactType(), old.getSubject(),
-                text.startsWith(HUMAN_PATCH_PREFIX) ? text : HUMAN_PATCH_PREFIX + text,
-                currentChapter);
-        newer.setImportance(importance != null ? importance : 5);
-        newer.setLastValidatedChapter(currentChapter);
-        factRepo.supersede(old, newer);
+        StoryFact newer = canon.applyHumanPatch(projectId, old.getFactType(), old.getSubject(),
+                text, currentChapter, importance);
         bump(projectId);
         return new PatchResult(newer, List.of(newer), true);
     }
@@ -213,47 +209,19 @@ public class CanonPatchService {
     }
 
     public StoryFact retireFact(String projectId, String factId) {
-        StoryFact existing = factRepo.findById(factId)
-                .orElseThrow(() -> new IllegalArgumentException("真典事实不存在: " + factId));
-        if (!projectId.equals(existing.getProjectId())) {
-            throw new IllegalArgumentException("真典事实不属于该项目: " + factId);
-        }
-        existing.retire();
-        factRepo.save(existing);
+        StoryFact existing = canon.retire(projectId, factId);
         bump(projectId);
         return existing;
     }
 
     public List<StoryFact> listActive(String projectId) {
-        return factRepo == null ? List.of() : factRepo.findActive(projectId);
+        return canon == null ? List.of() : canon.recall(projectId);
     }
 
-    /** FactHarvester：5 章内的人补丁不得自动 supercede。 */
-    public boolean isProtectedHumanPatch(StoryFact fact, int currentChapter) {
-        if (fact == null || fact.getAssertion() == null) return false;
-        if (!fact.getAssertion().startsWith(HUMAN_PATCH_PREFIX)) return false;
-        return currentChapter - fact.getLastValidatedChapter() <= HUMAN_PATCH_PROTECT_CHAPTERS;
-    }
-
+    /** p22-02: 人工写入统一走端口（ACTIVE 唯一性在实现内保证） */
     StoryFact writeHumanFact(String projectId, StoryFact.FactType type,
                              String subject, String assertion, int chapter) {
-        String text = assertion.startsWith(HUMAN_PATCH_PREFIX)
-                ? assertion : HUMAN_PATCH_PREFIX + assertion;
-        StoryFact newer = new StoryFact(projectId, type, subject, text, chapter);
-        newer.setImportance(5);
-        newer.setLastValidatedChapter(chapter);
-        if (factRepo != null) {
-            // p20-08: 人工写入总是取代同 subject+type 的旧 ACTIVE 事实（含保护窗口内的
-            // HUMAN_PATCH——保护只约束自动收割，不约束人工自己），保证恰好一条 ACTIVE
-            for (StoryFact old : factRepo.findActiveBySubject(projectId, subject)) {
-                if (old.getFactType() == type) {
-                    factRepo.supersede(old, newer);
-                    return newer;
-                }
-            }
-            factRepo.save(newer);
-        }
-        return newer;
+        return canon.applyHumanPatch(projectId, type, subject, assertion, chapter, 5);
     }
 
     private void bump(String projectId) {

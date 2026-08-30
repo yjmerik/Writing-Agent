@@ -8,7 +8,7 @@ import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
-import com.writing.novel.persistence.sqlite.StoryFactRepository;
+import com.writing.novel.spi.StoryCanon;
 
 import java.util.List;
 import java.util.Map;
@@ -27,16 +27,9 @@ public class FactHarvesterAgent {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FactHarvesterAgent.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private final LlmGateway gateway;
-    private final StoryFactRepository factRepo;
+    private final StoryCanon canon; // p22-02: 只依赖真典端口（保护窗口/唯一性在端口实现内）
     private final PromptTemplateService promptService;
     private com.writing.novel.service.EntityGraphService entityGraphService; // p19-02: 可选注入，subject 别名规范化
-    /** p20-07: 可选注入——HUMAN_PATCH 自动冲突保护策略（null 时退化为无保护，仅旧测试兼容） */
-    private com.writing.novel.service.CanonPatchService canonPatchService;
-
-    /** p20-07: 注入真典补丁服务，收割冲突时执行 HUMAN_PATCH 保护窗口裁决 */
-    public void setCanonPatchService(com.writing.novel.service.CanonPatchService canonPatchService) {
-        this.canonPatchService = canonPatchService;
-    }
 
     /** p19-01: 可选注入——死亡事实自动置位 Character.status（null 安全降级） */
     private com.writing.novel.spi.NovelRepository novelRepository;
@@ -71,9 +64,9 @@ public class FactHarvesterAgent {
         }
     }
 
-    public FactHarvesterAgent(LlmGateway gateway, StoryFactRepository factRepo, PromptTemplateService promptService) {
+    public FactHarvesterAgent(LlmGateway gateway, StoryCanon canon, PromptTemplateService promptService) {
         this.gateway = gateway;
-        this.factRepo = factRepo;
+        this.canon = canon;
         this.promptService = promptService;
     }
 
@@ -96,7 +89,7 @@ public class FactHarvesterAgent {
         // 现有 ACTIVE 真典（供 LLM 去重 + Java 层比对）
         // p16-03: 按相关性收窄——正文 cast 相关（subject 出现在正文中）优先，其余按重要性/新鲜度补足，
         // 硬上限 FACT_LIST_CAP；未列入清单的事实仍参与 Java 层 merge 比对（findActiveBySubject 按需查）
-        List<StoryFact> existing = factRepo.findActive(projectId);
+        List<StoryFact> existing = canon.recall(projectId);
         String content = chapter.getContent() != null ? chapter.getContent() : "";
         List<StoryFact> scoped = existing.stream()
                 .sorted(java.util.Comparator
@@ -159,35 +152,25 @@ public class FactHarvesterAgent {
                 // p19-02: 别名先解析为规范名再比对/落库，防止「林公子/林凡」分裂成平行 ACTIVE 事实
                 subject = canonicalSubject(projectId, subject);
 
-                List<StoryFact> sameSubject = factRepo.findActiveBySubject(projectId, subject).stream()
-                        .filter(f -> f.getFactType() == type).toList();
-                if (sameSubject.isEmpty()) {
-                    StoryFact f = new StoryFact(projectId, type, subject, assertion, chapterIndex);
-                    f.setImportance(3);
-                    factRepo.save(f);
-                    added++;
-                    // p19-01: CHARACTER_STATE 新事实含死亡信号 → 角色置位
-                    if (type == StoryFact.FactType.CHARACTER_STATE) {
-                        detectDeath(projectId, subject, assertion, chapterIndex);
+                // p22-02: 冲突裁决 / HUMAN_PATCH 保护窗口 / 审计链全部在 StoryCanon 端口内
+                StoryFact machine = new StoryFact(projectId, type, subject, assertion, chapterIndex);
+                machine.setImportance(3);
+                var result = canon.harvest(machine);
+                switch (result.outcome()) {
+                    case ADDED -> {
+                        added++;
+                        // p19-01: CHARACTER_STATE 新事实含死亡信号 → 角色置位
+                        if (type == StoryFact.FactType.CHARACTER_STATE) {
+                            detectDeath(projectId, subject, assertion, chapterIndex);
+                        }
                     }
-                } else {
-                    StoryFact old = sameSubject.get(0);
-                    if (old.getAssertion().contains(assertion) || assertion.contains(old.getAssertion())) {
-                        old.validateAt(chapterIndex);
-                        factRepo.save(old);
-                        validated++;
-                    } else if (canonPatchService != null
-                            && canonPatchService.isProtectedHumanPatch(old, chapterIndex)) {
-                        // p20-07: 5 章保护窗口内的 HUMAN_PATCH 不被自动冲突取代——
-                        // 机器断言丢弃（不落库，避免同 subject+type 平行 ACTIVE），人工意图最高优先
+                    case VALIDATED -> validated++;
+                    case SUPERSEDED -> superseded++;
+                    case SKIPPED_PROTECTED ->
+                        // 5 章保护窗口内的 HUMAN_PATCH 不被自动冲突取代——
+                        // 机器断言丢弃（不落库），人工意图最高优先
                         log.warn("真典收割跳过受保护人工补丁(项目{}, 章{}): subject={}", projectId,
                                 chapterIndex, subject);
-                    } else {
-                        // 冲突 → supercede（剧情合法演进；正文错误的情形由 ContinuityChecker 另行检测）
-                        StoryFact newer = new StoryFact(projectId, type, subject, assertion, chapterIndex);
-                        factRepo.supersede(old, newer);
-                        superseded++;
-                    }
                 }
             }
         } catch (Exception ignored) { }

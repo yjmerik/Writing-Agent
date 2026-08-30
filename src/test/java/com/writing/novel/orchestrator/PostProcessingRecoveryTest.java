@@ -134,7 +134,7 @@ class PostProcessingRecoveryTest {
         private final AtomicInteger harvests = new AtomicInteger();
 
         CountingFactHarvester(LlmGateway gw, com.writing.novel.persistence.sqlite.StoryFactRepository factRepo) {
-            super(gw, factRepo, TestPromptHelper.create());
+            super(gw, new com.writing.novel.persistence.sqlite.SqliteStoryCanon(factRepo), TestPromptHelper.create());
         }
 
         int harvests() { return harvests.get(); }

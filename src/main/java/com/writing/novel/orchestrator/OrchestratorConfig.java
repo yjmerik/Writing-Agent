@@ -59,7 +59,7 @@ public class OrchestratorConfig {
                                                  PassageEditor passageEditor,
                                                  PlotMotifTracker plotMotifTracker,
                                                  com.writing.novel.service.ExpositionDetector expositionDetector,
-                                                 com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository,
+                                                 com.writing.novel.spi.StoryCanon storyCanon,
                                                  com.writing.novel.agent.FactHarvesterAgent factHarvester,
                                                  com.writing.novel.service.ArchiveCompactor archiveCompactor,
                                                  com.writing.novel.telemetry.CostBudgetMonitor costBudgetMonitor,
@@ -79,7 +79,7 @@ public class OrchestratorConfig {
                 foreshadowingResolutionDetector, sceneClassifier, diversityTracker, arcScheduler,
                 consistencyGuard, consistencyGate, foreshadowingImportanceAuditor, clicheDetector,
                 relationshipEvolutionTracker, passageEditor, plotMotifTracker, expositionDetector);
-        orchestrator.setStoryFactRepository(storyFactRepository);
+        orchestrator.setStoryCanon(storyCanon);
         orchestrator.setFactHarvester(factHarvester);
         orchestrator.setArchiveCompactor(archiveCompactor);
         orchestrator.setCostBudgetMonitor(costBudgetMonitor);
@@ -112,14 +112,13 @@ public class OrchestratorConfig {
     @Bean
     public com.writing.novel.agent.FactHarvesterAgent factHarvesterAgent(
             com.writing.novel.llm.LlmGateway llmGateway,
-            com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository,
+            com.writing.novel.spi.StoryCanon storyCanon,
             com.writing.novel.llm.prompt.PromptTemplateService promptTemplateService,
-            EntityGraphService entityGraphService,
-            CanonPatchService canonPatchService) {
+            EntityGraphService entityGraphService) {
         com.writing.novel.agent.FactHarvesterAgent factHarvester =
-                new com.writing.novel.agent.FactHarvesterAgent(llmGateway, storyFactRepository, promptTemplateService);
+                new com.writing.novel.agent.FactHarvesterAgent(llmGateway, storyCanon, promptTemplateService);
         factHarvester.setEntityGraphService(entityGraphService); // p19-02: subject 别名规范化
-        factHarvester.setCanonPatchService(canonPatchService); // p20-07: HUMAN_PATCH 自动冲突保护
+        // p20-07 的 HUMAN_PATCH 保护已内置于 StoryCanon.harvest（p22-01/02 迁移）
         return factHarvester;
     }
 }

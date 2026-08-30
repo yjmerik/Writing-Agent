@@ -7,6 +7,7 @@ import com.writing.novel.llm.client.StreamHandler;
 import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.memory.WritingContext;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
@@ -38,7 +39,7 @@ class CharacterStatusTest {
         new SqliteSchemaInitializer(cp).initialize();
         repo = new SqliteNovelRepository(cp);
         factRepo = new StoryFactRepository(cp);
-        harvester = new FactHarvesterAgent(new StubGateway("[]"), factRepo, TestPromptHelper.create());
+        harvester = new FactHarvesterAgent(new StubGateway("[]"), new SqliteStoryCanon(factRepo), TestPromptHelper.create());
         harvester.setNovelRepository(repo);
     }
 
@@ -49,7 +50,7 @@ class CharacterStatusTest {
 
         harvester = new FactHarvesterAgent(new StubGateway("""
                 [{"type":"CHARACTER_STATE","subject":"叶秋","assertion":"第42章为掩护众人断后，身中数刀气绝身亡"}]
-                """), factRepo, TestPromptHelper.create());
+                """), new SqliteStoryCanon(factRepo), TestPromptHelper.create());
         harvester.setNovelRepository(repo);
         Chapter ch = new Chapter("proj-s", 42, "第42章");
         ch.setContent("叶秋为掩护众人断后，身中数刀，倒在血泊中气绝身亡。");

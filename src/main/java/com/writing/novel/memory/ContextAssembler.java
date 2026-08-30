@@ -38,7 +38,7 @@ public class ContextAssembler {
     /** p10-w1-01: 记忆版本号——null 时退化为永不失效（向后兼容旧构造器/测试） */
     private final MemoryRevision memoryRevision;
     /** p10-w2-07: 故事真典仓库——null 时跳过真典注入（向后兼容） */
-    private com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository;
+    private com.writing.novel.spi.StoryCanon storyCanon;
     /** p10-w2-05: 检索收窄门面——null 时回退全量（向后兼容旧构造器/测试） */
     private RelevanceGateway relevanceGateway;
 
@@ -180,8 +180,8 @@ public class ContextAssembler {
     }
 
     /** p10-w2-07: 注入故事真典仓库（@Bean 装配用）；不调则保持 null，真典段不注入 */
-    public void setStoryFactRepository(com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository) {
-        this.storyFactRepository = storyFactRepository;
+    public void setStoryCanon(com.writing.novel.spi.StoryCanon storyCanon) {
+        this.storyCanon = storyCanon;
     }
 
     /** p10-w2-05: 注入检索收窄门面（@Bean 装配用）；不调则回退全量（向后兼容） */
@@ -194,8 +194,8 @@ public class ContextAssembler {
         List<StoryFact> facts;
         if (relevanceGateway != null) {
             facts = relevanceGateway.relevantFacts(projectId, cast, chapterIndex, 40);
-        } else if (storyFactRepository != null) {
-            facts = storyFactRepository.findActive(projectId);
+        } else if (storyCanon != null) {
+            facts = storyCanon.recall(projectId);
             if (facts.size() > 40) facts = facts.subList(0, 40);
         } else {
             return "";

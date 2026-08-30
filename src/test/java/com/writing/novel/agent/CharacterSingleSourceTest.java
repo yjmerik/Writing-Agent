@@ -11,6 +11,7 @@ import com.writing.novel.llm.LlmResponse;
 import com.writing.novel.llm.client.StreamHandler;
 import com.writing.novel.memory.RelevanceGateway;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.spi.NovelRepository;
 import org.junit.jupiter.api.Test;
 
@@ -52,7 +53,7 @@ class CharacterSingleSourceTest {
         when(factRepo.findActiveBySubject("p", "季衡")).thenReturn(List.of());
 
         var updater = new ArcUpdater(llmReturning("【成长弧】筑基大成，剑意初成"),
-                repo, TestPromptHelper.create(), factRepo);
+                repo, TestPromptHelper.create(), new SqliteStoryCanon(factRepo));
         updater.updateArcs("p", 10);
 
         verify(factRepo).save(argThat(f -> f.getFactType() == StoryFact.FactType.CHARACTER_STATE
@@ -72,7 +73,7 @@ class CharacterSingleSourceTest {
         when(factRepo.findActiveBySubject("p", "季衡")).thenReturn(List.of(existing));
 
         var updater = new ArcUpdater(llmReturning("【成长弧】筑基大成"),
-                repo, TestPromptHelper.create(), factRepo);
+                repo, TestPromptHelper.create(), new SqliteStoryCanon(factRepo));
         updater.updateArcs("p", 10);
 
         // 无变化：刷新 existing（validateAt），不新建、不 supersede
@@ -97,7 +98,7 @@ class CharacterSingleSourceTest {
 
         String profile = "【角色定位】配角\n【性格】沉稳\n【能力】剑术初成\n【动机】报恩\n";
         var upgrader = new CharacterProfileUpgrader(llmReturning(profile),
-                repo, TestPromptHelper.create(), gw, factRepo);
+                repo, TestPromptHelper.create(), gw, new SqliteStoryCanon(factRepo));
         upgrader.upgrade("p", 5);
 
         verify(factRepo).save(argThat(f -> f.getSubject().equals("新配角")
@@ -122,7 +123,7 @@ class CharacterSingleSourceTest {
         when(gw.relevantFacts(any(), any(), anyInt())).thenReturn(List.of());
 
         var upgrader = new CharacterProfileUpgrader(llmReturning("【角色定位】配角\n【能力】新能力\n"),
-                repo, TestPromptHelper.create(), gw, factRepo);
+                repo, TestPromptHelper.create(), gw, new SqliteStoryCanon(factRepo));
         upgrader.upgrade("p", 5);
 
         // 已有真典状态：不覆盖（避免重建档覆盖演进）

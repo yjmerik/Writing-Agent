@@ -7,6 +7,7 @@ import com.writing.novel.domain.Project;
 import com.writing.novel.domain.StoryFact;
 import com.writing.novel.domain.Volume;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
@@ -95,7 +96,7 @@ class OutlineReplanningTest {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null);
-        orch.setStoryFactRepository(factRepo);
+        orch.setStoryCanon(new SqliteStoryCanon(factRepo));
 
         Outline outline = new Outline(pid, "原始总纲\n第1章 开局\n第2章 发展\n第3章 高潮");
         repo.saveOutline(outline);

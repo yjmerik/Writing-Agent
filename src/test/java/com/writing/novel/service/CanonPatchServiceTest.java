@@ -6,6 +6,7 @@ import com.writing.novel.domain.KnowledgeEntry;
 import com.writing.novel.domain.StoryFact;
 import com.writing.novel.memory.MemoryRevision;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,7 @@ class CanonPatchServiceTest {
     private MemoryRevision revision;
     private RecordingRepo repo;
     private CanonPatchService service;
+    private com.writing.novel.spi.StoryCanon canon;
     private final String pid = "proj-canon";
 
     @BeforeEach
@@ -39,7 +41,8 @@ class CanonPatchServiceTest {
         facts = new StoryFactRepository(cp);
         revision = new MemoryRevision();
         repo = new RecordingRepo();
-        service = new CanonPatchService(repo, facts, revision);
+        canon = new SqliteStoryCanon(facts);
+        service = new CanonPatchService(repo, canon, revision);
     }
 
     @Test
@@ -100,8 +103,9 @@ class CanonPatchServiceTest {
         patch.setLastValidatedChapter(80);
         facts.save(patch);
 
-        assertTrue(service.isProtectedHumanPatch(patch, 84));
-        assertFalse(service.isProtectedHumanPatch(patch, 86));
+        // p22-01: 保护策略随 StoryCanon 端口（接口 default，所有实现一致）
+        assertTrue(canon.isProtectedHumanPatch(patch, 84));
+        assertFalse(canon.isProtectedHumanPatch(patch, 86));
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.Volume;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
@@ -80,7 +81,7 @@ class CharacterVoiceNarrowingTest {
         when(cd.generateForbiddenList(anyString(), anyInt())).thenReturn("");
         ContextAssembler a = new ContextAssembler(repo, new KnowledgeBaseService(repo, vr),
                 mock(SummaryService.class), vr, eg, cl, nt, dv, cd, null);
-        if (factRepo != null) a.setStoryFactRepository(factRepo);
+        if (factRepo != null) a.setStoryCanon(new SqliteStoryCanon(factRepo));
         if (gateway != null) a.setRelevanceGateway(gateway);
         return a;
     }
@@ -91,7 +92,7 @@ class CharacterVoiceNarrowingTest {
                 new ConnectionProvider(tempDir.resolve("voice_f.db").toString()));
         // schema 已初始化（共享？）——用新连接但同库可能未初始化，单独初始化
         new SqliteSchemaInitializer(new ConnectionProvider(tempDir.resolve("voice_f.db").toString())).initialize();
-        RelevanceGateway gateway = new RelevanceGateway(repo, factRepo);
+        RelevanceGateway gateway = new RelevanceGateway(repo, new SqliteStoryCanon(factRepo));
         ContextAssembler a = assemblerWith(factRepo, gateway);
 
         WritingContext ctx = a.assemble(pid, 1, "第一章", "梗概", null);

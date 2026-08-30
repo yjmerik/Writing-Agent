@@ -6,7 +6,7 @@ import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
-import com.writing.novel.persistence.sqlite.StoryFactRepository;
+import com.writing.novel.spi.StoryCanon;
 import com.writing.novel.spi.NovelRepository;
 
 import java.util.List;
@@ -26,20 +26,20 @@ public class ArcUpdater {
     private final LlmGateway gateway;
     private final NovelRepository repository;
     private final PromptTemplateService promptService;
-    private final StoryFactRepository factRepo; // p11-q0-03: 真典写入（可变状态权威源）
+    private final StoryCanon canon; // p11-q0-03/p22-02: 真典写入（可变状态权威源）
 
     public ArcUpdater(LlmGateway gateway, NovelRepository repository,
                       PromptTemplateService promptService) {
         this(gateway, repository, promptService, null);
     }
 
-    /** p11-q0-03: 注入真典仓库，成长弧演进同步写真典 CHARACTER_STATE（Character 卡兼容保留） */
+    /** p11-q0-03: 注入真典端口，成长弧演进同步写真典 CHARACTER_STATE（Character 卡兼容保留） */
     public ArcUpdater(LlmGateway gateway, NovelRepository repository,
-                      PromptTemplateService promptService, StoryFactRepository factRepo) {
+                      PromptTemplateService promptService, StoryCanon canon) {
         this.gateway = gateway;
         this.repository = repository;
         this.promptService = promptService;
-        this.factRepo = factRepo;
+        this.canon = canon;
     }
 
     /**
@@ -135,24 +135,23 @@ public class ArcUpdater {
      * Character 卡的 growthArc 仍保留（兼容），但真典为权威源——ContextAssembler bibleSection 读真典。
      */
     private void syncCanonState(String projectId, Character c, int currentChapter) {
-        if (factRepo == null || c.getGrowthArc() == null) return;
+        if (canon == null || c.getGrowthArc() == null) return;
         String assertion = "成长弧：" + c.getGrowthArc();
-        var existing = factRepo.findActiveBySubject(projectId, c.getName()).stream()
+        var existing = canon.recallBySubject(projectId, c.getName()).stream()
                 .filter(f -> f.getFactType() == StoryFact.FactType.CHARACTER_STATE
                         && f.getAssertion() != null && f.getAssertion().startsWith("成长弧："))
                 .toList();
         if (existing.isEmpty()) {
-            factRepo.save(new StoryFact(projectId, StoryFact.FactType.CHARACTER_STATE,
+            canon.saveIfAbsent(new StoryFact(projectId, StoryFact.FactType.CHARACTER_STATE,
                     c.getName(), assertion, currentChapter));
         } else {
             StoryFact old = existing.get(0);
             if (old.getAssertion().equals(assertion)) {
-                old.validateAt(currentChapter); // 无变化则刷新确认章
-                factRepo.save(old);
+                canon.validate(old, currentChapter); // 无变化则刷新确认章
             } else {
-                StoryFact newer = new StoryFact(projectId, StoryFact.FactType.CHARACTER_STATE,
-                        c.getName(), assertion, currentChapter);
-                factRepo.supersede(old, newer); // 成长弧演进 → 合法 supercede
+                // 成长弧演进 → 合法 supercede（审计链由端口保证）
+                canon.supersedeFact(old, new StoryFact(projectId, StoryFact.FactType.CHARACTER_STATE,
+                        c.getName(), assertion, currentChapter));
             }
         }
     }

@@ -3,6 +3,7 @@ package com.writing.novel.memory;
 import com.writing.novel.domain.Character;
 import com.writing.novel.domain.Project;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
@@ -35,7 +36,7 @@ class RelevanceGatewayAnchorTest {
         repo = new SqliteNovelRepository(cp);
         ConnectionProvider factCp = new ConnectionProvider(tempDir.resolve("anchor_f.db").toString());
         new SqliteSchemaInitializer(factCp).initialize();
-        gateway = new RelevanceGateway(repo, new StoryFactRepository(factCp));
+        gateway = new RelevanceGateway(repo, new SqliteStoryCanon(new StoryFactRepository(factCp)));
 
         Project p = new Project("锚点书", "构思", "悬疑");
         repo.saveProject(p);

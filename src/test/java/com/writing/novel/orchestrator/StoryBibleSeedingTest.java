@@ -5,6 +5,7 @@ import com.writing.novel.domain.KnowledgeEntry;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.StoryFact;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
@@ -42,7 +43,7 @@ class StoryBibleSeedingTest {
                 null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null);
-        orchestrator.setStoryFactRepository(factRepo);
+        orchestrator.setStoryCanon(new SqliteStoryCanon(factRepo));
 
         Project p = new Project("播种书", "明代修仙传奇", "玄幻");
         repo.saveProject(p);
@@ -86,7 +87,7 @@ class StoryBibleSeedingTest {
 
     @Test
     void 未注入真典仓库时播种安全跳过_不抛异常() throws Exception {
-        orchestrator.setStoryFactRepository(null);
+        orchestrator.setStoryCanon(new SqliteStoryCanon(null));
         repo.saveKnowledgeEntry(new KnowledgeEntry(pid, "RULE", "规则", "内容"));
         // 不应抛异常，且无事实入库
         assertDoesNotThrow(() -> invokeSeed(pid));

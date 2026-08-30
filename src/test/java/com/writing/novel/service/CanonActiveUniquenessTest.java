@@ -5,6 +5,7 @@ import com.writing.novel.domain.Character;
 import com.writing.novel.domain.StoryFact;
 import com.writing.novel.memory.MemoryRevision;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,7 +52,7 @@ class CanonActiveUniquenessTest {
         new SqliteSchemaInitializer(cp).initialize();
         facts = new StoryFactRepository(cp);
         repo = new RecordingRepo();
-        service = new CanonPatchService(repo, facts, new MemoryRevision());
+        service = new CanonPatchService(repo, new SqliteStoryCanon(facts), new MemoryRevision());
     }
 
     @Test

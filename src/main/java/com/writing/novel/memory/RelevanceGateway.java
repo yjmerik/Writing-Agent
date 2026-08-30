@@ -3,7 +3,7 @@ package com.writing.novel.memory;
 import com.writing.novel.domain.Character;
 import com.writing.novel.domain.Entity;
 import com.writing.novel.domain.StoryFact;
-import com.writing.novel.persistence.sqlite.StoryFactRepository;
+import com.writing.novel.spi.StoryCanon;
 import com.writing.novel.spi.NovelRepository;
 import org.springframework.stereotype.Component;
 
@@ -22,11 +22,11 @@ import java.util.List;
 public class RelevanceGateway {
 
     private final NovelRepository repository;
-    private final StoryFactRepository factRepo;
+    private final StoryCanon canon;
 
-    public RelevanceGateway(NovelRepository repository, StoryFactRepository factRepo) {
+    public RelevanceGateway(NovelRepository repository, StoryCanon canon) {
         this.repository = repository;
-        this.factRepo = factRepo;
+        this.canon = canon;
     }
 
     /**
@@ -73,8 +73,8 @@ public class RelevanceGateway {
     }
 
     public List<StoryFact> relevantFacts(String projectId, List<String> cast, int chapterIndex, int cap) {
-        if (factRepo == null) return List.of();
-        List<StoryFact> all = factRepo.findActive(projectId);
+        if (canon == null) return List.of();
+        List<StoryFact> all = canon.recall(projectId);
         if (all.isEmpty()) return List.of();
         List<String> names = cast == null ? List.of() : cast;
         List<StoryFact> must = new ArrayList<>();

@@ -6,6 +6,7 @@ import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmResponse;
 import com.writing.novel.memory.MemoryRevision;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
 import com.writing.novel.service.CanonPatchService;
@@ -39,7 +40,7 @@ class HumanPatchHarvestProtectionTest {
         ConnectionProvider cp = new ConnectionProvider(tempDir.resolve("hp.db").toString());
         new SqliteSchemaInitializer(cp).initialize();
         factRepo = new StoryFactRepository(cp);
-        canonPatch = new CanonPatchService(new TestNovelRepositoryStub(), factRepo, new MemoryRevision());
+        canonPatch = new CanonPatchService(new TestNovelRepositoryStub(), new SqliteStoryCanon(factRepo), new MemoryRevision());
     }
 
     private Chapter chapterAt(int index) {
@@ -51,8 +52,7 @@ class HumanPatchHarvestProtectionTest {
     private FactHarvesterAgent agentReturning(String json) {
         LlmGateway gw = mock(LlmGateway.class);
         when(gw.complete(any())).thenReturn(new LlmResponse(json, 100, 50));
-        FactHarvesterAgent agent = new FactHarvesterAgent(gw, factRepo, TestPromptHelper.create());
-        agent.setCanonPatchService(canonPatch);
+        FactHarvesterAgent agent = new FactHarvesterAgent(gw, new SqliteStoryCanon(factRepo), TestPromptHelper.create());
         return agent;
     }
 

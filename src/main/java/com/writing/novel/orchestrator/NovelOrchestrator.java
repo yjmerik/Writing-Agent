@@ -67,8 +67,8 @@ public class NovelOrchestrator {
     private final PassageEditor passageEditor;
     private final PlotMotifTracker plotMotifTracker;
     private final com.writing.novel.service.ExpositionDetector expositionDetector;
-    /** p10-w2-02: 故事真典仓库——null 时跳过播种/收割（向后兼容旧构造器/测试） */
-    private com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository;
+    /** p10-w2-02/p22-02: 故事真典端口——null 时跳过播种/收割（向后兼容旧构造器/测试） */
+    private com.writing.novel.spi.StoryCanon storyCanon;
     private com.writing.novel.memory.RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面（setter 注入）
     private com.writing.novel.service.RepairArbiter repairArbiter; // p11-q0-04: 闭环三分类仲裁（setter 注入）
     private com.writing.novel.service.ConceiveGate conceiveGate; // p11-q1-01: 构思期质量门禁（setter 注入）
@@ -222,9 +222,9 @@ public class NovelOrchestrator {
         return arbiter != null;
     }
 
-    /** p10-w2-02: 注入故事真典仓库（@Bean 装配用）；不调则保持 null，播种/收割安全跳过 */
-    public void setStoryFactRepository(com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository) {
-        this.storyFactRepository = storyFactRepository;
+    /** p10-w2-02/p22-02: 注入真典端口（@Bean 装配用）；不调则保持 null，播种安全跳过 */
+    public void setStoryCanon(com.writing.novel.spi.StoryCanon storyCanon) {
+        this.storyCanon = storyCanon;
     }
 
     /** p11-q0-01: 注入检索收窄门面（@Bean 装配用）；不调则保持 null，collectSettingsForCheck 降级全量 */
@@ -285,10 +285,10 @@ public class NovelOrchestrator {
     /**
      * p10-w2-02: 故事真典播种——从世界观条目 + 初始人物卡 + 时代锚点抽取初始事实入典。
      * 确定性规则抽取（不调 LLM），为长程记忆提供结构化真相基线；后续 FactHarvester 每章增量更新。
-     * storyFactRepository==null（旧测试/未注入）时安全跳过。
+     * storyCanon==null（旧测试/未注入）时安全跳过。
      */
     private void seedStoryBible(String projectId) {
-        if (storyFactRepository == null) return;
+        if (storyCanon == null) return;
         try {
             var project = repository.findProject(projectId).orElse(null);
             if (project == null) return;
@@ -340,13 +340,9 @@ public class NovelOrchestrator {
      */
     private int saveFactIfAbsent(String projectId, StoryFact.FactType type, String subject,
                                  String assertion, int importance) {
-        boolean exists = storyFactRepository.findActiveBySubject(projectId, subject).stream()
-                .anyMatch(f -> f.getFactType() == type);
-        if (exists) return 0;
         StoryFact f = new StoryFact(projectId, type, subject, assertion, 1);
         f.setImportance(importance);
-        storyFactRepository.save(f);
-        return 1;
+        return storyCanon.saveIfAbsent(f) ? 1 : 0;
     }
 
     private void doConceiving(String projectId) {
@@ -1428,9 +1424,9 @@ public class NovelOrchestrator {
 
     /** p11-q0-04: 把矛盾纠正为真典 PLOT_COMMITMENT（待人工确认），让后续章节知晓该矛盾 */
     private void correctCanon(String projectId, int chapterIndex, ContinuityIssue issue) {
-        if (storyFactRepository == null) return;
+        if (storyCanon == null) return;
         try {
-            storyFactRepository.save(new com.writing.novel.domain.StoryFact(projectId,
+            storyCanon.saveIfAbsent(new com.writing.novel.domain.StoryFact(projectId,
                     com.writing.novel.domain.StoryFact.FactType.PLOT_COMMITMENT,
                     "矛盾待确认(章" + chapterIndex + ")",
                     "【待人工确认】" + issue.getDescription(), chapterIndex));
@@ -2013,8 +2009,8 @@ public class NovelOrchestrator {
             Project p = loadProject(projectId);
             String previous = p.getBookSnapshot() != null ? p.getBookSnapshot() : "（暂无，首版）";
             String keyFacts = "";
-            if (storyFactRepository != null) {
-                keyFacts = storyFactRepository.findActive(projectId).stream()
+            if (storyCanon != null) {
+                keyFacts = storyCanon.recall(projectId).stream()
                         .filter(f -> f.getImportance() >= 4)
                         .sorted(java.util.Comparator.comparingInt(
                                 f -> -f.getImportance()))
@@ -2120,8 +2116,8 @@ public class NovelOrchestrator {
             }
 
             // 收集真典事实（importance≥3 的 ACTIVE 事实）
-            if (storyFactRepository != null) {
-                var facts = storyFactRepository.findActive(projectId);
+            if (storyCanon != null) {
+                var facts = storyCanon.recall(projectId);
                 var importantFacts = facts.stream()
                         .filter(f -> f.getImportance() >= 3).limit(15).toList();
                 if (!importantFacts.isEmpty()) {
@@ -2234,8 +2230,8 @@ public class NovelOrchestrator {
             }
 
             // p10-w3-09: 真典一致性——检查是否有过多 SUPERSEDED 事实（剧变频繁，质量警告）
-            if (storyFactRepository != null) {
-                var allFacts = storyFactRepository.findAll(projectId);
+            if (storyCanon != null) {
+                var allFacts = storyCanon.findAll(projectId);
                 long superseded = allFacts.stream()
                         .filter(f -> f.getStatus() == com.writing.novel.domain.StoryFact.Status.SUPERSEDED).count();
                 if (superseded > 20) {

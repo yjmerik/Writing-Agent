@@ -167,6 +167,51 @@ public class NovelOrchestrator {
         return postProcessor;
     }
 
+    /** p20-04: 注入后处理阶段账本（重启续跑用；不注入则不记账） */
+    public void setPostProcessLedger(com.writing.novel.persistence.sqlite.PostProcessLedgerRepository ledger) {
+        postProcessor.setLedger(ledger);
+    }
+
+    /**
+     * p20-04: 恢复中断的后处理——找出 status=POST_PROCESSING 的章节，
+     * 依账本只补跑未完成阶段，终态裁决为 DONE（CONTINUITY 续跑标记的
+     * NEEDS_MANUAL_REVIEW 不被覆盖）。返回恢复的章节数。
+     */
+    public int resumeInterruptedPostProcessing(String projectId) {
+        var interrupted = repository.findChaptersByProject(projectId).stream()
+                .filter(c -> c.getStatus() == Chapter.Status.POST_PROCESSING)
+                .toList();
+        if (interrupted.isEmpty()) return 0;
+        Outline outline = repository.findOutlineByProject(projectId).orElse(null);
+        if (outline == null) return 0;
+        for (Chapter ch : interrupted) {
+            var synopsis = findSynopsis(outline, ch.getChapterIndex());
+            postProcessor.resume(projectId, ch, ch.getChapterIndex(), synopsis, outline);
+            if (ch.getStatus() == Chapter.Status.POST_PROCESSING) {
+                ch.setStatus(Chapter.Status.DONE);
+                repository.saveChapter(ch);
+                log.info("章{}中断后处理已续跑完成 → DONE", ch.getChapterIndex());
+            }
+        }
+        return interrupted.size();
+    }
+
+    /** p20-04: 启动清扫——全部项目的后处理续跑（进程崩溃后残留 POST_PROCESSING 章节） */
+    public int resumeAllInterruptedPostProcessing() {
+        int resumed = 0;
+        for (Project p : repository.findAllProjects()) {
+            try {
+                resumed += resumeInterruptedPostProcessing(p.getId());
+            } catch (Exception e) {
+                log.warn("项目{}后处理续跑失败: {}", p.getId(), e.getMessage());
+            }
+        }
+        if (resumed > 0) {
+            log.info("后处理续跑完成: {} 章", resumed);
+        }
+        return resumed;
+    }
+
     /** p20-02: 模块读取 late-set 的收割 Agent */
     com.writing.novel.agent.FactHarvesterAgent factHarvester() {
         return factHarvester;

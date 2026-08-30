@@ -68,7 +68,8 @@ public class OrchestratorConfig {
                                                  com.writing.novel.service.ConceiveGate conceiveGate,
                                                  com.writing.novel.service.PlanGate planGate,
                                                   com.writing.novel.service.QualityCouncil qualityCouncil,
-                                                  com.writing.novel.service.Arbiter arbiter) {
+                                                  com.writing.novel.service.Arbiter arbiter,
+                                                  com.writing.novel.persistence.sqlite.PostProcessLedgerRepository postProcessLedger) {
         NovelOrchestrator orchestrator = new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
@@ -88,7 +89,24 @@ public class OrchestratorConfig {
         orchestrator.setPlanGate(planGate);
         orchestrator.setQualityCouncil(qualityCouncil);
         orchestrator.setArbiter(arbiter);
+        // p20-04: 后处理阶段账本——重启续跑只补未完成阶段
+        orchestrator.setPostProcessLedger(postProcessLedger);
         return orchestrator;
+    }
+
+    /**
+     * p20-04: 启动清扫——进程崩溃后残留的 POST_PROCESSING 章节，依账本续跑未完成阶段。
+     */
+    @Bean
+    public org.springframework.boot.ApplicationRunner postProcessRecoveryRunner(NovelOrchestrator orchestrator) {
+        return args -> {
+            try {
+                orchestrator.resumeAllInterruptedPostProcessing();
+            } catch (Exception e) {
+                org.slf4j.LoggerFactory.getLogger(OrchestratorConfig.class)
+                        .warn("启动后处理清扫失败: {}", e.getMessage());
+            }
+        };
     }
 
     @Bean

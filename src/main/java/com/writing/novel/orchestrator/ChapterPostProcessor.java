@@ -55,6 +55,8 @@ public class ChapterPostProcessor {
     private final com.writing.novel.service.PlotProgressionDetector plotProgressionDetector;
     private final com.writing.novel.agent.CharacterProfileUpgrader characterProfileUpgrader;
     private final com.writing.novel.agent.ArcUpdater arcUpdater;
+    /** p20-04: 阶段账本——null 时不记账（旧行为） */
+    private com.writing.novel.persistence.sqlite.PostProcessLedgerRepository ledger;
 
     ChapterPostProcessor(NovelOrchestrator orch,
                          NovelRepository repository,
@@ -93,17 +95,54 @@ public class ChapterPostProcessor {
     /** 按固定顺序执行全部后处理阶段，返回（可能被重写过的）章节 */
     public Chapter process(String projectId, Chapter chapter, int chapterIndex,
                            ChapterSynopsis synopsis, Outline outline) {
-        boolean rewrittenByContinuity = stageContinuity(projectId, chapterIndex, chapter, synopsis);
-        stageEntityGraph(projectId, chapter, chapterIndex);
-        stageFactHarvest(projectId, chapter, chapterIndex);
-        stageNarrativeThreads(projectId, chapter, chapterIndex);
-        stageReaderReview(projectId, chapter, chapterIndex, synopsis, outline, rewrittenByContinuity);
-        stageForeshadowing(projectId, chapter, chapterIndex);
-        stageDiversity(projectId, chapter, chapterIndex, synopsis);
-        stageArcTracking(projectId, chapter, chapterIndex, synopsis);
-        stagePeriodic(projectId, chapter, chapterIndex);
-        stageVolumeSummary(projectId, outline, chapterIndex);
+        // p20-03: 建账（无行 PENDING），逐阶段 RUNNING→COMPLETED
+        if (ledger != null) {
+            for (Stage stage : Stage.values()) {
+                ledger.ensureStage(projectId, chapterIndex, stage);
+            }
+        }
+        return run(projectId, chapter, chapterIndex, synopsis, outline, null);
+    }
+
+    /**
+     * p20-04: 重启续跑——只执行 ledger 中未完成（RUNNING/PENDING）的阶段。
+     * 无账本（legacy 章节或 ledger 未接）时不做任何事。
+     */
+    public Chapter resume(String projectId, Chapter chapter, int chapterIndex,
+                          ChapterSynopsis synopsis, Outline outline) {
+        if (ledger == null) return chapter;
+        return run(projectId, chapter, chapterIndex, synopsis, outline,
+                ledger.unfinishedStages(projectId, chapterIndex));
+    }
+
+    private Chapter run(String projectId, Chapter chapter, int chapterIndex,
+                        ChapterSynopsis synopsis, Outline outline, java.util.List<Stage> only) {
+        boolean rewrittenByContinuity = false;
+        for (Stage stage : Stage.values()) {
+            if (only != null && !only.contains(stage)) continue;
+            if (ledger != null) ledger.markRunning(projectId, chapterIndex, stage);
+            switch (stage) {
+                case CONTINUITY -> rewrittenByContinuity =
+                        stageContinuity(projectId, chapterIndex, chapter, synopsis);
+                case ENTITY_GRAPH -> stageEntityGraph(projectId, chapter, chapterIndex);
+                case FACT_HARVEST -> stageFactHarvest(projectId, chapter, chapterIndex);
+                case NARRATIVE_THREADS -> stageNarrativeThreads(projectId, chapter, chapterIndex);
+                case READER_REVIEW -> stageReaderReview(projectId, chapter, chapterIndex,
+                        synopsis, outline, rewrittenByContinuity);
+                case FORESHADOWING -> stageForeshadowing(projectId, chapter, chapterIndex);
+                case DIVERSITY -> stageDiversity(projectId, chapter, chapterIndex, synopsis);
+                case ARC_TRACKING -> stageArcTracking(projectId, chapter, chapterIndex, synopsis);
+                case PERIODIC -> stagePeriodic(projectId, chapter, chapterIndex);
+                case VOLUME_SUMMARY -> stageVolumeSummary(projectId, outline, chapterIndex);
+            }
+            if (ledger != null) ledger.markCompleted(projectId, chapterIndex, stage);
+        }
         return chapter;
+    }
+
+    /** p20-04: 注入阶段账本（null = 不记账，保持旧行为） */
+    public void setLedger(com.writing.novel.persistence.sqlite.PostProcessLedgerRepository ledger) {
+        this.ledger = ledger;
     }
 
     /** 一致性检查 + 闭环修复（可能触发重写/真典纠正/NEEDS_MANUAL_REVIEW） */

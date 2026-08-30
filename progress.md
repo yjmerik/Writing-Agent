@@ -1,9 +1,54 @@
 # Session Progress Log
 
+---
+
+## 会话记录（2026-08-30）：production-readiness 架构落地（Phase 20-23）
+
+**输入**：`.omo/drafts/production-readiness-architecture.md`（已批准规划，5 组件 × 4 阶段 30 features）+ 用户指示「按架构优化文档及拆分任务实现，并端到端测试验证」。
+
+**结论：Phase 20 全部（9/9）、Phase 21 全部（8/8）、Phase 22 的 4/6、Phase 23 的 1/6 完成；feature_list.json 共登记 29 个新 feature（completed 22 / not-started 7）。全量 mvn test 465+ 绿、前端构建绿、e2e replay 与 record 基线逐字一致、compare-baseline PASS。**
+
+### Phase 20 生命周期完整性（9/9 ✅）
+- **p20-01** NEEDS_MANUAL_REVIEW 不再被末尾 DONE 覆盖；待人工章节冻结后续写作（拒绝写章 + 循环 WRITING_PAUSED）；resolve-review 恢复
+- **p20-02** ChapterPostProcessor 模块：~210 行内联后处理提为 10 阶段单点编排（CONTINUITY→ENTITY_GRAPH→FACT_HARVEST→NARRATIVE_THREADS→READER_REVIEW→FORESHADOWING→DIVERSITY→ARC_TRACKING→PERIODIC→VOLUME_SUMMARY），行为逐行等价
+- **p20-03** post_process_ledger 账本（主键 project/chapter/stage）：PENDING/RUNNING/COMPLETED 往返、COMPLETED 终态不降级、未完成阶段按声明序返回
+- **p20-04** 重启续跑：ENTITY_GRAPH 注入 Error 崩溃（模拟进程死亡）→ 同库重建上下文 → 只补跑未完成阶段（CONTINUITY 0 次 LLM、收割恰 1 次、0 重复摘要）→ DONE；ApplicationRunner 启动清扫
+- **p20-05/06** ProjectWorkCoordinator owner-token：并发 acquire 恰一 owner、stale release 不伤新 owner；重复 startWriting 409 冲突（移除 30s 强制接管）；/run /resume /write-chapter /write-all 全部经协调器，测试全闩锁
+- **p20-07/08** HUMAN_PATCH 保护：窗口内自动冲突事实丢弃不落库、窗口外取代留审计；人工编辑总是取代旧 ACTIVE（唯一性）
+- **p20-09** 章节号归一化仅作用于开头标题，对话/引文/跨章引用逐字保留
+
+### Phase 21 产品真实性与终态门禁（8/8 ✅）
+- **p21-01** WUXIA 退出快节奏集合（isFastPaced）：卷大纲/章节约束不再强制爽点/四段式/悬念钩子；WUXIA 豁免 POWER_SYSTEM；CULTIVATION 不变。p17-02/03/04 三处相反断言按「红相即规格修正」处理
+- **p21-02** FINAL/NEEDS_REVISION 服务端门禁：FINAL 拒绝全部写作命令且状态不变（修复 write-one 把 FINAL 推到 VOLUME_DONE 的状态破坏）；NEEDS_REVISION 允许修订 + retryFinalAudit 显式重审（POST /final-audit）
+- **p21-04** GET /chapters?page&size 元数据分页（400 章零正文序列化），正文单章懒加载
+- **p21-03/05/06/07/08** 前端：终态中文门禁与「重新评审」、章节懒加载缓存、Sider 响应式折叠+双栏堆叠、键盘激活+aria-label、SSE 有界退避重连与连接状态展示（npm build 绿）
+
+### Phase 22 模块深化（4/6 ✅，2 项未做）
+- **p22-01/02/03** StoryCanon 端口（spi）：recall/harvest/applyHumanPatch/saveIfAbsent/validate/supersedeFact/retire；保护窗口与 ACTIVE 唯一性语义收敛进端口；SqliteStoryCanon + InMemoryStoryCanon 双适配器过同一 8 项契约（16 用例）；FactHarvester/CanonPatchService/Orchestrator/RelevanceGateway/ContextAssembler/ProfileUpgrader/ArcUpdater 全量迁移——业务包零 StoryFactRepository import
+- **p22-06** NovelRepository 9 个 default no-op（归档/预设/清理）改抽象：缺能力=编译失败；契约补归档计数与预设往返
+- **p22-04/05（未做）** 章节生产模块提取、显式生命周期策略组合（去后置可选 setter）——见 handoff 下一步入口
+
+### Phase 23 可重复业务证据（1/6 ✅，5 项未做）
+- **p23-01** ScenarioLlmGateway：8 任务类型零网络确定性响应（章节号镜像、逐字可复现）；e2e.sh 默认自动解析最新版本化 replay 语料（mtime），e2e-fixture-dir-test.sh 契约检查
+- **p23-02~06（未做）** reliability-e2e 进程级场景 runner、400 章 soak、Playwright 浏览器套件、release-gate 聚合器、真实 LLM 金丝雀——见 handoff 下一步入口
+
+### 端到端验证（2026-08-30 实跑）
+- 全量 `mvn test`（source scripts/load-env.sh）：**465+ pass / 0 fail / 1 skip**（Spring 上下文测试需 DEEPSEEK_API_KEY）
+- `./init.sh`：全绿（详见本次提交后实跑记录）
+- `./scripts/e2e.sh`（E2E_FIXTURE_DIR=dsv4-20260829d）：3 章 / 10,574 字 / 50 LLM 调用 / 0 错误 / 0 章节失败——与 2026-08-29 record 基线**逐字一致**（Phase 20/21 行为变更未扰动确定性管道）
+- `python3 scripts/compare-baseline.py`：PASS（未 bless——质量无退化无需更新基线）
+- `cd frontend && npm run build`：通过
+- `bash scripts/e2e-fixture-dir-test.sh`：通过（默认解析 → dsv4-20260829d）
+
+### 遗留与风险
+1. p23-03 soak 依赖 PLOTTING 场景响应支持章节范围感知的分层大纲生成（当前 ScenarioLlmGateway 只发 3 章总纲形状）
+2. e2e-fixture-dir-test.sh 的 auto-resolution 断言假定 data/e2e-fixtures/ 存在语料；全新 clone（无语料）时该脚本第一条检查会失败——属预期（提示先 record）
+3. 分支未 push
+
 ## Current State
 
-**Last Updated:** 2026-08-28
-**Phase:** **Phase 16-19 百万字稳定性+风格确定性+人机交互（18/18 完成）— E2E 验证进行中**
+**Last Updated:** 2026-08-30
+**Phase:** **Phase 20-23 production-readiness 架构落地（22/29 completed）— e2e/基线/构建全绿**
 
 ### 本次会话（2026-08-28）：架构差距分析 → 模型切换 → 四阶段全量实现
 

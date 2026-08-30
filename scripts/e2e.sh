@@ -156,7 +156,9 @@ python3 - "$E2E_DIR" "$MODE" <<PYEOF
 import json, sys, datetime
 
 e2e_dir, mode = sys.argv[1], sys.argv[2]
-chapters = json.load(open(f"{e2e_dir}/chapters.json", encoding="utf-8"))
+_payload = json.load(open(f"{e2e_dir}/chapters.json", encoding="utf-8"))
+# p21-04: /chapters 为分页元数据 {"chapters":[...], "total":N}；兼容旧数组形状
+chapters = _payload["chapters"] if isinstance(_payload, dict) else _payload
 status = json.load(open(f"{e2e_dir}/status.json", encoding="utf-8"))
 write_result = json.loads('''$WRITE_RESULT''')
 task_json = json.loads('''$TASK_JSON''')

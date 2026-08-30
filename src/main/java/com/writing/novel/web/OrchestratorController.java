@@ -129,6 +129,19 @@ public class OrchestratorController {
         return Map.of("taskId", taskId, "status", "CANCELLED");
     }
 
+    /**
+     * p21-02: 显式成书门禁重试——NEEDS_REVISION 人工修订后触发；通过 → FINAL。
+     */
+    @PostMapping("/final-audit")
+    public Map<String, Object> finalAudit(@PathVariable String id) {
+        boolean passed = orchestrator.retryFinalAudit(id);
+        return Map.of(
+                "projectId", id,
+                "passed", passed,
+                "state", passed ? NovelState.FINAL.name() : NovelState.NEEDS_REVISION.name()
+        );
+    }
+
     /** 质量评价：从一致性/风格/情节/人物/世界观 5 维度评分并发现问题 */
     @PostMapping("/evaluate")
     public Map<String, Object> evaluate(@PathVariable String id) {

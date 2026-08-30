@@ -775,6 +775,13 @@ public class NovelOrchestrator {
 
     private Chapter doWriteOneChapter(String projectId, String instruction) {
         Project p = loadProject(projectId);
+        // p21-02: 终态命令门禁——FINAL/NEEDS_REVISION 拒绝写新章（显式重审走 retryFinalAudit）
+        if (p.getState() == NovelState.FINAL) {
+            throw new IllegalStateException("全书已完结（FINAL），不能继续写作");
+        }
+        if (p.getState() == NovelState.NEEDS_REVISION) {
+            throw new IllegalStateException("成书门禁未通过（NEEDS_REVISION），请修订设定/正文后重试成书门禁");
+        }
         Outline outline = repository.findOutlineByProject(projectId).orElseThrow(
                 () -> new IllegalStateException("无大纲，无法写作"));
 
@@ -1666,6 +1673,10 @@ public class NovelOrchestrator {
                 log.info("写作循环遇暂停，已写 {} 章", written);
                 break;
             }
+            // p21-02: 终态命令门禁——循环入口拒绝 FINAL/NEEDS_REVISION
+            if (p.getState() == NovelState.FINAL || p.getState() == NovelState.NEEDS_REVISION) {
+                throw new IllegalStateException("项目处于终态 " + p.getState() + "，拒绝写作命令");
+            }
             Outline outline = repository.findOutlineByProject(projectId).orElse(null);
             if (outline == null) break;
 
@@ -1842,6 +1853,23 @@ public class NovelOrchestrator {
         p.setState(passed ? NovelState.FINAL : NovelState.NEEDS_REVISION);
         repository.saveProject(p);
         log.info("成书门禁: {} → {}", passed ? "PASS" : "FAIL", passed ? "FINAL" : "NEEDS_REVISION");
+    }
+
+    /**
+     * p21-02: 显式成书门禁重试——仅 NEEDS_REVISION 可触发（人工修订后）。
+     * 通过 → FINAL；不通过 → 保持 NEEDS_REVISION。其他状态拒绝。
+     */
+    public boolean retryFinalAudit(String projectId) {
+        Project p = loadProject(projectId);
+        if (p.getState() != NovelState.NEEDS_REVISION) {
+            throw new IllegalStateException("仅 NEEDS_REVISION 状态可重试成书门禁，当前: " + p.getState());
+        }
+        boolean passed = runFinalAuditGate(projectId, p);
+        p.setState(passed ? NovelState.FINAL : NovelState.NEEDS_REVISION);
+        repository.saveProject(p);
+        EventLog.emit("FINAL_GATE_RETRY", Map.of("projectId", projectId, "passed", passed));
+        log.info("成书门禁重试: {} → {}", projectId, passed ? "FINAL" : "NEEDS_REVISION");
+        return passed;
     }
 
     /** 统计项目总字数 */

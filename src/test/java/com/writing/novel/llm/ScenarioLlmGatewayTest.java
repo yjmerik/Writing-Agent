@@ -31,10 +31,11 @@ class ScenarioLlmGatewayTest {
     }
 
     @Test
-    void 正文响应满足入库下限且镜像章节号() {
+    void 正文响应满足入库下限且不含章号污染() {
         LlmResponse r = gateway.complete(req(LlmTaskType.CHAPTER_WRITING, "第12章 试炼"));
         assertTrue(r.getContent().length() >= 2000, "场景正文必须达到最小入库门槛");
-        assertTrue(r.getContent().contains("第12章"), "正文应镜像 prompt 中的章节号");
+        assertFalse(r.getContent().contains("第12章"), "场景正文不得携带章号（避免污染后续 prompt 与章号告警）");
+        assertTrue(!r.getContent().matches(".*第\\d+章.*"), "全文不得出现任何 第N章 字样");
     }
 
     @Test
@@ -82,9 +83,15 @@ class ScenarioLlmGatewayTest {
     }
 
     @Test
-    void 不同章节号的正文响应可区分() {
-        String a = gateway.complete(req(LlmTaskType.CHAPTER_WRITING, "第7章")).getContent();
-        String b = gateway.complete(req(LlmTaskType.CHAPTER_WRITING, "第8章")).getContent();
-        assertNotEquals(a, b, "不同章节应产出可区分的确定性响应");
+    void harsh档按检查调用序触发前两次报高危() {
+        com.writing.novel.llm.ScenarioLlmGateway harsh = new com.writing.novel.llm.ScenarioLlmGateway(true);
+        LlmRequest check = LlmRequest.builder()
+                .taskType(LlmTaskType.CONTINUITY_CHECK)
+                .systemPrompt("你是连续性检查器。")
+                .userMessage("检查正文。")
+                .build();
+        assertTrue(harsh.complete(check).getContent().contains("【人物|高】"), "第1次检查（初检）应报 HIGH");
+        assertTrue(harsh.complete(check).getContent().contains("【人物|高】"), "第2次检查（复检）应报 HIGH");
+        assertEquals("[]", harsh.complete(check).getContent(), "第3次起不再注入");
     }
 }

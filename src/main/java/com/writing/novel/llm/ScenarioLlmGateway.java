@@ -116,20 +116,21 @@ public class ScenarioLlmGateway implements LlmGateway {
                 yield sb.toString();
             }
             case CHAPTER_WRITING -> {
-                String base = "第%d章正文。晨雾未散，主角沿着山道而上，心中的疑团比雾更浓。"
-                        .formatted(chapter);
+                // p23-02: 正文不含任何「第N章」字样——章号由系统注入，场景文本
+                // 不污染后续 prompt 的章号探测，也不触发章号一致性告警
+                String base = "场景正文。晨雾未散，主角沿着山道而上，心中的疑团比雾更浓。";
                 StringBuilder sb = new StringBuilder(base);
                 while (sb.length() < 2600) {
-                    sb.append("他回想起第").append(chapter).append("章之前的种种线索，")
-                      .append("每一步都像棋子落下，无法回头。山风掠过，剑鞘微凉，")
-                      .append("他知道这一章的抉择将决定后续所有人的命运。\n");
+                    sb.append("他回想起之前的种种线索，每一步都像棋子落下，无法回头。")
+                      .append("山风掠过，剑鞘微凉，他知道这一章的抉择将决定后续所有人的命运。\n");
                 }
                 yield sb.toString();
             }
             case CONTINUITY_CHECK -> {
-                if (harsh && chapter == 1) {
-                    yield "[{\"type\":\"CHARACTER\",\"severity\":\"HIGH\","
-                          + "\"description\":\"主角在第1章的行为超出能力设定（harsh 注入）\"}]";
+                // p23-02: harsh 档按检查调用序触发——前 2 次（第1章初检 + 重写后复检）
+                // 恒报 HIGH，驱动「人工复核暂停→处理→续跑」场景；与 prompt 文本解耦
+                if (harsh && n <= 2) {
+                    yield "【人物|高】主角的行为超出能力设定（harsh 注入）";
                 }
                 yield "[]";
             }

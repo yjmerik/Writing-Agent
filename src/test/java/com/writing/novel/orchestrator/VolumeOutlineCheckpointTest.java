@@ -35,7 +35,7 @@ class VolumeOutlineCheckpointTest {
                 null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null,
-                null, null, null, null);
+                null, null, null, null, null);
 
         Method m = NovelOrchestrator.class.getDeclaredMethod("parseAndAppendVolume",
                 Outline.class, String.class, String.class, int.class, int.class);

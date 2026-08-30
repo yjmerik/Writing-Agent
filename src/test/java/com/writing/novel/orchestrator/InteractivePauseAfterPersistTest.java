@@ -19,20 +19,25 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class InteractivePauseAfterPersistTest extends NovelOrchestratorWritingTest {
 
+    @Override
+    protected OrchestratorPolicies policiesOverride() {
+        // p22-05: 慢收割桩改为构造期策略注入（原后置 setter）
+        return new OrchestratorPolicies(null, null, null, null, null, null, null,
+                new FactHarvesterAgent(null, null, null) {
+                    @Override
+                    public HarvestResult harvest(String projectId, Chapter chapter) {
+                        try { Thread.sleep(1500); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+                        return new HarvestResult(0, 0, 0);
+                    }
+                }, null, null, null);
+    }
+
     @Test
     void interactiveWrite_pausesBeforeSlowHarvestFinishes() throws Exception {
         Project p = projectService.create("t", "c", "tag", ProjectMode.INTERACTIVE);
         orchestrator.runConceiving(p.getId());
         orchestrator.step(p.getId()); // resume AFTER_INITIAL_SETUP -> PLANNING
         orchestrator.step(p.getId()); // PLANNING -> WRITING
-
-        orchestrator.setFactHarvester(new FactHarvesterAgent(null, null, null) {
-            @Override
-            public HarvestResult harvest(String projectId, Chapter chapter) {
-                try { Thread.sleep(1500); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
-                return new HarvestResult(0, 0, 0);
-            }
-        });
 
         AtomicReference<NovelState> mid = new AtomicReference<>();
         Thread poller = new Thread(() -> {

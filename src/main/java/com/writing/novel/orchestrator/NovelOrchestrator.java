@@ -67,24 +67,24 @@ public class NovelOrchestrator {
     private final PassageEditor passageEditor;
     private final PlotMotifTracker plotMotifTracker;
     private final com.writing.novel.service.ExpositionDetector expositionDetector;
-    /** p10-w2-02/p22-02: 故事真典端口——null 时跳过播种/收割（向后兼容旧构造器/测试） */
-    private com.writing.novel.spi.StoryCanon storyCanon;
-    private com.writing.novel.memory.RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面（setter 注入）
-    private com.writing.novel.service.RepairArbiter repairArbiter; // p11-q0-04: 闭环三分类仲裁（setter 注入）
-    private com.writing.novel.service.ConceiveGate conceiveGate; // p11-q1-01: 构思期质量门禁（setter 注入）
-    private com.writing.novel.service.PlanGate planGate; // p11-q1-04: 章节梗概预检（setter 注入）
-    private com.writing.novel.service.QualityCouncil qualityCouncil; // p11-q2-03: 质检委员会合并重写（setter 注入）
-    private com.writing.novel.service.Arbiter arbiter;
-    /** p10-w2-03: 事实收割 Agent——null 时跳过（向后兼容） */
-    private com.writing.novel.agent.FactHarvesterAgent factHarvester;
+    /** p10-w2-02/p22-02: 故事真典端口——null 时跳过播种/收割（测试降级组合） */
+    private final com.writing.novel.spi.StoryCanon storyCanon;
+    private final com.writing.novel.memory.RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面
+    private final com.writing.novel.service.RepairArbiter repairArbiter; // p11-q0-04: 闭环三分类仲裁
+    private final com.writing.novel.service.ConceiveGate conceiveGate; // p11-q1-01: 构思期质量门禁
+    private final com.writing.novel.service.PlanGate planGate; // p11-q1-04: 章节梗概预检
+    private final com.writing.novel.service.QualityCouncil qualityCouncil; // p11-q2-03: 质检委员会合并重写
+    private final com.writing.novel.service.Arbiter arbiter;
+    /** p10-w2-03: 事实收割 Agent——null 时跳过（测试降级组合） */
+    private final com.writing.novel.agent.FactHarvesterAgent factHarvester;
     /** p20-02: 章节后处理模块 */
     private final ChapterPostProcessor postProcessor;
     /** p22-04: 章节生产模块（Context→Write→Quality→Rewrite） */
     private final ChapterProduction production;
-    /** p10-w3-03: 归档衰减器——null 时跳过（向后兼容） */
-    private com.writing.novel.service.ArchiveCompactor archiveCompactor;
-    /** p10-w3-09: 成本预算监控器——null 时跳过成本回执（向后兼容） */
-    private com.writing.novel.telemetry.CostBudgetMonitor costBudgetMonitor;
+    /** p10-w3-03: 归档衰减器——null 时跳过（测试降级组合） */
+    private final com.writing.novel.service.ArchiveCompactor archiveCompactor;
+    /** p10-w3-09: 成本预算监控器——null 时跳过成本回执（测试降级组合） */
+    private final com.writing.novel.telemetry.CostBudgetMonitor costBudgetMonitor;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -120,7 +120,8 @@ public class NovelOrchestrator {
                               RelationshipEvolutionTracker relationshipEvolutionTracker,
                               PassageEditor passageEditor,
                               PlotMotifTracker plotMotifTracker,
-                              com.writing.novel.service.ExpositionDetector expositionDetector) {
+                              com.writing.novel.service.ExpositionDetector expositionDetector,
+                              OrchestratorPolicies policies) {
         this.repository = repository;
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
@@ -156,6 +157,18 @@ public class NovelOrchestrator {
         this.passageEditor = passageEditor;
         this.plotMotifTracker = plotMotifTracker;
         this.expositionDetector = expositionDetector;
+        // p22-05: 生命周期策略包——生产组合显式给全（null 包仅测试降级）
+        OrchestratorPolicies pol = policies != null ? policies : OrchestratorPolicies.none();
+        this.storyCanon = pol.storyCanon();
+        this.relevanceGateway = pol.relevanceGateway();
+        this.repairArbiter = pol.repairArbiter();
+        this.conceiveGate = pol.conceiveGate();
+        this.planGate = pol.planGate();
+        this.qualityCouncil = pol.qualityCouncil();
+        this.arbiter = pol.arbiter();
+        this.factHarvester = pol.factHarvester();
+        this.archiveCompactor = pol.archiveCompactor();
+        this.costBudgetMonitor = pol.costBudgetMonitor();
         // p22-04: 章节生产模块——写前装配/正文生成/质量链/纠偏重写经此模块
         this.production = new ChapterProduction(this, repository, chapterWriter,
                 continuityChecker, readerReviewAgent, consistencyGuard, consistencyGate,
@@ -166,17 +179,12 @@ public class NovelOrchestrator {
                 entityGraphService, narrativeThreadExtractor, readerReviewAgent,
                 foreshadowingExtractor, climaxDiversityTracker, diversityTracker,
                 sceneClassifier, arcScheduler, relationshipEvolutionTracker, plotMotifTracker,
-                plotProgressionDetector, characterProfileUpgrader, arcUpdater);
+                plotProgressionDetector, characterProfileUpgrader, arcUpdater, pol.postProcessLedger());
     }
 
     /** p20-02: 后处理模块（正文落库后阶段编排） */
     ChapterPostProcessor postProcessor() {
         return postProcessor;
-    }
-
-    /** p20-04: 注入后处理阶段账本（重启续跑用；不注入则不记账） */
-    public void setPostProcessLedger(com.writing.novel.persistence.sqlite.PostProcessLedgerRepository ledger) {
-        postProcessor.setLedger(ledger);
     }
 
     /**
@@ -241,54 +249,9 @@ public class NovelOrchestrator {
     com.writing.novel.service.Arbiter arbiterRef() { return arbiter; }
     com.writing.novel.memory.RelevanceGateway relevanceGateway() { return relevanceGateway; }
 
-    /** p10-w2-02/p22-02: 注入真典端口（@Bean 装配用）；不调则保持 null，播种安全跳过 */
-    public void setStoryCanon(com.writing.novel.spi.StoryCanon storyCanon) {
-        this.storyCanon = storyCanon;
-    }
-
-    /** p11-q0-01: 注入检索收窄门面（@Bean 装配用）；不调则保持 null，collectSettingsForCheck 降级全量 */
-    public void setRelevanceGateway(com.writing.novel.memory.RelevanceGateway relevanceGateway) {
-        this.relevanceGateway = relevanceGateway;
-    }
-
-    /** p11-q0-04: 注入闭环三分类仲裁器（@Bean 装配用）；不调则保持 null，复检仍 HIGH 仅 log */
-    public void setRepairArbiter(com.writing.novel.service.RepairArbiter repairArbiter) {
-        this.repairArbiter = repairArbiter;
-    }
-
-    /** p11-q1-01: 注入构思期质量门禁（@Bean 装配用）；不调则保持 null，构思期跳过门禁 */
-    public void setConceiveGate(com.writing.novel.service.ConceiveGate conceiveGate) {
-        this.conceiveGate = conceiveGate;
-    }
-
-    /** p11-q1-04: 注入章节梗概预检（@Bean 装配用）；不调则保持 null，写正文前跳过预检 */
-    public void setPlanGate(com.writing.novel.service.PlanGate planGate) {
-        this.planGate = planGate;
-    }
-
-    /** p11-q2-03: 注入质检委员会（@Bean 装配用）；不调则保持 null，guard 重写不合并 */
-    public void setQualityCouncil(com.writing.novel.service.QualityCouncil qualityCouncil) {
-        this.qualityCouncil = qualityCouncil;
-    }
-
-    public void setArbiter(com.writing.novel.service.Arbiter arbiter) {
-        this.arbiter = arbiter;
-    }
-
-    /** p10-w2-03: 注入事实收割 Agent（@Bean 装配用）；不调则保持 null，收割安全跳过 */
-    public void setFactHarvester(com.writing.novel.agent.FactHarvesterAgent factHarvester) {
-        this.factHarvester = factHarvester;
-    }
-
     /** p10-w3-03: 注入归档衰减器（@Bean 装配用）；不调则卷末跳过归档 */
-    public void setArchiveCompactor(com.writing.novel.service.ArchiveCompactor archiveCompactor) {
-        this.archiveCompactor = archiveCompactor;
-    }
 
     /** p10-w3-09: 注入成本预算监控器（@Bean 装配用）；不调则门禁跳过成本回执 */
-    public void setCostBudgetMonitor(com.writing.novel.telemetry.CostBudgetMonitor costBudgetMonitor) {
-        this.costBudgetMonitor = costBudgetMonitor;
-    }
 
     /** 构思阶段：生成世界观 + 人物 + 大纲 */
     public void runConceiving(String projectId) {

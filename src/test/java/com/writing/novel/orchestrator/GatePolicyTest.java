@@ -90,8 +90,9 @@ class GatePolicyTest {
                 null, null, null, null, null, null, null, null, null, null, null, null,
                 new SceneClassifier(gateway, promptSvc),
                 new com.writing.novel.service.DiversityTracker(),
-                null, null, null, null, null, null, null, null, null);
-        orchestrator.setConceiveGate(new ConceiveGate()); // p11-q1-01/03: 启用构思期门禁
+                null, null, null, null, null, null, null, null, null,
+                new OrchestratorPolicies(null, null, null, new ConceiveGate(),
+                        null, null, null, null, null, null, null));
     }
 
     @Test

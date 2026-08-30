@@ -74,12 +74,8 @@ class EditPassageReturnsBeforeHarvestTest {
             }
         };
 
-        orchestrator = new NovelOrchestrator(repo, new ProjectService(repo),
-                null, null, null, null, null, null, null,
-                summarySvc, assembler, null,
-                null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, editor, null, null);
-        orchestrator.setFactHarvester(new FactHarvesterAgent(gateway, new SqliteStoryCanon(facts), promptSvc) {
+        // p22-05: 收割桩经策略包组合期注入（原后置 setter）
+        FactHarvesterAgent gatedHarvest = new FactHarvesterAgent(gateway, new SqliteStoryCanon(facts), promptSvc) {
             @Override
             public HarvestResult harvest(String projectId, Chapter chapter) {
                 harvestStarted.countDown();
@@ -89,7 +85,14 @@ class EditPassageReturnsBeforeHarvestTest {
                 harvestDone.countDown();
                 return new HarvestResult(0, 0, 0);
             }
-        });
+        };
+        orchestrator = new NovelOrchestrator(repo, new ProjectService(repo),
+                null, null, null, null, null, null, null,
+                summarySvc, assembler, null,
+                null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, editor, null, null,
+                new OrchestratorPolicies(null, null, null, null, null, null, null,
+                        gatedHarvest, null, null, null));
     }
 
     @AfterEach

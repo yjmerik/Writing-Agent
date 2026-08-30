@@ -30,7 +30,7 @@ class ApproveSpecificCheckpointTest {
                 null, null, null, null, null, null, null,
                 null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     @Test

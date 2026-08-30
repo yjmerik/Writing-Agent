@@ -78,20 +78,30 @@ public class OrchestratorConfig {
                 creativeDiversityService, narrativeThreadExtractor, readerReviewAgent,
                 foreshadowingResolutionDetector, sceneClassifier, diversityTracker, arcScheduler,
                 consistencyGuard, consistencyGate, foreshadowingImportanceAuditor, clicheDetector,
-                relationshipEvolutionTracker, passageEditor, plotMotifTracker, expositionDetector);
-        orchestrator.setStoryCanon(storyCanon);
-        orchestrator.setFactHarvester(factHarvester);
-        orchestrator.setArchiveCompactor(archiveCompactor);
-        orchestrator.setCostBudgetMonitor(costBudgetMonitor);
-        orchestrator.setRelevanceGateway(relevanceGateway);
-        orchestrator.setRepairArbiter(repairArbiter);
-        orchestrator.setConceiveGate(conceiveGate);
-        orchestrator.setPlanGate(planGate);
-        orchestrator.setQualityCouncil(qualityCouncil);
-        orchestrator.setArbiter(arbiter);
-        // p20-04: 后处理阶段账本——重启续跑只补未完成阶段
-        orchestrator.setPostProcessLedger(postProcessLedger);
+                relationshipEvolutionTracker, passageEditor, plotMotifTracker, expositionDetector,
+                // p22-05: 生命周期策略组合——生产组合显式给全，缺失即启动失败并指名能力
+                new OrchestratorPolicies(
+                        requirePolicy(storyCanon, "StoryCanon"),
+                        requirePolicy(relevanceGateway, "RelevanceGateway"),
+                        requirePolicy(repairArbiter, "RepairArbiter"),
+                        requirePolicy(conceiveGate, "ConceiveGate"),
+                        requirePolicy(planGate, "PlanGate"),
+                        requirePolicy(qualityCouncil, "QualityCouncil"),
+                        requirePolicy(arbiter, "Arbiter"),
+                        requirePolicy(factHarvester, "FactHarvesterAgent"),
+                        requirePolicy(archiveCompactor, "ArchiveCompactor"),
+                        requirePolicy(costBudgetMonitor, "CostBudgetMonitor"),
+                        requirePolicy(postProcessLedger, "PostProcessLedgerRepository")));
         return orchestrator;
+    }
+
+    /** p22-05: 必需策略校验——缺失能力让 Spring 启动失败并指名（fail-loud 组合） */
+    static <T> T requirePolicy(T policy, String capability) {
+        if (policy == null) {
+            throw new IllegalStateException("生命周期策略缺失: " + capability
+                    + " ——生产组合必须显式提供该能力（p22-05）");
+        }
+        return policy;
     }
 
     /**

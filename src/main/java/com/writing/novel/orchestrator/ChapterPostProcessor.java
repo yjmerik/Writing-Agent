@@ -55,8 +55,8 @@ public class ChapterPostProcessor {
     private final com.writing.novel.service.PlotProgressionDetector plotProgressionDetector;
     private final com.writing.novel.agent.CharacterProfileUpgrader characterProfileUpgrader;
     private final com.writing.novel.agent.ArcUpdater arcUpdater;
-    /** p20-04: 阶段账本——null 时不记账（旧行为） */
-    private com.writing.novel.persistence.sqlite.PostProcessLedgerRepository ledger;
+    /** p20-04/p22-05: 阶段账本——组合期显式给定；null 时不记账（仅测试） */
+    private final com.writing.novel.persistence.sqlite.PostProcessLedgerRepository ledger;
 
     ChapterPostProcessor(NovelOrchestrator orch,
                          NovelRepository repository,
@@ -73,7 +73,8 @@ public class ChapterPostProcessor {
                          com.writing.novel.agent.PlotMotifTracker plotMotifTracker,
                          com.writing.novel.service.PlotProgressionDetector plotProgressionDetector,
                          com.writing.novel.agent.CharacterProfileUpgrader characterProfileUpgrader,
-                         com.writing.novel.agent.ArcUpdater arcUpdater) {
+                         com.writing.novel.agent.ArcUpdater arcUpdater,
+                         com.writing.novel.persistence.sqlite.PostProcessLedgerRepository ledger) {
         this.orch = orch;
         this.repository = repository;
         this.chapterWriter = chapterWriter;
@@ -90,6 +91,7 @@ public class ChapterPostProcessor {
         this.plotProgressionDetector = plotProgressionDetector;
         this.characterProfileUpgrader = characterProfileUpgrader;
         this.arcUpdater = arcUpdater;
+        this.ledger = ledger;
     }
 
     /** 按固定顺序执行全部后处理阶段，返回（可能被重写过的）章节 */
@@ -140,10 +142,7 @@ public class ChapterPostProcessor {
         return chapter;
     }
 
-    /** p20-04: 注入阶段账本（null = 不记账，保持旧行为） */
-    public void setLedger(com.writing.novel.persistence.sqlite.PostProcessLedgerRepository ledger) {
-        this.ledger = ledger;
-    }
+
 
     /** 一致性检查 + 闭环修复（可能触发重写/真典纠正/NEEDS_MANUAL_REVIEW） */
     private boolean stageContinuity(String projectId, int chapterIndex, Chapter chapter,

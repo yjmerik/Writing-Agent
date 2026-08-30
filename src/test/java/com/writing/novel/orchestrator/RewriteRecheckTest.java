@@ -98,7 +98,7 @@ class RewriteRecheckTest {
                 null, null, null, null, null, null, null, null, null, null, null, null,
                 new SceneClassifier(gateway, promptSvc),
                 new com.writing.novel.service.DiversityTracker(),
-                null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null);
     }
 
     @Test

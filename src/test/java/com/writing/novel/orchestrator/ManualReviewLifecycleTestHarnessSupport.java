@@ -115,8 +115,9 @@ public abstract class ManualReviewLifecycleTestHarnessSupport {
                 null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null,
                 guardOverride(),
-                null, null, null, null, null, null, null);
-        orchestrator.setRepairArbiter(new RepairArbiter());
+                null, null, null, null, null, null, null,
+                new OrchestratorPolicies(null, null, new RepairArbiter(),
+                        null, null, null, null, null, null, null, null));
     }
 
     protected NovelOrchestrator orchestrator() { return orchestrator; }

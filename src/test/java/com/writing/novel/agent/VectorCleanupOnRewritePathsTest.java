@@ -1,6 +1,7 @@
 package com.writing.novel.agent;
 
 import com.writing.novel.domain.Chapter;
+import com.writing.novel.orchestrator.OrchestratorPolicies;
 import com.writing.novel.domain.ChapterSynopsis;
 import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
@@ -133,15 +134,16 @@ class VectorCleanupOnRewritePathsTest {
                 null,                        // 32 relationshipEvolutionTracker
                 editor,                      // 33 passageEditor
                 null,                        // 34 plotMotifTracker
-                null);                       // 35 expositionDetector
-        // harvest 是 POST_PROCESS 异步块的末尾——countdown 即后台任务对临时库的访问全部结束
-        orchestrator.setFactHarvester(new FactHarvesterAgent(gateway, null, promptSvc) {
-            @Override
-            public HarvestResult harvest(String projectId, Chapter chapter) {
-                postProcessDone.countDown();
-                return new HarvestResult(0, 0, 0);
-            }
-        });
+                null,                        // 35 expositionDetector
+                new OrchestratorPolicies(null, null, null, null, null, null, null,
+                        // p22-05: 收割桩经策略包组合注入（原后置 setter）
+                        new FactHarvesterAgent(gateway, null, promptSvc) {
+                            @Override
+                            public HarvestResult harvest(String projectId, Chapter chapter) {
+                                postProcessDone.countDown();
+                                return new HarvestResult(0, 0, 0);
+                            }
+                        }, null, null, null));
     }
 
     // ---------- 用例 1：ChapterWriterAgent.rewriteForCorrection ----------

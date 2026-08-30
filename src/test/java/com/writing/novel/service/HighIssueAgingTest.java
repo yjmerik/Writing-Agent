@@ -36,7 +36,7 @@ class HighIssueAgingTest {
         orchestrator = new NovelOrchestrator(repo, new ProjectService(repo),
                 null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     private Project projectAtChapter(String title, int currentChapter) {

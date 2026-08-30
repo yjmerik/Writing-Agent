@@ -181,6 +181,7 @@ class PostProcessingRecoveryTest {
 
         ProjectService projectService = new ProjectService(repo);
         var promptSvc = TestPromptHelper.create();
+        PostProcessLedgerRepository ledger = new PostProcessLedgerRepository(cp);
         NovelOrchestrator orchestrator = new NovelOrchestrator(repo, projectService,
                 new WorldBuilderAgent(gateway, kbSvc, promptSvc),
                 new CharacterDesignerAgent(gateway, kbSvc, promptSvc),
@@ -193,10 +194,10 @@ class PostProcessingRecoveryTest {
                 new com.writing.novel.agent.QualityEvaluationAgent(gateway, repo, promptSvc),
                 entityGraph,
                 null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null);
-        PostProcessLedgerRepository ledger = new PostProcessLedgerRepository(cp);
-        orchestrator.setPostProcessLedger(ledger);
-        orchestrator.setFactHarvester(factHarvester);
+                null, null, null, null, null, null, null, null, null, null,
+                // p22-05: ledger 与收割桩经策略包组合期注入（原后置 setter）
+                new OrchestratorPolicies(null, null, null, null, null, null, null,
+                        factHarvester, null, null, ledger));
         return new Ctx(repo, orchestrator, projectService, ledger, entityGraph, gateway, factHarvester);
     }
 

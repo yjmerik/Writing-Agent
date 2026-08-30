@@ -70,7 +70,7 @@ class BookSnapshotTest {
         orchestrator = new NovelOrchestrator(repo, new ProjectService(repo),
                 null, null, null, null, null, null, memoryManager, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     private Summary llmSummary(String content) {

@@ -33,7 +33,7 @@ class LayeredOutlineParsingTest {
         orchestrator = new NovelOrchestrator(repo, new ProjectService(repo),
                 null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     /** 真实 volume-outline 模板要求的格式（来自 volume-outline.st） */

@@ -55,7 +55,7 @@ class SummaryOverlapTest {
         NovelOrchestrator orchestrator = new NovelOrchestrator(repo, new ProjectService(repo),
                 null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null);
 
         // 生成卷级摘要 [1-8]——应触发清理 [1-3] 和 [4-6]
         // 直接调 generateSummary via reflection or test through removeSupersededSummaries

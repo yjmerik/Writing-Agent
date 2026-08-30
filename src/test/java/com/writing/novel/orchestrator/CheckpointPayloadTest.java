@@ -34,7 +34,7 @@ class CheckpointPayloadTest {
         orchestrator = new NovelOrchestrator(repo, new ProjectService(repo),
                 null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     @Test

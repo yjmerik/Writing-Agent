@@ -33,7 +33,7 @@ class FinalForeshadowingRecoveryTest {
         orchestrator = new NovelOrchestrator(repo, new ProjectService(repo),
                 null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     private Project projectWithExhaustedOutline(int currentChapter) {

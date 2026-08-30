@@ -81,15 +81,16 @@ class ArbiterWiredTest {
                 null, null, null, null, null, null, null, null, null, null, null, null,
                 new SceneClassifier(gateway, promptSvc),
                 new com.writing.novel.service.DiversityTracker(),
-                null, null, null, null, null, null, null, null, null);
-        orchestrator.setQualityCouncil(new QualityCouncil());
-        orchestrator.setArbiter(new Arbiter() {
-            @Override
-            public Arbitration arbitrate(QualityCouncil.CouncilReport report, int rewriteBudget, boolean alreadyRewritten) {
-                arbiterCalls.incrementAndGet();
-                return super.arbitrate(report, rewriteBudget, alreadyRewritten);
-            }
-        });
+                null, null, null, null, null, null, null, null, null,
+        new OrchestratorPolicies(null, null, null, null, null,
+                new QualityCouncil(),
+                new Arbiter() {
+                    @Override
+                    public Arbitration arbitrate(QualityCouncil.CouncilReport report, int rewriteBudget, boolean alreadyRewritten) {
+                        arbiterCalls.incrementAndGet();
+                        return super.arbitrate(report, rewriteBudget, alreadyRewritten);
+                    }
+                }, null, null, null, null));
     }
 
     @Test

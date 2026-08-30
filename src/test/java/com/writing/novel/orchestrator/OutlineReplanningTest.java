@@ -64,7 +64,7 @@ class OutlineReplanningTest {
                 null, null, plotter, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null,
-                null, null, null, null);
+                null, null, null, null, null);
 
         Outline outline = new Outline(pid, "总纲");
         // 模拟 planVolume 输出的章节文本（含结构化字段）
@@ -95,8 +95,9 @@ class OutlineReplanningTest {
                 null, null, plotter,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null);
-        orch.setStoryCanon(new SqliteStoryCanon(factRepo));
+                null, null, null, null, null, null, null, null, null, null,
+                new OrchestratorPolicies(new SqliteStoryCanon(factRepo),
+                        null, null, null, null, null, null, null, null, null, null));
 
         Outline outline = new Outline(pid, "原始总纲\n第1章 开局\n第2章 发展\n第3章 高潮");
         repo.saveOutline(outline);

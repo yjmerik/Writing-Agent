@@ -36,7 +36,7 @@ class ManualReviewSurfaceTest {
                 null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null,
-                null, null, null, null);
+                null, null, null, null, null);
 
         var report = orchestrator.buildChapterQualityReport(p.getId(), 1);
         assertTrue(report.isNeedsManualReview());

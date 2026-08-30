@@ -157,7 +157,7 @@ class VersionedMemoryTest {
                 new MemoryManagerAgent(gateway, summarySvc, promptSvc),
                 summarySvc, mockAssembler,
                 null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null);
 
         // 执行重写
         Chapter rewritten = orchestrator.rewriteChapter(p.getId(), 1, "重写得更精彩");

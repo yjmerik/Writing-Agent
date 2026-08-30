@@ -13,7 +13,7 @@ class FailLoudTest {
     void 复检与纠偏重写路径不含ignored吞异常() throws Exception {
         String src = Files.readString(Path.of(
                 "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"));
-        int start = src.indexOf("private boolean checkContinuityAfterWriting");
+        int start = src.indexOf("boolean checkContinuityAfterWriting");
         int rewrite = src.indexOf("private void rewriteWithCorrection");
         int afterRewrite = src.indexOf("private void applyRepairClassification");
         assertTrue(start > 0 && rewrite > start && afterRewrite > rewrite);

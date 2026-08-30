@@ -77,6 +77,8 @@ public class NovelOrchestrator {
     private com.writing.novel.service.Arbiter arbiter;
     /** p10-w2-03: 事实收割 Agent——null 时跳过（向后兼容） */
     private com.writing.novel.agent.FactHarvesterAgent factHarvester;
+    /** p20-02: 章节后处理模块 */
+    private final ChapterPostProcessor postProcessor;
     /** p10-w3-03: 归档衰减器——null 时跳过（向后兼容） */
     private com.writing.novel.service.ArchiveCompactor archiveCompactor;
     /** p10-w3-09: 成本预算监控器——null 时跳过成本回执（向后兼容） */
@@ -152,6 +154,27 @@ public class NovelOrchestrator {
         this.passageEditor = passageEditor;
         this.plotMotifTracker = plotMotifTracker;
         this.expositionDetector = expositionDetector;
+        // p20-02: 后处理模块——正文落库后的全部加工阶段经此模块编排
+        this.postProcessor = new ChapterPostProcessor(this, repository, chapterWriter,
+                entityGraphService, narrativeThreadExtractor, readerReviewAgent,
+                foreshadowingExtractor, climaxDiversityTracker, diversityTracker,
+                sceneClassifier, arcScheduler, relationshipEvolutionTracker, plotMotifTracker,
+                plotProgressionDetector, characterProfileUpgrader, arcUpdater);
+    }
+
+    /** p20-02: 后处理模块（正文落库后阶段编排） */
+    ChapterPostProcessor postProcessor() {
+        return postProcessor;
+    }
+
+    /** p20-02: 模块读取 late-set 的收割 Agent */
+    com.writing.novel.agent.FactHarvesterAgent factHarvester() {
+        return factHarvester;
+    }
+
+    /** p20-02: 模块读取仲裁器存在性（arbiter 接管时 reader review 互斥跳过） */
+    boolean hasArbiter() {
+        return arbiter != null;
     }
 
     /** p10-w2-02: 注入故事真典仓库（@Bean 装配用）；不调则保持 null，播种/收割安全跳过 */
@@ -833,210 +856,8 @@ public class NovelOrchestrator {
             repository.saveCheckpoint(chapterCp);
         }
 
-        // 写完后做连续性检查（发现问题记录到 DB，不中断写作）
-        // p10-w1-07: 返回是否已触发 continuity 重写——若已重写，reader review 不再重写（互斥，防成本翻倍）
-        boolean rewrittenByContinuity = checkContinuityAfterWriting(projectId, chapterIndex, chapter, parseCast(synopsis.getCast()));
-
-        // 图数据库：LLM 提取本章实体和关系
-        try {
-            entityGraphService.extractFromChapter(projectId, chapter);
-        } catch (Exception e) {
-            log.warn("实体提取失败(章{}): {}", chapterIndex, e.getMessage());
-        }
-
-        // p10-w2-03: 故事真典增量收割——从本章提取事实变更入典（长程记忆，替代级联摘要）
-        try {
-            if (factHarvester != null) {
-                var harvestResult = factHarvester.harvest(projectId, chapter);
-                if (harvestResult.total() > 0) {
-                    log.info("真典收割(章{}): +{} 新增 / {} 刷新 / {} 取代",
-                            chapterIndex, harvestResult.added(), harvestResult.validated(), harvestResult.superseded());
-                }
-            }
-        } catch (Exception e) {
-            log.warn("真典收割失败(章{}): {}", chapterIndex, e.getMessage());
-        }
-
-        // p8-2: 叙事线索提取与追踪
-        try {
-            if (narrativeThreadExtractor != null) {
-                narrativeThreadExtractor.extractAndUpdate(projectId, chapterIndex, chapter.getContent());
-            }
-        } catch (Exception e) {
-            log.warn("叙事线索提取失败(章{}): {}", chapterIndex, e.getMessage());
-        }
-
-        // p8-3: 读者检验 Agentic Loop——每章写后检验，低分自动重写（最多1次）
-        // p9-1: 重写长度保护——拒绝比原版短70%的重写
-        // p11-I1: 评价结果持久化
-        if (readerReviewAgent != null && arbiter == null) {
-            try {
-                var review = readerReviewAgent.review(chapterIndex, chapter.getContent());
-                log.info("读者检验(章{}): {}/10 — {}", chapterIndex, review.getScore(), review.getSummary());
-                // p11-q3-01: 质量事件遥测——读者检验评分可观测
-                EventLog.emit("QUALITY_REVIEW", Map.of("score", review.getScore(),
-                        "passed", review.isPassed(), "summary", EventLog.truncate(review.getSummary(), 150)));
-                // p10-w1-07: continuity 已重写则互斥跳过（单章最多 1 次重写，避免最坏情况成本翻倍）
-                if (!rewrittenByContinuity && !review.isPassed()) {
-                    log.info("章节评分 {} < {}，自动重写", review.getScore(), readerReviewAgent.getPassThreshold());
-                    var reviewSynopsis = findSynopsis(outline, chapterIndex);
-                    int originalLength = chapter.getContent().length();
-                    String newContent = chapterWriter.rewriteForCorrection(
-                            projectId, chapterIndex, chapter.getTitle(),
-                            reviewSynopsis != null ? reviewSynopsis.getSynopsis() : "",
-                            reviewSynopsis != null ? reviewSynopsis.getWritingNotes() : "",
-                            "读者检验改进建议：" + review.getImprovementSuggestion());
-                    // p9-1: 长度保护——重写不能比原版短太多（≥70%）
-                    if (newContent != null && newContent.length() >= originalLength * 0.7) {
-                        chapter.setContent(newContent);
-                        repository.saveChapter(chapter);
-                        log.info("章节重写完成(章{}): {}字→{}字", chapterIndex, originalLength, newContent.length());
-                        var reReview = readerReviewAgent.review(chapterIndex, chapter.getContent());
-                        log.info("重写后检验(章{}): {}/10", chapterIndex, reReview.getScore());
-                        // p11-I1: 持久化重写后的最终评价
-                        review = reReview;
-                        // p11-q3-01: 质量事件遥测——重写决策可观测
-                        EventLog.emit("REWRITE_TRIGGERED", Map.of("reason", "reader_review",
-                                "afterScore", reReview.getScore()));
-                    } else if (newContent != null) {
-                        log.warn("重写内容过短({}字 < 原版{}字的70%)，保留原版", newContent.length(), originalLength);
-                        // p16-05: 拒收重写——rewriteForCorrection 已把向量切到被拒版本，
-                        // 用保留的原正文重放向量索引，恢复向量库与 DB 一致
-                        try { chapterWriter.reindexChapter(projectId, chapterIndex, chapter.getContent()); }
-                        catch (Exception re) { log.warn("拒收重写后向量重放失败(章{}): {}", chapterIndex, re.getMessage()); }
-                    }
-                }
-                // p11-I1: 持久化章节评价报告
-                try {
-                    repository.saveChapterReview(ChapterReview.from(projectId, review));
-            enrichChapterCheckpointPayload(projectId, review.getChapterIndex());
-                } catch (Exception pe) {
-                    log.warn("章节评价持久化失败(章{}): {}", chapterIndex, pe.getMessage());
-                }
-            } catch (Exception e) {
-                log.warn("读者检验失败(章{}): {}", chapterIndex, e.getMessage());
-            }
-        }
-
-        // p5-c2: 伏笔动态提取——从正文中识别新埋下的伏笔
-        try {
-            foreshadowingExtractor.extract(projectId, chapter);
-        } catch (Exception e) {
-            log.warn("伏笔提取失败(章{}): {}", chapterIndex, e.getMessage());
-        }
-
-        // 爽点多样性追踪：从章节概要的 climax 字段推断爽点类型
-        try {
-            var climaxTypes = inferClimaxTypes(synopsis);
-            if (!climaxTypes.isEmpty()) {
-                climaxDiversityTracker.record(chapterIndex, climaxTypes);
-                // p10-b2: 激活 DiversityTracker 的 climax 维度（修复死代码）
-                diversityTracker.record("climax", chapterIndex,
-                        climaxTypes.stream().map(Enum::name).toList());
-            }
-        } catch (Exception e) {
-            log.warn("爽点追踪失败(章{}): {}", chapterIndex, e.getMessage());
-        }
-
-        // p10-b2: 场景结构分类 + 多样性追踪
-        try {
-            var sceneType = sceneClassifier.classify(chapter.getContent());
-            diversityTracker.record("scene", chapterIndex, List.of(sceneType.name()));
-            log.info("场景分类(章{}): {}", chapterIndex, sceneType.getLabel());
-
-            // 检测连续 3+ 章同一场景类型 → 结构套路化警告
-            int consecutive = diversityTracker.getConsecutiveSceneCount();
-            if (consecutive >= 3) {
-                String recent = diversityTracker.getRecentSceneTypes(4);
-                repository.saveContinuityIssue(new ContinuityIssue(
-                        projectId, chapterIndex,
-                        ContinuityIssue.Type.STRUCTURE,
-                        ContinuityIssue.Severity.MEDIUM,
-                        "连续 " + consecutive + " 章使用同一场景类型（" + sceneType.getLabel()
-                                + "），存在结构套路化风险。最近场景：" + recent
-                                + "。建议下一章切换到不同的场景类型。"));
-                log.warn("结构套路化警告(章{}): 连续{}章{}", chapterIndex, consecutive, sceneType.getLabel());
-            }
-        } catch (Exception e) {
-            log.warn("场景分类失败(章{}): {}", chapterIndex, e.getMessage());
-        }
-
-        // p10-w3-06: 持久化多样性追踪状态（重启后不丢失，修复纯内存 Map 跨进程清零）
-        try {
-            diversityTracker.persist(projectId, repository);
-        } catch (Exception ignored) {}
-
-        // p10-a2: 更新角色最近出场章节
-        try {
-            if (arcScheduler != null) {
-                arcScheduler.updateLastSeenChapters(projectId, chapterIndex, chapter.getContent());
-            }
-        } catch (Exception e) {
-            log.warn("角色出场更新失败(章{}): {}", chapterIndex, e.getMessage());
-        }
-
-        // p11-H3: 关系演变追踪——检测本章角色关系变化并更新图谱
-        try {
-            if (relationshipEvolutionTracker != null) {
-                String castStr = synopsis != null ? synopsis.getCast() : "";
-                int changes = relationshipEvolutionTracker.detectAndApply(
-                        projectId, chapterIndex, chapter.getContent(), castStr);
-                if (changes > 0) {
-                    log.info("关系演变(章{}): {} 条变化", chapterIndex, changes);
-                }
-            }
-        } catch (Exception e) {
-            log.warn("关系演变追踪失败(章{}): {}", chapterIndex, e.getMessage());
-        }
-
-        // p11.1-J2: 桥段追踪——提取叙事桥段标签并检测重复
-        try {
-            if (plotMotifTracker != null) {
-                var motifIssues = plotMotifTracker.trackAndDetect(projectId, chapterIndex, chapter.getContent());
-                for (var issue : motifIssues) {
-                    repository.saveContinuityIssue(issue);
-                    log.warn("桥段重复(章{}): {}", chapterIndex, issue.getDescription());
-                }
-            }
-        } catch (Exception e) {
-            log.warn("桥段追踪失败(章{}): {}", chapterIndex, e.getMessage());
-        }
-
-        // 剧情停滞检测：基于张力曲线，连续低张力触发警告
-        try {
-            plotProgressionDetector.detectStall(projectId, chapterIndex)
-                    .ifPresent(issue -> {
-                        repository.saveContinuityIssue(issue);
-                        log.warn("剧情停滞警告(章{}): {}", finalChapterIndex, issue.getDescription());
-                    });
-        } catch (Exception e) {
-            log.warn("停滞检测失败(章{}): {}", chapterIndex, e.getMessage());
-        }
-
-        // 角色档案升级：每 5 章检测重复出现的配角并升级
-        if (chapterIndex % 5 == 0) {
-            try {
-                characterProfileUpgrader.upgrade(projectId, chapterIndex);
-            } catch (Exception e) {
-                log.warn("角色升级失败(章{}): {}", chapterIndex, e.getMessage());
-            }
-        }
-
-        // 角色弧线更新：每 10 章重新评估已建档角色的成长弧和关系
-        if (chapterIndex % 10 == 0) {
-            try {
-                arcUpdater.updateArcs(projectId, chapterIndex);
-            } catch (Exception e) {
-                log.warn("弧线更新失败(章{}): {}", chapterIndex, e.getMessage());
-            }
-        }
-
-        if (chapterIndex % 3 == 0) {
-            generateSummary(projectId, chapterIndex - 2, chapterIndex);
-        }
-
-        // 卷结束时生成卷级全局摘要（递归摘要）
-        checkAndGenerateVolumeSummary(projectId, outline, chapterIndex);
+        // p20-02: 后处理阶段统一经 ChapterPostProcessor 模块按固定顺序执行
+        chapter = postProcessor.process(projectId, chapter, chapterIndex, synopsis, outline);
 
         // p12-K3: 向量库 flush 已在 ChapterWriterAgent.indexChapterInChunks 后完成
 
@@ -1051,7 +872,7 @@ public class NovelOrchestrator {
     }
 
     /** 检查当前章是否是某卷最后一章，如果是则生成卷级摘要 */
-    private void checkAndGenerateVolumeSummary(String projectId, Outline outline, int chapterIndex) {
+    void checkAndGenerateVolumeSummary(String projectId, Outline outline, int chapterIndex) {
         for (Volume v : outline.getVolumes()) {
             if (v.getSynopses().isEmpty()) continue;
             int lastChapter = v.getSynopses().stream()
@@ -1221,7 +1042,7 @@ public class NovelOrchestrator {
      * 发现 HIGH 级矛盾时触发 1 次重写（把矛盾描述加入 prompt 要求修正）。
      * 每 5 章检查一次风格漂移。
      */
-    private boolean checkContinuityAfterWriting(String projectId, int chapterIndex, Chapter chapter, List<String> cast) {
+    boolean checkContinuityAfterWriting(String projectId, int chapterIndex, Chapter chapter, List<String> cast) {
         boolean rewritten = false; // p10-w1-07: 标记是否触发重写（不提前 return，保持伏笔检测等后续流程）
         java.util.List<ContinuityIssue> continuityIssuesRef = java.util.List.of(); // p11-q2-03: 供 guard 合并重写引用
         try {
@@ -1756,7 +1577,7 @@ public class NovelOrchestrator {
     }
 
     /** p11-q0-01: 解析 synopsis.cast（逗号/顿号/空格分隔）为名字列表，供收窄 */
-    private static List<String> parseCast(String cast) {
+    static List<String> parseCast(String cast) {
         if (cast == null || cast.isBlank()) return List.of();
         return java.util.Arrays.stream(cast.split("[,，、/\\s]+"))
                 .map(String::trim).filter(s -> !s.isEmpty()).toList();
@@ -1984,7 +1805,7 @@ public class NovelOrchestrator {
         return repository.getTotalWordCount(projectId);
     }
 
-    private void generateSummary(String projectId, int from, int to) {
+    void generateSummary(String projectId, int from, int to) {
         StringBuilder sb = new StringBuilder();
         for (int i = from; i <= to; i++) {
             repository.findChapterByIndex(projectId, i).ifPresent(c ->
@@ -2366,7 +2187,7 @@ public class NovelOrchestrator {
         }
     }
 
-    private ChapterSynopsis findSynopsis(Outline outline, int chapterIndex) {
+    ChapterSynopsis findSynopsis(Outline outline, int chapterIndex) {
         for (Volume v : outline.getVolumes()) {
             for (ChapterSynopsis s : v.getSynopses()) {
                 if (s.getChapterIndex() == chapterIndex) return s;
@@ -2808,7 +2629,7 @@ public class NovelOrchestrator {
     }
 
     /** 从 ChapterSynopsis.climax 文本推断爽点类型（关键词匹配） */
-    private List<ClimaxType> inferClimaxTypes(ChapterSynopsis synopsis) {
+    List<ClimaxType> inferClimaxTypes(ChapterSynopsis synopsis) {
         if (synopsis == null || synopsis.getClimax() == null) return List.of();
         String text = synopsis.getClimax().toLowerCase();
         List<ClimaxType> types = new java.util.ArrayList<>();

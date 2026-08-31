@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 端到端测试：启动服务 → 建项目 → 构思 → 写 N 章 → 产出 e2e-report.json。
-# 用法: ./scripts/e2e.sh [--mode replay|record|live] [--chapters N] [--port P] [--evaluate]
+# 用法: ./scripts/e2e.sh [--mode replay|record|live] [--chapters N] [--port P] [--evaluate] [--preset mystery|wuxia|...]
 #   replay: 功能冒烟——用 data/fixtures/llm 回放 3 章，验证管道完整性（确定性、零成本）
 #   record: 真实调用 LLM 并录制 fixture + 生成完整长篇（建基线/长篇验证用）
 #   live:   真实调用，不录制
@@ -11,12 +11,19 @@ MODE="replay"
 CHAPTERS=""
 PORT=8090
 EVALUATE=false
+PRESET="mystery"
+PRESET_TAGS="悬疑,古代"
 while [ $# -gt 0 ]; do
   case "$1" in
     --mode) MODE="$2"; shift 2 ;;
     --chapters) CHAPTERS="$2"; shift 2 ;;
     --port) PORT="$2"; shift 2 ;;
     --evaluate) EVALUATE=true; shift ;;
+    --preset) PRESET="$2"; shift 2
+      case "$PRESET" in
+        wuxia) PRESET_TAGS="武侠,江湖" ;;
+        *) PRESET_TAGS="悬疑,古代" ;;
+      esac ;;
     *) echo "未知参数: $1"; exit 1 ;;
   esac
 done
@@ -80,7 +87,7 @@ echo "✅ 服务已就绪"
 echo "▶ 创建项目..."
 PROJECT_ID=$(curl --noproxy '*' -sf -X POST "$BASE/api/projects" \
   -H "Content-Type: application/json" \
-  -d '{"title":"E2E基准小说","concept":"一个雨夜的旧书店里，落魄账房学徒捡到一本会自己续写的账册，凡记入其中的欠债都会以离奇方式清偿","tags":"悬疑,古代","mode":"SOLO","preset":"mystery"}' \
+  -d "{\"title\":\"E2E基准小说-$PRESET\",\"concept\":\"一个雨夜的旧书店里，落魄账房学徒捡到一本会自己续写的账册，凡记入其中的欠债都会以离奇方式清偿\",\"tags\":\"$PRESET_TAGS\",\"mode\":\"SOLO\",\"preset\":\"$PRESET\"}" \
   | python3 -c "import json,sys; print(json.load(sys.stdin)['id'])")
 echo "✅ 项目: $PROJECT_ID"
 

@@ -57,6 +57,16 @@
   触发命令：`./scripts/e2e.sh --mode record --chapters 3 && python3 scripts/compare-baseline.py`
 - ⚠️ 本机代理 http_proxy=127.0.0.1:9098 会劫持 localhost——所有 curl 必须带 --noproxy '*'
 
+## 最终状态（2026-08-31）：29/29 features 全部完成
+
+- **p23-06 金丝雀已完成**（用户批准）：mystery 3 章 10,191 字 / WUXIA 3 章 11,308 字，均 0 错误 0 失败；
+  mystery compare PASS；WUXIA 规则断言 PASS（无修仙规则）。报告 data/release/canary-*.json
+- **WUXIA 基线 bless 待人工决定**：正文样本已在会话展示；如认可，将 canary-wuxia-report.json
+  作为基线 bless（compare-baseline.py 支持指定报告路径 + --bless）
+- 观察项：卷大纲层「题材规则（武侠）」注入密度仅总纲 1 次，可后续评估 p17-03 生产接线
+- ⚠️ 本机代理 http_proxy=127.0.0.1:9098 劫持 localhost——curl 必须带 --noproxy '*'
+- ⚠️ ego-browser 进程 cwd 非仓库根——其内 fs 写文件必须用绝对路径
+
 ## Known Issues / Next Steps（剩余 7 个 not-started feature 入口）
 
 1. **p22-04 提取章节生产模块**：p20-02 已切出 ChapterPostProcessor；下一步把「Context→write→quality→rewrite」同样收敛为小结果接口（ChapterProductionTest 为验证命令）。

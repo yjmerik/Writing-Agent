@@ -2,6 +2,24 @@
 
 ---
 
+## 会话记录（2026-08-31 续）：p23-06 金丝雀完成——29/29 全部收官
+
+**用户批准花费后执行 p23-06 真实 LLM 质量金丝雀**（p21-01 改动了 WUXIA 题材逻辑，触发条件成立）：
+- e2e.sh 补 --preset 参数（原硬编码 mystery，无法录 WUXIA）
+- mystery 实录：3 章 10,191 字，0 错误 0 失败，对既有基线 compare **PASS**（无需 bless）
+- WUXIA 实录：3 章 11,308 字，0 错误 0 失败；规则断言 **PASS**（54 fixture：武侠规则注入、
+  修仙规则/境界节奏/爽点四段式钩子零命中——p21-01 改动在真实生成链路生效）
+- 报告：data/release/canary-{mystery,wuxia}-report.json；fixture：data/e2e-fixtures/canary-*-20260831
+- WUXIA 基线 bless 留待人工确认（正文样本已在会话展示；判断质量可接受后
+  `python3 scripts/compare-baseline.py data/release/canary-wuxia-report.json --bless` 需先复制为 e2e-report.json 或指定路径）
+
+**29/29 features 全部完成。** 观察项（不阻塞）：卷大纲 prompt 的「题材规则（武侠）」仅出现 1 次
+（总纲层），逐卷层未重复注入——p17-03 单测覆盖的是 provider 注入路径，生产接线密度可后续评估。
+
+
+
+---
+
 ## 会话记录（2026-08-31）：Phase 23 收口——26/29 完成
 
 ### 本段完成

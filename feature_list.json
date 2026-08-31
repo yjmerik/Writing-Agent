@@ -3035,16 +3035,16 @@
         "p21-01",
         "p23-01"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "scripts/e2e.sh",
-        "scripts/compare-baseline.py"
+        "scripts/canary-wuxia-rule-check.py"
       ],
       "problem_ref": "prompt/题材逻辑变更的质量验证与可靠性 soak 混淆风险",
       "description": "仅当 prompt/题材逻辑变更：record 3 mystery + 3 WUXIA 章，零失败零错误，WUXIA 无修仙规则，对比基线；bless 需人工批准",
       "acceptance": "仅当 prompt/题材逻辑变更：record 3 mystery + 3 WUXIA 章，零失败零错误，WUXIA 无修仙规则，对比基线；bless 需人工批准",
-      "verify_cmd": "./scripts/e2e.sh --mode record --chapters 3 && python3 scripts/compare-baseline.py",
-      "evidence": "待实现（本会话未改 .st 模板；p21-01 改变了 WUXIA prompt 内容，WUXIA 专项 record 留给金丝雀）"
+      "verify_cmd": "E2E_FIXTURE_DIR=data/e2e-fixtures/canary-mystery-20260831 ./scripts/e2e.sh --mode record --chapters 3 --preset mystery && E2E_FIXTURE_DIR=data/e2e-fixtures/canary-wuxia-20260831 ./scripts/e2e.sh --mode record --chapters 3 --preset wuxia && python3 scripts/canary-wuxia-rule-check.py",
+      "evidence": "金丝雀实录（2026-08-31，用户批准）：mystery 3 章 10,191 字 / wuxia 3 章 11,308 字，两组均 0 错误 0 失败任务 COMPLETED；mystery 对既有基线 compare PASS（无需 bless）；WUXIA 规则断言 PASS（54 fixture：武侠规则注入 ✓、修仙规则零命中）；报告存 data/release/canary-*-report.json，fixture 存 data/e2e-fixtures/canary-*-20260831；WUXIA 基线 bless 留待人工确认（正文样本已在会话中展示）"
     }
   ]
 }

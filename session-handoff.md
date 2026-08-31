@@ -45,6 +45,18 @@
 - **暂停中**：400 章 soak 全量实跑 / p23-02 脚本实跑 / p23-04 Playwright / p23-05 聚合器 /
   p23-06 金丝雀——恢复后按 session-handoff 上文命令执行
 
+## 增补（2026-08-31）：Phase 23 收口——26/29 完成
+
+- **p23-02/03/04/05 全部完成并实跑验证**：reliability-e2e 四场景 PASS；400 章 soak 六不变量 PASS
+  （105.9 万字）；ego-browser 套件 8 检查 PASS（按用户指示替代 Playwright，已移除相关依赖）；
+  release-gate.sh 六门禁聚合 manifest
+- **套件抓到并修复的真实缺陷**：① meta 查询漏 status 列（待人审标记永不显示）② SPA 深链接 500
+  （SpaForwardController）③ InteractiveReview 点章全量重取（refresh 依赖修复）
+  ④ 场景正文章号污染（harsh 档改按调用序注入）
+- **唯一剩余**：p23-06 真实 LLM 质量金丝雀——需用户批准花费，且 bless 需人工确认；
+  触发命令：`./scripts/e2e.sh --mode record --chapters 3 && python3 scripts/compare-baseline.py`
+- ⚠️ 本机代理 http_proxy=127.0.0.1:9098 会劫持 localhost——所有 curl 必须带 --noproxy '*'
+
 ## Known Issues / Next Steps（剩余 7 个 not-started feature 入口）
 
 1. **p22-04 提取章节生产模块**：p20-02 已切出 ChapterPostProcessor；下一步把「Context→write→quality→rewrite」同样收敛为小结果接口（ChapterProductionTest 为验证命令）。

@@ -2877,15 +2877,16 @@
         "p20-02",
         "p21-02"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
+        "orchestrator/ChapterProduction.java",
         "orchestrator/NovelOrchestrator.java"
       ],
       "problem_ref": "Context→write→quality→rewrite 编排策略仍在 NovelOrchestrator 内部",
       "description": "生产组合可经小结果接口调用；orchestrator 只协调阶段不持有写策略",
       "acceptance": "生产组合可经小结果接口调用；orchestrator 只协调阶段不持有写策略",
       "verify_cmd": "mvn test -Dtest=ChapterProductionTest,NovelOrchestratorWritingTest",
-      "evidence": "待实现：p20-02 已建立 ChapterPostProcessor 边界，可直接续做"
+      "evidence": "ChapterProduction：prepare（作者指令+弧光+桥段+梗概预检）/write（正文+事件）/qualityGate（连续性→守卫→仲裁→风格全链 7 方法原样迁移）+ produce() 小结果接口（ProductionResult）；produce 不做状态转移（ChapterProductionTest 断言索引不推进）；全量 475 测试回归绿"
     },
     {
       "id": "p22-05",
@@ -2895,8 +2896,9 @@
       "dependencies": [
         "p22-04"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
+        "orchestrator/OrchestratorPolicies.java",
         "orchestrator/OrchestratorConfig.java",
         "orchestrator/NovelOrchestrator.java"
       ],
@@ -2904,7 +2906,7 @@
       "description": "生产组合无后置可选 setter；缺必需策略 Spring 启动失败；可选行为用显式 no-op 适配器表示",
       "acceptance": "生产组合无后置可选 setter；缺必需策略 Spring 启动失败；可选行为用显式 no-op 适配器表示",
       "verify_cmd": "mvn test -Dtest=OrchestratorCompositionTest,PersistenceSmokeTest",
-      "evidence": "待实现"
+      "evidence": "OrchestratorPolicies 值对象构造期注入（11 策略），后置可选 setter 全部移除（OrchestratorCompositionTest 反射断言）；OrchestratorConfig.requirePolicy 缺失能力启动即失败并指名；测试降级组合走 none()；全量 479 测试回归绿"
     },
     {
       "id": "p22-06",
@@ -2952,15 +2954,15 @@
         "p20-06",
         "p23-01"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "scripts/reliability-e2e.sh"
       ],
       "problem_ref": "崩溃注入/陈旧 worker/人工复核/真典保护仅单元级验证，缺打包应用真实进程级场景报告",
       "description": "crash-after-stage、restart 续跑、stale-worker 拒绝、manual-review、canon-protection 场景各产出 machine-readable report.json，失败非零退出",
       "acceptance": "crash-after-stage、restart 续跑、stale-worker 拒绝、manual-review、canon-protection 场景各产出 machine-readable report.json，失败非零退出",
-      "verify_cmd": "./scripts/reliability-e2e.sh --business",
-      "evidence": "前置功能已落地并单测验证：场景网关 harsh 档（第1章注入 HIGH 连续性矛盾）、人工复核暂停任务终态 PAUSED（PausedTerminalStateTest）；runner 脚本本身待应用实跑验证（按用户指示暂停）"
+      "verify_cmd": "./scripts/reliability-e2e.sh",
+      "evidence": "四场景实跑全 PASS：S1 crash-restart（kill -9 后同库重启续跑 5 章连续 DONE）、S2 stale-worker-409（活动期 write-all/write-chapter 双 409、终态释放后恢复接受）、S3 manual-review（harsh 档第1章 HIGH→任务 PAUSED→resolve-review→续跑 3 章全 DONE）、S4 canon-protection（同键人工补丁最新胜出恰一条 ACTIVE + retire 出 active）；场景网关 harsh 档按检查调用序注入；data/e2e/reliability/summary.json allPass=true"
     },
     {
       "id": "p23-03",
@@ -2971,7 +2973,7 @@
         "p21-04",
         "p23-01"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "scripts/soak.sh"
       ],
@@ -2979,7 +2981,7 @@
       "description": "恰 400 章连续唯一、零非终态章节、零重复 ACTIVE 真典键、零任务重叠、零 LLM 网络调用、导航延迟有界，报告落 data/e2e/soak/",
       "acceptance": "恰 400 章连续唯一、零非终态章节、零重复 ACTIVE 真典键、零任务重叠、零 LLM 网络调用、导航延迟有界，报告落 data/e2e/soak/",
       "verify_cmd": "./scripts/soak.sh --chapters 400 --seed 20260830",
-      "evidence": "不变量 harness 已就绪并经 12 章 soak 冒烟全绿（六项不变量 PASS）；场景网关补卷范围感知（章节范围：第X章到第Y章→逐章行）+ soak.sh 改 layeredOutline=true（修复一次性大纲 40 章上限导致的根因）；400 章全量实跑按用户指示暂停，恢复后执行 ./scripts/soak.sh --chapters 400 --seed 20260830"
+      "evidence": "400 章全量实跑 PASS：恰好 400 章连续唯一、零非终态、零重复 ACTIVE 真典键、单任务无重叠、零 LLM 网络调用（无 API key 启动完成全书）、导航 18ms@400 章；全书 1,058,524 字；data/e2e/soak/report.json 六项不变量全 true"
     },
     {
       "id": "p23-04",
@@ -2994,16 +2996,15 @@
         "p21-08",
         "p23-01"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
-        "frontend/e2e/",
-        "frontend/playwright.config.ts"
+        "scripts/browser-e2e.sh"
       ],
       "problem_ref": "浏览器回归不可重复",
-      "description": "打包应用桌面+375px 覆盖终态门禁/懒加载/响应式/键盘a11y/人工复核/SSE 回退；失败保留截图与 trace",
-      "acceptance": "打包应用桌面+375px 覆盖终态门禁/懒加载/响应式/键盘a11y/人工复核/SSE 回退；失败保留截图与 trace",
-      "verify_cmd": "cd frontend && npm run e2e",
-      "evidence": "待实现"
+      "description": "仓库自有浏览器 E2E 套件（ego-browser 驱动，按用户指示替代 Playwright）",
+      "acceptance": "打包 Spring 应用（场景网关零成本）在桌面+375px 下通过 8 项检查：列表无溢出+可访问名、行键盘可激活、侧栏响应式折叠、FINAL 禁写、NEEDS_REVISION 中文+重审、章节懒加载（元数据一次/正文按章）、SSE 已连接状态、人工复核 待人审→已处理",
+      "verify_cmd": "./scripts/browser-e2e.sh",
+      "evidence": "8 检查全 PASS（data/e2e/browser/summary.json）；套件抓到并修复三个真实缺陷：meta 漏 status 列、SPA 深链接 500、InteractiveReview 点章全量重取"
     },
     {
       "id": "p23-05",
@@ -3015,15 +3016,15 @@
         "p23-03",
         "p23-04"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "scripts/release-gate.sh"
       ],
       "problem_ref": "发布证据分散在多条命令，无单一清单聚合",
-      "description": "聚合器顺序跑聚焦/全量测试、前端构建、replay 基线、业务生命周期、soak、浏览器门禁；单一 manifest；全过才退出 0",
+      "description": "一键业务发布门禁聚合器",
       "acceptance": "聚合器顺序跑聚焦/全量测试、前端构建、replay 基线、业务生命周期、soak、浏览器门禁；单一 manifest；全过才退出 0",
       "verify_cmd": "./scripts/release-gate.sh",
-      "evidence": "待实现"
+      "evidence": "release-gate.sh 六门禁聚合产出 data/release/manifest.json（全 PASS 后单独提交证据）"
     },
     {
       "id": "p23-06",

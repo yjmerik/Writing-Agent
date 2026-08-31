@@ -94,15 +94,14 @@ else
 fi
 
 # ---- manifest ----
-python3 - "$RELEASE_DIR" "${GATE_NAMES[@]}" <<PYEOF
+python3 - "$RELEASE_DIR" "${GATE_NAMES[@]}" "${GATE_RESULTS[@]}" "${GATE_ARTIFACTS[@]}" <<PYEOF
 import json, sys, datetime, os
 release_dir = sys.argv[1]
-names = sys.argv[2::3] if False else None
-# bash 传参: name result artifact 三元组平铺
 rest = sys.argv[2:]
-triples = [rest[i:i+3] for i in range(0, len(rest), 3)]
+third = len(rest) // 3
+names, results, arts = rest[:third], rest[third:2*third], rest[2*third:]
 gates = [{"name": n, "result": ("pass" if r == "0" else ("skip" if r == "skip" else "fail")), "artifact": a}
-         for n, r, a in triples]
+         for n, r, a in zip(names, results, arts)]
 mandatory_fail = any(g["result"] == "fail" for g in gates)
 manifest = {
     "generatedAt": datetime.datetime.now().isoformat(),

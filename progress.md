@@ -2,6 +2,34 @@
 
 ---
 
+## 会话记录（2026-08-31）：Phase 23 收口——26/29 完成
+
+### 本段完成
+- **p23-03** 400 章零成本 soak 全量 PASS：恰好 400 章连续唯一 / 零非终态 / 零重复 ACTIVE 真典键 /
+  单任务无重叠 / 零网络调用（无 API key 启动即证明）/ 导航 18ms；全书 1,058,524 字。
+  修复：soak 改 layeredOutline=true；场景网关总纲按「预计总章数」、卷大纲按「章节范围」生成
+- **p23-02** reliability-e2e 四场景全 PASS：崩溃-重启续跑 / 陈旧 worker 409 / 人工复核暂停-处理-续跑 / 真典唯一性。
+  前置修复：场景网关 harsh 档（按 CONTINUITY_CHECK 调用序注入【人物|高】）；人工复核冻结任务终态改 PAUSED
+- **p23-04** 按用户指示改用 **ego-browser**（移除 Playwright）：browser-e2e.sh 8 检查全 PASS
+  （终态×2 / 懒加载 / 响应式 / 键盘 / SSE / 人工复核）。套件抓到并修复三个真实缺陷：
+  ① findChapterMetaByProject 漏 status 列（待人审标记永不显示）
+  ② SPA 深链接 /project/** 500（SpaForwardController 转发）
+  ③ InteractiveReview.refresh 误依赖 selectedIdx（点章全量重取）
+  ④ 场景正文剔除「第N章」字样（章号告警 + prompt 探测污染）
+- **p23-05** release-gate.sh：六门禁聚合（full tests / frontend build / replay baseline /
+  reliability / soak / browser）→ data/release/manifest.json
+
+### 验证
+- 全量 mvn test：**481 pass / 0 fail**；前端构建通过；e2e replay 逐字一致 + compare PASS
+- `./scripts/release-gate.sh` 完整实跑（manifest 见 data/release/manifest.json）
+
+### 剩余
+- p23-06 真实 LLM 质量金丝雀（唯一未完成；需批准花费 + 人工 bless）
+
+
+
+---
+
 ## 会话记录（2026-08-30 续）：Phase 22 收口 + Phase 23 功能修复
 
 **用户指示**：暂停真实章节书写类验证（400 章 soak 实跑），优先功能改动与验证。

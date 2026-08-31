@@ -30,6 +30,8 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   const [editInstruction, setEditInstruction] = useState('');
   const [editing, setEditing] = useState(false);
 
+  // p21-05 修复: refresh 只依赖 projectId——selectedIdx 变化（点选章节）不得触发
+  // 元数据/checkpoints/status 重取（此前 useCallback 依赖 selectedIdx，点章即全量重取）
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
@@ -43,15 +45,13 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
       setBodies({}); // 元数据刷新后正文缓存失效，由懒加载按需重建
       setCheckpoints(cps);
       setStatus(st);
-      if (metas.length > 0 && selectedIdx >= metas.length) {
-        setSelectedIdx(metas.length - 1);
-      }
+      setSelectedIdx((idx) => (metas.length > 0 && idx >= metas.length ? metas.length - 1 : idx));
     } catch (e) {
       message.error(`加载失败: ${(e as Error).message}`);
     } finally {
       setLoading(false);
     }
-  }, [projectId, selectedIdx]);
+  }, [projectId]);
 
   useEffect(() => { refresh(); }, [refresh]);
 

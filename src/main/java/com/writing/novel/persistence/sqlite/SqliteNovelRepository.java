@@ -344,7 +344,7 @@ public class SqliteNovelRepository implements NovelRepository {
         List<Chapter> list = new ArrayList<>();
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "SELECT id, project_id, chapter_index, title, word_count, version, created_at, updated_at " +
+                     "SELECT id, project_id, chapter_index, title, word_count, version, status, created_at, updated_at " +
                      "FROM chapters WHERE project_id=? ORDER BY chapter_index")) {
             ps.setString(1, projectId);
             ResultSet rs = ps.executeQuery();
@@ -353,6 +353,9 @@ public class SqliteNovelRepository implements NovelRepository {
                         rs.getInt("chapter_index"), rs.getString("title"));
                 setField(c, "id", rs.getString("id"));
                 setField(c, "wordCount", rs.getInt("word_count"));
+                // p23-04 修复: 元数据必须携带 status——懒加载列表的「待人审」标记依赖它
+                try { c.setStatus(Chapter.Status.valueOf(rs.getString("status"))); }
+                catch (Exception badStatus) { /* 未知状态保持默认 */ }
                 list.add(c);
             }
         } catch (SQLException e) { throw new RuntimeException(e); }

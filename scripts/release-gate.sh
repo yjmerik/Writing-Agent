@@ -79,17 +79,18 @@ else
   record "soak-400" 1 "$RELEASE_DIR/soak.log"
 fi
 
-# ---- Gate 6: 浏览器套件（p23-04 落地后为必选）----
+# ---- Gate 6: 浏览器套件（ego-browser 驱动）----
 if [ "$SKIP_BROWSER" = "1" ]; then
   skip "browser-e2e" "user-requested skip"
-elif [ -f frontend/package.json ] && grep -q '"e2e"' frontend/package.json && [ -d frontend/e2e ]; then
-  if (cd frontend && npm run e2e) > "$RELEASE_DIR/browser-e2e.log" 2>&1; then
-    record "browser-e2e" 0 "$RELEASE_DIR/browser-e2e.log"
+elif [ -x scripts/browser-e2e.sh ]; then
+  if ./scripts/browser-e2e.sh > "$RELEASE_DIR/browser-e2e.log" 2>&1; then
+    cp data/e2e/browser/summary.json "$RELEASE_DIR/browser-summary.json" 2>/dev/null || true
+    record "browser-e2e" 0 "$RELEASE_DIR/browser-summary.json"
   else
     record "browser-e2e" 1 "$RELEASE_DIR/browser-e2e.log"
   fi
 else
-  skip "browser-e2e" "suite not present yet (p23-04 pending)"
+  skip "browser-e2e" "browser-e2e.sh not present"
 fi
 
 # ---- manifest ----

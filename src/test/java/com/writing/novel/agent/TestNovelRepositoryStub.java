@@ -21,11 +21,23 @@ import com.writing.novel.domain.WritingPreferences;
 import java.util.List;
 import java.util.Optional;
 
+
 /**
  * 测试用 NovelRepository 空实现（所有方法返回空/默认值）。
  * 测试可继承并覆盖需要的方法。
  */
 public class TestNovelRepositoryStub implements NovelRepository {
+
+    // --- p22-06: 接口方法无 silent default，测试桩必须显式声明能力（缺能力=编译失败） ---
+    @Override public int deleteExpiredEdges(String projectId, int beforeChapter) { return 0; }
+    @Override public int archiveOldLowSeverityIssues(String projectId, int beforeChapter) { return 0; }
+    @Override public int archiveAgedHighIssues(String projectId, int beforeChapter) { return 0; }
+    @Override public int deleteResolvedNarrativeThreads(String projectId) { return 0; }
+    @Override public int deleteDuplicateKnowledgeEntries(String projectId) { return 0; }
+    @Override public void saveCustomPreset(String name, String contentJson) {}
+    @Override public java.util.Map<String, String> findCustomPresets() { return java.util.Map.of(); }
+    @Override public int retireStaleForeshadowings(String projectId, int beforeChapter) { return 0; }
+    @Override public int deleteKnowledgeEntriesByProject(String projectId) { return 0; }
 
     @Override public String saveProject(Project p) { return p.getId(); }
     @Override public Optional<Project> findProject(String id) { return Optional.empty(); }

@@ -5,6 +5,7 @@ import com.writing.novel.domain.KnowledgeEntry;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.StoryFact;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
@@ -41,8 +42,9 @@ class StoryBibleSeedingTest {
         orchestrator = new NovelOrchestrator(repo, new ProjectService(repo),
                 null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null);
-        orchestrator.setStoryFactRepository(factRepo);
+                null, null, null, null, null, null, null, null, null, null, null,
+                new OrchestratorPolicies(new SqliteStoryCanon(factRepo),
+                        null, null, null, null, null, null, null, null, null, null));
 
         Project p = new Project("播种书", "明代修仙传奇", "玄幻");
         repo.saveProject(p);
@@ -86,7 +88,12 @@ class StoryBibleSeedingTest {
 
     @Test
     void 未注入真典仓库时播种安全跳过_不抛异常() throws Exception {
-        orchestrator.setStoryFactRepository(null);
+        // p22-05: 未注入 = 降级策略包（storyCanon 为 null）——播种安全跳过
+        orchestrator = new NovelOrchestrator(repo, new ProjectService(repo),
+                null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null, null,
+                OrchestratorPolicies.none());
         repo.saveKnowledgeEntry(new KnowledgeEntry(pid, "RULE", "规则", "内容"));
         // 不应抛异常，且无事实入库
         assertDoesNotThrow(() -> invokeSeed(pid));

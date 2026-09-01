@@ -1,31 +1,342 @@
 # Session Progress Log
 
+---
+
+## 会话记录（2026-08-31 续）：p23-06 金丝雀完成——29/29 全部收官
+
+**用户批准花费后执行 p23-06 真实 LLM 质量金丝雀**（p21-01 改动了 WUXIA 题材逻辑，触发条件成立）：
+- e2e.sh 补 --preset 参数（原硬编码 mystery，无法录 WUXIA）
+- mystery 实录：3 章 10,191 字，0 错误 0 失败，对既有基线 compare **PASS**（无需 bless）
+- WUXIA 实录：3 章 11,308 字，0 错误 0 失败；规则断言 **PASS**（54 fixture：武侠规则注入、
+  修仙规则/境界节奏/爽点四段式钩子零命中——p21-01 改动在真实生成链路生效）
+- 报告：data/release/canary-{mystery,wuxia}-report.json；fixture：data/e2e-fixtures/canary-*-20260831
+- WUXIA 基线经人工确认 bless：`baselines/golden-wuxia.json`（mystery 基线不受影响），
+  对新基线 compare PASS——p23-06 及全部 29 项彻底闭环
+
+**29/29 features 全部完成。** 观察项（不阻塞）：卷大纲 prompt 的「题材规则（武侠）」仅出现 1 次
+（总纲层），逐卷层未重复注入——p17-03 单测覆盖的是 provider 注入路径，生产接线密度可后续评估。
+
+
+
+---
+
+## 会话记录（2026-08-31）：Phase 23 收口——26/29 完成
+
+### 本段完成
+- **p23-03** 400 章零成本 soak 全量 PASS：恰好 400 章连续唯一 / 零非终态 / 零重复 ACTIVE 真典键 /
+  单任务无重叠 / 零网络调用（无 API key 启动即证明）/ 导航 18ms；全书 1,058,524 字。
+  修复：soak 改 layeredOutline=true；场景网关总纲按「预计总章数」、卷大纲按「章节范围」生成
+- **p23-02** reliability-e2e 四场景全 PASS：崩溃-重启续跑 / 陈旧 worker 409 / 人工复核暂停-处理-续跑 / 真典唯一性。
+  前置修复：场景网关 harsh 档（按 CONTINUITY_CHECK 调用序注入【人物|高】）；人工复核冻结任务终态改 PAUSED
+- **p23-04** 按用户指示改用 **ego-browser**（移除 Playwright）：browser-e2e.sh 8 检查全 PASS
+  （终态×2 / 懒加载 / 响应式 / 键盘 / SSE / 人工复核）。套件抓到并修复三个真实缺陷：
+  ① findChapterMetaByProject 漏 status 列（待人审标记永不显示）
+  ② SPA 深链接 /project/** 500（SpaForwardController 转发）
+  ③ InteractiveReview.refresh 误依赖 selectedIdx（点章全量重取）
+  ④ 场景正文剔除「第N章」字样（章号告警 + prompt 探测污染）
+- **p23-05** release-gate.sh：六门禁聚合（full tests / frontend build / replay baseline /
+  reliability / soak / browser）→ data/release/manifest.json
+
+### 验证
+- 全量 mvn test：**481 pass / 0 fail**；前端构建通过；e2e replay 逐字一致 + compare PASS
+- `./scripts/release-gate.sh` 完整实跑（manifest 见 data/release/manifest.json）
+
+### 剩余
+- p23-06 真实 LLM 质量金丝雀（唯一未完成；需批准花费 + 人工 bless）
+
+
+
+---
+
+## 会话记录（2026-08-30 续）：Phase 22 收口 + Phase 23 功能修复
+
+**用户指示**：暂停真实章节书写类验证（400 章 soak 实跑），优先功能改动与验证。
+
+### 本段完成
+- **p22-04 章节生产模块**：ChapterProduction（prepare/write/qualityGate + produce() 小结果接口），质量链 7 方法自 Orchestrator 原样迁移；produce 不做状态转移（单测断言）
+- **p22-05 显式策略组合**：OrchestratorPolicies 值对象构造期注入，11 个后置 setter 全部移除；OrchestratorConfig.requirePolicy 缺失能力启动即失败并指名；OrchestratorCompositionTest 4 用例。Phase 22 至此 6/6 完成
+- **p23-03 功能根因修复**：400 章 soak 首跑只产出 40 章——根因是 layeredOutline=false 走传统一次性大纲（设计上限 40 章）。修复：soak.sh 改 layeredOutline=true；ScenarioLlmGateway 补卷大纲范围感知（「章节范围：第X章到第Y章」→ 逐章行）与总纲章数感知（「预计总章数：N」→ N 章大纲，每卷 8 章）
+- **p23-02 前置功能**：场景网关 harsh 档（第 1 章注入 HIGH 矛盾）；WritingTaskExecutor 人工复核冻结的任务终态改 PAUSED（原 FAILED「写作未完成」误导）
+- **验证**：全量 mvn test 481 pass / 0 fail；e2e replay（零成本回放）与 record 基线逐字一致（10,574 字 / 3 章 / 0 错误）；compare-baseline PASS；12 章 soak 冒烟六项不变量全 PASS
+
+### 暂停中（待用户恢复）
+- p23-03 400 章全量实跑：`./scripts/soak.sh --chapters 400 --seed 20260830`
+- p23-02 reliability-e2e.sh 脚本实跑；p23-04 Playwright；p23-05 release-gate.sh
+- p23-06 真实 LLM 金丝雀（需批准）
+
+
+
+---
+
+## 会话记录（2026-08-30）：production-readiness 架构落地（Phase 20-23）
+
+**输入**：`.omo/drafts/production-readiness-architecture.md`（已批准规划，5 组件 × 4 阶段 30 features）+ 用户指示「按架构优化文档及拆分任务实现，并端到端测试验证」。
+
+**结论：Phase 20 全部（9/9）、Phase 21 全部（8/8）、Phase 22 的 4/6、Phase 23 的 1/6 完成；feature_list.json 共登记 29 个新 feature（completed 22 / not-started 7）。全量 mvn test 465+ 绿、前端构建绿、e2e replay 与 record 基线逐字一致、compare-baseline PASS。**
+
+### Phase 20 生命周期完整性（9/9 ✅）
+- **p20-01** NEEDS_MANUAL_REVIEW 不再被末尾 DONE 覆盖；待人工章节冻结后续写作（拒绝写章 + 循环 WRITING_PAUSED）；resolve-review 恢复
+- **p20-02** ChapterPostProcessor 模块：~210 行内联后处理提为 10 阶段单点编排（CONTINUITY→ENTITY_GRAPH→FACT_HARVEST→NARRATIVE_THREADS→READER_REVIEW→FORESHADOWING→DIVERSITY→ARC_TRACKING→PERIODIC→VOLUME_SUMMARY），行为逐行等价
+- **p20-03** post_process_ledger 账本（主键 project/chapter/stage）：PENDING/RUNNING/COMPLETED 往返、COMPLETED 终态不降级、未完成阶段按声明序返回
+- **p20-04** 重启续跑：ENTITY_GRAPH 注入 Error 崩溃（模拟进程死亡）→ 同库重建上下文 → 只补跑未完成阶段（CONTINUITY 0 次 LLM、收割恰 1 次、0 重复摘要）→ DONE；ApplicationRunner 启动清扫
+- **p20-05/06** ProjectWorkCoordinator owner-token：并发 acquire 恰一 owner、stale release 不伤新 owner；重复 startWriting 409 冲突（移除 30s 强制接管）；/run /resume /write-chapter /write-all 全部经协调器，测试全闩锁
+- **p20-07/08** HUMAN_PATCH 保护：窗口内自动冲突事实丢弃不落库、窗口外取代留审计；人工编辑总是取代旧 ACTIVE（唯一性）
+- **p20-09** 章节号归一化仅作用于开头标题，对话/引文/跨章引用逐字保留
+
+### Phase 21 产品真实性与终态门禁（8/8 ✅）
+- **p21-01** WUXIA 退出快节奏集合（isFastPaced）：卷大纲/章节约束不再强制爽点/四段式/悬念钩子；WUXIA 豁免 POWER_SYSTEM；CULTIVATION 不变。p17-02/03/04 三处相反断言按「红相即规格修正」处理
+- **p21-02** FINAL/NEEDS_REVISION 服务端门禁：FINAL 拒绝全部写作命令且状态不变（修复 write-one 把 FINAL 推到 VOLUME_DONE 的状态破坏）；NEEDS_REVISION 允许修订 + retryFinalAudit 显式重审（POST /final-audit）
+- **p21-04** GET /chapters?page&size 元数据分页（400 章零正文序列化），正文单章懒加载
+- **p21-03/05/06/07/08** 前端：终态中文门禁与「重新评审」、章节懒加载缓存、Sider 响应式折叠+双栏堆叠、键盘激活+aria-label、SSE 有界退避重连与连接状态展示（npm build 绿）
+
+### Phase 22 模块深化（4/6 ✅，2 项未做）
+- **p22-01/02/03** StoryCanon 端口（spi）：recall/harvest/applyHumanPatch/saveIfAbsent/validate/supersedeFact/retire；保护窗口与 ACTIVE 唯一性语义收敛进端口；SqliteStoryCanon + InMemoryStoryCanon 双适配器过同一 8 项契约（16 用例）；FactHarvester/CanonPatchService/Orchestrator/RelevanceGateway/ContextAssembler/ProfileUpgrader/ArcUpdater 全量迁移——业务包零 StoryFactRepository import
+- **p22-06** NovelRepository 9 个 default no-op（归档/预设/清理）改抽象：缺能力=编译失败；契约补归档计数与预设往返
+- **p22-04/05（未做）** 章节生产模块提取、显式生命周期策略组合（去后置可选 setter）——见 handoff 下一步入口
+
+### Phase 23 可重复业务证据（1/6 ✅，5 项未做）
+- **p23-01** ScenarioLlmGateway：8 任务类型零网络确定性响应（章节号镜像、逐字可复现）；e2e.sh 默认自动解析最新版本化 replay 语料（mtime），e2e-fixture-dir-test.sh 契约检查
+- **p23-02~06（未做）** reliability-e2e 进程级场景 runner、400 章 soak、Playwright 浏览器套件、release-gate 聚合器、真实 LLM 金丝雀——见 handoff 下一步入口
+
+### 端到端验证（2026-08-30 实跑）
+- 全量 `mvn test`（source scripts/load-env.sh）：**465+ pass / 0 fail / 1 skip**（Spring 上下文测试需 DEEPSEEK_API_KEY）
+- `./init.sh`：全绿（详见本次提交后实跑记录）
+- `./scripts/e2e.sh`（E2E_FIXTURE_DIR=dsv4-20260829d）：3 章 / 10,574 字 / 50 LLM 调用 / 0 错误 / 0 章节失败——与 2026-08-29 record 基线**逐字一致**（Phase 20/21 行为变更未扰动确定性管道）
+- `python3 scripts/compare-baseline.py`：PASS（未 bless——质量无退化无需更新基线）
+- `cd frontend && npm run build`：通过
+- `bash scripts/e2e-fixture-dir-test.sh`：通过（默认解析 → dsv4-20260829d）
+
+### 遗留与风险
+1. p23-03 soak 依赖 PLOTTING 场景响应支持章节范围感知的分层大纲生成（当前 ScenarioLlmGateway 只发 3 章总纲形状）
+2. e2e-fixture-dir-test.sh 的 auto-resolution 断言假定 data/e2e-fixtures/ 存在语料；全新 clone（无语料）时该脚本第一条检查会失败——属预期（提示先 record）
+3. 分支未 push
+
 ## Current State
 
-**Last Updated:** 2026-08-14
-**Phase:** Phase 10 — 百万字长篇架构优化（故事真典+检索收窄+可靠作业）
-**Active spec:** docs/specs/2026-08-13-million-word-architecture.md（三波 23 feature）
-**Tests:** **214 pass, 0 failures, 1 skipped**（W1+W2+W3 全部融入）
+**Last Updated:** 2026-08-30
+**Phase:** **Phase 20-23 production-readiness 架构落地（22/29 completed）— e2e/基线/构建全绿**
 
-## 整体进度：22/23 feature 完成 ✅
+### 本次会话（2026-08-28）：架构差距分析 → 模型切换 → 四阶段全量实现
+
+**输入**：四路代码级架构评审（编排器/记忆/风格/交互）定位 400 章尺度系统性缺口 → 用户指示「切换 glm-5.3-flash + 按方案全部实现 + 端到端验证」。
+
+**Spec**：`docs/specs/2026-08-28-million-word-roadmap.md`（Phase 16-19，18 features）
+
+#### 模型切换（glm-5.3-flash）
+- 8 任务类型 + default 全量路由 `glm-5.3-flash`，端点 `https://open.bigmodel.cn/api/coding/paas/v4`（标准端点 1113 余额不足，coding 订阅通道可用）
+- `thinking-enabled: false`：GLM thinking 参数关闭（思考模式单次 3-10 分钟，e2e 构思 20 分钟超时根因；关闭后秒级返回零 reasoning token）
+- callTimeout 3→10 分钟；GLM_API_KEY/GLM_END_POINT/GLM_MODEL 环境覆盖支持
+
+#### Phase 16 百万字止血（6/6）
+- p16-01 HIGH 老化（30 章未复发归档）+ FINAL 门禁近 60 章口径 → 400 章可达 FINAL
+- p16-02 伏笔回收卷：修复不可达完结路径（原写 issue 后直接 break 的死路），指令入 writingNotes，有界一次
+- p16-03/04 四处全量注入收窄：FactHarvester cap 80（cast 相关优先）+ fail-loud；伏笔清单 20/线索台账 15/检查设定 20
+- p16-05 重写/段落编辑路径向量 chunk 重建（含拒收分支恢复），消除旧情节永久污染检索
+- p16-06 摘要分层裁剪（先丢最老卷 stub，细粒度受保护）+ premise 预算截断（6000 token 保头）
+
+#### Phase 17 风格确定性（5/5）
+- p17-01 WUXIA 全链路：枚举/检测词（先于修仙）/五方法规则/禁词表（修为·境界·丹药为武侠合法词不禁）/wuxia.json 预设/前端选项
+- p17-02 爽点四段式钩子题材条件化：慢节奏题材（LITERARY/HISTORICAL/ROMANCE…）不强制爽点/悬念钩子/开篇高压，换张力指引；快节奏（含 WUXIA）现状不变；chapter-writing.st 四段式改 structureGuide/climaxCraft 变量；plot 反馈词题材化
+- p17-03 volume-outline 补 genreRules+climaxPrinciple（长篇题材约束不断链）
+- p17-04 ConceiveGate POWER_SYSTEM 仅力量体系题材强制；styleVoice 注入；preferredQuoteSources 消费
+- p17-05 自定义预设持久化（custom_presets 表）
+
+#### Phase 18 人机交互（4/4）
+- p18-01 write-all 遇审核点 → 任务 PAUSED（不再误报 FAILED）
+- p18-02 checkpoint 质量 payload（字数/评分/未解决 HIGH/预览，评审后富集）+ 前端审批面板渲染
+- p18-03 写前指令通道（write-chapter/write-all instruction 参数，【作者指令】前置 writingNotes 逐章沿用）
+- p18-04 SSE 实时进度（EventLog 订阅总线+SseEventBus 按项目路由+EventController；前端 EventSource 逐章进度条）
+
+#### Phase 19 长篇质量结构（3/3）
+- p19-01 角色生死链：Character.Status+deathChapter，FactHarvester 死亡关键词自动置位，注入标注【已故·第N章殁】，ArcScheduler 不调度死人
+- p19-02 story_facts (project_id,status) 索引 + 真典 subject 过 resolveCanonical（别名不再分裂）
+- p19-03 全书结构化快照（book_snapshot JSON：主线/阵营/人物/时间线/里程碑，卷末增量更新，顶部注入【全书快照】）
+
+#### 验证
+- 全量 `mvn test`：**393 pass / 0 fail / 1 skip（既有）**；`cd frontend && npm run build` 通过
+- 新增测试 44 个（18 feature 各自 verify_cmd 全绿）
+- 武侠 REST 验证：presets 含 wuxia；preset=wuxia 建项目 genre=WUXIA；preferences 带预设值；SSE CONNECTED 事件正常
+
+#### LLM 路由终态（2026-08-29）：切回 DeepSeek v4-flash
+- GLM-5.3-flash 跑通 8 轮 E2E 调试期间修复 8 个基础设施 bug（coding 端点切换/thinking 开关/callTimeout 3→30min/审查温和化重试/模板长度纪律/429 退避 5→30s/连接池禁用/流式聚合路径 completeViaStream）
+- 终局：GLM coding 网关**夜间对 >5min 长响应 StreamReset CANCEL**（第 9 轮 100% 复现，新连接也失效）——非代码可控，按用户决策切回 DeepSeek v4-flash
+- 流式聚合路径保留（DeepSeek 同受益：长生成逐 token 心跳防切流，fixture 录制不受影响）
+
+#### replay 确定性彻底修复（2026-08-30）
+- **调用序号化 fixture**：`<taskType>-<指纹>-<N>.json`，同指纹每次调用独立保留，replay 按序回放——时序漂移根治；分支分叉 fail-fast 可诊断；兼容旧 fixture
+- 验证：dsv4-20260829d record（3章/10,574字/50调用/0错误/评分9/9/8）→ replay **逐字一致** → compare PASS（bless）；全量 mvn test 407 pass
+
+#### Bugfix 轮（2026-08-29 晚）
+- **标题污染修复**（15e1596）：单行大纲前瞻未行首锚定致行内「(HIGH，第N章回收)」误切分——修复后 record 3 章连续、标题干净、0 错误、评分 9/8/7、compare PASS（dsv4-20260829c）
+- **replay 健壮性**（61075d8）：空响应重试 + 禁止空覆盖非空 fixture（402 测试绿）；replay 第3章仍有发散——机理为后处理链 DB 时序副作用无法靠 LLM fixture 复现（机制性限制），DB 快照回放立项建议见 handoff
+
+#### E2E 验证（DeepSeek v4-flash，2026-08-29）
+- **record**：3 章 / **10,951 字** / 57 LLM 调用 / **0 错误 / 0 章节失败**；构思+3 章全程 ~55 分钟
+- **replay**：与 record 完全一致（同字数/同调用数/0 错误）——确定性回放验证通过
+- **compare-baseline**：PASS 后 --bless（基线 fixture 目录 `data/e2e-fixtures/dsv4-20260829`）
+- 读者评分：第1章 8 / 第3章 8 / 第5章 9；正文人工抽审质量扎实（题材一致性/开头钩子/细节质感）
+- 已知瑕疵（回流候选）：第 3/5 章标题混入大纲伏笔标注文本（卷大纲行格式漂移 + parse 端标题截取健壮性）——不影响正文与质检，标题展示问题
+
+---
+
+
+
+**Last Updated:** 2026-08-22
+**Phase:** **Phase 15 人机设定扩容与作业可观测 — 9/9 完成（p15-08/09 实现入库）**
+
+### Phase 15（2026-08-22 复审收尾：原子提交 + 回放确定性）
+
+- **p15-08**：上下文顺序与主角锚点确定化 → DONE（`7603ee1`）。同级反馈截断 tie-break（severity→章节倒序→type→description）；精确「主角」独占首位与锚点行、substring 配角追加队尾（WritingContext 无精确主角时回退 substring 锚点）；爽点轮换提示按 enum 序列化。
+- **p15-09**：replay fixture 完整请求保留 + miss 诊断 → DONE（`9a866a6`）。record fixture 存完整 systemPrompt/userMessage（preview 保留）；replay miss 转储 `<指纹>.miss.json`（taskType/missedAt/expectedFixture/完整请求）后仍 fail-fast。
+- **复审补入库**（此前登记 evidence 但实现未提交的部分，按 spec 原子提交、混合文件 hunk 级拆分）：p15-03 后端/前端（`8e19ac4`/`a8cc932`：overwriteUnwrittenOnly + prune + POST /replan + 大纲 UI 编辑/重规划）、p15-04 后端/前端（`f65a90b`/`0f33e25`：retireFact + 伏笔端点 + 真典编辑/伏笔面板/人审动作）、p15-05 删除护栏（`b2e9793`：DELETE 409）、p15-06 后端/前端（`8a7e580`/`3dbe851`：checkpointSpan 1/0/-1 + PUT 偏好 + 选择器）、p15-07 e2e runner（`2ee2e57`：stub embedding + 轮询异步 /run 任务 + 每章 600s 预算）。
+- **test 稳定性**：`EditPassageReturnsBeforeHarvestTest` 的 @TempDir 清理与后台 harvest 线程竞态（全量套件时长变化暴露为确定性失败）→ latch 释放+完成等待修复（`fec6b53`）；join 不可用（POST_PROCESS 空闲池线程常驻）。
+- **housekeeping**：删除生成态 `.omo/`（含早期误入库的 41 个 run-continuation JSON）并 gitignore `.omo/`（`6699296`/`03794d5`）。
+- 验证（2026-08-22 实跑）：各 feature `verify_cmd` 全绿；`mvn compile -q` exit 0；全量 `mvn test` **337 pass / 0 fail / 0 error / 1 skip**；`cd frontend && npm run build` 通过；`e2e-fixture-dir-test.sh` pass；`E2E_FIXTURE_DIR=data/e2e-fixtures/replay-proof-20260822 ./scripts/e2e.sh --mode replay` 3 章 10,802 字 50 LLM calls 0 errors；`compare-baseline.py` PASS（未 --bless）。
+
+---
+
+**Last Updated:** 2026-08-22
+**Phase:** **Phase 15 人机设定扩容与作业可观测 — 7/7 完成**
+
+### Phase 15（2026-08-22 收尾）
+
+- **p15-07**：E2E fixture 隔离 → DONE。`E2E_FIXTURE_DIR` 默认 `data/e2e-fixtures/llm`，并传入 Spring `llm.replay.dir`；`e2e-fixture-dir-test.sh` 覆盖默认和覆盖目录。
+- 验证：隔离目录 `data/e2e-fixtures/replay-proof-20260822` 的 record/replay 均完成 3 章、10,802 字、50 LLM calls、0 errors；`mvn test` 320 pass / 0 fail / 1 skip；`compare-baseline.py` PASS。
+- **p15-04**：真典 PUT/废止、伏笔 GET/POST/resolve、人审 `resolve-review` → DONE。`HitlCanonForeshadowReviewTest` 3 pass
+- **p15-05**：CONCEIVING 的 `POST /run` 立即返回 taskId 并后台构思；write-all 可取消；active task 时 DELETE 409。`ConceiveTaskTest` 3 pass
+- **p15-06**：滑条/开关走 PUT `/preferences`；`checkpointSpan` 1/0/-1。`CheckpointSpanTest` 2 pass
+- 验证：全量 `mvn test` 311 pass / 0 fail / 1 skip；`cd frontend && npm run build` 通过
+- E2E replay：构思和三章写作均可通过隔离 fixture 目录确定性回放。
+
+---
+
+**Last Updated:** 2026-08-22
+**Phase:** **Phase 15 人机设定扩容 — 3/6（p15-01/02/03 完成）**
+
+### Phase 15（2026-08-22）
+
+- **p15-03 完成**：未写梗概可编 + POST /replan
+  - PUT `/outline` 只覆盖 `chapterIndex > current`；已写梗概/已写卷名只读
+  - `POST /replan` 调 `OutlineReplanner.replaceUnwritten`；INTERACTIVE 挂 `AFTER_VOLUME_OUTLINE` 并 PAUSED
+  - `saveOutline` 按卷/梗概 id 剪枝，避免重规划后旧未写行残留
+  - 大纲 UI：未写卷/章可编；「重规划未写卷」
+- 验证：`mvn test -Dtest=UnwrittenSynopsisEditTest` 2 pass；全量 `mvn test` 303 pass / 0 fail / 1 skip；`cd frontend && npm run build` 通过
+- 下一入口：`p15-04` 真典改/废 + 伏笔人種人收 + 人审清状态
+
+---
+
+**Last Updated:** 2026-08-18
+**Phase:** **Phase 15 人机设定扩容 — 2/6（p15-01/02 完成）**
+
+### Phase 15（2026-08-18）
+
+- Spec：`docs/specs/2026-08-18-hitl-expansion.md`（用户确认方案 B）
+- 下一入口：`p15-01` POST 世界观/人物 + UI 添加
+- 锁定：已写章不回溯；INTERACTIVE 默认仍每章暂停；增量 WorldBuilder 禁止清空旧条目
+
+---
+
+**Last Updated:** 2026-08-17
+**Phase:** **Phase 14 人机真典硬化 — 6/6 feature 完成**
+
+### Phase 14（2026-08-17）
+
+- Spec：`docs/specs/2026-08-17-human-canon-hardening.md`
+- Plan：`docs/superpowers/plans/2026-08-17-human-canon-hardening.md`
+- **p14-01 完成**：`deleteProject` 事务级联；`projects` 用 `id`；其余有 `project_id` 的表全删
+- 验证：`mvn test -Dtest=SqliteNovelRepositoryDeleteTest` 1 pass
+- **p14-02 完成**：null 异常返回「内部错误: ClassName」；构思缺世界观/人物/大纲保持 CONCEIVING
+- 验证：`mvn test -Dtest=GlobalExceptionHandlerTest,ConceivingCompletenessTest,NovelOrchestratorConceiveTest` 3 pass
+- **p14-03 完成**：editPassage 后处理异步；INTERACTIVE 正文落库后立即 PAUSED
+- **p14-04 完成**：writeAll 轮询 taskId；按钮改为最多 50 章
+- **p14-05 完成**：approveCheckpoint 按 id；仍有 PENDING 保持暂停
+- **p14-06 完成**：人物全字段、真典入口、CULTURE、侧栏新建打开创建框
+- **UI e2e 2026-08-18**：删除 QA 项目 PASS；侧栏新建开 Modal PASS；真典添加 PASS；连续写作文案「最多 50 章」PASS。债册春秋仍 2 章 PAUSED。
+
+---
+
+**Last Updated:** 2026-08-16
+**Phase:** **Phase 13 百万字人机真典脊柱 — 15/15 feature 完成**
+
+### Phase 13（2026-08-16）
+
+- Spec：`docs/specs/2026-08-16-million-word-human-canon.md`
+- **15/15 完成**：H1 人机脊柱 / H2 真典召回 / H3 真重规划+卷 checkpoint / H4 Arbiter+fail-loud+伏笔活跃集 / H5 人审标记+篇幅
+- 验证：`mvn test` 282 pass / 0 fail / 1 skip
+- 入口能力：暂停后续写、改人物/世界观/总纲会写真典【HUMAN_PATCH】、第80章仍能召回第1卷铁律、伏笔上下文≤12
+
+---
+
+**Last Updated:** 2026-08-14
+**Phase:** **Phase 11 过程化质量门禁架构 — 21/21 feature 全部完成 ✅ + 真实 e2e 验证 PASS**
+
+
+### Phase 12 失败回流修复（6/6 完成，commit 78deccd，回归验证 PASS）
+- p12-01 标题解析（cleanText 剥离 #）/ p12-02 premise 客套剥离 / p12-03 ReaderReview 重试 / p12-04 丢弃空卡 / p12-05 默认 24 章 / p12-06 UI 预设选择
+- 回归验证（新项目「锦灰堆」preset=romance）：genre=ROMANCE、targetChapters=24、dialogueDensity=0.5、premise 无客套、7 人物卡 0 未命名
+- Phase12FixTest 4 pass；全量 mvn test BUILD SUCCESS（须 bash source scripts/load-env.sh 提供 DEEPSEEK_API_KEY）
+
+### 新题材创作验证（2026-08-14，爱情/古风悬疑「绣里江山」3 章，DeepSeek）
+- **质量结论 overallScore 8/10**：worldbuilding 9 / consistency·style·plot·characters 8 / dialogue·pattern_diversity 7。世界观（明代织造/两京制/壬辰贡案）与题材高度扣合，正文（"针藏锋"）公案语感扎实、绣娘专业视角推理可信
+- **质检链全程运行**：ConceiveGate/真典播种(8条)/PlanGate/ConsistencyGuard/读者检验/场景分类/桥段重复/说明文密度/真典收割(+4/3取代)
+- **发现的失败分类（候选 feature，按失败回流协议）**：
+  1. 章节标题丢失：正文含"## 第1章 针藏锋"但 Chapter.title="第1章"（延迟卷大纲 parseChapter 标题未提取 markdown 标题）
+  2. 章1 读者检验 5/10"检验解析失败"：ReaderReview JSON 解析 fallback 无重试
+  3. 大纲 premise 含 LLM 客套前言（"好的，作为您的专属..."）未剥离，会污染后续 prompt
+  4. 新项目 targetChapters=400（schema 默认）vs 构思要求 24 章——规划规模与用户意图不符
+  5. CharacterDesigner 解析失败留 2 张"未命名"空人物卡（应丢弃而非保存）
+  6. UI 新建表单未暴露 preset 选择（romance 预设 dialogueDensity=0.5 本更适合爱情题材，当前 UI 路径走 GenreDetector 推断）
+### 真实 e2e 验证（2026-08-14，DeepSeek 官方端点）
+- **写作**：凤鸣九州 61→63 章（第62章「锁衣里的名字」2309字 9/10 分；第63章「白骨识人」3341字 8/10 分），每章 ~12 次 LLM 质检调用
+- **质检链全部真实运行**：PlanGate 预检(quality_risk)→伏笔悬置告警(253条)→ConsistencyGuard 抓到真实穿帮(「坐标」时代用语/俄语词«одновременно»混入)→读者检验 9/10→场景分类→桥段重复检测→说明文密度
+- **质量事件遥测**：QUALITY_GATE×2 + QUALITY_REVIEW×2(62:9分/63:8分) 全部正确 emit；diagnose.sh 质量诊断输出正常
+- **页面**：工作区 5 tab 渲染正常，侧栏进度自动更新 63 章；章节 API 数据链完整（IAB 浏览器点击交互受限为环境限制，非应用问题）
+- **LLM 配置**：application.yml 8 任务块切换 ${DEEPSEEK_END_POINT}/${DEEPSEEK_MODEL}/${DEEPSEEK_API_KEY}（token-plan 403 无权限），已提交 df0fab1
+- **发现的可改进点**（非阻塞）：① maxChapters 语义为「写 N 章」而非「写到第 N 章」，易误触发连续写作（建议 API 加 startChapter 或文档澄清）② CONSISTENCY_ISSUE 事件仅在仲裁动作时 emit，检测发现（如 MEDIUM 穿帮）不发事件——可扩展 ③ 第62章 PlanGate 报 beats 缺失但 synopsis 是老项目延迟生成——存量数据无 beats 字段属预期，commit e3b4dd8..ee44bc9，全量 mvn test BUILD SUCCESS（需 ALIYUN_LLM_API_KEY=$DASHSCOPE_API_KEY）。Q0 地基补齐 6 + Q1 前置门禁 4 + Q2 质检委员会+合并重写 5 + Q3 可观测回归 6。Phase 10 余 p10-w3-09 由 p11-q3-06 吸收完成。
+**Tests:** 本次会话仅新增 spec 文档 + 改 `feature_list.json`（数据文件），未触碰任何 `.java`/`.st`/`.yml`，编译与测试基线不受影响，故未重跑 `mvn test`。
+
+---
+
+## 本次会话（2026-08-14）：架构评估 + Phase 11 设计
+
+**任务**：对创作质量、长程稳定性、一致性架构做深度评估与优化设计（用户目标：大纲生成/章节审查的过程化实时质检 + 根据结果优化调整 + 增强稳定性，过程发现而非最后反复改）。
+
+**产出**：
+- 设计文档：`docs/specs/2026-08-14-quality-gate-architecture.md`（决策完备，四大支柱 + 21 feature）
+- backlog：Phase 11 共 **21 feature** 已登记 `feature_list.json`（Q0×6 / Q1×4 / Q2×5 / Q3×6）
+
+**关键发现（代码级证据）**——Phase 10 多个「声称 completed」的质量闭环 feature **实际未落地**（grep + 构造器签名验证，2026-08-14）：
+- W2-05 检查器走 RelevanceGateway 收窄：**未落地**（RelevanceGateway 仅被 ContextAssembler/MemoryConfig 引用，5 检查器 0 引用、构造器未注入）
+- W2-07 检查器读真典 ACTIVE 事实：**未落地**（5 检查器对 StoryFact 引用数全为 0）
+- W3-08 闭环三分类仲裁：**只实现 1/3**（NEEDS_MANUAL_REVIEW 全代码库仅枚举定义、无赋值点）
+- W3-03 ArchiveCompactor 归档 5 类：**只做 2/5**
+- spec line 61 人物单轨化：**未做**（CharacterProfileUpgrader 仍覆盖式写 Character，双轨无裁决）
+- 进度漂移订正：实际 not-started 的是 **p10-w3-09**（FINAL 真终审），非此前多处误写的 w3-01（w3-01 已 completed）
+
+**四大支柱**：
+1. **过程化前置门禁（ConceiveGate + PlanGate）** — 大纲/梗概生成中实时质检（软门禁：次数上限→标记 `quality_risk`→人机暂停，不硬阻塞）
+2. **章节质检委员会 + 统一仲裁（QualityCouncil + Arbiter）** — 各出报告→合并纠偏→一次重写→全量复检
+3. **真典作为一致性检测的唯一真相层** — 检查器收窄+读真典+人物单轨+三分类（补齐 Phase 10 未落地）
+4. **可观测质量遥测 + 稳定性硬化 + 回归网** — 7 类质量事件、diagnose 质量分类、fail-loud、重新启用 `minEvaluationScore` 门禁
+
+**用户已确认决策**：软门禁+人机协同 / 统一仲裁+合并重写 / 真相层全做 / 落 spec+拆 feature。
+
+**下次入口**：Phase 11 **Q0 地基补齐先行**（`p11-q0-01` 检查器接入 RelevanceGateway，无跨波依赖）。每 feature 遵 Bugfix gate（先写复现 failing test，后改实现）。
+
+---
+
+## Phase 10 进度（历史，已合并 main）
+
+整体 22/23 完成；W1(7)+W2(7)+W3(8) 已实现并端到端 3 轮 e2e PASS。**注意**：W2-05/W2-07/W3-08/W3-03 在 `feature_list.json` 标 completed，但其「检测侧」改造经 2026-08-14 代码级验证**未真正落地**，已作为 Phase 11 Q0 重新登记补齐。
 
 ### W1 第一波（止血与正确性）— 7/7 ✅
 stableSectionCache 失效 / 脏摘要重算 / 向量去污 / 成本熔断 / 退避降级 / 状态机 / 重写互斥
 
-### W2 第二波（故事真典+检索收窄）— 7/7 ✅
+### W2 第二波（故事真典+检索收窄）— 7/7 ✅（注：检测侧 w2-05/w2-07 实际未落地，见 Phase 11 Q0）
 story_facts 表 / 真典播种 / FactHarvester 收割 / RelevanceGateway / 检查器收窄 / 摘要预算 / 真典消费
 
-### W3 第三波（结构演进+闭环修复）— 8/9 ✅
-- 延迟卷大纲补全结构化字段（修 GAP#1 追踪器失明）
-- ArchiveCompactor 归档衰减（修根因 B）
-- 全量查询分页 LIMIT
-- ArcScheduler 冷场阈值缩放 + Top-K（修 GAP#5）
-- DiversityTracker 持久化（重启不丢）
-- 叙事线索状态机修正（修 GAP#4）
-- ConsistencyGuard HIGH 入闭环 + 重写后复检（修根因 D）
-- FINAL 终审扩展（真典一致性 + 成本回执）
-
-**剩余：w3-01 总纲中段重规划**（需 LLM 重规划，单独立 spec 推进）
+### W3 第三波（结构演进+闭环修复）— 8/9，剩余 p10-w3-09（由 p11-q3-06 吸收）
+（注：w3-08 三分类实际只实现 1/3、w3-03 归档只 2/5，见 Phase 11 Q0）
 
 ### 端到端验证（3 轮，全部 PASS）
 | 轮次 | 字數 | LLM 调用 | 错误 | 失败 | compare-baseline |

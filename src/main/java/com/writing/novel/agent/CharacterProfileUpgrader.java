@@ -3,10 +3,13 @@ package com.writing.novel.agent;
 import com.writing.novel.domain.Character;
 import com.writing.novel.domain.Entity;
 import com.writing.novel.domain.EntityType;
+import com.writing.novel.domain.StoryFact;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
+import com.writing.novel.memory.RelevanceGateway;
+import com.writing.novel.spi.StoryCanon;
 import com.writing.novel.spi.NovelRepository;
 
 import java.util.ArrayList;
@@ -27,12 +30,29 @@ public class CharacterProfileUpgrader {
     private final LlmGateway gateway;
     private final NovelRepository repository;
     private final PromptTemplateService promptService;
+    private final RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面
+    private final StoryCanon canon;      // p11-q0-03/p22-02: 真典写入（可变状态权威源）
 
     public CharacterProfileUpgrader(LlmGateway gateway, NovelRepository repository,
                                      PromptTemplateService promptService) {
+        this(gateway, repository, promptService, null, null);
+    }
+
+    /** p11-q0-01: 注入 RelevanceGateway，collectExcerpts 按最近窗口收窄 */
+    public CharacterProfileUpgrader(LlmGateway gateway, NovelRepository repository,
+                                     PromptTemplateService promptService, RelevanceGateway relevanceGateway) {
+        this(gateway, repository, promptService, relevanceGateway, null);
+    }
+
+    /** p11-q0-03: 注入真典端口，建档时播种初始 CHARACTER_STATE（真典为可变状态权威） */
+    public CharacterProfileUpgrader(LlmGateway gateway, NovelRepository repository,
+                                     PromptTemplateService promptService, RelevanceGateway relevanceGateway,
+                                     StoryCanon canon) {
         this.gateway = gateway;
         this.repository = repository;
         this.promptService = promptService;
+        this.relevanceGateway = relevanceGateway;
+        this.canon = canon;
     }
 
     /**
@@ -74,6 +94,12 @@ public class CharacterProfileUpgrader {
 
         if (candidates.isEmpty()) return upgraded;
 
+        // p11-q0-02: 读取真典 CHARACTER_STATE（角色当前状态），建档时遵循真相避免与已确立事实矛盾
+        var canonStates = relevanceGateway != null
+                ? relevanceGateway.relevantFacts(projectId, null, 20).stream()
+                        .filter(f -> f.getFactType() == StoryFact.FactType.CHARACTER_STATE).toList()
+                : java.util.Collections.<StoryFact>emptyList();
+
         // p11-fix: debug 日志
         log.info("角色升级 candidates: {}", candidates.stream()
                 .map(e -> e.getName() + "(ch" + e.getFirstSeenChapter() + "-" + e.getLastSeenChapter() + ")").toList());
@@ -81,6 +107,12 @@ public class CharacterProfileUpgrader {
         // 3. 每个候选：采集出场段落 → 生成 Character 档案
         for (Entity candidate : candidates) {
             String excerpts = collectExcerpts(projectId, candidate.getName(), currentChapter);
+            // p11-q0-02: 附加该候选的真典已确立状态（避免新档案与真相矛盾）
+            String canonFor = canonStates.stream()
+                    .filter(f -> f.getSubject() != null && f.getSubject().contains(candidate.getName()))
+                    .map(f -> "【真典已确立】" + f.getAssertion())
+                    .collect(Collectors.joining("\n"));
+            if (!canonFor.isBlank()) excerpts = excerpts + "\n" + canonFor;
             log.info("角色升级 {} excerpts: {} 字", candidate.getName(), excerpts.length());
             if (excerpts.length() < 30) continue; // p11-H2: 50→30（降低门槛）
 
@@ -88,6 +120,8 @@ public class CharacterProfileUpgrader {
             Character profile = generateProfile(projectId, candidate.getName(), excerpts);
             if (profile != null) {
                 repository.saveCharacter(profile);
+                // p11-q0-03: 建档即播种初始 CHARACTER_STATE 到真典（可变状态由真典承载，避免后续 Character 卡漂移）
+                seedCanonState(projectId, profile, currentChapter);
                 upgraded.add(candidate.getName());
             }
         }
@@ -95,10 +129,33 @@ public class CharacterProfileUpgrader {
         return upgraded;
     }
 
+    /**
+     * p11-q0-03: 建档即把角色的初始可变状态（能力/动机）播种为真典 CHARACTER_STATE。
+     * 真典成为可变状态权威源（与 ArcUpdater 成长弧同步、FactHarvester 每章收割互补），
+     * Character 卡的 ability/motivation 作为初始档案兼容保留。
+     */
+    private void seedCanonState(String projectId, Character profile, int currentChapter) {
+        if (canon == null) return;
+        StringBuilder assertion = new StringBuilder();
+        if (profile.getAbility() != null && !profile.getAbility().isBlank()) {
+            assertion.append("初始能力：").append(profile.getAbility());
+        }
+        if (profile.getMotivation() != null && !profile.getMotivation().isBlank()) {
+            if (assertion.length() > 0) assertion.append("；");
+            assertion.append("初始动机：").append(profile.getMotivation());
+        }
+        if (assertion.length() == 0) return;
+        // p22-02: 幂等播种在端口内（已有同 type 事实则不覆盖演进）
+        canon.saveIfAbsent(new StoryFact(projectId, StoryFact.FactType.CHARACTER_STATE,
+                profile.getName(), assertion.toString(), currentChapter));
+    }
+
     /** 从角色出场章节中采集出场段落 */
     private String collectExcerpts(String projectId, String name, int currentChapter) {
-        // p11-fix: 从全部章节中搜索角色出场，而不是只看最近10章
-        var chapters = repository.findChaptersByProject(projectId);
+        // p11-q0-01: 经 recent 窗口收窄（候选已过滤 lastSeenChapter<=currentChapter-8，最近窗口足够），
+        // 避免 findChaptersByProject 全量 O(N) 扫描（百万字下性能与 token 双赢）
+        int window = Math.min(50, Math.max(currentChapter, 1));
+        var chapters = repository.findRecentChapters(projectId, window);
         StringBuilder sb = new StringBuilder();
         for (var ch : chapters) {
             String content = ch.getContent();

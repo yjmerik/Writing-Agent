@@ -4,6 +4,7 @@ import com.writing.novel.domain.Character;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.StoryFact;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
@@ -34,7 +35,7 @@ class RelevanceGatewayTest {
         new SqliteSchemaInitializer(cp).initialize();
         repo = new SqliteNovelRepository(cp);
         factRepo = new StoryFactRepository(cp);
-        gateway = new RelevanceGateway(repo, factRepo);
+        gateway = new RelevanceGateway(repo, new SqliteStoryCanon(factRepo));
         Project p = new Project("gw书", "构思", "玄幻");
         repo.saveProject(p);
         pid = p.getId();

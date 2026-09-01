@@ -21,72 +21,73 @@ llm:
   replay:
     mode: "off"
     dir: data/fixtures/llm
+  # 2026-08-29 切回 DeepSeek v4-flash（GLM coding 网关夜间对 >5min 长响应 StreamReset，不稳定）
   default-model:
-    base-url: http://127.0.0.1:8088/v1
-    api-key: ${LOCAL_LLM_API_KEY:}
-    model: qwen3-4b-wuxia
+    base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
+    api-key: ${DEEPSEEK_API_KEY:}
+    model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
     temperature: 0.7
     max-tokens: 8192
-    context-window: 32768
+    context-window: 64000
     streaming: true
     style-guide: "严格遵循世界观设定中已确立的类型风格。不要引入与世界观类型不兼容的元素。人物名字必须与【出场人物】完全一致，绝对不得改名。"
   models:
     CHAPTER_WRITING:
-      base-url: https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
-      api-key: ${ALIYUN_LLM_API_KEY:}
-      model: deepseek-v4-flash-0731
+      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
+      api-key: ${DEEPSEEK_API_KEY:}
+      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
       temperature: 0.8
-      # mc-p3-01: 推理模型 reasoning_content 消耗大量输出 token；8192 会截断 3000+ 字正文
+      # 推理模型 reasoning_content 消耗大量输出 token；8192 会截断 3000+ 字正文
       max-tokens: 20000
       context-window: 64000
       style-guide: "严格遵循世界观设定中已确立的类型风格。人物名字必须与【出场人物】完全一致，绝对不得改名。不得引入与世界观不兼容的元素。"
     CONTINUITY_CHECK:
-      base-url: https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
-      api-key: ${ALIYUN_LLM_API_KEY:}
-      model: deepseek-v4-flash-0731
+      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
+      api-key: ${DEEPSEEK_API_KEY:}
+      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
       temperature: 0.3
       max-tokens: 4096
       context-window: 64000
     PLOTTING:
-      base-url: https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
-      api-key: ${ALIYUN_LLM_API_KEY:}
-      model: deepseek-v4-flash-0731
+      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
+      api-key: ${DEEPSEEK_API_KEY:}
+      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
       temperature: 0.7
       # op-fix: 推理模型 reasoning_content 耗 token，8192 致总纲正文为空
       max-tokens: 16000
       context-window: 64000
     WORLDBUILDING:
-      base-url: https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
-      api-key: ${ALIYUN_LLM_API_KEY:}
-      model: deepseek-v4-flash-0731
+      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
+      api-key: ${DEEPSEEK_API_KEY:}
+      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
       temperature: 0.7
       max-tokens: 8192
       context-window: 64000
     CHARACTER_DESIGN:
-      base-url: https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
-      api-key: ${ALIYUN_LLM_API_KEY:}
-      model: deepseek-v4-flash-0731
+      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
+      api-key: ${DEEPSEEK_API_KEY:}
+      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
       temperature: 0.7
       max-tokens: 8192
       context-window: 64000
     STYLE_GUARDIAN:
-      base-url: https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
-      api-key: ${ALIYUN_LLM_API_KEY:}
-      model: deepseek-v4-flash-0731
+      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
+      api-key: ${DEEPSEEK_API_KEY:}
+      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
       temperature: 0.3
       max-tokens: 4096
       context-window: 64000
     MEMORY_SUMMARY:
-      base-url: https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
-      api-key: ${ALIYUN_LLM_API_KEY:}
-      model: deepseek-v4-flash-0731
+      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
+      api-key: ${DEEPSEEK_API_KEY:}
+      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
       temperature: 0.3
       max-tokens: 4096
       context-window: 64000
     GENERAL:
-      base-url: https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
-      api-key: ${ALIYUN_LLM_API_KEY:}
-      model: deepseek-v4-flash-0731
+      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
+      api-key: ${DEEPSEEK_API_KEY:}
+      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
       temperature: 0.3
       max-tokens: 4096
       context-window: 64000

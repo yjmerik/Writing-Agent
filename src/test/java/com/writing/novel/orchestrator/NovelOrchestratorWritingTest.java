@@ -24,9 +24,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class NovelOrchestratorWritingTest {
 
     @TempDir Path tempDir;
-    private NovelOrchestrator orchestrator;
-    private SqliteNovelRepository repo;
-    private ProjectService projectService;
+    protected NovelOrchestrator orchestrator;
+    protected SqliteNovelRepository repo;
+    protected ProjectService projectService;
 
     @BeforeEach
     void setUp() {
@@ -94,8 +94,13 @@ class NovelOrchestratorWritingTest {
                 new com.writing.novel.agent.QualityEvaluationAgent(gateway, repo, promptSvc),
                 null, null, null, null, null, null, null, null, null, null, null, null,
                 new com.writing.novel.agent.SceneClassifier(gateway, promptSvc),
-                new com.writing.novel.service.DiversityTracker(), null, null, null, null, null, null, null, null, null);
+                new com.writing.novel.service.DiversityTracker(),
+                null, null, null, null, null, null, null, null, null,
+                policiesOverride());
     }
+
+    /** p22-05: 子类可覆写——构造期注入策略包（后置 setter 已移除） */
+    protected OrchestratorPolicies policiesOverride() { return null; }
 
     @Test
     void 全流程_构思_规划_写三章() {
@@ -134,5 +139,27 @@ class NovelOrchestratorWritingTest {
         Project found = repo.findProject(p.getId()).orElseThrow();
         assertEquals(NovelState.PAUSED_AT_CHECKPOINT, found.getState());
         assertFalse(repo.findPendingCheckpoints(p.getId()).isEmpty(), "应有待审核 checkpoint");
+    }
+
+    @Test
+    void 交互模式连续写作只写一章就暂停() {
+        Project p = projectService.create("t", "c", "tag", ProjectMode.INTERACTIVE);
+        orchestrator.runConceiving(p.getId());
+        orchestrator.step(p.getId());
+        orchestrator.step(p.getId());
+
+        int written = orchestrator.runWritingLoop(p.getId(), 5);
+        assertEquals(1, written);
+        assertEquals(NovelState.PAUSED_AT_CHECKPOINT, repo.findProject(p.getId()).orElseThrow().getState());
+    }
+
+    @Test
+    void pause将项目置为暂停() {
+        Project p = projectService.create("t", "c", "tag");
+        orchestrator.runConceiving(p.getId());
+        orchestrator.step(p.getId());
+        orchestrator.pause(p.getId());
+        assertEquals(NovelState.PAUSED_AT_CHECKPOINT, repo.findProject(p.getId()).orElseThrow().getState());
+        assertEquals(0, orchestrator.runWritingLoop(p.getId(), 3));
     }
 }

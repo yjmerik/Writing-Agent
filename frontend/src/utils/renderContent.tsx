@@ -8,8 +8,7 @@ import React from 'react';
 export function renderContent(content: string, onParagraphClick?: (index: number, text: string) => void): React.ReactNode[] {
   if (!content) return [];
   const lines = content.split('\n');
-  let paraIdx = -1; // 只对正文段落编号（跳过标题/分隔线）
-  return lines.filter(Boolean).map((line, i) => {
+  return lines.map((line, i) => {
     const trimmed = line.trim();
     if (!trimmed) return <br key={i} />;
 
@@ -36,13 +35,10 @@ export function renderContent(content: string, onParagraphClick?: (index: number
       return <hr key={i} style={{ margin: '16px 0', border: 'none', borderTop: '1px dashed #ddd' }} />;
     }
 
-    // 普通段落
-    paraIdx++;
-    const myIdx = i; // 原始行索引（用于 API 调用）
     return (
       <p
         key={i}
-        data-paragraph-index={myIdx}
+        data-paragraph-index={i}
         style={{
           textIndent: '2em',
           marginBottom: '0.4em',
@@ -54,7 +50,7 @@ export function renderContent(content: string, onParagraphClick?: (index: number
         }}
         onClick={onParagraphClick ? (e) => {
           e.currentTarget.style.background = '#e6f7ff';
-          onParagraphClick(myIdx, trimmed);
+          onParagraphClick(i, trimmed);
         } : undefined}
         onMouseLeave={onParagraphClick ? (e) => {
           e.currentTarget.style.background = '';

@@ -79,6 +79,37 @@ for e in chapters[-10:]:
     print(f"- 第{e.get('chapterIndex','?')}章 {e.get('wordCount','?')}字 "
           f"耗时{e.get('durationMs',0)//1000}s [{e.get('projectId','?')}] {e.get('ts','')}")
 
+# p11-q3-02: 质量诊断分类——解析质量事件（重写成功率/根因/熔断/FINAL/quality_risk）
+quality_events = [e for e in events if e["event"] in
+    ("QUALITY_REVIEW", "REWRITE_TRIGGERED", "CONSISTENCY_ISSUE", "QUALITY_CIRCUIT_BREAKER", "FINAL_GATE", "QUALITY_GATE")]
+print(f"\n## 质量诊断（共 {len(quality_events)} 条质量事件）")
+if quality_events:
+    reviews = [e for e in quality_events if e["event"] == "QUALITY_REVIEW"]
+    rewrites = [e for e in quality_events if e["event"] == "REWRITE_TRIGGERED"]
+    failed_reviews = [e for e in reviews if not e.get("passed", True)]
+    if reviews:
+        rate = (1 - len(failed_reviews) / len(reviews)) * 100
+        print(f"- 读者检验通过率: {rate:.0f}%（{len(reviews)-len(failed_reviews)}/{len(reviews)}），重写 {len(rewrites)} 次")
+    issues = [e for e in quality_events if e["event"] == "CONSISTENCY_ISSUE"]
+    if issues:
+        by_type = defaultdict(int)
+        for e in issues:
+            by_type[e.get("type", "?")] += 1
+        top = sorted(by_type.items(), key=lambda kv: -kv[1])[:3]
+        print(f"- 一致性问题根因 Top: {', '.join(f'{t}×{c}' for t, c in top)}")
+    breakers = [e for e in quality_events if e["event"] == "QUALITY_CIRCUIT_BREAKER"]
+    if breakers:
+        print(f"- ⚠️ 质量熔断 {len(breakers)} 次（连续 HIGH 问题暂停写作）")
+    final_fails = [e for e in quality_events if e["event"] == "FINAL_GATE" and not e.get("passed", True)]
+    if final_fails:
+        reasons = ', '.join(sorted(set(e.get('reason', '?') for e in final_fails)))
+        print(f"- ⚠️ FINAL 门禁失败 {len(final_fails)} 次，原因: {reasons}")
+    gates = [e for e in quality_events if e["event"] == "QUALITY_GATE"]
+    if gates:
+        print(f"- quality_risk 标记 {len(gates)} 处（构思/规划门禁未过）")
+else:
+    print("无质量事件记录（质检闭环未触发或事件未启用）")
+
 print("\n## 结论建议")
 if failures:
     top = max(by_class.items(), key=lambda kv: len(kv[1]))

@@ -44,8 +44,7 @@ class OrchestratorControllerTest {
     @Test
     void 运行构思阶段并查询状态() throws Exception {
         String id = createProject();
-        mvc.perform(post("/api/projects/" + id + "/run"))
-                .andExpect(status().isOk());
+        RunTaskSupport.runAndAwait(mvc, om, id);
         mvc.perform(get("/api/projects/" + id + "/status"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.state").value("PLANNING"));

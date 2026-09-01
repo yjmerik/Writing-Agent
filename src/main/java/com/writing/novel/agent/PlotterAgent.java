@@ -19,6 +19,11 @@ public class PlotterAgent {
     private final LlmGateway gateway;
     private final NovelRepository repository;
     private final PromptTemplateService promptService;
+    // p17-03: 题材规则提供者（可选注入，卷大纲题材约束）
+    private com.writing.novel.service.GenreRuleProvider genreRuleProvider;
+
+    /** p17-03: 注入题材规则提供者（@Bean 装配用） */
+    public void setGenreRuleProvider(com.writing.novel.service.GenreRuleProvider provider) { this.genreRuleProvider = provider; }
 
     public PlotterAgent(LlmGateway gateway, NovelRepository repository,
                         PromptTemplateService promptService) {
@@ -139,7 +144,7 @@ public class PlotterAgent {
                 .maxTokens(16000)
                 .build();
         var resp = gateway.complete(req);
-        return resp.getContent();
+        return stripPreamble(resp.getContent()); // p12-02: 剥离 LLM 客套前言
     }
 
     /**
@@ -169,18 +174,38 @@ public class PlotterAgent {
                               String volumeTitle, String volumeSummary,
                               int startChapter, int endChapter,
                               String existingCharacters, String protagonistName) {
+        return planVolume(masterOutline, previousSummary, volumeTitle, volumeSummary,
+                startChapter, endChapter, existingCharacters, protagonistName, null);
+    }
+
+    /**
+     * p17-03: 带题材的卷大纲生成——注入 genreRules + 题材化高潮原则，修复长篇题材约束断链。
+     */
+    public String planVolume(String masterOutline, String previousSummary,
+                              String volumeTitle, String volumeSummary,
+                              int startChapter, int endChapter,
+                              String existingCharacters, String protagonistName,
+                              com.writing.novel.domain.GenreProfile genre) {
         int chapterCount = endChapter - startChapter + 1;
-        String systemPrompt = promptService.render("volume-outline", Map.of(
-                "masterOutline", masterOutline != null ? masterOutline : "（暂无总纲）",
-                "previousSummary", previousSummary != null ? previousSummary : "（第一卷，无前文）",
-                "volumeTitle", volumeTitle,
-                "volumeSummary", volumeSummary != null ? volumeSummary : "",
-                "startChapter", String.valueOf(startChapter),
-                "endChapter", String.valueOf(endChapter),
-                "startChapterPlus1", String.valueOf(startChapter + 1),
-                "chapterCount", String.valueOf(chapterCount),
-                "existingCharacters", existingCharacters != null ? existingCharacters : "（暂无）",
-                "protagonistName", protagonistName != null ? protagonistName : ""));
+        boolean fastPaced = genre == null || genre.isFastPaced();
+        String climaxPrinciple = fastPaced
+                ? "2. 每章至少一个爽点，爽点类型要多样化"
+                : "2. 每章至少一个核心张力点（冲突升级/真相揭示/关键抉择），形式要多样化";
+        String genreRules = genreRuleProvider != null && genre != null
+                ? genreRuleProvider.getPlottingRules(genre) : "";
+        String systemPrompt = promptService.render("volume-outline", java.util.Map.ofEntries(
+                java.util.Map.entry("masterOutline", masterOutline != null ? masterOutline : "（暂无总纲）"),
+                java.util.Map.entry("previousSummary", previousSummary != null ? previousSummary : "（第一卷，无前文）"),
+                java.util.Map.entry("volumeTitle", volumeTitle),
+                java.util.Map.entry("volumeSummary", volumeSummary != null ? volumeSummary : ""),
+                java.util.Map.entry("startChapter", String.valueOf(startChapter)),
+                java.util.Map.entry("endChapter", String.valueOf(endChapter)),
+                java.util.Map.entry("startChapterPlus1", String.valueOf(startChapter + 1)),
+                java.util.Map.entry("chapterCount", String.valueOf(chapterCount)),
+                java.util.Map.entry("existingCharacters", existingCharacters != null ? existingCharacters : "（暂无）"),
+                java.util.Map.entry("protagonistName", protagonistName != null ? protagonistName : ""),
+                java.util.Map.entry("climaxPrinciple", climaxPrinciple),
+                java.util.Map.entry("genreRules", genreRules != null ? genreRules : "")));
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.PLOTTING)
@@ -191,7 +216,7 @@ public class PlotterAgent {
                 .maxTokens(12000)
                 .build();
         var resp = gateway.complete(req);
-        return resp.getContent();
+        return stripPreamble(resp.getContent()); // p12-02: 剥离 LLM 客套前言
     }
 
     private Outline parseOutline(String text, String projectId) {
@@ -296,7 +321,9 @@ public class PlotterAgent {
 
         // 单行格式（标题:内容）
         if (!hasChapters) {
-            Matcher chM2 = Pattern.compile("\\*{0,2}第([0-9一二三四五六七八九十百]+)章\\s*(.+?)[：:]\\s*(.+?)(?=\\*{0,2}第\\d+章|$)", Pattern.DOTALL).matcher(volBody);
+            // p16-fix: 前瞻必须行首锚定（\r?\n）——否则行内伏笔「(HIGH，第N章回收)」的"第N章"
+            // 被误判为下一章起点，章节被拦腰截断、脏文本（"回收)；埋设-…"）混入后续章标题
+            Matcher chM2 = Pattern.compile("\\*{0,2}第([0-9一二三四五六七八九十百]+)章\\s*(.+?)[：:]\\s*(.+?)(?=\\r?\\n\\*{0,2}第\\d+章|$)", Pattern.DOTALL).matcher(volBody);
             while (chM2.find()) {
                 int idx = parseChineseOrArabic(chM2.group(1));
                 if (existingIndices.contains(idx)) continue; // p12-fix: 去重
@@ -382,7 +409,9 @@ public class PlotterAgent {
     /** 清理标题中的 markdown 标记（**、#、多余空格） */
     private String sanitizeTitle(String title) {
         if (title == null) return "";
-        return title.replaceAll("\\*{2}", "").replaceAll("#+\\s*", "").trim();
+        // p16-fix: 标题内嵌换行压成空格（解析异常时的最后防线，脏内容不得跨行污染展示）
+        return title.replaceAll("\\*{2}", "").replaceAll("#+\\s*", "")
+                .replaceAll("\\r?\\n+", " ").trim();
     }
 
     /** 解析中文数字或阿拉伯数字（一→1，二→2...十→10，二十→20） */
@@ -401,5 +430,20 @@ public class PlotterAgent {
             if (digits[i].equals(s)) return i;
         }
         return 1; // 兜底
+    }
+
+    /**
+     * p12-02: 剥离 LLM 客套前言（如"好的，作为您的专属长篇小说大纲规划专家…"）。
+     * 客套话污染 outline.premise 后会进入后续所有 prompt。以首个【总纲】/【卷N】/# 标题为界截断。
+     */
+    static String stripPreamble(String content) {
+        if (content == null) return "";
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("(?:【总纲】|【卷\\d+】|^#\\s)")
+                .matcher(content);
+        if (m.find() && m.start() > 0) {
+            return content.substring(m.start()).trim();
+        }
+        return content.trim();
     }
 }

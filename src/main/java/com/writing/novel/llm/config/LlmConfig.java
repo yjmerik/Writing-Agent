@@ -29,7 +29,14 @@ public class LlmConfig {
     public LlmGateway llmGateway(LlmProperties properties, LlmClient client,
                                  @Value("${llm.replay.mode:off}") String replayMode,
                                  @Value("${llm.replay.dir:data/fixtures/llm}") String replayDir,
+                                 @Value("${llm.scenario.enabled:false}") boolean scenarioEnabled,
+                                 @Value("${llm.scenario.harsh:false}") boolean scenarioHarsh,
                                  CostBudgetMonitor costBudgetMonitor) {
+        // p23-01/p23-03: 确定性场景网关——零网络零成本（soak/可靠性验证专用），无需任何 API key
+        if (scenarioEnabled) {
+            return new ObservedLlmGateway(new com.writing.novel.llm.ScenarioLlmGateway(scenarioHarsh),
+                    properties, costBudgetMonitor);
+        }
         // mc-p0-04: 启动时校验凭据（replay 模式跳过）
         properties.setReplayMode(replayMode.equalsIgnoreCase("replay"));
         properties.validateKeys();

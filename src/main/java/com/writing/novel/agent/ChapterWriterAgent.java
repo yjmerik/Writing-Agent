@@ -98,6 +98,9 @@ public class ChapterWriterAgent {
         }
         // p11.1-J1: 字数约束——从 prefs 读取 maxChapterLength
         String chapterLengthGuide = buildChapterLengthGuide(projectId, chapterIndex);
+        // p17-02: 结构指引/高潮技巧按题材生成（替代模板硬编码四段式）
+        String structureGuide = buildStructureGuide(projectId);
+        String climaxCraft = buildClimaxCraft(projectId);
         String chapterWritingPrompt = promptService.render("chapter-writing", Map.of(
                 "styleGuide", dynamicStyleGuide,
                 "writingConstraints", ctx.getWritingConstraints() != null ? ctx.getWritingConstraints() : "",
@@ -105,6 +108,8 @@ public class ChapterWriterAgent {
                 "knowledgeQuotes", ctx.getKnowledgeQuoteSection() != null ? ctx.getKnowledgeQuoteSection() : "",
                 "genrePacingRules", genrePacingRules,
                 "chapterLengthGuide", chapterLengthGuide,
+                "structureGuide", structureGuide,
+                "climaxCraft", climaxCraft,
                 "feedbackSection", ctx.getFeedbackSection() != null ? ctx.getFeedbackSection() : ""));
         String systemPrompt = ctx.toSystemPrompt() + "\n\n" + chapterWritingPrompt;
 
@@ -218,6 +223,8 @@ public class ChapterWriterAgent {
                     "knowledgeQuotes", ctx.getKnowledgeQuoteSection() != null ? ctx.getKnowledgeQuoteSection() : "",
                     "genrePacingRules", genrePacingRules,
                     "chapterLengthGuide", chapterLengthGuide,
+                    "structureGuide", buildStructureGuide(projectId),
+                    "climaxCraft", buildClimaxCraft(projectId),
                     "feedbackSection", ctx.getFeedbackSection() != null ? ctx.getFeedbackSection() : ""))
                 : "你是网络小说写作高手。";
 
@@ -240,14 +247,61 @@ public class ChapterWriterAgent {
             return null; // 重写也失败，保留原版本
         }
 
-        return sanitizeChapterNumbers(resp.getContent(), chapterIndex);
+        String cleanContent = sanitizeChapterNumbers(resp.getContent(), chapterIndex);
+        // p16-05: 重写改变了正文——立即按章重建向量索引（清旧 chunk + 新正文入库）。
+        // 调用方若拒收该重写（长度保护等），需用保留的原正文重放 reindexChapter 恢复一致。
+        reindexChapter(projectId, chapterIndex, cleanContent);
+        return cleanContent;
     }
 
-    /** 纠正正文中错误的章节号（LLM 可能自创"第N章"，需统一为系统 chapterIndex） */
-    private String sanitizeChapterNumbers(String content, int chapterIndex) {
+    /**
+     * p16-05: 按章重建向量索引——统一入口。
+     * 清掉该章所有旧版本 chunk（chapterId 与 chapterId#chunkN）后按给定正文分块重新入库。
+     * 供三条改写路径（rewriteForCorrection / orchestrator.rewriteChapter / orchestrator.editPassage）
+     * 修改正文后调用，避免向量库残留被否定的旧情节被后续章节检索召回。
+     * 索引失败不影响调用方主流程（与 write() 的容错一致）。
+     */
+    public void reindexChapter(String projectId, int chapterIndex, String content) {
+        if (vectorRetrieval == null || repository == null || content == null) return;
+        try {
+            Chapter chapter = repository.findChapterByIndex(projectId, chapterIndex).orElse(null);
+            if (chapter == null) return; // 章未入库则无从取 chunk id 前缀，跳过
+            indexChapterInChunks(projectId, chapter, content);
+            vectorRetrieval.flush();
+        } catch (Exception e) {
+            // 索引失败不影响主流程（章节正文已保存）
+        }
+    }
+
+    /**
+     * p20-09: 章节号归一化——仅归一化正文开头的章节标题。
+     * 对话、引文、跨章引用中的"第N章"保持逐字不动（旧实现全文 replaceAll 破坏正文）。
+     * 允许前导空白与 markdown 标题井号前缀；包内可见便于直接测试。
+     */
+    static String sanitizeChapterNumbers(String content, int chapterIndex) {
         if (content == null) return content;
-        // 将所有"第\d+章"替换为正确的章节号
-        return content.replaceAll("第\\d+章", "第" + chapterIndex + "章");
+        int leadingWs = 0;
+        while (leadingWs < content.length() && Character.isWhitespace(content.charAt(leadingWs))) {
+            leadingWs++;
+        }
+        int headingStart = leadingWs;
+        while (headingStart < content.length() && content.charAt(headingStart) == '#') {
+            headingStart++;
+        }
+        if (headingStart < content.length() && content.charAt(headingStart) == '第'
+                && headingStart + 1 < content.length()
+                && Character.isDigit(content.charAt(headingStart + 1))) {
+            int digitsEnd = headingStart + 1;
+            while (digitsEnd < content.length() && Character.isDigit(content.charAt(digitsEnd))) {
+                digitsEnd++;
+            }
+            if (digitsEnd < content.length() && content.charAt(digitsEnd) == '章') {
+                return content.substring(0, headingStart)
+                        + "第" + chapterIndex + "章"
+                        + content.substring(digitsEnd + 1);
+            }
+        }
+        return content;
     }
 
     /** 按段落分块索引章节正文，每块 ~800 字，确保中后段情节也能被召回。D2: 批量索引（一次embedding调用） */
@@ -304,25 +358,75 @@ public class ChapterWriterAgent {
             int maxLen = repository.findWritingPreferences(projectId)
                     .map(p -> p.getMaxChapterLength())
                     .orElse(6000);
+            // p17-02: 题材感知——慢节奏/严肃题材不用爽点式四段式措辞
+            boolean fastPaced = repository.findProject(projectId)
+                    .map(p -> p.getGenre() == null || p.getGenre().isFastPaced())
+                    .orElse(true);
             // op-01: 开篇前 5 章强制高压——禁止喘息章判定
             boolean isOpening = chapterIndex <= OPENING_CHAPTERS;
             boolean isLongChapter = isOpening || chapterIndex % 3 != 0;
             if (isOpening) {
                 int targetMax = Math.min(maxLen, 4500);
-                return "本章为【开篇高压章】（前" + OPENING_CHAPTERS + "章），目标字数 3500-" + targetMax + " 字。"
-                        + "开篇必须快速抓人：首 500 字内必须出现冲突/悬念/反转钩子，不得用大段环境描写或背景铺垫开场。"
-                        + "四段式比例：开场钩子500字→冲突升级1500字→高潮爽点1200字→悬念400字。"
-                        + "本章至少 2 个爽点，冲突必须在章内升级而非只铺悬念。";
+                if (fastPaced) {
+                    return "本章为【开篇高压章】（前" + OPENING_CHAPTERS + "章），目标字数 3500-" + targetMax + " 字。"
+                            + "开篇必须快速抓人：首 500 字内必须出现冲突/悬念/反转钩子，不得用大段环境描写或背景铺垫开场。"
+                            + "四段式比例：开场钩子500字→冲突升级1500字→高潮爽点1200字→悬念400字。"
+                            + "本章至少 2 个爽点，冲突必须在章内升级而非只铺悬念。";
+                }
+                return "本章为开篇章（前" + OPENING_CHAPTERS + "章），目标字数 3500-" + targetMax + " 字。"
+                        + "前 800 字内进入具体场景与人物处境，禁止大段设定解说/环境铺陈/谱系罗列开场；"
+                        + "以事件或人物处境切入，张力随章内递进。";
             } else if (isLongChapter) {
                 int targetMax = Math.min(maxLen, 4500);
+                String structure = fastPaced
+                        ? "四段式比例：开场500字→冲突升级1500字→高潮1200字→悬念400字。"
+                        : "按本章张力自然递进组织段落（切入→发展→高潮点→余韵）。";
                 return "本章为标准/高潮章，目标字数 3500-" + targetMax + " 字（上限 " + maxLen + " 字，超过将被标记为过长）。" +
-                        "四段式比例：开场500字→冲突升级1500字→高潮1200字→悬念400字。宁可精简也不要注水。";
+                        structure + "宁可精简也不要注水。";
             } else {
-                return "本章为喘息/过渡章，目标字数 2500-3500 字。不必严格四段式，可以是对话驱动/单场景深挖/角色互动为主，不需要爽点爆发。";
+                String burst = fastPaced ? "不需要爽点爆发" : "不需要高潮爆发";
+                return "本章为喘息/过渡章，目标字数 2500-3500 字。不必严格四段式，可以是对话驱动/单场景深挖/角色互动为主，" + burst + "。";
             }
         } catch (Exception e) {
             return "目标字数 3000-4500 字。";
         }
+    }
+
+    /** p17-02: 按题材生成章节结构指引（替代模板硬编码四段式）；包级可见供测试 */
+    String buildStructureGuide(String projectId) {
+        boolean fastPaced = repository == null || repository.findProject(projectId)
+                .map(p -> p.getGenre() == null || p.getGenre().isFastPaced())
+                .orElse(true);
+        if (fastPaced) {
+            return """
+                    1. **开场钩子**（约15%篇幅）：用一个悬念/冲突/反常画面直接抓住读者。不要用风景描写或设定说明开场。
+                    2. **冲突升级**（约40%篇幅）：将【本章任务】中的「场景节拍」逐一展开为具体场景。每个节拍要有一个明确的动作和一次冲突推进。对话与动作穿插，不要大段独白。
+                    3. **高潮/爽点**（约30%篇幅）：执行【本章任务】中的「爽点」设计。爽点要有铺垫→压抑→释放的三拍节奏：先让主角陷入困境(铺垫)，再加剧压力(压抑)，最后以意想不到的方式逆转(释放)。**不要用"路人震惊"来表现爽感，用对手的反应和主角的内心变化来呈现。**
+                    4. **悬念结尾**（约15%篇幅）：留下一个让读者必须看下一章的钩子。可以是新危机出现、真相半揭露、或角色做出意外决定。""";
+        }
+        return """
+                1. **场景切入**（约15%篇幅）：直接进入具体场景与人物处境，不要用设定说明或风景描写开场。
+                2. **发展与递进**（约50%篇幅）：将【本章任务】中的「场景节拍」展开为具体场景，每个节拍有明确的动作和一次张力推进。对话与叙述穿插。
+                3. **高潮点**（约25%篇幅）：本章核心张力点在此释放（真相揭示/冲突爆发/关键抉择），要有铺垫与余波，不要仓促宣告结果。
+                4. **收束/余韵**（约10%篇幅）：留有未解张力或余韵，不必强钩子，但不得平淡收场。""";
+    }
+
+    /** p17-02: 高潮执行技巧（快节奏题材为爽点技巧；慢节奏题材为通用张力技巧） */
+    private String buildClimaxCraft(String projectId) {
+        boolean fastPaced = repository == null || repository.findProject(projectId)
+                .map(p -> p.getGenre() == null || p.getGenre().isFastPaced())
+                .orElse(true);
+        if (fastPaced) {
+            return """
+                    **爽点执行技巧：**
+                    - 信息差：让读者知道主角知道而角色不知道的事，制造紧张感
+                    - 反预期：建立读者的预期，然后打破它（但必须有逻辑支撑）
+                    - 智斗：主角用策略/知识/规则利用获胜，而非纯粹的力量碾压""";
+        }
+        return """
+                **高潮执行技巧：**
+                - 张力点的释放要有铺垫→积蓄→爆发的节奏，用具体细节与人物反应呈现，不要直白宣告
+                - 反转必须有逻辑支撑与前置伏笔，不为反转而反转""";
     }
 
     private String extractStyleGuide(String projectId) {
@@ -332,6 +436,11 @@ public class ChapterWriterAgent {
         var style = styleOpt.get();
         StringBuilder sb = new StringBuilder();
         if (style.getTone() != null) sb.append(style.getTone());
+        // p17-04: voice（叙事视角/节奏）此前被丢弃——预设 styleVoice 现已生效
+        if (style.getVoice() != null && !style.getVoice().isBlank()) {
+            if (sb.length() > 0) sb.append("。");
+            sb.append(style.getVoice());
+        }
         if (style.getDosAndDonts() != null) {
             if (sb.length() > 0) sb.append("。");
             sb.append(style.getDosAndDonts());

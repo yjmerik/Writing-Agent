@@ -36,6 +36,16 @@ public class ProjectService {
         return create(title, concept, tags, mode, null);
     }
 
+    public Project create(String title, String concept, String tags, ProjectMode mode, String presetName, Integer targetChapters) {
+        Project p = create(title, concept, tags, mode, presetName);
+        if (targetChapters != null && targetChapters > 0) {
+            var prefs = repository.findWritingPreferences(p.getId()).orElseGet(() -> new WritingPreferences(p.getId()));
+            prefs.setTargetChapters(targetChapters);
+            repository.saveWritingPreferences(prefs);
+        }
+        return p;
+    }
+
     public Project create(String title, String concept, String tags, ProjectMode mode, String presetName) {
         Project p = new Project(title, concept, tags);
         p.setMode(mode);

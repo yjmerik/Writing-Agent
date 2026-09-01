@@ -13,7 +13,9 @@ interface Props {
 }
 
 export default function InteractiveReview({ projectId, onChanged }: Props) {
+  // p21-05: 元数据一次加载；正文按选中章节懒加载缓存
   const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [bodies, setBodies] = useState<Record<number, Chapter>>({});
   const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const [status, setStatus] = useState<ProjectStatus | null>(null);
   const [selectedIdx, setSelectedIdx] = useState(0);
@@ -28,26 +30,28 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   const [editInstruction, setEditInstruction] = useState('');
   const [editing, setEditing] = useState(false);
 
+  // p21-05 修复: refresh 只依赖 projectId——selectedIdx 变化（点选章节）不得触发
+  // 元数据/checkpoints/status 重取（此前 useCallback 依赖 selectedIdx，点章即全量重取）
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const [chs, cps, st] = await Promise.all([
-        api.getChapters(projectId),
+      const [page, cps, st] = await Promise.all([
+        api.getChapterPage(projectId, 0, 1000),
         api.listCheckpoints(projectId),
         api.getStatus(projectId),
       ]);
-      setChapters(chs);
+      const metas = page.chapters || [];
+      setChapters(metas);
+      setBodies({}); // 元数据刷新后正文缓存失效，由懒加载按需重建
       setCheckpoints(cps);
       setStatus(st);
-      if (chs.length > 0 && selectedIdx >= chs.length) {
-        setSelectedIdx(chs.length - 1);
-      }
+      setSelectedIdx((idx) => (metas.length > 0 && idx >= metas.length ? metas.length - 1 : idx));
     } catch (e) {
       message.error(`加载失败: ${(e as Error).message}`);
     } finally {
       setLoading(false);
     }
-  }, [projectId, selectedIdx]);
+  }, [projectId]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
@@ -55,15 +59,34 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   const hasPendingCheckpoint = checkpoints.length > 0;
   const currentCheckpoint = checkpoints[checkpoints.length - 1];
   const isInteractive = status?.mode === 'INTERACTIVE';
-  const currentChapter = chapters[selectedIdx];
+  const currentMeta = chapters[selectedIdx];
+
+  // p21-05: 选中章节正文懒加载（不重取 checkpoints/status，更不全量取章节正文）
+  useEffect(() => {
+    if (!currentMeta) return;
+    if (bodies[currentMeta.chapterIndex]) return;
+    let cancelled = false;
+    api.getChapter(projectId, currentMeta.chapterIndex)
+      .then((full) => {
+        if (cancelled || !full) return;
+        setBodies((prev) => ({ ...prev, [currentMeta.chapterIndex]: full }));
+      })
+      .catch(() => { /* 正文加载失败不阻塞元信息展示 */ });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, currentMeta?.chapterIndex]);
+
+  const currentChapter = currentMeta
+    ? (bodies[currentMeta.chapterIndex] ?? currentMeta)
+    : undefined;
 
   // p11-I3: 选中章节时获取质量报告
   useEffect(() => {
-    if (!currentChapter) { setQualityReport(null); return; }
-    api.getChapterQuality(projectId, currentChapter.chapterIndex)
+    if (!currentMeta) { setQualityReport(null); return; }
+    api.getChapterQuality(projectId, currentMeta.chapterIndex)
       .then(setQualityReport)
       .catch(() => setQualityReport(null));
-  }, [projectId, currentChapter]);
+  }, [projectId, currentMeta]);
 
   // p11-G2: 段落编辑
   const handleParagraphClick = (index: number, text: string) => {
@@ -91,11 +114,12 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
     }
   };
 
-  const handleApprove = async () => {
-    if (!currentCheckpoint) { message.warning('无待审核项'); return; }
+  const handleApprove = async (checkpointId?: string) => {
+    const id = checkpointId ?? currentCheckpoint?.id;
+    if (!id) { message.warning('无待审核项'); return; }
     setLoading(true);
     try {
-      await api.approveCheckpoint(projectId, currentCheckpoint.id);
+      await api.approveCheckpoint(projectId, id);
       message.success('已批准');
       await refresh();
       onChanged();
@@ -170,14 +194,37 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
     <div>
       <Spin spinning={loading}>
         {/* 状态栏 */}
-        {isPaused && hasPendingCheckpoint && (
+        {isPaused && hasPendingCheckpoint && checkpoints.map(cp => {
+          let payload: import('../types').CheckpointPayload | null = null;
+          try { payload = cp.payload ? JSON.parse(cp.payload) : null; } catch { payload = null; }
+          return (
           <Alert
+            key={cp.id}
             type="warning"
-            message={`⏸ 待审核：${currentCheckpoint.description}`}
+            message={`⏸ 待审核：${cp.description}`}
             description={
+              <div>
+              {payload && (
+                <div style={{ marginBottom: 8, fontSize: 13 }}>
+                  {payload.score != null && (
+                    <span style={{ marginRight: 12 }}>
+                      读者评分：<b style={{ color: payload.score >= 8 ? '#52c41a' : payload.score >= 7 ? '#faad14' : '#ff4d4f' }}>{payload.score}/10</b>
+                    </span>
+                  )}
+                  {payload.wordCount != null && <span style={{ marginRight: 12 }}>字数：{payload.wordCount.toLocaleString?.() ?? payload.wordCount}</span>}
+                  {payload.unresolvedHigh != null && payload.unresolvedHigh > 0 && (
+                    <span style={{ marginRight: 12, color: '#ff4d4f' }}>未解决 HIGH 问题：{payload.unresolvedHigh}</span>
+                  )}
+                  {payload.preview && (
+                    <div style={{ color: '#888', marginTop: 4, maxHeight: 60, overflow: 'hidden' }}>
+                      {payload.preview}…
+                    </div>
+                  )}
+                </div>
+              )}
               <Space>
-                <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleApprove} loading={loading}>
-                  ✅ 批准并继续
+                <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => handleApprove(cp.id)} loading={loading}>
+                  ✅ 批准
                 </Button>
                 <Button danger icon={<CloseCircleOutlined />} onClick={handleReject} loading={loading}>
                   ❌ 拒绝并重写
@@ -186,14 +233,39 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
                   📝 修改意见重写
                 </Button>
               </Space>
+              </div>
             }
             style={{ marginBottom: 16 }}
           />
-        )}
+          );
+        })}
 
         {/* 状态提示 */}
         {status?.state === 'FINAL' && (
           <Alert type="success" message={`✅ 全书已完结，共 ${status.currentChapter} 章`} style={{ marginBottom: 16 }} />
+        )}
+        {status?.state === 'NEEDS_REVISION' && (
+          <Alert
+            type="error"
+            message="⛔ 成书门禁未通过（待修订）"
+            description="全书存在未达标的硬性门禁（如 mustResolve 伏笔未回收、近 60 章 HIGH 级矛盾超限）。请修订设定或正文后，点击「重新评审」再次触发成书门禁；通过后全书进入「已完结」。"
+            style={{ marginBottom: 16 }}
+            action={
+              <Button
+                type="primary"
+                danger
+                onClick={async () => {
+                  try {
+                    const r = await api.finalAudit(projectId);
+                    if (r.passed) { message.success('评审通过，全书已完结'); } else { message.warning('评审未通过，请继续修订'); }
+                    onChanged();
+                  } catch (e) { message.error((e as Error).message); }
+                }}
+              >
+                重新评审
+              </Button>
+            }
+          />
         )}
         {status?.state === 'WRITING' && !isPaused && (
           <Alert type="info" message="📝 写作中 — 可查看和重写已完成的章节" style={{ marginBottom: 16 }} />
@@ -209,20 +281,34 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
         )}
 
         <Row gutter={16}>
-          {/* 章节列表 */}
-          <Col span={6}>
+          {/* 章节列表（p21-06: 小屏堆叠） */}
+          <Col xs={24} md={6}>
             <Card title={`📖 章节 (${chapters.length})`} size="small" style={{ maxHeight: '70vh', overflow: 'auto' }}>
               <List
                 size="small"
                 dataSource={chapters}
                 renderItem={(ch, idx) => (
                   <List.Item
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`第${ch.chapterIndex}章 ${ch.title}`}
                     onClick={() => setSelectedIdx(idx)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedIdx(idx);
+                      }
+                    }}
                     style={{ cursor: 'pointer', background: idx === selectedIdx ? '#e6f7ff' : undefined }}
                   >
                     <List.Item.Meta
                       title={<Text strong>第{ch.chapterIndex}章 {ch.title.replace(/\*\*/g, '')}</Text>}
-                      description={<Tag>{ch.wordCount} 字</Tag>}
+                      description={
+                        <Space size={4}>
+                          <Tag>{ch.wordCount} 字</Tag>
+                          {ch.status === 'NEEDS_MANUAL_REVIEW' && <Tag color="red">待人审</Tag>}
+                        </Space>
+                      }
                     />
                   </List.Item>
                 )}
@@ -230,8 +316,8 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
             </Card>
           </Col>
 
-          {/* 章节正文 */}
-          <Col span={18}>
+          {/* 章节正文（p21-06: 小屏堆叠） */}
+          <Col xs={24} md={18}>
             {currentChapter ? (
               <Card
                 title={`第${currentChapter.chapterIndex}章 ${currentChapter.title.replace(/\*\*/g, '')}`}
@@ -239,6 +325,18 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
                   <Space>
                     <Tag color="blue">{currentChapter.wordCount} 字</Tag>
                     <Tag color="purple">v{currentChapter.version}</Tag>
+                    {currentChapter.status === 'NEEDS_MANUAL_REVIEW' && (
+                      <Button size="small" type="primary" onClick={async () => {
+                        try {
+                          await api.resolveManualReview(projectId, currentChapter.chapterIndex);
+                          message.success('已标为处理完毕');
+                          refresh();
+                          onChanged();
+                        } catch (err) {
+                          message.error((err as Error).message);
+                        }
+                      }}>已处理</Button>
+                    )}
                     <Button size="small" icon={<EditOutlined />} onClick={() => { setRewriteInstructions(''); setRewriteModalOpen(true); }}>
                       重写此章
                     </Button>
@@ -246,7 +344,9 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
                 }
                 style={{ maxHeight: '70vh', overflow: 'auto' }}
               >
-                {renderChapterContent(currentChapter.content)}
+                {bodies[currentMeta.chapterIndex]
+                  ? renderChapterContent(currentChapter.content)
+                  : <Spin style={{ display: 'block', margin: '40px auto' }} />}
 
                 {/* p11-G2: 段落编辑面板 */}
                 {selectedParagraph && (
@@ -257,10 +357,16 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
                       <div style={{ marginTop: 4 }}>{selectedParagraph.text.substring(0, 100)}
                         {selectedParagraph.text.length > 100 ? '...' : ''}</div>
                     </div>
+                    <div style={{ marginBottom: 6, color: '#888', fontSize: 12 }}>编辑方式（选好后再点右下角执行）</div>
                     <Space style={{ marginBottom: 8 }}>
                       {(['REWRITE', 'EXPAND', 'INSERT'] as const).map(m => (
                         <Button key={m} size="small" type={editMode === m ? 'primary' : 'default'}
-                          onClick={() => setEditMode(m)}>
+                          onClick={() => {
+                            setEditMode(m);
+                            if (editMode === m) {
+                              message.info('已是该方式，请填写指令后点「执行」');
+                            }
+                          }}>
                           {m === 'REWRITE' ? '改写' : m === 'EXPAND' ? '扩充' : '在其后插入'}
                         </Button>
                       ))}

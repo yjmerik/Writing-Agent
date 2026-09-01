@@ -24,6 +24,8 @@ public class ChapterQualityReport {
     // 套路词统计
     private int clicheCount;
     private List<String> topCliches;
+    private boolean needsManualReview;
+    private boolean qualityRisk;
 
     public ChapterQualityReport(int chapterIndex, String chapterTitle, int wordCount) {
         this.chapterIndex = chapterIndex;
@@ -68,4 +70,8 @@ public class ChapterQualityReport {
     public void setClicheCount(int c) { this.clicheCount = c; }
     public List<String> getTopCliches() { return topCliches; }
     public void setTopCliches(List<String> c) { this.topCliches = c; }
+    public boolean isNeedsManualReview() { return needsManualReview; }
+    public void setNeedsManualReview(boolean v) { this.needsManualReview = v; }
+    public boolean isQualityRisk() { return qualityRisk; }
+    public void setQualityRisk(boolean v) { this.qualityRisk = v; }
 }

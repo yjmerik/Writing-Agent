@@ -28,7 +28,10 @@ public class GlobalExceptionHandler {
     /** 兜底：其他未捕获异常 → 500 */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGeneric(Exception e) {
-        return ResponseEntity.internalServerError()
-                .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "内部错误"));
+        String msg = e.getMessage();
+        if (msg == null || msg.isBlank()) {
+            msg = "内部错误: " + e.getClass().getSimpleName();
+        }
+        return ResponseEntity.internalServerError().body(Map.of("error", msg));
     }
 }

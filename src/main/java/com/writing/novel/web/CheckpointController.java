@@ -33,12 +33,7 @@ public class CheckpointController {
     /** 批准 checkpoint — 推进项目状态 */
     @PostMapping("/{checkpointId}/approve")
     public Map<String, Object> approve(@PathVariable String id, @PathVariable String checkpointId) {
-        var cp = repository.findCheckpoint(checkpointId)
-                .orElseThrow(() -> new IllegalArgumentException("Checkpoint 不存在: " + checkpointId));
-        cp.approve();
-        repository.saveCheckpoint(cp);
-        // 推进状态（resumeFromCheckpoint 会自动处理状态转换）
-        orchestrator.step(id);
+        orchestrator.approveCheckpoint(id, checkpointId);
         return Map.of("status", "approved", "checkpointId", checkpointId);
     }
 

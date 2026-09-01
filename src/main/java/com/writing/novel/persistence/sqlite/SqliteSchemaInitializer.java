@@ -27,6 +27,7 @@ public class SqliteSchemaInitializer {
             "speaking_style TEXT, knowledge_domains TEXT, " +
             "strategy_level INTEGER, countermeasures TEXT, independent_will TEXT, blind_spot TEXT, " +
             "arc_stage TEXT, last_seen_chapter INTEGER, " +
+            "status TEXT, death_chapter INTEGER, " +
             "version INTEGER, updated_at TEXT)",
 
         "CREATE TABLE IF NOT EXISTS outlines (" +
@@ -68,7 +69,7 @@ public class SqliteSchemaInitializer {
 
         "CREATE TABLE IF NOT EXISTS checkpoints (" +
             "id TEXT PRIMARY KEY, project_id TEXT, type TEXT, " +
-            "description TEXT, status TEXT, created_at TEXT)",
+            "description TEXT, status TEXT, created_at TEXT, payload TEXT)",
 
         // 图数据库：实体表
         "CREATE TABLE IF NOT EXISTS entities (" +
@@ -107,6 +108,9 @@ public class SqliteSchemaInitializer {
                 "target_chapters INTEGER DEFAULT 400, " +
                 "layered_outline INTEGER DEFAULT 1, " +
                 "cost_budget_yuan REAL DEFAULT 0, " +
+                "rewrite_budget INTEGER DEFAULT 1, " +
+                "circuit_breaker_threshold INTEGER DEFAULT 10, " +
+                "checkpoint_span INTEGER DEFAULT 1, " +
                 "updated_at TEXT)",
 
         // 生成日志表（创意多样性追踪）
@@ -127,9 +131,10 @@ public class SqliteSchemaInitializer {
             "character_score INTEGER, hook INTEGER, " +
             "summary TEXT, issues TEXT, improvement TEXT, created_at TEXT)",
 
-        // p12-K2: 异步写作任务表
+        // p12-K2: 异步写作任务表（p15-05: task_type 区分构思/单章/全卷任务）
         "CREATE TABLE IF NOT EXISTS writing_tasks (" +
             "id TEXT PRIMARY KEY, project_id TEXT, status TEXT, " +
+            "task_type TEXT DEFAULT 'WRITE_ALL', " +
             "current_chapter INTEGER, total_chapters INTEGER, " +
             "chapters_written INTEGER, total_words INTEGER, " +
             "error_message TEXT, created_at TEXT, updated_at TEXT)",
@@ -140,7 +145,17 @@ public class SqliteSchemaInitializer {
             "subject TEXT, assertion TEXT, chapter_established INTEGER, " +
             "source_chapter_version INTEGER DEFAULT 0, importance INTEGER DEFAULT 3, " +
             "status TEXT DEFAULT 'ACTIVE', superseded_by TEXT, " +
-            "last_validated_chapter INTEGER, created_at TEXT, updated_at TEXT)"
+            "last_validated_chapter INTEGER, created_at TEXT, updated_at TEXT)",
+
+        // p17-05: 自定义预设持久化（跨项目共享，name 主键 upsert）
+        "CREATE TABLE IF NOT EXISTS custom_presets (" +
+            "name TEXT PRIMARY KEY, content TEXT, updated_at TEXT)",
+
+        // p20-03: 后处理阶段账本——每项目/章节/阶段一行，重启续跑只补未完成阶段
+        "CREATE TABLE IF NOT EXISTS post_process_ledger (" +
+            "project_id TEXT, chapter_index INTEGER, stage TEXT, " +
+            "status TEXT DEFAULT 'PENDING', updated_at TEXT, " +
+            "PRIMARY KEY (project_id, chapter_index, stage))"
     };
 
     private final ConnectionProvider cp;
@@ -215,7 +230,10 @@ public class SqliteSchemaInitializer {
             // evaluation_records: 按 project_id 查
             "CREATE INDEX IF NOT EXISTS idx_eval_project ON evaluation_records(project_id)",
             // writing_preferences: 按 project_id 查（主键已有，但显式声明）
-            "CREATE INDEX IF NOT EXISTS idx_prefs_project ON writing_preferences(project_id)"
+            "CREATE INDEX IF NOT EXISTS idx_prefs_project ON writing_preferences(project_id)",
+            // p19-02: story_facts 按 project_id + status 过滤——findActive/findActiveBySubject 每章高频调用，
+            // 千行级事实无索引时全表扫（400 章 × 5+ 次/章劣化）
+            "CREATE INDEX IF NOT EXISTS idx_story_facts_project_status ON story_facts(project_id, status)"
         };
         for (String idx : indexes) {
             try {
@@ -227,6 +245,8 @@ public class SqliteSchemaInitializer {
     }
 
     private void applyMigrations(Statement st) {
+        // p18-02: checkpoints 表新增 payload 列（审批质量信息）
+        safeAddColumn(st, "ALTER TABLE checkpoints ADD COLUMN payload TEXT");
         // p10-c1: foreshadowings 表新增列
         safeAddColumn(st, "ALTER TABLE foreshadowings ADD COLUMN priority TEXT DEFAULT 'MEDIUM'");
         safeAddColumn(st, "ALTER TABLE foreshadowings ADD COLUMN expected_resolve_chapter INTEGER");
@@ -256,9 +276,20 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE chapter_synopses ADD COLUMN climax TEXT");
         // C2: 全书摘要——卷末压缩为≤3句的"全书一句话摘要"，修复记忆地平线坍塌
         safeAddColumn(st, "ALTER TABLE projects ADD COLUMN book_summary TEXT");
+        // p19-03: 全书结构化快照
+        safeAddColumn(st, "ALTER TABLE projects ADD COLUMN book_snapshot TEXT");
+        // p19-01: 角色存续状态
+        safeAddColumn(st, "ALTER TABLE characters ADD COLUMN status TEXT");
+        safeAddColumn(st, "ALTER TABLE characters ADD COLUMN death_chapter INTEGER");
         // p10-w1-04: 成本预算熔断
         safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN cost_budget_yuan REAL DEFAULT 0");
+        // p11-q2-04/05: 重写预算 + 质量熔断阈值（可配置）
+        safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN rewrite_budget INTEGER DEFAULT 1");
+        safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN circuit_breaker_threshold INTEGER DEFAULT 10");
         // p10-w1-06: 章节状态机
         safeAddColumn(st, "ALTER TABLE chapters ADD COLUMN status TEXT DEFAULT 'DONE'");
+        safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN checkpoint_span INTEGER DEFAULT 1");
+        // p15-05: 写作任务类型（旧库无此列时补列，存量行默认 WRITE_ALL）
+        safeAddColumn(st, "ALTER TABLE writing_tasks ADD COLUMN task_type TEXT DEFAULT 'WRITE_ALL'");
     }
 }

@@ -7,6 +7,7 @@ import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
+import com.writing.novel.memory.RelevanceGateway;
 import com.writing.novel.spi.NovelRepository;
 
 import java.util.ArrayList;
@@ -24,13 +25,21 @@ public class EntityExtractorAgent {
     private final LlmGateway gateway;
     private final NovelRepository repository;
     private final PromptTemplateService promptService;
+    private final RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     public EntityExtractorAgent(LlmGateway gateway, NovelRepository repository,
                                 PromptTemplateService promptService) {
+        this(gateway, repository, promptService, null);
+    }
+
+    /** p11-q0-01: 注入 RelevanceGateway，进 LLM 的参考清单按 recency 收窄（token 受控） */
+    public EntityExtractorAgent(LlmGateway gateway, NovelRepository repository,
+                                PromptTemplateService promptService, RelevanceGateway relevanceGateway) {
         this.gateway = gateway;
         this.repository = repository;
         this.promptService = promptService;
+        this.relevanceGateway = relevanceGateway;
     }
 
     /**
@@ -40,9 +49,22 @@ public class EntityExtractorAgent {
      * @return 提取结果统计
      */
     public ExtractionResult extract(String projectId, Chapter chapter) {
-        // 已有实体列表（用于 LLM 去重 + Java 层二次去重）
+        // 已有实体列表（Java 层去重需全量，保证不产生重复实体）
         List<Entity> existingEntities = repository.findEntitiesByProject(projectId);
-        String existingJson = formatExistingEntities(existingEntities);
+        // p11-q0-01: 进 LLM 的参考清单经 RelevanceGateway 收窄（recency），token 受控
+        List<Entity> llmReference = relevanceGateway != null
+                ? relevanceGateway.relevantEntities(projectId, null, 40)
+                : existingEntities;
+        String existingJson = formatExistingEntities(llmReference);
+        // p11-q0-02: 附加真典已确立的角色/物品事实（避免重复提取已确立内容）
+        if (relevanceGateway != null) {
+            String canon = relevanceGateway.relevantFacts(projectId, null, 20).stream()
+                    .filter(f -> f.getFactType() == StoryFact.FactType.OBJECT_STATE
+                            || f.getFactType() == StoryFact.FactType.CHARACTER_STATE)
+                    .map(f -> f.getSubject() + ":" + f.getAssertion())
+                    .collect(Collectors.joining("; "));
+            if (!canon.isBlank()) existingJson = existingJson + "\n已确立事实: " + canon;
+        }
 
         // p9-5: 截断正文到 3000 字，避免超 token 导致 LLM 返回空
         String chapterContent = chapter.getContent();

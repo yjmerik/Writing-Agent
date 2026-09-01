@@ -1,0 +1,97 @@
+package com.writing.novel.llm;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * p23-01: 确定性场景网关——按任务类型产出语法合法、逐字可复现的响应，全程零网络。
+ * 为 400 章 soak / 业务生命周期 E2E 提供驱动原语。
+ */
+class ScenarioLlmGatewayTest {
+
+    private final ScenarioLlmGateway gateway = new ScenarioLlmGateway();
+
+    private LlmRequest req(LlmTaskType type, String systemPrompt) {
+        return LlmRequest.builder()
+                .taskType(type)
+                .systemPrompt(systemPrompt)
+                .userMessage("请提取第3章确立的事实。")
+                .build();
+    }
+
+    @Test
+    void 全部任务类型响应非空且无网络依赖() {
+        for (LlmTaskType type : LlmTaskType.values()) {
+            LlmResponse r = gateway.complete(req(type, "任意上下文"));
+            assertNotNull(r);
+            assertNotNull(r.getContent());
+            assertFalse(r.getContent().isBlank(), type + " 响应不得为空");
+        }
+    }
+
+    @Test
+    void 正文响应满足入库下限且不含章号污染() {
+        LlmResponse r = gateway.complete(req(LlmTaskType.CHAPTER_WRITING, "第12章 试炼"));
+        assertTrue(r.getContent().length() >= 2000, "场景正文必须达到最小入库门槛");
+        assertFalse(r.getContent().contains("第12章"), "场景正文不得携带章号（避免污染后续 prompt 与章号告警）");
+        assertTrue(!r.getContent().matches(".*第\\d+章.*"), "全文不得出现任何 第N章 字样");
+    }
+
+    @Test
+    void 构思类响应可被解析器识别() {
+        String world = gateway.complete(req(LlmTaskType.WORLDBUILDING, "设定")).getContent();
+        assertTrue(world.contains("【地理】") && world.contains("【力量体系】"));
+
+        String character = gateway.complete(req(LlmTaskType.CHARACTER_DESIGN, "设计")).getContent();
+        assertTrue(character.contains("【姓名】") && character.contains("【角色定位】"));
+
+        String plot = gateway.complete(req(LlmTaskType.PLOTTING, "规划")).getContent();
+        assertTrue(plot.contains("【总纲】") && plot.contains("【卷1】"));
+        assertTrue(plot.contains("第1章") && plot.contains("第3章"), "总纲应含可解析的章节行");
+    }
+
+    @Test
+    void 校验收割类任务返回可解析JSON数组() {
+        String continuity = gateway.complete(req(LlmTaskType.CONTINUITY_CHECK, "检查")).getContent();
+        assertTrue(continuity.trim().startsWith("["), "一致性检查应返回 JSON 数组（零问题）");
+
+        String general = gateway.complete(req(LlmTaskType.GENERAL, "收割/抽取")).getContent();
+        assertTrue(general.trim().startsWith("["), "GENERAL（收割/抽取族）应返回 JSON 数组");
+    }
+
+    @Test
+    void 卷大纲请求按章节范围生成逐章行() {
+        LlmRequest volumeReq = LlmRequest.builder()
+                .taskType(LlmTaskType.PLOTTING)
+                .systemPrompt("章节范围：第9章到第16章（共8章）。当前任务：为卷生成详细章节大纲。")
+                .userMessage("请规划卷大纲。")
+                .build();
+        String out = gateway.complete(volumeReq).getContent();
+        assertTrue(out.contains("第9章") && out.contains("第16章"), "应覆盖范围首尾章节");
+        assertFalse(out.contains("第17章"), "不得越过范围上限");
+        // 逐章大纲行需要可解析的节拍/爽点结构（parseChaptersInVolume 兼容）
+        assertTrue(out.contains("场景节拍") && out.contains("爽点"));
+    }
+
+    @Test
+    void 同参数响应逐字可复现() {
+        LlmRequest r = req(LlmTaskType.CHAPTER_WRITING, "第5章");
+        String first = gateway.complete(r).getContent();
+        String second = gateway.complete(r).getContent();
+        assertEquals(first, second, "场景网关必须确定性（逐字一致）");
+    }
+
+    @Test
+    void harsh档按检查调用序触发前两次报高危() {
+        com.writing.novel.llm.ScenarioLlmGateway harsh = new com.writing.novel.llm.ScenarioLlmGateway(true);
+        LlmRequest check = LlmRequest.builder()
+                .taskType(LlmTaskType.CONTINUITY_CHECK)
+                .systemPrompt("你是连续性检查器。")
+                .userMessage("检查正文。")
+                .build();
+        assertTrue(harsh.complete(check).getContent().contains("【人物|高】"), "第1次检查（初检）应报 HIGH");
+        assertTrue(harsh.complete(check).getContent().contains("【人物|高】"), "第2次检查（复检）应报 HIGH");
+        assertEquals("[]", harsh.complete(check).getContent(), "第3次起不再注入");
+    }
+}

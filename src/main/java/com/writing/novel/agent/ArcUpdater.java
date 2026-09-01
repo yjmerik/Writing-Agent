@@ -1,10 +1,12 @@
 package com.writing.novel.agent;
 
 import com.writing.novel.domain.Character;
+import com.writing.novel.domain.StoryFact;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
+import com.writing.novel.spi.StoryCanon;
 import com.writing.novel.spi.NovelRepository;
 
 import java.util.List;
@@ -24,12 +26,20 @@ public class ArcUpdater {
     private final LlmGateway gateway;
     private final NovelRepository repository;
     private final PromptTemplateService promptService;
+    private final StoryCanon canon; // p11-q0-03/p22-02: 真典写入（可变状态权威源）
 
     public ArcUpdater(LlmGateway gateway, NovelRepository repository,
                       PromptTemplateService promptService) {
+        this(gateway, repository, promptService, null);
+    }
+
+    /** p11-q0-03: 注入真典端口，成长弧演进同步写真典 CHARACTER_STATE（Character 卡兼容保留） */
+    public ArcUpdater(LlmGateway gateway, NovelRepository repository,
+                      PromptTemplateService promptService, StoryCanon canon) {
         this.gateway = gateway;
         this.repository = repository;
         this.promptService = promptService;
+        this.canon = canon;
     }
 
     /**
@@ -84,6 +94,8 @@ public class ArcUpdater {
 
             var resp = gateway.complete(req);
             applyUpdates(c, resp.getContent());
+            // p11-q0-03: 成长弧演进同步写真典 CHARACTER_STATE（真典为可变状态权威，消除 Character 卡漂移双轨）
+            syncCanonState(projectId, c, currentChapter);
             repository.saveCharacter(c);
             return c.getName();
         } catch (Exception e) {
@@ -115,6 +127,33 @@ public class ArcUpdater {
         if (rel != null) c.setRelationships(rel);
         String voice = extractField(text, "说话风格");
         if (voice != null) c.setSpeakingStyle(voice);
+    }
+
+    /**
+     * p11-q0-03: 成长弧演进同步写真典 CHARACTER_STATE。
+     * 角色成长弧是"可变状态"，应由真典承载（与 FactHarvester 每章收割互补）。
+     * Character 卡的 growthArc 仍保留（兼容），但真典为权威源——ContextAssembler bibleSection 读真典。
+     */
+    private void syncCanonState(String projectId, Character c, int currentChapter) {
+        if (canon == null || c.getGrowthArc() == null) return;
+        String assertion = "成长弧：" + c.getGrowthArc();
+        var existing = canon.recallBySubject(projectId, c.getName()).stream()
+                .filter(f -> f.getFactType() == StoryFact.FactType.CHARACTER_STATE
+                        && f.getAssertion() != null && f.getAssertion().startsWith("成长弧："))
+                .toList();
+        if (existing.isEmpty()) {
+            canon.saveIfAbsent(new StoryFact(projectId, StoryFact.FactType.CHARACTER_STATE,
+                    c.getName(), assertion, currentChapter));
+        } else {
+            StoryFact old = existing.get(0);
+            if (old.getAssertion().equals(assertion)) {
+                canon.validate(old, currentChapter); // 无变化则刷新确认章
+            } else {
+                // 成长弧演进 → 合法 supercede（审计链由端口保证）
+                canon.supersedeFact(old, new StoryFact(projectId, StoryFact.FactType.CHARACTER_STATE,
+                        c.getName(), assertion, currentChapter));
+            }
+        }
     }
 
     private String extractField(String text, String field) {

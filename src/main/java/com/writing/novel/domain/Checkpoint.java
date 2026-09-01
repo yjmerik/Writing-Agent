@@ -19,6 +19,8 @@ public class Checkpoint {
     private String description;
     private Status status;
     private Instant createdAt;
+    /** p18-02: 审批质量 payload（JSON：AFTER_CHAPTER 含 chapterIndex/title/wordCount/preview/score/unresolvedHigh） */
+    private String payload;
 
     public Checkpoint(String projectId, Type type, String description) {
         this.id = UUID.randomUUID().toString();
@@ -39,4 +41,6 @@ public class Checkpoint {
     public String getDescription() { return description; }
     public Status getStatus() { return status; }
     public Instant getCreatedAt() { return createdAt; }
+    public String getPayload() { return payload; }
+    public void setPayload(String payload) { this.payload = payload; }
 }

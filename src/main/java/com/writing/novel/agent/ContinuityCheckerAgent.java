@@ -1,10 +1,12 @@
 package com.writing.novel.agent;
 
 import com.writing.novel.domain.ContinuityIssue;
+import com.writing.novel.domain.StoryFact;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
+import com.writing.novel.memory.RelevanceGateway;
 import com.writing.novel.spi.NovelRepository;
 
 import java.util.ArrayList;
@@ -21,12 +23,20 @@ public class ContinuityCheckerAgent {
     private final LlmGateway gateway;
     private final NovelRepository repository;
     private final PromptTemplateService promptService;
+    private final RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面
 
     public ContinuityCheckerAgent(LlmGateway gateway, NovelRepository repository,
                                   PromptTemplateService promptService) {
+        this(gateway, repository, promptService, null);
+    }
+
+    /** p11-q0-01: 注入 RelevanceGateway，按相关性收窄查找（如主角定位） */
+    public ContinuityCheckerAgent(LlmGateway gateway, NovelRepository repository,
+                                  PromptTemplateService promptService, RelevanceGateway relevanceGateway) {
         this.gateway = gateway;
         this.repository = repository;
         this.promptService = promptService;
+        this.relevanceGateway = relevanceGateway;
     }
 
     public List<ContinuityIssue> check(String projectId, int chapterIndex,
@@ -54,6 +64,12 @@ public class ContinuityCheckerAgent {
             msg.append("\n\n").append(nameCheck);
         }
 
+        // p11-q0-02: 故事真典（已确立事实）——长程一致性校验依据，替代级联压缩的摘要
+        String canon = buildCanonSection(projectId);
+        if (canon != null && !canon.isBlank()) {
+            msg.append("\n\n").append(canon);
+        }
+
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.CONTINUITY_CHECK)
                 .systemPrompt(systemPrompt)
@@ -77,7 +93,10 @@ public class ContinuityCheckerAgent {
      * mc-p2-02: 构建长程连续性检查依据——历史卷摘要（span>3 的卷级摘要，过滤 dirty）
      * + 叙事线索台账（未回收的线索）。检查新章节时与这些历史依据核对。
      */
-    private String buildHistorySection(String projectId) {
+    /** p16-04: 线索台账注入上限——40 条线索全量注入随章节无界增长 */
+    static final int THREAD_LEDGER_CAP = 15;
+
+    String buildHistorySection(String projectId) {
         if (repository == null) return "";
         StringBuilder sb = new StringBuilder();
 
@@ -99,9 +118,12 @@ public class ContinuityCheckerAgent {
             sb.append("\n");
         }
 
-        // 叙事线索台账：未回收线索
+        // 叙事线索台账：未回收线索（p16-04: 悬挂最久优先，cap 15）
         var threads = repository.findAllNarrativeThreads(projectId).stream()
                 .filter(t -> t.getStatus() != com.writing.novel.domain.ThreadStatus.RESOLVED)
+                .sorted(java.util.Comparator.comparingInt(
+                        t -> ((com.writing.novel.domain.NarrativeThread) t).getFirstSeenChapter()))
+                .limit(THREAD_LEDGER_CAP)
                 .toList();
         if (!threads.isEmpty()) {
             sb.append("【叙事线索台账（本章不得与以下未回收线索冲突，必要时推进或回收）】\n");
@@ -144,7 +166,11 @@ public class ContinuityCheckerAgent {
     private String buildNameDriftCheckSection(String projectId) {
         if (repository == null) return "";
         try {
-            var mc = repository.findCharactersByProject(projectId).stream()
+            // p11-q0-01: 经 RelevanceGateway 收窄定位主角（gateway 主角保底），不再全量 findAll*
+            var characters = relevanceGateway != null
+                    ? relevanceGateway.relevantCharacters(projectId, null, 5)
+                    : repository.findCharactersByProject(projectId);
+            var mc = characters.stream()
                     .filter(c -> c.getRole() != null && c.getRole().contains("主角"))
                     .map(c -> c.getName()).findFirst().orElse(null);
             if (mc == null || mc.isBlank()) return "";
@@ -154,6 +180,22 @@ public class ContinuityCheckerAgent {
         } catch (Exception e) {
             return "";
         }
+    }
+
+    /**
+     * p11-q0-02: 故事真典段——消费 ACTIVE 事实作为连续性校验依据。
+     * 经 RelevanceGateway 取 importance 降序的相关事实（主角保底），作为长程一致性核对依据。
+     */
+    private String buildCanonSection(String projectId) {
+        if (relevanceGateway == null) return "";
+        List<StoryFact> facts = relevanceGateway.relevantFacts(projectId, null, 15);
+        if (facts.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder("【故事真典（已确立的事实，新章节必须严格遵守）】\n");
+        for (StoryFact f : facts) {
+            sb.append("- ").append(f.getSubject()).append("（").append(f.getFactType())
+                    .append("）：").append(f.getAssertion()).append("\n");
+        }
+        return sb.toString().trim();
     }
 
     private List<ContinuityIssue> parseIssues(String text, String projectId, int chapterIndex) {

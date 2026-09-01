@@ -2,17 +2,20 @@ package com.writing.novel.agent;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.writing.novel.domain.StoryFact;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmResponse;
 import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
+import com.writing.novel.memory.RelevanceGateway;
 import com.writing.novel.spi.NovelRepository;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 质量评价 Agent（评分子系统）。
@@ -30,13 +33,21 @@ public class QualityEvaluationAgent {
     private final LlmGateway gateway;
     private final NovelRepository repository;
     private final PromptTemplateService promptService;
+    private final RelevanceGateway relevanceGateway; // p11-q0-02: 真典消费
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     public QualityEvaluationAgent(LlmGateway gateway, NovelRepository repository,
                                   PromptTemplateService promptService) {
+        this(gateway, repository, promptService, null);
+    }
+
+    /** p11-q0-02: 注入 RelevanceGateway，消费真典 ACTIVE 事实作为长程评价依据 */
+    public QualityEvaluationAgent(LlmGateway gateway, NovelRepository repository,
+                                  PromptTemplateService promptService, RelevanceGateway relevanceGateway) {
         this.gateway = gateway;
         this.repository = repository;
         this.promptService = promptService;
+        this.relevanceGateway = relevanceGateway;
     }
 
     /**
@@ -50,6 +61,7 @@ public class QualityEvaluationAgent {
         String chapterSamples = collectChapterSamples(projectId);
         String outline = collectOutline(projectId);
         String summary = collectSummaries(projectId);
+        String canon = collectCanon(projectId); // p11-q0-02: 真典作为长程一致性评价依据
 
         String systemPrompt = promptService.render("quality-evaluate", Map.of());
 
@@ -57,6 +69,7 @@ public class QualityEvaluationAgent {
                 "\n\n=== 人物卡 ===\n" + truncate(characters, 600) +
                 "\n\n=== 大纲 ===\n" + truncate(outline, 500) +
                 "\n\n=== 前情摘要 ===\n" + truncate(summary, 800) +
+                "\n\n=== 故事真典（已确立事实） ===\n" + truncate(canon, 800) +
                 "\n\n=== 章节正文采样 ===\n" + truncate(chapterSamples, 3000) +
                 "\n\n请评价这部小说的质量。";
 
@@ -155,6 +168,16 @@ public class QualityEvaluationAgent {
                     .append("章：").append(s.getContent()).append("\n");
         }
         return sb.toString();
+    }
+
+    /** p11-q0-02: 收集故事真典 ACTIVE 事实作为长程一致性评价依据（替代级联压缩摘要） */
+    private String collectCanon(String projectId) {
+        if (relevanceGateway == null) return "（无真典）";
+        List<StoryFact> facts = relevanceGateway.relevantFacts(projectId, null, 30);
+        if (facts.isEmpty()) return "（无已确立事实）";
+        return facts.stream()
+                .map(f -> "- " + f.getSubject() + "（" + f.getFactType() + "）：" + f.getAssertion())
+                .collect(Collectors.joining("\n"));
     }
 
     private String collectChapterSamples(String projectId) {

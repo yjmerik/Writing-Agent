@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Layout, Tabs, Button, Descriptions, Tag, Space, message, Spin, Collapse, Input, Slider, Switch } from 'antd';
+import { Layout, Tabs, Button, Descriptions, Tag, Space, message, Spin, Collapse, Input, Slider, Switch, Select } from 'antd';
 import { ArrowLeftOutlined, PlusOutlined, SettingOutlined, SendOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
 import type { Project, ProjectMode } from '../types';
@@ -18,12 +18,13 @@ const STATE_TEXT: Record<string, string> = {
   WRITING: '创作中',
   VOLUME_DONE: '卷完结',
   FINAL: '已完结',
+  NEEDS_REVISION: '待修订',
   PAUSED_AT_CHECKPOINT: '待审核',
 };
 
 const STATE_COLOR: Record<string, string> = {
   CONCEIVING: 'blue', PLANNING: 'cyan', WRITING: 'processing',
-  VOLUME_DONE: 'gold', FINAL: 'green', PAUSED_AT_CHECKPOINT: 'orange',
+  VOLUME_DONE: 'gold', FINAL: 'green', NEEDS_REVISION: 'red', PAUSED_AT_CHECKPOINT: 'orange',
 };
 
 export default function ProjectWorkspace() {
@@ -89,14 +90,21 @@ export default function ProjectWorkspace() {
 
   return (
     <Layout style={{ background: 'transparent', minHeight: '100vh' }}>
-      <Sider width={320} theme="light" style={{ padding: '16px 12px', background: '#fafaf8', borderRight: '1px solid #eee' }}>
+      {/* p21-06: 响应式侧栏——小于 lg 自动折叠，375px 下无页面级横向溢出 */}
+      <Sider
+        width={320}
+        breakpoint="lg"
+        collapsedWidth="0"
+        theme="light"
+        style={{ padding: '16px 12px', background: '#fafaf8', borderRight: '1px solid #eee' }}
+      >
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
           {/* 顶部操作 */}
           <div style={{ display: 'flex', gap: 8 }}>
             <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/')} style={{ flex: 1 }}>
               返回列表
             </Button>
-            <Button icon={<PlusOutlined />} onClick={() => navigate('/')} style={{ flex: 1 }}>
+            <Button icon={<PlusOutlined />} onClick={() => navigate('/?new=1')} style={{ flex: 1 }}>
               新建
             </Button>
           </div>
@@ -116,6 +124,24 @@ export default function ProjectWorkspace() {
                     onClick={() => handleModeSwitch(project.mode === 'SOLO' ? 'INTERACTIVE' : 'SOLO')}>
                     切换
                   </Button>
+                  {project.state !== 'FINAL' && project.state !== 'PAUSED_AT_CHECKPOINT' && (
+                    <Button size="small" type="link" style={{ padding: 0, height: 'auto', fontSize: 11 }}
+                      onClick={async () => {
+                        try { await api.pause(project.id); message.success('已暂停'); load(); }
+                        catch (e) { message.error((e as Error).message); }
+                      }}>
+                      暂停
+                    </Button>
+                  )}
+                  {project.state === 'PAUSED_AT_CHECKPOINT' && (
+                    <Button size="small" type="link" style={{ padding: 0, height: 'auto', fontSize: 11 }}
+                      onClick={async () => {
+                        try { await api.resume(project.id); message.success('已继续'); load(); }
+                        catch (e) { message.error((e as Error).message); }
+                      }}>
+                      续写
+                    </Button>
+                  )}
                 </Space>
               </Descriptions.Item>
               <Descriptions.Item label={<span style={{ color: '#999', fontSize: 12 }}>进度</span>}>
@@ -148,9 +174,7 @@ export default function ProjectWorkspace() {
                         value={Math.round((prefs.dialogueDensity as number) * 100)}
                         onChange={async (v) => {
                           try {
-                            const r = await api.chatPreferences(id!, `对话密度设为${v}%`);
-                            setPrefs(r.preferences);
-                            setChatReply(r.reply);
+                            setPrefs(await api.updatePreferences(id!, { dialogueDensity: v / 100 }));
                           } catch { /* ignore */ }
                         }}
                       />
@@ -161,8 +185,7 @@ export default function ProjectWorkspace() {
                           checked={prefs.enableClimaxRotation as boolean}
                           onChange={async (v) => {
                             try {
-                              const r = await api.chatPreferences(id!, v ? '开启爽点轮换' : '关闭爽点轮换');
-                              setPrefs(r.preferences);
+                              setPrefs(await api.updatePreferences(id!, { enableClimaxRotation: v }));
                             } catch { /* ignore */ }
                           }}
                         />
@@ -174,8 +197,7 @@ export default function ProjectWorkspace() {
                           checked={prefs.enableCharacterVoice as boolean}
                           onChange={async (v) => {
                             try {
-                              const r = await api.chatPreferences(id!, v ? '开启角色声音' : '关闭角色声音');
-                              setPrefs(r.preferences);
+                              setPrefs(await api.updatePreferences(id!, { enableCharacterVoice: v }));
                             } catch { /* ignore */ }
                           }}
                         />
@@ -187,10 +209,27 @@ export default function ProjectWorkspace() {
                           checked={prefs.enableKnowledgeQuotes as boolean}
                           onChange={async (v) => {
                             try {
-                              const r = await api.chatPreferences(id!, v ? '开启引用素材' : '关闭引用素材');
-                              setPrefs(r.preferences);
+                              setPrefs(await api.updatePreferences(id!, { enableKnowledgeQuotes: v }));
                             } catch { /* ignore */ }
                           }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                        <span style={{ color: '#666' }}>检查点间隔</span>
+                        <Select
+                          size="small"
+                          style={{ width: 110 }}
+                          value={(prefs.checkpointSpan as number) ?? 1}
+                          onChange={async (v) => {
+                            try {
+                              setPrefs(await api.updatePreferences(id!, { checkpointSpan: v }));
+                            } catch { /* ignore */ }
+                          }}
+                          options={[
+                            { value: 1, label: '每章' },
+                            { value: 0, label: '仅手动' },
+                            { value: -1, label: '卷末' },
+                          ]}
                         />
                       </div>
                     </div>
@@ -226,7 +265,7 @@ export default function ProjectWorkspace() {
           items={[
             { key: 'run', label: '🎮 运行控制台', children: <RunConsole projectId={project.id} projectState={project.state} onChanged={load} /> },
             { key: 'world', label: '🌍 世界观与人物', children: <WorldbuildingView key={`world-${project.currentChapterIndex}`} projectId={project.id} /> },
-            { key: 'outline', label: '📋 大纲', children: <OutlineView key={`outline-${project.state}`} projectId={project.id} /> },
+            { key: 'outline', label: '📋 大纲', children: <OutlineView key={`outline-${project.state}-${project.currentChapterIndex}`} projectId={project.id} currentChapter={project.currentChapterIndex} /> },
             { key: 'review', label: '📖 章节管理', children: <InteractiveReview key={`review-${project.currentChapterIndex}`} projectId={project.id} onChanged={load} /> },
             { key: 'quality', label: '🔍 质量评价', children: <QualityView projectId={project.id} /> },
           ]}

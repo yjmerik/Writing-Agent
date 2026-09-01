@@ -5,6 +5,7 @@ import com.writing.novel.domain.StoryFact;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmResponse;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +43,7 @@ class FactHarvesterTest {
     private FactHarvesterAgent agentReturning(String json) {
         LlmGateway gw = mock(LlmGateway.class);
         when(gw.complete(any())).thenReturn(new LlmResponse(json, 100, 50));
-        return new FactHarvesterAgent(gw, factRepo, TestPromptHelper.create());
+        return new FactHarvesterAgent(gw, new SqliteStoryCanon(factRepo), TestPromptHelper.create());
     }
 
     @Test

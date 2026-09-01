@@ -113,7 +113,7 @@ class WritingJobReliabilityTest {
 
         // mock orchestrator.runWritingLoop 返回 written(2) < maxChapters(10)
         NovelOrchestrator orch = mock(NovelOrchestrator.class);
-        when(orch.runWritingLoop(eq(pid), eq(10), any())).thenReturn(2);
+        when(orch.runWritingLoop(eq(pid), eq(10), any(), any())).thenReturn(2);
 
         WritingTaskExecutor executor = new WritingTaskExecutor(orch, repo, monitor);
         WritingTask task = new WritingTask(pid, 10);
@@ -139,7 +139,7 @@ class WritingJobReliabilityTest {
         monitor.add(pid, 0.01); // 远低于预算
 
         NovelOrchestrator orch = mock(NovelOrchestrator.class);
-        when(orch.runWritingLoop(eq(pid), eq(10), any())).thenReturn(10); // 写满
+        when(orch.runWritingLoop(eq(pid), eq(10), any(), any())).thenReturn(10); // 写满
 
         WritingTaskExecutor executor = new WritingTaskExecutor(orch, repo, monitor);
         WritingTask task = new WritingTask(pid, 10);

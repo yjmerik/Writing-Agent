@@ -1,6 +1,7 @@
 package com.writing.novel.web;
 
 import com.writing.novel.agent.QualityEvaluationAgent;
+import com.writing.novel.domain.NovelState;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.WritingTask;
 import com.writing.novel.orchestrator.NovelOrchestrator;
@@ -31,7 +32,44 @@ public class OrchestratorController {
 
     @PostMapping("/run")
     public Map<String, Object> run(@PathVariable String id) {
-        orchestrator.step(id);
+        Project project = projectService.find(id).orElseThrow();
+        if (project.getState() == NovelState.CONCEIVING) {
+            WritingTask task = writingTaskExecutor.startConceiving(id);
+            return Map.of(
+                    "projectId", id,
+                    "taskId", task.getId(),
+                    "type", task.getType().name(),
+                    "status", task.getStatus().name()
+            );
+        }
+        // p20-06: 同步 step 也是写作入口——经协调器占坑，活动期冲突拒绝（409）
+        String workId = "step-" + java.util.UUID.randomUUID();
+        writingTaskExecutor.beginWork(id, workId);
+        try {
+            orchestrator.step(id);
+        } finally {
+            writingTaskExecutor.endWork(id, workId);
+        }
+        return status(id);
+    }
+
+    @PostMapping("/pause")
+    public Map<String, Object> pause(@PathVariable String id) {
+        orchestrator.pause(id);
+        writingTaskExecutor.cancelByProject(id);
+        return status(id);
+    }
+
+    @PostMapping("/resume")
+    public Map<String, Object> resume(@PathVariable String id) {
+        // p20-06: resume 可推进到写章——经协调器占坑，活动期冲突拒绝（409）
+        String workId = "step-" + java.util.UUID.randomUUID();
+        writingTaskExecutor.beginWork(id, workId);
+        try {
+            orchestrator.step(id);
+        } finally {
+            writingTaskExecutor.endWork(id, workId);
+        }
         return status(id);
     }
 
@@ -53,11 +91,13 @@ public class OrchestratorController {
      */
     @PostMapping("/write-all")
     public Map<String, Object> writeAll(@PathVariable String id,
-                                         @RequestParam(defaultValue = "50") int maxChapters) {
-        WritingTask task = writingTaskExecutor.startWriting(id, maxChapters);
+                                         @RequestParam(defaultValue = "50") int maxChapters,
+                                         @RequestParam(required = false) String instruction) {
+        WritingTask task = writingTaskExecutor.startWriting(id, maxChapters, instruction);
         return Map.of(
                 "projectId", id,
                 "taskId", task.getId(),
+                "type", task.getType().name(),
                 "status", task.getStatus().name(),
                 "totalChapters", task.getTotalChapters(),
                 "message", "异步写作已启动，请轮询任务状态"
@@ -72,6 +112,7 @@ public class OrchestratorController {
         return Map.of(
                 "taskId", task.getId(),
                 "projectId", task.getProjectId(),
+                "type", task.getType().name(),
                 "status", task.getStatus().name(),
                 "currentChapter", task.getCurrentChapter(),
                 "chaptersWritten", task.getChaptersWritten(),
@@ -86,6 +127,19 @@ public class OrchestratorController {
     public Map<String, Object> cancelWritingTask(@PathVariable String id, @PathVariable String taskId) {
         writingTaskExecutor.cancel(taskId);
         return Map.of("taskId", taskId, "status", "CANCELLED");
+    }
+
+    /**
+     * p21-02: 显式成书门禁重试——NEEDS_REVISION 人工修订后触发；通过 → FINAL。
+     */
+    @PostMapping("/final-audit")
+    public Map<String, Object> finalAudit(@PathVariable String id) {
+        boolean passed = orchestrator.retryFinalAudit(id);
+        return Map.of(
+                "projectId", id,
+                "passed", passed,
+                "state", passed ? NovelState.FINAL.name() : NovelState.NEEDS_REVISION.name()
+        );
     }
 
     /** 质量评价：从一致性/风格/情节/人物/世界观 5 维度评分并发现问题 */

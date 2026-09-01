@@ -45,12 +45,13 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public String saveProject(Project p) {
-        String sql = "INSERT INTO projects (id,title,concept,tags,mode,state,current_chapter_index,genre,created_at,updated_at,book_summary) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?) " +
+        String sql = "INSERT INTO projects (id,title,concept,tags,mode,state,current_chapter_index,genre,created_at,updated_at,book_summary,book_snapshot) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?) " +
                 "ON CONFLICT(id) DO UPDATE SET title=excluded.title, concept=excluded.concept, " +
                 "tags=excluded.tags, mode=excluded.mode, state=excluded.state, " +
                 "current_chapter_index=excluded.current_chapter_index, genre=excluded.genre, " +
-                "updated_at=excluded.updated_at, book_summary=excluded.book_summary";
+                "updated_at=excluded.updated_at, book_summary=excluded.book_summary, " +
+                "book_snapshot=excluded.book_snapshot";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, p.getId());
@@ -64,6 +65,7 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setString(9, p.getCreatedAt().toString());
             ps.setString(10, p.getUpdatedAt().toString());
             ps.setString(11, p.getBookSummary());
+            ps.setString(12, p.getBookSnapshot());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -92,6 +94,7 @@ public class SqliteNovelRepository implements NovelRepository {
                 }
             } catch (Exception ignored) {}
             try { p.setBookSummary(rs.getString("book_summary")); } catch (Exception ignored) {}
+            try { p.setBookSnapshot(rs.getString("book_snapshot")); } catch (Exception ignored) {}
             return Optional.of(p);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -115,16 +118,49 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public void deleteProject(String id) {
-        try (Connection conn = cp.getConnection();
-             Statement st = conn.createStatement()) {
-            for (String t : new String[]{"projects","knowledge_entries","characters","chapters",
-                    "summaries","foreshadowings","style_profiles","continuity_issues","checkpoints",
-                    "entities","entity_edges","evaluation_records"}) {
-                st.execute("DELETE FROM " + t + " WHERE project_id='" + id.replace("'","''") + "'");
+        try (Connection conn = cp.getConnection()) {
+            boolean oldAuto = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            try {
+                java.util.List<String> tables = new java.util.ArrayList<>();
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")) {
+                    ResultSet rs = ps.executeQuery();
+                    while (rs.next()) tables.add(rs.getString(1));
+                }
+                for (String t : tables) {
+                    if ("projects".equals(t)) continue;
+                    if (!hasColumn(conn, t, "project_id")) continue;
+                    try (PreparedStatement del = conn.prepareStatement(
+                            "DELETE FROM " + t + " WHERE project_id=?")) {
+                        del.setString(1, id);
+                        del.executeUpdate();
+                    }
+                }
+                try (PreparedStatement del = conn.prepareStatement("DELETE FROM projects WHERE id=?")) {
+                    del.setString(1, id);
+                    del.executeUpdate();
+                }
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(oldAuto);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static boolean hasColumn(Connection conn, String table, String column) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement("PRAGMA table_info(" + table + ")")) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                if (column.equalsIgnoreCase(rs.getString("name"))) return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -184,9 +220,9 @@ public class SqliteNovelRepository implements NovelRepository {
         String sql = "INSERT INTO characters (id,project_id,name,role,personality,ability,motivation," +
                 "appearance,relationships,growth_arc,speaking_style,knowledge_domains," +
                 "strategy_level,countermeasures,independent_will,blind_spot," +
-                "arc_stage,last_seen_chapter," +
+                "arc_stage,last_seen_chapter,status,death_chapter," +
                 "version,updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
                 "name=excluded.name, role=excluded.role, personality=excluded.personality, " +
                 "ability=excluded.ability, motivation=excluded.motivation, appearance=excluded.appearance, " +
                 "relationships=excluded.relationships, growth_arc=excluded.growth_arc, " +
@@ -194,6 +230,7 @@ public class SqliteNovelRepository implements NovelRepository {
                 "strategy_level=excluded.strategy_level, countermeasures=excluded.countermeasures, " +
                 "independent_will=excluded.independent_will, blind_spot=excluded.blind_spot, " +
                 "arc_stage=excluded.arc_stage, last_seen_chapter=excluded.last_seen_chapter, " +
+                "status=excluded.status, death_chapter=excluded.death_chapter, " +
                 "version=excluded.version, updated_at=excluded.updated_at";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -211,7 +248,10 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setString(17, c.getArcStage());
             if (c.getLastSeenChapter() != null) ps.setInt(18, c.getLastSeenChapter());
             else ps.setNull(18, Types.INTEGER);
-            ps.setInt(19, c.getVersion()); ps.setString(20, c.getUpdatedAt().toString());
+            ps.setString(19, c.getStatus() != null ? c.getStatus().name() : null);
+            if (c.getDeathChapter() != null) ps.setInt(20, c.getDeathChapter());
+            else ps.setNull(20, Types.INTEGER);
+            ps.setInt(21, c.getVersion()); ps.setString(22, c.getUpdatedAt().toString());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
         return c.getId();
@@ -304,7 +344,7 @@ public class SqliteNovelRepository implements NovelRepository {
         List<Chapter> list = new ArrayList<>();
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "SELECT id, project_id, chapter_index, title, word_count, version, created_at, updated_at " +
+                     "SELECT id, project_id, chapter_index, title, word_count, version, status, created_at, updated_at " +
                      "FROM chapters WHERE project_id=? ORDER BY chapter_index")) {
             ps.setString(1, projectId);
             ResultSet rs = ps.executeQuery();
@@ -313,6 +353,9 @@ public class SqliteNovelRepository implements NovelRepository {
                         rs.getInt("chapter_index"), rs.getString("title"));
                 setField(c, "id", rs.getString("id"));
                 setField(c, "wordCount", rs.getInt("word_count"));
+                // p23-04 修复: 元数据必须携带 status——懒加载列表的「待人审」标记依赖它
+                try { c.setStatus(Chapter.Status.valueOf(rs.getString("status"))); }
+                catch (Exception badStatus) { /* 未知状态保持默认 */ }
                 list.add(c);
             }
         } catch (SQLException e) { throw new RuntimeException(e); }
@@ -386,8 +429,13 @@ public class SqliteNovelRepository implements NovelRepository {
                 ps.setString(1, o.getProjectId()); ps.setString(2, o.getPremise());
                 ps.executeUpdate();
             }
+            java.util.Set<String> keptVolumeIds = new java.util.HashSet<>();
             for (Volume v : o.getVolumes()) {
                 saveVolume(conn, v);
+                keptVolumeIds.add(v.getId());
+            }
+            if (!keptVolumeIds.isEmpty()) {
+                pruneMissingVolumes(conn, o.getProjectId(), keptVolumeIds);
             }
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
@@ -401,8 +449,56 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setString(5, v.getSummary());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
+        java.util.Set<String> keptSynopsisIds = new java.util.HashSet<>();
         for (ChapterSynopsis s : v.getSynopses()) {
             saveSynopsis(conn, v.getId(), s);
+            keptSynopsisIds.add(s.getId());
+        }
+        try {
+            pruneMissingSynopses(conn, v.getId(), keptSynopsisIds);
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    private void pruneMissingSynopses(Connection conn, String volumeId, java.util.Set<String> keptIds) throws SQLException {
+        if (keptIds.isEmpty()) {
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM chapter_synopses WHERE volume_id=?")) {
+                ps.setString(1, volumeId);
+                ps.executeUpdate();
+            }
+            return;
+        }
+        String placeholders = String.join(",", java.util.Collections.nCopies(keptIds.size(), "?"));
+        try (PreparedStatement ps = conn.prepareStatement(
+                "DELETE FROM chapter_synopses WHERE volume_id=? AND id NOT IN (" + placeholders + ")")) {
+            ps.setString(1, volumeId);
+            int i = 2;
+            for (String id : keptIds) {
+                ps.setString(i++, id);
+            }
+            ps.executeUpdate();
+        }
+    }
+
+    private void pruneMissingVolumes(Connection conn, String projectId, java.util.Set<String> keptIds) throws SQLException {
+        String placeholders = String.join(",", java.util.Collections.nCopies(keptIds.size(), "?"));
+        try (PreparedStatement ps = conn.prepareStatement(
+                "DELETE FROM chapter_synopses WHERE volume_id IN (SELECT id FROM volumes WHERE project_id=? AND id NOT IN (" + placeholders + "))")) {
+            ps.setString(1, projectId);
+            int i = 2;
+            for (String id : keptIds) {
+                ps.setString(i++, id);
+            }
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = conn.prepareStatement(
+                "DELETE FROM volumes WHERE project_id=? AND id NOT IN (" + placeholders + ")")) {
+            ps.setString(1, projectId);
+            int i = 2;
+            for (String id : keptIds) {
+                ps.setString(i++, id);
+            }
+            ps.executeUpdate();
         }
     }
 
@@ -682,12 +778,13 @@ public class SqliteNovelRepository implements NovelRepository {
     public String saveCheckpoint(Checkpoint c) {
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO checkpoints (id,project_id,type,description,status,created_at) " +
-                     "VALUES (?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET status=excluded.status")) {
+                     "INSERT INTO checkpoints (id,project_id,type,description,status,created_at,payload) " +
+                     "VALUES (?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET status=excluded.status, payload=excluded.payload")) {
             ps.setString(1, c.getId()); ps.setString(2, c.getProjectId());
             ps.setString(3, c.getType().name()); ps.setString(4, c.getDescription());
             ps.setString(5, c.getStatus().name());
             ps.setString(6, c.getCreatedAt().toString());
+            ps.setString(7, c.getPayload());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
         return c.getId();
@@ -888,6 +985,93 @@ public class SqliteNovelRepository implements NovelRepository {
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
+    /** p16-01: 老化归档更早的未复发 HIGH（resolved=1），防止 400 章尺度下历史 HIGH 无界累积锁死 FINAL 门禁 */
+    @Override
+    public int archiveAgedHighIssues(String projectId, int beforeChapter) {
+        String sql = "UPDATE continuity_issues SET resolved=1 WHERE project_id=? AND resolved=0 "
+                + "AND severity='HIGH' AND detected_at_chapter<?";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            ps.setInt(2, beforeChapter);
+            return ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** p11-q0-06: 物理删除已回收（RESOLVED）叙事线索，避免 narrative_threads 表无界增长 */
+    @Override
+    public int deleteResolvedNarrativeThreads(String projectId) {
+        String sql = "DELETE FROM narrative_threads WHERE project_id=? AND status='RESOLVED'";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            return ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** p11-q0-06: 同项目重名知识条目去重（按 name 分组保留 MIN(id)，删除其余） */
+    @Override    public int deleteDuplicateKnowledgeEntries(String projectId) {
+        String sql = "DELETE FROM knowledge_entries WHERE project_id=? AND id NOT IN "
+                + "(SELECT MIN(id) FROM knowledge_entries WHERE project_id=? GROUP BY name)";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            ps.setString(2, projectId);
+            return ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** p17-05: 自定义预设持久化——upsert by name */
+    @Override
+    public void saveCustomPreset(String name, String contentJson) {
+        String sql = "INSERT INTO custom_presets (name, content, updated_at) VALUES (?,?,?) "
+                + "ON CONFLICT(name) DO UPDATE SET content=excluded.content, updated_at=excluded.updated_at";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name);
+            ps.setString(2, contentJson);
+            ps.setString(3, java.time.Instant.now().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** p17-05: 读取全部自定义预设 */
+    @Override
+    public java.util.Map<String, String> findCustomPresets() {
+        java.util.Map<String, String> result = new java.util.LinkedHashMap<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT name, content FROM custom_presets ORDER BY updated_at")) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) result.put(rs.getString("name"), rs.getString("content"));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return result;
+    }
+
+    /** p11-q0-06: 长期悬置（planted<beforeChapter）非 mustResolve 的 LOW 伏笔标记放弃（resolved=1） */
+    @Override
+    public int retireStaleForeshadowings(String projectId, int beforeChapter) {        String sql = "UPDATE foreshadowings SET resolved=1, resolved_at_chapter=? "
+                + "WHERE project_id=? AND resolved=0 AND must_resolve=0 AND priority='LOW' AND planted_at_chapter<?";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, beforeChapter);
+            ps.setString(2, projectId);
+            ps.setInt(3, beforeChapter);
+            return ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** p11-q1-01: 删除项目全部知识条目（ConceiveGate 重生成前清旧，避免累积） */
+    @Override
+    public int deleteKnowledgeEntriesByProject(String projectId) {
+        String sql = "DELETE FROM knowledge_entries WHERE project_id=?";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            return ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
     // --- EvaluationRecord ---
 
     @Override
@@ -987,22 +1171,24 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public void saveWritingTask(WritingTask t) {
-        String sql = "INSERT INTO writing_tasks (id,project_id,status,current_chapter,total_chapters," +
+        String sql = "INSERT INTO writing_tasks (id,project_id,status,task_type,current_chapter,total_chapters," +
                 "chapters_written,total_words,error_message,created_at,updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
-                "status=excluded.status, current_chapter=excluded.current_chapter, " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
+                "status=excluded.status, task_type=excluded.task_type, " +
+                "current_chapter=excluded.current_chapter, " +
                 "total_chapters=excluded.total_chapters, chapters_written=excluded.chapters_written, " +
                 "total_words=excluded.total_words, error_message=excluded.error_message, " +
                 "updated_at=excluded.updated_at";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, t.getId()); ps.setString(2, t.getProjectId());
-            ps.setString(3, t.getStatus().name()); ps.setInt(4, t.getCurrentChapter());
-            ps.setInt(5, t.getTotalChapters()); ps.setInt(6, t.getChaptersWritten());
-            ps.setInt(7, t.getTotalWords());
-            ps.setString(8, t.getErrorMessage());
-            ps.setString(9, t.getCreatedAt().toString());
-            ps.setString(10, t.getUpdatedAt().toString());
+            ps.setString(3, t.getStatus().name()); ps.setString(4, t.getType().name());
+            ps.setInt(5, t.getCurrentChapter());
+            ps.setInt(6, t.getTotalChapters()); ps.setInt(7, t.getChaptersWritten());
+            ps.setInt(8, t.getTotalWords());
+            ps.setString(9, t.getErrorMessage());
+            ps.setString(10, t.getCreatedAt().toString());
+            ps.setString(11, t.getUpdatedAt().toString());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
@@ -1044,7 +1230,8 @@ public class SqliteNovelRepository implements NovelRepository {
     }
 
     private WritingTask mapWritingTask(ResultSet rs) throws SQLException {
-        WritingTask t = new WritingTask(rs.getString("project_id"), rs.getInt("total_chapters"));
+        WritingTask t = new WritingTask(rs.getString("project_id"), rs.getInt("total_chapters"),
+                WritingTask.Type.valueOf(rs.getString("task_type")));
         setField(t, "id", rs.getString("id"));
         t.setStatus(WritingTask.Status.valueOf(rs.getString("status")));
         t.setCurrentChapter(rs.getInt("current_chapter"));
@@ -1065,8 +1252,9 @@ public class SqliteNovelRepository implements NovelRepository {
                 "enable_feedback_injection,feedback_window,dialogue_differentiation," +
                 "plot_stall_window,character_upgrade_span,min_chapter_length," +
                 "max_beats_per_chapter,max_chapter_length,chapter_length_variation,fast_pace_window," +
-                "foreshadow_suspense_threshold,target_chapters,layered_outline,cost_budget_yuan,updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET " +
+                "foreshadow_suspense_threshold,target_chapters,layered_outline,cost_budget_yuan," +
+                "rewrite_budget,circuit_breaker_threshold,checkpoint_span,updated_at) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET " +
                 "dialogue_density=excluded.dialogue_density, " +
                 "enable_dialogue_enforcement=excluded.enable_dialogue_enforcement, " +
                 "enable_climax_rotation=excluded.enable_climax_rotation, " +
@@ -1088,6 +1276,9 @@ public class SqliteNovelRepository implements NovelRepository {
                 "target_chapters=excluded.target_chapters, " +
                 "layered_outline=excluded.layered_outline, " +
                 "cost_budget_yuan=excluded.cost_budget_yuan, " +
+                "rewrite_budget=excluded.rewrite_budget, " +
+                "circuit_breaker_threshold=excluded.circuit_breaker_threshold, " +
+                "checkpoint_span=excluded.checkpoint_span, " +
                 "updated_at=excluded.updated_at";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -1113,7 +1304,10 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setInt(20, p.getTargetChapters());
             ps.setInt(21, p.isLayeredOutline() ? 1 : 0);
             ps.setDouble(22, p.getCostBudgetYuan());
-            ps.setString(23, p.getUpdatedAt().toString());
+            ps.setInt(23, p.getRewriteBudget());
+            ps.setInt(24, p.getCircuitBreakerThreshold());
+            ps.setInt(25, p.getCheckpointSpan());
+            ps.setString(26, p.getUpdatedAt().toString());
             ps.executeUpdate();
         } catch (SQLException ex) { throw new RuntimeException(ex); }
     }
@@ -1302,6 +1496,9 @@ public class SqliteNovelRepository implements NovelRepository {
         try { p.setTargetChapters(rs.getInt("target_chapters")); } catch (Exception ignored) { p.setTargetChapters(24); }
         try { p.setLayeredOutline(rs.getInt("layered_outline") == 1); } catch (Exception ignored) { p.setLayeredOutline(false); }
         try { p.setCostBudgetYuan(rs.getDouble("cost_budget_yuan")); } catch (Exception ignored) { p.setCostBudgetYuan(0); }
+        try { p.setRewriteBudget(rs.getInt("rewrite_budget")); } catch (Exception ignored) { p.setRewriteBudget(1); }
+        try { p.setCircuitBreakerThreshold(rs.getInt("circuit_breaker_threshold")); } catch (Exception ignored) { p.setCircuitBreakerThreshold(10); }
+        try { p.setCheckpointSpan(rs.getInt("checkpoint_span")); } catch (Exception ignored) { p.setCheckpointSpan(1); }
         return p;
     }
     private KnowledgeEntry mapEntry(ResultSet rs) throws SQLException {
@@ -1324,6 +1521,13 @@ public class SqliteNovelRepository implements NovelRepository {
         c.setGrowthArc(rs.getString("growth_arc"));
         c.setSpeakingStyle(rs.getString("speaking_style"));
         c.setKnowledgeDomains(rs.getString("knowledge_domains"));
+        // p19-01: 存续状态（旧库无列时 null=ACTIVE）
+        try {
+            String st = rs.getString("status");
+            if (st != null && !st.isBlank()) c.setStatus(Character.Status.valueOf(st));
+            int dc = rs.getInt("death_chapter");
+            if (!rs.wasNull()) c.setDeathChapter(dc);
+        } catch (Exception ignored) { }
         // p10-a1: 读取智谋建模字段（兼容旧库）
         try {
             int sl = rs.getInt("strategy_level");
@@ -1387,6 +1591,7 @@ public class SqliteNovelRepository implements NovelRepository {
                 Checkpoint.Type.valueOf(rs.getString("type")),
                 rs.getString("description"));
         setField(c, "id", rs.getString("id"));
+        c.setPayload(rs.getString("payload"));
         switch (Checkpoint.Status.valueOf(rs.getString("status"))) {
             case APPROVED -> c.approve();
             case MODIFIED -> c.modify();

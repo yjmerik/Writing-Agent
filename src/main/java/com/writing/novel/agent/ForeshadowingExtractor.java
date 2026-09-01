@@ -39,10 +39,19 @@ public class ForeshadowingExtractor {
      * 从章节正文中提取新伏笔。
      * @return 新提取的伏笔数量
      */
+    /** p16-04: 既有伏笔清单注入上限——全量注入（含已回收）随章节无界增长 */
+    static final int EXISTING_LIST_CAP = 20;
+
     public int extract(String projectId, Chapter chapter) {
-        // 已有伏笔清单（防重复）
+        // 已有伏笔清单（防重复）；p16-04: mustResolve 钉住 + 未回收优先 + 最近埋设优先，cap 20
+        // （parseAndSave 的去重仍对全量 existing 做，清单收窄只影响 prompt 展示）
         var existing = repository.findForeshadowingsByProject(projectId);
         String existingList = existing.stream()
+                .sorted(java.util.Comparator
+                        .comparing(Foreshadowing::isMustResolve).reversed()
+                        .thenComparing(Foreshadowing::isResolved)
+                        .thenComparing(java.util.Comparator.comparingInt(Foreshadowing::getPlantedAtChapter).reversed()))
+                .limit(EXISTING_LIST_CAP)
                 .map(Foreshadowing::getDescription)
                 .collect(Collectors.joining("\n- ", "- ", ""));
 

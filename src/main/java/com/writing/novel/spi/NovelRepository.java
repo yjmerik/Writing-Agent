@@ -106,10 +106,28 @@ public interface NovelRepository {
     List<EntityEdge> findEdgesByProject(String projectId);
 
     // --- p10-w3-03: ArchiveCompactor 归档衰减（修根因 B：图表只增不减）---
-    /** 物理删除过期实体边（validTo>0 且 < beforeChapter），返回删除数。默认 0（实现可选） */
-    default int deleteExpiredEdges(String projectId, int beforeChapter) { return 0; }
-    /** 归档旧的非 HIGH 连续性问题（resolved=1），返回归档数。默认 0 */
-    default int archiveOldLowSeverityIssues(String projectId, int beforeChapter) { return 0; }
+    /** 物理删除过期实体边（validTo>0 且 < beforeChapter），返回删除数。p22-06: 无默认——实现必须显式提供 */
+    int deleteExpiredEdges(String projectId, int beforeChapter);
+    /** 归档旧的非 HIGH 连续性问题（resolved=1），返回归档数。p22-06: 无默认 */
+    int archiveOldLowSeverityIssues(String projectId, int beforeChapter);
+    /** p16-01: 老化归档更早的未复发 HIGH 问题（resolved=1）。p22-06: 无默认 */
+    int archiveAgedHighIssues(String projectId, int beforeChapter);
+
+    // --- p11-q0-06: 归档衰减补齐（foreshadowings/narrative_threads/knowledge_entries，W3-03 只做 2/5）---
+    /** 物理删除已回收（RESOLVED）的叙事线索，避免 narrative_threads 表无界增长。p22-06: 无默认 */
+    int deleteResolvedNarrativeThreads(String projectId);
+    /** 删除同项目内重名的知识条目（按 name 去重保留其一）。p22-06: 无默认 */
+    int deleteDuplicateKnowledgeEntries(String projectId);
+
+    // --- p17-05: 自定义预设持久化（跨项目共享） ---
+    /** 保存/更新自定义预设（name 为键，content 为 JSON 全文）。p22-06: 无默认 */
+    void saveCustomPreset(String name, String contentJson);
+    /** 读取全部自定义预设（name → JSON）。p22-06: 无默认 */
+    java.util.Map<String, String> findCustomPresets();
+    /** 长期悬置（planted<beforeChapter）且非 mustResolve 的 LOW 优先级伏笔标记放弃（resolved=1）。p22-06: 无默认 */
+    int retireStaleForeshadowings(String projectId, int beforeChapter);
+    /** p11-q1-01: 删除项目全部知识条目（ConceiveGate 重生成前清旧，避免累积）。p22-06: 无默认 */
+    int deleteKnowledgeEntriesByProject(String projectId);
 
     // --- EvaluationRecord ---
     void saveEvaluationRecord(EvaluationRecord record);

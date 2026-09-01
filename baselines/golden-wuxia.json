@@ -1,0 +1,10 @@
+{
+  "blessedAt": "2026-09-01T00:24:29.723690",
+  "blessedFrom": "data/release/canary-wuxia-report.json",
+  "minChapters": 3,
+  "minTotalWords": 9046,
+  "minAvgWordCount": 2638,
+  "maxChapterFailures": 0,
+  "maxLlmErrors": 0,
+  "minEvaluationScore": null
+}

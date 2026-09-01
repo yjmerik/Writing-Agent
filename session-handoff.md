@@ -2,87 +2,78 @@
 
 ## Current Objective
 
-- **Goal**: 百万字长篇架构优化（`docs/specs/2026-08-13-million-word-architecture.md`，Phase 10，三波 23 feature）。
-- **Current status**: **22/23 feature 完成，214 tests 0 failures，3 轮 e2e 全部 PASS**。W1(7)+W2(7)+W3(8) 已实现并端到端验证。剩余 w3-01（总纲中段重规划，需 LLM 重规划，单独立 spec 推进）。
-- **Branch / commit**: `phase-10-w1-w2-foundation`（3 个 commit，见 progress.md）。
-- **Branch / commit**: main（未 commit，工作区有 W1+W2 改动）；最近提交见 `git log`。
-- **上一阶段（mc spec）状态**: P0/P1/P2/P3 全部完成，详见下方历史。
+- **Goal**: production-readiness 架构落地（Phase 20-23，29 features）——按 `.omo/drafts/production-readiness-architecture.md` 实现并端到端验证。
+- **Current status**: **本会话完成 22/29**（Phase 20 全部、Phase 21 全部、Phase 22 的 4/6、Phase 23 的 1/6）。全量 mvn test 465+ 全绿、`./init.sh` 通过、前端构建通过、e2e replay 与 record 基线逐字一致、compare-baseline PASS。
+- **Spec**: `docs/specs/TEMPLATE.md` 路径外：本阶段 spec 即 `.omo/drafts/production-readiness-architecture.md`（status: approved-and-planned）
+- **Branch**: `phase-11-quality-gate-architecture`（未 push，无 upstream）
+- **Feature 台账**: `feature_list.json`（p20-01…p23-06，含验收与证据）
 
-## 架构 Review 结论速览（2026-08-13）
+## Completed（2026-08-30）
 
-- 系统在 ~30 章/≈9.6 万字验证通过，向百万字（400 章）扩展有 5 道扩展墙（~40/120/200/200+/全程）。
-- 4 个系统性根因：A 全量加载进单次 LLM 调用 / B 图表只增不减 / C 历史记忆级联压缩衰减 / D 修复闭环只向当前章只1次。
-- 核心动作：引入 `story_facts`（可累积/可纠错/可检索的事实真相层）替代 book_summary 为主长程记忆，并作为修复闭环的纠错对象。
-
-## Next Steps（下次会话入口）
-
-1. **开始 W1 第一波（止血正确性）**——按 Bugfix gate，每个 feature 先写复现 failing test：
-   - `p10-w1-01` stableSectionCache 写联动失效（**正确性 bug，最高优先**）
-   - `p10-w1-02` 脏卷摘要重算路径（**静默历史丢失**）
-   - `p10-w1-03` 向量去污 + top-K 联动预算
-   - `p10-w1-04..07` 成本熔断/退避降级/章节状态机/后处理并行+重写互斥
-2. W1 完成后跑 `./scripts/e2e.sh --mode record --chapters 30` 验证无中断 + 模拟 429 验证降级。
-3. W1 全绿后进入 W2（故事真典 + 检索收窄），需先做 `p10-w2-01` story_facts 表。
-4. 每个 feature 完成按 End-of-Session 程序更新 feature_list.json（status→completed + evidence）。
-
-## 审查 5 类阻断问题 → 修复状态
-
-| 阻断 | 修复 | 证据 |
+| 阶段 | 内容 | 提交 |
 |---|---|---|
-| 单活跃作业并发双写 | `startWriting` 同步等待旧任务退出（30s 超时）；cancel 只设内存标志 | `SingleActiveJobTest`/`WritingTaskCancelTest` |
-| P1 数据正确性缺失 | Chapter.version 往返；summaries dirty + sourceChapterVersion；重写失效摘要 | `VersionedMemoryTest` |
-| P2 长程记忆未实现 | model-aware token budget（窗口 90%+输出预留）；连续性检查注入历史卷摘要+线索台账；embedding cloud-api 默认 | `TokenBudgetSafetyTest`/`ContinuityHistoryInputTest`/`EmbeddingProfileTest` |
-| P3 门禁绕过 + 无 fixture | VOLUME_DONE→step() 统一走 runFinalAuditGate；E2E 轮询/从文件读报告 | `FinalAuditGateTest` |
-| 凭据无 fail-fast | validateKeys 校验所有模型、仅远程要求 key、本地豁免；测试加载系统 key | `LlmPropertiesValidateTest` |
+| Phase 20 生命周期完整性（9/9） | 人工复核优先级 / ChapterPostProcessor 模块 / 阶段账本 / 重启续跑 / ProjectWorkCoordinator owner-token / 四入口 ownership / HUMAN_PATCH 保护 / ACTIVE 唯一性 / 仅标题归一化 | `5799346` `ace78c4` `4096cbc` `17d57b9` `0b27aca` `9ab1270` `f70ea66` |
+| Phase 21 终态门禁+产品（8/8） | WUXIA 路线图对齐 / FINAL·NEEDS_REVISION 命令门禁+/final-audit / 章节元数据分页 / 前端终态动作+懒加载+响应式+a11y+SSE 重连 | `f4dd6d7` `cc25cc8` |
+| Phase 22 模块深化（4/6） | StoryCanon 端口+双适配器契约（16 用例）/ 写入方读取方全量迁移（业务包零 StoryFactRepository import）/ 仓库 fail-loud（9 个 default no-op 改抽象） | `5e4afbc` |
+| Phase 23 证据 harness（1/6） | ScenarioLlmGateway（8 任务类型确定性零网络响应）+ e2e.sh 语料自动解析 | 见最后提交 |
 
-## Completed This Session
+## Verification（2026-08-30 实跑）
 
-- **P0**：单活跃作业、cancel 状态机、诚实终态、孤儿清扫、凭据 fail-fast 语义修正、load-env.sh、JDK26 兼容
-- **P1**：Chapter.version 往返、摘要 dirty + sourceChapterVersion（表列+迁移）
-- **P2**：TokenBudget.budgetForModel、连续性检查历史卷摘要+线索台账、embedding 百炼 text-embedding-v3
-- **P3**：FinalAuditGateTest、LlmCostTelemetryTest、diagnose 成本聚合、E2E 异步轮询 + 报告从文件读取
-- **4 个可靠性 bug（Bugfix gate）**：
-  1. 分层大纲截断空转 → 卷块 8 章 + maxTokens 12000 + 占位兜底
-  2. record→replay 非确定 → 失败也录制、回放复现同类型异常
-  3. 推理模型输出触顶（reasoning_content 耗 token）→ CHAPTER_WRITING maxTokens 20000 + 组装预算预留输出
-  4. 卷大纲解析行内"预计第N章回收"误截断 → 行首锚定 + 兼容 markdown 加粗章节行
+- `./init.sh`：**exit 0**（编译 + 全量测试 + 前端构建）
+- `mvn test`（需 `source scripts/load-env.sh`）：**465+ pass / 0 fail / 1 skip**
+- `./scripts/e2e.sh`（不设 E2E_FIXTURE_DIR，自动解析）→ 3 章 / 10,574 字 / 50 调用 / 0 错误——与 dsv4-20260829d record **逐字一致**
+- `python3 scripts/compare-baseline.py`：**PASS**（无需 bless）
+- `cd frontend && npm run build`：通过
+- `bash scripts/e2e-fixture-dir-test.sh`：通过
 
-## Verification Evidence（快速验证 3 章）
+## 关键设计决策（后续会话必读）
 
-| Check | Command | Result |
-|---|---|---|
-| 全量测试 | `source scripts/load-env.sh && mvn test` | 138 pass, 0 failures, 1 skipped |
-| 完整 harness | `./init.sh` | 编译+测试+前端全通过 |
-| 3 章 record | `./scripts/e2e.sh --mode record --chapters 3` | 3 章、11,081 字、46 调用、0 失败 |
-| 3 章 replay | `./scripts/e2e.sh --mode replay --chapters 3` | 与记录完全一致 |
-| 质量评估 | 对 replay DB 调 `/api/projects/{id}/evaluate` | overallScore **7/10**（人物7/世界观6/情节6/对话7/文风8/多样性7/一致性5） |
-| 基线 | `compare-baseline.py --bless && compare` | PASS（minChapters=3, minTotalWords=8864, minEvaluationScore=7） |
+1. **ChapterPostProcessor**（orchestrator/）：正文落库后 10 阶段单点编排，逐阶段记账；POST_PROCESSING→DONE 裁决留在 Orchestrator；p20-01 保证 NEEDS_MANUAL_REVIEW 不被覆盖。
+2. **ProjectWorkCoordinator**（service/）：owner-token 语义是全部写作入口的唯一裁决点；重复启动=409（不存在强制接管路径）；release 一律条件删除。
+3. **StoryCanon**（spi/）：真典全部读写语义（5 章保护窗口、ACTIVE 唯一性、审计链）收敛进端口；新增真典消费方一律注入 StoryCanon，禁止 import `persistence.sqlite.StoryFactRepository`（grep 可验证）。
+4. **NovelRepository 无 silent default**：归档/预设/清理 9 方法缺实现=编译失败；给测试写新 stub 时需显式声明这些能力（参考 TestNovelRepositoryStub）。
+5. **终态语义**：FINAL 全写锁 + NEEDS_REVISION 修订/重审分离（retryFinalAudit）；resolve-review 仍是 NEEDS_MANUAL_REVIEW→DONE 的恢复路径。
 
-## 质量评估发现的问题（一致性为主）
+## 增补（2026-08-30 续，用户指示暂停真实书写验证后）
 
-- HIGH：世界观设定"大明宝钞"（明代）vs 第3章"道光年间《千字文》"（清代）——朝代矛盾
-- MEDIUM：第1章时间线衔接不清；前3章节奏偏慢、爽点不密集；明代/清代年号混用
-- LOW：配角形象模糊
+- **Phase 22 全部完成（6/6）**：p22-04 ChapterProduction 模块（produce 小结果接口，质量链迁移）+
+  p22-05 OrchestratorPolicies 组合（11 个后置 setter 移除，requirePolicy 启动校验）
+- **p23-03 根因修复**：soak 首跑 40 章封顶 = layeredOutline=false 走传统一次性大纲（≤40 章设计上限）；
+  已改 soak.sh 为 layeredOutline=true，且场景网关支持卷范围感知与总纲章数感知
+- **人工复核暂停任务终态改 PAUSED**（原 FAILED 误导）；场景网关 harsh 档就绪
+- **验证**：481 测试 0 失败；e2e replay 逐字一致 + compare PASS（重构行为保持）
+- **暂停中**：400 章 soak 全量实跑 / p23-02 脚本实跑 / p23-04 Playwright / p23-05 聚合器 /
+  p23-06 金丝雀——恢复后按 session-handoff 上文命令执行
 
-## Blockers
+## 增补（2026-08-31）：Phase 23 收口——26/29 完成
 
-- 20 章真实记录约 2 小时（单章 2-5 分钟）；快速验证用 3 章即可
-- 质量一致性（朝代年号）需后续统一历史语境或改虚拟年号
+- **p23-02/03/04/05 全部完成并实跑验证**：reliability-e2e 四场景 PASS；400 章 soak 六不变量 PASS
+  （105.9 万字）；ego-browser 套件 8 检查 PASS（按用户指示替代 Playwright，已移除相关依赖）；
+  release-gate.sh 六门禁聚合 manifest
+- **套件抓到并修复的真实缺陷**：① meta 查询漏 status 列（待人审标记永不显示）② SPA 深链接 500
+  （SpaForwardController）③ InteractiveReview 点章全量重取（refresh 依赖修复）
+  ④ 场景正文章号污染（harsh 档改按调用序注入）
+- **唯一剩余**：p23-06 真实 LLM 质量金丝雀——需用户批准花费，且 bless 需人工确认；
+  触发命令：`./scripts/e2e.sh --mode record --chapters 3 && python3 scripts/compare-baseline.py`
+- ⚠️ 本机代理 http_proxy=127.0.0.1:9098 会劫持 localhost——所有 curl 必须带 --noproxy '*'
 
-## Next Steps（下次会话入口）
+## 最终状态（2026-08-31）：29/29 features 全部完成
 
-1. 用 3-5 章快速验证闭环已就绪；需要长篇小说时再跑 20+ 章 record
-2. 处理质量评估 HIGH 一致性矛盾（朝代年号统一）——按 Bugfix gate 写 failing test
-3. 向会话目标推进：连续 30+ 章 ≈ 10 万字 + 独立质量评估达标
-4. 恢复用户 8080 开发服务：`mvn spring-boot:run`（会话中清理 e2e 残留时停掉）
+- **p23-06 金丝雀已完成**（用户批准）：mystery 3 章 10,191 字 / WUXIA 3 章 11,308 字，均 0 错误 0 失败；
+  mystery compare PASS；WUXIA 规则断言 PASS（无修仙规则）。报告 data/release/canary-*.json
+- **WUXIA 基线已 bless**（人工确认质量）：`baselines/golden-wuxia.json`，mystery 基线独立保留；
+  两组基线 compare 均 PASS
+- 观察项：卷大纲层「题材规则（武侠）」注入密度仅总纲 1 次，可后续评估 p17-03 生产接线
+- ⚠️ 本机代理 http_proxy=127.0.0.1:9098 劫持 localhost——curl 必须带 --noproxy '*'
+- ⚠️ ego-browser 进程 cwd 非仓库根——其内 fs 写文件必须用绝对路径
 
-## Files Changed（本会话）
+## Known Issues / Next Steps（剩余 7 个 not-started feature 入口）
 
-- `src/main/java/.../llm/config/{LlmProperties,ModelConfig,LlmConfig}.java`
-- `src/main/java/.../llm/gateway/{RecordReplayLlmGateway,ObservedLlmGateway}.java`
-- `src/main/java/.../memory/{TokenBudget,ContextAssembler}.java`、`domain/Summary.java`
-- `src/main/java/.../agent/{ChapterWriterAgent,ContinuityCheckerAgent,AgentConfig,PlotterAgent}.java`
-- `src/main/java/.../orchestrator/NovelOrchestrator.java`、`service/WritingTaskExecutor.java`
-- `src/main/java/.../persistence/sqlite/{SqliteNovelRepository,SqliteSchemaInitializer}.java`
-- `src/main/resources/application.yml`、`pom.xml`、`init.sh`、`scripts/{load-env,e2e,diagnose}.sh`、`baselines/golden.json`
-- 测试：LlmPropertiesValidateTest / TokenBudgetSafetyTest / VersionedMemoryTest / ContinuityHistoryInputTest / EmbeddingProfileTest / FinalAuditGateTest / LlmCostTelemetryTest / LayeredOutlineParsingTest / WritingTaskRecoveryTest / HonestTerminalStateTest / SingleActiveJobTest / ChapterWriterAgentTest / RecordReplayLlmGatewayTest
+1. **p22-04 提取章节生产模块**：p20-02 已切出 ChapterPostProcessor；下一步把「Context→write→quality→rewrite」同样收敛为小结果接口（ChapterProductionTest 为验证命令）。
+2. **p22-05 显式生命周期策略组合**：NovelOrchestrator 仍有 ~10 个后置可选 setter（setRepairArbiter/setPlanGate/…）；改为构造期必需 + 显式 no-op 适配器。注意：大量测试 harness 传 null 依赖此宽松性，改法建议「生产 @Bean 全量显式 + 测试用 no-op 适配器」。
+3. **p23-02 reliability-e2e.sh**：PostProcessingRecoveryTest 的「注入崩溃→同库重建→恢复」就是蓝本，脚本化为打包 Spring 进程级场景并产出 report.json。
+4. **p23-03 soak.sh（400 章）**：ScenarioLlmGateway 已就绪，但 PLOTTING 响应需支持**章节范围感知**的分层大纲生成（解析 prompt 中卷/章范围，生成对应数量的 `第N章 …` 行）；否则编排器大纲只有 3 章。
+5. **p23-04 Playwright 套件**：p21-03/05/06/07/08 的行为断言（终态禁写/懒加载/375px/键盘/SSE 状态）已在前端就位，缺仓库自有 spec 文件与 CI 化。
+6. **p23-05 release-gate.sh**：聚合 init/e2e/soak/browser 的清单式脚本，等 p23-02/03/04 落地后收口。
+7. **p23-06 真实 LLM 金丝雀**：本次未改任何 `.st` 模板（replay 逐字一致证明），无需触发；但 p21-01 改变了 WUXIA 的 prompt 内容——下次涉及武侠的 record 需重录 + 人工审后 bless。
+8. 分支未 push；如需：`git push -u origin phase-11-quality-gate-architecture`。

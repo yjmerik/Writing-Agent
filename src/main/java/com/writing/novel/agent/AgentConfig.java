@@ -4,6 +4,7 @@ import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.KnowledgeBaseService;
+import com.writing.novel.memory.RelevanceGateway;
 import com.writing.novel.memory.SummaryService;
 import com.writing.novel.memory.VectorRetrievalService;
 import com.writing.novel.service.ClimaxDiversityTracker;
@@ -30,8 +31,11 @@ public class AgentConfig {
 
     @Bean
     public PlotterAgent plotterAgent(LlmGateway gateway, NovelRepository repo,
-                                     PromptTemplateService promptService) {
-        return new PlotterAgent(gateway, repo, promptService);
+                                     PromptTemplateService promptService,
+                                     com.writing.novel.service.GenreRuleProvider genreRuleProvider) {
+        PlotterAgent plotter = new PlotterAgent(gateway, repo, promptService);
+        plotter.setGenreRuleProvider(genreRuleProvider); // p17-03: 卷大纲题材约束
+        return plotter;
     }
 
     @Bean
@@ -45,8 +49,9 @@ public class AgentConfig {
 
     @Bean
     public ContinuityCheckerAgent continuityCheckerAgent(LlmGateway gateway, NovelRepository repo,
-                                                          PromptTemplateService promptService) {
-        return new ContinuityCheckerAgent(gateway, repo, promptService);
+                                                          PromptTemplateService promptService,
+                                                          RelevanceGateway relevanceGateway) {
+        return new ContinuityCheckerAgent(gateway, repo, promptService, relevanceGateway);
     }
 
     @Bean
@@ -63,14 +68,16 @@ public class AgentConfig {
 
     @Bean
     public QualityEvaluationAgent qualityEvaluationAgent(LlmGateway gateway, NovelRepository repo,
-                                                         PromptTemplateService promptService) {
-        return new QualityEvaluationAgent(gateway, repo, promptService);
+                                                         PromptTemplateService promptService,
+                                                         RelevanceGateway relevanceGateway) {
+        return new QualityEvaluationAgent(gateway, repo, promptService, relevanceGateway);
     }
 
     @Bean
     public EntityExtractorAgent entityExtractorAgent(LlmGateway gateway, NovelRepository repo,
-                                                     PromptTemplateService promptService) {
-        return new EntityExtractorAgent(gateway, repo, promptService);
+                                                     PromptTemplateService promptService,
+                                                     RelevanceGateway relevanceGateway) {
+        return new EntityExtractorAgent(gateway, repo, promptService, relevanceGateway);
     }
 
     @Bean
@@ -86,8 +93,10 @@ public class AgentConfig {
 
     @Bean
     public CharacterProfileUpgrader characterProfileUpgrader(LlmGateway gateway, NovelRepository repo,
-                                                              PromptTemplateService promptService) {
-        return new CharacterProfileUpgrader(gateway, repo, promptService);
+                                                              PromptTemplateService promptService,
+                                                              RelevanceGateway relevanceGateway,
+                                                              com.writing.novel.spi.StoryCanon storyCanon) {
+        return new CharacterProfileUpgrader(gateway, repo, promptService, relevanceGateway, storyCanon);
     }
 
     @Bean
@@ -102,8 +111,9 @@ public class AgentConfig {
 
     @Bean
     public ArcUpdater arcUpdater(LlmGateway gateway, NovelRepository repo,
-                                  PromptTemplateService promptService) {
-        return new ArcUpdater(gateway, repo, promptService);
+                                  PromptTemplateService promptService,
+                                  com.writing.novel.spi.StoryCanon storyCanon) {
+        return new ArcUpdater(gateway, repo, promptService, storyCanon);
     }
 
     @Bean
@@ -158,8 +168,9 @@ public class AgentConfig {
 
     @Bean
     public ConsistencyGuard consistencyGuard(LlmGateway gateway, NovelRepository repo,
-                                              PromptTemplateService promptService) {
-        return new ConsistencyGuard(gateway, repo, promptService);
+                                              PromptTemplateService promptService,
+                                              RelevanceGateway relevanceGateway) {
+        return new ConsistencyGuard(gateway, repo, promptService, relevanceGateway);
     }
 
     @Bean

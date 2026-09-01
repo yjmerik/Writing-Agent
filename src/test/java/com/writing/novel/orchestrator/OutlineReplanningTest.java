@@ -7,6 +7,7 @@ import com.writing.novel.domain.Project;
 import com.writing.novel.domain.StoryFact;
 import com.writing.novel.domain.Volume;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
+import com.writing.novel.persistence.sqlite.SqliteStoryCanon;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.persistence.sqlite.StoryFactRepository;
@@ -63,7 +64,7 @@ class OutlineReplanningTest {
                 null, null, plotter, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null,
-                null, null, null, null);
+                null, null, null, null, null);
 
         Outline outline = new Outline(pid, "总纲");
         // 模拟 planVolume 输出的章节文本（含结构化字段）
@@ -85,7 +86,7 @@ class OutlineReplanningTest {
     }
 
     @Test
-    void replanRemainingOutline追加剧情偏离段到premise() throws Exception {
+    void replanRemainingOutline不再追加偏离段到premise() throws Exception {
         // 创建 NovelOrchestrator（StoryFactRepository 注入 true）
         com.writing.novel.persistence.sqlite.StoryFactRepository factRepo = new com.writing.novel.persistence.sqlite.StoryFactRepository(
                 new com.writing.novel.persistence.sqlite.ConnectionProvider(tempDir.resolve("replan.db").toString()));
@@ -94,8 +95,9 @@ class OutlineReplanningTest {
                 null, null, plotter,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null);
-        orch.setStoryFactRepository(factRepo);
+                null, null, null, null, null, null, null, null, null, null,
+                new OrchestratorPolicies(new SqliteStoryCanon(factRepo),
+                        null, null, null, null, null, null, null, null, null, null));
 
         Outline outline = new Outline(pid, "原始总纲\n第1章 开局\n第2章 发展\n第3章 高潮");
         repo.saveOutline(outline);
@@ -112,11 +114,9 @@ class OutlineReplanningTest {
         m.invoke(orch, pid, 40); // 第 40 章，卷 5 末
 
         Outline after = repo.findOutlineByProject(pid).orElseThrow();
-        assertTrue(after.getPremise().contains("剧情偏离与重规划"),
-                "总纲应追加【剧情偏离与重规划】段");
-        assertTrue(after.getPremise().contains("金丹期"),
-                "应包含真典事实");
-        assertTrue(after.getPremise().contains("季衡身世之秘"),
-                "应包含未回收 mustResolve 伏笔");
+        assertFalse(after.getPremise().contains("剧情偏离与重规划"),
+                "总纲不得再追加【剧情偏离与重规划】段");
+        assertTrue(after.getPremise().startsWith("原始总纲"),
+                "已有总纲应保留");
     }
 }

@@ -20,20 +20,28 @@ import java.time.Duration;
  */
 public class OpenAiCompatibleClient implements LlmClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(OpenAiCompatibleClient.class);
+
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private final OkHttpClient httpClient;
 
     /** p10-w1-05: 退避时长（可被测试调小避免长睡）——5xx/网络 基数 */
     static volatile long backoffUnitMs = 1000L;
     /** p10-w1-05: 429 限流退避基数（更长：指数到分钟级） */
-    static volatile long rateLimitBackoffMs = 5000L;
+    static volatile long rateLimitBackoffMs = 30_000L;
 
     public OpenAiCompatibleClient() {
         this.httpClient = new OkHttpClient.Builder()
                 .connectTimeout(Duration.ofSeconds(30))
-                .readTimeout(Duration.ofMinutes(5))
-                .callTimeout(Duration.ofMinutes(3)) // 单次请求最长 3 分钟
+                .readTimeout(Duration.ofMinutes(30))
+                // glm-5.3-flash 长生成（20k max_tokens 非流式）网关侧偶发 >10 分钟排队；
+                // e2e 实证 CHAPTER_WRITING 3×600s 整齐超时而同 prompt 独立进程 44s——网关排队方差大，
+                // 超时必须给足：单次请求上限 30 分钟
+                .callTimeout(Duration.ofMinutes(30))
                 .retryOnConnectionFailure(true)      // 网络抖动自动重试
+                // e2e 实证：复用 keep-alive 连接发送 >10 分钟的长响应请求会被对端重置
+                // （StreamResetException: CANCEL），而新连接稳定成功——LLM 长生成必须每请求新连接
+                .connectionPool(new okhttp3.ConnectionPool(0, 1, java.util.concurrent.TimeUnit.MILLISECONDS))
                 .build();
     }
 
@@ -44,11 +52,19 @@ public class OpenAiCompatibleClient implements LlmClient {
 
     @Override
     public LlmResponse complete(ModelConfig config, LlmRequest request) {
+        // p16-e2e: streaming 配置为 true 时走 SSE 聚合——长生成（>5 分钟）非流式响应会被
+        // 网关/中间层 StreamReset CANCEL（e2e 实证 23 点后 100% 复现），流式逐 token 心跳保活；
+        // 对上层透明（聚合完整 content 返回），fixture 录制在 gateway 层不受影响
+        if (config.isStreaming()) {
+            return completeViaStream(config, request);
+        }
         ObjectNode body = buildRequestBody(config, request, false);
         String url = config.getBaseUrl() + "/chat/completions";
 
-        // 429/5xx 重试（3次，指数退避）
-        for (int attempt = 0; attempt < 3; attempt++) {
+        // 429/5xx 重试（3次，指数退避）；内容审查(1301)首次温和化原位重试（不消耗次数）
+        boolean softened = false;
+        int attempt = 0;
+        while (attempt < 3) {
             Request httpRequest = new Request.Builder()
                     .url(url)
                     .header("Authorization", "Bearer " + config.getApiKey())
@@ -56,6 +72,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                     .post(RequestBody.create(body.toString(), MediaType.parse("application/json")))
                     .build();
 
+            long attemptStart = System.currentTimeMillis();
             try (Response response = httpClient.newCall(httpRequest).execute()) {
                 if (response.isSuccessful()) {
                     JsonNode root = MAPPER.readTree(response.body().string());
@@ -63,14 +80,30 @@ public class OpenAiCompatibleClient implements LlmClient {
                             .path("message").path("content").asText();
                     int promptTokens = root.path("usage").path("prompt_tokens").asInt();
                     int completionTokens = root.path("usage").path("completion_tokens").asInt();
+                    // p16-replay-fix: 空响应是服务端故障（瞬时空响应会覆盖非空 fixture、
+                    // 使后处理产出漂移）——视为可重试失败，与 ChapterWriter 空内容重试同语义
+                    if (content.isBlank() && attempt < 2) {
+                        log.warn("LLM 空响应(尝试{}/3): {}，重试", attempt + 1, request.getTaskType());
+                        sleepBackoff(attempt, false);
+                        attempt++;
+                        continue;
+                    }
                     return new LlmResponse(content, promptTokens, completionTokens);
                 }
                 // 400/401/403 等客户端错误
                 if (response.code() >= 400 && response.code() < 500 && response.code() != 429) {
                     String errBody = response.body().string();
-                    // 内容审查错误抛专用异常（可恢复，上层可用温和 prompt 重试）
+                    // 内容审查（GLM 1301 等）：首次注入温和化提示原位重试一次（GLM 审查比 DeepSeek 敏感，
+                    // 构思期的冲突/复仇设定易触发 level-1 误拦；温和化后通常可过）
                     if (errBody.contains("1301") || errBody.contains("content_filter")
                             || errBody.contains("Content Filter") || errBody.contains("contentFilter")) {
+                        if (!softened) {
+                            softened = true;
+                            appendSafetyNote(body);
+                            log.warn("内容审查拦截({}), 温和化 system prompt 后原位重试: {}",
+                                    response.code(), request.getTaskType());
+                            continue; // 不消耗重试次数
+                        }
                         throw new ContentFilterException("内容审查拦截: " + errBody);
                     }
                     throw new RuntimeException("LLM 调用失败: HTTP " + response.code() + " " + errBody);
@@ -80,6 +113,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                     boolean rateLimited = response.code() == 429;
                     response.close();
                     sleepBackoff(attempt, rateLimited);
+                    attempt++;
                     continue;
                 }
                 // p10-w1-05: 429 重试耗尽 → RateLimitException（上层降级到 fallback 模型，不计永久失败）
@@ -89,14 +123,118 @@ public class OpenAiCompatibleClient implements LlmClient {
                 throw new RuntimeException("LLM 调用失败（重试耗尽）: HTTP " + response.code()
                         + " " + response.body().string());
             } catch (IOException e) {
+                long elapsed = System.currentTimeMillis() - attemptStart;
+                log.warn("LLM 调用 IOException(尝试{}/3, {}ms): {} — {}: {}",
+                        attempt + 1, elapsed, request.getTaskType(),
+                        e.getClass().getSimpleName(), e.getMessage());
                 if (attempt < 2) {
                     sleepBackoff(attempt, false);
+                    attempt++;
                     continue;
                 }
                 throw new RuntimeException("LLM 调用异常（重试耗尽）", e);
             }
         }
         throw new RuntimeException("LLM 调用失败：不应到达此处");
+    }
+
+    /**
+     * p16-e2e: 流式聚合版 complete——SSE 逐 token 接收，聚合完整正文后以 LlmResponse 返回。
+     * 保留非流式路径的重试语义（429 退避/5xx 重试/内容审查温和化），429/错误以 SSE 错误事件或 HTTP 状态呈现。
+     */
+    private LlmResponse completeViaStream(ModelConfig config, LlmRequest request) {
+        int attempt = 0;
+        while (attempt < 3) {
+            ObjectNode body = buildRequestBody(config, request, true);
+            body.putObject("stream_options").put("include_usage", true);
+            String url = config.getBaseUrl() + "/chat/completions";
+            Request httpRequest = new Request.Builder()
+                    .url(url)
+                    .header("Authorization", "Bearer " + config.getApiKey())
+                    .header("Content-Type", "application/json")
+                    .post(RequestBody.create(body.toString(), MediaType.parse("application/json")))
+                    .build();
+            long attemptStart = System.currentTimeMillis();
+            try (Response response = httpClient.newCall(httpRequest).execute()) {
+                if (!response.isSuccessful()) {
+                    String errBody = response.body() != null ? response.body().string() : "";
+                    // 429：退避重试；耗尽抛 RateLimitException
+                    if (response.code() == 429) {
+                        if (attempt < 2) { sleepBackoff(attempt, true); attempt++; continue; }
+                        throw new RateLimitException("LLM 限流（429）重试耗尽: 429");
+                    }
+                    // 内容审查：温和化一次
+                    if ((errBody.contains("1301") || errBody.contains("content_filter")
+                            || errBody.contains("contentFilter")) && attempt < 2) {
+                        appendSafetyNoteBody(body);
+                        attempt++;
+                        log.warn("内容审查拦截（流式），温和化后重试: {}", request.getTaskType());
+                        continue;
+                    }
+                    if (response.code() >= 400 && response.code() < 500) {
+                        throw new RuntimeException("LLM 调用失败: HTTP " + response.code() + " " + errBody);
+                    }
+                    if (attempt < 2) { sleepBackoff(attempt, false); attempt++; continue; }
+                    throw new RuntimeException("LLM 调用失败（重试耗尽）: HTTP " + response.code());
+                }
+                StringBuilder content = new StringBuilder();
+                int promptTokens = 0, completionTokens = 0;
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(response.body().byteStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (line.startsWith("data: ")) {
+                            String data = line.substring(6).trim();
+                            if ("[DONE]".equals(data)) break;
+                            JsonNode chunk = MAPPER.readTree(data);
+                            JsonNode delta = chunk.path("choices").path(0).path("delta");
+                            content.append(delta.path("content").asText(""));
+                            // usage 可能在最后一个 chunk（stream_options）或 [DONE] 帧携带
+                            JsonNode usage = chunk.path("usage");
+                            if (usage.isObject()) {
+                                promptTokens = usage.path("prompt_tokens").asInt(promptTokens);
+                                completionTokens = usage.path("completion_tokens").asInt(completionTokens);
+                            }
+                        }
+                    }
+                }
+                // p16-replay-fix: 流式空聚合同样重试——瞬时空响应是服务端故障
+                if (content.isEmpty() && attempt < 2) {
+                    log.warn("LLM 流式空聚合(尝试{}/3): {}，重试", attempt + 1, request.getTaskType());
+                    sleepBackoff(attempt, false);
+                    attempt++;
+                    continue;
+                }
+                return new LlmResponse(content.toString(), promptTokens, completionTokens);
+            } catch (java.io.IOException e) {
+                long elapsed = System.currentTimeMillis() - attemptStart;
+                log.warn("LLM 流式调用 IOException(尝试{}/3, {}ms): {} — {}: {}",
+                        attempt + 1, elapsed, request.getTaskType(),
+                        e.getClass().getSimpleName(), e.getMessage());
+                if (attempt < 2) { sleepBackoff(attempt, false); attempt++; continue; }
+                throw new RuntimeException("LLM 调用异常（重试耗尽）", e);
+            }
+        }
+        throw new RuntimeException("LLM 调用失败：不应到达此处");
+    }
+
+    /** appendSafetyNote 的 body 参数版（流式路径的 body 是局部变量） */
+    private void appendSafetyNoteBody(ObjectNode body) {
+        appendSafetyNote(body);
+    }
+
+    /** 内容审查温和化：向 system 消息追加安全表达提示（原位修改请求体） */
+    private void appendSafetyNote(ObjectNode body) {
+        JsonNode messages = body.get("messages");
+        if (messages != null && messages.isArray() && !messages.isEmpty()) {
+            JsonNode first = messages.get(0);
+            if (first.isObject() && "system".equals(first.path("role").asText())) {
+                ((com.fasterxml.jackson.databind.node.ObjectNode) first).put("content",
+                        first.path("content").asText()
+                                + "\n\n【安全提示】请全程使用克制、含蓄的表达：冲突与死亡用侧面烘托而非直白描写，"
+                                + "避免血腥细节、自残教唆与任何敏感现实指涉。保持文学化叙述。");
+            }
+        }
     }
 
     /**
@@ -156,6 +294,11 @@ public class OpenAiCompatibleClient implements LlmClient {
         body.put("temperature", config.getTemperature());
         body.put("max_tokens", config.getMaxTokens());
         body.put("stream", stream);
+        // 思考模式开关（GLM thinking 参数）：关闭后无 reasoning_content，秒级返回；
+        // 非 GLM 端点（DeepSeek/本地）不会设置 thinking-enabled: false，不注入该字段
+        if (!config.isThinkingEnabled()) {
+            body.putObject("thinking").put("type", "disabled");
+        }
 
         ArrayNode messages = body.putArray("messages");
         if (request.getSystemPrompt() != null && !request.getSystemPrompt().isEmpty()) {

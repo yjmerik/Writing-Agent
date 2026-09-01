@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.writing.novel.domain.Character;
 import com.writing.novel.domain.ContinuityIssue;
+import com.writing.novel.domain.StoryFact;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
+import com.writing.novel.memory.RelevanceGateway;
 import com.writing.novel.spi.NovelRepository;
 
 import java.util.ArrayList;
@@ -29,13 +31,22 @@ public class ConsistencyGuard {
     private final LlmGateway gateway;
     private final NovelRepository repository;
     private final PromptTemplateService promptService;
+    private final RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ConsistencyGuard.class);
 
     public ConsistencyGuard(LlmGateway gateway, NovelRepository repository,
                             PromptTemplateService promptService) {
+        this(gateway, repository, promptService, null);
+    }
+
+    /** p11-q0-01: 注入 RelevanceGateway 后按 cast 收窄角色，不再全量 findAll* */
+    public ConsistencyGuard(LlmGateway gateway, NovelRepository repository,
+                            PromptTemplateService promptService, RelevanceGateway relevanceGateway) {
         this.gateway = gateway;
         this.repository = repository;
         this.promptService = promptService;
+        this.relevanceGateway = relevanceGateway;
     }
 
     /**
@@ -43,11 +54,21 @@ public class ConsistencyGuard {
      * @return 发现的问题列表（ContinuityIssue），空列表表示无问题
      */
     public List<ContinuityIssue> check(String projectId, int chapterIndex, String chapterContent) {
+        return check(projectId, chapterIndex, chapterContent, null);
+    }
+
+    /**
+     * p11-q0-01: 经 RelevanceGateway 按本章 cast 收窄角色，不再全量 findAll*。
+     * @param cast 本章出场人物名（收窄依据；null/空时 gateway 主角保底）
+     */
+    public List<ContinuityIssue> check(String projectId, int chapterIndex, String chapterContent, List<String> cast) {
         List<ContinuityIssue> issues = new ArrayList<>();
         if (chapterContent == null || chapterContent.length() < 200) return issues;
 
-        // 构建角色能力设定文本
-        var characters = repository.findCharactersByProject(projectId);
+        // p11-q0-01: 经 RelevanceGateway 按 cast 收窄（百万字下避免全量角色进 LLM 失明）
+        var characters = relevanceGateway != null
+                ? relevanceGateway.relevantCharacters(projectId, cast, 12)
+                : repository.findCharactersByProject(projectId);
         String abilities = characters.stream()
                 .filter(c -> c.getAbility() != null && !c.getAbility().isBlank())
                 .map(c -> "- " + c.getName() + "（" + c.getRole() + "）能力：" + c.getAbility())
@@ -58,8 +79,13 @@ public class ConsistencyGuard {
         String content = chapterContent.length() > 5000
                 ? chapterContent.substring(0, 5000) : chapterContent;
 
+        // p11-q0-02: 消费真典 ACTIVE 事实作为能力越界/凭空证据的校验依据
+        var facts = relevanceGateway != null
+                ? relevanceGateway.relevantFacts(projectId, cast, 15)
+                : java.util.Collections.<StoryFact>emptyList();
         String systemPrompt = promptService.render("consistency-guard", Map.of(
                 "characterAbilities", abilities,
+                "storyCanon", formatCanon(facts),
                 "chapterContent", content));
 
         var req = LlmRequest.builder()
@@ -73,9 +99,18 @@ public class ConsistencyGuard {
         try {
             var resp = gateway.complete(req);
             issues.addAll(parseIssues(resp.getContent(), projectId, chapterIndex));
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("一致性守卫处理异常（p11-q3-03 fail-loud，不再静默吞）: {}", e.getMessage());
         }
         return issues;
+    }
+
+    /** p11-q0-02: 格式化真典事实为校验依据文本 */
+    private String formatCanon(List<StoryFact> facts) {
+        if (facts == null || facts.isEmpty()) return "（无已确立事实）";
+        return facts.stream()
+                .map(f -> "- " + f.getSubject() + "（" + f.getFactType() + "）：" + f.getAssertion())
+                .collect(Collectors.joining("\n"));
     }
 
     private List<ContinuityIssue> parseIssues(String json, String projectId, int chapterIndex) {
@@ -138,7 +173,8 @@ public class ConsistencyGuard {
                     }
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("一致性守卫处理异常（p11-q3-03 fail-loud，不再静默吞）: {}", e.getMessage());
         }
         return issues;
     }

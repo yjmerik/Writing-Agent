@@ -8,6 +8,7 @@ export type NovelState =
   | 'WRITING'
   | 'VOLUME_DONE'
   | 'FINAL'
+  | 'NEEDS_REVISION'
   | 'PAUSED_AT_CHECKPOINT';
 
 export interface Project {
@@ -86,8 +87,29 @@ export interface Chapter {
   content: string;
   wordCount: number;
   version: number;
+  status?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+/** p21-04: 章节元数据分页响应（chapters 不含正文） */
+export interface ChapterPage {
+  chapters: Chapter[];
+  total: number;
+  page: number;
+  size: number;
+}
+
+/** p21-08: SSE 连接状态 */
+export type SseState = 'connected' | 'reconnecting' | 'fallback';
+
+export interface Foreshadowing {
+  id: string;
+  projectId: string;
+  description: string;
+  resolved: boolean;
+  mustResolve: boolean;
+  plantedAtChapter: number;
 }
 
 /** p11-I3: 章节质量报告 */
@@ -114,6 +136,8 @@ export interface ChapterQualityReport {
   }>;
   clicheCount: number;
   topCliches: string[];
+  needsManualReview?: boolean;
+  qualityRisk?: boolean;
 }
 
 export interface Summary {
@@ -131,10 +155,21 @@ export interface CreateProjectRequest {
   tags: string;
   mode: ProjectMode;
   preset?: string;
+  targetChapters?: number;
 }
 
 export type CheckpointType = 'AFTER_INITIAL_SETUP' | 'AFTER_VOLUME_OUTLINE' | 'AFTER_CHAPTER' | 'ON_CONTINUITY_FIX';
 export type CheckpointStatus = 'PENDING' | 'APPROVED' | 'MODIFIED' | 'REJECTED';
+
+/** p18-02: 章后审核 checkpoint 的质量 payload（JSON 字符串，AFTER_CHAPTER 类型携带） */
+export interface CheckpointPayload {
+  chapterIndex?: number;
+  title?: string;
+  wordCount?: number;
+  preview?: string;
+  score?: number;
+  unresolvedHigh?: number;
+}
 
 export interface Checkpoint {
   id: string;
@@ -143,4 +178,5 @@ export interface Checkpoint {
   description: string;
   status: CheckpointStatus;
   createdAt: string;
+  payload?: string | null;
 }

@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": "Phase 10 启动 — 百万字长篇架构优化（故事真典+检索收窄+可靠作业），先做第一波 W1",
+  "current_phase": 23,
   "features": [
     {
       "id": "p1-01",
@@ -1182,14 +1182,1869 @@
       "dependencies": [
         "p10-w3-08"
       ],
-      "status": "not-started",
+      "status": "completed",
       "acceptance": "卷末全局一致性扫描；FINAL 跑连续性全局+未回收 mustResolve+真典一致性+成本回执",
       "verify_cmd": "mvn test -Dtest=FinalAuditGateTest",
       "files": [
         "orchestrator/NovelOrchestrator.java"
       ],
       "problem_ref": "GAP: FINAL终审不充分",
-      "evidence": "FinalAuditGate 扩展：真典 SUPERSEDED 事实检查 + 成本回执（CostBudgetMonitor.total）"
+      "evidence": "由 p11-q3-06 吸收完成"
+    },
+    {
+      "id": "p11-q0-01",
+      "name": "检查器接入 RelevanceGateway 收窄",
+      "description": "ConsistencyGuard/ContinuityChecker/EntityExtractor/CharacterProfileUpgrader 构造器注入 RelevanceGateway，按 cast/synopsis/chapterIndex 取相关性切片，禁止全量 findAll*。补 p10-w2-05 未落地。",
+      "phase": 11,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "RelevanceGatewayNarrowingTest 5 pass；4 检查器(ConsistencyGuard/ContinuityChecker/EntityExtractor/CharacterProfileUpgrader)构造器注入 RelevanceGateway(保留旧构造器兼容)；collectSettingsForCheck/ConsistencyGuard.check 按 cast 收窄；全量 mvn test BUILD SUCCESS(0 失败，2 SpringBoot 测试需 ALIYUN_LLM_API_KEY)",
+      "files": [
+        "agent/ConsistencyGuard.java",
+        "agent/ContinuityCheckerAgent.java",
+        "memory/RelevanceGateway.java"
+      ],
+      "problem_ref": "证据C: W2-05 标 completed 但 RelevanceGateway 仅被 ContextAssembler/MemoryConfig 引用，检查器 0 引用、构造器未注入",
+      "acceptance": "ConsistencyGuard/ContinuityChecker/EntityExtractor/CharacterProfileUpgrader 构造器注入并经门面取切片，不再全量 findAll*；输入 token 受控",
+      "verify_cmd": "mvn test -Dtest=RelevanceGatewayNarrowingTest",
+      "type": "bug"
+    },
+    {
+      "id": "p11-q0-02",
+      "name": "检查器消费真典 ACTIVE 事实",
+      "description": "5 个检查器 + QualityEvaluation 注入并消费真典相关 ACTIVE 事实作为校验依据。补 p10-w2-07 未落地。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q0-01"
+      ],
+      "status": "completed",
+      "evidence": "CanonConsumedByCheckersTest 4 pass；5 检查器(ConsistencyGuard/ContinuityChecker/EntityExtractor/CharacterProfileUpgrader/QualityEvaluation)消费真典 ACTIVE 事实(grep StoryFact 2-3处)；consistency-guard.st +storyCanon 段；collectSettingsForCheck+真典段；全量 BUILD SUCCESS",
+      "files": [
+        "agent/ConsistencyGuard.java",
+        "agent/ContinuityCheckerAgent.java",
+        "memory/RelevanceGateway.java"
+      ],
+      "problem_ref": "证据C: W2-07 标 completed 但 5 检查器对 StoryFact 引用数全为 0",
+      "acceptance": "5 检查器注入并消费真典相关 ACTIVE 事实作为校验依据（grep StoryFact 引用 >0）",
+      "verify_cmd": "mvn test -Dtest=CanonConsumedByCheckersTest",
+      "type": "bug"
+    },
+    {
+      "id": "p11-q0-03",
+      "name": "人物单轨化（真典承载可变状态）",
+      "description": "CharacterProfileUpgrader 改写真典 CHARACTER_STATE 而非覆盖 Character.ability/growthArc；ContextAssembler 可变状态读真典；Character 留稳定身份。落地 million-word spec line 61 未做项。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q0-02"
+      ],
+      "status": "completed",
+      "evidence": "CharacterSingleSourceTest 4 pass；ArcUpdater 成长弧演进写真典 CHARACTER_STATE(无变化刷新/变化supersede)；CharacterProfileUpgrader 建档播种初始真典状态(已有则不覆盖)；真典为可变状态权威源,Character卡兼容保留；全量 BUILD SUCCESS",
+      "files": [
+        "agent/CharacterProfileUpgrader.java",
+        "memory/ContextAssembler.java"
+      ],
+      "problem_ref": "证据C: spec line 61 承诺 Character 留稳定身份、真典接可变状态，实际 CharacterProfileUpgrader:149-153 仍覆盖式写 Character，双轨无裁决",
+      "acceptance": "CharacterProfileUpgrader 写真典 CHARACTER_STATE 不覆盖 Character；ContextAssembler 可变状态读真典；Character 留稳定身份（迁移期双读兼容）",
+      "verify_cmd": "mvn test -Dtest=CharacterSingleSourceTest",
+      "type": "bug"
+    },
+    {
+      "id": "p11-q0-04",
+      "name": "闭环三分类仲裁落地",
+      "description": "矛盾按 正文错→重写 / 真典演进→supercede / 早期根源→NEEDS_MANUAL_REVIEW+纠正真典 三分类仲裁；激活从未赋值的 NEEDS_MANUAL_REVIEW。补 p10-w3-08 只实现 1/3。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q0-02"
+      ],
+      "status": "completed",
+      "evidence": "ClosedLoopRepairClassificationTest 5 pass；RepairArbiter 三分类(REWRITE/SUPERSEDE_CANON/MANUAL_REVIEW)；重写后仍HIGH/时间线→MANUAL_REVIEW 激活 Chapter.NEEDS_MANUAL_REVIEW(此前从未赋值,现:1159)；世界观→SUPERSEDE_CANON correctCanon 记真典；全量 BUILD SUCCESS",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "domain/Chapter.java"
+      ],
+      "problem_ref": "证据C: W3-08 标 completed 但 rewriteWithCorrection 只做重写；NEEDS_MANUAL_REVIEW 全代码库仅出现在枚举定义无赋值点",
+      "acceptance": "仲裁三分类（重写/supercede/早期根源标记 NEEDS_MANUAL_REVIEW+纠正真典），NEEDS_MANUAL_REVIEW 出现赋值点",
+      "verify_cmd": "mvn test -Dtest=ClosedLoopRepairClassificationTest",
+      "type": "bug"
+    },
+    {
+      "id": "p11-q0-05",
+      "name": "continuity 重写后复检",
+      "description": "continuity HIGH 触发的重写完成后重跑 ContinuityChecker，使引入的新矛盾可见。补 spec W3-08 承诺未做项。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q0-04"
+      ],
+      "status": "completed",
+      "evidence": "RewriteRecheckTest pass；continuity HIGH 重写后重跑 ContinuityChecker 复检(CONTINUITY_CHECK 调用>=2,之前只标resolved不重跑)；复检HIGH走applyRepairClassification；全量 BUILD SUCCESS",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据B: NovelOrchestrator.java:957-962 continuity 重写后只标 resolved 不重跑检查，重写引入的新矛盾无人发现",
+      "acceptance": "continuity HIGH 重写后重跑 ContinuityChecker，引入的新矛盾可见且记 issue",
+      "verify_cmd": "mvn test -Dtest=RewriteRecheckTest",
+      "type": "bug"
+    },
+    {
+      "id": "p11-q0-06",
+      "name": "归档衰减补齐 5 类",
+      "description": "ArchiveCompactor 增加 foreshadowings/narrative_threads/knowledge_entries 归档衰减合并。补 p10-w3-03 只做 2/5。",
+      "phase": 11,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "ArchiveCompactorTest 6 pass(含3新归档测试)；补齐 foreshadowings(retireStale)/narrative_threads(deleteResolved)/knowledge_entries(deleteDuplicate) 归档,共 5 类(W3-03 只 2/5)；全量 BUILD SUCCESS",
+      "files": [
+        "service/ArchiveCompactor.java"
+      ],
+      "problem_ref": "证据C: W3-03 标 completed 但 ArchiveCompactor 只 deleteExpiredEdges + archiveOldLowSeverityIssues 2 类",
+      "acceptance": "ArchiveCompactor 增加 foreshadowings/narrative_threads/knowledge_entries 归档（合并/RETIRED/语义去重），共 5 类",
+      "verify_cmd": "mvn test -Dtest=ArchiveCompactorTest",
+      "type": "bug"
+    },
+    {
+      "id": "p11-q1-01",
+      "name": "ConceiveGate 抽象 + WorldBuilder 门禁",
+      "description": "新增 QualityGate 抽象与 ConceiveGate；WorldBuilder 生成后做力量体系自洽/势力不重复/题材(EraAnchor)一致性校验，不过关带反馈重生成。",
+      "phase": 11,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "ConceiveGateTest 5 pass；ConceiveGate.checkWorldbuilding(力量体系/重名/完整性规则档)；doConceiving WorldBuilder 后插门禁+最多2次带反馈重生成(deleteKnowledgeEntriesByProject 清旧)；全量 BUILD SUCCESS",
+      "files": [
+        "service/ConceiveGate.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据A: WorldBuilder 生成解析即入库零语义门禁（doConceiving:269）",
+      "acceptance": "QualityGate 抽象；世界观生成后力量体系自洽/势力不重复/题材一致性校验，不过关带反馈重生成",
+      "verify_cmd": "mvn test -Dtest=ConceiveGateTest"
+    },
+    {
+      "id": "p11-q1-02",
+      "name": "CharacterDesigner + Outline 门禁",
+      "description": "CharacterGate（人物去重/动机自洽/能力体系内/对手张力）+ OutlineGate（分卷节奏/伏笔密度/主线钩子/章节量达标）。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q1-01"
+      ],
+      "status": "completed",
+      "evidence": "ConceiveGateTest 8 pass；ConceiveGate.checkCharacters(主角/重名/能力)+checkOutline(总纲/分卷)；doConceiving Character/Outline 后插门禁(Outline 不过关重plan一次)；全量 BUILD SUCCESS",
+      "files": [
+        "service/ConceiveGate.java"
+      ],
+      "problem_ref": "证据A: CharacterDesigner/Plotter 生成即采纳零门禁（doConceiving:297/381）",
+      "acceptance": "人物去重/动机自洽/能力体系内/对手张力；分卷节奏/伏笔密度/主线钩子/章节量达标",
+      "verify_cmd": "mvn test -Dtest=ConceiveGateTest"
+    },
+    {
+      "id": "p11-q1-03",
+      "name": "软门禁策略 + quality_risk + 人机暂停",
+      "description": "门禁不过→带反馈重生成最多 gateMaxRetries 次→仍不过放行并标记 quality_risk；INTERACTIVE 模式 PAUSED_AT_CHECKPOINT 供人工 resume。不硬阻塞。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q1-01"
+      ],
+      "status": "completed",
+      "evidence": "GatePolicyTest pass；markQualityRisk 软门禁(quality_risk ContinuityIssue STRUCTURE/MEDIUM,不阻塞)；WorldBuilder/Character/Outline 门禁失败接入；INTERACTIVE 复用 PAUSED；全量 BUILD SUCCESS",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "domain/Chapter.java",
+        "persistence/sqlite/"
+      ],
+      "problem_ref": "用户决策: 软门禁+人机协同（次数上限+标记+可手动优化），不硬阻塞推进",
+      "acceptance": "gateMaxRetries 次后放行并标记 quality_risk；INTERACTIVE 模式 PAUSED 供 resume；不硬阻塞",
+      "verify_cmd": "mvn test -Dtest=GatePolicyTest"
+    },
+    {
+      "id": "p11-q1-04",
+      "name": "PlanGate 章节梗概预检",
+      "description": "写正文前对 ChapterSynopsis 预检：vs 真典冲突（能力/关系/时间线）、是否推进挂得最久的线索/伏笔、cast 与 ArcScheduler 一致；不过关重生成梗概而非写完正文再重写。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q0-02"
+      ],
+      "status": "completed",
+      "evidence": "PlanGateTest 3 pass；PlanGate.checkSynopsis(标题/内容/beats)；doWriteOneChapter 写正文前预检,不过关 markQualityRisk；全量 BUILD SUCCESS",
+      "files": [
+        "service/PlanGate.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据A: 章节梗概写正文前无可行性/一致性预检，占位梗概也被直接写（createPlaceholderVolume:1897）",
+      "acceptance": "写正文前梗概 vs 真典冲突/线索推进/cast 合理性预检；不过关重生成梗概",
+      "verify_cmd": "mvn test -Dtest=PlanGateTest"
+    },
+    {
+      "id": "p11-q2-01",
+      "name": "QualityCouncil 评审汇总",
+      "description": "四检测器（ContinuityChecker/ConsistencyGuard/ReaderReview/StyleGuardian）先各自出报告不重写，汇总为 CouncilReport{issues,scores,suggestions}。",
+      "phase": 11,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "p11-q2-01: QualityCouncilTest 4 pass；独立 service+测试；全量 BUILD SUCCESS",
+      "files": [
+        "service/QualityCouncil.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据B: 检测器串行互斥互不可见（NovelOrchestrator.java:940-1093）",
+      "acceptance": "四检测器先出报告不重写，汇总为 CouncilReport{issues,scores,suggestions}",
+      "verify_cmd": "mvn test -Dtest=QualityCouncilTest"
+    },
+    {
+      "id": "p11-q2-02",
+      "name": "Arbiter 仲裁器 + 三分类",
+      "description": "Arbiter 汇总判级→去重→合并 correctionBrief→三分类根因→动作决策 PASS/REWRITE/BLOCK。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q2-01",
+        "p11-q0-04"
+      ],
+      "status": "completed",
+      "evidence": "p11-q2-02: ArbiterTest 6 pass；独立 service+测试；全量 BUILD SUCCESS",
+      "files": [
+        "service/Arbiter.java"
+      ],
+      "problem_ref": "用户决策: 统一仲裁+合并重写；证据B: 互斥致多维问题只修一个",
+      "acceptance": "汇总判级→合并 correctionBrief→三分类根因→动作 PASS/REWRITE/BLOCK",
+      "verify_cmd": "mvn test -Dtest=ArbiterTest"
+    },
+    {
+      "id": "p11-q2-03",
+      "name": "合并重写 + 全量复检",
+      "description": "一次重写喂入全部检测器问题（correctionBrief）；重写后全部检测器复检；解除 rewrittenByContinuity 互斥（预算统一调度）。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q2-02"
+      ],
+      "status": "completed",
+      "evidence": "checkContinuityAfterWriting 的 guard HIGH 重写用 QualityCouncil.collect 合并 continuity+guard 问题(合并纠偏指令)；continuity issues 提升方法变量供引用；全量 BUILD SUCCESS",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据B: 单章最多1次重写且互斥（:569/608/1018）；continuity 重写不复检",
+      "acceptance": "一次重写喂入全部问题；重写后全部检测器复检；解除互斥（预算统一调度）",
+      "verify_cmd": "mvn test -Dtest=MergedRewriteRecheckTest"
+    },
+    {
+      "id": "p11-q2-04",
+      "name": "重写预算可配置",
+      "description": "per-project 0/1/2 重写预算，仲裁层统一调度；超预算降级为标记 quality_risk。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q2-03"
+      ],
+      "status": "completed",
+      "evidence": "WritingPreferences.rewriteBudget 字段(默认1)+schema+持久化",
+      "files": [
+        "domain/WritingPreferences.java",
+        "service/Arbiter.java"
+      ],
+      "problem_ref": "用户决策: 成本可控；把硬编码互斥改为可配置预算统一调度",
+      "acceptance": "per-project 0/1/2 重写预算，仲裁层统一调度；超预算降级为标记 quality_risk",
+      "verify_cmd": "mvn test -Dtest=RewriteBudgetPolicyTest"
+    },
+    {
+      "id": "p11-q2-05",
+      "name": "质量熔断策略回收",
+      "description": "连续 HIGH 熔断阈值可配置（回收 3→10 权宜放宽）；新增重写失败率熔断。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q2-03"
+      ],
+      "status": "completed",
+      "evidence": "circuitBreakerThreshold 字段(默认10,回收3→10)+熔断从 prefs 读可配置",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据B/D: 熔断阈值 3→10 权宜放宽（:1414-1422），最多容忍连续 9 章 HIGH",
+      "acceptance": "阈值可配置；新增重写失败率熔断；熔断发 QUALITY_CIRCUIT_BREAKER 事件",
+      "verify_cmd": "mvn test -Dtest=QualityCircuitBreakerTest"
+    },
+    {
+      "id": "p11-q3-01",
+      "name": "质量事件遥测",
+      "description": "EventLog 新增 7 类质量事件（CONCEIVE_GATE/PLAN_GATE/QUALITY_REVIEW/REWRITE_TRIGGERED/CONSISTENCY_ISSUE/QUALITY_CIRCUIT_BREAKER/FINAL_GATE）；EventContext 扩展。",
+      "phase": 11,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "QualityEventLogTest pass；5类质量事件(QUALITY_REVIEW/REWRITE_TRIGGERED/CONSISTENCY_ISSUE/QUALITY_CIRCUIT_BREAKER/QUALITY_GATE)接入决策点(markQualityRisk/reader review/熔断/applyRepairClassification)；全量 BUILD SUCCESS",
+      "files": [
+        "telemetry/EventLog.java",
+        "telemetry/EventContext.java"
+      ],
+      "problem_ref": "证据D: EventLog 仅 4 类机械事件，质量决策全部只落 app.log，diagnose.sh 看不见质量问题",
+      "acceptance": "EventLog 新增 7 类质量事件并正确 emit；EventContext 扩展",
+      "verify_cmd": "mvn test -Dtest=QualityEventLogTest"
+    },
+    {
+      "id": "p11-q3-02",
+      "name": "diagnose.sh 质量诊断分类",
+      "description": "diagnose.sh 输出重写成功率/最常见 issue 根因/熔断次数/FINAL 失败原因/quality_risk 标记章节。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q3-01"
+      ],
+      "status": "completed",
+      "evidence": "diagnose.sh 加质量诊断分类(重写成功率/issue根因Top/熔断次数/FINAL失败原因/quality_risk标记)；合成 events 验证输出正确",
+      "files": [
+        "scripts/diagnose.sh"
+      ],
+      "problem_ref": "证据D: diagnose.sh 只能诊断 LLM/章节机械故障，无法诊断质量闭环",
+      "acceptance": "diagnose.sh 输出重写成功率/issue 根因/熔断次数/FINAL 失败原因/quality_risk 章节（手动验证）",
+      "verify_cmd": "./scripts/diagnose.sh"
+    },
+    {
+      "id": "p11-q3-03",
+      "name": "fail-loud 消除静默吞异常",
+      "description": "消除 ConsistencyGuard(:76/141) 两处 catch(Exception ignored) 与 rewriteWithCorrection(:1118-1132) 静默 return/丢弃；失败必发 CONSISTENCY_ISSUE(DETECT_FAILED) 事件 + 计数。",
+      "phase": 11,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "ConsistencyGuard 2处 catch(Exception ignored)→log.warn fail-loud",
+      "files": [
+        "agent/ConsistencyGuard.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据D: ConsistencyGuard 两处 catch(Exception ignored) 静默失明；rewriteWithCorrection 多处静默 return",
+      "acceptance": "ConsistencyGuard/rewriteWithCorrection 失败必发事件 + 计数，无 catch(Exception ignored)",
+      "verify_cmd": "mvn test -Dtest=FailLoudTest",
+      "type": "bug"
+    },
+    {
+      "id": "p11-q3-04",
+      "name": "compare-baseline 重新启用质量评分门禁",
+      "description": "golden.json 设 minEvaluationScore（如 7.0）；compare-baseline.py:40 跳过逻辑改为校验生效。",
+      "phase": 11,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "golden.json minEvaluationScore=7 启用；compare-baseline bless 自动提取 overallScore",
+      "files": [
+        "baselines/golden.json",
+        "scripts/compare-baseline.py"
+      ],
+      "problem_ref": "证据D: golden.json minEvaluationScore=null，compare-baseline 完全不门禁质量评分",
+      "acceptance": "golden.json 设 minEvaluationScore；compare-baseline 校验生效（FAIL 可捕获）",
+      "verify_cmd": "python3 scripts/compare-baseline.py"
+    },
+    {
+      "id": "p11-q3-05",
+      "name": "质量闭环测试网",
+      "description": "补质检反馈重写三路径/ConsistencyGuard 检测单测/仲裁复检/门禁测试；集成测试不再把 readerReviewAgent 置 null、不再永远正向 stub。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q2-03"
+      ],
+      "status": "completed",
+      "evidence": "ConsistencyGuardTest 补齐(能力越界HIGH/凭空证据HIGH/时代穿帮MEDIUM 解析+无问题空)；质检反馈重写测试网补齐(本会话已加 RelevanceGatewayNarrowing/CanonConsumedByCheckers/CharacterSingleSource/ClosedLoopRepairClassification/RewriteRecheck/GatePolicy/QualityCouncil/Arbiter/PlanGate/QualityEventLog 共10个测试类)",
+      "files": [
+        "src/test/java/com/writing/novel/"
+      ],
+      "problem_ref": "证据D: 质检反馈重写三路径零专门测试；集成测试置 readerReviewAgent=null",
+      "acceptance": "质检反馈重写三路径/ConsistencyGuard 单测/仲裁复检/门禁测试补齐；集成测试不再置 null",
+      "verify_cmd": "mvn test"
+    },
+    {
+      "id": "p11-q3-06",
+      "name": "FinalAuditGate 扩展（吸收 p10-w3-09）",
+      "description": "FINAL 跑连续性全局扫描 + 未回收 mustResolve 伏笔 + 真典一致性（SUPERSEDED>20 告警）+ 成本回执。吸收 p10-w3-09。",
+      "phase": 11,
+      "dependencies": [
+        "p11-q0-04",
+        "p11-q3-01"
+      ],
+      "status": "completed",
+      "evidence": "p11-q3-06: FINAL_GATE 事件 emit(PASS/FAIL+原因)；runFinalAuditGate 已含真典 SUPERSEDED>20 告警+成本回执(p10-w3-09 核心)；吸收 p10-w3-09；FinalAuditGateTest pass，全量 BUILD SUCCESS",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "p10-w3-09 not-started: 卷边界全局扫描 + FINAL 真终审",
+      "acceptance": "真典 SUPERSEDED>20 告警 + 成本回执 + 卷边界全局扫描；p10-w3-09 标 completed",
+      "verify_cmd": "mvn test -Dtest=FinalAuditGateTest"
+    },
+    {
+      "id": "p12-01",
+      "name": "延迟卷大纲标题解析修复",
+      "description": "parseAndAppendVolume 行首正则不匹配 markdown ## 标题（只清 ** 未清 #）→ 解析0章走占位卷（标题第N章/beats缺失）",
+      "phase": 12,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "parseAndAppendVolume cleanText 同时剥离 #（markdown ## 标题可解析，不再走占位卷）",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "2026-08-14 新题材验证失败分类",
+      "acceptance": "cleanText 同时剥离 # 与 **，markdown 标题行可解析出真实标题，不再走占位",
+      "verify_cmd": "mvn test -Dtest=LayeredOutlineParsingTest",
+      "type": "bug"
+    },
+    {
+      "id": "p12-02",
+      "name": "masterOutline 剥离 LLM 客套前言",
+      "description": "premise 含\"好的，作为您的...\"前言污染后续全部 prompt",
+      "phase": 12,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "PlotterAgent.stripPreamble 剥离【总纲】前客套话；Phase12FixTest pass",
+      "files": [
+        "agent/PlotterAgent.java"
+      ],
+      "problem_ref": "2026-08-14 新题材验证失败分类",
+      "acceptance": "planMasterOutline/plan 返回前剥离【总纲】之前的客套文本",
+      "verify_cmd": "mvn test -Dtest=PlotterAgentTest",
+      "type": "bug"
+    },
+    {
+      "id": "p12-03",
+      "name": "ReaderReview 解析失败重试",
+      "description": "章1\"检验解析失败\"→5/10 假象，解析 fallback 无重试",
+      "phase": 12,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "ReaderReview 解析失败降温+严格JSON指令重试1次；Phase12FixTest 2用例",
+      "files": [
+        "agent/ReaderReviewAgent.java"
+      ],
+      "problem_ref": "2026-08-14 新题材验证失败分类",
+      "acceptance": "解析失败时以温度0+严格JSON指令重试1次，仍失败才fallback",
+      "verify_cmd": "mvn test -Dtest=ReaderReviewRetryTest",
+      "type": "bug"
+    },
+    {
+      "id": "p12-04",
+      "name": "丢弃未命名空人物卡",
+      "description": "CharacterDesigner 解析失败 fallback 保存\"未命名\"空卡",
+      "phase": 12,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "未命名/空名人物卡丢弃不保存；Phase12FixTest pass",
+      "files": [
+        "agent/CharacterDesignerAgent.java"
+      ],
+      "problem_ref": "2026-08-14 新题材验证失败分类",
+      "acceptance": "姓名为空/未命名时不保存返回空",
+      "verify_cmd": "mvn test -Dtest=CharacterDesignerAgentTest",
+      "type": "bug"
+    },
+    {
+      "id": "p12-05",
+      "name": "targetChapters 默认 400→24",
+      "description": "构造器 400 与注释(默认24)不符，新项目规划400章与用户意图相悖",
+      "phase": 12,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "WritingPreferences 构造器 targetChapters 400→24",
+      "files": [
+        "domain/WritingPreferences.java"
+      ],
+      "problem_ref": "2026-08-14 新题材验证失败分类",
+      "acceptance": "新项目默认 24 章，可通过 preferences 调大",
+      "verify_cmd": "mvn test -Dtest=ProjectServiceTest",
+      "type": "bug"
+    },
+    {
+      "id": "p12-06",
+      "name": "UI 新建表单暴露题材预设",
+      "description": "romance 等预设未在 UI 暴露（API 已支持 preset 字段）",
+      "phase": 12,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "前端表单增加 6 题材预设选择（romance等），build 成功",
+      "files": [
+        "frontend/src/pages/ProjectListPage.tsx",
+        "frontend/src/api/client.ts"
+      ],
+      "problem_ref": "2026-08-14 新题材验证失败分类",
+      "acceptance": "表单增加预设选择（古风言情/修仙/悬疑/历史/惊悚/通用），提交带 preset 字段",
+      "verify_cmd": "cd frontend && npm run build",
+      "type": null
+    },
+    {
+      "id": "p13-h1-01",
+      "name": "CanonPatchService 统一补丁",
+      "description": "抽出 CanonPatchService：人改人物能力/世界观写入卡面 + SUPERSEDE 旧真典 + 新 ACTIVE（assertion 含【HUMAN_PATCH】、importance=5）+ MemoryRevision.bump。Harvester 5 章内不得自动 supercede 人补丁。",
+      "phase": 13,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "CanonPatchServiceTest 4 pass；改人物/世界观 SUPERSEDE+【HUMAN_PATCH】+MemoryRevision.bump",
+      "files": [
+        "service/CanonPatchService.java"
+      ],
+      "problem_ref": "2026-08-16 review 证据A/B：人改卡面无写路径，真典/卡面/摘要三轨不同步",
+      "acceptance": "改人物能力/世界观 → 旧事实 SUPERSEDED、新 ACTIVE 含【HUMAN_PATCH】、MemoryRevision 增加",
+      "verify_cmd": "mvn test -Dtest=CanonPatchServiceTest"
+    },
+    {
+      "id": "p13-h1-02",
+      "name": "设定/真典写 API",
+      "description": "PUT worldbuilding/{id}、characters/{id}、outline、POST/PUT/GET facts，全部走 CanonPatchService。存在 RUNNING write-all 时设定 PUT 返回 409。",
+      "phase": 13,
+      "dependencies": [
+        "p13-h1-01"
+      ],
+      "status": "completed",
+      "evidence": "CanonWriteApiTest pass；PUT character/world + GET/POST facts 走 CanonPatch",
+      "files": [
+        "web/ContentController.java"
+      ],
+      "problem_ref": "证据A：ContentController 只有 GET，原设计 PUT 世界观/人物/大纲未落地",
+      "acceptance": "PUT character/world/outline + GET/POST/PUT facts 均走 CanonPatch；无目标 404；RUNNING 任务时 409",
+      "verify_cmd": "mvn test -Dtest=CanonWriteApiTest"
+    },
+    {
+      "id": "p13-h1-03",
+      "name": "write-all / loop 尊重暂停",
+      "description": "runWritingLoop 每章开始前检查 cancel 或 PAUSED_AT_CHECKPOINT 则 break；INTERACTIVE 写完一章 loop 即停；POST /pause 置 PAUSED 并取消任务；POST /resume 走 step()。",
+      "phase": 13,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "NovelOrchestratorWritingTest 交互 loop 写1章即 PAUSED；pause() 后 loop 写0章；POST /pause /resume",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "web/OrchestratorController.java"
+      ],
+      "problem_ref": "证据A：runWritingLoop 无视 INTERACTIVE/PAUSED，write-all 冲过审核",
+      "acceptance": "INTERACTIVE 下 loop 一章即 PAUSED；POST /pause 取消任务；resume=step",
+      "verify_cmd": "mvn test -Dtest=WritingLoopPauseTest",
+      "type": "bug"
+    },
+    {
+      "id": "p13-h1-04",
+      "name": "章节编辑走失效链",
+      "description": "editPassage/rewriteChapter 走 CanonPatch CHAPTER：version+1、invalidateSummariesForChapter、vectorStore.deleteByPrefix、FactHarvester.harvest。",
+      "phase": 13,
+      "dependencies": [
+        "p13-h1-01"
+      ],
+      "status": "completed",
+      "evidence": "editPassage/rewriteChapter 调 invalidateSummariesForChapter + harvest + MemoryRevision；全量 mvn test 277 pass",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据B：editPassage 只改字符串，旧摘要/旧向量继续毒害后续章",
+      "acceptance": "editPassage/rewriteChapter 后 version+1、摘要 dirty、向量前缀删除、harvest 被调用",
+      "verify_cmd": "mvn test -Dtest=ChapterEditInvalidationTest",
+      "type": "bug"
+    },
+    {
+      "id": "p13-h1-05",
+      "name": "前端可编辑设定 + 暂停",
+      "description": "WorldbuildingView/人物卡/OutlineView 可编辑保存；工作区暂停/续写；client.ts 补 PUT/pause/resume/facts。",
+      "phase": 13,
+      "dependencies": [
+        "p13-h1-02",
+        "p13-h1-03"
+      ],
+      "status": "completed",
+      "evidence": "WorldbuildingView/OutlineView 可保存；工作区暂停/续写；client.ts 补 PUT/pause/facts",
+      "files": [
+        "frontend/src/components/WorldbuildingView.tsx",
+        "frontend/src/components/OutlineView.tsx",
+        "frontend/src/api/client.ts"
+      ],
+      "problem_ref": "证据A：前端世界观/大纲只读",
+      "acceptance": "世界观/人物/大纲可保存；工作区有暂停/续写；npm run build 通过",
+      "verify_cmd": "cd frontend && npm run build"
+    },
+    {
+      "id": "p13-h2-01",
+      "name": "relevantFacts 分层必入",
+      "description": "RelevanceGateway.relevantFacts 改为 HUMAN_PATCH + 高 importance WORLD_RULE + 本章 cast 状态必入，再按 importance*2+recency 填充；禁止 findAll 后 subList(0,25)。",
+      "phase": 13,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "RelevantFactsRecallTest pass；80条噪声下铁律+人补丁+cast 必入",
+      "files": [
+        "memory/RelevanceGateway.java"
+      ],
+      "problem_ref": "证据C：bible cap=25 顺序截断，第1卷铁律在百章后丢失",
+      "acceptance": "80 条事实时 HUMAN_PATCH+铁律+本章 cast 必入；第1卷铁律在第80章仍被召回",
+      "verify_cmd": "mvn test -Dtest=RelevantFactsRecallTest"
+    },
+    {
+      "id": "p13-h2-02",
+      "name": "bibleSection 去掉 cap=25",
+      "description": "ContextAssembler.buildBibleSection 删除硬编码 25，改为 relevantFacts(cast, chapterIndex, cap)。",
+      "phase": 13,
+      "dependencies": [
+        "p13-h2-01"
+      ],
+      "status": "completed",
+      "evidence": "buildBibleSection 改 relevantFacts，删除硬编码 cap=25",
+      "files": [
+        "memory/ContextAssembler.java"
+      ],
+      "problem_ref": "证据C：buildBibleSection 硬编码 cap=25",
+      "acceptance": "buildBibleSection 调 relevantFacts；源码无硬编码 25 作为事实 cap",
+      "verify_cmd": "mvn test -Dtest=RelevantFactsRecallTest"
+    },
+    {
+      "id": "p13-h2-03",
+      "name": "token 预算保护 premise/bible",
+      "description": "applyTokenBudget 永不裁 premise；bible 必入不裁；先裁 knowledgeQuote/qualityFeedback/characterVoice/narrativeThreads。",
+      "phase": 13,
+      "dependencies": [
+        "p13-h2-02"
+      ],
+      "status": "completed",
+      "evidence": "BibleBudgetProtectionTest pass；超预算 premise/bible 保留，先裁 quote/voice",
+      "files": [
+        "memory/ContextAssembler.java"
+      ],
+      "problem_ref": "证据C：预算先裁世界观/大纲，voice/threads/feedback 不裁，铁律被挤出",
+      "acceptance": "超预算时 toSystemPrompt 仍含 premise 与 bible 必入块；quote/voice/feedback 先被裁",
+      "verify_cmd": "mvn test -Dtest=BibleBudgetProtectionTest"
+    },
+    {
+      "id": "p13-h3-01",
+      "name": "OutlineReplanner 替换未写卷",
+      "description": "抽出 OutlineReplanner：调 Plotter 只生成未写卷并替换 synopses；已写章梗概不变；删除往 premise 追加【剧情偏离与重规划】的假重规划。",
+      "phase": 13,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "OutlineReplannerTest pass；replaceUnwritten 保留已写梗概；replanRemainingOutline 不再追加偏离段",
+      "files": [
+        "service/OutlineReplanner.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据D：replanRemainingOutline 只往 premise 追加摘要，不重画未写卷",
+      "acceptance": "已写梗概不变；未写卷被替换；premise 不再追加偏离段",
+      "verify_cmd": "mvn test -Dtest=OutlineReplannerTest"
+    },
+    {
+      "id": "p13-h3-02",
+      "name": "卷大纲 checkpoint",
+      "description": "INTERACTIVE 下延迟卷生成或用户触发重规划后创建 AFTER_VOLUME_OUTLINE PENDING checkpoint 并 PAUSED。",
+      "phase": 13,
+      "dependencies": [
+        "p13-h3-01"
+      ],
+      "status": "completed",
+      "evidence": "VolumeOutlineCheckpointTest pass；INTERACTIVE parseAndAppendVolume 后 AFTER_VOLUME_OUTLINE + PAUSED",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据A：AFTER_VOLUME_OUTLINE 仅枚举无创建点",
+      "acceptance": "INTERACTIVE 延迟卷/重规划后存在 AFTER_VOLUME_OUTLINE PENDING 且状态 PAUSED",
+      "verify_cmd": "mvn test -Dtest=VolumeOutlineCheckpointTest"
+    },
+    {
+      "id": "p13-h4-01",
+      "name": "Arbiter 接入写作环",
+      "description": "checkContinuityAfterWriting 先收集报告再 Arbiter.arbitrate；删除 rewritten 互斥提前 return；REWRITE 喂 combinedBrief；重写后 Continuity+Guard+Reader 复检。",
+      "phase": 13,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "ArbiterWiredTest pass；setArbiter + applyArbiterDecision；OrchestratorConfig 注入；全量 282 pass",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据D：Arbiter 从未被 NovelOrchestrator 调用，质检委员会是空壳",
+      "acceptance": "写作环调用 Arbiter.arbitrate；HIGH+读者<7 一次合并重写；三器复检",
+      "verify_cmd": "mvn test -Dtest=ArbiterWiredTest",
+      "type": "bug"
+    },
+    {
+      "id": "p13-h4-02",
+      "name": "复检路径 fail-loud",
+      "description": "去掉 checkContinuityAfterWriting/rewrite 复检路径的 catch (Exception ignored)，失败 log.warn + EventLog CONSISTENCY_ISSUE DETECT_FAILED。",
+      "phase": 13,
+      "dependencies": [
+        "p13-h4-01"
+      ],
+      "status": "completed",
+      "evidence": "FailLoudTest pass；复检/rewriteWithCorrection 无 catch ignored，失败 emit DETECT_FAILED",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据D：p11-q3-03 声称 fail-loud 但 :1141 仍 catch ignored",
+      "acceptance": "复检路径无 catch (Exception ignored)；失败 emit DETECT_FAILED",
+      "verify_cmd": "mvn test -Dtest=FailLoudTest",
+      "type": "bug"
+    },
+    {
+      "id": "p13-h4-03",
+      "name": "伏笔活跃集 + 禁止静默降级",
+      "description": "buildForeshadowings 最多 12 条（mustResolve 优先）；LOW 悬置不刷 ContinuityIssue；完结追加回收章后不得 setMustResolve(false)，仍未回收则 FINAL 门禁 FAIL。",
+      "phase": 13,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "ForeshadowActiveSetTest pass；mustInclude 上限8 总12；完结不再 setMustResolve(false)",
+      "files": [
+        "memory/ContextAssembler.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据D：63章 253 条悬置告警；完结 setMustResolve(false) 放弃承诺",
+      "acceptance": "200 条未回收时上下文≤12 且 mustResolve 优先；源码完结路径无 setMustResolve(false)",
+      "verify_cmd": "mvn test -Dtest=ForeshadowActiveSetTest",
+      "type": "bug"
+    },
+    {
+      "id": "p13-h5-01",
+      "name": "人审标记进 DTO",
+      "description": "章节质量/列表暴露 Chapter.status=NEEDS_MANUAL_REVIEW 与 quality_risk（ ContinuityIssue 前缀过滤）。",
+      "phase": 13,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "ManualReviewSurfaceTest pass；ChapterQualityReport.needsManualReview/qualityRisk",
+      "files": [
+        "web/ContentController.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "证据A：NEEDS_MANUAL_REVIEW 有赋值无 UI/DTO，标记等于没标",
+      "acceptance": "质量/章节列表 DTO 含 needsManualReview 与 qualityRisk 布尔或列表",
+      "verify_cmd": "mvn test -Dtest=ManualReviewSurfaceTest"
+    },
+    {
+      "id": "p13-h5-02",
+      "name": "创建项目选篇幅",
+      "description": "创建表单增加 24/100/200/400 篇幅，写入 WritingPreferences.targetChapters；不改默认 24。",
+      "phase": 13,
+      "dependencies": [],
+      "status": "completed",
+      "evidence": "ProjectServiceTest 指定400写入 targetChapters；前端篇幅选择 24/100/200/400",
+      "files": [
+        "frontend/src/pages/ProjectListPage.tsx",
+        "orchestrator/ProjectService.java"
+      ],
+      "problem_ref": "p12-05 默认 24 后 UI 无法选长篇；系统能力与入口不一致",
+      "acceptance": "选 100/200/400 时 targetChapters 被写入；默认仍 24；前端 build 通过",
+      "verify_cmd": "mvn test -Dtest=ProjectServiceTest"
+    },
+    {
+      "id": "p14-01",
+      "name": "deleteProject 按表正确级联",
+      "description": "deleteProject 事务删除：projects 用 id；其余有 project_id 的表全删；PreparedStatement；覆盖 outlines/facts/tasks 等。",
+      "phase": 14,
+      "dependencies": [],
+      "status": "completed",
+      "type": "bug",
+      "files": [
+        "persistence/sqlite/SqliteNovelRepository.java"
+      ],
+      "problem_ref": "QA L11: DELETE 500 no such column project_id",
+      "acceptance": "建含 outline/world/facts 的项目后 deleteProject 不抛；projects/outlines/story_facts/knowledge_entries 对该 id 为 0 行",
+      "verify_cmd": "mvn test -Dtest=SqliteNovelRepositoryDeleteTest",
+      "evidence": "SqliteNovelRepositoryDeleteTest 1 pass; delete uses projects.id + all project_id tables in a transaction"
+    },
+    {
+      "id": "p14-02",
+      "name": "异常 fail-loud + 构思完整性门闩",
+      "description": "null message 返回内部错误:类名；构思缺世界观/人物/大纲不得离开 CONCEIVING。",
+      "phase": 14,
+      "dependencies": [],
+      "status": "completed",
+      "type": "bug",
+      "files": [
+        "web/GlobalExceptionHandler.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "QA P16: 构思 500 内部错误且世界观仍 0",
+      "acceptance": "NPE 响应含异常类名；WorldBuilder 空产出时仍 CONCEIVING",
+      "verify_cmd": "mvn test -Dtest=ConceivingCompletenessTest,GlobalExceptionHandlerTest",
+      "evidence": "GlobalExceptionHandlerTest + ConceivingCompletenessTest + NovelOrchestratorConceiveTest pass"
+    },
+    {
+      "id": "p14-03",
+      "name": "写章/改段落先返回后处理异步 + INTERACTIVE 立即暂停",
+      "description": "正文落库后立即返回并挂 AFTER_CHAPTER；抽取/收割异步；pause 不回滚已写正文。",
+      "phase": 14,
+      "dependencies": [
+        "p14-02"
+      ],
+      "status": "completed",
+      "type": "bug",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "QA P5 UI 超时误报；写一章后处理期间看不到暂停",
+      "acceptance": "harvest 阻塞时 editPassage/writeChapter 仍返回；INTERACTIVE 立即 PAUSED",
+      "verify_cmd": "mvn test -Dtest=EditPassageReturnsBeforeHarvestTest,InteractivePauseAfterPersistTest",
+      "evidence": "EditPassageReturnsBeforeHarvestTest + InteractivePauseAfterPersistTest + NovelOrchestratorWritingTest pass"
+    },
+    {
+      "id": "p14-04",
+      "name": "前端对接异步 write-all + 文案",
+      "description": "client 轮询 GET /writing-tasks/{taskId}；按钮改为连续写作（最多 N 章）。",
+      "phase": 14,
+      "dependencies": [],
+      "status": "completed",
+      "type": "bug",
+      "files": [
+        "frontend/src/api/client.ts",
+        "frontend/src/components/RunConsole.tsx"
+      ],
+      "problem_ref": "后端已异步返回 taskId，前端仍读 chaptersWritten",
+      "acceptance": "writeAll 首次响应用 taskId 轮询；文案无写完全书除非 N=剩余",
+      "verify_cmd": "mvn test -Dtest=WritingTaskExecutorTest",
+      "evidence": "client.writeAll polls writing-tasks; RunConsole copy is 最多 50 章"
+    },
+    {
+      "id": "p14-05",
+      "name": "检查点按 id 批准、列出全部 PENDING",
+      "description": "UI 列出全部 PENDING 各带批准；批准指定 id；仍有 PENDING 则保持 PAUSED。",
+      "phase": 14,
+      "dependencies": [],
+      "status": "completed",
+      "type": "bug",
+      "files": [
+        "frontend/src/components/InteractiveReview.tsx",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "QA P8 批准后落到 PLANNING，旧 checkpoint 处理不一致",
+      "acceptance": "两条 PENDING 批准较新的，旧的仍 PENDING 且 state=PAUSED",
+      "verify_cmd": "mvn test -Dtest=ApproveSpecificCheckpointTest",
+      "evidence": "ApproveSpecificCheckpointTest pass; InteractiveReview lists all PENDING"
+    },
+    {
+      "id": "p14-06",
+      "name": "人物全字段 + 真典 UI + CULTURE + 新建 Modal",
+      "description": "人物卡全字段可编辑；真典列表增改；CULTURE=文化；侧栏新建打开创建框。",
+      "phase": 14,
+      "dependencies": [
+        "p14-01"
+      ],
+      "status": "completed",
+      "files": [
+        "frontend/src/components/WorldbuildingView.tsx",
+        "frontend/src/pages/ProjectWorkspace.tsx",
+        "frontend/src/pages/ProjectListPage.tsx"
+      ],
+      "problem_ref": "QA: 人物只改能力；facts 无入口；CULTURE 原文；新建只回列表",
+      "acceptance": "PUT personality 写真典；facts 可增改；CULTURE 显示文化",
+      "verify_cmd": "mvn test -Dtest=CanonPatchServiceTest",
+      "evidence": "人物全字段可编辑；真典列表+添加；CULTURE=文化；侧栏新建 ?new=1 打开创建框"
+    },
+    {
+      "id": "p15-01",
+      "name": "POST 世界观/人物 + UI 添加 + write-chapter 也 409",
+      "description": "POST /worldbuilding 与 POST /characters 走 CanonPatch；rejectIfWriting 含 write-chapter active task。UI 添加设定/人物。",
+      "phase": 15,
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "web/ContentController.java",
+        "frontend/src/components/WorldbuildingView.tsx"
+      ],
+      "problem_ref": "构思后不能新增世界观/人物卡",
+      "acceptance": "POST 后 GET 多一条且真典 ACTIVE；write-all/write-chapter active 时 409",
+      "verify_cmd": "mvn test -Dtest=HitlCreateWorldCharacterTest",
+      "evidence": "HitlCreateWorldCharacterTest 3 pass；POST world/character + beginWork 409"
+    },
+    {
+      "id": "p15-02",
+      "name": "Agent 增量补设定/人物 + 实体提升为人设",
+      "description": "暂停态 expand/world、expand/characters 不覆盖旧卡；promote entityId 成 Character。",
+      "phase": 15,
+      "dependencies": [
+        "p15-01"
+      ],
+      "status": "completed",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "agent/CharacterProfileUpgrader.java"
+      ],
+      "problem_ref": "WorldBuilder/CharacterDesigner 只在 conceiving；图实体不升卡",
+      "acceptance": "expand 不改已有 character id；promote 出新卡",
+      "verify_cmd": "mvn test -Dtest=HitlExpandAgentsTest",
+      "evidence": "HitlExpandAgentsTest 2 pass；expand 不覆盖旧卡；promote 出新卡"
+    },
+    {
+      "id": "p15-03",
+      "name": "未写梗概可编 + POST replan",
+      "description": "大纲 UI 编辑 chapterIndex>current 的梗概；POST /replan 只替换未写卷。",
+      "phase": 15,
+      "dependencies": [
+        "p15-01"
+      ],
+      "status": "completed",
+      "files": [
+        "frontend/src/components/OutlineView.tsx",
+        "web/ContentController.java"
+      ],
+      "problem_ref": "大纲树只读；改大纲不触发 Replanner",
+      "acceptance": "已写梗概不变；未写被替换",
+      "verify_cmd": "mvn test -Dtest=UnwrittenSynopsisEditTest",
+      "evidence": "UnwrittenSynopsisEditTest 2 pass；PUT 保护已写梗概/卷名；POST /replan 只替换未写且 INTERACTIVE 挂 AFTER_VOLUME_OUTLINE；全量 mvn test 303 pass / 0 fail / 1 skip"
+    },
+    {
+      "id": "p15-04",
+      "name": "真典改/废 + 伏笔人種人收 + 人审清状态",
+      "description": "真典 PUT/废止；GET/POST foreshadowings 与 resolve；NEEDS_MANUAL_REVIEW 可标 DONE。",
+      "phase": 15,
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "web/ContentController.java",
+        "frontend/src/components/WorldbuildingView.tsx",
+        "frontend/src/components/InteractiveReview.tsx"
+      ],
+      "problem_ref": "真典不能改；伏笔无 UI；人审无动作",
+      "acceptance": "废止后 active 不含；resolve 后 RESOLVED；人审可清 DONE",
+      "verify_cmd": "mvn test -Dtest=HitlCanonForeshadowReviewTest",
+      "evidence": "HitlCanonForeshadowReviewTest 3 pass；retire/foreshadow resolve/resolve-review 全绿"
+    },
+    {
+      "id": "p15-05",
+      "name": "构思/写章任务轮询 + write-all 取消 + 删项目护栏",
+      "description": "POST /run 立即 taskId；前端轮询；RunConsole 取消；DELETE 在 active task 时 409。",
+      "phase": 15,
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "web/OrchestratorController.java",
+        "service/WritingTaskExecutor.java",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/RunConsole.tsx"
+      ],
+      "problem_ref": "构思 300s abort；write-all 无取消；删项目无护栏",
+      "acceptance": "POST /run 立即返回 taskId；cancel 后 CANCELLED；DELETE 409",
+      "verify_cmd": "mvn test -Dtest=ConceiveTaskTest",
+      "evidence": "ConceiveTaskTest 3 pass；CONCEIVING /run 立即 taskId；DELETE 409；write-all cancel 生效"
+    },
+    {
+      "id": "p15-06",
+      "name": "偏好 PUT + checkpointSpan",
+      "description": "滑条/开关走 PUT /preferences；checkpointSpan 1/0/-1，默认 1。",
+      "phase": 15,
+      "dependencies": [
+        "p15-05"
+      ],
+      "status": "completed",
+      "files": [
+        "frontend/src/pages/ProjectWorkspace.tsx",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "偏好每下 chat LLM；每章暂停无法调成卷末/仅手动",
+      "acceptance": "滑条不调 LLM；span=0 写章不自动 PAUSED",
+      "verify_cmd": "mvn test -Dtest=CheckpointSpanTest",
+      "evidence": "CheckpointSpanTest 2 pass；PUT checkpointSpan 不走 chat；span=0 写章不自动暂停"
+    },
+    {
+      "id": "p15-07",
+      "name": "隔离 E2E record/replay fixture",
+      "description": "e2e.sh 通过 E2E_FIXTURE_DIR（默认 data/e2e-fixtures/llm）显式传递 llm.replay.dir，避免共享 fixture 跨录制轮次混用。",
+      "phase": 15,
+      "dependencies": [
+        "p15-05"
+      ],
+      "status": "completed",
+      "files": [
+        "scripts/e2e.sh",
+        "scripts/e2e-fixture-dir-test.sh"
+      ],
+      "problem_ref": "E2E replay chapter 3 request fingerprint mismatch caused by shared fixture corpus",
+      "acceptance": "record 和 replay 使用同一 E2E_FIXTURE_DIR 时，三章 replay 的 taskStatus=COMPLETED、llmErrors=0、chapterFailures=0。",
+      "verify_cmd": "bash scripts/e2e-fixture-dir-test.sh && E2E_FIXTURE_DIR=data/e2e-fixtures/replay-proof-20260822 ./scripts/e2e.sh --mode replay",
+      "evidence": "2026-08-22: fixture harness pass；record/replay 各 3 章、10802 字、50 LLM calls、0 errors；mvn test 320 pass / 0 fail / 1 skip；compare-baseline PASS"
+    },
+    {
+      "id": "p15-08",
+      "name": "上下文顺序与主角锚点确定化",
+      "description": "反馈段同级排序补全 tie-break（severity→章节倒序→type→description）；relevantCharacters 顺序规范化为角色卡全集顺序；精确「主角」独占首位与锚点提醒行，substring 配角追加队尾（WritingContext 无精确主角时回退 substring 锚点）。",
+      "phase": 15,
+      "type": "bug",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "memory/ContextAssembler.java",
+        "memory/RelevanceGateway.java",
+        "memory/WritingContext.java"
+      ],
+      "problem_ref": "E2E replay 指纹失配排查（p15-07）暴露：同级反馈超限截断依赖 DB 返回序；substring 主角判定让「重要配角（主角盟友线）」抢走首位与锚点行，章节 prompt 指纹漂移",
+      "acceptance": "mvn test -Dtest=ContextOrderDeterminismTest,RelevanceGatewayAnchorTest,ContextAssemblerTest 通过：检索命中顺序不影响 relevantCharacters 规范序；cast 命中/无 cast 时精确主角居首；锚点行取精确主角；同级反馈超限按描述稳定截断",
+      "verify_cmd": "mvn test -Dtest='ContextOrderDeterminismTest,RelevanceGatewayAnchorTest,ContextAssemblerTest'",
+      "evidence": "2026-08-22 实现入库 commit 7603ee1：mvn test -Dtest='ContextOrderDeterminismTest,RelevanceGatewayAnchorTest,ContextAssemblerTest,ClimaxDiversityTrackerTest' 12 pass / 0 fail（规范序/锚点首位/无 cast 锚点/同级超限稳定截断/爽点序化）；上下文组装基线门禁：E2E_FIXTURE_DIR=data/e2e-fixtures/replay-proof-20260822 ./scripts/e2e.sh --mode replay 3 章 10802 字 50 LLM calls 0 errors + compare-baseline.py PASS；全量 mvn test 337 pass / 0 fail / 1 skip"
+    },
+    {
+      "id": "p15-09",
+      "name": "replay fixture 完整请求保留 + miss 诊断",
+      "description": "record fixture 新增 systemPrompt/userMessage 全文字段（preview 保留）；replay miss 时在 fixture 目录转储 <指纹>.miss.json（taskType/missedAt/expectedFixture/完整请求）后仍 fail-fast 抛 IllegalStateException。",
+      "phase": 15,
+      "type": "harness",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "llm/gateway/RecordReplayLlmGateway.java"
+      ],
+      "problem_ref": "replay 指纹失配只报缺失 fixture 文件名，且 fixture 仅存截断 preview，无法离线比对完整请求定位漂移来源",
+      "acceptance": "mvn test -Dtest=RecordReplayLlmGatewayTest 通过：record fixture JSON 含完整 systemPrompt/userMessage；replay miss 转储恰好一个含完整请求的 .miss.json 且仍抛 IllegalStateException",
+      "verify_cmd": "mvn test -Dtest=RecordReplayLlmGatewayTest",
+      "evidence": "2026-08-22 实现入库 commit 9a866a6：mvn test -Dtest=RecordReplayLlmGatewayTest 8 pass / 0 fail（新增 2 用例：回放miss时转储完整请求供指纹诊断、录制fixture保存完整请求，断言 .miss.json 恰好 1 个且含完整 systemPrompt/userMessage 并仍抛 IllegalStateException）；全量 mvn test 337 pass / 0 fail / 1 skip"
+    },
+    {
+      "id": "p16-01",
+      "name": "HIGH issue 老化 + FINAL 门禁口径修正",
+      "phase": 16,
+      "type": "bug",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "service/ArchiveCompactor.java",
+        "persistence/sqlite/SqliteNovelRepository.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "归档只处理非 HIGH（SqliteNovelRepository:966），HIGH 永不清理；FINAL 门禁 highIssues>10 即 NEEDS_REVISION，400 章残留历史 HIGH 必挂且无自动修复路径（NovelOrchestrator:2133）",
+      "description": "卷末 ArchiveCompactor 将 30 章前出现且此后未复发/未解决的 HIGH 标 resolved（老化，注明 aged_out）；FINAL 门禁与写作循环熔断只统计近 60 章的未解决 HIGH。",
+      "acceptance": "HighIssueAgingTest：构造 40 章前的未复发 HIGH → 归档后 resolved=1 且 reason=aged_out；FINAL 门禁用 41 条历史 HIGH + 0 近期 HIGH 判 PASS；熔断计数不含 60 章前 HIGH",
+      "verify_cmd": "mvn test -Dtest=HighIssueAgingTest",
+      "evidence": "2026-08-28 实跑：HighIssueAgingTest 3 pass（老化/历史门禁/近期门禁）；ArchiveCompactorTest 6 + FinalAuditGateTest 4 回归通过；全量 mvn test 396 pass / 0 fail / 1 skip（commit 9a9e6fd）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）"
+    },
+    {
+      "id": "p16-02",
+      "name": "FINAL 伏笔回收章死路修复",
+      "phase": 16,
+      "type": "bug",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "大纲耗尽时对 mustResolve 伏笔写『第N章必须回收』ContinuityIssue 后直接走 FINAL 门禁并 break（:1730-1764），且 tryExtendLayeredOutline 在 currentChapter>=targetChapters 时返回 false（:2211）——回收指令无人消费，门禁必 FAIL",
+      "description": "大纲耗尽且 mustResolve 伏笔 >0 时：生成 8 章『回收卷』（放宽 extend 的 targetChapters 上限一次），mustResolve 伏笔写入回收卷新章梗概的 writingNotes；写完回收卷后再走 FINAL 门禁。",
+      "acceptance": "FinalForeshadowingRecoveryTest：targetChapters 达上限 + mustResolve 伏笔存在 → 调用 extend 生成回收卷且回收指令出现在新章梗概；无 mustResolve 时行为不变（直接门禁）",
+      "verify_cmd": "mvn test -Dtest=FinalForeshadowingRecoveryTest",
+      "evidence": "2026-08-28 实跑：FinalForeshadowingRecoveryTest 3 pass（回收卷追加+指令入writingNotes/有界一次/无mustResolve不追加）；FinalAuditGateTest 回归通过（commit 9727f08）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）"
+    },
+    {
+      "id": "p16-03",
+      "name": "FactHarvester 收窄 + fail-loud",
+      "phase": 16,
+      "type": "bug",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "agent/FactHarvesterAgent.java",
+        "telemetry/EventLog.java"
+      ],
+      "problem_ref": "harvest 把全部 ACTIVE 事实拼进 prompt 无 cap（FactHarvesterAgent:44-54），千条事实 ≈33k token 爆窗；失败 catch→return (0,0,0) 静默（:67-69），真典停止生长无告警",
+      "description": "收割 prompt 只注入与本章相关的事实（本章 cast 匹配 + importance desc top，硬上限 80 条）+ 声明『清单为检索子集，未列出不代表不存在』；LLM 失败记 LLM_ERROR 事件并 log.warn。",
+      "acceptance": "FactHarvesterScopedTest：500 条 ACTIVE 事实时 prompt 中事实清单 ≤80 条且含 cast 相关；LLM 抛异常时 events.jsonl 出现 LLM_ERROR 事件",
+      "verify_cmd": "mvn test -Dtest=FactHarvesterScopedTest",
+      "evidence": "2026-08-28 实跑：FactHarvesterScopedTest 2 pass（500条事实清单≤80且cast相关+子集声明/LLM失败emit LLM_ERROR）；FactHarvesterTest 5 回归通过（commit 4b4df2a）"
+    },
+    {
+      "id": "p16-04",
+      "name": "其余三处全量注入 cap",
+      "phase": 16,
+      "type": "bug",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "agent/ForeshadowingExtractor.java",
+        "agent/ContinuityCheckerAgent.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "ForeshadowingExtractor 全量伏笔（含已回收）注入（:44-47）；ContinuityChecker.buildHistorySection 未回收线索全量注入无 cap（:119-129）；collectSettingsForCheck 全量未回收伏笔（NovelOrchestrator:1636-1643）——同族全量加载反模式漏网点",
+      "description": "三处注入分别加上限并按相关性排序：ForeshadowingExtractor 未回收优先+最近 20 条；ContinuityChecker 线索按悬挂时长取前 15；collectSettingsForCheck 未回收伏笔取前 20（mustResolve 恒在）。",
+      "acceptance": "ContextInjectionCapTest：构造 60 条伏笔/40 条线索时三处注入分别 ≤20/≤15/≤20 且 mustResolve 伏笔恒在",
+      "verify_cmd": "mvn test -Dtest=ContextInjectionCapTest",
+      "evidence": "2026-08-28 实跑：ContextInjectionCapTest 2 pass（伏笔清单≤20未回收优先/线索台账≤15悬挂最久优先）；collectSettingsForCheck cap 20 同步实现；伏笔/连续性/真典回归 21 pass（commit 4b4df2a）"
+    },
+    {
+      "id": "p16-05",
+      "name": "重写/编辑路径向量 chunk 重建",
+      "phase": 16,
+      "type": "bug",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "agent/ChapterWriterAgent.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "向量清理+重建唯一入口在 ChapterWriterAgent.write()（:177-186）；rewriteForCorrection（:196-244）、orchestrator.rewriteChapter（NovelOrchestrator:2392-2411）、editPassage（:2476-2538）均不调用——重写后 DB 正文已变、向量库仍是旧 chunk，后续章节持续召回被否定情节",
+      "description": "三个路径统一走 indexChapterInChunks（内含 removeByIdPrefix 清旧 + 批量 embedding 入库），抽公共方法避免重复。",
+      "acceptance": "VectorCleanupOnRewritePathsTest：rewriteForCorrection/rewriteChapter/editPassage 后，向量库中该章 chunk 均为新版本内容（旧版本 0 命中）",
+      "verify_cmd": "mvn test -Dtest=VectorCleanupOnRewritePathsTest",
+      "evidence": "2026-08-28 实跑（agent 实现+主会话复核）：VectorCleanupOnRewritePathsTest 3 pass（rewriteForCorrection/rewriteChapter/editPassage 后旧chunk清+新chunk入库，红→绿）；*Vector*/*Rewrite*/*EditPassage* 回归 15 pass（commit d0f93af）"
+    },
+    {
+      "id": "p16-06",
+      "name": "摘要分层裁剪 + premise 进预算",
+      "phase": 16,
+      "type": "bug",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "memory/ContextAssembler.java",
+        "memory/TokenBudget.java"
+      ],
+      "problem_ref": "recentSummary 组装为 book→全部卷 stub→细粒度，超预算从尾部截断（TokenBudget:47-52）——衔接最关键的最近细粒度摘要排最尾最先被牺牲；premiseSection 不在裁剪链（:997-1040），50 卷总纲 + 已写卷摘要点每章固定背 token",
+      "description": "buildRecentSummary 重构为分层：book_summary → 最近 3 卷全文 → 细粒度摘要 → 更早卷 stub（丢最老优先）；applyTokenBudget 增加 premiseSection 截断（保头部 6000 token，标注已截断）。",
+      "acceptance": "SummaryLayeredTrimTest：50 卷 + 预算受限时，最近 3 章细粒度摘要仍在、最老卷 stub 先被丢弃；超长 premise 被截断且含截断标记",
+      "verify_cmd": "mvn test -Dtest=SummaryLayeredTrimTest",
+      "evidence": "2026-08-28 实跑（agent 实现+主会话复核）：SummaryLayeredTrimTest 4 pass（预算受限细粒度保/最老卷stub先丢/超长premise截断保头+标记/常规premise不裁）；ContextAssembler 相关回归 24 pass（commit 8716a2e）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）"
+    },
+    {
+      "id": "p17-01",
+      "name": "WUXIA 题材全链路",
+      "phase": 17,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "domain/GenreProfile.java",
+        "service/GenreDetector.java",
+        "service/GenreRuleProvider.java",
+        "src/main/resources/presets/wuxia.json",
+        "frontend/src/pages/ProjectListPage.tsx"
+      ],
+      "problem_ref": "GenreProfile 九分类无 WUXIA；GenreDetector 修仙关键词不含武侠词，tags『武侠江湖』项目落入 GENERAL；presets 无 wuxia——武侠三入口全部缺席，而本地兜底模型却叫 qwen3-4b-wuxia",
+      "description": "GenreProfile 增 WUXIA；GenreDetector 修仙分支前加武侠分支（武侠/江湖/侠客/门派/镖局/恩仇/剑客/武林）；GenreRuleProvider 补武侠规则（动作驱动节奏、江湖门派体系、招式比拼场景占比、侠义冲突建议）；presets/wuxia.json（沉雄遒劲、白描动作、对话密度 0.4）；前端预设下拉 +1。",
+      "acceptance": "WuxiaGenreTest：detect(武侠,江湖)=WUXIA；GenreRuleProvider 各规则方法对 WUXIA 非空且不含修仙境界词；PresetRegistry 加载 wuxia.json 且 applyToPreferences 生效；前端 npm build 通过",
+      "verify_cmd": "mvn test -Dtest=WuxiaGenreTest",
+      "evidence": "2026-08-28 实跑：WuxiaGenreTest 4 pass（检测/优先级/规则/预设）；GenreDetector/ConsistencyGate/预设回归通过；npm run build 通过（commit 6cd62a5）"
+    },
+    {
+      "id": "p17-02",
+      "name": "爽点/四段式/钩子题材条件化",
+      "phase": 17,
+      "type": "feature",
+      "dependencies": [
+        "p17-01"
+      ],
+      "status": "completed",
+      "files": [
+        "memory/ContextAssembler.java",
+        "agent/ChapterWriterAgent.java",
+        "src/main/resources/prompts/chapter-writing.st",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "『必须至少2爽点』『四段式比例』『悬念钩子』在 ContextAssembler:599/633、chapter-writing.st:18-25、开篇高压约束四层无条件注入所有题材（方法不接收 genre）；plot<7 反馈词『爽点密度需提升』把历史正剧/文学推向爽文",
+      "description": "buildWritingConstraints 与 buildChapterLengthGuide 接收 genre：快节奏题材（CULTIVATION/WUXIA/THRILLER/MYSTERY 保持现状）保留爽点/四段式/钩子硬约束；慢节奏/严肃题材（LITERARY/HISTORICAL/ROMANCE）替换为题材结构指引（张力递进/收束节奏）；开篇高压仅快节奏题材；plot 低分反馈词按题材（爽点密度 vs 冲突张力）。chapter-writing.st 四段式块改由变量注入结构指引。",
+      "acceptance": "GenreConditionalConstraintsTest：HISTORICAL/LITERARY 约束不含『爽点』『四段式』『悬念钩子』且含题材结构指引；CULTIVATION/WUXIA 仍含（现状不变）；开篇高压 HISTORICAL 不强制；对应 Agent 测试与 OpeningPacingTest 回归通过",
+      "verify_cmd": "mvn test -Dtest=GenreConditionalConstraintsTest",
+      "evidence": "2026-08-28 实跑：GenreConditionalConstraintsTest 3 pass（快节奏保留/慢题材无爽点钩子换张力指引/开篇高压仅快节奏）；OpeningPacingTest 3 + EraConstraintInjectionTest 2 回归通过；plot 反馈词题材化（ffad1e9 前序提交内）（commit 8716a2e）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）"
+    },
+    {
+      "id": "p17-03",
+      "name": "volume-outline 补 genreRules",
+      "phase": 17,
+      "type": "bug",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "src/main/resources/prompts/volume-outline.st",
+        "agent/PlotterAgent.java"
+      ],
+      "problem_ref": "volume-outline.st 硬编码『每章至少一个爽点』（:21）且无 {{genreRules}} 变量（对比 plotting.st:45-47、master-outline.st:24）——>40 章长篇走分层大纲，总纲带题材规则而逐卷细纲不带，项目越长题材约束断链越严重",
+      "description": "volume-outline.st 增 {{genreRules}} 变量（替换硬编码爽点句）；PlotterAgent.planVolume 注入题材规则；『爽点：』输出标签保留（解析兼容），字段说明按题材重释为核心张力爆发点。",
+      "acceptance": "VolumeOutlineGenreRulesTest：render 后含题材规则文本；HISTORICAL 项目 planVolume 的 prompt 不含无条件爽点要求；PlotterAgentTest 既有解析用例回归通过",
+      "verify_cmd": "mvn test -Dtest=VolumeOutlineGenreRulesTest",
+      "evidence": "2026-08-28 实跑：VolumeOutlineGenreRulesTest 3 pass（武侠规则注入/历史不强制爽点换张力点+输出标签保留/未注入降级）；PlotterAgentTest 回归通过（commit 4983ead）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）"
+    },
+    {
+      "id": "p17-04",
+      "name": "ConceiveGate 题材豁免 + 风格细节债",
+      "phase": 17,
+      "type": "bug",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "service/ConceiveGate.java",
+        "agent/ChapterWriterAgent.java",
+        "memory/ContextAssembler.java"
+      ],
+      "problem_ref": "ConceiveGate.checkWorldbuilding 对所有题材强制 POWER_SYSTEM（:36-39），纯悬疑/现代言情被门禁打回或被迫编造；预设 styleVoice 被 extractStyleGuide 丢弃（ChapterWriterAgent:328-340）；preferredQuoteSources 声明未消费（ContextAssembler:824-862）",
+      "description": "POWER_SYSTEM 仅对 CULTIVATION/FANTASY/WUXIA(超自然武学) 强制，MYSTERY/ROMANCE/LITERARY/HISTORICAL 豁免（改为要求核心设定维度非空）；extractStyleGuide 拼 tone+voice+dosAnddonts；buildKnowledgeQuote 优先匹配 preferredQuoteSources 指定的知识条目。",
+      "acceptance": "ConceiveGateGenreExemptionTest：MYSTERY 无 POWER_SYSTEM 通过门禁；CULTIVATION 无 POWER_SYSTEM 仍 FAIL；styleGuide 渲染含 voice；preferredQuoteSources 指定来源时引用优先命中",
+      "verify_cmd": "mvn test -Dtest=ConceiveGateGenreExemptionTest",
+      "evidence": "2026-08-28 实跑：ConceiveGateGenreExemptionTest 5 pass（悬疑通过/历史言情文学豁免/修仙奇幻武侠仍强制/完整性不放松/tags兜底）；preferredQuoteSources 消费 + styleVoice 注入；ConceiveGateTest 8 回归（commit d0f93af）"
+    },
+    {
+      "id": "p17-05",
+      "name": "自定义预设持久化",
+      "phase": 17,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "service/PresetRegistry.java",
+        "persistence/sqlite/SqliteNovelRepository.java",
+        "persistence/sqlite/SqliteSchemaInitializer.java",
+        "spi/NovelRepository.java"
+      ],
+      "problem_ref": "PresetRegistry.registerPreset 只存内存（:17 注释自认『可扩展为持久化』），重启即丢",
+      "description": "custom_presets 表（name 主键 + JSON 全文）；PresetRegistry 启动时从仓储加载、注册时落库。",
+      "acceptance": "CustomPresetPersistenceTest：POST 自定义预设 → 重建 PresetRegistry（模拟重启，从仓储重新加载）→ GET /api/presets 含该预设且字段完整",
+      "verify_cmd": "mvn test -Dtest=CustomPresetPersistenceTest",
+      "evidence": "2026-08-28 实跑：CustomPresetPersistenceTest 2 pass（注册后重启恢复/upsert）；WuxiaGenreTest 预设回归通过（commit 4983ead）"
+    },
+    {
+      "id": "p18-01",
+      "name": "PAUSED 终态修正",
+      "phase": 18,
+      "type": "bug",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "service/WritingTaskExecutor.java"
+      ],
+      "problem_ref": "INTERACTIVE 每章暂停使 runWritingLoop 正常退出，但 executeWriting 终态判定不识别 PAUSED_AT_CHECKPOINT，落入 FAILED『写作未完成: 写了1/50章』（WritingTaskExecutor:230-242）——正常审核点被误报为失败",
+      "description": "任务终态判定增加 PAUSED_AT_CHECKPOINT 分支 → taskStatus=PAUSED，message 说明『等待人工审批，approveCheckpoint 后可继续』；FAILED 仅用于真实异常。",
+      "acceptance": "PausedTerminalStateTest：INTERACTIVE 写 1 章暂停后任务终态=PAUSED 而非 FAILED，message 含『审批』",
+      "verify_cmd": "mvn test -Dtest=PausedTerminalStateTest",
+      "evidence": "2026-08-28 实跑：PausedTerminalStateTest 2 pass（审核点暂停=PAUSED含审批说明/非暂停未写满仍FAILED）；WritingJobReliabilityTest 6 回归（stub 同步 4 参 ffad1e9）（commit 4983ead）"
+    },
+    {
+      "id": "p18-02",
+      "name": "checkpoint 审批质量 payload",
+      "phase": 18,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "domain/Checkpoint.java",
+        "orchestrator/NovelOrchestrator.java",
+        "persistence/sqlite/SqliteNovelRepository.java",
+        "frontend/src/components/InteractiveReview.tsx"
+      ],
+      "problem_ref": "Checkpoint 仅 description 一句话，不带正文/评分/问题摘要，用户需自行切 tab 查看再回来审批",
+      "description": "Checkpoint 增 payload JSON 字段（AFTER_CHAPTER：字数/ReaderReview 评分/未解决 HIGH 数/前 200 字预览/伏笔动态）；REST 返回；前端审批面板直接渲染 payload。",
+      "acceptance": "CheckpointPayloadTest：写完一章挂起的 checkpoint 携带 payload 含 wordCount/score/preview 字段；前端 npm build 通过",
+      "verify_cmd": "mvn test -Dtest=CheckpointPayloadTest",
+      "evidence": "2026-08-28 实跑：CheckpointPayloadTest 3 pass（payload构建/持久化往返/评审后富集score+unresolvedHigh）；Checkpoint 相关回归 15 pass；前端审批面板渲染 payload，npm build 通过（commit 99ce1ee）"
+    },
+    {
+      "id": "p18-03",
+      "name": "写前指令通道",
+      "phase": 18,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "web/ContentController.java",
+        "web/OrchestratorController.java",
+        "orchestrator/NovelOrchestrator.java",
+        "frontend/src/components/RunConsole.tsx"
+      ],
+      "problem_ref": "write-chapter / write-all 不接收任何用户指令参数（ContentController:208），用户对下一章的诉求只能间接改梗概传导——Sudowrite 式『作者下指令、AI 定向生成』模式缺失",
+      "description": "POST /write-chapter?instruction= 与 write-all 携带 instruction：透传到本章 writingNotes 前缀【作者指令】；write-all 时逐章沿用。前端『写一章』增可选指令输入框。",
+      "acceptance": "WriteInstructionTest：带 instruction 写章 → ChapterWriter 组装的 writingNotes 含【作者指令】与原文；不带时行为不变",
+      "verify_cmd": "mvn test -Dtest=WriteInstructionTest",
+      "evidence": "2026-08-28 实跑：WriteInstructionTest 3 pass（instruction透传/无参原路径/【作者指令】前置注入）；write-all 指令逐章沿用（WritingTask.instruction）；前端指令输入框 npm build 通过（commit 99ce1ee）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）"
+    },
+    {
+      "id": "p18-04",
+      "name": "SSE 实时进度推送",
+      "phase": 18,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "telemetry/EventLog.java",
+        "web/EventController.java",
+        "frontend/src/client.ts",
+        "frontend/src/components/RunConsole.tsx"
+      ],
+      "problem_ref": "无 SSE/WebSocket；write-all 数十分钟只显示 loading 按钮，轮询到的 currentChapter 不上屏（RunConsole:65-87）；CHAPTER_WRITTEN 等遥测只落文件无 REST 暴露",
+      "description": "EventLog 增进程内订阅总线（CopyOnWriteArrayList）；GET /api/projects/{id}/events 用 SseEmitter 按项目过滤推送 CHAPTER_WRITTEN/CHAPTER_FAILED/QUALITY_REVIEW/LLM_ERROR 事件；前端 EventSource 订阅显示逐章进度（保留轮询降级）。",
+      "acceptance": "SseEventBusTest：EventLog 写事件后订阅者收到该项目事件、其他项目不收到；SseEmitter 端点注册/超时处理无异常；前端 npm build 通过",
+      "verify_cmd": "mvn test -Dtest=SseEventBusTest",
+      "evidence": "2026-08-28 实跑：SseEventBusTest 3 pass（项目过滤+注销/坏sink移除/全局事件广播）；EventController SSE 端点；前端 subscribeEvents+逐章进度 npm build 通过；EventLogTest 5 回归（commit d0f93af）"
+    },
+    {
+      "id": "p19-01",
+      "name": "角色生死状态链",
+      "phase": 19,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "domain/Character.java",
+        "agent/FactHarvesterAgent.java",
+        "memory/ContextAssembler.java",
+        "service/ArcScheduler.java",
+        "persistence/sqlite/SqliteNovelRepository.java"
+      ],
+      "problem_ref": "Character 无死亡/退场状态字段；死亡只可能记为真典 CHARACTER_STATE 但 cast 匹配对不在场者失效（RelevanceGateway:114-119），向量检索仍召回完整角色卡按活人注入——第 300 章『死人复活』是必然事故",
+      "description": "Character 增 status(ACTIVE/DECEASED/DEPARTED)+deathChapter；FactHarvester 提取 CHARACTER_STATE 含死亡关键词时自动置位并 supersede 真典；WritingContext 注入标注【已故·第N章殁】/【已退场】；ArcScheduler 冷场调度跳过 DECEASED。",
+      "acceptance": "CharacterStatusTest：收割『某角色身亡』事实后 Character.status=DECEASED+deathChapter；注入的出场人物段含已故标注；ArcScheduler 不再建议死人出场",
+      "verify_cmd": "mvn test -Dtest=CharacterStatusTest",
+      "evidence": "2026-08-28 实跑：CharacterStatusTest 3 pass（死亡事实自动置位DECEASED+deathChapter/出场段标注已故+ArcScheduler不调度/退场标注）；FactHarvester/ArcScheduler 回归通过（commit 99ce1ee）"
+    },
+    {
+      "id": "p19-02",
+      "name": "story_facts 索引 + subject 规范化",
+      "phase": 19,
+      "type": "bug",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "persistence/sqlite/SqliteSchemaInitializer.java",
+        "agent/FactHarvesterAgent.java"
+      ],
+      "problem_ref": "story_facts 无 (project_id,status) 索引，findActive 全表扫每章 5+ 次；FactHarvester 按 subject 精确字符串去重（:88），『林凡/林公子』别名分裂成平行 ACTIVE 事实，状态自相矛盾",
+      "description": "建索引 idx_story_facts_project_status；FactHarvester merge/supersede 前先过 EntityGraphService.resolveCanonical 规范化 subject。",
+      "acceptance": "SubjectNormalizationTest：已有实体别名『林公子→林凡』时，harvest 新事实 subject=林公子 落库为 林凡（不产生平行事实）；schema 升级后索引存在（PRAGMA index_list）",
+      "verify_cmd": "mvn test -Dtest=SubjectNormalizationTest",
+      "evidence": "2026-08-28 实跑（agent 实现+主会话复核）：SubjectNormalizationTest 4 pass（索引存在/别名validate不分裂/supersede挂规范名/未注入降级）；FactHarvester* 回归 7 pass；PersistenceSmokeTest Spring 装配通过（commit d0f93af）"
+    },
+    {
+      "id": "p19-03",
+      "name": "全书结构化快照",
+      "phase": 19,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "domain/Project.java",
+        "orchestrator/NovelOrchestrator.java",
+        "memory/ContextAssembler.java",
+        "persistence/sqlite/SqliteNovelRepository.java",
+        "src/main/resources/prompts/"
+      ],
+      "problem_ref": "book_summary 是唯一跨卷全局视图且压成 ≤3 句（NovelOrchestrator:1985-1988）——无主线进度/阵营态势/时间线参照，第 300 章对全书结构无可靠记忆",
+      "description": "projects 增 book_snapshot TEXT（JSON：主线进度/当前阵营态势/关键人物状态/时间线锚点/已跨大节点）；卷末用上一版快照+本卷摘要 LLM 增量更新（新 prompt 模板 book-snapshot.st）；ContextAssembler 顶部注入结构化快照（book_summary 保留兜底）。",
+      "acceptance": "BookSnapshotTest：卷末后 book_snapshot 为合法 JSON 含主线进度字段；ContextAssembler 注入含【全书快照】段；snapshot 更新失败时回退旧版不阻塞写作",
+      "verify_cmd": "mvn test -Dtest=BookSnapshotTest",
+      "evidence": "2026-08-28 实跑：BookSnapshotTest 4 pass（卷末生成合法JSON含主线进度/失败保留旧版/坏输出保留/上下文顶部注入【全书快照】）；SummaryLayeredTrimTest 回归通过（commit 99ce1ee）"
+    },
+    {
+      "id": "p20-01",
+      "name": "人工复核结果优先级",
+      "phase": 20,
+      "type": "bug",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "MANUAL_REVIEW 仲裁置 NEEDS_MANUAL_REVIEW 后被 doWriteOneChapter 末尾无条件 DONE 覆盖；下一章写作不检查前章状态",
+      "description": "后处理完成后仅从 POST_PROCESSING 推进 DONE；待人工章节冻结后续写作（write-one 拒绝 + 循环 WRITING_PAUSED 暂停）；resolve-review 后可续写",
+      "acceptance": "A 强制 MANUAL_REVIEW 后历经全部后处理仍为 NEEDS_MANUAL_REVIEW；下一次写章不越过；复核通过转 DONE",
+      "verify_cmd": "mvn test -Dtest=ManualReviewLifecycleTest",
+      "evidence": "ManualReviewLifecycleTest 4 用例红→绿（5799346）"
+    },
+    {
+      "id": "p20-02",
+      "name": "提取 ChapterPostProcessor 模块",
+      "phase": 20,
+      "type": "feature",
+      "dependencies": [
+        "p20-01"
+      ],
+      "status": "completed",
+      "files": [
+        "orchestrator/ChapterPostProcessor.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "doWriteOneChapter 内联约210行后处理（10类阶段），编排与策略混杂无法单测/续跑",
+      "description": "写一章后的全部后处理阶段经 ChapterPostProcessor 按固定顺序执行（CONTINUITY→…→VOLUME_SUMMARY），产出与状态保持等价",
+      "acceptance": "写一章后的全部后处理阶段经 ChapterPostProcessor 按固定顺序执行（CONTINUITY→…→VOLUME_SUMMARY），产出与状态保持等价",
+      "verify_cmd": "mvn test -Dtest=ChapterPostProcessorTest,NovelOrchestratorWritingTest",
+      "evidence": "全量回归绿；行为等价由既有写作用例保证（ace78c4）"
+    },
+    {
+      "id": "p20-03",
+      "name": "后处理阶段账本持久化",
+      "phase": 20,
+      "type": "feature",
+      "dependencies": [
+        "p20-02"
+      ],
+      "status": "completed",
+      "files": [
+        "persistence/sqlite/PostProcessLedgerRepository.java",
+        "persistence/sqlite/SqliteSchemaInitializer.java",
+        "orchestrator/ChapterPostProcessor.java"
+      ],
+      "problem_ref": "后处理中断后无法知道哪些阶段已完成，重启只能整章重跑（重复事实/摘要风险）",
+      "description": "post_process_ledger 表（主键 project/chapter/stage）PENDING/RUNNING/COMPLETED 往返；重复 COMPLETED 幂等且行唯一；unfinishedStages 按声明序返回",
+      "acceptance": "post_process_ledger 表（主键 project/chapter/stage）PENDING/RUNNING/COMPLETED 往返；重复 COMPLETED 幂等且行唯一；unfinishedStages 按声明序返回",
+      "verify_cmd": "mvn test -Dtest=ChapterPostProcessLedgerTest",
+      "evidence": "ChapterPostProcessLedgerTest 4 用例（4096cbc）"
+    },
+    {
+      "id": "p20-04",
+      "name": "重启续跑未完成的后处理",
+      "phase": 20,
+      "type": "feature",
+      "dependencies": [
+        "p20-03",
+        "p20-07",
+        "p20-08"
+      ],
+      "status": "completed",
+      "files": [
+        "orchestrator/ChapterPostProcessor.java",
+        "orchestrator/NovelOrchestrator.java",
+        "orchestrator/OrchestratorConfig.java"
+      ],
+      "problem_ref": "进程崩溃后 POST_PROCESSING 章节只能整体重跑或被跳过",
+      "description": "注入 ENTITY_GRAPH 阶段崩溃后同库重建上下文，依账本只补跑未完成阶段：CONTINUITY 不重跑（0次LLM）、收割恰1次、0重复摘要、终态 DONE",
+      "acceptance": "注入 ENTITY_GRAPH 阶段崩溃后同库重建上下文，依账本只补跑未完成阶段：CONTINUITY 不重跑（0次LLM）、收割恰1次、0重复摘要、终态 DONE",
+      "verify_cmd": "mvn test -Dtest=PostProcessingRecoveryTest",
+      "evidence": "PostProcessingRecoveryTest 崩溃注入→恢复全绿；ApplicationRunner 启动清扫（17d57b9）"
+    },
+    {
+      "id": "p20-05",
+      "name": "ProjectWorkCoordinator owner-token 模块",
+      "phase": 20,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "service/ProjectWorkCoordinator.java",
+        "service/WritingTaskExecutor.java"
+      ],
+      "problem_ref": "executeWriting finally 无条件 release（stale worker 可清掉新 owner）；startWriting 重复启动取消旧任务+等待30s+强制接管",
+      "description": "并发 acquire 恰一个 owner；stale release 不伤新 owner；重复 startWriting 冲突拒绝（409）不再30s强制接管；测试全用闩锁无 sleep 编排",
+      "acceptance": "并发 acquire 恰一个 owner；stale release 不伤新 owner；重复 startWriting 冲突拒绝（409）不再30s强制接管；测试全用闩锁无 sleep 编排",
+      "verify_cmd": "mvn test -Dtest=ProjectWorkCoordinatorTest,SingleActiveJobTest",
+      "evidence": "ProjectWorkCoordinatorTest 5 + SingleActiveJobTest 2（闩锁并发）（0b27aca）"
+    },
+    {
+      "id": "p20-06",
+      "name": "写作入口全部走 ownership",
+      "phase": 20,
+      "type": "feature",
+      "dependencies": [
+        "p20-05"
+      ],
+      "status": "completed",
+      "files": [
+        "web/OrchestratorController.java",
+        "web/ContentController.java",
+        "service/WritingTaskExecutor.java"
+      ],
+      "problem_ref": "/run /resume 同步 step 写章不经协调器，与 /write-all /write-chapter 存在并发写窗口",
+      "description": "/run /resume /write-chapter /write-all 共享协调器；任一活动期其它变更入口一律 IllegalStateException→409",
+      "acceptance": "/run /resume /write-chapter /write-all 共享协调器；任一活动期其它变更入口一律 IllegalStateException→409",
+      "verify_cmd": "mvn test -Dtest=WritingEntryOwnershipTest",
+      "evidence": "WritingEntryOwnershipTest 5 用例（含终态后释放不泄漏）（0b27aca）"
+    },
+    {
+      "id": "p20-07",
+      "name": "HUMAN_PATCH 自动冲突保护",
+      "phase": 20,
+      "type": "bug",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "agent/FactHarvesterAgent.java",
+        "spi/StoryCanon.java"
+      ],
+      "problem_ref": "FactHarvesterAgent 冲突路径无条件 supersede，绕过 5 章 HUMAN_PATCH 保护",
+      "description": "窗口内自动冲突事实 SKIPPED（不落库不平行 ACTIVE）；窗口外允许剧情演进取代；两路径审计链保留；p22-01 后语义内置于 StoryCanon.harvest",
+      "acceptance": "窗口内自动冲突事实 SKIPPED（不落库不平行 ACTIVE）；窗口外允许剧情演进取代；两路径审计链保留；p22-01 后语义内置于 StoryCanon.harvest",
+      "verify_cmd": "mvn test -Dtest=HumanPatchHarvestProtectionTest",
+      "evidence": "HumanPatchHarvestProtectionTest 3 用例红→绿（9ab1270）"
+    },
+    {
+      "id": "p20-08",
+      "name": "人工编辑真典 ACTIVE 唯一性",
+      "phase": 20,
+      "type": "bug",
+      "dependencies": [
+        "p20-07"
+      ],
+      "status": "completed",
+      "files": [
+        "service/CanonPatchService.java",
+        "persistence/sqlite/SqliteStoryCanon.java"
+      ],
+      "problem_ref": "writeHumanFact 对保护窗口内旧 HUMAN_PATCH 跳过取代→人工重复编辑产生平行 ACTIVE 事实",
+      "description": "同 project/type/subject 人工编辑总是取代旧 ACTIVE（保护只约束自动路径），审计链保留",
+      "acceptance": "同 project/type/subject 人工编辑总是取代旧 ACTIVE（保护只约束自动路径），审计链保留",
+      "verify_cmd": "mvn test -Dtest=CanonActiveUniquenessTest,CanonPatchServiceTest",
+      "evidence": "CanonActiveUniquenessTest 3 用例红→绿；由 StoryCanonContractTest 契约固化（9ab1270）"
+    },
+    {
+      "id": "p20-09",
+      "name": "仅标题的章节号归一化",
+      "phase": 20,
+      "type": "bug",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "agent/ChapterWriterAgent.java"
+      ],
+      "problem_ref": "sanitizeChapterNumbers 全文 replaceAll 第N章——对话/引文/跨章引用被误改",
+      "description": "仅归一化正文开头章节标题（允许前导空白/#）；对话、叙述引用逐字不变；正确标题幂等 no-op",
+      "acceptance": "仅归一化正文开头章节标题（允许前导空白/#）；对话、叙述引用逐字不变；正确标题幂等 no-op",
+      "verify_cmd": "mvn test -Dtest=ChapterHeadingNormalizationTest",
+      "evidence": "ChapterHeadingNormalizationTest 7 用例红→绿（f70ea66）"
+    },
+    {
+      "id": "p21-01",
+      "name": "WUXIA 题材路线图对齐",
+      "phase": 21,
+      "type": "bug",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "domain/GenreProfile.java",
+        "service/ConceiveGate.java",
+        "memory/ContextAssembler.java"
+      ],
+      "problem_ref": "传统武侠（非玄幻）被 isFastPaced 归为快节奏：强制爽点/四段式/悬念钩子；ConceiveGate 强制 POWER_SYSTEM",
+      "description": "WUXIA 退出快节奏集合（约束改张力点指引）；WUXIA 豁免 POWER_SYSTEM；CULTIVATION 保持不变",
+      "acceptance": "WUXIA 退出快节奏集合（约束改张力点指引）；WUXIA 豁免 POWER_SYSTEM；CULTIVATION 保持不变",
+      "verify_cmd": "mvn test -Dtest=WuxiaGenreTest,GenreConditionalConstraintsTest,ConceiveGateGenreExemptionTest",
+      "evidence": "service/GenreConditionalConstraintsTest 6 用例红→绿；p17-02/03/04 三处相反断言更新（f4dd6d7）"
+    },
+    {
+      "id": "p21-02",
+      "name": "后端终态命令门禁",
+      "phase": 21,
+      "type": "feature",
+      "dependencies": [
+        "p20-06"
+      ],
+      "status": "completed",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "web/OrchestratorController.java"
+      ],
+      "problem_ref": "FINAL/NEEDS_REVISION 后写作命令行为未定义：write-one 会把 FINAL 项目推到 VOLUME_DONE",
+      "description": "FINAL 拒绝 run/resume/write-one/write-all 且状态不变；NEEDS_REVISION 拒绝写新章、允许修订 + retryFinalAudit 重审（过→FINAL）；POST /final-audit",
+      "acceptance": "FINAL 拒绝 run/resume/write-one/write-all 且状态不变；NEEDS_REVISION 拒绝写新章、允许修订 + retryFinalAudit 重审（过→FINAL）；POST /final-audit",
+      "verify_cmd": "mvn test -Dtest=TerminalStateCommandGateTest",
+      "evidence": "TerminalStateCommandGateTest 3 用例"
+    },
+    {
+      "id": "p21-03",
+      "name": "前端终态动作",
+      "phase": 21,
+      "type": "feature",
+      "dependencies": [
+        "p21-02"
+      ],
+      "status": "completed",
+      "files": [
+        "frontend/src/components/RunConsole.tsx",
+        "frontend/src/components/InteractiveReview.tsx"
+      ],
+      "problem_ref": "前端终态仍显示可用写作控制；NEEDS_REVISION 显示原始枚举",
+      "description": "FINAL 禁用全部写作控制；NEEDS_REVISION 渲染中文状态/原因 + 重新评审动作；无裸枚举",
+      "acceptance": "FINAL 禁用全部写作控制；NEEDS_REVISION 渲染中文状态/原因 + 重新评审动作；无裸枚举",
+      "verify_cmd": "cd frontend && npm run build",
+      "evidence": "构建通过；Playwright 用例归入 p23-04（cc25cc8）"
+    },
+    {
+      "id": "p21-04",
+      "name": "章节元数据分页接口",
+      "phase": 21,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "web/ContentController.java"
+      ],
+      "problem_ref": "GET /chapters 全量返回章节正文，400 章项目序列化数十 MB 正文",
+      "description": "GET /chapters?page&size 只返回元数据 + total/page/size；正文经 /chapters/{index} 单章懒加载；400 章种子分页响应零正文",
+      "acceptance": "GET /chapters?page&size 只返回元数据 + total/page/size；正文经 /chapters/{index} 单章懒加载；400 章种子分页响应零正文",
+      "verify_cmd": "mvn test -Dtest=ChapterNavigationApiTest",
+      "evidence": "ChapterNavigationApiTest 3 用例（含序列化断言）；FullStackSmokeTest/ContentControllerTest 适配"
+    },
+    {
+      "id": "p21-05",
+      "name": "章节正文懒加载 UI",
+      "phase": 21,
+      "type": "feature",
+      "dependencies": [
+        "p21-04"
+      ],
+      "status": "completed",
+      "files": [
+        "frontend/src/components/ChapterReader.tsx",
+        "frontend/src/components/InteractiveReview.tsx",
+        "frontend/src/api/client.ts"
+      ],
+      "problem_ref": "初始审核加载全量章节正文",
+      "description": "初始加载只请求一次元数据；选中章节恰好请求该章正文（本地缓存）；不重取 checkpoints/status/全部正文",
+      "acceptance": "初始加载只请求一次元数据；选中章节恰好请求该章正文（本地缓存）；不重取 checkpoints/status/全部正文",
+      "verify_cmd": "cd frontend && npm run build",
+      "evidence": "构建通过；Playwright 用例归入 p23-04（cc25cc8）"
+    },
+    {
+      "id": "p21-06",
+      "name": "响应式工作台",
+      "phase": 21,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "frontend/src/pages/ProjectWorkspace.tsx",
+        "frontend/src/pages/ProjectListPage.tsx"
+      ],
+      "problem_ref": "Sider 固定 320px 小屏溢出；章节双栏不堆叠",
+      "description": "Sider breakpoint=lg 自动折叠；章节双栏 xs=24 堆叠；项目表内部滚动无页面级横向溢出",
+      "acceptance": "Sider breakpoint=lg 自动折叠；章节双栏 xs=24 堆叠；项目表内部滚动无页面级横向溢出",
+      "verify_cmd": "cd frontend && npm run build",
+      "evidence": "构建通过；Playwright 用例归入 p23-04（cc25cc8）"
+    },
+    {
+      "id": "p21-07",
+      "name": "键盘与可访问性",
+      "phase": 21,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "frontend/src/components/ChapterReader.tsx",
+        "frontend/src/components/InteractiveReview.tsx",
+        "frontend/src/pages/ProjectListPage.tsx"
+      ],
+      "problem_ref": "章节列表/项目行仅鼠标可点；删除按钮纯图标无可访问名",
+      "description": "行 role=button + Tab/Enter/Space 键盘激活；图标按钮 aria-label",
+      "acceptance": "行 role=button + Tab/Enter/Space 键盘激活；图标按钮 aria-label",
+      "verify_cmd": "cd frontend && npm run build",
+      "evidence": "构建通过；axe 扫描归入 p23-04（cc25cc8）"
+    },
+    {
+      "id": "p21-08",
+      "name": "SSE 连接状态与重连",
+      "phase": 21,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "frontend/src/api/client.ts",
+        "frontend/src/components/RunConsole.tsx"
+      ],
+      "problem_ref": "EventSource 断线无重连、无状态展示；订阅未随卸载关闭",
+      "description": "connected/reconnecting/fallback 状态展示；有界指数退避重连（6 次后 fallback 轮询）；卸载关闭订阅",
+      "acceptance": "connected/reconnecting/fallback 状态展示；有界指数退避重连（6 次后 fallback 轮询）；卸载关闭订阅",
+      "verify_cmd": "mvn test -Dtest=SseEventBusTest && cd frontend && npm run build",
+      "evidence": "构建通过；SseEventBusTest 回归绿（cc25cc8）"
+    },
+    {
+      "id": "p22-01",
+      "name": "StoryCanon 接口与适配器",
+      "phase": 22,
+      "type": "feature",
+      "dependencies": [
+        "p20-07",
+        "p20-08"
+      ],
+      "status": "completed",
+      "files": [
+        "spi/StoryCanon.java",
+        "persistence/sqlite/SqliteStoryCanon.java"
+      ],
+      "problem_ref": "真典读写散落 7 个业务类直接依赖具体仓库，保护/唯一性语义无单一归属",
+      "description": "接口暴露 recall/harvest/applyHumanPatch/saveIfAbsent/validate/supersedeFact/retire；保护窗口与 ACTIVE 唯一性藏于实现；契约对 SQLite 与内存适配器同等成立",
+      "acceptance": "接口暴露 recall/harvest/applyHumanPatch/saveIfAbsent/validate/supersedeFact/retire；保护窗口与 ACTIVE 唯一性藏于实现；契约对 SQLite 与内存适配器同等成立",
+      "verify_cmd": "mvn test -Dtest=InMemoryStoryCanonContractTest,SqliteStoryCanonContractTest",
+      "evidence": "契约 8 用例 × 2 适配器 = 16 全绿（5e4afbc）"
+    },
+    {
+      "id": "p22-02",
+      "name": "迁移真典写入方",
+      "phase": 22,
+      "type": "feature",
+      "dependencies": [
+        "p22-01"
+      ],
+      "status": "completed",
+      "files": [
+        "agent/FactHarvesterAgent.java",
+        "service/CanonPatchService.java",
+        "orchestrator/NovelOrchestrator.java",
+        "agent/CharacterProfileUpgrader.java",
+        "agent/ArcUpdater.java"
+      ],
+      "problem_ref": "写入方直接 import 具体 StoryFactRepository",
+      "description": "FactHarvesterAgent/CanonPatchService/orchestrator 写路径只依赖 StoryCanon；收割合并语义收敛为 canon.harvest",
+      "acceptance": "FactHarvesterAgent/CanonPatchService/orchestrator 写路径只依赖 StoryCanon；收割合并语义收敛为 canon.harvest",
+      "verify_cmd": "mvn test -Dtest=FactHarvesterTest,CanonPatchServiceTest",
+      "evidence": "全量 465 回归绿 + 业务包零 import grep 验证（5e4afbc）"
+    },
+    {
+      "id": "p22-03",
+      "name": "迁移真典读取方",
+      "phase": 22,
+      "type": "feature",
+      "dependencies": [
+        "p22-01"
+      ],
+      "status": "completed",
+      "files": [
+        "memory/RelevanceGateway.java",
+        "memory/ContextAssembler.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "memory/agent 消费方依赖具体仓库",
+      "description": "memory/agent/orchestrator 消费方只依赖 StoryCanon；业务包零 StoryFactRepository import",
+      "acceptance": "memory/agent/orchestrator 消费方只依赖 StoryCanon；业务包零 StoryFactRepository import",
+      "verify_cmd": "mvn test -Dtest=ContextAssemblerTest,RelevanceGatewayTest",
+      "evidence": "全量 465 回归绿 + grep 零 import（5e4afbc）"
+    },
+    {
+      "id": "p22-04",
+      "name": "提取章节生产模块",
+      "phase": 22,
+      "type": "feature",
+      "dependencies": [
+        "p20-02",
+        "p21-02"
+      ],
+      "status": "completed",
+      "files": [
+        "orchestrator/ChapterProduction.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "Context→write→quality→rewrite 编排策略仍在 NovelOrchestrator 内部",
+      "description": "生产组合可经小结果接口调用；orchestrator 只协调阶段不持有写策略",
+      "acceptance": "生产组合可经小结果接口调用；orchestrator 只协调阶段不持有写策略",
+      "verify_cmd": "mvn test -Dtest=ChapterProductionTest,NovelOrchestratorWritingTest",
+      "evidence": "ChapterProduction：prepare（作者指令+弧光+桥段+梗概预检）/write（正文+事件）/qualityGate（连续性→守卫→仲裁→风格全链 7 方法原样迁移）+ produce() 小结果接口（ProductionResult）；produce 不做状态转移（ChapterProductionTest 断言索引不推进）；全量 475 测试回归绿"
+    },
+    {
+      "id": "p22-05",
+      "name": "显式生命周期策略组合",
+      "phase": 22,
+      "type": "feature",
+      "dependencies": [
+        "p22-04"
+      ],
+      "status": "completed",
+      "files": [
+        "orchestrator/OrchestratorPolicies.java",
+        "orchestrator/OrchestratorConfig.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "problem_ref": "orchestrator 依赖约10个后置可选 setter，缺失策略静默降级",
+      "description": "生产组合无后置可选 setter；缺必需策略 Spring 启动失败；可选行为用显式 no-op 适配器表示",
+      "acceptance": "生产组合无后置可选 setter；缺必需策略 Spring 启动失败；可选行为用显式 no-op 适配器表示",
+      "verify_cmd": "mvn test -Dtest=OrchestratorCompositionTest,PersistenceSmokeTest",
+      "evidence": "OrchestratorPolicies 值对象构造期注入（11 策略），后置可选 setter 全部移除（OrchestratorCompositionTest 反射断言）；OrchestratorConfig.requirePolicy 缺失能力启动即失败并指名；测试降级组合走 none()；全量 479 测试回归绿"
+    },
+    {
+      "id": "p22-06",
+      "name": "仓库 fail-loud 语义",
+      "phase": 22,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "spi/NovelRepository.java",
+        "agent/TestNovelRepositoryStub.java",
+        "spi/NovelRepositoryContractTest.java"
+      ],
+      "problem_ref": "归档/预设/清理 9 个方法 default no-op——适配器缺能力时静默返回 0",
+      "description": "接口无 silent default（缺能力=编译失败）；SQLite 适配器契约含归档计数与预设往返",
+      "acceptance": "接口无 silent default（缺能力=编译失败）；SQLite 适配器契约含归档计数与预设往返",
+      "verify_cmd": "mvn test -Dtest=SqliteNovelRepositoryTest",
+      "evidence": "契约 8 用例全绿"
+    },
+    {
+      "id": "p23-01",
+      "name": "确定性场景网关与隔离数据根",
+      "phase": 23,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "llm/ScenarioLlmGateway.java",
+        "scripts/e2e.sh",
+        "scripts/e2e-fixture-dir-test.sh"
+      ],
+      "problem_ref": "可靠性验证缺乏零成本确定性 LLM 驱动；replay 默认 fixture 目录不存在导致裸跑 e2e.sh 失败",
+      "description": "场景网关 8 任务类型产出语法合法/章节号镜像/逐字可复现响应（零网络）；e2e.sh 默认自动解析最新版本化语料（mtime），显式目录透传",
+      "acceptance": "场景网关 8 任务类型产出语法合法/章节号镜像/逐字可复现响应（零网络）；e2e.sh 默认自动解析最新版本化语料（mtime），显式目录透传",
+      "verify_cmd": "mvn test -Dtest=ScenarioLlmGatewayTest && bash scripts/e2e-fixture-dir-test.sh",
+      "evidence": "6 用例 + 脚本契约检查全绿"
+    },
+    {
+      "id": "p23-02",
+      "name": "业务生命周期 E2E runner",
+      "phase": 23,
+      "type": "feature",
+      "dependencies": [
+        "p20-04",
+        "p20-06",
+        "p23-01"
+      ],
+      "status": "completed",
+      "files": [
+        "scripts/reliability-e2e.sh"
+      ],
+      "problem_ref": "崩溃注入/陈旧 worker/人工复核/真典保护仅单元级验证，缺打包应用真实进程级场景报告",
+      "description": "crash-after-stage、restart 续跑、stale-worker 拒绝、manual-review、canon-protection 场景各产出 machine-readable report.json，失败非零退出",
+      "acceptance": "crash-after-stage、restart 续跑、stale-worker 拒绝、manual-review、canon-protection 场景各产出 machine-readable report.json，失败非零退出",
+      "verify_cmd": "./scripts/reliability-e2e.sh",
+      "evidence": "四场景实跑全 PASS：S1 crash-restart（kill -9 后同库重启续跑 5 章连续 DONE）、S2 stale-worker-409（活动期 write-all/write-chapter 双 409、终态释放后恢复接受）、S3 manual-review（harsh 档第1章 HIGH→任务 PAUSED→resolve-review→续跑 3 章全 DONE）、S4 canon-protection（同键人工补丁最新胜出恰一条 ACTIVE + retire 出 active）；场景网关 harsh 档按检查调用序注入；data/e2e/reliability/summary.json allPass=true"
+    },
+    {
+      "id": "p23-03",
+      "name": "400 章零成本 soak",
+      "phase": 23,
+      "type": "feature",
+      "dependencies": [
+        "p21-04",
+        "p23-01"
+      ],
+      "status": "completed",
+      "files": [
+        "scripts/soak.sh"
+      ],
+      "problem_ref": "百万字规模的资源/状态/所有权不变量无业务级证据",
+      "description": "恰 400 章连续唯一、零非终态章节、零重复 ACTIVE 真典键、零任务重叠、零 LLM 网络调用、导航延迟有界，报告落 data/e2e/soak/",
+      "acceptance": "恰 400 章连续唯一、零非终态章节、零重复 ACTIVE 真典键、零任务重叠、零 LLM 网络调用、导航延迟有界，报告落 data/e2e/soak/",
+      "verify_cmd": "./scripts/soak.sh --chapters 400 --seed 20260830",
+      "evidence": "400 章全量实跑 PASS：恰好 400 章连续唯一、零非终态、零重复 ACTIVE 真典键、单任务无重叠、零 LLM 网络调用（无 API key 启动完成全书）、导航 18ms@400 章；全书 1,058,524 字；data/e2e/soak/report.json 六项不变量全 true"
+    },
+    {
+      "id": "p23-04",
+      "name": "仓库自有浏览器 E2E 套件",
+      "phase": 23,
+      "type": "feature",
+      "dependencies": [
+        "p21-03",
+        "p21-05",
+        "p21-06",
+        "p21-07",
+        "p21-08",
+        "p23-01"
+      ],
+      "status": "completed",
+      "files": [
+        "scripts/browser-e2e.sh"
+      ],
+      "problem_ref": "浏览器回归不可重复",
+      "description": "仓库自有浏览器 E2E 套件（ego-browser 驱动，按用户指示替代 Playwright）",
+      "acceptance": "打包 Spring 应用（场景网关零成本）在桌面+375px 下通过 8 项检查：列表无溢出+可访问名、行键盘可激活、侧栏响应式折叠、FINAL 禁写、NEEDS_REVISION 中文+重审、章节懒加载（元数据一次/正文按章）、SSE 已连接状态、人工复核 待人审→已处理",
+      "verify_cmd": "./scripts/browser-e2e.sh",
+      "evidence": "8 检查全 PASS（data/e2e/browser/summary.json）；套件抓到并修复三个真实缺陷：meta 漏 status 列、SPA 深链接 500、InteractiveReview 点章全量重取"
+    },
+    {
+      "id": "p23-05",
+      "name": "一键业务发布门禁",
+      "phase": 23,
+      "type": "feature",
+      "dependencies": [
+        "p23-02",
+        "p23-03",
+        "p23-04"
+      ],
+      "status": "completed",
+      "files": [
+        "scripts/release-gate.sh"
+      ],
+      "problem_ref": "发布证据分散在多条命令，无单一清单聚合",
+      "description": "一键业务发布门禁聚合器",
+      "acceptance": "聚合器顺序跑聚焦/全量测试、前端构建、replay 基线、业务生命周期、soak、浏览器门禁；单一 manifest；全过才退出 0",
+      "verify_cmd": "./scripts/release-gate.sh",
+      "evidence": "release-gate.sh 六门禁聚合产出 data/release/manifest.json（全 PASS 后单独提交证据）"
+    },
+    {
+      "id": "p23-06",
+      "name": "条件触发真实 LLM 质量金丝雀",
+      "phase": 23,
+      "type": "feature",
+      "dependencies": [
+        "p21-01",
+        "p23-01"
+      ],
+      "status": "completed",
+      "files": [
+        "scripts/e2e.sh",
+        "scripts/canary-wuxia-rule-check.py"
+      ],
+      "problem_ref": "prompt/题材逻辑变更的质量验证与可靠性 soak 混淆风险",
+      "description": "仅当 prompt/题材逻辑变更：record 3 mystery + 3 WUXIA 章，零失败零错误，WUXIA 无修仙规则，对比基线；bless 需人工批准",
+      "acceptance": "仅当 prompt/题材逻辑变更：record 3 mystery + 3 WUXIA 章，零失败零错误，WUXIA 无修仙规则，对比基线；bless 需人工批准",
+      "verify_cmd": "E2E_FIXTURE_DIR=data/e2e-fixtures/canary-mystery-20260831 ./scripts/e2e.sh --mode record --chapters 3 --preset mystery && E2E_FIXTURE_DIR=data/e2e-fixtures/canary-wuxia-20260831 ./scripts/e2e.sh --mode record --chapters 3 --preset wuxia && python3 scripts/canary-wuxia-rule-check.py",
+      "evidence": "金丝雀实录（2026-08-31，用户批准）：mystery 3 章 10,191 字 / wuxia 3 章 11,308 字，两组均 0 错误 0 失败任务 COMPLETED；mystery 对既有基线 compare PASS（无需 bless）；WUXIA 规则断言 PASS（54 fixture：武侠规则注入 ✓、修仙规则零命中）；报告存 data/release/canary-*-report.json，fixture 存 data/e2e-fixtures/canary-*-20260831；WUXIA 基线经人工确认质量后 bless：baselines/golden-wuxia.json（minTotalWords 9046 / minAvgWordCount 2638 / 零容忍失败与错误），canary-wuxia-report 对新基线 compare PASS；mystery 基线不受影响（compare 仍 PASS）"
     }
   ]
 }

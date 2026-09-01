@@ -60,7 +60,15 @@ public class WritingContext {
         if (!relevantCharacters.isEmpty()) {
             sb.append("【出场人物（必须严格遵守以下设定，不得改名或改变性格）】\n");
             for (Character c : relevantCharacters) {
-                sb.append("■ ").append(c.getName()).append("（").append(c.getRole()).append("）\n");
+                sb.append("■ ").append(c.getName()).append("（").append(c.getRole()).append("）");
+                // p19-01: 存续状态标注——已故/已退场角色不得以活人身份登场（回忆/遗物除外）
+                if (c.isDeceased()) {
+                    sb.append("【已故·第").append(c.getDeathChapter() != null ? c.getDeathChapter() : "?")
+                      .append("章殁——除回忆/闪回/遗物外不得出场】");
+                } else if (c.getStatus() == Character.Status.DEPARTED) {
+                    sb.append("【已退场——无铺垫不得突然回归】");
+                }
+                sb.append("\n");
                 if (c.getPersonality() != null) sb.append("  性格：").append(c.getPersonality()).append("\n");
                 if (c.getAbility() != null) sb.append("  能力：").append(c.getAbility()).append("\n");
                 if (c.getMotivation() != null) sb.append("  动机：").append(c.getMotivation()).append("\n");
@@ -87,10 +95,16 @@ public class WritingContext {
     public String toUserPrompt() {
         StringBuilder sb = new StringBuilder();
         // 开头强锚定主角名，防止 LLM 从"上一章原文"中继承错误的名字（滚雪球效应）
+        // p15-fix: 精确"主角"角色优先；substring 匹配者（"重要配角（主角盟友线）"）不得抢锚点
         if (relevantCharacters != null && !relevantCharacters.isEmpty()) {
             var mainChars = relevantCharacters.stream()
-                    .filter(c -> c.getRole() != null && c.getRole().contains("主角"))
+                    .filter(c -> "主角".equals(c.getRole()))
                     .toList();
+            if (mainChars.isEmpty()) {
+                mainChars = relevantCharacters.stream()
+                        .filter(c -> c.getRole() != null && c.getRole().contains("主角"))
+                        .toList();
+            }
             if (!mainChars.isEmpty()) {
                 sb.append("⚠️ 重要提醒：本章主角的名字是「")
                   .append(mainChars.get(0).getName()).append("」，")

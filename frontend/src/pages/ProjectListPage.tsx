@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Table, Button, Modal, Form, Input, Select, Tag, Space, message, Popconfirm, Card, Progress } from 'antd';
 import { PlusOutlined, DeleteOutlined, ReadOutlined, RocketOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
@@ -11,6 +11,7 @@ const STATE_LABELS: Record<NovelState, { text: string; color: string; percent: n
   WRITING: { text: '创作中', color: 'processing', percent: 50 },
   VOLUME_DONE: { text: '卷完结', color: 'gold', percent: 75 },
   FINAL: { text: '已完结', color: 'green', percent: 100 },
+  NEEDS_REVISION: { text: '待修订', color: 'red', percent: 90 },
   PAUSED_AT_CHECKPOINT: { text: '待审核', color: 'orange', percent: 40 },
 };
 
@@ -21,6 +22,7 @@ const MODE_CONFIG: Record<ProjectMode, { text: string; color: string; bg: string
 
 export default function ProjectListPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -39,6 +41,14 @@ export default function ProjectListPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setCreateOpen(true);
+      searchParams.delete('new');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleCreate = async () => {
     const values = await createForm.validateFields();
@@ -160,7 +170,8 @@ export default function ProjectListPage() {
             onConfirm={(e) => handleDelete(record.id, e)}
             onCancel={(e) => e?.stopPropagation()}
           >
-            <Button danger size="small" icon={<DeleteOutlined />} style={{ borderRadius: 6 }} />
+            <Button danger size="small" icon={<DeleteOutlined />} style={{ borderRadius: 6 }}
+              aria-label={`删除项目「${record.title || record.concept || record.id}」`} />
           </Popconfirm>
         </Space>
       ),
@@ -213,8 +224,19 @@ export default function ProjectListPage() {
               rowKey="id"
               loading={loading}
               pagination={false}
+              scroll={{ x: true }}
               onRow={(record) => ({
                 onClick: () => navigate(`/project/${record.id}`),
+                // p21-07: 行键盘可激活
+                role: 'button',
+                tabIndex: 0,
+                'aria-label': `打开项目 ${record.title || record.concept?.slice(0, 12) || record.id}`,
+                onKeyDown: (e: React.KeyboardEvent) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    navigate(`/project/${record.id}`);
+                  }
+                },
                 style: { cursor: 'pointer', transition: 'background 0.2s' },
                 onMouseEnter: (e) => { (e.currentTarget as HTMLElement).style.background = '#faf8f4'; },
                 onMouseLeave: (e) => { (e.currentTarget as HTMLElement).style.background = ''; },
@@ -249,6 +271,25 @@ export default function ProjectListPage() {
             </Form.Item>
             <Form.Item name="tags" label="类型标签">
               <Input placeholder="逗号分隔，如：穿越,历史,权谋,朝堂" />
+            </Form.Item>
+            <Form.Item name="preset" label="题材预设（可选 — 按题材优化对话密度/文风/引用）">
+              <Select size="large" allowClear placeholder="自动推断（不选则按标签推断题材）">
+                <Select.Option value="wuxia">🗡️ 武侠江湖 — 招式对决、门派恩仇、侠义精神</Select.Option>
+                <Select.Option value="romance">💕 古风言情 — 高对话密度、情感节拍、诗词典故</Select.Option>
+                <Select.Option value="cultivation">⚔️ 修仙玄幻 — 境界体系、爽点轮换、战斗张力</Select.Option>
+                <Select.Option value="mystery">🔍 悬疑推理 — 线索管理、伏笔密度、逻辑链</Select.Option>
+                <Select.Option value="historical">📜 历史权谋 — 时代锚点、典章语感、朝堂博弈</Select.Option>
+                <Select.Option value="thriller">⚡ 惊悚 — 高张力、危机节奏</Select.Option>
+                <Select.Option value="general">📖 通用 — 不做题材特化</Select.Option>
+              </Select>
+            </Form.Item>
+            <Form.Item name="targetChapters" label="篇幅">
+              <Select size="large" allowClear placeholder="默认 24 章（短篇验证）">
+                <Select.Option value={24}>24 章 · 短篇</Select.Option>
+                <Select.Option value={100}>100 章 · 中篇</Select.Option>
+                <Select.Option value={200}>200 章 · 长篇</Select.Option>
+                <Select.Option value={400}>400 章 · 百万字</Select.Option>
+              </Select>
             </Form.Item>
             <Form.Item name="mode" label="运行模式">
               <Select size="large">

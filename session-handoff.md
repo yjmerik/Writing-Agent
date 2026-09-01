@@ -61,8 +61,8 @@
 
 - **p23-06 金丝雀已完成**（用户批准）：mystery 3 章 10,191 字 / WUXIA 3 章 11,308 字，均 0 错误 0 失败；
   mystery compare PASS；WUXIA 规则断言 PASS（无修仙规则）。报告 data/release/canary-*.json
-- **WUXIA 基线 bless 待人工决定**：正文样本已在会话展示；如认可，将 canary-wuxia-report.json
-  作为基线 bless（compare-baseline.py 支持指定报告路径 + --bless）
+- **WUXIA 基线已 bless**（人工确认质量）：`baselines/golden-wuxia.json`，mystery 基线独立保留；
+  两组基线 compare 均 PASS
 - 观察项：卷大纲层「题材规则（武侠）」注入密度仅总纲 1 次，可后续评估 p17-03 生产接线
 - ⚠️ 本机代理 http_proxy=127.0.0.1:9098 劫持 localhost——curl 必须带 --noproxy '*'
 - ⚠️ ego-browser 进程 cwd 非仓库根——其内 fs 写文件必须用绝对路径

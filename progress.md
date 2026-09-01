@@ -10,8 +10,8 @@
 - WUXIA 实录：3 章 11,308 字，0 错误 0 失败；规则断言 **PASS**（54 fixture：武侠规则注入、
   修仙规则/境界节奏/爽点四段式钩子零命中——p21-01 改动在真实生成链路生效）
 - 报告：data/release/canary-{mystery,wuxia}-report.json；fixture：data/e2e-fixtures/canary-*-20260831
-- WUXIA 基线 bless 留待人工确认（正文样本已在会话展示；判断质量可接受后
-  `python3 scripts/compare-baseline.py data/release/canary-wuxia-report.json --bless` 需先复制为 e2e-report.json 或指定路径）
+- WUXIA 基线经人工确认 bless：`baselines/golden-wuxia.json`（mystery 基线不受影响），
+  对新基线 compare PASS——p23-06 及全部 29 项彻底闭环
 
 **29/29 features 全部完成。** 观察项（不阻塞）：卷大纲 prompt 的「题材规则（武侠）」仅出现 1 次
 （总纲层），逐卷层未重复注入——p17-03 单测覆盖的是 provider 注入路径，生产接线密度可后续评估。

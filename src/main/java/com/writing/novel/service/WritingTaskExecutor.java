@@ -113,17 +113,26 @@ public class WritingTaskExecutor {
     }
 
     public synchronized WritingTask startConceiving(String projectId) {
-        // p15-05: 原任务仍在运行时，重复启动直接返回原任务（不取消、不替换、不等待）
-        String activeTaskId = coordinator.currentOwner(projectId).orElse(null);
-        if (activeTaskId != null) {
-            log.info("项目 {} 已有进行中的构思任务 {}，直接返回原任务", projectId, activeTaskId);
-            return getTask(activeTaskId);
-        }
         WritingTask task = new WritingTask(projectId, 0, WritingTask.Type.CONCEIVE);
-        if (coordinator.tryAcquire(projectId, task.getId()).isEmpty()) {
-            return getTask(coordinator.currentOwner(projectId).orElse(task.getId()));
+        var token = coordinator.tryAcquire(projectId, task.getId());
+        if (token.isEmpty()) {
+            // p15-05: 只有已落库的同项目 CONCEIVE owner 可幂等返回；同步人工工作必须明确冲突。
+            String activeTaskId = coordinator.currentOwner(projectId).orElse(null);
+            WritingTask activeTask = activeTaskId == null ? null : getTask(activeTaskId);
+            if (activeTask != null
+                    && projectId.equals(activeTask.getProjectId())
+                    && activeTask.getType() == WritingTask.Type.CONCEIVE) {
+                log.info("项目 {} 已有进行中的构思任务 {}，直接返回原任务", projectId, activeTaskId);
+                return activeTask;
+            }
+            throw new IllegalStateException("项目已有进行中的工作，请等待其完成");
         }
-        repository.saveWritingTask(task);
+        try {
+            repository.saveWritingTask(task);
+        } catch (RuntimeException e) {
+            coordinator.release(token.get());
+            throw e;
+        }
         cancelFlags.put(task.getId(), false);
         executor.submit(() -> executeConceive(task));
         return task;

@@ -16,8 +16,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -86,6 +88,22 @@ class ConceiveTaskOwnershipTest {
         // 原任务完成后条件释放自己的 token
         releaseStep.countDown();
         awaitNoActiveTask();
+    }
+
+    @Test
+    void nonTaskOwnerRejectsConceiveWithoutCreatingTaskOrReplacingOwner() {
+        executor.beginWork("p1", "outline-edit-x");
+        try {
+            assertThrows(IllegalStateException.class, () -> executor.startConceiving("p1"));
+
+            verify(mockRepo, never()).saveWritingTask(any());
+            verifyNoInteractions(mockOrchestrator);
+            assertTrue(executor.hasActiveTask("p1"), "冲突后原 outline owner 必须仍然持有工作权");
+            assertThrows(IllegalStateException.class,
+                    () -> executor.beginWork("p1", "replacement-owner"));
+        } finally {
+            executor.endWork("p1", "outline-edit-x");
+        }
     }
 
     private void awaitNoActiveTask() throws InterruptedException {

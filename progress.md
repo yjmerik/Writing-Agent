@@ -824,3 +824,9 @@ W2 的两个独立基石已落地（不依赖 LLM prompt 改动，不影响产�
 - GREEN：`OutlineStructureService` 在服务内取得项目 owner，覆盖 boundary read、全部校验、SQLite commit 和 revision bump，冲突调用不进入 repository，并在成功/失败时 finally 释放。已写卷与章梗概从可信持久化对象 detached copy，保留 UUID、写作要求、节拍、高潮、人物、剧情目的、张力和卷内位置，不信任 payload ID。
 - `NovelRepository.replaceOutlineAtomically` 明确大纲+可选剧情承诺的原子契约；SQLite 单事务执行 outline 替换、旧同键 ACTIVE 全部 SUPERSEDED 及 HUMAN_PATCH INSERT。故障注入在 INSERT 阶段中断后，outline、全部 facts、旧 fact 状态及 MemoryRevision 均与调用前完全一致；revision 仅在 DB commit 后推进。
 - 最终 `OutlineStructureEditTest,UnwrittenSynopsisEditTest,CanonPatchServiceTest,CanonActiveUniquenessTest,CheckpointRevisionRoutingTest` **32/32 PASS**；manual aggregate **0 PASS / 1 XFAIL / 0 ERROR**；JDK21 compile/full/init **546 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端生产构建 PASS。
+
+### p26-09 Review round 2
+
+- TDD RED：共享 owner 后，`startConceiving` 把 `outline-edit-*` 当作已落库构思任务并返回 null；服务与真实 HTTP 两条回归为 **7 tests / 2 failures / 0 errors**，`POST /run` 实际 NPE 500。
+- GREEN：构思启动先原子 `tryAcquire`，不再在 `currentOwner` 预读与 acquire 之间留下窗口。竞争失败后，仅 repository 中同项目 `CONCEIVE` task 可按既有语义幂等返回；人工大纲或其他同步 owner 明确抛 `IllegalStateException`（HTTP 409），不创建 WritingTask、不进入 orchestrator、不替换原 owner。首次任务持久化失败时释放刚取得的 token。
+- 直接/HTTP GREEN **7/7**；扩展 `ConceiveTaskOwnershipTest,ConceiveTaskTest,WritingEntryOwnershipTest,ProjectWorkCoordinatorTest,OutlineStructureEditTest` **33/33 PASS**；JDK21 compile/full/init **548 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端生产构建 PASS。未改变自动任务持续运行语义。

@@ -2,6 +2,7 @@ package com.writing.novel.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.writing.novel.service.WritingTaskExecutor;
+import com.writing.novel.spi.NovelRepository;
 import com.writing.novel.web.dto.CreateProjectRequest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,7 @@ class ConceiveTaskTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper om;
     @Autowired WritingTaskExecutor writingTaskExecutor;
+    @Autowired NovelRepository repository;
 
     @BeforeAll
     static void createDataDir() { new File("./data").mkdirs(); }
@@ -90,6 +92,25 @@ class ConceiveTaskTest {
                     .andExpect(status().isConflict());
         } finally {
             writingTaskExecutor.endWork(id, "write-all");
+        }
+    }
+
+    @Test
+    void postRun_conflictsWhenOutlineEditOwnsProjectWithoutCreatingTask() throws Exception {
+        String id = createProject();
+        int tasksBefore = repository.findWritingTasksByProject(id).size();
+        writingTaskExecutor.beginWork(id, "outline-edit-x");
+        try {
+            mvc.perform(post("/api/projects/" + id + "/run"))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.error").isNotEmpty());
+
+            org.junit.jupiter.api.Assertions.assertEquals(tasksBefore,
+                    repository.findWritingTasksByProject(id).size());
+            org.junit.jupiter.api.Assertions.assertTrue(writingTaskExecutor.hasActiveTask(id),
+                    "409 后原 outline owner 必须仍然持有工作权");
+        } finally {
+            writingTaskExecutor.endWork(id, "outline-edit-x");
         }
     }
 

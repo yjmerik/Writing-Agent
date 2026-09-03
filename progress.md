@@ -801,3 +801,10 @@ W2 的两个独立基石已落地（不依赖 LLM prompt 改动，不影响产�
 - TDD RED：`WorldCharacterFullEditTest` 为 **4 tests / 4 failures / 0 errors**，覆盖类型丢失、ITEM/INVALID 放行、非法更新副作用和跨项目修改。GREEN focused ownership/canon/create 回归为 **14/14 PASS**。
 - 产品 E2E：`manual-content-management --expect-known-failures` 为 **0 PASS / 1 XFAIL / 0 ERROR**；worldSave 的下拉、保存、持久化、刷新后三字段与 characterSave 的保存、持久化、刷新后八字段子断言全部通过，聚合仅保留后续大纲/章节子项的预期失败。`initial-setup-summary`、`checkpoint-card-targeting` strict 各 **1 PASS / 0 XFAIL / 0 ERROR**。
 - 验证：frontend build、JDK21 `mvn compile`、`mvn test` 与 `./init.sh` 全部 PASS（**529 tests / 0 failures / 0 errors / 1 skipped**；init 另通过 27 prompt 与前端生产构建）。本 feature 未改 Agent/prompt/上下文/产出逻辑，无需 replay。
+
+### p26-08 Review round 1
+
+- TDD RED：扩展后的 `WorldCharacterFullEditTest` 为 **7 tests / 3 failures / 0 errors**；世界观/人物改名后旧 subject 仍为 ACTIVE，人物整卡保存的 CHARACTER_STATE 只保留最后一次 growthArc 写入。
+- GREEN：更新前捕获旧 subject 的相关 ACTIVE。有真实新断言时先写新 subject HUMAN_PATCH，再以 `StoryCanon.supersedeFact` 建立 old → new 跨主体审计链；清空正文或人物状态/关系时改为 RETIRED，保留完整审计记录。`canon.recall` 与其真实消费者 `RelevanceGateway` 均不再输出旧主体。
+- 人物状态从更新后完整实体一次组合 role/personality/ability/motivation/appearance/growthArc，空值不产生标签噪声；relationships 独立写一次。重复整卡保存及 ability-only partial 后，每个 type+subject 仍恰好 1 ACTIVE，状态断言同时保留能力、动机和成长弧。
+- 验证：focused ownership/canon/create **17/17 PASS**；frontend build PASS；manual aggregate **0 PASS / 1 XFAIL / 0 ERROR** 且 worldSave/characterSave 全 true；initial-summary/targeting strict 各 **1/0/0**；JDK21 full/init **532 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端生产构建 PASS。

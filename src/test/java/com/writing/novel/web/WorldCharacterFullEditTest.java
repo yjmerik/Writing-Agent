@@ -3,7 +3,9 @@ package com.writing.novel.web;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.writing.novel.domain.KnowledgeEntry;
+import com.writing.novel.domain.StoryFact;
 import com.writing.novel.memory.MemoryRevision;
+import com.writing.novel.memory.RelevanceGateway;
 import com.writing.novel.spi.NovelRepository;
 import com.writing.novel.spi.StoryCanon;
 import com.writing.novel.web.dto.CreateProjectRequest;
@@ -23,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -45,6 +48,7 @@ class WorldCharacterFullEditTest {
     @Autowired NovelRepository repository;
     @Autowired StoryCanon canon;
     @Autowired MemoryRevision memoryRevision;
+    @Autowired RelevanceGateway relevanceGateway;
 
     @BeforeAll
     static void createDataDir() {
@@ -193,6 +197,84 @@ class WorldCharacterFullEditTest {
         assertEquals(attackerRevisionBefore, memoryRevision.current(attackerProject));
     }
 
+    @Test
+    void 世界观改名建立跨主体审计链且清空正文归档旧事实() throws Exception {
+        String projectId = createProject("世界观改名与清空");
+        JsonNode renamedEntry = createWorld(projectId, "RULE", "旧税则", "每十船抽一船");
+        StoryFact oldRenameFact = onlyActive(projectId, StoryFact.FactType.WORLD_RULE, "旧税则");
+
+        updateWorld(projectId, renamedEntry.get("id").asText(), "ECONOMY", "新税则", "每二十船抽一船");
+
+        StoryFact newRenameFact = onlyActive(projectId, StoryFact.FactType.WORLD_RULE, "新税则");
+        StoryFact auditedOld = canon.findById(oldRenameFact.getId()).orElseThrow();
+        assertEquals(StoryFact.Status.SUPERSEDED, auditedOld.getStatus());
+        assertEquals(newRenameFact.getId(), auditedOld.getSupersededBy());
+        assertFalse(canon.recall(projectId).stream().anyMatch(f -> "旧税则".equals(f.getSubject())));
+        assertFalse(relevanceGateway.relevantFacts(projectId, List.of(), 2, 40).stream()
+                .anyMatch(f -> "旧税则".equals(f.getSubject())));
+
+        JsonNode clearedEntry = createWorld(projectId, "CULTURE", "乡约", "每月初一议事");
+        StoryFact oldClearFact = onlyActive(projectId, StoryFact.FactType.WORLD_RULE, "乡约");
+
+        updateWorld(projectId, clearedEntry.get("id").asText(), "CULTURE", "乡约", "");
+
+        assertFalse(canon.recall(projectId).stream().anyMatch(f -> "乡约".equals(f.getSubject())));
+        assertEquals(StoryFact.Status.RETIRED,
+                canon.findById(oldClearFact.getId()).orElseThrow().getStatus());
+    }
+
+    @Test
+    void 人物改名建立两类跨主体审计链且清空状态与关系归档旧事实() throws Exception {
+        String projectId = createProject("人物改名与清空");
+        JsonNode character = createCharacter(projectId, characterFields(
+                "旧名", "主角", "谨慎", "识账", "查清亏空", "左眉浅疤", "与顾清舟结盟", "学会担当"));
+        updateCharacter(projectId, character.get("id").asText(), characterFields(
+                "旧名", "主角", "谨慎", "识账", "查清亏空", "左眉浅疤", "与顾清舟结盟", "学会担当"));
+        StoryFact oldState = onlyActive(projectId, StoryFact.FactType.CHARACTER_STATE, "旧名");
+        StoryFact oldRelationship = onlyActive(projectId, StoryFact.FactType.RELATIONSHIP_STATE, "旧名");
+
+        updateCharacter(projectId, character.get("id").asText(), characterFields(
+                "沈砚", "主角", "谨慎而执拗", "辨认暗账", "查清漕粮亏空", "左眉有浅疤", "与顾清舟互为盟友", "从自保走向担当"));
+
+        StoryFact newState = onlyActive(projectId, StoryFact.FactType.CHARACTER_STATE, "沈砚");
+        StoryFact newRelationship = onlyActive(projectId, StoryFact.FactType.RELATIONSHIP_STATE, "沈砚");
+        StoryFact auditedOldState = canon.findById(oldState.getId()).orElseThrow();
+        StoryFact auditedOldRelationship = canon.findById(oldRelationship.getId()).orElseThrow();
+        assertEquals(StoryFact.Status.SUPERSEDED, auditedOldState.getStatus());
+        assertEquals(newState.getId(), auditedOldState.getSupersededBy());
+        assertEquals(StoryFact.Status.SUPERSEDED, auditedOldRelationship.getStatus());
+        assertEquals(newRelationship.getId(), auditedOldRelationship.getSupersededBy());
+        assertFalse(canon.recall(projectId).stream().anyMatch(f -> "旧名".equals(f.getSubject())));
+        assertFalse(relevanceGateway.relevantFacts(projectId, List.of(), 2, 40).stream()
+                .anyMatch(f -> "旧名".equals(f.getSubject())));
+
+        updateCharacter(projectId, character.get("id").asText(), characterFields(
+                "沈砚", "", "", "", "", "", "", ""));
+
+        assertFalse(canon.recall(projectId).stream().anyMatch(f -> "沈砚".equals(f.getSubject())));
+        assertEquals(StoryFact.Status.RETIRED, canon.findById(newState.getId()).orElseThrow().getStatus());
+        assertEquals(StoryFact.Status.RETIRED,
+                canon.findById(newRelationship.getId()).orElseThrow().getStatus());
+    }
+
+    @Test
+    void 人物整卡与局部保存均以更新后完整实体生成单条状态事实() throws Exception {
+        String projectId = createProject("人物聚合事实");
+        JsonNode character = createCharacter(projectId, characterFields(
+                "沈砚", "主角", "谨慎", "识字", "守家", "青衣", "与顾清舟结盟", "学会担当"));
+        Map<String, String> fullPatch = characterFields(
+                "沈砚", "主角", "谨慎而执拗", "辨认暗账", "查清漕粮亏空", "左眉有浅疤", "与顾清舟互为盟友", "从自保走向担当");
+
+        updateCharacter(projectId, character.get("id").asText(), fullPatch);
+        assertCompleteCharacterFacts(projectId, "辨认暗账", "查清漕粮亏空", "从自保走向担当");
+
+        updateCharacter(projectId, character.get("id").asText(), fullPatch);
+        assertCompleteCharacterFacts(projectId, "辨认暗账", "查清漕粮亏空", "从自保走向担当");
+
+        updateCharacter(projectId, character.get("id").asText(), Map.of("ability", "识破伪账"));
+        assertCompleteCharacterFacts(projectId, "识破伪账", "查清漕粮亏空", "从自保走向担当");
+    }
+
     private String createProject(String title) throws Exception {
         CreateProjectRequest request = new CreateProjectRequest(title, "确定性概念", "mystery", "SOLO", null);
         String json = mvc.perform(post("/api/projects")
@@ -220,6 +302,53 @@ class WorldCharacterFullEditTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         return objectMapper.readTree(json);
+    }
+
+    private void updateWorld(String projectId, String entryId, String type, String name, String content)
+            throws Exception {
+        mvc.perform(put("/api/projects/{id}/worldbuilding/{entryId}", projectId, entryId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "type", type, "name", name, "content", content))))
+                .andExpect(status().isOk());
+    }
+
+    private void updateCharacter(String projectId, String characterId, Map<String, String> fields)
+            throws Exception {
+        mvc.perform(put("/api/projects/{id}/characters/{charId}", projectId, characterId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(fields)))
+                .andExpect(status().isOk());
+    }
+
+    private Map<String, String> characterFields(String name, String role, String personality, String ability,
+                                                 String motivation, String appearance, String relationships,
+                                                 String growthArc) {
+        return Map.of(
+                "name", name, "role", role, "personality", personality, "ability", ability,
+                "motivation", motivation, "appearance", appearance,
+                "relationships", relationships, "growthArc", growthArc);
+    }
+
+    private StoryFact onlyActive(String projectId, StoryFact.FactType type, String subject) {
+        List<StoryFact> matching = canon.recall(projectId).stream()
+                .filter(f -> f.getFactType() == type && subject.equals(f.getSubject()))
+                .toList();
+        assertEquals(1, matching.size(), type + "/" + subject + " 应恰好一条 ACTIVE");
+        return matching.get(0);
+    }
+
+    private void assertCompleteCharacterFacts(String projectId, String ability, String motivation,
+                                              String growthArc) {
+        StoryFact state = onlyActive(projectId, StoryFact.FactType.CHARACTER_STATE, "沈砚");
+        assertTrue(state.getAssertion().contains("角色：主角"));
+        assertTrue(state.getAssertion().contains("性格：谨慎而执拗"));
+        assertTrue(state.getAssertion().contains("能力/境界：" + ability));
+        assertTrue(state.getAssertion().contains("动机：" + motivation));
+        assertTrue(state.getAssertion().contains("外貌：左眉有浅疤"));
+        assertTrue(state.getAssertion().contains("成长弧：" + growthArc));
+        StoryFact relationship = onlyActive(projectId, StoryFact.FactType.RELATIONSHIP_STATE, "沈砚");
+        assertTrue(relationship.getAssertion().contains("与顾清舟互为盟友"));
     }
 
     private JsonNode getArray(String path) throws Exception {

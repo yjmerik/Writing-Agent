@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -50,6 +51,10 @@ public class CanonPatchService {
         if (!projectId.equals(existing.getProjectId())) {
             throw new IllegalArgumentException("人物不属于该项目: " + charId);
         }
+        String oldSubject = existing.getName();
+        List<StoryFact> oldStateFacts = activeFacts(projectId, StoryFact.FactType.CHARACTER_STATE, oldSubject);
+        List<StoryFact> oldRelationshipFacts = activeFacts(
+                projectId, StoryFact.FactType.RELATIONSHIP_STATE, oldSubject);
         if (patch.getName() != null) existing.setName(patch.getName());
         if (patch.getRole() != null) existing.setRole(patch.getRole());
         if (patch.getPersonality() != null) existing.setPersonality(patch.getPersonality());
@@ -63,21 +68,19 @@ public class CanonPatchService {
         repository.saveCharacter(existing);
 
         List<StoryFact> written = new ArrayList<>();
-        if (patch.getAbility() != null && !patch.getAbility().isBlank()) {
-            written.add(writeHumanFact(projectId, StoryFact.FactType.CHARACTER_STATE,
-                    existing.getName(), "能力/境界：" + patch.getAbility(), currentChapter));
+        boolean renamed = !Objects.equals(oldSubject, existing.getName());
+        boolean stateTouched = renamed || patch.getRole() != null || patch.getPersonality() != null
+                || patch.getAbility() != null || patch.getMotivation() != null
+                || patch.getAppearance() != null || patch.getGrowthArc() != null;
+        if (stateTouched) {
+            StoryFact state = replaceOrRetire(projectId, StoryFact.FactType.CHARACTER_STATE,
+                    oldSubject, existing.getName(), oldStateFacts, characterStateAssertion(existing), currentChapter);
+            if (state != null) written.add(state);
         }
-        if (patch.getMotivation() != null && !patch.getMotivation().isBlank()) {
-            written.add(writeHumanFact(projectId, StoryFact.FactType.CHARACTER_STATE,
-                    existing.getName(), "动机：" + patch.getMotivation(), currentChapter));
-        }
-        if (patch.getGrowthArc() != null && !patch.getGrowthArc().isBlank()) {
-            written.add(writeHumanFact(projectId, StoryFact.FactType.CHARACTER_STATE,
-                    existing.getName(), "成长弧：" + patch.getGrowthArc(), currentChapter));
-        }
-        if (patch.getRelationships() != null && !patch.getRelationships().isBlank()) {
-            written.add(writeHumanFact(projectId, StoryFact.FactType.RELATIONSHIP_STATE,
-                    existing.getName(), patch.getRelationships(), currentChapter));
+        if (renamed || patch.getRelationships() != null) {
+            StoryFact relationship = replaceOrRetire(projectId, StoryFact.FactType.RELATIONSHIP_STATE,
+                    oldSubject, existing.getName(), oldRelationshipFacts, existing.getRelationships(), currentChapter);
+            if (relationship != null) written.add(relationship);
         }
         bump(projectId);
         return new PatchResult(existing, written, true);
@@ -90,15 +93,18 @@ public class CanonPatchService {
         if (!projectId.equals(existing.getProjectId())) {
             throw new IllegalArgumentException("世界观条目不属于该项目: " + entryId);
         }
+        String oldSubject = existing.getName();
+        List<StoryFact> oldFacts = activeFacts(projectId, StoryFact.FactType.WORLD_RULE, oldSubject);
         existing.setType(patch.getType());
         if (patch.getName() != null) existing.setName(patch.getName());
         if (patch.getContent() != null) existing.setContent(patch.getContent());
         repository.saveKnowledgeEntry(existing);
 
         List<StoryFact> written = new ArrayList<>();
-        if (patch.getContent() != null && !patch.getContent().isBlank()) {
-            written.add(writeHumanFact(projectId, StoryFact.FactType.WORLD_RULE,
-                    existing.getName(), patch.getContent(), currentChapter));
+        if (!Objects.equals(oldSubject, existing.getName()) || patch.getContent() != null) {
+            StoryFact replacement = replaceOrRetire(projectId, StoryFact.FactType.WORLD_RULE,
+                    oldSubject, existing.getName(), oldFacts, existing.getContent(), currentChapter);
+            if (replacement != null) written.add(replacement);
         }
         bump(projectId);
         return new PatchResult(existing, written, true);
@@ -239,6 +245,41 @@ public class CanonPatchService {
     StoryFact writeHumanFact(String projectId, StoryFact.FactType type,
                              String subject, String assertion, int chapter) {
         return canon.applyHumanPatch(projectId, type, subject, assertion, chapter, 5);
+    }
+
+    private List<StoryFact> activeFacts(String projectId, StoryFact.FactType type, String subject) {
+        return canon.recall(projectId).stream()
+                .filter(f -> f.getFactType() == type && Objects.equals(subject, f.getSubject()))
+                .toList();
+    }
+
+    private StoryFact replaceOrRetire(String projectId, StoryFact.FactType type,
+                                      String oldSubject, String newSubject, List<StoryFact> oldFacts,
+                                      String assertion, int currentChapter) {
+        if (assertion == null || assertion.isBlank()) {
+            oldFacts.forEach(f -> canon.retire(projectId, f.getId()));
+            return null;
+        }
+        StoryFact newer = writeHumanFact(projectId, type, newSubject, assertion, currentChapter);
+        if (!Objects.equals(oldSubject, newSubject)) {
+            oldFacts.forEach(old -> canon.supersedeFact(old, newer));
+        }
+        return newer;
+    }
+
+    private String characterStateAssertion(Character character) {
+        List<String> parts = new ArrayList<>();
+        addFactPart(parts, "角色", character.getRole());
+        addFactPart(parts, "性格", character.getPersonality());
+        addFactPart(parts, "能力/境界", character.getAbility());
+        addFactPart(parts, "动机", character.getMotivation());
+        addFactPart(parts, "外貌", character.getAppearance());
+        addFactPart(parts, "成长弧", character.getGrowthArc());
+        return String.join("；", parts);
+    }
+
+    private void addFactPart(List<String> parts, String label, String value) {
+        if (value != null && !value.isBlank()) parts.add(label + "：" + value);
     }
 
     private void bump(String projectId) {

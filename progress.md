@@ -2,6 +2,48 @@
 
 ---
 
+## 会话记录（2026-09-02）：Phase 25 产品审计 E2E 测试先行
+
+**输入**：用户要求依据 `docs/audits/2026-09-02-product-design-consistency-audit.md`，先补充端到端测试用例，不提前修复产品问题。
+
+- 新增 spec：`docs/specs/2026-09-02-product-audit-browser-e2e.md`，登记并完成 p25-01。
+- 新增 `scripts/product-audit-e2e.sh`：真实启动 Spring 应用，使用隔离 SQLite、Scenario LLM 和 ego-browser；支持 `--list`、`--case`、默认严格模式与 `--expect-known-failures`。
+- 9 个场景覆盖：自动项目零干预、初始设定带意见重做、卷大纲带意见重做、独立章节重写、交互切自动、审核后阅读稳定性、多检查点对象安全、人工内容管理、移动端关键路径。
+- 浏览器红灯基线：**0 PASS / 9 XFAIL / 0 ERROR**；已知失败集合精确匹配时命令 exit 0。严格模式单跑 `auto-zero-intervention` 为 1 XFAIL、exit 1，确认不会把产品失败当成通过。
+- 具体失败证据：自动项目一次启动后停在 PLANNING；两类审核改写未改变内容；独立章节重写弹窗不关闭且版本不增；切自动仍保留暂停与检查点；批准章节后正文消失并持续 loading；多卡片拒绝命中最新卡而非所点卡；人工完整编辑/新增入口缺失；375px 标题宽约 71px，侧栏触发器和正文段落不可访问。
+- 常规基线：`./init.sh` PASS；481 tests / 0 failures / 0 errors / 1 skipped；前端生产构建通过。
+- 本轮未修改业务实现、Prompt、schema 或质量基线。后续修复每通过一个场景，需从 `KNOWN_FAILURES` 移除对应 ID；出现 XPASS 会主动使已知失败校验失败。
+
+---
+
+## 会话记录（2026-09-02）：页面功能与交互产品一致性审查
+
+**输入**：使用 ego-browser 全面检查自动/交互模式、世界观、人物、大纲、章节、审核、质量结果和响应式页面，并输出与产品设计不一致的文档。
+
+- 完成两类隔离项目的真实页面审查：自动模式项目、交互模式项目。
+- 确认 16 项产品不一致：P0 3 项、P1 8 项、P2 5 项；重点包括检查点改写未实际执行、独立章节重写无响应、交互切自动不续跑、自动模式不能端到端推进，以及人工内容管理能力不完整。
+- 审查报告：`docs/audits/2026-09-02-product-design-consistency-audit.md`。
+- 截图证据：`docs/audits/assets/2026-09-02-product-audit/`。
+- 既有 `browser-e2e.sh` 8/8 PASS；本次同时补充了现有套件未覆盖的审核后刷新、改写生效和模式切换场景。
+- 环境验证：`./init.sh` 通过，481 tests / 0 failures / 0 errors / 1 skipped，前端生产构建通过。
+- 本次只产出审查文档和证据，没有修改产品实现、Prompt、schema 或 feature 台账。
+
+---
+
+## 会话记录（2026-09-02）：Phase 24 文档状态一致性
+
+**输入**：用户要求“先把文档状态修复成一致”。
+
+- 新增 spec：`docs/specs/2026-09-02-documentation-state-sync.md`，登记 p24-01。
+- `AGENTS.md` 更新为当前规模：23 个 Agent/辅助职责类、27 个 Prompt、7 个题材预设、Phase 24 / 178 features、480+ 测试基线。
+- `session-handoff.md` 重写为单一 2026-09-02 当前状态；移除已完成的 p22/p23 待办和旧分支信息，历史过程继续保留在本文件。
+- 明确当前非阻塞观察项：质量分 baseline 未启用、无 Git remote、Orchestrator/ContextAssembler 复杂度热点、前端 bundle 体积警告。
+- 业务代码、Prompt、schema、质量基线均未修改。
+- 修改后验证：`jq empty feature_list.json` PASS；`mvn compile -q` PASS；`mvn test` **481 tests / 0 failures / 0 errors / 1 skipped，BUILD SUCCESS**。
+- p24-01 已更新为 completed；台账当前为 Phase 24、178/178 completed。
+
+---
+
 ## 会话记录（2026-08-31 续）：p23-06 金丝雀完成——29/29 全部收官
 
 **用户批准花费后执行 p23-06 真实 LLM 质量金丝雀**（p21-01 改动了 WUXIA 题材逻辑，触发条件成立）：

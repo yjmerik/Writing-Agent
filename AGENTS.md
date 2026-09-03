@@ -6,12 +6,12 @@
 ## 项目概述
 
 多 Agent 图架构的长篇小说自动写作系统：
-- **19 个 Agent**：7 个核心 Agent（WorldBuilder / CharacterDesigner / Plotter / ChapterWriter / ContinuityChecker / StyleGuardian / MemoryManager）+ 12 个辅助 Agent（EntityExtractor、Foreshadowing 三件套、QualityEvaluation、ReaderReview、SceneClassifier、ConsistencyGuard、ArcUpdater、CharacterProfileUpgrader、NarrativeThreadExtractor、WritingPreferences）
-- **三层记忆**：结构化知识库 + 滚动摘要 + 向量检索（ContextAssembler 按 TokenBudget 汇成 WritingContext，【故事原旨】永不裁剪）
-- **状态机编排**：CONCEIVING → PLANNING → WRITING → VOLUME_DONE → FINAL
-- **PromptTemplate 系统**：20 个外置 `.st` 模板 + 6 个题材预设（presets/），支持变量插值和条件块
-- **多模型路由**：按 `LlmTaskType`（8 种）路由到不同 LLM（当前：DeepSeek 为主 / 本地 qwen3-4b-wuxia 兜底 / GLM embedding-3 向量化）
-- **多样性与质量控制**：ClicheDetector、DiversityTracker、ClimaxDiversityTracker、ReaderReview 每章检验（score<7 自动重写，最多 1 次）
+- **23 个 Agent/辅助职责类**：7 个核心 Agent（WorldBuilder / CharacterDesigner / Plotter / ChapterWriter / ContinuityChecker / StyleGuardian / MemoryManager）+ 16 个辅助职责（原 12 个基础辅助 Agent，另含 FactHarvester、PassageEditor、PlotMotifTracker、RelationshipEvolutionTracker）
+- **多层长程记忆**：故事原旨 + StoryCanon 真典 + 全书快照/分层摘要 + 近期正文 + 向量检索 + 实体/线索/伏笔台账（ContextAssembler 按模型窗口预算汇成 WritingContext）
+- **状态机编排**：CONCEIVING → PLANNING → WRITING ↔ VOLUME_DONE → FINAL；另有 PAUSED_AT_CHECKPOINT 与 NEEDS_REVISION
+- **PromptTemplate 系统**：27 个外置 `.st` 模板 + 7 个题材预设（含 wuxia），支持变量插值和条件块
+- **多模型路由**：按 `LlmTaskType`（8 种）路由；当前 8 类任务均使用 DeepSeek v4-flash，DashScope text-embedding-v3 向量化，Scenario/RecordReplay 网关提供零成本确定性验证
+- **多样性与质量控制**：ConceiveGate / PlanGate / QualityCouncil / Arbiter + Continuity/Consistency/Reader/Style 检查，重写预算按项目配置（默认 1 次）
 
 设计文档：`docs/superpowers/specs/2026-07-10-novel-writing-system-design.md`
 
@@ -21,7 +21,7 @@ Before writing code:
 
 1. **Confirm working directory** with `pwd` — should be `/Users/erik/ZCodeProject/WritingAgent`
 2. **Read this file** completely
-3. **Read `feature_list.json`** — 查看当前优化进度（9 Phase × 50 features；Phase 9 为 harness 闭环设施）
+3. **Read `feature_list.json`** — 查看当前优化进度（当前 Phase 25，共 179 features；以文件内 `current_phase` 和状态汇总为准）
 4. **Run `./init.sh`** — 编译 + 测试验证环境健康
 5. **Review recent commits** with `git log --oneline -5`
 
@@ -61,7 +61,7 @@ If `mvn test` fails, repair baseline first before adding new scope.
 
 1. **Agent 间不直接调用** — 全部经 NovelOrchestrator 调度
 2. **Prompt 外置** — Agent 的 systemPrompt 必须用 `promptService.render(templateName, vars)`，不硬编码
-3. **SPI 分层** — 业务层只依赖 `NovelRepository` / `VectorStore` / `EmbeddingProvider` 接口
+3. **SPI 分层** — 业务层只依赖 `NovelRepository` / `StoryCanon` / `VectorStore` / `EmbeddingProvider` 接口
 4. **幂等性** — `runConceiving` 的各步骤已有幂等检查（查 DB 是否已有则跳过）
 5. **写作循环容错** — 单章失败不跳章（退避重试），空内容不入库（≥500字门槛）
 
@@ -71,7 +71,7 @@ A feature is done only when ALL of the following are true:
 
 - [ ] Target behavior is implemented
 - [ ] `mvn compile` passes without errors
-- [ ] `mvn test` passes (95+ tests, 0 failures)
+- [ ] `mvn test` passes (当前 480+ tests, 0 failures)
 - [ ] Feature 自带的 `verify_cmd` 通过（若有）
 - [ ] Evidence recorded in `feature_list.json`
 - [ ] If prompt changed: corresponding Agent test still passes
@@ -118,7 +118,7 @@ cd frontend && npm run build
 
 ## 可观测性设施
 
-- **结构化事件日志**: `data/logs/events.jsonl`（JSON Lines）。事件类型：`LLM_CALL` / `LLM_ERROR` / `CHAPTER_WRITTEN` / `CHAPTER_FAILED`。由 `telemetry/EventLog` 静态写入，`ObservedLlmGateway` 与 NovelOrchestrator 埋点
+- **结构化事件日志**: `data/logs/events.jsonl`（JSON Lines）。覆盖 LLM、章节、质量门禁、重写、熔断与 FINAL 审计等事件；由 `telemetry/EventLog` 写入，`ObservedLlmGateway` 与 NovelOrchestrator 埋点
 - **应用日志落盘**: `data/logs/app.log`（logback 滚动，14 天）
 - **LLM 录制/回放**: `llm.replay.mode` = `"off"`/`"record"`/`"replay"`（application.yml，off 必须带引号），fixture 存 `data/fixtures/llm/`，按任务类型与归一化 prompt 的 SHA-256 指纹命名（配置 JSON 的 `updatedAt` 不参与指纹）。装饰链：Observed → RecordReplay → Default
 
@@ -126,21 +126,21 @@ cd frontend && npm run build
 
 ```
 src/main/java/com/writing/novel/
-├── agent/           # 19 个 Agent + AgentConfig/AgentHarness + util/ResponseParser
+├── agent/           # 23 个 Agent/辅助职责类 + AgentConfig/AgentHarness + util/ResponseParser
 ├── config/          # PersistenceConfig, PersistenceProperties
-├── domain/          # 29 个领域模型/枚举 (Project, Chapter, Character, Foreshadowing, NarrativeThread, ...)
+├── domain/          # 35 个领域模型/枚举 (Project, Chapter, Character, StoryFact, WritingTask, ...)
 ├── llm/             # LlmGateway/DefaultLlmGateway, OpenAiCompatibleClient, PromptTemplateService, LlmTaskType
-├── memory/          # ContextAssembler, WritingContext, TokenBudget, 三层记忆服务
-├── orchestrator/    # NovelOrchestrator (状态机+Agent调度) + ProjectService
+├── memory/          # ContextAssembler, WritingContext, RelevanceGateway, TokenBudget, 分层记忆服务
+├── orchestrator/    # NovelOrchestrator + ChapterProduction/PostProcessor + OrchestratorPolicies
 ├── persistence/     # SqliteNovelRepository + EmbeddedVectorStore + EmbeddingProvider 实现
-├── service/         # 12 个业务服务 (ArcScheduler, ClicheDetector, DiversityTracker, EntityGraphService, PresetRegistry, ...)
-├── spi/             # NovelRepository, VectorStore, EmbeddingProvider, VectorSearchResult
-├── telemetry/       # EventLog (JSON Lines 事件日志), EventContext (ThreadLocal 上下文)
+├── service/         # 25 个业务模块 (Arbiter, ProjectWorkCoordinator, ArchiveCompactor, PresetRegistry, ...)
+├── spi/             # NovelRepository, StoryCanon, VectorStore, EmbeddingProvider, VectorSearchResult
+├── telemetry/       # EventLog, EventContext, CostBudgetMonitor
 ├── util/            # NameSanitizer
-└── web/             # 7 个 REST Controller + GlobalExceptionHandler
+└── web/             # 11 个 REST/SSE/SPA 入口与支持类
 src/main/resources/
-├── prompts/         # 20 个 .st 模板文件
-├── presets/         # 6 个题材预设 (cultivation/general/historical/mystery/romance/thriller)
+├── prompts/         # 27 个 .st 模板文件
+├── presets/         # 7 个题材预设 (cultivation/general/historical/mystery/romance/thriller/wuxia)
 ├── logback-spring.xml  # 日志落盘 data/logs/app.log
 └── application.yml  # 模型配置 (按 LlmTaskType 路由) + 持久化 + llm.replay 配置
 scripts/             # e2e.sh (端到端), diagnose.sh (诊断), compare-baseline.py (质量基线)
@@ -153,5 +153,5 @@ frontend/src/        # React + Ant Design 前端 (2 页面 + 6 组件 + api/clie
 
 - **Architecture decisions**: 参考 spec 文档或 `session-handoff.md`
 - **Prompt tuning**: 改 `.st` 文件后如果测试失败，检查模板变量名是否与 Agent 代码的 `Map.of(...)` 一致
-- **LLM API errors**: GLM-5.2 有 5 小时限额，DeepSeek 有余额限制。`application.yml` 中切换模型配置
+- **LLM API errors**: 当前写作任务走 DeepSeek v4-flash，embedding 走 DashScope；遇余额/限流先查 `data/logs/events.jsonl`，再在 `application.yml` 切换模型配置
 - **SQLite locked**: 单进程使用，避免多个 `write-all` 并发调用同一项目

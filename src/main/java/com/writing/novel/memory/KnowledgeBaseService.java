@@ -38,6 +38,24 @@ public class KnowledgeBaseService {
         invalidate(entry.getProjectId());
     }
 
+    /**
+     * Replace one project's worldbuilding as a coherent memory set.
+     * The database transaction completes before any vector is changed, so a rejected database
+     * candidate cannot remove the currently retrievable setup.
+     */
+    public void replaceEntries(String projectId, List<KnowledgeEntry> candidates) {
+        List<String> oldIds = repository.findKnowledgeEntriesByProject(projectId).stream()
+                .map(KnowledgeEntry::getId)
+                .toList();
+        repository.replaceKnowledgeEntries(projectId, candidates);
+        oldIds.forEach(vectorRetrieval::remove);
+        vectorRetrieval.indexBatch(candidates.stream()
+                .map(entry -> new IndexedText(entry.getId(), entry.getProjectId(),
+                        entry.getName() + "：" + entry.getContent(), "WORLDBUILDING"))
+                .toList());
+        invalidate(projectId);
+    }
+
     public List<KnowledgeEntry> findAllEntries(String projectId) {
         return repository.findKnowledgeEntriesByProject(projectId);
     }

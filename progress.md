@@ -2,6 +2,21 @@
 
 ---
 
+## 会话记录（2026-09-03）：Phase 26 p26-02 初始设定与卷大纲审核改写真正路由
+
+- `NovelOrchestrator.reviseCheckpoint(...)` 按 checkpoint 类型路由真实改写；返回目标、前后摘要及内容版本，且自身不改变 checkpoint 状态。Controller 只在候选校验和持久化成功后标记 `REJECTED`/`MODIFIED`，失败继续保持 `PENDING`。
+- `WorldBuilderAgent.propose(...)` 与 `PlotterAgent.proposeVolumeRevision(...)` 均先生成 detached candidate，不在解析阶段写库；显式审核的空/非法候选不再产生 fallback 占位。
+- 初始设定通过新增的最小 `replaceKnowledgeEntries` SPI 及 SQLite 单事务实现整体替换；卷大纲保存也以单事务提交。强制插入失败测试证明两条路径都会 rollback 并保留旧数据。数据库提交成功后，KnowledgeBaseService 才清旧向量、批量索引新条目并 bump memory revision；数据库失败不会提前改变向量。
+- 用户意见产生的新世界观同步进入 StoryCanon：仅 retire 本次被替换旧条目名称及其对应 WORLD_RULE/OBJECT_STATE，新候选以 HUMAN_PATCH 写成 ACTIVE；时代锚点和其他主体不受影响。
+- Controller 在改写和项目推进都成功后才处理 checkpoint；候选/持久化或推进失败均留下 `PENDING`，reject/modify 成功响应均带 `revision`。
+- 卷大纲仅替换 `project.currentChapterIndex` 之后且章号集合完整匹配的候选，已写章节的 ID、标题、内容和项目边界保持不变。
+- TDD RED：focused 首跑缺少 `reviseCheckpoint`/`replaceKnowledgeEntries`；加入 Agent 零写入测试后共 7 个 missing symbol；知识库一致性测试先缺 `replaceEntries`（2 errors），canon/controller 闭环测试先缺 `resumeAfterCheckpointRevision`（2 errors）。GREEN：focused/Agent/controller/KB **20 tests**，checkpoint/Scenario/StoryCanon 回归 **13 tests**，均 0 failures/errors。
+- strict 浏览器：`initial-setup-modify`、`volume-outline-modify` 各 **1 PASS / 0 XFAIL / 0 ERROR**；仅从 `KNOWN_FAILURES` 删除这两项。
+- 默认 E2E 首跑因最新 wuxia fixture 与默认 mystery 请求指纹不匹配而 fail-fast；diagnose 为 **1 LLM_ERROR / 0 calls**。按批准指定匹配的 `canary-mystery-20260831` fixture 后为 **3 章 / 10,191 字 / 54 LLM calls / 0 errors / 0 chapter failures**，`compare-baseline.py` PASS。
+- 完整验证：`mvn compile` PASS；`mvn test` 和 `./init.sh` 均为 **497 tests / 0 failures / 0 errors / 1 skipped**；init 另确认 27 个 prompt 完整与前端生产构建通过。
+
+---
+
 ## 会话记录（2026-09-03）：Phase 26 p26-01 Checkpoint 目标归属与状态校验
 
 - 新增 `CheckpointTargetService` 作为审核操作的唯一验证边界：checkpoint 不存在抛参数错误；项目归属不符或状态非 `PENDING` 抛状态错误（HTTP 409）。

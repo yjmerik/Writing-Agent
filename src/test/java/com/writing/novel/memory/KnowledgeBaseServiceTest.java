@@ -11,7 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.Statement;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -21,12 +24,14 @@ class KnowledgeBaseServiceTest {
     Path tempDir;
     private KnowledgeBaseService service;
     private SqliteNovelRepository repo;
+    private ConnectionProvider connectionProvider;
+    private MemoryRevision memoryRevision;
 
     @BeforeEach
     void setUp() {
-        ConnectionProvider cp = new ConnectionProvider(tempDir.resolve("kb.db").toString());
-        new SqliteSchemaInitializer(cp).initialize();
-        repo = new SqliteNovelRepository(cp);
+        connectionProvider = new ConnectionProvider(tempDir.resolve("kb.db").toString());
+        new SqliteSchemaInitializer(connectionProvider).initialize();
+        repo = new SqliteNovelRepository(connectionProvider);
 
         EmbeddingProvider emb = new EmbeddingProvider() {
             @Override public float[] embed(String text) { return new float[]{1.0f}; }
@@ -34,7 +39,8 @@ class KnowledgeBaseServiceTest {
         };
         var store = new com.writing.novel.persistence.embedding.EmbeddedVectorStore(
                 tempDir.resolve("kb.idx").toString());
-        service = new KnowledgeBaseService(repo, new VectorRetrievalService(store, emb));
+        memoryRevision = new MemoryRevision();
+        service = new KnowledgeBaseService(repo, new VectorRetrievalService(store, emb), memoryRevision);
     }
 
     @Test
@@ -70,6 +76,45 @@ class KnowledgeBaseServiceTest {
         String indexed = service.getIndexedText(entry.getId());
         assertNotNull(indexed);
         assertTrue(indexed.contains("青云宗"));
+    }
+
+    @Test
+    void 整体替换知识时先提交数据库_再清旧向量并批量索引新条目() {
+        KnowledgeEntry old = new KnowledgeEntry("p1", "POWER_SYSTEM", "九境灵气", "修士可飞升");
+        service.saveEntry(old);
+        long beforeRevision = memoryRevision.current("p1");
+        KnowledgeEntry history = new KnowledgeEntry("p1", "HISTORY", "永熙年间", "低魔王朝末年");
+        KnowledgeEntry rule = new KnowledgeEntry("p1", "RULE", "方术限制", "只能辨迹寻物");
+
+        service.replaceEntries("p1", List.of(history, rule));
+
+        assertNull(service.getIndexedText(old.getId()));
+        assertTrue(service.getIndexedText(history.getId()).contains("永熙年间"));
+        assertTrue(service.getIndexedText(rule.getId()).contains("方术限制"));
+        assertEquals(Set.of(history.getId(), rule.getId()), repo.findKnowledgeEntriesByProject("p1").stream()
+                .map(KnowledgeEntry::getId).collect(java.util.stream.Collectors.toSet()));
+        assertEquals(beforeRevision + 1, memoryRevision.current("p1"));
+    }
+
+    @Test
+    void 数据库整体替换失败时不提前改变向量索引() throws Exception {
+        KnowledgeEntry old = new KnowledgeEntry("p1", "RULE", "旧规则", "原内容");
+        service.saveEntry(old);
+        KnowledgeEntry replacement = new KnowledgeEntry("p1", "RULE", "触发失败", "不得落库");
+        try (Connection connection = connectionProvider.getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.execute("CREATE TRIGGER abort_kb_replace BEFORE INSERT ON knowledge_entries "
+                    + "WHEN NEW.name = '触发失败' BEGIN SELECT RAISE(ABORT, 'forced failure'); END");
+        }
+        long beforeRevision = memoryRevision.current("p1");
+
+        assertThrows(RuntimeException.class,
+                () -> service.replaceEntries("p1", List.of(replacement)));
+
+        assertNotNull(service.getIndexedText(old.getId()));
+        assertNull(service.getIndexedText(replacement.getId()));
+        assertEquals("原内容", repo.findKnowledgeEntriesByProject("p1").get(0).getContent());
+        assertEquals(beforeRevision, memoryRevision.current("p1"));
     }
 
     @Test

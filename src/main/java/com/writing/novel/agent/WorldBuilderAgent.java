@@ -10,6 +10,7 @@ import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.memory.KnowledgeBaseService;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,13 +34,34 @@ public class WorldBuilderAgent {
     }
 
     public Worldbuilding build(String projectId, String concept, String tags, String diversityGuide) {
+        Worldbuilding wb = propose(projectId, concept, tags, diversityGuide, "");
+
+        // 普通构思保留占位兜底；显式审核修订调用 propose，由编排器拒绝空候选。
+        if (wb.getEntries().isEmpty()) {
+            wb.addEntry(new KnowledgeEntry(projectId, "CUSTOM",
+                    "基础设定", concept + "（系统自动生成的占位设定，请重新运行构思以获得完整世界观）"));
+        }
+        for (KnowledgeEntry entry : wb.getEntries()) {
+            knowledgeBase.saveEntry(entry);
+        }
+        return wb;
+    }
+
+    /**
+     * 生成 detached 世界观候选；解析和重试期间不写知识库。
+     * 显式审核修订会把用户意见附在请求中，并在候选校验通过后由编排器一次性替换。
+     */
+    public Worldbuilding propose(String projectId, String concept, String tags, String diversityGuide,
+                                 String instructions) {
         String systemPrompt = promptService.render("worldbuilding", Map.of(
                 "concept", concept, "tags", tags,
                 "styleGuide", "",
                 "diversityGuide", diversityGuide != null ? diversityGuide : ""));
 
         String userMessage = "构思：" + concept + "\n类型标签：" + tags
-                + "\n请生成 5-8 条世界观设定。";
+                + "\n请生成 5-8 条世界观设定。"
+                + (instructions == null || instructions.isBlank()
+                ? "" : "\n【用户修改意见】" + instructions.trim());
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.WORLDBUILDING)
@@ -59,15 +81,12 @@ public class WorldBuilderAgent {
             wb = parseWorldbuilding(resp.getContent(), projectId);
         }
 
-        // 仍为空时 fallback：至少生成 1 条基础条目
-        if (wb.getEntries().isEmpty()) {
-            KnowledgeEntry fallback = new KnowledgeEntry(projectId, "CUSTOM",
-                    "基础设定", concept + "（系统自动生成的占位设定，请重新运行构思以获得完整世界观）");
-            wb.addEntry(fallback);
-            knowledgeBase.saveEntry(fallback);
-        }
-
         return wb;
+    }
+
+    /** Commit an already validated setup candidate through the knowledge-memory consistency boundary. */
+    public void replaceEntries(String projectId, List<KnowledgeEntry> entries) {
+        knowledgeBase.replaceEntries(projectId, entries);
     }
 
     private Worldbuilding parseWorldbuilding(String content, String projectId) {
@@ -76,7 +95,6 @@ public class WorldBuilderAgent {
             KnowledgeEntry entry = new KnowledgeEntry(projectId,
                     normalizeType(pe.type()), pe.name(), pe.content());
             wb.addEntry(entry);
-            knowledgeBase.saveEntry(entry);
         }
         return wb;
     }

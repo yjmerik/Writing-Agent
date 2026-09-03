@@ -44,6 +44,7 @@ public class TestNovelRepositoryStub implements NovelRepository {
     @Override public List<Project> findAllProjects() { return List.of(); }
     @Override public void deleteProject(String id) {}
     @Override public void saveKnowledgeEntry(KnowledgeEntry e) {}
+    @Override public void replaceKnowledgeEntries(String projectId, List<KnowledgeEntry> entries) {}
     @Override public List<KnowledgeEntry> findKnowledgeEntriesByProject(String p) { return List.of(); }
     @Override public Optional<KnowledgeEntry> findKnowledgeEntry(String id) { return Optional.empty(); }
     @Override public List<KnowledgeEntry> findKnowledgeEntriesByType(String p, String t) { return List.of(); }

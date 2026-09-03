@@ -70,7 +70,15 @@ public class ScenarioLlmGateway implements LlmGateway {
         int chapter = chapterOf(req);
         int n = seq(type.name());
         String content = switch (type) {
-            case WORLDBUILDING -> """
+            case WORLDBUILDING -> req.getUserMessage().contains("【用户修改意见】")
+                    ? """
+                    【地理】北境三州%03d：故事发生在严寒边镇，驿路与关城决定信息流动。
+                    【历史】永熙年间%03d：王朝末年，旧案与边军粮册牵动朝局。
+                    【势力】巡检司%03d：依律查案的地方衙门，与豪强彼此牵制。
+                    【文化】乡约礼俗%03d：宗族与保甲共同维持地方秩序。
+                    【规则】方术限制%03d：只能辨迹寻物，不能飞升或凭空杀人。
+                    """.formatted(n, n, n, n, n)
+                    : """
                     【地理】场景大陆%03d：故事发生的主大陆，地貌自西向东为山地、平原、海岸。
                     【力量体系】武学体系%03d：修炼体系，境界有明确层级，突破需际遇支撑。
                     【势力】%03d号门派：江湖势力，与主角亦敌亦友。

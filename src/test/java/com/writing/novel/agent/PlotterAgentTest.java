@@ -1,6 +1,7 @@
 package com.writing.novel.agent;
 
 import com.writing.novel.domain.Outline;
+import com.writing.novel.domain.ChapterSynopsis;
 import com.writing.novel.domain.Volume;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
@@ -8,9 +9,43 @@ import com.writing.novel.llm.LlmResponse;
 import com.writing.novel.llm.client.StreamHandler;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class PlotterAgentTest {
+
+    @Test
+    void proposeVolumeRevisionIncludesInstructionsWithoutPersistingCandidate() {
+        class RecordingGateway implements LlmGateway {
+            LlmRequest request;
+            @Override public LlmResponse complete(LlmRequest request) {
+                this.request = request;
+                return new LlmResponse("""
+                        第2章 账册失踪：场景节拍：盘点→追查。人物：主角。目的：查案。张力：7。
+                        第3章 夜访证人：场景节拍：跟踪→问证。人物：主角。目的：取证。张力：8。
+                        """, 10, 10);
+            }
+            @Override public void streamComplete(LlmRequest request, StreamHandler handler) { }
+        }
+        AtomicInteger saves = new AtomicInteger();
+        var repository = new TestNovelRepositoryStub() {
+            @Override public void saveOutline(Outline outline) { saves.incrementAndGet(); }
+        };
+        RecordingGateway gateway = new RecordingGateway();
+        PlotterAgent agent = new PlotterAgent(gateway, repository, TestPromptHelper.create());
+        Volume source = new Volume("proj-1", 1, "旧卷", "旧梗概");
+        source.addSynopsis(new ChapterSynopsis("proj-1", 1, "旧一", "已写"));
+        source.addSynopsis(new ChapterSynopsis("proj-1", 2, "旧二", "未写二"));
+        source.addSynopsis(new ChapterSynopsis("proj-1", 3, "旧三", "未写三"));
+
+        Volume candidate = agent.proposeVolumeRevision(
+                "proj-1", "全书总纲", source, 1, "把第二章改为调查账册失踪案");
+
+        assertEquals(2, candidate.getSynopses().size());
+        assertTrue(gateway.request.getUserMessage().contains("把第二章改为调查账册失踪案"));
+        assertEquals(0, saves.get(), "candidate generation must not persist before validation");
+    }
 
     @Test
     void 生成全书大纲与卷() {

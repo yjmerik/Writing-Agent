@@ -36,6 +36,8 @@ public interface NovelRepository {
 
     // --- Worldbuilding / KnowledgeEntry ---
     void saveKnowledgeEntry(KnowledgeEntry entry);
+    /** Atomically replace all worldbuilding entries for one project. */
+    void replaceKnowledgeEntries(String projectId, List<KnowledgeEntry> entries);
     List<KnowledgeEntry> findKnowledgeEntriesByProject(String projectId);
     Optional<KnowledgeEntry> findKnowledgeEntry(String id);
     List<KnowledgeEntry> findKnowledgeEntriesByType(String projectId, String type);

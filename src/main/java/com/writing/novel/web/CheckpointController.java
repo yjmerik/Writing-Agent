@@ -52,19 +52,15 @@ public class CheckpointController {
         var cp = checkpointTargetService.requirePending(id, checkpointId);
         String instructions = body.getOrDefault("instructions", "");
 
-        // 如果是 AFTER_CHAPTER 类型，重写当前章节
-        if (cp.getType() == Checkpoint.Type.AFTER_CHAPTER) {
-            var project = repository.findProject(id).orElseThrow();
-            int chapterIndex = project.getCurrentChapterIndex();
-            orchestrator.rewriteChapter(id, chapterIndex, instructions);
-        }
+        // 先完成并持久化对应目标的改写；失败时下面的 checkpoint 状态变更不会执行。
+        var revision = orchestrator.reviseCheckpoint(id, cp, instructions);
 
         cp.reject();
         repository.saveCheckpoint(cp);
 
         // 重新进入 PAUSED_AT_CHECKPOINT 等待再次审核
         return Map.of("status", "rejected", "checkpointId", checkpointId,
-                "instructions", instructions);
+                "instructions", instructions, "revision", revision);
     }
 
     /**
@@ -77,18 +73,15 @@ public class CheckpointController {
         var cp = checkpointTargetService.requirePending(id, checkpointId);
         String instructions = body.getOrDefault("instructions", "");
 
-        // 如果是 AFTER_CHAPTER，先重写再批准
-        if (cp.getType() == Checkpoint.Type.AFTER_CHAPTER && !instructions.isBlank()) {
-            var project = repository.findProject(id).orElseThrow();
-            int chapterIndex = project.getCurrentChapterIndex();
-            orchestrator.rewriteChapter(id, chapterIndex, instructions);
-        }
+        // 先完成并持久化对应目标的改写；失败时下面的 checkpoint 状态变更不会执行。
+        var revision = orchestrator.reviseCheckpoint(id, cp, instructions);
 
+        // 项目推进成功后才处理 checkpoint；推进异常仍保留 PENDING，便于用户重试。
+        orchestrator.resumeAfterCheckpointRevision(id, cp);
         cp.modify();
         repository.saveCheckpoint(cp);
-        orchestrator.step(id);
 
         return Map.of("status", "modified", "checkpointId", checkpointId,
-                "instructions", instructions);
+                "instructions", instructions, "revision", revision);
     }
 }

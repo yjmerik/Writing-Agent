@@ -25,8 +25,6 @@ CASES=(
 # 测试先行基线：修复某项后，必须从此数组移除对应 ID；XPASS 会使校验失败。
 KNOWN_FAILURES=(
   auto-zero-intervention
-  initial-setup-modify
-  volume-outline-modify
   standalone-chapter-rewrite
   interactive-to-auto
   approve-keeps-chapter-visible

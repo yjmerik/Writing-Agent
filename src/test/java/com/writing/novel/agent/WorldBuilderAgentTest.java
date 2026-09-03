@@ -10,10 +10,36 @@ import com.writing.novel.memory.KnowledgeBaseService;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class WorldBuilderAgentTest {
+
+    @Test
+    void proposeIncludesRevisionInstructionsWithoutPersistingCandidate() {
+        class RecordingGateway implements LlmGateway {
+            LlmRequest request;
+            @Override public LlmResponse complete(LlmRequest request) {
+                this.request = request;
+                return new LlmResponse("【历史】永熙年间：低魔王朝末年。", 10, 10);
+            }
+            @Override public void streamComplete(LlmRequest request, StreamHandler handler) { }
+        }
+        RecordingGateway gateway = new RecordingGateway();
+        AtomicInteger saves = new AtomicInteger();
+        KnowledgeBaseService knowledgeBase = new KnowledgeBaseService(null, null) {
+            @Override public void saveEntry(KnowledgeEntry entry) { saves.incrementAndGet(); }
+        };
+        WorldBuilderAgent agent = new WorldBuilderAgent(gateway, knowledgeBase, TestPromptHelper.create());
+
+        Worldbuilding candidate = agent.propose(
+                "proj-1", "旧构思", "玄幻", "", "改成低魔历史题材");
+
+        assertEquals(1, candidate.getEntries().size());
+        assertTrue(gateway.request.getUserMessage().contains("改成低魔历史题材"));
+        assertEquals(0, saves.get(), "candidate generation must not persist before validation");
+    }
 
     @Test
     void 从构思生成世界观条目() {

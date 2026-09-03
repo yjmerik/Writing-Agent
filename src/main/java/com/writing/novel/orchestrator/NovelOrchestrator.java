@@ -278,11 +278,7 @@ public class NovelOrchestrator {
 
             // 1. 世界观条目 → WORLD_RULE（POWER_SYSTEM/RULE/FACTION/HISTORY/CUSTOM）/ OBJECT_STATE（ITEM）
             for (var entry : repository.findKnowledgeEntriesByProject(projectId)) {
-                StoryFact.FactType type = switch (entry.getType() == null ? "" : entry.getType()) {
-                    case "POWER_SYSTEM", "RULE", "FACTION", "HISTORY", "CUSTOM" -> StoryFact.FactType.WORLD_RULE;
-                    case "ITEM" -> StoryFact.FactType.OBJECT_STATE;
-                    default -> null;
-                };
+                StoryFact.FactType type = storyFactType(entry);
                 if (type != null) {
                     seeded += saveFactIfAbsent(projectId, type, entry.getName(),
                             entry.getName() + "：" + entry.getContent(),
@@ -325,6 +321,14 @@ public class NovelOrchestrator {
         StoryFact f = new StoryFact(projectId, type, subject, assertion, 1);
         f.setImportance(importance);
         return storyCanon.saveIfAbsent(f) ? 1 : 0;
+    }
+
+    private StoryFact.FactType storyFactType(KnowledgeEntry entry) {
+        return switch (entry.getType() == null ? "" : entry.getType()) {
+            case "POWER_SYSTEM", "RULE", "FACTION", "HISTORY", "CUSTOM" -> StoryFact.FactType.WORLD_RULE;
+            case "ITEM" -> StoryFact.FactType.OBJECT_STATE;
+            default -> null;
+        };
     }
 
     private void doConceiving(String projectId) {
@@ -674,6 +678,222 @@ public class NovelOrchestrator {
         repository.saveProject(p);
     }
 
+    /** Result returned to checkpoint review clients after the target content has been replaced. */
+    public record CheckpointRevisionResult(String targetType, String beforeSummary, String afterSummary,
+                                           int beforeVersion, int afterVersion) {}
+
+    /**
+     * Route a pending checkpoint to its real revision target. This method deliberately does not
+     * change checkpoint status; the controller handles it only after content persistence succeeds.
+     */
+    public CheckpointRevisionResult reviseCheckpoint(String projectId, Checkpoint checkpoint,
+                                                     String instructions) {
+        if (checkpoint == null || !projectId.equals(checkpoint.getProjectId())) {
+            throw new IllegalStateException("Checkpoint 不属于当前项目");
+        }
+        if (checkpoint.getStatus() != Checkpoint.Status.PENDING) {
+            throw new IllegalStateException("Checkpoint 已处理");
+        }
+        if (instructions == null || instructions.isBlank()) {
+            throw new IllegalArgumentException("修改意见不能为空");
+        }
+        return switch (checkpoint.getType()) {
+            case AFTER_INITIAL_SETUP -> reviseInitialSetup(projectId, instructions);
+            case AFTER_VOLUME_OUTLINE -> reviseVolumeOutline(projectId, checkpoint, instructions);
+            case AFTER_CHAPTER -> reviseCheckpointChapter(projectId, instructions);
+            case ON_CONTINUITY_FIX -> throw new IllegalArgumentException("当前 checkpoint 不支持内容改写");
+        };
+    }
+
+    private CheckpointRevisionResult reviseInitialSetup(String projectId, String instructions) {
+        if (worldBuilder == null) throw new IllegalStateException("WorldBuilder 未配置");
+        Project project = loadProject(projectId);
+        List<KnowledgeEntry> beforeEntries = repository.findKnowledgeEntriesByProject(projectId);
+        String before = canonicalWorld(beforeEntries);
+
+        Worldbuilding candidate = worldBuilder.propose(projectId,
+                project.getConcept() != null ? project.getConcept() : "",
+                project.getTags() != null ? project.getTags() : "", "", instructions);
+        validateWorldCandidate(projectId, candidate);
+        String after = canonicalWorld(candidate.getEntries());
+        requireChanged(before, after, "世界观候选未产生有效变化");
+
+        worldBuilder.replaceEntries(projectId, List.copyOf(candidate.getEntries()));
+        replaceWorldCanon(projectId, beforeEntries, candidate.getEntries(), project.getCurrentChapterIndex());
+        if (contextAssembler != null) contextAssembler.invalidateProject(projectId);
+        return revisionResult("INITIAL_SETUP", before, after);
+    }
+
+    private void replaceWorldCanon(String projectId, List<KnowledgeEntry> oldEntries,
+                                   List<KnowledgeEntry> candidates, int currentChapterIndex) {
+        if (storyCanon == null) return;
+        for (KnowledgeEntry oldEntry : oldEntries) {
+            StoryFact.FactType type = storyFactType(oldEntry);
+            if (type == null) continue;
+            storyCanon.recallBySubject(projectId, oldEntry.getName()).stream()
+                    .filter(fact -> fact.getFactType() == type)
+                    .toList()
+                    .forEach(fact -> storyCanon.retire(projectId, fact.getId()));
+        }
+        for (KnowledgeEntry candidate : candidates) {
+            StoryFact.FactType type = storyFactType(candidate);
+            if (type == null) continue;
+            storyCanon.applyHumanPatch(projectId, type, candidate.getName(),
+                    candidate.getName() + "：" + candidate.getContent(), currentChapterIndex,
+                    type == StoryFact.FactType.WORLD_RULE ? 4 : 3);
+        }
+    }
+
+    private CheckpointRevisionResult reviseVolumeOutline(String projectId, Checkpoint checkpoint,
+                                                         String instructions) {
+        if (plotter == null) throw new IllegalStateException("Plotter 未配置");
+        Project project = loadProject(projectId);
+        Outline outline = repository.findOutlineByProject(projectId)
+                .orElseThrow(() -> new IllegalStateException("无大纲"));
+        Volume target = findCheckpointVolume(outline, checkpoint, project.getCurrentChapterIndex());
+        String before = canonicalVolume(target);
+
+        Volume candidate = plotter.proposeVolumeRevision(projectId, outline.getPremise(), target,
+                project.getCurrentChapterIndex(), instructions);
+        validateVolumeCandidate(target, candidate, project.getCurrentChapterIndex());
+
+        target.getSynopses().removeIf(s -> s.getChapterIndex() > project.getCurrentChapterIndex());
+        target.getSynopses().addAll(candidate.getSynopses());
+        target.getSynopses().sort(java.util.Comparator.comparingInt(ChapterSynopsis::getChapterIndex));
+        String after = canonicalVolume(target);
+        requireChanged(before, after, "卷大纲候选未产生有效变化");
+
+        repository.saveOutline(outline);
+        if (contextAssembler != null) contextAssembler.invalidateProject(projectId);
+        return revisionResult("VOLUME_OUTLINE", before, after);
+    }
+
+    private CheckpointRevisionResult reviseCheckpointChapter(String projectId, String instructions) {
+        Project project = loadProject(projectId);
+        Chapter beforeChapter = repository.findChapterByIndex(projectId, project.getCurrentChapterIndex())
+                .orElseThrow(() -> new IllegalArgumentException("章节不存在: " + project.getCurrentChapterIndex()));
+        String before = canonicalChapter(beforeChapter);
+        int beforeVersion = beforeChapter.getVersion();
+
+        rewriteChapter(projectId, project.getCurrentChapterIndex(), instructions);
+        Chapter afterChapter = repository.findChapterByIndex(projectId, project.getCurrentChapterIndex())
+                .orElseThrow(() -> new IllegalStateException("章节重写后不存在"));
+        String after = canonicalChapter(afterChapter);
+        if (before.equals(after) || afterChapter.getVersion() <= beforeVersion) {
+            throw new IllegalStateException("章节改写未产生有效变化");
+        }
+        return new CheckpointRevisionResult("CHAPTER", displaySummary(before), displaySummary(after),
+                beforeVersion, afterChapter.getVersion());
+    }
+
+    private Volume findCheckpointVolume(Outline outline, Checkpoint checkpoint, int writtenBoundary) {
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("卷\\s*(\\d+)")
+                .matcher(checkpoint.getDescription() != null ? checkpoint.getDescription() : "");
+        if (matcher.find()) {
+            int volumeIndex = Integer.parseInt(matcher.group(1));
+            return outline.getVolumes().stream()
+                    .filter(volume -> volume.getVolumeIndex() == volumeIndex)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("大纲中无审核目标卷: " + volumeIndex));
+        }
+        return outline.getVolumes().stream()
+                .filter(volume -> volume.getSynopses().stream()
+                        .anyMatch(synopsis -> synopsis.getChapterIndex() > writtenBoundary))
+                .max(java.util.Comparator.comparingInt(Volume::getVolumeIndex))
+                .orElseThrow(() -> new IllegalStateException("无可修订的未写卷大纲"));
+    }
+
+    private void validateWorldCandidate(String projectId, Worldbuilding candidate) {
+        if (candidate == null || candidate.getEntries().isEmpty()) {
+            throw new IllegalStateException("WorldBuilder 返回空候选");
+        }
+        java.util.Set<String> keys = new java.util.HashSet<>();
+        for (KnowledgeEntry entry : candidate.getEntries()) {
+            if (entry == null || !projectId.equals(entry.getProjectId())
+                    || isBlank(entry.getType()) || isBlank(entry.getName()) || isBlank(entry.getContent())) {
+                throw new IllegalStateException("WorldBuilder 返回非法候选");
+            }
+            if (!keys.add(entry.getType() + "\u0000" + entry.getName())) {
+                throw new IllegalStateException("WorldBuilder 候选含重复条目: " + entry.getName());
+            }
+        }
+    }
+
+    private void validateVolumeCandidate(Volume source, Volume candidate, int writtenBoundary) {
+        if (candidate == null || candidate.getSynopses().isEmpty()) {
+            throw new IllegalStateException("Plotter 返回空卷大纲候选");
+        }
+        java.util.Set<Integer> expected = source.getSynopses().stream()
+                .map(ChapterSynopsis::getChapterIndex)
+                .filter(index -> index > writtenBoundary)
+                .collect(java.util.stream.Collectors.toCollection(java.util.TreeSet::new));
+        java.util.Set<Integer> actual = new java.util.TreeSet<>();
+        for (ChapterSynopsis synopsis : candidate.getSynopses()) {
+            if (synopsis == null || synopsis.getChapterIndex() <= writtenBoundary
+                    || isBlank(synopsis.getTitle()) || isBlank(synopsis.getSynopsis())
+                    || !actual.add(synopsis.getChapterIndex())) {
+                throw new IllegalStateException("Plotter 返回非法卷大纲候选");
+            }
+        }
+        if (expected.isEmpty() || !expected.equals(actual)) {
+            throw new IllegalStateException("Plotter 候选章号必须完整匹配未写范围: " + expected);
+        }
+    }
+
+    private CheckpointRevisionResult revisionResult(String targetType, String before, String after) {
+        return new CheckpointRevisionResult(targetType, displaySummary(before), displaySummary(after),
+                contentVersion(before), contentVersion(after));
+    }
+
+    private String canonicalWorld(List<KnowledgeEntry> entries) {
+        return entries.stream()
+                .sorted(java.util.Comparator.comparing(KnowledgeEntry::getType)
+                        .thenComparing(KnowledgeEntry::getName)
+                        .thenComparing(KnowledgeEntry::getContent))
+                .map(entry -> entry.getType() + "|" + entry.getName() + "|" + entry.getContent())
+                .collect(java.util.stream.Collectors.joining("\n"));
+    }
+
+    private String canonicalVolume(Volume volume) {
+        String chapters = volume.getSynopses().stream()
+                .sorted(java.util.Comparator.comparingInt(ChapterSynopsis::getChapterIndex))
+                .map(s -> s.getChapterIndex() + "|" + s.getTitle() + "|" + s.getSynopsis()
+                        + "|" + safe(s.getWritingNotes()) + "|" + safe(s.getBeats())
+                        + "|" + safe(s.getClimax()) + "|" + safe(s.getCast())
+                        + "|" + safe(s.getPlotPurpose()) + "|" + s.getTensionLevel())
+                .collect(java.util.stream.Collectors.joining("\n"));
+        return volume.getVolumeIndex() + "|" + safe(volume.getTitle()) + "|"
+                + safe(volume.getSummary()) + "\n" + chapters;
+    }
+
+    private String canonicalChapter(Chapter chapter) {
+        return chapter.getChapterIndex() + "|" + safe(chapter.getTitle()) + "|" + safe(chapter.getContent());
+    }
+
+    private void requireChanged(String before, String after, String message) {
+        if (before.equals(after)) throw new IllegalStateException(message);
+    }
+
+    private String displaySummary(String canonical) {
+        int limit = 600;
+        String text = canonical.length() <= limit ? canonical : canonical.substring(0, limit) + "…";
+        return text + " [v" + Integer.toUnsignedString(contentVersion(canonical)) + "]";
+    }
+
+    private int contentVersion(String canonical) {
+        java.util.zip.CRC32 crc = new java.util.zip.CRC32();
+        crc.update(canonical.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        return (int) crc.getValue();
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value;
+    }
+
     /** 从当前状态推进一步 */
     public void step(String projectId) {
         Project p = loadProject(projectId);
@@ -685,6 +905,26 @@ public class NovelOrchestrator {
             case VOLUME_DONE -> startNextVolumeOrFinish(projectId);
             default -> throw new IllegalStateException("无法从状态推进: " + p.getState());
         }
+    }
+
+    /**
+     * Advance the project for a successfully revised checkpoint without handling that checkpoint.
+     * This lets the controller persist MODIFIED only after project advancement succeeds.
+     */
+    public void resumeAfterCheckpointRevision(String projectId, Checkpoint checkpoint) {
+        if (checkpoint == null || !projectId.equals(checkpoint.getProjectId())
+                || checkpoint.getStatus() != Checkpoint.Status.PENDING) {
+            throw new IllegalStateException("Checkpoint 不是当前项目的待处理项");
+        }
+        Project project = loadProject(projectId);
+        boolean hasOtherPending = repository.findPendingCheckpoints(projectId).stream()
+                .anyMatch(pending -> !pending.getId().equals(checkpoint.getId()));
+        NovelState target = hasOtherPending ? NovelState.PAUSED_AT_CHECKPOINT : switch (checkpoint.getType()) {
+            case AFTER_INITIAL_SETUP, AFTER_VOLUME_OUTLINE -> NovelState.PLANNING;
+            case AFTER_CHAPTER, ON_CONTINUITY_FIX -> NovelState.WRITING;
+        };
+        project.setState(target);
+        repository.saveProject(project);
     }
 
     public void pause(String projectId) {

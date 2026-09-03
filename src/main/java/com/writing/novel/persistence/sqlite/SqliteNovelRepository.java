@@ -165,17 +165,62 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public void saveKnowledgeEntry(KnowledgeEntry e) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = knowledgeEntryStatement(conn)) {
+            bindKnowledgeEntry(ps, e);
+            ps.executeUpdate();
+        } catch (SQLException ex) { throw new RuntimeException(ex); }
+    }
+
+    /** p26-02: explicit setup revision is all-or-nothing; a failed candidate insert restores the old set. */
+    @Override
+    public void replaceKnowledgeEntries(String projectId, List<KnowledgeEntry> entries) {
+        java.util.Objects.requireNonNull(projectId, "projectId");
+        java.util.Objects.requireNonNull(entries, "entries");
+        for (KnowledgeEntry entry : entries) {
+            if (entry == null || !projectId.equals(entry.getProjectId())) {
+                throw new IllegalArgumentException("世界观候选不属于项目: " + projectId);
+            }
+        }
+        try (Connection conn = cp.getConnection()) {
+            boolean oldAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement delete = conn.prepareStatement(
+                        "DELETE FROM knowledge_entries WHERE project_id=?")) {
+                    delete.setString(1, projectId);
+                    delete.executeUpdate();
+                }
+                try (PreparedStatement insert = knowledgeEntryStatement(conn)) {
+                    for (KnowledgeEntry entry : entries) {
+                        bindKnowledgeEntry(insert, entry);
+                        insert.executeUpdate();
+                    }
+                }
+                conn.commit();
+            } catch (SQLException | RuntimeException e) {
+                try { conn.rollback(); } catch (SQLException rollbackFailure) { e.addSuppressed(rollbackFailure); }
+                throw e;
+            } finally {
+                conn.setAutoCommit(oldAutoCommit);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private PreparedStatement knowledgeEntryStatement(Connection conn) throws SQLException {
         String sql = "INSERT INTO knowledge_entries (id,project_id,type,name,content,version,updated_at) " +
                 "VALUES (?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET type=excluded.type, name=excluded.name, " +
                 "content=excluded.content, version=excluded.version, updated_at=excluded.updated_at";
-        try (Connection conn = cp.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, e.getId()); ps.setString(2, e.getProjectId());
-            ps.setString(3, e.getType()); ps.setString(4, e.getName());
-            ps.setString(5, e.getContent()); ps.setInt(6, e.getVersion());
-            ps.setString(7, e.getUpdatedAt().toString());
-            ps.executeUpdate();
-        } catch (SQLException ex) { throw new RuntimeException(ex); }
+        return conn.prepareStatement(sql);
+    }
+
+    private void bindKnowledgeEntry(PreparedStatement ps, KnowledgeEntry e) throws SQLException {
+        ps.setString(1, e.getId()); ps.setString(2, e.getProjectId());
+        ps.setString(3, e.getType()); ps.setString(4, e.getName());
+        ps.setString(5, e.getContent()); ps.setInt(6, e.getVersion());
+        ps.setString(7, e.getUpdatedAt().toString());
     }
 
     @Override
@@ -421,26 +466,36 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public void saveOutline(Outline o) {
-        // C3: 单连接（原两连接 latent bug）
+        // C3/p26-02: 单连接 + 单事务，候选大纲不得留下部分 premise/volume/synopsis。
         try (Connection conn = cp.getConnection()) {
-            try (PreparedStatement ps = conn.prepareStatement(
-                    "INSERT INTO outlines (project_id, premise) VALUES (?,?) " +
-                    "ON CONFLICT(project_id) DO UPDATE SET premise=excluded.premise")) {
-                ps.setString(1, o.getProjectId()); ps.setString(2, o.getPremise());
-                ps.executeUpdate();
-            }
-            java.util.Set<String> keptVolumeIds = new java.util.HashSet<>();
-            for (Volume v : o.getVolumes()) {
-                saveVolume(conn, v);
-                keptVolumeIds.add(v.getId());
-            }
-            if (!keptVolumeIds.isEmpty()) {
-                pruneMissingVolumes(conn, o.getProjectId(), keptVolumeIds);
+            boolean oldAutoCommit = conn.getAutoCommit();
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "INSERT INTO outlines (project_id, premise) VALUES (?,?) " +
+                        "ON CONFLICT(project_id) DO UPDATE SET premise=excluded.premise")) {
+                    ps.setString(1, o.getProjectId()); ps.setString(2, o.getPremise());
+                    ps.executeUpdate();
+                }
+                java.util.Set<String> keptVolumeIds = new java.util.HashSet<>();
+                for (Volume v : o.getVolumes()) {
+                    saveVolume(conn, v);
+                    keptVolumeIds.add(v.getId());
+                }
+                if (!keptVolumeIds.isEmpty()) {
+                    pruneMissingVolumes(conn, o.getProjectId(), keptVolumeIds);
+                }
+                conn.commit();
+            } catch (SQLException | RuntimeException e) {
+                try { conn.rollback(); } catch (SQLException rollbackFailure) { e.addSuppressed(rollbackFailure); }
+                throw e;
+            } finally {
+                conn.setAutoCommit(oldAutoCommit);
             }
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
-    private void saveVolume(Connection conn, Volume v) {
+    private void saveVolume(Connection conn, Volume v) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO volumes (id,project_id,volume_index,title,summary) VALUES (?,?,?,?,?) " +
                 "ON CONFLICT(id) DO UPDATE SET title=excluded.title, summary=excluded.summary")) {
@@ -448,15 +503,13 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setInt(3, v.getVolumeIndex()); ps.setString(4, v.getTitle());
             ps.setString(5, v.getSummary());
             ps.executeUpdate();
-        } catch (SQLException e) { throw new RuntimeException(e); }
+        }
         java.util.Set<String> keptSynopsisIds = new java.util.HashSet<>();
         for (ChapterSynopsis s : v.getSynopses()) {
             saveSynopsis(conn, v.getId(), s);
             keptSynopsisIds.add(s.getId());
         }
-        try {
-            pruneMissingSynopses(conn, v.getId(), keptSynopsisIds);
-        } catch (SQLException e) { throw new RuntimeException(e); }
+        pruneMissingSynopses(conn, v.getId(), keptSynopsisIds);
     }
 
     private void pruneMissingSynopses(Connection conn, String volumeId, java.util.Set<String> keptIds) throws SQLException {
@@ -502,7 +555,7 @@ public class SqliteNovelRepository implements NovelRepository {
         }
     }
 
-    private void saveSynopsis(Connection conn, String volumeId, ChapterSynopsis s) {
+    private void saveSynopsis(Connection conn, String volumeId, ChapterSynopsis s) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO chapter_synopses (id,project_id,volume_id,chapter_index,title,synopsis,writing_notes," +
                 "plot_purpose,tension_level,volume_arc_position,cast,beats,climax) " +
@@ -522,7 +575,7 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setString(12, s.getBeats());
             ps.setString(13, s.getClimax());
             ps.executeUpdate();
-        } catch (SQLException e) { throw new RuntimeException(e); }
+        }
     }
 
     @Override

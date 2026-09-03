@@ -3101,12 +3101,29 @@
       "phase": 26,
       "type": "bug",
       "dependencies": ["p26-01"],
-      "status": "not-started",
-      "files": ["orchestrator/NovelOrchestrator.java", "agent/WorldBuilderAgent.java", "agent/PlotterAgent.java"],
+      "status": "completed",
+      "files": [
+        "orchestrator/NovelOrchestrator.java",
+        "agent/WorldBuilderAgent.java",
+        "agent/PlotterAgent.java",
+        "memory/KnowledgeBaseService.java",
+        "spi/NovelRepository.java",
+        "persistence/sqlite/SqliteNovelRepository.java",
+        "web/CheckpointController.java",
+        "llm/ScenarioLlmGateway.java",
+        "orchestrator/CheckpointRevisionRoutingTest.java",
+        "web/CheckpointRevisionControllerTest.java",
+        "memory/KnowledgeBaseServiceTest.java",
+        "agent/WorldBuilderAgentTest.java",
+        "agent/PlotterAgentTest.java",
+        "agent/TestNovelRepositoryStub.java",
+        "scripts/product-audit-e2e.sh"
+      ],
       "problem_ref": "P0-01：非章节 checkpoint 的修改意见没有修改任何内容",
       "description": "初始设定和卷大纲分别走候选生成、校验、保存路径，并返回前后摘要；失败不处理 checkpoint。",
       "acceptance": "两类审核意见均改变对应持久化内容与版本，已写边界不变，空或非法结果使 checkpoint 保持 PENDING。",
-      "verify_cmd": "mvn test -Dtest=CheckpointRevisionRoutingTest"
+      "verify_cmd": "mvn test -Dtest=CheckpointRevisionRoutingTest",
+      "evidence": "2026-09-03：严格 TDD RED：CheckpointRevisionRoutingTest 首跑因 reviseCheckpoint/replaceKnowledgeEntries 缺失而 testCompile 失败；加入 Agent detached-candidate 断言后仍有 7 个 missing symbol；KnowledgeBaseServiceTest 因 replaceEntries 缺失出现 2 个编译错误；canon/controller 失败闭环测试因 resumeAfterCheckpointRevision 缺失出现 2 个编译错误。GREEN：focused/Agent/controller/KB 20 tests、checkpoint/Scenario/StoryCanon 回归 13 tests 均 0 failures/errors；SQLite 强制中断验证世界观与大纲事务 rollback；DB 替换失败不动向量，成功替换清旧向量、批量索引新条目并 bump memory revision；旧世界观主体退出 ACTIVE、新主体以 HUMAN_PATCH ACTIVE 入典且时代锚点保留；候选或推进失败 checkpoint 均保持 PENDING，成功响应含 revision。strict 浏览器 initial-setup-modify 与 volume-outline-modify 各 1 PASS / 0 XFAIL / 0 ERROR，且仅移除这两个 KNOWN_FAILURES。默认 e2e 首跑因脚本选中 wuxia fixture 与 mystery 请求指纹不匹配而 fail-fast，diagnose 为 1 LLM_ERROR/0 calls；按批准使用匹配 canary-mystery-20260831 fixture 后 3 章/10,191 字/54 LLM calls/0 errors/0 chapter failures，compare-baseline PASS。mvn compile PASS；mvn test 与 ./init.sh 均为 497 tests / 0 failures / 0 errors / 1 skipped，init 前端构建通过。"
     },
     {
       "id": "p26-03",

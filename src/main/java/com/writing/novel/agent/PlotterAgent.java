@@ -43,6 +43,15 @@ public class PlotterAgent {
 
     public Outline plan(String projectId, String concept, String theme, int totalChapters,
                         String styleGuide, String genreRules, String diversityGuide) {
+        Outline outline = proposeOutline(projectId, concept, theme, totalChapters,
+                styleGuide, genreRules, diversityGuide);
+        repository.saveOutline(outline);
+        return outline;
+    }
+
+    /** Generate and validate a detached whole-book outline before the single persistence step. */
+    private Outline proposeOutline(String projectId, String concept, String theme, int totalChapters,
+                                   String styleGuide, String genreRules, String diversityGuide) {
         String systemPrompt = promptService.render("plotting", Map.of(
                 "concept", concept, "theme", theme,
                 "totalChapters", totalChapters,
@@ -105,7 +114,6 @@ public class PlotterAgent {
             outline.addVolume(v);
         }
 
-        repository.saveOutline(outline);
         return outline;
     }
 
@@ -186,6 +194,48 @@ public class PlotterAgent {
                               int startChapter, int endChapter,
                               String existingCharacters, String protagonistName,
                               com.writing.novel.domain.GenreProfile genre) {
+        return requestVolumeOutline(masterOutline, previousSummary, volumeTitle, volumeSummary,
+                startChapter, endChapter, existingCharacters, protagonistName, genre, "");
+    }
+
+    /**
+     * Generate a detached replacement for the unwritten portion of one volume.
+     * The candidate is never saved here; the orchestrator validates its exact chapter set first.
+     */
+    public Volume proposeVolumeRevision(String projectId, String masterOutline, Volume sourceVolume,
+                                        int writtenBoundary, String instructions) {
+        var unwritten = sourceVolume.getSynopses().stream()
+                .filter(s -> s.getChapterIndex() > writtenBoundary)
+                .sorted(java.util.Comparator.comparingInt(ChapterSynopsis::getChapterIndex))
+                .toList();
+        Volume candidate = new Volume(projectId, sourceVolume.getVolumeIndex(),
+                sourceVolume.getTitle(), sourceVolume.getSummary());
+        if (unwritten.isEmpty()) return candidate;
+
+        int startChapter = unwritten.get(0).getChapterIndex();
+        int endChapter = unwritten.get(unwritten.size() - 1).getChapterIndex();
+        var characters = repository.findCharactersByProject(projectId);
+        String existingCharacters = characters.stream()
+                .map(c -> c.getName() + "(" + c.getRole() + ")")
+                .reduce((a, b) -> a + "、" + b).orElse("（暂无）");
+        String protagonistName = characters.stream()
+                .filter(c -> c.getRole() != null && c.getRole().contains("主角"))
+                .map(com.writing.novel.domain.Character::getName)
+                .findFirst().orElse("");
+        GenreProfile genre = repository.findProject(projectId).map(Project::getGenre).orElse(null);
+        String raw = requestVolumeOutline(masterOutline, "已写至第" + writtenBoundary + "章",
+                sourceVolume.getTitle(), sourceVolume.getSummary(), startChapter, endChapter,
+                existingCharacters, protagonistName, genre, instructions);
+        parseChaptersInVolume(candidate, raw, projectId);
+        return candidate;
+    }
+
+    private String requestVolumeOutline(String masterOutline, String previousSummary,
+                                        String volumeTitle, String volumeSummary,
+                                        int startChapter, int endChapter,
+                                        String existingCharacters, String protagonistName,
+                                        com.writing.novel.domain.GenreProfile genre,
+                                        String instructions) {
         int chapterCount = endChapter - startChapter + 1;
         boolean fastPaced = genre == null || genre.isFastPaced();
         String climaxPrinciple = fastPaced
@@ -210,7 +260,9 @@ public class PlotterAgent {
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.PLOTTING)
                 .systemPrompt(systemPrompt)
-                .userMessage("请生成本卷的详细章节大纲。")
+                .userMessage("请生成本卷的详细章节大纲。"
+                        + (instructions == null || instructions.isBlank()
+                        ? "" : "\n【用户修改意见】" + instructions.trim()))
                 .temperature(0.7)
                 // mc-p3-01: 12000 输出余量——8 章 × 详细格式 + 总纲注入，避免截断
                 .maxTokens(12000)
@@ -268,7 +320,6 @@ public class PlotterAgent {
             outline.addVolume(volume);
         }
 
-        repository.saveOutline(outline);
         return outline;
     }
 

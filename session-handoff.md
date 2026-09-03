@@ -5,9 +5,9 @@
 ## Current Objective
 
 - **Goal**: 以产品一致性审计的浏览器红灯套件驱动下一轮 P0 → P1 → P2 修复。
-- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 已完成：checkpoint 的 approve/reject/modify 均先验证项目归属与 PENDING 状态。9 个浏览器场景的既知失败集合尚未更新；`checkpoint-card-targeting` 仍为 p26-03 的预期 XFAIL。
+- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01、p26-02 已完成：审核操作先校验目标归属/PENDING，初始设定与卷大纲的修改意见会生成 detached candidate，校验后事务替换真实持久化内容；失败保留原内容与 `PENDING`。世界观替换同步 DB、向量、memory revision 与 StoryCanon HUMAN_PATCH。产品浏览器既知失败集合已移除 `initial-setup-modify`、`volume-outline-modify`；`checkpoint-card-targeting` 仍为 p26-03 的预期 XFAIL。
 - **Branch**: 当前 Phase 26 修复分支；仓库没有 Git remote/upstream。
-- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 completed，p26-02 起仍 not-started。
+- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01、p26-02 completed，p26-03 起仍 not-started。
 - **Current spec**: `docs/specs/2026-09-02-product-audit-browser-e2e.md` 与 `.superpowers/sdd/2026-09-03-product-design-consistency-remediation/` 任务简报。
 - **Product audit**: `docs/audits/2026-09-02-product-design-consistency-audit.md`（P0 3 项 / P1 8 项 / P2 5 项）。
 
@@ -32,7 +32,12 @@
 - p26-01 RED：`mvn test -Dtest=CheckpointTargetValidationTest` 为 2 failures / 0 errors（跨项目、已处理 checkpoint 实际均接受为 HTTP 200）。
 - p26-01 focused GREEN：`mvn test -Dtest=CheckpointTargetValidationTest,ApproveSpecificCheckpointTest` 为 3 tests / 0 failures / 0 errors。
 - p26-01 browser：`./scripts/product-audit-e2e.sh --case checkpoint-card-targeting --expect-known-failures` 为 0 PASS / 1 XFAIL / 0 ERROR（卡片绑定保留给 p26-03）。
-- 全量：`mvn compile -q && mvn test` 与 `./init.sh` 为 483 tests / 0 failures / 0 errors / 1 skipped；init 还通过 27 个 prompt 与前端生产构建检查。
+- p26-02 RED：focused 首跑因 `reviseCheckpoint`/`replaceKnowledgeEntries` 缺失而 testCompile 失败；加入 Agent candidate 零写入断言后仍有 7 个 missing symbol。
+- p26-02 RED 补充：KnowledgeBaseService 替换测试先缺 `replaceEntries`（2 errors）；canon/controller 闭环测试先缺 `resumeAfterCheckpointRevision`（2 errors）。
+- p26-02 GREEN：routing/controller/KB/Agent focused 为 20 tests / 0 failures / 0 errors；checkpoint/Scenario/StoryCanon 回归为 13 tests / 0 failures / 0 errors。SQLite rollback 覆盖世界观与大纲原内容保留；DB 失败不动向量，成功后清旧/索引新向量并 bump revision；旧世界观真典主体 retire，新主体为 HUMAN_PATCH ACTIVE；候选或推进失败均保持 checkpoint PENDING，成功响应含 revision。
+- p26-02 browser：`initial-setup-modify` 与 `volume-outline-modify` strict 各为 1 PASS / 0 XFAIL / 0 ERROR，并已从 `KNOWN_FAILURES` 精确移除。
+- p26-02 质量：默认 `e2e.sh` 因选中 wuxia fixture 与 mystery 请求不匹配而 fail-fast（diagnose：1 LLM_ERROR / 0 calls）；指定匹配的 `canary-mystery-20260831` fixture 后 3 章、10,191 字、54 calls、0 errors、0 chapter failures，baseline PASS。
+- 全量：`mvn compile` PASS；`mvn test` 与 `./init.sh` 为 497 tests / 0 failures / 0 errors / 1 skipped；init 还通过 27 个 prompt 与前端生产构建检查。
 
 ## Non-blocking Observations
 
@@ -40,11 +45,11 @@
 2. NovelOrchestrator（2329 行）和 ContextAssembler（1131 行）仍是复杂度热点；ChapterProduction 仍持有 Orchestrator 回引用。它们不是当前 blocker，但属于后续模块深化候选。
 3. 前端主 bundle 约 1.19 MB（gzip 372 KB），构建通过但有分包警告。
 4. 当前无 Git remote，`.github/workflows/ci.yml` 不会在远端实际触发；现有证据均为本地 release gate。
+5. 默认 `e2e.sh` 会选字典序最新 fixture；当前会选 wuxia fixture，但默认 preset 为 mystery，造成请求指纹 miss。p26-02 按匹配 mystery fixture 完成质量回归；fixture 选择策略不在本 feature 范围。
 
 ## Next Entry
 
-- 下一步为 p26-02（依赖 p26-01）：初始设定和卷大纲的审核修改必须真正走候选生成、校验与保存路径；先复用 `--case initial-setup-modify` 与 `--case volume-outline-modify`。
-- p26-03 负责前端多卡片显式绑定和确认摘要；在该 feature 完成前 `checkpoint-card-targeting` 必须继续作为 XFAIL，不得提前从 `KNOWN_FAILURES` 移除。
+- 下一步为 p26-03：前端多卡片显式绑定和确认摘要；在该 feature 完成前 `checkpoint-card-targeting` 必须继续作为 XFAIL，不得提前从 `KNOWN_FAILURES` 移除。
 - 后续红灯还有独立章节重写、交互切自动、审核后正文稳定、人工管理、移动端；自动零干预需单独设计持续运行生命周期。
 - 新需求继续遵循：写 spec → 拆 1-3 文件 feature → 登记 `feature_list.json` → 实现与验证 → 更新三份状态文档。
 - 本机代理可能劫持 localhost；脚本内 curl 保持 `--noproxy '*'`。ego-browser 内写文件使用绝对路径。

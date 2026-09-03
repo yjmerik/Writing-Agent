@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * p13-h1-01: 人机真典补丁——卡面写入 + 真典 SUPERSEDE + 记忆失效走同一入口。
@@ -25,6 +26,9 @@ public class CanonPatchService {
 
     public static final String HUMAN_PATCH_PREFIX = StoryCanon.HUMAN_PATCH_PREFIX;
     public static final int HUMAN_PATCH_PROTECT_CHAPTERS = StoryCanon.HUMAN_PATCH_PROTECT_CHAPTERS;
+    private static final Set<String> WORLD_TYPES = Set.of(
+            "GEOGRAPHY", "POWER_SYSTEM", "FACTION", "HISTORY", "RULE",
+            "CULTURE", "ECONOMY", "RACE", "CUSTOM");
 
     public record PatchResult(Object entity, List<StoryFact> factsWritten, boolean invalidated) {}
 
@@ -43,6 +47,9 @@ public class CanonPatchService {
     public PatchResult patchCharacter(String projectId, String charId, Character patch, int currentChapter) {
         Character existing = repository.findCharacter(charId)
                 .orElseThrow(() -> new IllegalArgumentException("人物不存在: " + charId));
+        if (!projectId.equals(existing.getProjectId())) {
+            throw new IllegalArgumentException("人物不属于该项目: " + charId);
+        }
         if (patch.getName() != null) existing.setName(patch.getName());
         if (patch.getRole() != null) existing.setRole(patch.getRole());
         if (patch.getPersonality() != null) existing.setPersonality(patch.getPersonality());
@@ -77,8 +84,13 @@ public class CanonPatchService {
     }
 
     public PatchResult patchWorld(String projectId, String entryId, KnowledgeEntry patch, int currentChapter) {
+        validateWorldType(patch.getType());
         KnowledgeEntry existing = repository.findKnowledgeEntry(entryId)
                 .orElseThrow(() -> new IllegalArgumentException("世界观条目不存在: " + entryId));
+        if (!projectId.equals(existing.getProjectId())) {
+            throw new IllegalArgumentException("世界观条目不属于该项目: " + entryId);
+        }
+        existing.setType(patch.getType());
         if (patch.getName() != null) existing.setName(patch.getName());
         if (patch.getContent() != null) existing.setContent(patch.getContent());
         repository.saveKnowledgeEntry(existing);
@@ -173,12 +185,14 @@ public class CanonPatchService {
     }
 
     public PatchResult createWorld(String projectId, KnowledgeEntry entry, int currentChapter) {
+        validateWorldType(entry.getType());
+        if (!projectId.equals(entry.getProjectId())) {
+            throw new IllegalArgumentException("世界观条目不属于该项目: " + entry.getId());
+        }
         repository.saveKnowledgeEntry(entry);
-        StoryFact.FactType factType = "ITEM".equals(entry.getType())
-                ? StoryFact.FactType.OBJECT_STATE : StoryFact.FactType.WORLD_RULE;
         List<StoryFact> written = new ArrayList<>();
         if (entry.getContent() != null && !entry.getContent().isBlank()) {
-            written.add(writeHumanFact(projectId, factType, entry.getName(),
+            written.add(writeHumanFact(projectId, StoryFact.FactType.WORLD_RULE, entry.getName(),
                     entry.getName() + "：" + entry.getContent(), currentChapter));
         }
         bump(projectId);
@@ -186,6 +200,9 @@ public class CanonPatchService {
     }
 
     public PatchResult createCharacter(String projectId, Character created, int currentChapter) {
+        if (!projectId.equals(created.getProjectId())) {
+            throw new IllegalArgumentException("人物不属于该项目: " + created.getId());
+        }
         repository.saveCharacter(created);
         List<StoryFact> written = new ArrayList<>();
         String assertion = created.getAbility() != null && !created.getAbility().isBlank()
@@ -226,5 +243,11 @@ public class CanonPatchService {
 
     private void bump(String projectId) {
         if (memoryRevision != null) memoryRevision.bump(projectId);
+    }
+
+    private void validateWorldType(String type) {
+        if (!WORLD_TYPES.contains(type)) {
+            throw new IllegalArgumentException("无效的世界观类型");
+        }
     }
 }

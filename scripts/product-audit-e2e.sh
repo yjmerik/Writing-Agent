@@ -477,15 +477,57 @@ await runCase('manual-content-management', async () => {
   const world = await pageJson('/api/projects/$P_REWRITE/worldbuilding')
   const characters = await pageJson('/api/projects/$P_REWRITE/characters')
   await openTab('世界观与人物')
-  const worldFields = await js('(() => {const name=' + JSON.stringify(world[0]?.name || '') + ';const type=' + JSON.stringify(world[0]?.type || '') + ';const vals=[...document.querySelectorAll("input")].map(x=>x.value);const selects=[...document.querySelectorAll("[role=combobox]")].map(x=>x.textContent+" "+x.getAttribute("aria-label"));return {name:vals.includes(name),type:vals.includes(type)||selects.some(x=>x.includes(type))}})()')
-  const characterFields = await js('(() => {const name=' + JSON.stringify(characters[0]?.name || '') + ';const role=' + JSON.stringify(characters[0]?.role || '') + ';const vals=[...document.querySelectorAll("input")].map(x=>x.value);return {name:vals.includes(name),role:vals.includes(role)}})()')
+  const worldTarget = world[0]
+  const characterTarget = characters[0]
+  const worldExpected = { type: 'ECONOMY', name: '漕运税则（人工）', content: '每十船抽一船，刷新后仍须完整保留。' }
+  const characterExpected = {
+    name: '沈砚（人工）', role: '主角', personality: '谨慎而执拗', ability: '辨认暗账',
+    motivation: '查清漕粮亏空', appearance: '左眉有浅疤', relationships: '与顾清舟互为盟友',
+    growthArc: '从自保走向担当',
+  }
+  const worldScope = '[data-world-entry-id="' + (worldTarget?.id || '') + '"]'
+  const characterScope = '[data-character-id="' + (characterTarget?.id || '') + '"]'
+
+  await click(worldScope + ' .ant-select-selector')
+  await wait(1)
+  const worldTypeOpened = await js('!!document.querySelector(".ant-select-dropdown:not(.ant-select-dropdown-hidden)")')
+  if (worldTypeOpened) await click('.ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option[title="经济"]')
+  const worldTypeSelected = await js('document.querySelector(' + JSON.stringify(worldScope) + ')?.querySelector(".ant-select-selection-item")?.innerText==="经济"')
+  await fillInput('input[aria-label=' + JSON.stringify((worldTarget?.name || '') + ' 世界观名称') + ']', worldExpected.name)
+  await fillInput(worldScope + ' textarea', worldExpected.content)
+  const worldSaveClicked = await js('(() => {const scope=document.querySelector(' + JSON.stringify(worldScope) + ');const button=[...(scope?.querySelectorAll("button")||[])].find(x=>x.innerText.includes("保存设定"));if(!button)return false;button.click();return true})()')
+  await wait(2)
+
+  const oldCharacterName = characterTarget?.name || ''
+  await fillInput('input[aria-label=' + JSON.stringify(oldCharacterName + ' 姓名') + ']', characterExpected.name)
+  await fillInput('input[aria-label=' + JSON.stringify(oldCharacterName + ' 角色定位') + ']', characterExpected.role)
+  await fillInput('textarea[aria-label=' + JSON.stringify(oldCharacterName + ' 性格') + ']', characterExpected.personality)
+  await fillInput('textarea[aria-label=' + JSON.stringify(oldCharacterName + ' 能力') + ']', characterExpected.ability)
+  await fillInput('textarea[aria-label=' + JSON.stringify(oldCharacterName + ' 动机') + ']', characterExpected.motivation)
+  await fillInput('textarea[aria-label=' + JSON.stringify(oldCharacterName + ' 外貌') + ']', characterExpected.appearance)
+  await fillInput('textarea[aria-label=' + JSON.stringify(oldCharacterName + ' 关系') + ']', characterExpected.relationships)
+  await fillInput('textarea[aria-label=' + JSON.stringify(oldCharacterName + ' 成长弧') + ']', characterExpected.growthArc)
+  const characterSaveClicked = await js('(() => {const scope=document.querySelector(' + JSON.stringify(characterScope) + ');const button=[...(scope?.querySelectorAll("button")||[])].find(x=>x.innerText.includes("保存人物"));if(!button)return false;button.click();return true})()')
+  await wait(2)
+
+  const worldAfterSave = (await pageJson('/api/projects/$P_REWRITE/worldbuilding')).find(x=>x.id===worldTarget?.id)
+  const characterAfterSave = (await pageJson('/api/projects/$P_REWRITE/characters')).find(x=>x.id===characterTarget?.id)
+  const worldPersisted = !!worldAfterSave && Object.entries(worldExpected).every(([key, value])=>worldAfterSave[key]===value)
+  const characterPersisted = !!characterAfterSave && Object.entries(characterExpected).every(([key, value])=>characterAfterSave[key]===value)
+
+  await go('/#/project/$P_REWRITE')
+  await openTab('世界观与人物')
+  const worldFields = await js('(() => {const scope=document.querySelector(' + JSON.stringify(worldScope) + ');return {type:scope?.querySelector(".ant-select-selection-item")?.innerText==="经济",name:scope?.querySelector("input.ant-input")?.value===' + JSON.stringify(worldExpected.name) + ',content:scope?.querySelector("textarea")?.value===' + JSON.stringify(worldExpected.content) + '}})()')
+  const characterFields = await js('(() => {const scope=document.querySelector(' + JSON.stringify(characterScope) + ');const values=[...scope.querySelectorAll("input.ant-input,textarea")].map(x=>x.value);const expected=' + JSON.stringify(Object.values(characterExpected)) + ';return {allEight:expected.every(x=>values.includes(x)),saveButton:[...scope.querySelectorAll("button")].some(x=>x.innerText.includes("保存人物"))}})()')
   await openTab('大纲')
   const outlineActions = await js('(() => {const t=document.body.innerText;return {addVolume:t.includes("新增卷"),addChapter:t.includes("新增章节"),remove:t.includes("删除章节")||t.includes("删除卷")}})()')
   await openTab('章节管理')
   const chapterActions = await js('(() => {const t=document.body.innerText;return {add:t.includes("新增章节"),directEdit:t.includes("编辑正文"),save:t.includes("保存正文")}})()')
-  const pass = Object.values(worldFields).every(Boolean) && Object.values(characterFields).every(Boolean) &&
+  const pass = worldTypeOpened && worldTypeSelected && worldSaveClicked && characterSaveClicked &&
+    worldPersisted && characterPersisted && Object.values(worldFields).every(Boolean) && Object.values(characterFields).every(Boolean) &&
     Object.values(outlineActions).every(Boolean) && Object.values(chapterActions).every(Boolean)
-  return { pass, worldFields, characterFields, outlineActions, chapterActions }
+  return { pass, worldSave: { worldTypeOpened, worldTypeSelected, worldSaveClicked, persisted: worldPersisted, refreshed: worldFields },
+    characterSave: { characterSaveClicked, persisted: characterPersisted, refreshed: characterFields }, outlineActions, chapterActions }
 })
 
 await runCase('mobile-critical-path', async () => {

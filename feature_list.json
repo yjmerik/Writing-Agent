@@ -3201,12 +3201,13 @@
       "phase": 26,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
-      "files": ["service/CanonPatchService.java", "frontend/src/components/WorldbuildingView.tsx", "web/WorldCharacterFullEditTest.java"],
+      "status": "completed",
+      "files": ["service/CanonPatchService.java", "domain/KnowledgeEntry.java", "frontend/src/components/WorldbuildingView.tsx", "web/WorldCharacterFullEditTest.java", "scripts/product-audit-e2e.sh"],
       "problem_ref": "P1-04：世界观类型及人物姓名/定位等字段不可完整编辑",
       "description": "服务端验证世界观类型并持久化完整补丁，页面提供中文类型选项及全部人物字段。",
       "acceptance": "世界观类型/名称/正文及人物八个字段均可修改并刷新保持；非法类型 400 且不写库。",
-      "verify_cmd": "mvn test -Dtest=WorldCharacterFullEditTest"
+      "verify_cmd": "mvn test -Dtest=WorldCharacterFullEditTest",
+      "evidence": "2026-09-03：严格 TDD RED 使用真实 Spring HTTP + SQLite 得到 4 tests / 4 failures / 0 errors，分别复现世界观 ECONOMY 更新后仍为 GEOGRAPHY、人工 create 接受旧 ITEM、INVALID 更新返回 200 并产生实体/真典/MemoryRevision 副作用、借其他 projectId 路径可修改世界观与人物。GREEN：CanonPatchService 在任何实体/真典/revision 写入前校验精确人工 allowlist GEOGRAPHY/POWER_SYSTEM/FACTION/HISTORY/RULE/CULTURE/ECONOMY/RACE/CUSTOM，并验证目标 projectId；KnowledgeEntry 增加最小 setType，领域 enum 与页面展示继续保留系统/存量 ITEM 兼容，人工 Select 不提供且 API 拒绝 ITEM。世界观卡使用中文类型 Select 并一次保存 type/name/content；人物卡以受控 draft 显式编辑 name/role/personality/ability/motivation/appearance/relationships/growthArc 并一次保存，失败不清空输入，不暴露 speakingStyle。focused WorldCharacterFullEdit/CanonPatch/CanonActiveUniqueness/HitlCreateWorldCharacter 14/14 PASS；frontend build PASS。manual-content-management expect-known-failures 为 0 PASS / 1 XFAIL / 0 ERROR：worldSave 的打开、选中、点击、持久化及刷新后三字段全部 true，characterSave 的点击、持久化、刷新后八字段与保存入口全部 true；聚合只因 p26-09..16 的大纲/章节子项继续 XFAIL，KNOWN_FAILURES 未改。initial-setup-summary 与 checkpoint-card-targeting strict 各 1 PASS / 0 XFAIL / 0 ERROR。JDK21 mvn compile、mvn test、./init.sh 全部 PASS：529 tests / 0 failures / 0 errors / 1 skipped，27 prompt 与前端生产构建通过。本 feature 未修改 Agent/prompt/上下文/产出逻辑，无需 replay。"
     },
     {
       "id": "p26-09",

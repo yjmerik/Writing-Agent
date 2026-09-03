@@ -5,9 +5,9 @@ import java.util.UUID;
 
 /** 结构化知识库的单个条目，是人物/世界观/物品等的统一载体 */
 public class KnowledgeEntry {
-    /** 类型：地理/势力/力量体系/历史/规则/物品 等 */
+    /** 世界观/知识类型；ITEM 保留用于系统生成与存量数据，人工接口另行限制可选类型。 */
     public enum Type {
-        GEOGRAPHY, FACTION, POWER_SYSTEM, HISTORY, RULE, ITEM, CUSTOM
+        GEOGRAPHY, POWER_SYSTEM, FACTION, HISTORY, RULE, CULTURE, ECONOMY, RACE, ITEM, CUSTOM
     }
 
     private String id;
@@ -31,6 +31,7 @@ public class KnowledgeEntry {
     public String getId() { return id; }
     public String getProjectId() { return projectId; }
     public String getType() { return type; }
+    public void setType(String type) { this.type = type; bumpVersion(); }
     public String getName() { return name; }
     public void setName(String n) { this.name = n; bumpVersion(); }
     public String getContent() { return content; }

@@ -5,9 +5,9 @@
 ## Current Objective
 
 - **Goal**: 以产品一致性审计的浏览器红灯套件驱动下一轮 P0 → P1 → P2 修复。
-- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-07 已完成。初始设定审核现在显示来自已持久化世界观、人物、outline premise、项目原旨及必要时卷标题/summary 的三段有界摘要，并可键盘跳转真实的世界观/人物与大纲页签；双来源不会互相吞没，仍无真实原旨来源时 fail-closed 并保持 `CONCEIVING`。旧或异常 payload 的摘要字段先做字符串类型归一化，跳转 target 继续经 `world`/`outline` 运行时白名单过滤。既有服务端动作矩阵、自动任务和 mode switch/resume 语义均未改动。
+- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-08 已完成。世界观已有项现在可用中文类型 Select 完整编辑类型、名称与正文；人物卡可一次编辑并保存姓名、角色定位和六个现有描述字段，失败保留 draft。人工世界观 API 只接受 9 个锁定类型，非法类型与跨项目目标在任何实体/真典/记忆版本写入前返回 400；系统/存量 ITEM 枚举与中文展示继续保留。`manual-content-management` 的世界观/人物 UI 保存及刷新子断言已全绿，aggregate 仍只因后续大纲/章节任务保持预期 XFAIL。既有服务端动作矩阵、自动任务和 mode switch/resume 语义均未改动。
 - **Branch**: 当前 Phase 26 修复分支；仓库没有 Git remote/upstream。
-- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-07 completed，下一项为 p26-08。
+- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-08 completed，下一项为 p26-09。
 - **Current spec**: `docs/specs/2026-09-02-product-audit-browser-e2e.md` 与 `.superpowers/sdd/2026-09-03-product-design-consistency-remediation/` 任务简报。
 - **Product audit**: `docs/audits/2026-09-02-product-design-consistency-audit.md`（P0 3 项 / P1 8 项 / P2 5 项）。
 
@@ -45,6 +45,7 @@
 - p26-05 基线 follow-up：`chapter-lazy-loading` RED 为首章请求 b1=2，非 force 读取复用 in-flight 后 browser 8/8，提交 `e4b20bb`；SQLite metadata focused RED 为 full.version=3/meta.version=1，映射 version 后 focused 4/4、approve/standalone strict 各1/1、browser 8/8、full/init 通过，提交 `2b92249`。
 - p26-06 RED：policy 类/枚举缺失导致 testCompile 失败；endpoint 回归初始 4 失败，覆盖 status 缺字段、WRITING `/run` 隐式写章、CONCEIVING write-all 创建任务、write-chapter 留 FAILED 任务。独立标准审查再发现 `/write-chapter` 门禁至启动的 TOCTOU，确定性 latch 回归 RED 为缺少原子 gate overload 的 testCompile 失败；GREEN 在取得 `ProjectWorkCoordinator` owner 后、保存 task 前按 repository 真相二次门禁，暂停先发生时不创建 task、不进入 orchestrator。最终 focused **35/35**，四个非法 endpoint 无 task/orchestrator 调用；approve/standalone strict 各 **1/1**，browser **8/8**，frontend build PASS，JDK21 full/init **522 tests / 0 failures / 0 errors / 1 skipped**，27 prompt 与前端构建 PASS。
 - p26-07 RED：完整 INTERACTIVE 构思链路的 `InitialSetupCheckpointPayloadTest` 为 **1 failure / 0 errors**，AFTER_INITIAL_SETUP payload 实际为 null；`initial-setup-summary` strict 为 **0 PASS / 1 XFAIL / 0 ERROR**，三段真实摘要、两次跳转与页签选中断言均失败。初版 GREEN 后 review round 1 再以 **3 failures / 0 errors** 复现超长 concept 吞掉 outline、空 premise 生成空摘要、缺少真实来源却仍创建 checkpoint；异常旧 payload strict 为 **0 PASS / 1 XFAIL / 0 ERROR**，非字符串 React child 令卡片崩溃。最终 GREEN：checkpoint 以 Jackson 编码三段持久化内容摘要与 `world`/`outline` links；每段按 code point 限 300 且 surrogate 完整，双来源均保留、单来源可用完整预算。premise 缺失时回退已持久化卷标题/summary，仍空则在状态改变和 checkpoint 创建前 fail-closed 并保持 `CONCEIVING`。审核卡只渲染运行时确认为 string 的摘要，并用原生按钮切 tab；target 白名单防止异常 payload 写入无效 tab。focused checkpoint 回归 **17/17**；含异常 payload 的 `initial-setup-summary` 与 `checkpoint-card-targeting` strict 各 **1 PASS / 0 XFAIL / 0 ERROR**，未改弱 `KNOWN_FAILURES`；frontend build PASS。browser 产品断言分段 **8/8**：完整脚本前 7 项 PASS，第 8 项两阶段重启因旧服务占端口是假失败（base `13f745c` 同样复现，日志为 `Port was already in use`），独立确认 `harsh=true` 新服务后原断言 PASS。JDK21 full/init **525 tests / 0 failures / 0 errors / 1 skipped**，27 prompt 与前端构建 PASS。Agent/prompt/上下文/产出未改，无 replay 质量门禁。
+- p26-08 RED：真实 HTTP/SQLite `WorldCharacterFullEditTest` 为 **4 tests / 4 failures / 0 errors**，复现世界观 type 丢失、人工 ITEM/INVALID 放行及副作用、跨项目路径可修改目标。GREEN：人工 world allowlist 精确为 9 类，更新持久化 type/name/content，world/character 目标均校验 projectId；ITEM 只保留系统/存量 enum 与中文展示。人物八字段改为受控整卡保存，世界观新增/编辑共用中文 Select，失败保留 draft。focused ownership/canon/create **14/14 PASS**；`manual-content-management --expect-known-failures` 为 **0 PASS / 1 XFAIL / 0 ERROR**，worldSave 与 characterSave 的 UI 保存、API 持久化、整页刷新子断言全部 true，aggregate 仅保留大纲/章节预期红灯；`initial-setup-summary`、`checkpoint-card-targeting` strict 各 **1 PASS / 0 XFAIL / 0 ERROR**。frontend build、JDK21 compile/full/init 全绿：**529 tests / 0 failures / 0 errors / 1 skipped**，27 prompt 通过；无 Agent/prompt/上下文改动，不需要 replay。
 
 ## Non-blocking Observations
 
@@ -57,7 +58,7 @@
 
 ## Next Entry
 
-- 下一步为 p26-08：世界观与人物完整字段编辑；不要改 p26-07 的 payload schema、页签白名单或既有动作矩阵。
+- 下一步为 p26-09：未写大纲结构校验与变更 API；不要改 p26-08 的人工类型 allowlist、受控 draft、ITEM 存量兼容或既有动作矩阵。
 - 剩余本期红灯聚焦人工内容管理、移动端与文案一致性；按用户指示，自动任务及其 mode switch/resume 生命周期需要架构和系统修复，不在本期计划范围。
 - 新需求继续遵循：写 spec → 拆 1-3 文件 feature → 登记 `feature_list.json` → 实现与验证 → 更新三份状态文档。
 - 本机代理可能劫持 localhost；脚本内 curl 保持 `--noproxy '*'`。ego-browser 内写文件使用绝对路径。

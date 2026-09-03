@@ -1,10 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Card, Tag, Empty, Spin, Row, Col, Descriptions, Divider, Button, Space, Input, message, List, Typography } from 'antd';
+import { Card, Tag, Empty, Spin, Row, Col, Descriptions, Divider, Button, Space, Input, Select, message, List, Typography } from 'antd';
 import { ReloadOutlined, SaveOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
 import type { KnowledgeEntry, Character, Foreshadowing } from '../types';
 
 const { Text } = Typography;
+
+const WORLD_TYPE_OPTIONS = [
+  { value: 'GEOGRAPHY', label: '地理' },
+  { value: 'POWER_SYSTEM', label: '力量体系' },
+  { value: 'FACTION', label: '势力' },
+  { value: 'HISTORY', label: '历史' },
+  { value: 'RULE', label: '规则' },
+  { value: 'CULTURE', label: '文化' },
+  { value: 'ECONOMY', label: '经济' },
+  { value: 'RACE', label: '种族' },
+  { value: 'CUSTOM', label: '其他' },
+] as const;
 
 const TYPE_LABELS: Record<string, string> = {
   GEOGRAPHY: '地理',
@@ -15,6 +27,8 @@ const TYPE_LABELS: Record<string, string> = {
   ITEM: '物品',
   CUSTOM: '其他',
   CULTURE: '文化',
+  ECONOMY: '经济',
+  RACE: '种族',
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -26,7 +40,41 @@ const TYPE_COLORS: Record<string, string> = {
   ITEM: 'gold',
   CUSTOM: 'default',
   CULTURE: 'cyan',
+  ECONOMY: 'gold',
+  RACE: 'magenta',
 };
+
+type WorldDraft = Pick<KnowledgeEntry, 'type' | 'name' | 'content'>;
+type CharacterField = 'name' | 'role' | 'personality' | 'ability' | 'motivation' | 'appearance' | 'relationships' | 'growthArc';
+type CharacterDraft = Record<CharacterField, string>;
+
+const CHARACTER_FIELDS: Array<{ field: CharacterField; label: string; rows: number }> = [
+  { field: 'name', label: '姓名', rows: 1 },
+  { field: 'role', label: '角色定位', rows: 1 },
+  { field: 'personality', label: '性格', rows: 2 },
+  { field: 'ability', label: '能力', rows: 2 },
+  { field: 'motivation', label: '动机', rows: 2 },
+  { field: 'appearance', label: '外貌', rows: 2 },
+  { field: 'relationships', label: '关系', rows: 2 },
+  { field: 'growthArc', label: '成长弧', rows: 2 },
+];
+
+function worldDraft(entry: KnowledgeEntry): WorldDraft {
+  return { type: entry.type, name: entry.name, content: entry.content };
+}
+
+function characterDraft(character: Character): CharacterDraft {
+  return {
+    name: character.name,
+    role: character.role,
+    personality: character.personality || '',
+    ability: character.ability || '',
+    motivation: character.motivation || '',
+    appearance: character.appearance || '',
+    relationships: character.relationships || '',
+    growthArc: character.growthArc || '',
+  };
+}
 
 export default function WorldbuildingView({ projectId }: { projectId: string }) {
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
@@ -38,6 +86,8 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
   const [newWorld, setNewWorld] = useState({ type: 'FACTION', name: '', content: '' });
   const [newChar, setNewChar] = useState({ name: '', role: '配角', ability: '' });
   const [loading, setLoading] = useState(true);
+  const [worldDrafts, setWorldDrafts] = useState<Record<string, WorldDraft>>({});
+  const [characterDrafts, setCharacterDrafts] = useState<Record<string, CharacterDraft>>({});
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
 
@@ -76,7 +126,13 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
       </Space>
       <h2>🌍 世界观设定</h2>
       <Space style={{ marginBottom: 12 }} wrap>
-        <Input style={{ width: 100 }} value={newWorld.type} onChange={(e) => setNewWorld({ ...newWorld, type: e.target.value })} placeholder="类型" />
+        <Select
+          aria-label="新增世界观类型"
+          style={{ width: 130 }}
+          value={newWorld.type}
+          options={[...WORLD_TYPE_OPTIONS]}
+          onChange={(type) => setNewWorld({ ...newWorld, type })}
+        />
         <Input style={{ width: 140 }} value={newWorld.name} onChange={(e) => setNewWorld({ ...newWorld, name: e.target.value })} placeholder="名称" />
         <Input style={{ width: 240 }} value={newWorld.content} onChange={(e) => setNewWorld({ ...newWorld, content: e.target.value })} placeholder="内容" />
         <Button size="small" type="primary" onClick={async () => {
@@ -111,27 +167,58 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
                 title={<Tag color={TYPE_COLORS[type] || 'default'}>{TYPE_LABELS[type] || type}</Tag>}
               >
                 {items.map((e) => (
-                  <div key={e.id} style={{ marginBottom: 12 }}>
-                    <strong>{e.name}</strong>
-                    <Input.TextArea
-                      rows={3}
-                      value={drafts[e.id] ?? e.content}
-                      onChange={(ev) => setDrafts((d) => ({ ...d, [e.id]: ev.target.value }))}
-                      style={{ marginTop: 6 }}
-                    />
+                  <div key={e.id} data-world-entry-id={e.id} style={{ marginBottom: 12 }}>
+                    <Descriptions column={1} size="small">
+                      <Descriptions.Item label="类型">
+                        <Select
+                          aria-label={`${e.name} 世界观类型`}
+                          style={{ width: '100%' }}
+                          value={(worldDrafts[e.id] ?? worldDraft(e)).type}
+                          options={[...WORLD_TYPE_OPTIONS]}
+                          onChange={(type) => setWorldDrafts((current) => ({
+                            ...current,
+                            [e.id]: { ...(current[e.id] ?? worldDraft(e)), type },
+                          }))}
+                        />
+                      </Descriptions.Item>
+                      <Descriptions.Item label="名称">
+                        <Input
+                          aria-label={`${e.name} 世界观名称`}
+                          value={(worldDrafts[e.id] ?? worldDraft(e)).name}
+                          onChange={(event) => setWorldDrafts((current) => ({
+                            ...current,
+                            [e.id]: { ...(current[e.id] ?? worldDraft(e)), name: event.target.value },
+                          }))}
+                        />
+                      </Descriptions.Item>
+                      <Descriptions.Item label="正文">
+                        <Input.TextArea
+                          aria-label={`${e.name} 世界观正文`}
+                          rows={3}
+                          value={(worldDrafts[e.id] ?? worldDraft(e)).content}
+                          onChange={(event) => setWorldDrafts((current) => ({
+                            ...current,
+                            [e.id]: { ...(current[e.id] ?? worldDraft(e)), content: event.target.value },
+                          }))}
+                        />
+                      </Descriptions.Item>
+                    </Descriptions>
                     <Button size="small" type="link" icon={<SaveOutlined />} loading={saving === e.id}
                       onClick={async () => {
                         setSaving(e.id);
                         try {
-                          await api.updateWorldbuilding(projectId, e.id, {
-                            name: e.name, type: e.type, content: drafts[e.id] ?? e.content,
+                          const saved = await api.updateWorldbuilding(projectId, e.id, worldDrafts[e.id] ?? worldDraft(e));
+                          setEntries((current) => current.map((entry) => entry.id === saved.id ? saved : entry));
+                          setWorldDrafts((current) => {
+                            const next = { ...current };
+                            delete next[e.id];
+                            return next;
                           });
                           message.success('已保存并写入真典');
-                          await load();
                         } catch (err) {
                           message.error((err as Error).message);
                         } finally { setSaving(null); }
-                      }}>保存</Button>
+                      }}>保存设定</Button>
                   </div>
                 ))}
               </Card>
@@ -172,37 +259,59 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
       ) : (
         <Row gutter={[16, 16]}>
           {characters.map((c) => (
-            <Col span={12} key={c.id}>
+            <Col span={12} key={c.id} data-character-id={c.id}>
               <Card size="small" title={c.name} extra={<Tag>{c.role}</Tag>}>
                 <Descriptions column={1} size="small">
-                  {([
-                    ['性格', 'personality', c.personality],
-                    ['能力', 'ability', c.ability],
-                    ['动机', 'motivation', c.motivation],
-                    ['外貌', 'appearance', c.appearance],
-                    ['关系', 'relationships', c.relationships],
-                    ['成长弧', 'growthArc', c.growthArc],
-                  ] as const).map(([label, field, val]) => (
+                  {CHARACTER_FIELDS.map(({ label, field, rows }) => (
                     <Descriptions.Item key={field} label={label}>
-                      <Input.TextArea
-                        size="small"
-                        rows={2}
-                        defaultValue={val || ''}
-                        onBlur={async (ev) => {
-                          const v = ev.target.value;
-                          if (v === (val || '')) return;
-                          try {
-                            await api.updateCharacter(projectId, c.id, { [field]: v });
-                            message.success(`${c.name} ${label}已写入真典`);
-                            load();
-                          } catch (err) {
-                            message.error((err as Error).message);
-                          }
-                        }}
-                      />
+                      {rows === 1 ? (
+                        <Input
+                          size="small"
+                          aria-label={`${c.name} ${label}`}
+                          value={(characterDrafts[c.id] ?? characterDraft(c))[field]}
+                          onChange={(event) => setCharacterDrafts((current) => ({
+                            ...current,
+                            [c.id]: { ...(current[c.id] ?? characterDraft(c)), [field]: event.target.value },
+                          }))}
+                        />
+                      ) : (
+                        <Input.TextArea
+                          size="small"
+                          rows={rows}
+                          aria-label={`${c.name} ${label}`}
+                          value={(characterDrafts[c.id] ?? characterDraft(c))[field]}
+                          onChange={(event) => setCharacterDrafts((current) => ({
+                            ...current,
+                            [c.id]: { ...(current[c.id] ?? characterDraft(c)), [field]: event.target.value },
+                          }))}
+                        />
+                      )}
                     </Descriptions.Item>
                   ))}
                 </Descriptions>
+                <Button
+                  size="small"
+                  type="primary"
+                  icon={<SaveOutlined />}
+                  loading={saving === c.id}
+                  onClick={async () => {
+                    setSaving(c.id);
+                    try {
+                      const saved = await api.updateCharacter(projectId, c.id, characterDrafts[c.id] ?? characterDraft(c));
+                      setCharacters((current) => current.map((character) => character.id === saved.id ? saved : character));
+                      setCharacterDrafts((current) => {
+                        const next = { ...current };
+                        delete next[c.id];
+                        return next;
+                      });
+                      message.success(`${saved.name} 已保存并写入真典`);
+                    } catch (err) {
+                      message.error((err as Error).message);
+                    } finally {
+                      setSaving(null);
+                    }
+                  }}
+                >保存人物</Button>
               </Card>
             </Col>
           ))}

@@ -792,3 +792,12 @@ W2 的两个独立基石已落地（不依赖 LLM prompt 改动，不影响产�
 - TDD RED：policy 首跑因类/枚举不存在而编译失败；endpoint 首跑 4 失败，覆盖 status 缺字段、WRITING `/run` 隐式写章、CONCEIVING write-all 创建任务、write-chapter 留 FAILED 任务。
 - 独立标准审查发现 `/write-chapter` 初次门禁与异步任务启动之间存在 TOCTOU。确定性 latch 测试 RED 为 `WritingTaskExecutor` 缺少原子 gate overload 的 testCompile 失败；GREEN 在取得既有 `ProjectWorkCoordinator` owner 后、持久化任务前按 repository 真相二次门禁，暂停先发生时不创建 task、不进入 orchestrator。
 - GREEN：focused policy/controller/content/ownership/instruction **35/35 PASS**；approve 与 standalone strict 各 **1 PASS / 0 XFAIL / 0 ERROR**；browser **8/8 PASS**；frontend build PASS；JDK21 full Maven/init **522 tests / 0 failures / 0 errors / 1 skipped**，27 prompt 与生产前端构建 PASS。
+
+## Phase 26 — p26-08 世界观与人物完整字段编辑（2026-09-03）
+
+- 人工世界观类型由服务端精确限制为 `GEOGRAPHY/POWER_SYSTEM/FACTION/HISTORY/RULE/CULTURE/ECONOMY/RACE/CUSTOM`，创建与更新都在写实体、StoryCanon 或 MemoryRevision 前校验；`ITEM` 继续作为系统/存量领域类型与中文展示存在，但不能从人工 API 新建或写回。
+- 世界观更新会持久化类型、名称和正文；世界观与人物更新均验证目标属于 URL 中的项目，错误路径返回 400 且两侧项目无真典或记忆版本副作用。
+- 世界观卡改为中文类型 Select 与受控三字段整卡保存；人物卡显式提供姓名、角色定位及六个描述字段，以受控 draft 一次“保存人物”，失败保留输入，不暴露 task 外字段。
+- TDD RED：`WorldCharacterFullEditTest` 为 **4 tests / 4 failures / 0 errors**，覆盖类型丢失、ITEM/INVALID 放行、非法更新副作用和跨项目修改。GREEN focused ownership/canon/create 回归为 **14/14 PASS**。
+- 产品 E2E：`manual-content-management --expect-known-failures` 为 **0 PASS / 1 XFAIL / 0 ERROR**；worldSave 的下拉、保存、持久化、刷新后三字段与 characterSave 的保存、持久化、刷新后八字段子断言全部通过，聚合仅保留后续大纲/章节子项的预期失败。`initial-setup-summary`、`checkpoint-card-targeting` strict 各 **1 PASS / 0 XFAIL / 0 ERROR**。
+- 验证：frontend build、JDK21 `mvn compile`、`mvn test` 与 `./init.sh` 全部 PASS（**529 tests / 0 failures / 0 errors / 1 skipped**；init 另通过 27 prompt 与前端生产构建）。本 feature 未改 Agent/prompt/上下文/产出逻辑，无需 replay。

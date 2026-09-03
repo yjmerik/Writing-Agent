@@ -11,6 +11,7 @@ const { Text } = Typography;
 interface Props {
   projectId: string;
   onChanged: () => void;
+  onNavigateTab: (target: 'world' | 'outline') => void;
 }
 
 type RewriteTarget =
@@ -27,8 +28,12 @@ type RewriteTarget =
 
 type ReviewResult = Extract<RewriteTarget, { kind: 'checkpoint' }> & { revision: CheckpointRevision };
 type BodyLoadState = { loading: boolean; error: string };
+type ReviewNavigationTarget = 'world' | 'outline';
 
-export default function InteractiveReview({ projectId, onChanged }: Props) {
+const isReviewNavigationTarget = (target: unknown): target is ReviewNavigationTarget =>
+  target === 'world' || target === 'outline';
+
+export default function InteractiveReview({ projectId, onChanged, onNavigateTab }: Props) {
   // p21-05: 元数据一次加载；正文按选中章节懒加载缓存
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [bodies, setBodies] = useState<Record<number, Chapter>>({});
@@ -338,6 +343,11 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
         {isPaused && hasPendingCheckpoint && checkpoints.map(cp => {
           let payload: import('../types').CheckpointPayload | null = null;
           try { payload = cp.payload ? JSON.parse(cp.payload) : null; } catch { payload = null; }
+          const navigationLinks = Array.isArray(payload?.links)
+            ? payload.links.filter(link => typeof link?.label === 'string'
+              && link.label.trim().length > 0
+              && isReviewNavigationTarget(link.target))
+            : [];
           return (
           <Alert
             key={cp.id}
@@ -363,6 +373,38 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
                     <div style={{ color: '#888', marginTop: 4, maxHeight: 60, overflow: 'hidden' }}>
                       {payload.preview}…
                     </div>
+                  )}
+                  {payload.worldSummary && (
+                    <div style={{ marginTop: 8 }}>
+                      <Text strong>世界观摘要</Text>
+                      <div style={{ color: '#666', whiteSpace: 'pre-wrap' }}>{payload.worldSummary}</div>
+                    </div>
+                  )}
+                  {payload.characterSummary && (
+                    <div style={{ marginTop: 8 }}>
+                      <Text strong>人物摘要</Text>
+                      <div style={{ color: '#666', whiteSpace: 'pre-wrap' }}>{payload.characterSummary}</div>
+                    </div>
+                  )}
+                  {payload.premiseSummary && (
+                    <div style={{ marginTop: 8 }}>
+                      <Text strong>原旨与大纲摘要</Text>
+                      <div style={{ color: '#666', whiteSpace: 'pre-wrap' }}>{payload.premiseSummary}</div>
+                    </div>
+                  )}
+                  {navigationLinks.length > 0 && (
+                    <Space wrap size={4} style={{ marginTop: 8 }}>
+                      {navigationLinks.map(link => (
+                        <Button
+                          key={`${link.target}-${link.label}`}
+                          type="link"
+                          size="small"
+                          onClick={() => onNavigateTab(link.target)}
+                        >
+                          {link.label}
+                        </Button>
+                      ))}
+                    </Space>
                   )}
                 </div>
               )}

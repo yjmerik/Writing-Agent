@@ -12,6 +12,7 @@ LIST_ONLY=0
 
 CASES=(
   auto-zero-intervention
+  initial-setup-summary
   initial-setup-modify
   volume-outline-modify
   standalone-chapter-rewrite
@@ -33,6 +34,7 @@ KNOWN_FAILURES=(
 describe_case() {
   case "$1" in
     auto-zero-intervention) echo "P1-01|P1|自动项目一次启动后生成 3 章并到达 FINAL" ;;
+    initial-setup-summary) echo "P1-08|P1|初始设定审核展示真实摘要并可跳转内容页签" ;;
     initial-setup-modify) echo "P0-01|P0|初始设定带意见重做后内容发生变化" ;;
     volume-outline-modify) echo "P0-01|P0|卷大纲带意见重做且不覆盖已写章节" ;;
     standalone-chapter-rewrite) echo "P0-02|P0|无待审核项时独立重写章节" ;;
@@ -184,6 +186,7 @@ need_case() {
 
 # ---------- 隔离数据种子 ----------
 P_AUTO=""
+P_SETUP_SUMMARY=""
 P_SETUP=""
 P_VOLUME=""
 P_REWRITE=""
@@ -198,6 +201,11 @@ CP_MULTI_LATEST=""
 if need_case auto-zero-intervention; then
   P_AUTO=$(create_project "audit-auto" SOLO 3) || exit 2
   conceive_once "$P_AUTO" || exit 2
+fi
+
+if need_case initial-setup-summary; then
+  P_SETUP_SUMMARY=$(create_project "audit-setup-summary" INTERACTIVE 3) || exit 2
+  conceive_once "$P_SETUP_SUMMARY" || exit 2
 fi
 
 if need_case initial-setup-modify; then
@@ -335,6 +343,21 @@ await runCase('auto-zero-intervention', async () => {
   const count = (chapters.chapters || []).length
   return { pass: status.state === 'FINAL' && status.currentChapter === 3 && count === 3,
     state: status.state, currentChapter: status.currentChapter, chapterCount: count }
+})
+
+await runCase('initial-setup-summary', async () => {
+  await go('/#/project/$P_SETUP_SUMMARY')
+  await openTab('章节管理')
+  const summary = await js('(() => {const a=[...document.querySelectorAll(".ant-alert")].find(x=>x.innerText.includes("初始设定"));const text=a?.innerText||"";return {world:text.includes("场景大陆001"),character:text.includes("主角001"),premise:text.includes("产品审计确定性场景")&&text.includes("查清师门旧案")}})()')
+  const worldClicked = await clickButtonContaining('查看世界观与人物', '初始设定')
+  await wait(2)
+  const worldSelected = await js('!![...document.querySelectorAll("[role=tab]")].find(x=>x.innerText.includes("世界观与人物")&&x.getAttribute("aria-selected")==="true")')
+  await openTab('章节管理')
+  const outlineClicked = await clickButtonContaining('查看大纲', '初始设定')
+  await wait(2)
+  const outlineSelected = await js('!![...document.querySelectorAll("[role=tab]")].find(x=>x.innerText.includes("大纲")&&x.getAttribute("aria-selected")==="true")')
+  return { pass: summary.world && summary.character && summary.premise && worldClicked && worldSelected && outlineClicked && outlineSelected,
+    summary, worldClicked, worldSelected, outlineClicked, outlineSelected }
 })
 
 await runCase('initial-setup-modify', async () => {

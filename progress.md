@@ -2,6 +2,18 @@
 
 ---
 
+## 会话记录（2026-09-03）：Phase 26 p26-07 初始设定审核内容摘要
+
+- AFTER_INITIAL_SETUP checkpoint 新增 Jackson JSON payload：`worldSummary`、`characterSummary`、`premiseSummary` 和 `links`。三段内容只读取已持久化的世界观条目、人物卡、outline premise 与项目原旨，不使用固定摘要文案。
+- 每段摘要按 Unicode code point 截断到最多 300，补充 emoji 长文本回归，证明不会拆开 surrogate pair。跳转只发布真实 workspace 页签 `world` / `outline`。
+- 审核卡展示“世界观摘要 / 人物摘要 / 原旨与大纲摘要”，并提供原生键盘可操作按钮跳转对应页签；UI 在调用 `setActiveTab` 前对白名单 target 做运行时过滤，异常旧 payload 不能写入不存在的页签状态。
+- 严格 TDD：Java RED 为 **1 failure / 0 errors**（payload 为 null）；UI strict RED 为 **0 PASS / 1 XFAIL / 0 ERROR**（三段摘要、按钮与页签选中断言均失败）。GREEN 后 Java focused checkpoint 回归 **15/15**，`initial-setup-summary` 与 `checkpoint-card-targeting` strict 各 **1 PASS / 0 XFAIL / 0 ERROR**，没有把新场景加入 `KNOWN_FAILURES`。
+- Browser E2E 产品断言 **8/8 PASS**：前 7 项由完整脚本通过；第 8 项的脚本内二阶段重启暴露既有端口回收竞态（base `13f745c` 同样复现，第二服务日志明确 `Port was already in use`）。隔离启动确认 `harsh=true` 的新服务后，以原断言得到 chapter `NEEDS_MANUAL_REVIEW` 且 `pendingTag/resolveBtn/resolved=true`；未修改 harness。
+- 完整验证：frontend build PASS；JDK21 `mvn compile && mvn test` 与 `./init.sh` 均 PASS，**523 tests / 0 failures / 0 errors / 1 skipped**，init 另通过 27 个 prompt 与生产前端构建。
+- 本 feature 只增加 checkpoint payload 与审核展示，不修改 Agent、prompt、上下文组装、自动任务或 mode switch/resume 语义，因此不触发 replay 质量门禁。
+
+---
+
 ## 会话记录（2026-09-03）：Phase 26 p26-03 审核卡目标绑定与修改结果
 
 - 审核卡的批准、拒绝、修改均直接持有被点击的 `Checkpoint`；拒绝/修改弹窗用显式 `RewriteTarget { checkpoint, action }` 保存目标，提交只用 `target.checkpoint.id`，不再读取最后一张审核卡。

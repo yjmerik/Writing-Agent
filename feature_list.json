@@ -3187,12 +3187,13 @@
       "phase": 26,
       "type": "feature",
       "dependencies": ["p26-02"],
-      "status": "not-started",
+      "status": "completed",
       "files": ["orchestrator/NovelOrchestrator.java", "orchestrator/InitialSetupCheckpointPayloadTest.java", "frontend/src/components/InteractiveReview.tsx"],
       "problem_ref": "P1-08：初始设定审核卡只有一句描述，无法确认审核对象",
       "description": "checkpoint payload 提供有界的世界观、人物、原旨/大纲摘要和页面跳转。",
       "acceptance": "初始设定 checkpoint 的三类摘要非空且不超过限制，审核卡可跳转到对应内容。",
-      "verify_cmd": "mvn test -Dtest=InitialSetupCheckpointPayloadTest"
+      "verify_cmd": "mvn test -Dtest=InitialSetupCheckpointPayloadTest",
+      "evidence": "2026-09-03：严格 TDD RED：完整 INTERACTIVE 构思链路先生成并持久化世界观、人物和大纲，InitialSetupCheckpointPayloadTest 得到 1 failure / 0 errors（AFTER_INITIAL_SETUP payload 为 null）；产品 strict 初跑为 0 PASS / 1 XFAIL / 0 ERROR，三段摘要、两个跳转和选中页签均不存在。GREEN：checkpoint 用 Jackson 编码 worldSummary/characterSummary/premiseSummary/links；摘要来自 repository 中的世界观、人物、outline premise 与项目原旨，按 Unicode code point 限 300 且不拆 surrogate；链接仅发布 world/outline。审核卡展示三段真实摘要，原生 Button 支持键盘，ProjectWorkspace 回调切换真实页签；UI 对旧/异常 payload 的 target 运行时白名单过滤。focused checkpoint 回归 15/15；strict initial-setup-summary 与 checkpoint-card-targeting 各 1 PASS / 0 XFAIL / 0 ERROR，未加入或弱化 KNOWN_FAILURES；frontend build PASS。browser-e2e 前 7 项 PASS；第 8 项两阶段重启因旧非 harsh 服务占端口而假失败，base 13f745c 同样复现且日志明确 Port was already in use；独立启动确认带 harsh=true 的新服务后原断言 PASS（chapter NEEDS_MANUAL_REVIEW，pendingTag/resolveBtn/resolved 均 true），合计 8/8 产品断言通过，工作树 harness 未改。JDK21 mvn compile && mvn test 与 ./init.sh 均 PASS：523 tests / 0 failures / 0 errors / 1 skipped，27 prompt 与前端生产构建通过。未修改 Agent/prompt/上下文/产出逻辑，无需 replay 质量门禁。"
     },
     {
       "id": "p26-08",

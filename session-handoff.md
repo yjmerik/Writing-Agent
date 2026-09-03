@@ -5,9 +5,9 @@
 ## Current Objective
 
 - **Goal**: 以产品一致性审计的浏览器红灯套件驱动下一轮 P0 → P1 → P2 修复。
-- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-06 已完成。在已有审核目标安全、detached candidate 替换、独立章节重写与审批后正文收敛之上，项目主操作现由服务端 `ProjectActionPolicy` 唯一定义与强制；status 按真实 repository 大纲/待审项发布 `allowedActions`/`blockedReasons`，RunConsole 只呈现当前有效动作。`/run` 不再在 WRITING 隐式写章，四个主 endpoint 在任务/Agent 副作用前统一门禁。p26-05 交付前另独立修复了初次正文请求去重（`e4b20bb`）与 metadata version 映射（`2b92249`）。
+- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-07 已完成。初始设定审核现在显示来自已持久化世界观、人物、outline premise 与项目原旨的三段有界摘要，并可键盘跳转真实的世界观/人物与大纲页签；旧或异常 payload 的跳转 target 会先经 `world`/`outline` 运行时白名单过滤。既有服务端动作矩阵、自动任务和 mode switch/resume 语义均未改动。
 - **Branch**: 当前 Phase 26 修复分支；仓库没有 Git remote/upstream。
-- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-06 completed，下一项为 p26-07。
+- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-07 completed，下一项为 p26-08。
 - **Current spec**: `docs/specs/2026-09-02-product-audit-browser-e2e.md` 与 `.superpowers/sdd/2026-09-03-product-design-consistency-remediation/` 任务简报。
 - **Product audit**: `docs/audits/2026-09-02-product-design-consistency-audit.md`（P0 3 项 / P1 8 项 / P2 5 项）。
 
@@ -44,6 +44,7 @@
 - p26-05 RED：`approve-keeps-chapter-visible` strict 为 0 PASS / 1 XFAIL / 0 ERROR；批准前正文可见，批准后消失且 `bodyLoading=true`。GREEN：刷新按 chapterIndex/version 保留有效缓存，选中章版本变化先淘汰再显式重读，批准强制重读当前章且旧正文保留到新响应；失败显示站内错误与重试，spinner 收敛。独立章节重写继续同步 body/meta。strict 为 1 PASS / 0 XFAIL / 0 ERROR，仅移除该项 KNOWN_FAILURES；frontend build、JDK21 `mvn compile`、`mvn test` 与 `./init.sh` 均 PASS（504 tests / 0 failures / 0 errors / 1 skipped）。
 - p26-05 基线 follow-up：`chapter-lazy-loading` RED 为首章请求 b1=2，非 force 读取复用 in-flight 后 browser 8/8，提交 `e4b20bb`；SQLite metadata focused RED 为 full.version=3/meta.version=1，映射 version 后 focused 4/4、approve/standalone strict 各1/1、browser 8/8、full/init 通过，提交 `2b92249`。
 - p26-06 RED：policy 类/枚举缺失导致 testCompile 失败；endpoint 回归初始 4 失败，覆盖 status 缺字段、WRITING `/run` 隐式写章、CONCEIVING write-all 创建任务、write-chapter 留 FAILED 任务。独立标准审查再发现 `/write-chapter` 门禁至启动的 TOCTOU，确定性 latch 回归 RED 为缺少原子 gate overload 的 testCompile 失败；GREEN 在取得 `ProjectWorkCoordinator` owner 后、保存 task 前按 repository 真相二次门禁，暂停先发生时不创建 task、不进入 orchestrator。最终 focused **35/35**，四个非法 endpoint 无 task/orchestrator 调用；approve/standalone strict 各 **1/1**，browser **8/8**，frontend build PASS，JDK21 full/init **522 tests / 0 failures / 0 errors / 1 skipped**，27 prompt 与前端构建 PASS。
+- p26-07 RED：完整 INTERACTIVE 构思链路的 `InitialSetupCheckpointPayloadTest` 为 **1 failure / 0 errors**，AFTER_INITIAL_SETUP payload 实际为 null；`initial-setup-summary` strict 为 **0 PASS / 1 XFAIL / 0 ERROR**，三段真实摘要、两次跳转与页签选中断言均失败。GREEN：checkpoint 以 Jackson 编码三段持久化内容摘要与 `world`/`outline` links；每段按 code point 限 300 且 surrogate 完整。审核卡展示摘要并用原生按钮切 tab，target 运行时白名单防止异常 payload 写入无效 tab。focused checkpoint 回归 **15/15**；`initial-setup-summary` 与 `checkpoint-card-targeting` strict 各 **1 PASS / 0 XFAIL / 0 ERROR**，未改弱 `KNOWN_FAILURES`；frontend build PASS。browser 产品断言 **8/8**：完整脚本前 7 项 PASS，第 8 项两阶段重启因旧服务占端口是假失败（base `13f745c` 同样复现，日志为 `Port was already in use`），独立确认 `harsh=true` 新服务后原断言 PASS。JDK21 full/init **523 tests / 0 failures / 0 errors / 1 skipped**，27 prompt 与前端构建 PASS。Agent/prompt/上下文/产出未改，无 replay 质量门禁。
 
 ## Non-blocking Observations
 
@@ -52,10 +53,11 @@
 3. 前端主 bundle 约 1.19 MB（gzip 372 KB），构建通过但有分包警告。
 4. 当前无 Git remote，`.github/workflows/ci.yml` 不会在远端实际触发；现有证据均为本地 release gate。
 5. 默认 `e2e.sh` 会选字典序最新 fixture；当前会选 wuxia fixture，但默认 preset 为 mystery，造成请求指纹 miss。p26-02 按匹配 mystery fixture 完成质量回归；fixture 选择策略不在本 feature 范围。
+6. `browser-e2e.sh` 的两阶段应用重启只按端口 readiness 判断；若旧服务未及时退出，第二个 harsh 服务会 bind 失败且 readiness 命中旧服务。p26-07 只记录并隔离验证，没有修改 harness；若后续单独修复，应新建 feature 并给 `kill_port/start_app` 增加端口空闲与新 PID 断言。
 
 ## Next Entry
 
-- 下一步为 p26-07：初始设定审核内容摘要；不要改 p26-06 已锁定的动作矩阵或四个 endpoint 前置门禁。
-- 后续红灯还有独立章节重写、交互切自动、审核后正文稳定、人工管理、移动端；自动零干预需单独设计持续运行生命周期。
+- 下一步为 p26-08：世界观与人物完整字段编辑；不要改 p26-07 的 payload schema、页签白名单或既有动作矩阵。
+- 剩余本期红灯聚焦人工内容管理、移动端与文案一致性；按用户指示，自动任务及其 mode switch/resume 生命周期需要架构和系统修复，不在本期计划范围。
 - 新需求继续遵循：写 spec → 拆 1-3 文件 feature → 登记 `feature_list.json` → 实现与验证 → 更新三份状态文档。
 - 本机代理可能劫持 localhost；脚本内 curl 保持 `--noproxy '*'`。ego-browser 内写文件使用绝对路径。

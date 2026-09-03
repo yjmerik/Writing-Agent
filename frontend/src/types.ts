@@ -174,6 +174,13 @@ export interface CheckpointPayload {
   preview?: string;
   score?: number;
   unresolvedHigh?: number;
+  worldSummary?: string;
+  characterSummary?: string;
+  premiseSummary?: string;
+  links?: Array<{
+    label: string;
+    target: 'world' | 'outline';
+  }>;
 }
 
 export interface Checkpoint {

@@ -25,6 +25,9 @@ import java.util.Map;
 public class NovelOrchestrator {
 
     private static final Logger log = LoggerFactory.getLogger(NovelOrchestrator.class);
+    private static final com.fasterxml.jackson.databind.ObjectMapper JSON =
+            new com.fasterxml.jackson.databind.ObjectMapper();
+    private static final int INITIAL_SETUP_SUMMARY_LIMIT = 300;
     private static final java.util.concurrent.ExecutorService POST_PROCESS =
             java.util.concurrent.Executors.newCachedThreadPool(r -> {
                 Thread t = new Thread(r, "chapter-postprocess");
@@ -547,12 +550,45 @@ public class NovelOrchestrator {
 
         if (p.getMode() == ProjectMode.INTERACTIVE) {
             p.setState(NovelState.PAUSED_AT_CHECKPOINT);
-            repository.saveCheckpoint(new Checkpoint(projectId,
-                    Checkpoint.Type.AFTER_INITIAL_SETUP, "初始设定生成完成，待审核"));
+            Checkpoint checkpoint = new Checkpoint(projectId,
+                    Checkpoint.Type.AFTER_INITIAL_SETUP, "初始设定生成完成，待审核");
+            checkpoint.setPayload(buildInitialSetupCheckpointPayload(projectId, p));
+            repository.saveCheckpoint(checkpoint);
         } else {
             p.setState(NovelState.PLANNING);
         }
         repository.saveProject(p);
+    }
+
+
+    /** 初始设定审核摘要只读取已落库内容，避免审核卡展示生成过程中的临时候选。 */
+    String buildInitialSetupCheckpointPayload(String projectId, Project project) {
+        var root = JSON.createObjectNode();
+        root.put("worldSummary", boundedInitialSetupSummary(collectWorldbuildingSummary(projectId)));
+        root.put("characterSummary", boundedInitialSetupSummary(collectCharacterSummary(projectId)));
+
+        String outlinePremise = repository.findOutlineByProject(projectId)
+                .map(Outline::getPremise)
+                .filter(value -> value != null && !value.isBlank())
+                .orElse("");
+        String projectConcept = project.getConcept() == null ? "" : project.getConcept().strip();
+        String premise = java.util.stream.Stream.of(projectConcept, outlinePremise)
+                .filter(value -> !value.isBlank())
+                .collect(java.util.stream.Collectors.joining("\n"));
+        root.put("premiseSummary", boundedInitialSetupSummary(premise));
+
+        var links = root.putArray("links");
+        links.addObject().put("label", "查看世界观与人物").put("target", "world");
+        links.addObject().put("label", "查看大纲").put("target", "outline");
+        return root.toString();
+    }
+
+    private static String boundedInitialSetupSummary(String value) {
+        String summary = value == null ? "" : value.strip();
+        int codePoints = summary.codePointCount(0, summary.length());
+        if (codePoints <= INITIAL_SETUP_SUMMARY_LIMIT) return summary;
+        int end = summary.offsetByCodePoints(0, INITIAL_SETUP_SUMMARY_LIMIT);
+        return summary.substring(0, end);
     }
 
 

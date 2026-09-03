@@ -10,7 +10,9 @@ import {
 } from '@ant-design/icons';
 import type { DataNode } from 'antd/es/tree';
 import { api } from '../api/client';
+import type { AgentRevisionTarget } from '../api/client';
 import type { ChapterSynopsis, Outline, Volume } from '../types';
+import AgentRevisionDialog from './AgentRevisionDialog';
 
 let draftSequence = 0;
 
@@ -34,6 +36,7 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
   const [premiseDraft, setPremiseDraft] = useState('');
   const [saving, setSaving] = useState(false);
   const [replanning, setReplanning] = useState(false);
+  const [revisionTarget, setRevisionTarget] = useState<AgentRevisionTarget | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -194,6 +197,9 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
 
   if (loading) return <Spin />;
 
+  const hasUnsavedStructure = Boolean(draft && persistedOutline
+    && JSON.stringify(draft.volumes) !== JSON.stringify(persistedOutline.volumes));
+
   return (
     <Card>
       <Space wrap style={{ marginBottom: 16 }}>
@@ -257,6 +263,7 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
             outline={draft}
             currentChapter={currentChapter}
             saving={saving}
+            hasUnsavedStructure={hasUnsavedStructure}
             onUpdateVolume={updateVolume}
             onUpdateSynopsis={updateSynopsis}
             onAddChapter={addChapter}
@@ -264,9 +271,24 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
             onMoveChapter={moveChapter}
             onDeleteVolume={deleteVolume}
             onMoveVolume={moveVolume}
+            onReviseVolume={(volume) => setRevisionTarget({
+              projectId,
+              targetType: 'VOLUME',
+              targetId: volume.id,
+              label: `卷${volume.volumeIndex} · ${volume.title}`,
+            })}
           />
         </>
       )}
+      <AgentRevisionDialog
+        open={revisionTarget !== null}
+        target={revisionTarget}
+        onApplied={async () => {
+          setRevisionTarget(null);
+          await load();
+        }}
+        onCancel={() => setRevisionTarget(null)}
+      />
     </Card>
   );
 }
@@ -275,6 +297,7 @@ function OutlineTree({
   outline,
   currentChapter,
   saving,
+  hasUnsavedStructure,
   onUpdateVolume,
   onUpdateSynopsis,
   onAddChapter,
@@ -282,10 +305,12 @@ function OutlineTree({
   onMoveChapter,
   onDeleteVolume,
   onMoveVolume,
+  onReviseVolume,
 }: {
   outline: Outline;
   currentChapter: number;
   saving: boolean;
+  hasUnsavedStructure: boolean;
   onUpdateVolume: (volumeId: string, patch: Partial<Pick<Volume, 'title' | 'summary'>>) => void;
   onUpdateSynopsis: (synopsisId: string, patch: Partial<Pick<ChapterSynopsis, 'title' | 'synopsis'>>) => void;
   onAddChapter: (volumeId: string) => void;
@@ -293,6 +318,7 @@ function OutlineTree({
   onMoveChapter: (volumeId: string, synopsisIndex: number, direction: -1 | 1) => void;
   onDeleteVolume: (volumeId: string) => void;
   onMoveVolume: (volumeIndex: number, direction: -1 | 1) => void;
+  onReviseVolume: (volume: Volume) => void;
 }) {
   const lastWrittenVolumePosition = outline.volumes.reduce(
     (last, volume, index) => volumeContainsWritten(volume, currentChapter) ? index : last,
@@ -332,6 +358,13 @@ function OutlineTree({
                 />
               </>
             )}
+            <Button
+              size="small"
+              aria-label={`让 Agent 修改卷${volume.volumeIndex}`}
+              onClick={() => onReviseVolume(volume)}
+              disabled={saving || locked || hasUnsavedStructure || volume.id.startsWith('draft-volume-')}
+              title={hasUnsavedStructure ? '请先保存或刷新当前大纲修改' : locked ? '含已写章节的卷不可修改' : undefined}
+            >让 Agent 修改</Button>
             <Button
               size="small"
               icon={<PlusOutlined />}

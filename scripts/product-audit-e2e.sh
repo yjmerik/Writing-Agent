@@ -244,9 +244,11 @@ if need_case manual-content-management; then
   # chapter to an earlier written volume would place a new high chapter index before a
   # later locked chapter and make the complete outline invalid.
   second_volume_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
+  third_volume_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
   fourth_synopsis_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
+  fifth_synopsis_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
   sqlite3 "$DIR/novel.db" \
-    "INSERT INTO volumes(id,project_id,volume_index,title,summary) VALUES('$second_volume_id','$P_REWRITE',2,'第二卷','第二卷边界测试'); UPDATE chapter_synopses SET volume_id='$second_volume_id' WHERE project_id='$P_REWRITE' AND chapter_index IN (2,3); INSERT INTO chapter_synopses(id,project_id,volume_id,chapter_index,title,synopsis,writing_notes) VALUES('$fourth_synopsis_id','$P_REWRITE','$second_volume_id',4,'事件4','第4章的场景梗概，用于验证单独移动后立即保存。',NULL); UPDATE projects SET current_chapter_index=2 WHERE id='$P_REWRITE';" || exit 2
+    "INSERT INTO volumes(id,project_id,volume_index,title,summary) VALUES('$second_volume_id','$P_REWRITE',2,'第二卷','第二卷边界测试'); INSERT INTO volumes(id,project_id,volume_index,title,summary) VALUES('$third_volume_id','$P_REWRITE',3,'第三卷','纯未写卷，用于验证定向 Agent 修改'); UPDATE chapter_synopses SET volume_id='$second_volume_id' WHERE project_id='$P_REWRITE' AND chapter_index IN (2,3); INSERT INTO chapter_synopses(id,project_id,volume_id,chapter_index,title,synopsis,writing_notes) VALUES('$fourth_synopsis_id','$P_REWRITE','$second_volume_id',4,'事件4','第4章的场景梗概，用于验证单独移动后立即保存。',NULL); INSERT INTO chapter_synopses(id,project_id,volume_id,chapter_index,title,synopsis,writing_notes) VALUES('$fifth_synopsis_id','$P_REWRITE','$third_volume_id',5,'事件5','第5章的场景梗概，用于验证纯未写卷定向修订。',NULL); UPDATE projects SET current_chapter_index=2 WHERE id='$P_REWRITE';" || exit 2
 fi
 
 if need_case interactive-to-auto; then
@@ -297,6 +299,34 @@ const worldFingerprint = (entries) => fingerprint((entries || []).map(entry => (
   content: entry.content,
   version: entry.version,
 })).sort((a, b) => String(a.id).localeCompare(String(b.id))))
+const characterFingerprint = (entries) => fingerprint((entries || []).map(character => ({
+  id: character.id,
+  name: character.name,
+  role: character.role,
+  personality: character.personality,
+  ability: character.ability,
+  motivation: character.motivation,
+  appearance: character.appearance,
+  relationships: character.relationships,
+  growthArc: character.growthArc,
+  speakingStyle: character.speakingStyle,
+})).sort((a, b) => String(a.id).localeCompare(String(b.id))))
+const chapterFingerprint = (chapter) => fingerprint(chapter ? {
+  id: chapter.id,
+  chapterIndex: chapter.chapterIndex,
+  title: chapter.title,
+  content: chapter.content,
+  status: chapter.status,
+  version: chapter.version,
+} : null)
+const chapterMetaFingerprint = (chapters) => fingerprint((chapters || []).map(chapter => ({
+  id: chapter.id,
+  chapterIndex: chapter.chapterIndex,
+  title: chapter.title,
+  status: chapter.status,
+  version: chapter.version,
+  wordCount: chapter.wordCount,
+})).sort((a, b) => String(a.id).localeCompare(String(b.id))))
 
 async function pageJson(path, options) {
   // 当前 ego-browser 的 js() 不等待页面 Promise；只用于 GET 的同步 XHR 保证返回可序列化对象。
@@ -332,6 +362,43 @@ async function submitModal(instruction, buttonText) {
   if (!await modalOpen()) return false
   await fillInput('.ant-modal-wrap textarea', instruction)
   return await js('(() => {const modal=[...document.querySelectorAll(".ant-modal-wrap")].find(x=>getComputedStyle(x).display!=="none");const b=[...modal.querySelectorAll("button")].find(x=>x.innerText.includes(' + JSON.stringify(buttonText) + '));if(b){b.click();return true}return false})()')
+}
+
+async function clickButtonInScope(scopeSelector, text, ariaLabel) {
+  const source = '(() => {const scope=document.querySelector(' + JSON.stringify(scopeSelector) + ');' +
+    'const b=[...(scope?.querySelectorAll("button")||[])].find(x=>' +
+    (ariaLabel
+      ? '(x.getAttribute("aria-label")||"")===' + JSON.stringify(ariaLabel)
+      : 'x.innerText.trim()===' + JSON.stringify(text)) +
+    ');if(!b||b.disabled)return false;b.click();return true})()'
+  return await js(source)
+}
+
+async function generateAgentRevisionPreview(instruction) {
+  if (!await modalOpen()) return { generated: false, diffVisible: false }
+  await fillInput('textarea[aria-label="修改要求"]', instruction)
+  const generated = await js('(() => {const modal=[...document.querySelectorAll(".ant-modal-wrap")].find(x=>getComputedStyle(x).display!=="none");const b=[...modal.querySelectorAll("button")].find(x=>x.innerText.trim()==="生成预览");if(!b||b.disabled)return false;b.click();return true})()')
+  if (generated) await wait(3)
+  const diffVisible = generated && await js('!!document.querySelector("[data-revision-side=before]")&&!!document.querySelector("[data-revision-side=after]")')
+  return { generated, diffVisible }
+}
+
+async function finishAgentRevision(action) {
+  if (!await modalOpen()) return false
+  const clicked = await js('(() => {const modal=[...document.querySelectorAll(".ant-modal-wrap")].find(x=>getComputedStyle(x).display!=="none");let b=[...modal.querySelectorAll("button")].find(x=>x.innerText.trim()===' + JSON.stringify(action) + ');if(!b&&' + JSON.stringify(action) + '==="取消")b=modal.querySelector(".ant-modal-close");if(!b||b.disabled)return false;b.click();return true})()')
+  if (clicked) await wait(action === '确认应用' ? 3 : 1)
+  return clicked
+}
+
+function selectedObjectOnlyChanged(before, after, targetId) {
+  const selectedBefore = (before || []).find(item => item.id === targetId)
+  const selectedAfter = (after || []).find(item => item.id === targetId)
+  const otherBefore = (before || []).filter(item => item.id !== targetId)
+    .sort((a, b) => String(a.id).localeCompare(String(b.id)))
+  const otherAfter = (after || []).filter(item => item.id !== targetId)
+    .sort((a, b) => String(a.id).localeCompare(String(b.id)))
+  return fingerprint(selectedBefore) !== fingerprint(selectedAfter) &&
+    fingerprint(otherBefore) === fingerprint(otherAfter)
 }
 
 async function runCase(id, fn) {
@@ -692,6 +759,132 @@ await runCase('manual-content-management', async () => {
   const conflictHandled = externalUpdate?.status === 200 && conflictState?.modalOpen && conflictState?.message &&
     conflictState.title === externalTitle && conflictState.content === externalContent &&
     afterConflict?.title === externalTitle && afterConflict?.content === externalContent && afterConflict.version > restored.version
+  const conflictClosed = !conflictState?.modalOpen || await finishAgentRevision('取消')
+
+  // P1-06: all five object levels share the same preview-before-apply contract.
+  // Preview and cancel must be read-only; a confirmed candidate may change only its selected object.
+  await go('/#/project/$P_REWRITE')
+  await openTab('世界观与人物')
+  const agentWorldBefore = await pageJson('/api/projects/$P_REWRITE/worldbuilding')
+  const agentWorldTarget = agentWorldBefore[0]
+  const agentWorldScope = '[data-world-entry-id="' + (agentWorldTarget?.id || '') + '"]'
+  const agentWorldCancelOpened = !!agentWorldTarget && await clickButtonInScope(agentWorldScope, '让 Agent 修改')
+  const agentWorldCancelPreview = agentWorldCancelOpened
+    ? await generateAgentRevisionPreview('只补充一条可验证的经济规则')
+    : { generated: false, diffVisible: false }
+  const agentWorldAfterCancelPreview = await pageJson('/api/projects/$P_REWRITE/worldbuilding')
+  const agentWorldPreviewReadOnly = worldFingerprint(agentWorldBefore) === worldFingerprint(agentWorldAfterCancelPreview)
+  const agentWorldCancelled = agentWorldCancelPreview.generated && await finishAgentRevision('取消')
+  const agentWorldAfterCancel = await pageJson('/api/projects/$P_REWRITE/worldbuilding')
+  const agentWorldCancelReadOnly = worldFingerprint(agentWorldBefore) === worldFingerprint(agentWorldAfterCancel)
+  const agentWorldOpened = !!agentWorldTarget && await clickButtonInScope(agentWorldScope, '让 Agent 修改')
+  const agentWorldPreview = agentWorldOpened
+    ? await generateAgentRevisionPreview('只补充一条可验证的经济规则')
+    : { generated: false, diffVisible: false }
+  const agentWorldApplied = agentWorldPreview.diffVisible && await finishAgentRevision('确认应用')
+  const agentWorldAfter = await pageJson('/api/projects/$P_REWRITE/worldbuilding')
+  const agentWorldAfterTarget = agentWorldAfter.find(item => item.id === agentWorldTarget?.id)
+  const agentWorldScoped = agentWorldApplied && agentWorldAfterTarget?.content !== agentWorldTarget?.content &&
+    worldFingerprint(agentWorldBefore.filter(item => item.id !== agentWorldTarget?.id)) ===
+      worldFingerprint(agentWorldAfter.filter(item => item.id !== agentWorldTarget?.id))
+
+  const agentCharactersBefore = await pageJson('/api/projects/$P_REWRITE/characters')
+  const agentCharacterTarget = agentCharactersBefore[0]
+  const agentCharacterScope = '[data-character-id="' + (agentCharacterTarget?.id || '') + '"]'
+  const agentCharacterOpened = !!agentCharacterTarget && await clickButtonInScope(agentCharacterScope, '让 Agent 修改')
+  const agentCharacterPreview = agentCharacterOpened
+    ? await generateAgentRevisionPreview('只强化这个人物的调查动机')
+    : { generated: false, diffVisible: false }
+  const agentCharactersAfterPreview = await pageJson('/api/projects/$P_REWRITE/characters')
+  const agentCharacterPreviewReadOnly = characterFingerprint(agentCharactersBefore) === characterFingerprint(agentCharactersAfterPreview)
+  const agentCharacterApplied = agentCharacterPreview.diffVisible && await finishAgentRevision('确认应用')
+  const agentCharactersAfter = await pageJson('/api/projects/$P_REWRITE/characters')
+  const agentCharacterAfterTarget = agentCharactersAfter.find(item => item.id === agentCharacterTarget?.id)
+  const agentCharacterScoped = agentCharacterApplied &&
+    agentCharacterAfterTarget?.motivation !== agentCharacterTarget?.motivation &&
+    characterFingerprint(agentCharactersBefore.filter(item => item.id !== agentCharacterTarget?.id)) ===
+      characterFingerprint(agentCharactersAfter.filter(item => item.id !== agentCharacterTarget?.id))
+
+  await openTab('大纲')
+  const agentStatus = await pageJson('/api/projects/$P_REWRITE/status')
+  const agentOutlineBefore = await pageJson('/api/projects/$P_REWRITE/outline')
+  const agentVolumeTarget = agentOutlineBefore.volumes.find(volume =>
+    volume.synopses.every(synopsis => synopsis.chapterIndex > agentStatus.currentChapter))
+  const agentVolumeScope = '[data-outline-volume-id="' + (agentVolumeTarget?.id || '') + '"]'
+  const agentVolumeOpened = !!agentVolumeTarget && await clickButtonInScope(agentVolumeScope, '让 Agent 修改')
+  const agentVolumePreview = agentVolumeOpened
+    ? await generateAgentRevisionPreview('只调整本卷标题和简介')
+    : { generated: false, diffVisible: false }
+  const agentOutlineAfterPreview = await pageJson('/api/projects/$P_REWRITE/outline')
+  const agentVolumePreviewReadOnly = fingerprint(agentOutlineBefore) === fingerprint(agentOutlineAfterPreview)
+  const agentVolumeApplied = agentVolumePreview.diffVisible && await finishAgentRevision('确认应用')
+  const agentOutlineAfter = await pageJson('/api/projects/$P_REWRITE/outline')
+  const agentVolumeScoped = agentVolumeApplied &&
+    agentOutlineBefore.premise === agentOutlineAfter.premise &&
+    selectedObjectOnlyChanged(agentOutlineBefore.volumes, agentOutlineAfter.volumes, agentVolumeTarget?.id)
+
+  await openTab('章节管理')
+  await wait(2)
+  const agentChapterBefore = await pageJson('/api/projects/$P_REWRITE/chapters/1')
+  const agentChapterListBefore = await pageJson('/api/projects/$P_REWRITE/chapters?page=0&size=1000')
+  const agentChapterSelector = '[data-chapter-index="1"]'
+  await js('(() => {const row=document.querySelector(' + JSON.stringify(agentChapterSelector) + ');if(!row)return false;row.click();return true})()')
+  await wait(2)
+  const agentChapterOpened = await clickButtonInScope('body', '', '让 Agent 修改第1章')
+  const agentChapterPreview = agentChapterOpened
+    ? await generateAgentRevisionPreview('只增强本章的证据推理')
+    : { generated: false, diffVisible: false }
+  const agentChapterAfterPreview = await pageJson('/api/projects/$P_REWRITE/chapters/1')
+  const agentChapterPreviewReadOnly = chapterFingerprint(agentChapterBefore) === chapterFingerprint(agentChapterAfterPreview)
+  const agentChapterApplied = agentChapterPreview.diffVisible && await finishAgentRevision('确认应用')
+  const agentChapterAfter = await pageJson('/api/projects/$P_REWRITE/chapters/1')
+  const agentChapterListAfter = await pageJson('/api/projects/$P_REWRITE/chapters?page=0&size=1000')
+  const agentChapterScoped = agentChapterApplied && chapterFingerprint(agentChapterBefore) !== chapterFingerprint(agentChapterAfter) &&
+    chapterMetaFingerprint(agentChapterListBefore.chapters.filter(item => item.id !== agentChapterBefore?.id)) ===
+      chapterMetaFingerprint(agentChapterListAfter.chapters.filter(item => item.id !== agentChapterBefore?.id))
+
+  const agentPassageBefore = agentChapterAfter
+  const agentPassageButton = await js('(() => {const b=[...document.querySelectorAll("button")].find(x=>(x.getAttribute("aria-label")||"").startsWith("让 Agent 修改第 ")&&(x.getAttribute("aria-label")||"").endsWith(" 段"));return b?.getAttribute("aria-label")||""})()')
+  const passageMatch = agentPassageButton.match(/第 (\d+) 段/)
+  const passageLineIndex = passageMatch ? Number(passageMatch[1]) - 1 : -1
+  const agentPassageOpened = !!agentPassageButton && await clickButtonInScope('body', '', agentPassageButton)
+  const agentPassagePreview = agentPassageOpened
+    ? await generateAgentRevisionPreview('只增强这一段的现场感')
+    : { generated: false, diffVisible: false }
+  const agentPassageAfterPreview = await pageJson('/api/projects/$P_REWRITE/chapters/1')
+  const agentPassagePreviewReadOnly = chapterFingerprint(agentPassageBefore) === chapterFingerprint(agentPassageAfterPreview)
+  const agentPassageApplied = agentPassagePreview.diffVisible && await finishAgentRevision('确认应用')
+  const agentPassageAfter = await pageJson('/api/projects/$P_REWRITE/chapters/1')
+  const passageBeforeLines = (agentPassageBefore?.content || '').split('\n')
+  const passageAfterLines = (agentPassageAfter?.content || '').split('\n')
+  const agentPassageScoped = agentPassageApplied && passageLineIndex >= 0 &&
+    agentPassageAfter?.id === agentPassageBefore?.id && agentPassageAfter?.title === agentPassageBefore?.title &&
+    passageBeforeLines.length === passageAfterLines.length &&
+    passageBeforeLines[passageLineIndex] !== passageAfterLines[passageLineIndex] &&
+    passageBeforeLines.every((line, index) => index === passageLineIndex || line === passageAfterLines[index])
+
+  const agentRevisions = {
+    conflictClosed,
+    world: { opened: agentWorldOpened, preview: agentWorldPreview, previewReadOnly: agentWorldPreviewReadOnly,
+      cancelOpened: agentWorldCancelOpened, cancelPreview: agentWorldCancelPreview, cancelled: agentWorldCancelled,
+      cancelReadOnly: agentWorldCancelReadOnly, applied: agentWorldApplied, scoped: agentWorldScoped },
+    character: { opened: agentCharacterOpened, preview: agentCharacterPreview,
+      previewReadOnly: agentCharacterPreviewReadOnly, applied: agentCharacterApplied, scoped: agentCharacterScoped },
+    volume: { target: agentVolumeTarget?.id, opened: agentVolumeOpened, preview: agentVolumePreview,
+      previewReadOnly: agentVolumePreviewReadOnly, applied: agentVolumeApplied, scoped: agentVolumeScoped },
+    chapter: { opened: agentChapterOpened, preview: agentChapterPreview,
+      previewReadOnly: agentChapterPreviewReadOnly, applied: agentChapterApplied, scoped: agentChapterScoped },
+    passage: { button: agentPassageButton, opened: agentPassageOpened, preview: agentPassagePreview,
+      previewReadOnly: agentPassagePreviewReadOnly, applied: agentPassageApplied, scoped: agentPassageScoped },
+  }
+  const agentRevisionsPass = agentRevisions.conflictClosed &&
+    agentRevisions.world.cancelOpened && agentRevisions.world.cancelPreview.diffVisible &&
+    agentRevisions.world.cancelled && agentRevisions.world.cancelReadOnly &&
+    ['world', 'character', 'volume', 'chapter', 'passage'].every(level => {
+      const state = agentRevisions[level]
+      return state.opened && state.preview.generated && state.preview.diffVisible &&
+        state.previewReadOnly && state.applied && state.scoped
+    })
   const pass = worldTypeOpened && worldTypeSelected && worldSaveClicked && characterSaveClicked &&
     worldPersisted && characterPersisted && Object.values(worldFields).every(Boolean) && Object.values(characterFields).every(Boolean) &&
     !!targetVolume && targetUnwritten.length >= 2 && Object.values(outlineActions).every(Boolean) &&
@@ -702,7 +895,7 @@ await runCase('manual-content-management', async () => {
     Object.values(chapterActions).every(Boolean) && addOpened && createSubmitted && createdVisible &&
     editOpened && saveActionVisible && editSubmitted && editPersisted && editReloaded && historyOpened &&
     Object.values(historyState || {}).every(Boolean) && compareClicked && Object.values(comparison || {}).every(Boolean) &&
-    restoreClicked && restoreConfirmed && restorePersisted && restoreReloaded && conflictHandled
+    restoreClicked && restoreConfirmed && restorePersisted && restoreReloaded && conflictHandled && agentRevisionsPass
   return { pass, worldSave: { worldTypeOpened, worldTypeSelected, worldSaveClicked, persisted: worldPersisted, refreshed: worldFields },
     characterSave: { characterSaveClicked, persisted: characterPersisted, refreshed: characterFields },
     outlineActions: { ...outlineActions, lockedActions, addBoundary, addClicked, newRowPresent, moveClicked,
@@ -714,7 +907,8 @@ await runCase('manual-content-management', async () => {
       createdVersion: created?.version, editOpened, editSubmitted, editPersisted, editReloaded,
       historyOpened, historyState, compareClicked, comparison, restoreClicked, restoreConfirmed,
       restoredVersion: restored?.version, restorePersisted, restoreReloaded, externalUpdateStatus: externalUpdate?.status,
-      conflictSubmitted, conflictState, afterConflictVersion: afterConflict?.version, conflictHandled } }
+      conflictSubmitted, conflictState, afterConflictVersion: afterConflict?.version, conflictHandled },
+    agentRevisions }
 })
 
 await runCase('mobile-critical-path', async () => {

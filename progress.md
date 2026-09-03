@@ -2,6 +2,16 @@
 
 ---
 
+## 会话记录（2026-09-04）：Phase 26 p26-16 五层级统一 Agent 修改界面
+
+- 新增统一 `AgentRevisionDialog`，世界观、人物、纯未写卷、章节和正文段落共用“指令 → 生成预览 → 前后对照 → 确认应用”闭环；预览展示摘要与来源指纹，修改指令会丢弃旧预览，错误留在站内。
+- 取消只关闭本地对话框，不调用 apply。存在未保存世界观/人物整卡草稿、未保存大纲结构草稿，或卷已包含已写章节时，对应 Agent 入口明确禁用，避免以已保存来源覆盖本地编辑。章节与每个可修改段落都有独立 Button，段落 `aria-label="让 Agent 修改第 N 段"`。
+- 浏览器 TDD RED 为 **0 PASS / 1 XFAIL / 0 ERROR**：原有人工内容管理链路全部通过，五层级入口均缺失。GREEN 场景真实执行世界观预览取消后零写入、再次预览确认，以及人物、纯未写卷、章节、段落各一次预览确认；所有 preview/cancel 业务指纹不变，确认后仅所选对象变化，最终 strict **1 PASS / 0 XFAIL / 0 ERROR**。
+- 为真实浏览器场景补充的 Scenario 内容修订候选先以单测得到 **1 failure**，随后五类候选保留身份并定向修改；普通 GENERAL 场景仍返回 `[]`。focused Scenario/Agent/API **23/23 PASS**。
+- frontend production build PASS；JDK21 compile/full/init 全绿：**583 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端生产构建通过。生产 Prompt、Agent、上下文、自动任务及 mode switch/resume 未修改，不需要文学质量 replay。
+
+---
+
 ## 会话记录（2026-09-04）：Phase 26 p26-15 Agent 修订预览与乐观锁应用 API
 
 - 新增服务端持有的 UUID 修订预览和两段式 API。预览读取单一 WORLD、CHARACTER、VOLUME、CHAPTER 或 PASSAGE 对象，返回 before/after、摘要与 SHA-256 来源指纹，本身不写仓储；应用不接受客户端回传候选，重新读取并校验持久化目标。

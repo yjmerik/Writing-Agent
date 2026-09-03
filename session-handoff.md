@@ -5,9 +5,9 @@
 ## Current Objective
 
 - **Goal**: 以产品一致性审计的浏览器红灯套件驱动下一轮 P0 → P1 → P2 修复。
-- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-15 已完成。五类内容修订已具备服务端预览、来源指纹、目标身份校验、活动写作冲突和一次性应用 API；统一界面尚未接入，留给 p26-16。自动任务持续运行和 mode switch/resume 语义均未改动。
-- **Branch**: 当前 Phase 26 修复分支；仓库没有 Git remote/upstream。
-- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-15 completed，下一项为 p26-16。
+- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-16 已完成。五类内容修订均已具备统一“让 Agent 修改”入口、只读预览、来源指纹和一次性定向应用；自动任务持续运行和 mode switch/resume 语义均未改动。
+- **Branch**: `codex/product-design-consistency-fixes`；仓库没有 Git remote/upstream。
+- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-16 completed，下一项为 p26-17。
 - **Current spec**: `docs/specs/2026-09-02-product-audit-browser-e2e.md` 与 `.superpowers/sdd/2026-09-03-product-design-consistency-remediation/` 任务简报。
 - **Product audit**: `docs/audits/2026-09-02-product-design-consistency-audit.md`（P0 3 项 / P1 8 项 / P2 5 项）。
 
@@ -27,7 +27,7 @@
 - reliability E2E：crash-restart / stale-worker-409 / manual-review / canon-protection 四场景全部 PASS。
 - 真实 LLM 金丝雀：mystery 3 章 10,191 字、WUXIA 3 章 11,308 字，均 0 LLM 错误、0 章节失败；WUXIA 规则断言无修仙规则污染。
 
-## Verification（2026-09-03）
+## Verification（2026-09-04）
 
 - p26-01 RED：`mvn test -Dtest=CheckpointTargetValidationTest` 为 2 failures / 0 errors（跨项目、已处理 checkpoint 实际均接受为 HTTP 200）。
 - p26-01 focused GREEN：`mvn test -Dtest=CheckpointTargetValidationTest,ApproveSpecificCheckpointTest` 为 3 tests / 0 failures / 0 errors。
@@ -60,6 +60,7 @@
 - p26-13 RED：真实浏览器 `manual-content-management` 为 **0 PASS / 1 XFAIL / 0 ERROR**，章节新增、编辑、历史、比较、回退及冲突处理均缺失。GREEN：新增与编辑使用本地草稿，提交目标绑定 chapterIndex/expectedVersion；历史可比较指定旧版本与当前正文并确认回退。模拟外部更新后陈旧保存收到 409，弹窗保持打开并重载服务端最新标题/正文，显示“章节已被更新，请重新确认”。strict 与 expect-known-failures 均为 **1 PASS / 0 XFAIL / 0 ERROR**，并已从 KNOWN_FAILURES 移除；frontend build、JDK21 compile/full/init PASS，仍为 **567 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建通过。
 - p26-14 RED：`ContentRevisionAgentTest` testCompile 为 **23 个预期缺失符号**。GREEN：五类 TargetType 均渲染目标/当前 JSON/指令并返回严格 RevisionCandidate；输入 JSON、目标绑定、必填字段、单 JSON/无 fence/无尾随值及 structuredJson 对象均 fail loud，Agent 无仓储依赖。专属 **10/10**、含 Spring 接线 **11/11**；匹配 mystery replay 为 **3 章 / 10,191 字 / 54 calls / 0 errors / 0 chapter failures**，baseline PASS；manual browser **1/0/0**。JDK21 compile/full/init **577 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端构建通过。
 - p26-15 RED：`AgentRevisionApiTest` 的 5 组真实 Spring MVC/SQLite 场景因预览路由不存在返回 500。GREEN：五类目标返回服务端 UUID preview、before/after 与 SHA-256 sourceVersion；应用重新读取并校验项目、目标身份、索引、活动写作和来源指纹，一次性消费。跨项目、陈旧、篡改身份、活动任务及重复应用均无部分写入；卷级仅修改所选未写卷标题/摘要且保持所有卷 UUID，章节/段落进入既有版本与派生刷新链。API **5/5**、联合 Agent **15/15**；matching mystery replay **3 章 / 10,191 字 / 54 calls / 0 errors / 0 chapter failures**，baseline PASS；manual browser **1/0/0**。JDK21 compile/full/init **582 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端构建通过。
+- p26-16 RED：扩展后的 `manual-content-management` 为 **0 PASS / 1 XFAIL / 0 ERROR**，既有人工管理断言全绿而五类 Agent 入口缺失；Scenario 严格候选单测先为 **1 failure**。GREEN：统一对话框覆盖指令、生成、前后预览、确认和站内错误；世界观/人物/卷/章节/段落均有目标绑定入口，未保存本地草稿和含已写章节卷会禁用以避免覆盖，段落使用真实可访问 Button。真实浏览器执行一次预览取消和五类确认，逐项证明 preview/cancel 零写入、确认只改目标，strict **1 PASS / 0 XFAIL / 0 ERROR**。focused Scenario/Agent/API **23/23**；frontend build、JDK21 compile/full/init PASS：**583 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端构建通过。Scenario 适配仅供确定性测试，生产 Prompt/Agent/上下文未改，无 replay。
 
 ## Non-blocking Observations
 
@@ -72,7 +73,7 @@
 
 ## Next Entry
 
-- 下一步为 p26-16：只接入五层级统一“让 Agent 修改”界面，复用已完成的 preview/apply API，验证取消/预览不写入、确认只改目标；不扩展自动任务、mode switch/resume 或相邻架构。
+- 下一步为 p26-17：只修复暂停阶段与项目列表的真实章数/百分比展示，并把现有自动模式文案改为不承诺无人值守；不实现自动持续执行、mode switch/resume 或任何调度架构。
 - 剩余本期红灯聚焦人工内容管理、移动端与文案一致性；按用户指示，自动任务及其 mode switch/resume 生命周期需要架构和系统修复，不在本期计划范围。
 - 新需求继续遵循：写 spec → 拆 1-3 文件 feature → 登记 `feature_list.json` → 实现与验证 → 更新三份状态文档。
 - 本机代理可能劫持 localhost；脚本内 curl 保持 `--noproxy '*'`。ego-browser 内写文件使用绝对路径。

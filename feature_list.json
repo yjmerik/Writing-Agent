@@ -3314,12 +3314,13 @@
       "phase": 26,
       "type": "feature",
       "dependencies": ["p26-15"],
-      "status": "not-started",
-      "files": ["frontend/src/components/AgentRevisionDialog.tsx", "frontend/src/components/WorldbuildingView.tsx", "frontend/src/components/InteractiveReview.tsx"],
+      "status": "completed",
+      "files": ["frontend/src/components/AgentRevisionDialog.tsx", "frontend/src/components/WorldbuildingView.tsx", "frontend/src/components/OutlineView.tsx", "frontend/src/components/InteractiveReview.tsx", "frontend/src/api/client.ts", "scripts/product-audit-e2e.sh"],
       "problem_ref": "P1-06：世界观、人物、卷、章节、段落没有一致的 Agent 修改入口",
       "description": "五层级复用指令、预览差异、确认应用对话框，取消不写入。",
       "acceptance": "五类对象均可生成预览并确认，只修改选中对象；取消和预览阶段不写库；段落入口可访问。",
-      "verify_cmd": "./scripts/product-audit-e2e.sh --case manual-content-management"
+      "verify_cmd": "./scripts/product-audit-e2e.sh --case manual-content-management",
+      "evidence": "2026-09-04：真实浏览器 TDD RED 为 0 PASS / 1 XFAIL / 0 ERROR，原有人工世界观、人物、大纲、章节、版本与冲突处理子断言全部通过，新增 WORLD/CHARACTER/VOLUME/CHAPTER/PASSAGE 入口均不存在。GREEN 新增统一 AgentRevisionDialog，状态覆盖指令输入、生成中、前后 JSON 预览、应用中和站内错误；预览展示摘要与来源指纹，修改指令会使旧预览失效，取消不会调用 apply。世界观/人物在存在未保存整卡草稿时、卷在包含已写章节或存在未保存结构草稿时禁用 Agent 入口，避免用已保存来源覆盖本地草稿；章节与每个正文段落均提供显式 Button，段落 aria-label 为“让 Agent 修改第 N 段”。应用成功后只刷新相应数据并关闭对话框。浏览器场景真实执行世界观预览后取消、再次预览并确认，以及人物、纯未写卷、章节、段落各一次预览确认；每次预览前后与取消后业务指纹不变，确认后只有所选对象变化，最终 strict 1 PASS / 0 XFAIL / 0 ERROR。ScenarioLlmGateway 仅为 browser scenario 增加五类严格确定性候选，非内容修订 GENERAL 行为仍为 []；单测先 RED 1 failure，GREEN 8/8。focused Scenario/Agent/API 共 23/23 PASS；frontend production build PASS；JDK21 compile、full test 与 ./init.sh PASS：583 tests / 0 failures / 0 errors / 1 skipped，28 prompts 与前端构建通过。生产 Prompt、Agent、上下文与自动任务/mode switch/resume 均未修改，因此不触发文学质量 replay。"
     },
     {
       "id": "p26-17",

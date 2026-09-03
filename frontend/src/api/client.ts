@@ -41,6 +41,36 @@ export interface CheckpointOperationResponse {
   revision?: CheckpointRevision;
 }
 
+export type AgentRevisionTargetType = 'WORLD' | 'CHARACTER' | 'VOLUME' | 'CHAPTER' | 'PASSAGE';
+
+export interface AgentRevisionTarget {
+  projectId: string;
+  targetType: AgentRevisionTargetType;
+  targetId: string;
+  chapterIndex?: number;
+  passageIndex?: number;
+  label: string;
+}
+
+export interface AgentRevisionPreview {
+  previewId: string;
+  targetType: AgentRevisionTargetType;
+  targetId: string;
+  sourceVersion: string;
+  before: Record<string, unknown>;
+  after: Record<string, unknown>;
+  summary: string;
+}
+
+export interface AgentRevisionApplyResult {
+  previewId: string;
+  targetType: AgentRevisionTargetType;
+  targetId: string;
+  sourceVersion: string;
+  applied: boolean;
+  result: unknown;
+}
+
 /** 封装 fetch，统一处理错误和超时 */
 async function request<T>(url: string, options?: RequestInit, timeoutMs = 300000): Promise<T> {
   const controller = new AbortController();
@@ -168,6 +198,23 @@ export const api = {
 
   replanOutline: (id: string) =>
     request<Outline>(`/projects/${id}/replan`, { method: 'POST' }),
+
+  previewAgentRevision: (target: AgentRevisionTarget, instructions: string) =>
+    request<AgentRevisionPreview>(`/projects/${target.projectId}/revisions/preview`, {
+      method: 'POST',
+      body: JSON.stringify({
+        targetType: target.targetType,
+        targetId: target.targetId,
+        chapterIndex: target.chapterIndex,
+        passageIndex: target.passageIndex,
+        instructions,
+      }),
+    }, 300000),
+
+  applyAgentRevision: (projectId: string, previewId: string) =>
+    request<AgentRevisionApplyResult>(`/projects/${projectId}/revisions/${previewId}/apply`, {
+      method: 'POST',
+    }, 300000),
 
   getFacts: (id: string) =>
     request<Array<{ id: string; subject: string; assertion: string; factType: string }>>(`/projects/${id}/facts`),

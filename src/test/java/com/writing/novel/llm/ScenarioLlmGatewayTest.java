@@ -1,5 +1,7 @@
 package com.writing.novel.llm;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -11,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ScenarioLlmGatewayTest {
 
     private final ScenarioLlmGateway gateway = new ScenarioLlmGateway();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private LlmRequest req(LlmTaskType type, String systemPrompt) {
         return LlmRequest.builder()
@@ -58,6 +61,34 @@ class ScenarioLlmGatewayTest {
 
         String general = gateway.complete(req(LlmTaskType.GENERAL, "收割/抽取")).getContent();
         assertTrue(general.trim().startsWith("["), "GENERAL（收割/抽取族）应返回 JSON 数组");
+    }
+
+    @Test
+    void 内容修订场景返回保留身份且实际变化的严格候选() throws Exception {
+        String current = "{\"id\":\"world-1\",\"projectId\":\"project-1\","
+                + "\"type\":\"RULE\",\"name\":\"旧规则\",\"content\":\"旧内容\"}";
+        LlmRequest request = LlmRequest.builder()
+                .taskType(LlmTaskType.GENERAL)
+                .systemPrompt("""
+                        你是内容修订 Agent。你只负责为人工确认生成一个候选。
+                        目标类型：WORLD
+
+                        当前选中对象（JSON）：
+                        %s
+
+                        用户修改要求：
+                        只增强规则说明
+                        """.formatted(current))
+                .userMessage("请生成严格符合约束的内容修订候选。")
+                .build();
+
+        JsonNode candidate = objectMapper.readTree(gateway.complete(request).getContent());
+        assertEquals("WORLD", candidate.path("targetType").asText());
+        assertFalse(candidate.path("summary").asText().isBlank());
+        JsonNode structured = objectMapper.readTree(candidate.path("structuredJson").asText());
+        assertEquals("world-1", structured.path("id").asText());
+        assertEquals("project-1", structured.path("projectId").asText());
+        assertNotEquals("旧内容", structured.path("content").asText());
     }
 
     @Test

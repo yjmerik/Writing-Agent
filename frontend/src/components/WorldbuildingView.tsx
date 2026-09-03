@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, Tag, Empty, Spin, Row, Col, Descriptions, Divider, Button, Space, Input, Select, message, List, Typography } from 'antd';
 import { ReloadOutlined, SaveOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
+import type { AgentRevisionApplyResult, AgentRevisionTarget } from '../api/client';
 import type { KnowledgeEntry, Character, Foreshadowing } from '../types';
+import AgentRevisionDialog from './AgentRevisionDialog';
 
 const { Text } = Typography;
 
@@ -90,6 +92,7 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
   const [characterDrafts, setCharacterDrafts] = useState<Record<string, CharacterDraft>>({});
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
+  const [revisionTarget, setRevisionTarget] = useState<AgentRevisionTarget | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -110,6 +113,25 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
   }, [projectId]);
 
   useEffect(() => { load(); }, [load]);
+
+  const handleAgentApplied = async (_result: AgentRevisionApplyResult) => {
+    if (revisionTarget?.targetType === 'WORLD') {
+      setWorldDrafts((current) => {
+        const next = { ...current };
+        delete next[revisionTarget.targetId];
+        return next;
+      });
+    }
+    if (revisionTarget?.targetType === 'CHARACTER') {
+      setCharacterDrafts((current) => {
+        const next = { ...current };
+        delete next[revisionTarget.targetId];
+        return next;
+      });
+    }
+    setRevisionTarget(null);
+    await load();
+  };
 
   if (loading) return <Spin />;
 
@@ -203,22 +225,36 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
                         />
                       </Descriptions.Item>
                     </Descriptions>
-                    <Button size="small" type="link" icon={<SaveOutlined />} loading={saving === e.id}
-                      onClick={async () => {
-                        setSaving(e.id);
-                        try {
-                          const saved = await api.updateWorldbuilding(projectId, e.id, worldDrafts[e.id] ?? worldDraft(e));
-                          setEntries((current) => current.map((entry) => entry.id === saved.id ? saved : entry));
-                          setWorldDrafts((current) => {
-                            const next = { ...current };
-                            delete next[e.id];
-                            return next;
-                          });
-                          message.success('已保存并写入真典');
-                        } catch (err) {
-                          message.error((err as Error).message);
-                        } finally { setSaving(null); }
-                      }}>保存设定</Button>
+                    <Space>
+                      <Button size="small" type="link" icon={<SaveOutlined />} loading={saving === e.id}
+                        onClick={async () => {
+                          setSaving(e.id);
+                          try {
+                            const saved = await api.updateWorldbuilding(projectId, e.id, worldDrafts[e.id] ?? worldDraft(e));
+                            setEntries((current) => current.map((entry) => entry.id === saved.id ? saved : entry));
+                            setWorldDrafts((current) => {
+                              const next = { ...current };
+                              delete next[e.id];
+                              return next;
+                            });
+                            message.success('已保存并写入真典');
+                          } catch (err) {
+                            message.error((err as Error).message);
+                          } finally { setSaving(null); }
+                        }}>保存设定</Button>
+                      <Button
+                        size="small"
+                        disabled={saving === e.id || Boolean(worldDrafts[e.id])}
+                        title={worldDrafts[e.id] ? '请先保存或刷新当前手工修改' : undefined}
+                        aria-label={`让 Agent 修改世界观 ${e.name}`}
+                        onClick={() => setRevisionTarget({
+                          projectId,
+                          targetType: 'WORLD',
+                          targetId: e.id,
+                          label: `世界观 · ${e.name}`,
+                        })}
+                      >让 Agent 修改</Button>
+                    </Space>
                   </div>
                 ))}
               </Card>
@@ -289,29 +325,43 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
                     </Descriptions.Item>
                   ))}
                 </Descriptions>
-                <Button
-                  size="small"
-                  type="primary"
-                  icon={<SaveOutlined />}
-                  loading={saving === c.id}
-                  onClick={async () => {
-                    setSaving(c.id);
-                    try {
-                      const saved = await api.updateCharacter(projectId, c.id, characterDrafts[c.id] ?? characterDraft(c));
-                      setCharacters((current) => current.map((character) => character.id === saved.id ? saved : character));
-                      setCharacterDrafts((current) => {
-                        const next = { ...current };
-                        delete next[c.id];
-                        return next;
-                      });
-                      message.success(`${saved.name} 已保存并写入真典`);
-                    } catch (err) {
-                      message.error((err as Error).message);
-                    } finally {
-                      setSaving(null);
-                    }
-                  }}
-                >保存人物</Button>
+                <Space>
+                  <Button
+                    size="small"
+                    type="primary"
+                    icon={<SaveOutlined />}
+                    loading={saving === c.id}
+                    onClick={async () => {
+                      setSaving(c.id);
+                      try {
+                        const saved = await api.updateCharacter(projectId, c.id, characterDrafts[c.id] ?? characterDraft(c));
+                        setCharacters((current) => current.map((character) => character.id === saved.id ? saved : character));
+                        setCharacterDrafts((current) => {
+                          const next = { ...current };
+                          delete next[c.id];
+                          return next;
+                        });
+                        message.success(`${saved.name} 已保存并写入真典`);
+                      } catch (err) {
+                        message.error((err as Error).message);
+                      } finally {
+                        setSaving(null);
+                      }
+                    }}
+                  >保存人物</Button>
+                  <Button
+                    size="small"
+                    disabled={saving === c.id || Boolean(characterDrafts[c.id])}
+                    title={characterDrafts[c.id] ? '请先保存或刷新当前手工修改' : undefined}
+                    aria-label={`让 Agent 修改人物 ${c.name}`}
+                    onClick={() => setRevisionTarget({
+                      projectId,
+                      targetType: 'CHARACTER',
+                      targetId: c.id,
+                      label: `人物 · ${c.name}`,
+                    })}
+                  >让 Agent 修改</Button>
+                </Space>
               </Card>
             </Col>
           ))}
@@ -425,6 +475,12 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
           )}
         />
       )}
+      <AgentRevisionDialog
+        open={revisionTarget !== null}
+        target={revisionTarget}
+        onApplied={handleAgentApplied}
+        onCancel={() => setRevisionTarget(null)}
+      />
     </div>
   );
 }

@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin, Progress, Collapse } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, HistoryOutlined, PlusOutlined, ReloadOutlined, StepForwardOutlined, TrophyOutlined } from '@ant-design/icons';
 import { ApiError, api } from '../api/client';
-import type { CheckpointRevision } from '../api/client';
+import type { AgentRevisionTarget, CheckpointRevision } from '../api/client';
 import { renderContent } from '../utils/renderContent';
 import type { Chapter, ChapterVersion, Checkpoint, CheckpointPayload, ProjectStatus, ChapterQualityReport } from '../types';
+import AgentRevisionDialog from './AgentRevisionDialog';
 
 const { Text } = Typography;
 
@@ -107,6 +108,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
   const [historyLoading, setHistoryLoading] = useState(false);
   const [compareVersion, setCompareVersion] = useState<ChapterVersion | null>(null);
   const [restoringVersion, setRestoringVersion] = useState<number | null>(null);
+  const [revisionTarget, setRevisionTarget] = useState<AgentRevisionTarget | null>(null);
 
   if (activeProjectIdRef.current !== projectId) {
     activeProjectIdRef.current = projectId;
@@ -231,6 +233,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
     setHistoryChapter(null);
     setChapterVersions([]);
     setCompareVersion(null);
+    setRevisionTarget(null);
   }, [projectId]);
 
   useEffect(() => { refresh(); }, [refresh]);
@@ -517,7 +520,38 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
 
   const renderChapterContent = (content: string) => {
     if (!content) return <Text type="secondary">（空）</Text>;
-    return renderContent(content, handleParagraphClick);
+    const lines = content.split('\n');
+    return renderContent(content, handleParagraphClick).map((node, index) => {
+      const trimmed = lines[index]?.trim() ?? '';
+      const isParagraph = Boolean(trimmed)
+        && !trimmed.startsWith('# ')
+        && !trimmed.startsWith('## ')
+        && trimmed !== '---'
+        && trimmed !== '***';
+      if (!isParagraph || !currentChapter) return node;
+      return (
+        <div
+          key={`passage-action-${index}`}
+          data-passage-action-index={index}
+          style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>{node}</div>
+          <Button
+            size="small"
+            type="text"
+            aria-label={`让 Agent 修改第 ${index + 1} 段`}
+            onClick={() => setRevisionTarget({
+              projectId,
+              targetType: 'PASSAGE',
+              targetId: currentChapter.id,
+              chapterIndex: currentChapter.chapterIndex,
+              passageIndex: index,
+              label: `第${currentChapter.chapterIndex}章 · 第${index + 1}段`,
+            })}
+          >让 Agent 修改</Button>
+        </div>
+      );
+    });
   };
 
   return (
@@ -738,6 +772,18 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
                     >
                       版本记录
                     </Button>
+                    <Button
+                      size="small"
+                      disabled={!currentBody}
+                      aria-label={`让 Agent 修改第${currentChapter.chapterIndex}章`}
+                      onClick={() => currentBody && setRevisionTarget({
+                        projectId,
+                        targetType: 'CHAPTER',
+                        targetId: currentBody.id,
+                        chapterIndex: currentBody.chapterIndex,
+                        label: `第${currentBody.chapterIndex}章 · ${currentBody.title}`,
+                      })}
+                    >让 Agent 修改</Button>
                     <Button size="small" icon={<EditOutlined />} onClick={() => {
                       setRewriteTarget({
                         kind: 'chapter',
@@ -1050,6 +1096,19 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
           )}
         </Spin>
       </Modal>
+
+      <AgentRevisionDialog
+        open={revisionTarget !== null}
+        target={revisionTarget}
+        onApplied={async () => {
+          const chapterIndex = revisionTarget?.chapterIndex;
+          setRevisionTarget(null);
+          setSelectedParagraph(null);
+          await refresh(true, chapterIndex);
+          onChanged();
+        }}
+        onCancel={() => setRevisionTarget(null)}
+      />
     </div>
   );
 }

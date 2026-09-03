@@ -1,5 +1,9 @@
 package com.writing.novel.llm;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.writing.novel.llm.client.StreamHandler;
 
 import java.util.Map;
@@ -17,6 +21,11 @@ import java.util.regex.Pattern;
 public class ScenarioLlmGateway implements LlmGateway {
 
     private static final Pattern CHAPTER_REF = Pattern.compile("第(\\d{1,4})章");
+    private static final Pattern REVISION_TARGET = Pattern.compile(
+            "目标类型：\\s*(WORLD|CHARACTER|VOLUME|CHAPTER|PASSAGE)");
+    private static final String REVISION_SOURCE_START = "当前选中对象（JSON）：";
+    private static final String REVISION_SOURCE_END = "用户修改要求：";
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     /** p23-02: harsh 档——第 1 章注入 HIGH 连续性矛盾，驱动人工复核暂停→处理→续跑场景 */
     private final boolean harsh;
@@ -144,9 +153,70 @@ public class ScenarioLlmGateway implements LlmGateway {
             }
             case STYLE_GUARDIAN -> "风格一致性评分：90/100。本章与基线风格保持一致。";
             case MEMORY_SUMMARY -> "章节摘要：第%d章确立的事件与人物变化已按序记录。".formatted(chapter);
-            case GENERAL -> "[]";
+            case GENERAL -> contentRevisionCandidate(req);
         };
         return new LlmResponse(content, Math.max(10, content.length() / 3), Math.max(10, content.length() / 6));
+    }
+
+    private String contentRevisionCandidate(LlmRequest request) {
+        String prompt = request.getSystemPrompt();
+        if (prompt == null || !prompt.contains("你是内容修订 Agent")) return "[]";
+
+        Matcher targetMatcher = REVISION_TARGET.matcher(prompt);
+        int sourceStart = prompt.indexOf(REVISION_SOURCE_START);
+        int sourceEnd = prompt.indexOf(REVISION_SOURCE_END);
+        if (!targetMatcher.find() || sourceStart < 0 || sourceEnd <= sourceStart) return "[]";
+
+        String targetType = targetMatcher.group(1);
+        String currentJson = prompt.substring(sourceStart + REVISION_SOURCE_START.length(), sourceEnd).trim();
+        try {
+            JsonNode parsed = OBJECT_MAPPER.readTree(currentJson);
+            if (!(parsed instanceof ObjectNode after)) return "[]";
+
+            String content = switch (targetType) {
+                case "WORLD" -> {
+                    String revised = appendMarker(after.path("content").asText());
+                    after.put("content", revised);
+                    yield revised;
+                }
+                case "CHARACTER" -> {
+                    String revised = appendMarker(after.path("motivation").asText());
+                    after.put("motivation", revised);
+                    yield revised;
+                }
+                case "VOLUME" -> {
+                    String revised = appendMarker(after.path("summary").asText());
+                    after.put("summary", revised);
+                    yield revised;
+                }
+                case "CHAPTER" -> {
+                    String revised = appendMarker(after.path("title").asText());
+                    after.put("title", revised);
+                    yield after.path("content").asText();
+                }
+                case "PASSAGE" -> {
+                    String revised = appendMarker(after.path("content").asText());
+                    after.put("content", revised);
+                    yield revised;
+                }
+                default -> throw new IllegalStateException("未知修订目标: " + targetType);
+            };
+
+            ObjectNode candidate = OBJECT_MAPPER.createObjectNode()
+                    .put("targetType", targetType)
+                    .put("title", targetType + " 修订候选")
+                    .put("content", content)
+                    .put("structuredJson", OBJECT_MAPPER.writeValueAsString(after))
+                    .put("summary", "仅修改当前选中的 " + targetType + " 对象");
+            return OBJECT_MAPPER.writeValueAsString(candidate);
+        } catch (JsonProcessingException | IllegalStateException e) {
+            return "[]";
+        }
+    }
+
+    private static String appendMarker(String value) {
+        String base = value == null ? "" : value.trim();
+        return base.isEmpty() ? "【Agent 修订】" : base + "【Agent 修订】";
     }
 
     @Override

@@ -12,8 +12,13 @@ import com.writing.novel.agent.StyleGuardianAgent;
 import com.writing.novel.agent.TestPromptHelper;
 import com.writing.novel.agent.WorldBuilderAgent;
 import com.writing.novel.domain.Checkpoint;
+import com.writing.novel.domain.ChapterSynopsis;
+import com.writing.novel.domain.Character;
+import com.writing.novel.domain.NovelState;
+import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.ProjectMode;
+import com.writing.novel.domain.Volume;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmResponse;
@@ -42,6 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InitialSetupCheckpointPayloadTest {
@@ -54,6 +60,7 @@ class InitialSetupCheckpointPayloadTest {
     private SqliteNovelRepository repository;
     private ProjectService projectService;
     private NovelOrchestrator orchestrator;
+    private String plottingResponse;
 
     @BeforeEach
     void setUp() {
@@ -73,6 +80,8 @@ class InitialSetupCheckpointPayloadTest {
         var contextAssembler = new ContextAssembler(repository, knowledgeBase, summaryService, vectorService,
                 entityGraph, new ClimaxDiversityTracker(), null, null, null);
         var characterSequence = new AtomicInteger();
+        plottingResponse = "【总纲】潮声尽头藏着旧王朝航路。" + "潮😀".repeat(350)
+                + "\n【卷1】雾港启航\n追查失落航路。\n第1章 雾港：纪澜找到第一张星图。";
         LlmGateway gateway = new LlmGateway() {
             @Override
             public LlmResponse complete(LlmRequest request) {
@@ -84,10 +93,7 @@ class InitialSetupCheckpointPayloadTest {
                             "【姓名】纪澜" + characterSequence.incrementAndGet()
                                     + "\n【角色定位】主角\n【性格】" + "执着😀".repeat(140)
                                     + "\n【能力】辨认失落星图", 50, 100);
-                    case PLOTTING -> new LlmResponse(
-                            "【总纲】潮声尽头藏着旧王朝航路。" + "潮😀".repeat(350)
-                                    + "\n【卷1】雾港启航\n追查失落航路。\n第1章 雾港：纪澜找到第一张星图。",
-                            50, 100);
+                    case PLOTTING -> new LlmResponse(plottingResponse, 50, 100);
                     default -> new LlmResponse("ok", 1, 1);
                 };
             }
@@ -116,8 +122,9 @@ class InitialSetupCheckpointPayloadTest {
 
     @Test
     void interactiveConceptionCreatesBoundedSummariesFromPersistedSetupWithWorkspaceLinks() throws Exception {
+        String concept = "原旨标记·纪澜追查失落航路" + "原😀".repeat(350);
         Project project = projectService.create(
-                "潮汐旧闻", "纪澜追查失落航路", "奇幻", ProjectMode.INTERACTIVE, null, 3);
+                "潮汐旧闻", concept, "奇幻", ProjectMode.INTERACTIVE, null, 3);
 
         orchestrator.runConceiving(project.getId());
 
@@ -128,9 +135,9 @@ class InitialSetupCheckpointPayloadTest {
 
         assertSummary(payload, "worldSummary", "琉璃群岛");
         assertSummary(payload, "characterSummary", "纪澜");
-        assertSummary(payload, "premiseSummary", "纪澜追查失落航路");
+        assertSummary(payload, "premiseSummary", "原旨标记");
         assertTrue(payload.path("premiseSummary").asText().contains("潮声尽头"),
-                "原旨摘要还应包含已持久化的大纲 premise");
+                "超长项目原旨不得吞掉已持久化的大纲 premise");
 
         Set<String> targets = new HashSet<>();
         for (JsonNode link : payload.path("links")) {
@@ -144,6 +151,53 @@ class InitialSetupCheckpointPayloadTest {
                 "初始设定审核必须能跳转世界观/人物和大纲");
     }
 
+    @Test
+    void emptyConceptAndPremiseUsePersistedVolumeTitleAndSummary() throws Exception {
+        plottingResponse = "【总纲】\n【卷1】回声雾港\n旧案线索在潮汐中重现。\n第1章 雾港：纪澜找到第一张星图。";
+        Project project = projectService.create(
+                "潮汐旧闻", "", "奇幻", ProjectMode.INTERACTIVE, null, 3);
+
+        orchestrator.runConceiving(project.getId());
+
+        Checkpoint checkpoint = repository.findPendingCheckpoints(project.getId()).get(0);
+        JsonNode payload = OBJECT_MAPPER.readTree(checkpoint.getPayload());
+        String premiseSummary = payload.path("premiseSummary").asText();
+        assertFalse(premiseSummary.isBlank(), "卷标题/summary 应为缺失原旨提供真实持久化回退");
+        assertTrue(premiseSummary.contains("回声雾港"));
+        assertTrue(premiseSummary.contains("旧案线索在潮汐中重现"));
+        assertAllSummariesNonBlank(payload);
+    }
+
+    @Test
+    void noPersistedPremiseOrVolumeSummaryFailsClosedBeforeCheckpoint() {
+        Project project = projectService.create(
+                "潮汐旧闻", "", "奇幻", ProjectMode.INTERACTIVE, null, 4);
+        repository.saveCharacter(new Character(project.getId(), "纪澜", "主角"));
+        Outline outline = new Outline(project.getId(), "");
+        Volume emptyVolume = new Volume(project.getId(), 1, "", "");
+        for (int chapter = 1; chapter <= 4; chapter++) {
+            emptyVolume.addSynopsis(new ChapterSynopsis(
+                    project.getId(), chapter, "占位章" + chapter, "仅用于证明大纲已持久化"));
+        }
+        outline.addVolume(emptyVolume);
+        repository.saveOutline(outline);
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> orchestrator.runConceiving(project.getId()));
+
+        assertTrue(failure.getMessage().contains("原旨") || failure.getMessage().contains("大纲摘要"));
+        assertEquals(NovelState.CONCEIVING,
+                repository.findProject(project.getId()).orElseThrow().getState());
+        assertTrue(repository.findPendingCheckpoints(project.getId()).isEmpty(),
+                "缺少真实摘要时不得创建空内容 checkpoint");
+    }
+
+    private static void assertAllSummariesNonBlank(JsonNode payload) {
+        assertFalse(payload.path("worldSummary").asText().isBlank());
+        assertFalse(payload.path("characterSummary").asText().isBlank());
+        assertFalse(payload.path("premiseSummary").asText().isBlank());
+    }
+
     private static void assertSummary(JsonNode payload, String field, String sourceMarker) {
         String summary = payload.path(field).asText();
         assertFalse(summary.isBlank(), field + " 不得为空");
@@ -155,10 +209,10 @@ class InitialSetupCheckpointPayloadTest {
     private static boolean hasOnlyPairedSurrogates(String value) {
         for (int index = 0; index < value.length(); index++) {
             char current = value.charAt(index);
-            if (Character.isHighSurrogate(current)) {
-                if (index + 1 >= value.length() || !Character.isLowSurrogate(value.charAt(index + 1))) return false;
+            if (java.lang.Character.isHighSurrogate(current)) {
+                if (index + 1 >= value.length() || !java.lang.Character.isLowSurrogate(value.charAt(index + 1))) return false;
                 index++;
-            } else if (Character.isLowSurrogate(current)) {
+            } else if (java.lang.Character.isLowSurrogate(current)) {
                 return false;
             }
         }

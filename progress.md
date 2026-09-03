@@ -11,6 +11,9 @@
 - Browser E2E 产品断言 **8/8 PASS**：前 7 项由完整脚本通过；第 8 项的脚本内二阶段重启暴露既有端口回收竞态（base `13f745c` 同样复现，第二服务日志明确 `Port was already in use`）。隔离启动确认 `harsh=true` 的新服务后，以原断言得到 chapter `NEEDS_MANUAL_REVIEW` 且 `pendingTag/resolveBtn/resolved=true`；未修改 harness。
 - 完整验证：frontend build PASS；JDK21 `mvn compile && mvn test` 与 `./init.sh` 均 PASS，**523 tests / 0 failures / 0 errors / 1 skipped**，init 另通过 27 个 prompt 与生产前端构建。
 - 本 feature 只增加 checkpoint payload 与审核展示，不修改 Agent、prompt、上下文组装、自动任务或 mode switch/resume 语义，因此不触发 replay 质量门禁。
+- Review fix round 1 先补三类红灯：超长项目原旨会吞掉 outline 标记、原旨与 outline premise 同时为空会生成空摘要、旧 payload 的非字符串摘要会令 React 渲染崩溃。Java RED 为 **3 failures / 0 errors**；强化后的 strict RED 为 **0 PASS / 1 XFAIL / 0 ERROR**，真实摘要卡被异常卡拖垮且安全跳转不可用。
+- GREEN 后双来源在 300 code points 总预算内公平分配并保留双方标记，单来源独占完整预算；缺 premise 时读取已持久化卷标题/summary，仍为空则在创建 checkpoint 和改变状态前 fail-closed，项目保持 `CONCEIVING`。前端只接收字符串摘要，并继续对白名单 links 做运行时归一化。
+- Review fix 回归：focused checkpoint **17/17**；`initial-setup-summary`（含异常旧 payload）和 `checkpoint-card-targeting` strict 各 **1 PASS / 0 XFAIL / 0 ERROR**；browser 产品断言分段 **8/8**；frontend build、JDK21 full/init 均 PASS，**525 tests / 0 failures / 0 errors / 1 skipped**。
 
 ---
 

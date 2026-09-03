@@ -549,10 +549,11 @@ public class NovelOrchestrator {
         }
 
         if (p.getMode() == ProjectMode.INTERACTIVE) {
+            String payload = buildInitialSetupCheckpointPayload(projectId, p);
             p.setState(NovelState.PAUSED_AT_CHECKPOINT);
             Checkpoint checkpoint = new Checkpoint(projectId,
                     Checkpoint.Type.AFTER_INITIAL_SETUP, "初始设定生成完成，待审核");
-            checkpoint.setPayload(buildInitialSetupCheckpointPayload(projectId, p));
+            checkpoint.setPayload(payload);
             repository.saveCheckpoint(checkpoint);
         } else {
             p.setState(NovelState.PLANNING);
@@ -563,19 +564,23 @@ public class NovelOrchestrator {
 
     /** 初始设定审核摘要只读取已落库内容，避免审核卡展示生成过程中的临时候选。 */
     String buildInitialSetupCheckpointPayload(String projectId, Project project) {
-        var root = JSON.createObjectNode();
-        root.put("worldSummary", boundedInitialSetupSummary(collectWorldbuildingSummary(projectId)));
-        root.put("characterSummary", boundedInitialSetupSummary(collectCharacterSummary(projectId)));
+        String worldSummary = boundedInitialSetupSummary(collectWorldbuildingSummary(projectId));
+        String characterSummary = boundedInitialSetupSummary(collectCharacterSummary(projectId));
+        Outline outline = repository.findOutlineByProject(projectId).orElse(null);
+        String outlinePremise = outline == null ? "" : normalizeInitialSetupSummary(outline.getPremise());
+        String projectConcept = normalizeInitialSetupSummary(project.getConcept());
+        String premiseSummary = boundedInitialSetupSummary(projectConcept, outlinePremise);
+        if (premiseSummary.isBlank()) {
+            premiseSummary = boundedInitialSetupSummary(collectOutlineReviewFallback(outline));
+        }
+        if (worldSummary.isBlank() || characterSummary.isBlank() || premiseSummary.isBlank()) {
+            throw new IllegalStateException("构思未完成，缺少可审核的世界观、人物或原旨/大纲摘要");
+        }
 
-        String outlinePremise = repository.findOutlineByProject(projectId)
-                .map(Outline::getPremise)
-                .filter(value -> value != null && !value.isBlank())
-                .orElse("");
-        String projectConcept = project.getConcept() == null ? "" : project.getConcept().strip();
-        String premise = java.util.stream.Stream.of(projectConcept, outlinePremise)
-                .filter(value -> !value.isBlank())
-                .collect(java.util.stream.Collectors.joining("\n"));
-        root.put("premiseSummary", boundedInitialSetupSummary(premise));
+        var root = JSON.createObjectNode();
+        root.put("worldSummary", worldSummary);
+        root.put("characterSummary", characterSummary);
+        root.put("premiseSummary", premiseSummary);
 
         var links = root.putArray("links");
         links.addObject().put("label", "查看世界观与人物").put("target", "world");
@@ -583,12 +588,49 @@ public class NovelOrchestrator {
         return root.toString();
     }
 
+    private static String collectOutlineReviewFallback(Outline outline) {
+        if (outline == null) return "";
+        return outline.getVolumes().stream()
+                .flatMap(volume -> java.util.stream.Stream.of(volume.getTitle(), volume.getSummary()))
+                .map(NovelOrchestrator::normalizeInitialSetupSummary)
+                .filter(value -> !value.isBlank())
+                .collect(java.util.stream.Collectors.joining("\n"));
+    }
+
+    private static String boundedInitialSetupSummary(String first, String second) {
+        first = normalizeInitialSetupSummary(first);
+        second = normalizeInitialSetupSummary(second);
+        if (first.isBlank()) return boundedInitialSetupSummary(second);
+        if (second.isBlank()) return boundedInitialSetupSummary(first);
+
+        int available = INITIAL_SETUP_SUMMARY_LIMIT - 1;
+        int firstLength = first.codePointCount(0, first.length());
+        int secondLength = second.codePointCount(0, second.length());
+        int firstLimit = Math.min(firstLength, (available + 1) / 2);
+        int secondLimit = Math.min(secondLength, available / 2);
+        int remaining = available - firstLimit - secondLimit;
+        int firstExtra = Math.min(remaining, firstLength - firstLimit);
+        firstLimit += firstExtra;
+        remaining -= firstExtra;
+        secondLimit += Math.min(remaining, secondLength - secondLimit);
+        return boundedInitialSetupSummary(first, firstLimit)
+                + "\n" + boundedInitialSetupSummary(second, secondLimit);
+    }
+
     private static String boundedInitialSetupSummary(String value) {
-        String summary = value == null ? "" : value.strip();
+        return boundedInitialSetupSummary(value, INITIAL_SETUP_SUMMARY_LIMIT);
+    }
+
+    private static String boundedInitialSetupSummary(String value, int limit) {
+        String summary = normalizeInitialSetupSummary(value);
         int codePoints = summary.codePointCount(0, summary.length());
-        if (codePoints <= INITIAL_SETUP_SUMMARY_LIMIT) return summary;
-        int end = summary.offsetByCodePoints(0, INITIAL_SETUP_SUMMARY_LIMIT);
+        if (codePoints <= limit) return summary;
+        int end = summary.offsetByCodePoints(0, limit);
         return summary.substring(0, end);
+    }
+
+    private static String normalizeInitialSetupSummary(String value) {
+        return value == null ? "" : value.strip();
     }
 
 

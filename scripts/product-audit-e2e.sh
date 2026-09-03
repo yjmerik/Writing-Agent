@@ -197,6 +197,7 @@ CP_SETUP=""
 CP_VOLUME=""
 CP_MULTI_FIRST=""
 CP_MULTI_LATEST=""
+CP_SETUP_MALFORMED=""
 
 if need_case auto-zero-intervention; then
   P_AUTO=$(create_project "audit-auto" SOLO 3) || exit 2
@@ -206,6 +207,9 @@ fi
 if need_case initial-setup-summary; then
   P_SETUP_SUMMARY=$(create_project "audit-setup-summary" INTERACTIVE 3) || exit 2
   conceive_once "$P_SETUP_SUMMARY" || exit 2
+  CP_SETUP_MALFORMED=$(uuidgen | tr '[:upper:]' '[:lower:]')
+  sqlite3 "$DIR/novel.db" \
+    "INSERT INTO checkpoints(id,project_id,type,description,status,created_at,payload) VALUES('$CP_SETUP_MALFORMED','$P_SETUP_SUMMARY','AFTER_INITIAL_SETUP','旧异常摘要','PENDING',datetime('now'),'{\"worldSummary\":{\"unexpected\":\"invalid-world\"},\"characterSummary\":[\"invalid-character\"],\"premiseSummary\":42,\"links\":[{\"label\":\"安全跳转\",\"target\":\"world\"},{\"label\":\"异常跳转\",\"target\":\"missing\"}]}');" || exit 2
 fi
 
 if need_case initial-setup-modify; then
@@ -349,6 +353,7 @@ await runCase('initial-setup-summary', async () => {
   await go('/#/project/$P_SETUP_SUMMARY')
   await openTab('章节管理')
   const summary = await js('(() => {const a=[...document.querySelectorAll(".ant-alert")].find(x=>x.innerText.includes("初始设定"));const text=a?.innerText||"";return {world:text.includes("场景大陆001"),character:text.includes("主角001"),premise:text.includes("产品审计确定性场景")&&text.includes("查清师门旧案")}})()')
+  const malformed = await js('(() => {const a=[...document.querySelectorAll(".ant-alert")].find(x=>x.innerText.includes("旧异常摘要"));const text=a?.innerText||"";const buttons=a?[...a.querySelectorAll("button")]:[];return {visible:!!a,invalidSummariesHidden:!text.includes("世界观摘要")&&!text.includes("人物摘要")&&!text.includes("原旨与大纲摘要")&&!text.includes("invalid-"),safeLink:!!buttons.find(b=>b.innerText.trim()==="安全跳转"),badLinkAbsent:!buttons.find(b=>b.innerText.trim()==="异常跳转")}})()')
   const worldClicked = await clickButtonContaining('查看世界观与人物', '初始设定')
   await wait(2)
   const worldSelected = await js('!![...document.querySelectorAll("[role=tab]")].find(x=>x.innerText.includes("世界观与人物")&&x.getAttribute("aria-selected")==="true")')
@@ -356,8 +361,8 @@ await runCase('initial-setup-summary', async () => {
   const outlineClicked = await clickButtonContaining('查看大纲', '初始设定')
   await wait(2)
   const outlineSelected = await js('!![...document.querySelectorAll("[role=tab]")].find(x=>x.innerText.includes("大纲")&&x.getAttribute("aria-selected")==="true")')
-  return { pass: summary.world && summary.character && summary.premise && worldClicked && worldSelected && outlineClicked && outlineSelected,
-    summary, worldClicked, worldSelected, outlineClicked, outlineSelected }
+  return { pass: summary.world && summary.character && summary.premise && malformed.visible && malformed.invalidSummariesHidden && malformed.safeLink && malformed.badLinkAbsent && worldClicked && worldSelected && outlineClicked && outlineSelected,
+    summary, malformed, worldClicked, worldSelected, outlineClicked, outlineSelected }
 })
 
 await runCase('initial-setup-modify', async () => {

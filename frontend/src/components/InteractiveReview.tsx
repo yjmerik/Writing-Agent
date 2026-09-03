@@ -4,7 +4,7 @@ import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, ReloadOutlined,
 import { api } from '../api/client';
 import type { CheckpointRevision } from '../api/client';
 import { renderContent } from '../utils/renderContent';
-import type { Chapter, Checkpoint, ProjectStatus, ChapterQualityReport } from '../types';
+import type { Chapter, Checkpoint, CheckpointPayload, ProjectStatus, ChapterQualityReport } from '../types';
 
 const { Text } = Typography;
 
@@ -32,6 +32,38 @@ type ReviewNavigationTarget = 'world' | 'outline';
 
 const isReviewNavigationTarget = (target: unknown): target is ReviewNavigationTarget =>
   target === 'world' || target === 'outline';
+
+export const normalizeCheckpointPayload = (value: unknown): CheckpointPayload | null => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  const text = (field: string) => typeof raw[field] === 'string' ? raw[field] as string : undefined;
+  const number = (field: string) => typeof raw[field] === 'number' && Number.isFinite(raw[field])
+    ? raw[field] as number
+    : undefined;
+  const links: NonNullable<CheckpointPayload['links']> = [];
+  if (Array.isArray(raw.links)) {
+    for (const candidate of raw.links) {
+      if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) continue;
+      const link = candidate as Record<string, unknown>;
+      if (typeof link.label === 'string' && link.label.trim().length > 0
+        && isReviewNavigationTarget(link.target)) {
+        links.push({ label: link.label, target: link.target });
+      }
+    }
+  }
+  return {
+    chapterIndex: number('chapterIndex'),
+    title: text('title'),
+    wordCount: number('wordCount'),
+    preview: text('preview'),
+    score: number('score'),
+    unresolvedHigh: number('unresolvedHigh'),
+    worldSummary: text('worldSummary'),
+    characterSummary: text('characterSummary'),
+    premiseSummary: text('premiseSummary'),
+    links,
+  };
+};
 
 export default function InteractiveReview({ projectId, onChanged, onNavigateTab }: Props) {
   // p21-05: 元数据一次加载；正文按选中章节懒加载缓存
@@ -341,13 +373,9 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
       <Spin spinning={loading}>
         {/* 状态栏 */}
         {isPaused && hasPendingCheckpoint && checkpoints.map(cp => {
-          let payload: import('../types').CheckpointPayload | null = null;
-          try { payload = cp.payload ? JSON.parse(cp.payload) : null; } catch { payload = null; }
-          const navigationLinks = Array.isArray(payload?.links)
-            ? payload.links.filter(link => typeof link?.label === 'string'
-              && link.label.trim().length > 0
-              && isReviewNavigationTarget(link.target))
-            : [];
+          let payload: CheckpointPayload | null = null;
+          try { payload = cp.payload ? normalizeCheckpointPayload(JSON.parse(cp.payload)) : null; } catch { payload = null; }
+          const navigationLinks = payload?.links ?? [];
           return (
           <Alert
             key={cp.id}

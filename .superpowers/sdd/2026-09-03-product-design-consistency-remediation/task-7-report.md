@@ -59,6 +59,30 @@
 - 后端只发布 `world`/`outline`，前端再次白名单过滤，形成生产者与消费者双边约束。
 - 页面跳转只复用 workspace 现有 Tabs 状态；未增加路由、未触碰审核推进或自动任务语义。
 
+## Review fix round 1
+
+### RED
+
+- 将项目原旨扩展到 300 code points 以上，复现先拼接后整体截断会吞掉已持久化 outline premise 标记。
+- 将项目原旨与 outline premise 同时置空，复现 checkpoint 的 `premiseSummary` 为空；再构造连卷标题/summary 都为空的已持久化大纲，复现项目仍被暂停并创建不可审核 checkpoint。
+- 后端 focused 首跑为 **3 tests / 3 failures / 0 errors**。
+- strict 种子插入摘要字段分别为 object/array/number、同时混合安全与非法 link 的旧 payload；首次为 **0 PASS / 1 XFAIL / 0 ERROR**，React child 渲染异常使真实摘要与跳转断言一并失败。该 case 未加入 `KNOWN_FAILURES`。
+
+### GREEN
+
+- 双来源摘要在扣除换行后的 299 code points 中先均分，再把未用预算让给较长来源；由此总长度不超过 300 且两方标记均保留。只有一个来源时使用完整 300 code points 预算。
+- 项目原旨与 outline premise 都为空时，读取已持久化卷标题/summary；仍无真实内容则在项目切换为 `PAUSED_AT_CHECKPOINT` 和 checkpoint 写入之前抛错，持久化状态保持 `CONCEIVING`。
+- `InteractiveReview` 对 JSON 根、所有可见摘要字段及 links 做运行时归一化：摘要只接收 string，links 仍只接收 `world`/`outline`，异常旧数据不会进入 React child 或活动页签状态。
+
+### Review fix 验证
+
+- Focused checkpoint 回归 → **17 tests / 0 failures / 0 errors**。
+- Frontend build → PASS（3043 modules；仅既有 bundle warning）。
+- `initial-setup-summary`（含异常旧 payload）和 `checkpoint-card-targeting` strict → 各 **1 PASS / 0 XFAIL / 0 ERROR**。
+- Browser 产品断言 → 分段 **8/8 PASS**；完整脚本前 7 项 PASS，第 8 项仍是已记录的二阶段端口竞态，独立 fresh `harsh=true` 服务运行原断言 PASS，未修改 harness。
+- JDK21 `mvn compile && mvn test` 与 `./init.sh` → **525 tests / 0 failures / 0 errors / 1 skipped**；init 另通过 27 个 prompt 与前端构建。
+- 仍未修改 Agent、prompt、上下文组装或产出逻辑，不触发 replay 质量门禁。
+
 ## Concerns
 
 - 无 feature blocker。

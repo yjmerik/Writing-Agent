@@ -2,6 +2,16 @@
 
 ---
 
+## 会话记录（2026-09-03）：Phase 26 p26-01 Checkpoint 目标归属与状态校验
+
+- 新增 `CheckpointTargetService` 作为审核操作的唯一验证边界：checkpoint 不存在抛参数错误；项目归属不符或状态非 `PENDING` 抛状态错误（HTTP 409）。
+- `approve`、`reject`、`modify` 三个 checkpoint REST 操作在任何编排或写入之前统一经过该边界，避免跨项目或重复处理改变 checkpoint。
+- 测试先行：`CheckpointTargetValidationTest` 首次运行得到 **2 failures / 0 errors**（实际 HTTP 200）；修复后 focused `CheckpointTargetValidationTest,ApproveSpecificCheckpointTest` **3 tests / 0 failures / 0 errors**。
+- 浏览器边界验证：`./scripts/product-audit-e2e.sh --case checkpoint-card-targeting --expect-known-failures` 为 **0 PASS / 1 XFAIL / 0 ERROR**；卡片绑定仍是 p26-03，不在本 feature 范围。
+- 完整验证：`mvn compile -q && mvn test` 和 `./init.sh` 均为 **483 tests / 0 failures / 0 errors / 1 skipped**；init 另确认 27 个 prompt 完整及前端生产构建通过。
+
+---
+
 ## 会话记录（2026-09-02）：Phase 25 产品审计 E2E 测试先行
 
 **输入**：用户要求依据 `docs/audits/2026-09-02-product-design-consistency-audit.md`，先补充端到端测试用例，不提前修复产品问题。

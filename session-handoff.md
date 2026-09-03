@@ -1,15 +1,15 @@
 # Session Handoff
 
-> 状态日期：2026-09-02。历史过程保留在 `progress.md` 与 Git 历史；本文只描述下一会话需要读取的当前事实。
+> 状态日期：2026-09-03。历史过程保留在 `progress.md` 与 Git 历史；本文只描述下一会话需要读取的当前事实。
 
 ## Current Objective
 
 - **Goal**: 以产品一致性审计的浏览器红灯套件驱动下一轮 P0 → P1 → P2 修复。
-- **Current status**: Phase 23 的 production-readiness 29/29 已完成并合并到 `main`；Phase 24 文档维护完成；Phase 25 的产品审计 E2E 测试先行 p25-01 已完成。9 个新增场景当前为 0 PASS / 9 XFAIL / 0 ERROR，尚未实施产品修复。
-- **Branch**: `main`，HEAD `de38d9d`；工作区在本次文档修改前为 clean；仓库当前没有 Git remote/upstream。
-- **Feature 台账**: `feature_list.json`，`current_phase=25`，179/179 features 全部 completed。
-- **Current spec**: `docs/specs/2026-09-02-product-audit-browser-e2e.md`。
-- **Product audit**: `docs/audits/2026-09-02-product-design-consistency-audit.md`（P0 3 项 / P1 8 项 / P2 5 项；仅审查，未登记或实施新 feature）。
+- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 已完成：checkpoint 的 approve/reject/modify 均先验证项目归属与 PENDING 状态。9 个浏览器场景的既知失败集合尚未更新；`checkpoint-card-targeting` 仍为 p26-03 的预期 XFAIL。
+- **Branch**: 当前 Phase 26 修复分支；仓库没有 Git remote/upstream。
+- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 completed，p26-02 起仍 not-started。
+- **Current spec**: `docs/specs/2026-09-02-product-audit-browser-e2e.md` 与 `.superpowers/sdd/2026-09-03-product-design-consistency-remediation/` 任务简报。
+- **Product audit**: `docs/audits/2026-09-02-product-design-consistency-audit.md`（P0 3 项 / P1 8 项 / P2 5 项）。
 
 ## Current Architecture
 
@@ -27,11 +27,12 @@
 - reliability E2E：crash-restart / stale-worker-409 / manual-review / canon-protection 四场景全部 PASS。
 - 真实 LLM 金丝雀：mystery 3 章 10,191 字、WUXIA 3 章 11,308 字，均 0 LLM 错误、0 章节失败；WUXIA 规则断言无修仙规则污染。
 
-## Verification（2026-09-02）
+## Verification（2026-09-03）
 
-- 本会话修改前 `./init.sh`：481 tests / 0 failures / 0 errors / 1 skipped；27 个 Prompt 完整；前端生产构建通过。
-- p24-01 修改后：`jq empty feature_list.json` PASS；`mvn compile -q` PASS；`mvn test` 481 tests / 0 failures / 0 errors / 1 skipped，BUILD SUCCESS。
-- p25-01：`./scripts/product-audit-e2e.sh --expect-known-failures` PASS，0 PASS / 9 XFAIL / 0 ERROR；默认 strict 单场景按预期 exit 1；修改后 `./init.sh` PASS（481 tests / 0 failures / 0 errors / 1 skipped + 前端构建）。
+- p26-01 RED：`mvn test -Dtest=CheckpointTargetValidationTest` 为 2 failures / 0 errors（跨项目、已处理 checkpoint 实际均接受为 HTTP 200）。
+- p26-01 focused GREEN：`mvn test -Dtest=CheckpointTargetValidationTest,ApproveSpecificCheckpointTest` 为 3 tests / 0 failures / 0 errors。
+- p26-01 browser：`./scripts/product-audit-e2e.sh --case checkpoint-card-targeting --expect-known-failures` 为 0 PASS / 1 XFAIL / 0 ERROR（卡片绑定保留给 p26-03）。
+- 全量：`mvn compile -q && mvn test` 与 `./init.sh` 为 483 tests / 0 failures / 0 errors / 1 skipped；init 还通过 27 个 prompt 与前端生产构建检查。
 
 ## Non-blocking Observations
 
@@ -42,7 +43,8 @@
 
 ## Next Entry
 
-- 不存在遗留的 not-started feature。下一步按审计建议先修 P0-01（初始设定/卷大纲审核改写真正路由）；修复前先复用 `--case initial-setup-modify` 与 `--case volume-outline-modify`，修复后从 `KNOWN_FAILURES` 移除通过项。
-- 其余红灯依次为 P0-02 独立章节重写、P0-03 交互切自动、P1-03 审核后正文稳定、P1-07 多卡对象绑定、P1-04/05/06 人工管理、P2-02 移动端；自动零干预 P1-01 需单独设计持续运行生命周期。
+- 下一步为 p26-02（依赖 p26-01）：初始设定和卷大纲的审核修改必须真正走候选生成、校验与保存路径；先复用 `--case initial-setup-modify` 与 `--case volume-outline-modify`。
+- p26-03 负责前端多卡片显式绑定和确认摘要；在该 feature 完成前 `checkpoint-card-targeting` 必须继续作为 XFAIL，不得提前从 `KNOWN_FAILURES` 移除。
+- 后续红灯还有独立章节重写、交互切自动、审核后正文稳定、人工管理、移动端；自动零干预需单独设计持续运行生命周期。
 - 新需求继续遵循：写 spec → 拆 1-3 文件 feature → 登记 `feature_list.json` → 实现与验证 → 更新三份状态文档。
 - 本机代理可能劫持 localhost；脚本内 curl 保持 `--noproxy '*'`。ego-browser 内写文件使用绝对路径。

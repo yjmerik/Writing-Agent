@@ -2,6 +2,7 @@ package com.writing.novel.web;
 
 import com.writing.novel.domain.Checkpoint;
 import com.writing.novel.orchestrator.NovelOrchestrator;
+import com.writing.novel.service.CheckpointTargetService;
 import com.writing.novel.spi.NovelRepository;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,10 +19,13 @@ public class CheckpointController {
 
     private final NovelRepository repository;
     private final NovelOrchestrator orchestrator;
+    private final CheckpointTargetService checkpointTargetService;
 
-    public CheckpointController(NovelRepository repository, NovelOrchestrator orchestrator) {
+    public CheckpointController(NovelRepository repository, NovelOrchestrator orchestrator,
+                                CheckpointTargetService checkpointTargetService) {
         this.repository = repository;
         this.orchestrator = orchestrator;
+        this.checkpointTargetService = checkpointTargetService;
     }
 
     /** 列出待审核 checkpoint */
@@ -33,6 +37,7 @@ public class CheckpointController {
     /** 批准 checkpoint — 推进项目状态 */
     @PostMapping("/{checkpointId}/approve")
     public Map<String, Object> approve(@PathVariable String id, @PathVariable String checkpointId) {
+        checkpointTargetService.requirePending(id, checkpointId);
         orchestrator.approveCheckpoint(id, checkpointId);
         return Map.of("status", "approved", "checkpointId", checkpointId);
     }
@@ -44,8 +49,7 @@ public class CheckpointController {
     @PostMapping("/{checkpointId}/reject")
     public Map<String, Object> reject(@PathVariable String id, @PathVariable String checkpointId,
                                        @RequestBody Map<String, String> body) {
-        var cp = repository.findCheckpoint(checkpointId)
-                .orElseThrow(() -> new IllegalArgumentException("Checkpoint 不存在: " + checkpointId));
+        var cp = checkpointTargetService.requirePending(id, checkpointId);
         String instructions = body.getOrDefault("instructions", "");
 
         // 如果是 AFTER_CHAPTER 类型，重写当前章节
@@ -70,8 +74,7 @@ public class CheckpointController {
     @PostMapping("/{checkpointId}/modify")
     public Map<String, Object> modify(@PathVariable String id, @PathVariable String checkpointId,
                                        @RequestBody Map<String, String> body) {
-        var cp = repository.findCheckpoint(checkpointId)
-                .orElseThrow(() -> new IllegalArgumentException("Checkpoint 不存在: " + checkpointId));
+        var cp = checkpointTargetService.requirePending(id, checkpointId);
         String instructions = body.getOrDefault("instructions", "");
 
         // 如果是 AFTER_CHAPTER，先重写再批准

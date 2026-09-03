@@ -3087,12 +3087,13 @@
       "phase": 26,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": ["service/CheckpointTargetService.java", "web/CheckpointController.java", "web/CheckpointTargetValidationTest.java"],
       "problem_ref": "P1-07：审核操作未校验 checkpoint 属于当前项目且仍待处理",
       "description": "为批准、拒绝、修改建立统一的 projectId + checkpointId + PENDING 校验边界。",
       "acceptance": "跨项目或已处理 checkpoint 的三类操作均返回冲突且状态不变；合法待审核对象可继续处理。",
-      "verify_cmd": "mvn test -Dtest=CheckpointTargetValidationTest"
+      "verify_cmd": "mvn test -Dtest=CheckpointTargetValidationTest",
+      "evidence": "2026-09-03：CheckpointTargetValidationTest 覆盖 approve/reject/modify 对跨项目和已处理 checkpoint 的 409 与状态不变；RED 为 2 failures、0 errors（实际 200），修复后 focused 3 tests / 0 failures / 0 errors；全量与 ./init.sh 均为 483 tests / 0 failures / 0 errors / 1 skipped，前端构建通过；checkpoint-card-targeting 仍为 Task 3 范围内预期 XFAIL，0 ERROR。"
     },
     {
       "id": "p26-02",

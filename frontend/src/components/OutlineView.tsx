@@ -184,7 +184,6 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
       const saved = await api.updateOutline(projectId, draft);
       setPersistedOutline(saved);
       setDraft(cloneOutline(saved));
-      setPremiseDraft(saved.premise);
       message.success('未写大纲已保存');
     } catch (error) {
       message.error((error as Error).message);
@@ -198,8 +197,8 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
   return (
     <Card>
       <Space wrap style={{ marginBottom: 16 }}>
-        <Button size="small" icon={<ReloadOutlined />} onClick={() => void load()}>刷新</Button>
-        <Button size="small" loading={replanning} onClick={async () => {
+        <Button size="small" icon={<ReloadOutlined />} disabled={saving} onClick={() => void load()}>刷新</Button>
+        <Button size="small" loading={replanning} disabled={saving} onClick={async () => {
           setReplanning(true);
           try {
             await api.replanOutline(projectId);
@@ -239,14 +238,17 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
                   message.error((error as Error).message);
                 }
               }}
+              aria-label="保存总纲"
+              disabled={saving}
             >保存总纲</Button>
           </div>
           <Space wrap style={{ marginBottom: 16 }}>
-            <Button icon={<PlusOutlined />} onClick={addVolume} aria-label="新增卷">新增卷</Button>
+            <Button icon={<PlusOutlined />} onClick={addVolume} aria-label="新增卷" disabled={saving}>新增卷</Button>
             <Button
               type="primary"
               icon={<SaveOutlined />}
               loading={saving}
+              disabled={saving}
               onClick={() => void saveStructure()}
               aria-label="保存未写大纲"
             >保存未写大纲</Button>
@@ -292,6 +294,10 @@ function OutlineTree({
   onDeleteVolume: (volumeId: string) => void;
   onMoveVolume: (volumeIndex: number, direction: -1 | 1) => void;
 }) {
+  const lastWrittenVolumePosition = outline.volumes.reduce(
+    (last, volume, index) => volumeContainsWritten(volume, currentChapter) ? index : last,
+    -1,
+  );
   const treeData: DataNode[] = outline.volumes.map((volume, volumePosition) => {
     const locked = volumeContainsWritten(volume, currentChapter);
     const previousLocked = volumePosition === 0 || volumeContainsWritten(outline.volumes[volumePosition - 1], currentChapter);
@@ -313,6 +319,7 @@ function OutlineTree({
                   aria-label={`卷${volume.volumeIndex}标题`}
                   style={{ width: 180 }}
                   value={volume.title}
+                  disabled={saving}
                   onChange={(event) => onUpdateVolume(volume.id, { title: event.target.value })}
                 />
                 <Input
@@ -320,6 +327,7 @@ function OutlineTree({
                   aria-label={`卷${volume.volumeIndex}简介`}
                   style={{ width: 220 }}
                   value={volume.summary}
+                  disabled={saving}
                   onChange={(event) => onUpdateVolume(volume.id, { summary: event.target.value })}
                 />
               </>
@@ -329,7 +337,7 @@ function OutlineTree({
               icon={<PlusOutlined />}
               aria-label={`新增章节到卷${volume.volumeIndex}`}
               onClick={() => onAddChapter(volume.id)}
-              disabled={saving}
+              disabled={saving || volumePosition < lastWrittenVolumePosition}
             >新增章节</Button>
             <Button
               size="small"
@@ -431,6 +439,7 @@ function SynopsisRow({
             aria-label={`第${synopsis.chapterIndex}章标题`}
             style={{ width: 220 }}
             value={synopsis.title}
+            disabled={saving}
             onChange={(event) => onUpdate(synopsis.id, { title: event.target.value })}
           />
         )}
@@ -465,6 +474,7 @@ function SynopsisRow({
           aria-label={`第${synopsis.chapterIndex}章梗概`}
           style={{ marginTop: 6 }}
           value={synopsis.synopsis}
+          disabled={saving}
           onChange={(event) => onUpdate(synopsis.id, { synopsis: event.target.value })}
         />
       )}

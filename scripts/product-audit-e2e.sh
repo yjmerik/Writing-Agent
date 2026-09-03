@@ -240,6 +240,16 @@ if need_case standalone-chapter-rewrite || need_case manual-content-management |
     "UPDATE chapters SET content = content || char(10) || char(10) || '【重写前来源标记】' WHERE project_id='$P_REWRITE' AND chapter_index=1;" || exit 2
 fi
 
+if need_case manual-content-management; then
+  # Two written-boundary volumes expose an important UI invariant: adding an unwritten
+  # chapter to an earlier written volume would place a new high chapter index before a
+  # later locked chapter and make the complete outline invalid.
+  second_volume_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
+  fourth_synopsis_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
+  sqlite3 "$DIR/novel.db" \
+    "INSERT INTO volumes(id,project_id,volume_index,title,summary) VALUES('$second_volume_id','$P_REWRITE',2,'第二卷','第二卷边界测试'); UPDATE chapter_synopses SET volume_id='$second_volume_id' WHERE project_id='$P_REWRITE' AND chapter_index IN (2,3); INSERT INTO chapter_synopses(id,project_id,volume_id,chapter_index,title,synopsis,writing_notes) VALUES('$fourth_synopsis_id','$P_REWRITE','$second_volume_id',4,'事件4','第4章的场景梗概，用于验证单独移动后立即保存。',NULL); UPDATE projects SET current_chapter_index=2 WHERE id='$P_REWRITE';" || exit 2
+fi
+
 if need_case interactive-to-auto; then
   P_SWITCH=$(create_project "audit-switch" INTERACTIVE 3) || exit 2
   conceive_once "$P_SWITCH" || exit 2
@@ -532,9 +542,15 @@ await runCase('manual-content-management', async () => {
   const retainedSeed = targetUnwritten[1]
   const newTitle = '人工新增待写章'
   const newSynopsis = '新增后上移，保存并刷新仍保持此梗概。'
+  const premiseBefore = outlineBefore.premise
+  const premiseDraftMarker = premiseBefore + '【未保存总纲草稿】'
+  const premisePendingMarker = premiseBefore + '【保存请求期间继续编辑】'
+  await fillInput('textarea[aria-label="总纲内容"]', premiseDraftMarker)
 
   const outlineActions = await js('(() => {const t=document.body.innerText;return {addVolume:t.includes("新增卷"),addChapter:t.includes("新增章节"),removeChapter:t.includes("删除章节"),removeVolume:t.includes("删除卷"),save:t.includes("保存未写大纲")}})()')
   const lockedActions = await js('(() => {const row=[...document.querySelectorAll("[data-outline-chapter-index]")].find(x=>x.getAttribute("data-outline-chapter-index")==="1");const controls=row?[...row.querySelectorAll("button")].filter(b=>/上移|下移|删除/.test(b.getAttribute("aria-label")||b.innerText)):[];return {row:!!row,protected:controls.length===0||controls.every(b=>b.disabled)}})()')
+  const earlyWrittenVolume = outlineBefore.volumes.find(volume => volume.volumeIndex < targetVolume?.volumeIndex && volume.synopses.some(s => s.chapterIndex <= statusBeforeOutlineEdit.currentChapter))
+  const addBoundary = await js('(() => {const buttons=[...document.querySelectorAll("button")];const early=buttons.find(x=>x.getAttribute("aria-label")===' + JSON.stringify('新增章节到卷' + (earlyWrittenVolume?.volumeIndex || '')) + ');const last=buttons.find(x=>x.getAttribute("aria-label")===' + JSON.stringify('新增章节到卷' + (targetVolume?.volumeIndex || '')) + ');return {earlyExists:!!early,earlyDisabled:!!early&&early.disabled,lastExists:!!last,lastEnabled:!!last&&!last.disabled}})()')
   const addClicked = !!targetVolume && await js('(() => {const b=[...document.querySelectorAll("button")].find(x=>x.getAttribute("aria-label")===' + JSON.stringify('新增章节到卷' + (targetVolume?.volumeIndex || '')) + ');if(!b||b.disabled)return false;b.click();return true})()')
   if (addClicked) await wait(1)
   const newRowPresent = await js('!!document.querySelector("[data-outline-new-chapter]")')
@@ -543,7 +559,37 @@ await runCase('manual-content-management', async () => {
     await fillInput('[data-outline-new-chapter] textarea', newSynopsis)
   }
   const moveClicked = newRowPresent && await js('(() => {const row=document.querySelector("[data-outline-new-chapter]");const b=[...(row?.querySelectorAll("button")||[])].find(x=>(x.getAttribute("aria-label")||"").startsWith("上移第"));if(!b||b.disabled)return false;b.click();return true})()')
-  const deleteClicked = !!deletedSeed && await js('(() => {const row=[...document.querySelectorAll("[data-outline-chapter-id]")].find(x=>x.getAttribute("data-outline-chapter-id")===' + JSON.stringify(deletedSeed?.id || '') + ');const b=[...(row?.querySelectorAll("button")||[])].find(x=>(x.getAttribute("aria-label")||"").startsWith("删除第"));if(!b||b.disabled)return false;b.click();return true})()')
+
+  // Delay the real response so the page can prove that every structure-draft input is
+  // locked for the whole request. The independently edited premise remains editable.
+  const delayInstalled = await js('(() => {const original=window.fetch;window.__auditOutlineFetch=original;window.fetch=(input,init)=>{const url=String(input);if(url.includes("/outline")&&String(init?.method||"").toUpperCase()==="PUT"){window.fetch=original;return original(input,init).then(response=>new Promise(resolve=>setTimeout(()=>resolve(response),3500)))}return original(input,init)};return true})()')
+  const moveSaveClicked = await js('(() => {const b=[...document.querySelectorAll("button")].find(x=>x.getAttribute("aria-label")==="保存未写大纲");if(!b||b.disabled)return false;b.click();return true})()')
+  await wait(1)
+  const pendingLocked = await js('(() => {const structureInputs=[...document.querySelectorAll("[data-outline-volume-id] input,[data-outline-chapter-id] input,[data-outline-chapter-id] textarea")];const structureButtons=[...document.querySelectorAll("button")].filter(b=>{const a=b.getAttribute("aria-label")||"";return a==="新增卷"||a==="保存未写大纲"||/^(新增章节到卷|上移卷|下移卷|删除卷|上移第|下移第|删除第)/.test(a)});const premise=document.querySelector("textarea[aria-label=总纲内容]");const premiseSave=[...document.querySelectorAll("button")].find(b=>b.getAttribute("aria-label")==="保存总纲");return {inputs:structureInputs.length>0&&structureInputs.every(x=>x.disabled),buttons:structureButtons.length>0&&structureButtons.every(x=>x.disabled),premiseEditable:!!premise&&!premise.disabled,premiseSaveLocked:!!premiseSave&&premiseSave.disabled}})()')
+  if (pendingLocked.premiseEditable) await fillInput('textarea[aria-label="总纲内容"]', premisePendingMarker)
+  await wait(4)
+  await js('(() => {if(window.__auditOutlineFetch){window.fetch=window.__auditOutlineFetch;delete window.__auditOutlineFetch}return true})()')
+  const outlineAfterMove = await pageJson('/api/projects/$P_REWRITE/outline')
+  const movePersistedOrder = outlineAfterMove.volumes.flatMap(volume => volume.synopses.map(synopsis => ({
+    id: synopsis.id, volumeIndex: volume.volumeIndex, chapterIndex: synopsis.chapterIndex,
+    title: synopsis.title, synopsis: synopsis.synopsis,
+  })))
+  const moveNewPosition = movePersistedOrder.findIndex(item => item.title === newTitle && item.synopsis === newSynopsis)
+  const moveRetainedPosition = movePersistedOrder.findIndex(item => item.title === retainedSeed?.title)
+  const moveSavedInOrder = moveNewPosition >= 0 && moveRetainedPosition === moveNewPosition + 1 &&
+    movePersistedOrder.every((item, index) => item.chapterIndex === index + 1)
+  const premiseAfterMove = await js('document.querySelector("textarea[aria-label=总纲内容]")?.value')
+  const premiseDraftRetained = premiseAfterMove === premisePendingMarker && outlineAfterMove.premise === premiseBefore
+
+  await go('/#/project/$P_REWRITE')
+  await openTab('大纲')
+  const outlineAfterMoveReload = await pageJson('/api/projects/$P_REWRITE/outline')
+  const moveReloadedOrder = outlineAfterMoveReload.volumes.flatMap(volume => volume.synopses.map(synopsis => ({
+    id: synopsis.id, volumeIndex: volume.volumeIndex, chapterIndex: synopsis.chapterIndex,
+    title: synopsis.title, synopsis: synopsis.synopsis,
+  })))
+  const moveReloadedExactly = JSON.stringify(movePersistedOrder) === JSON.stringify(moveReloadedOrder)
+  const deleteClicked = !!deletedSeed && await js('(() => {const row=[...document.querySelectorAll("[data-outline-chapter-id]")].find(x=>[...x.querySelectorAll("input")].some(i=>i.value===' + JSON.stringify(deletedSeed?.title || '') + '));const b=[...(row?.querySelectorAll("button")||[])].find(x=>(x.getAttribute("aria-label")||"").startsWith("删除第"));if(!b||b.disabled)return false;b.click();return true})()')
 
   // Keep the UI draft intact while a real server-side validation error travels through api.request
   // and is surfaced by Ant Design message.error. The following retry sends the untouched valid draft.
@@ -579,12 +625,16 @@ await runCase('manual-content-management', async () => {
   const pass = worldTypeOpened && worldTypeSelected && worldSaveClicked && characterSaveClicked &&
     worldPersisted && characterPersisted && Object.values(worldFields).every(Boolean) && Object.values(characterFields).every(Boolean) &&
     !!targetVolume && targetUnwritten.length >= 2 && Object.values(outlineActions).every(Boolean) &&
-    lockedActions.row && lockedActions.protected && addClicked && newRowPresent && moveClicked && deleteClicked && errorInterceptorInstalled &&
+    lockedActions.row && lockedActions.protected && Object.values(addBoundary).every(Boolean) && addClicked && newRowPresent && moveClicked &&
+    delayInstalled && moveSaveClicked && Object.values(pendingLocked).every(Boolean) && moveSavedInOrder && moveReloadedExactly && premiseDraftRetained &&
+    deleteClicked && errorInterceptorInstalled &&
     rejectedSaveClicked && serverErrorVisible && saveClicked && outlinePersisted && Object.values(refreshedOutlineFields).every(Boolean) &&
     Object.values(chapterActions).every(Boolean)
   return { pass, worldSave: { worldTypeOpened, worldTypeSelected, worldSaveClicked, persisted: worldPersisted, refreshed: worldFields },
     characterSave: { characterSaveClicked, persisted: characterPersisted, refreshed: characterFields },
-    outlineActions: { ...outlineActions, lockedActions, addClicked, newRowPresent, moveClicked, deleteClicked, rejectedSaveClicked,
+    outlineActions: { ...outlineActions, lockedActions, addBoundary, addClicked, newRowPresent, moveClicked,
+      delayInstalled, moveSaveClicked, pendingLocked, moveSavedInOrder, moveReloadedExactly, premiseDraftRetained,
+      movePersistedOrder, moveReloadedOrder, deleteClicked, rejectedSaveClicked,
       serverErrorVisible, saveClicked, persisted: outlinePersisted, refreshed: refreshedOutlineFields,
       seed: seedOrder, persistedOrder, reloadedOrder }, chapterActions }
 })

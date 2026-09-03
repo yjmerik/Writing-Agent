@@ -52,6 +52,7 @@
 - p26-09 review round 2：`startConceiving` 面对 `outline-edit-*` owner 的服务/HTTP RED 为 **7 tests / 2 failures / 0 errors**，实际 null 返回并导致 `/run` 500。GREEN 改为先原子 acquire，失败方仅在 owner 是 repository 中同项目 CONCEIVE task 时幂等返回，否则明确 409；不创建 task、不调用 orchestrator且原 owner 保持。构思重复启动旧语义继续通过；工作权 focused **33/33**，JDK21 compile/full/init **548 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建 PASS。
 
 - p26-10 RED：真实浏览器 seed 为卷1三章（ch1 已写，ch2/ch3 未写），`manual-content-management` 为 **0 PASS / 1 XFAIL / 0 ERROR**；新增卷/章、删除卷/章、保存与锁定 DOM 子项全 false。GREEN：完整 Outline 本地草稿提供未写卷章增删、上下移动与字段编辑，结构操作后保持已写章号并全局重新编号未写项；已写卷章有明确锁定语义且结构按钮 disabled。真实浏览器完成新增章→上移→删除原 ch2，首次保存被真实服务端 duplicate 校验拒绝并显示站内错误，原草稿随后成功重试；服务端生成 UUID 后的完整有序序列与整页刷新 API 完全一致，刷新 DOM 字段一致。manual aggregate 保持 **0 PASS / 1 XFAIL / 0 ERROR**，world/character/outline 全 true，仅 chapterActions false；两个邻近 strict 各 **1/0/0**。frontend build、JDK21 compile/full/init PASS：**548 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建 PASS。
+- p26-10 review round 1：真实浏览器改用两卷 written boundary，并在删除前单独执行“新增→上移→立即保存→整页刷新精确比对”。强化 RED 命中 `addBoundary.earlyDisabled`、`pendingLocked.inputs/buttons/premiseSaveLocked`、`premiseDraftRetained` 五项 false；移动保存/刷新顺序两项已 true。GREEN 仅允许最后一个含已写章的卷及其后卷新增章；结构 PUT pending 时锁定全部结构字段/动作、刷新、重规划和两个保存按钮，总纲文本仍可继续编辑，响应不覆盖总纲草稿且 persisted premise 保持旧值。增强 manual aggregate 为 **0/1/0** 且 outline/world/character 全 true，仅 future chapterActions false；两个 strict 各 **1/0/0**；frontend build、JDK21 compile/full/init **548 tests / 0 failures / 0 errors / 1 skipped**。
 
 ## Non-blocking Observations
 

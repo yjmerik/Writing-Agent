@@ -11,6 +11,8 @@
 - GREEN 场景真实完成：新增“人工新增待写章”→上移→删除事件2→第一次保存经真实服务端 duplicate 校验返回 400 且站内错误可见→保留草稿后再次保存。服务端为未写章生成新 UUID；保存响应与整页刷新后的 `id/volumeIndex/chapterIndex/title/synopsis` 完整有序序列逐项一致，刷新 DOM 标题与梗概一致。
 - `manual-content-management --expect-known-failures` 为 **0 PASS / 1 XFAIL / 0 ERROR**：world、character、outline 子断言全部 true，只剩 p26-13 范围内的 chapterActions false。`initial-setup-summary` 与 `checkpoint-card-targeting` strict 各 **1 PASS / 0 XFAIL / 0 ERROR**。
 - frontend build PASS；JDK21 `mvn compile && mvn test` 与 `./init.sh` 均 PASS，**548 tests / 0 failures / 0 errors / 1 skipped**，27 个 prompt 与前端生产构建通过。本 feature 未改后端、Agent/prompt、自动任务或 mode switch/resume。
+- Review fix round 1 先强化真实浏览器场景：改为两卷已写边界，并将新增章“上移后立即保存、整页刷新精确比对”与后续删除分成两次真实保存；延迟结构 PUT 响应期间同时检查全部结构草稿入口锁定及总纲独立编辑。RED 的 `outlineActions` 具体为 `addBoundary.earlyDisabled=false`、`pendingLocked.inputs=false`、`pendingLocked.buttons=false`、`pendingLocked.premiseSaveLocked=false`、`premiseDraftRetained=false`；移动后立即保存与刷新已为 true，证明移动重编号实现本身无回归。
+- Review GREEN：新增章只允许在最后一个含已写章节的卷及其后卷；更早的已写边界卷入口 disabled。结构保存期间卷章字段、结构按钮、刷新、重规划、结构保存及总纲保存均锁定，总纲文本框仍可编辑；结构响应不再覆盖未保存总纲草稿，结构请求也不携带该草稿。增强后的 manual aggregate 仍为 **0 PASS / 1 XFAIL / 0 ERROR**，全部 outline/world/character 子断言 true，仅 future `chapterActions` false；两个 strict 场景各 **1/0/0**。frontend build、JDK21 compile/full/init 再次全绿，仍为 **548 tests / 0 failures / 0 errors / 1 skipped**。
 
 ---
 

@@ -468,32 +468,76 @@ public class SqliteNovelRepository implements NovelRepository {
     @Override
     public void saveOutline(Outline o) {
         // C3/p26-02: 单连接 + 单事务，候选大纲不得留下部分 premise/volume/synopsis。
-        try (Connection conn = cp.getConnection()) {
-            boolean oldAutoCommit = conn.getAutoCommit();
-            conn.setAutoCommit(false);
-            try {
-                try (PreparedStatement ps = conn.prepareStatement(
-                        "INSERT INTO outlines (project_id, premise) VALUES (?,?) " +
-                        "ON CONFLICT(project_id) DO UPDATE SET premise=excluded.premise")) {
-                    ps.setString(1, o.getProjectId()); ps.setString(2, o.getPremise());
-                    ps.executeUpdate();
-                }
-                java.util.Set<String> keptVolumeIds = new java.util.HashSet<>();
-                for (Volume v : o.getVolumes()) {
-                    saveVolume(conn, v);
-                    keptVolumeIds.add(v.getId());
-                }
-                if (!keptVolumeIds.isEmpty()) {
-                    pruneMissingVolumes(conn, o.getProjectId(), keptVolumeIds);
-                }
-                conn.commit();
-            } catch (SQLException | RuntimeException e) {
-                try { conn.rollback(); } catch (SQLException rollbackFailure) { e.addSuppressed(rollbackFailure); }
-                throw e;
-            } finally {
-                conn.setAutoCommit(oldAutoCommit);
+        runInTransaction(conn -> {
+            saveOutline(conn, o);
+            return null;
+        });
+    }
+
+    @Override
+    public Optional<StoryFact> replaceOutlineAtomically(Outline outline, StoryFact plotCommitment) {
+        return runInTransaction(conn -> {
+            saveOutline(conn, outline);
+            if (plotCommitment != null) replaceActiveStoryFact(conn, plotCommitment);
+            return Optional.ofNullable(plotCommitment);
+        });
+    }
+
+    private void saveOutline(Connection conn, Outline o) {
+        try {
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO outlines (project_id, premise) VALUES (?,?) " +
+                    "ON CONFLICT(project_id) DO UPDATE SET premise=excluded.premise")) {
+                ps.setString(1, o.getProjectId()); ps.setString(2, o.getPremise());
+                ps.executeUpdate();
             }
-        } catch (SQLException e) { throw new RuntimeException(e); }
+            java.util.Set<String> keptVolumeIds = new java.util.HashSet<>();
+            for (Volume v : o.getVolumes()) {
+                saveVolume(conn, v);
+                keptVolumeIds.add(v.getId());
+            }
+            if (!keptVolumeIds.isEmpty()) {
+                pruneMissingVolumes(conn, o.getProjectId(), keptVolumeIds);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void replaceActiveStoryFact(Connection conn, StoryFact newer) {
+        try {
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE story_facts SET status='SUPERSEDED', superseded_by=?, updated_at=? " +
+                    "WHERE project_id=? AND fact_type=? AND subject=? AND status='ACTIVE'")) {
+                ps.setString(1, newer.getId());
+                ps.setString(2, newer.getUpdatedAt().toString());
+                ps.setString(3, newer.getProjectId());
+                ps.setString(4, newer.getFactType().name());
+                ps.setString(5, newer.getSubject());
+                ps.executeUpdate();
+            }
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO story_facts (id,project_id,fact_type,subject,assertion," +
+                    "chapter_established,source_chapter_version,importance,status,superseded_by," +
+                    "last_validated_chapter,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+                ps.setString(1, newer.getId());
+                ps.setString(2, newer.getProjectId());
+                ps.setString(3, newer.getFactType().name());
+                ps.setString(4, newer.getSubject());
+                ps.setString(5, newer.getAssertion());
+                ps.setInt(6, newer.getChapterEstablished());
+                ps.setInt(7, newer.getSourceChapterVersion());
+                ps.setInt(8, newer.getImportance());
+                ps.setString(9, newer.getStatus().name());
+                ps.setString(10, newer.getSupersededBy());
+                ps.setInt(11, newer.getLastValidatedChapter());
+                ps.setString(12, newer.getCreatedAt().toString());
+                ps.setString(13, newer.getUpdatedAt().toString());
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void saveVolume(Connection conn, Volume v) throws SQLException {

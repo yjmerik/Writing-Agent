@@ -133,13 +133,20 @@ public class CanonPatchService {
     public PatchResult replaceOutline(String projectId, Outline replacement, int currentChapter) {
         Outline existing = repository.findOutlineByProject(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("大纲不存在: " + projectId));
-        repository.saveOutline(replacement);
-        List<StoryFact> written = new ArrayList<>();
+        StoryFact plotCommitment = null;
         if (replacement.getPremise() != null && !replacement.getPremise().isBlank()
                 && !Objects.equals(existing.getPremise(), replacement.getPremise())) {
-            written.add(writeHumanFact(projectId, StoryFact.FactType.PLOT_COMMITMENT,
-                    "总纲", replacement.getPremise(), currentChapter));
+            String assertion = replacement.getPremise().startsWith(HUMAN_PATCH_PREFIX)
+                    ? replacement.getPremise()
+                    : HUMAN_PATCH_PREFIX + replacement.getPremise();
+            plotCommitment = new StoryFact(projectId, StoryFact.FactType.PLOT_COMMITMENT,
+                    "总纲", assertion, currentChapter);
+            plotCommitment.setImportance(5);
+            plotCommitment.setLastValidatedChapter(currentChapter);
         }
+        List<StoryFact> written = repository.replaceOutlineAtomically(replacement, plotCommitment)
+                .map(List::of).orElseGet(List::of);
+        // MemoryRevision 只做提交后的缓存失效；全部可失败的数据库副作用已在上面的事务中完成。
         bump(projectId);
         return new PatchResult(replacement, written, true);
     }

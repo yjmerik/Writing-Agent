@@ -30,6 +30,22 @@ public class ChapterSynopsis {
         this.tensionLevel = 5; // 默认中等张力
     }
 
+    /** 为受保护的已写章创建脱离持久化对象的完整副本，同时保留其可信身份。 */
+    public ChapterSynopsis copyPreservingIdentity() {
+        ChapterSynopsis copy = new ChapterSynopsis(projectId, chapterIndex, title, synopsis);
+        copy.id = id;
+        copy.writingNotes = writingNotes;
+        copy.beats = beats;
+        copy.climax = climax;
+        copy.cast = cast;
+        copy.plotPurpose = plotPurpose;
+        copy.tensionLevel = tensionLevel;
+        copy.volumeArcPosition = volumeArcPosition;
+        copy.foreshadowingsToPlant = foreshadowingsToPlant;
+        copy.foreshadowingsToResolve = foreshadowingsToResolve;
+        return copy;
+    }
+
     public String getId() { return id; }
     public String getProjectId() { return projectId; }
     public int getChapterIndex() { return chapterIndex; }

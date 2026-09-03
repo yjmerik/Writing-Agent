@@ -41,7 +41,8 @@ public class ContentController {
     public ContentController(NovelRepository repository, NovelOrchestrator orchestrator,
                              CanonPatchService canonPatch, WritingTaskExecutor writingTaskExecutor) {
         this(repository, orchestrator, canonPatch, writingTaskExecutor,
-                canonPatch == null ? null : new OutlineStructureService(repository, canonPatch));
+                canonPatch == null ? null : new OutlineStructureService(
+                        repository, canonPatch, writingTaskExecutor));
     }
 
     @GetMapping("/worldbuilding")

@@ -817,3 +817,10 @@ W2 的两个独立基石已落地（不依赖 LLM prompt 改动，不影响产�
 - 严格 TDD RED：真实 Spring HTTP + SQLite 为 **8 tests / 8 failures / 0 errors**，覆盖旧 merge 无法删除/移动、0/-1 边界残留、三类非法章序放行、已写前缀放行、空大纲放行。GREEN 后新测试 **10/10**；连同旧 synopsis/canon/checkpoint merge 回归 focused **25/25 PASS**。
 - 产品 E2E：`manual-content-management --expect-known-failures` 为 **0 PASS / 1 XFAIL / 0 ERROR**；世界观/人物子项保持全绿，aggregate 仅因 p26-10 大纲 UI 与后续章节 UI 尚未实现。
 - 验证：JDK21 `mvn compile`、`mvn test`、`./init.sh` 全部 PASS（**542 tests / 0 failures / 0 errors / 1 skipped**；27 prompt 与前端生产构建 PASS）。未修改前端、自动任务、Agent/prompt/上下文或产出逻辑。
+
+### p26-09 Review round 1
+
+- 严格 TDD RED：真实服务/SQLite 测试扩展为 **14 tests / 4 failures / 0 errors**。确定性 latch 复现结构服务读取 boundary 后 writer 与第二个 PUT 均可进入；刷新后已写卷 UUID 改变；真典新事实 INSERT 触发器失败时，大纲已替换且旧事实可能先被 supersede。
+- GREEN：`OutlineStructureService` 在服务内取得项目 owner，覆盖 boundary read、全部校验、SQLite commit 和 revision bump，冲突调用不进入 repository，并在成功/失败时 finally 释放。已写卷与章梗概从可信持久化对象 detached copy，保留 UUID、写作要求、节拍、高潮、人物、剧情目的、张力和卷内位置，不信任 payload ID。
+- `NovelRepository.replaceOutlineAtomically` 明确大纲+可选剧情承诺的原子契约；SQLite 单事务执行 outline 替换、旧同键 ACTIVE 全部 SUPERSEDED 及 HUMAN_PATCH INSERT。故障注入在 INSERT 阶段中断后，outline、全部 facts、旧 fact 状态及 MemoryRevision 均与调用前完全一致；revision 仅在 DB commit 后推进。
+- 最终 `OutlineStructureEditTest,UnwrittenSynopsisEditTest,CanonPatchServiceTest,CanonActiveUniquenessTest,CheckpointRevisionRoutingTest` **32/32 PASS**；manual aggregate **0 PASS / 1 XFAIL / 0 ERROR**；JDK21 compile/full/init **546 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端生产构建 PASS。

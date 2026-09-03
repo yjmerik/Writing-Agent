@@ -24,6 +24,13 @@ public class Volume {
 
     public void addSynopsis(ChapterSynopsis s) { this.synopses.add(s); }
 
+    /** 为受保护的已写卷创建脱离持久化对象的副本，同时保留其可信身份。 */
+    public Volume copyPreservingIdentity() {
+        Volume copy = new Volume(projectId, volumeIndex, title, summary);
+        copy.id = id;
+        return copy;
+    }
+
     public String getId() { return id; }
     public String getProjectId() { return projectId; }
     public int getVolumeIndex() { return volumeIndex; }

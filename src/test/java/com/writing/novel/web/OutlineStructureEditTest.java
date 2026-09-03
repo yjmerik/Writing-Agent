@@ -5,11 +5,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.writing.novel.domain.ChapterSynopsis;
 import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
+import com.writing.novel.domain.StoryFact;
 import com.writing.novel.domain.Volume;
 import com.writing.novel.memory.MemoryRevision;
+import com.writing.novel.orchestrator.NovelOrchestrator;
+import com.writing.novel.persistence.sqlite.ConnectionProvider;
 import com.writing.novel.service.CanonPatchService;
 import com.writing.novel.service.OutlineStructureService;
+import com.writing.novel.service.WritingTaskExecutor;
 import com.writing.novel.spi.NovelRepository;
+import com.writing.novel.spi.StoryCanon;
 import com.writing.novel.web.dto.CreateProjectRequest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -24,12 +29,18 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.File;
+import java.sql.Connection;
+import java.sql.Statement;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -55,6 +66,8 @@ class OutlineStructureEditTest {
     @Autowired NovelRepository repository;
     @Autowired MemoryRevision memoryRevision;
     @Autowired CanonPatchService canonPatch;
+    @Autowired StoryCanon storyCanon;
+    @Autowired ConnectionProvider connectionProvider;
 
     @BeforeAll
     static void createDataDir() {
@@ -64,6 +77,9 @@ class OutlineStructureEditTest {
     @Test
     void replacesUnwrittenStructureAndReloadsAddedDeletedAndMovedItems() throws Exception {
         String projectId = seedPartialOutline(1);
+        Outline before = repository.findOutlineByProject(projectId).orElseThrow();
+        Volume writtenVolumeBefore = before.getVolumes().get(0);
+        ChapterSynopsis writtenBefore = findChapter(before, 1);
         Outline incoming = outline(projectId, "更新后的总纲",
                 volume(projectId, 1, "卷一已写", "已写卷摘要",
                         synopsis(projectId, 1, "第一章", "已写内容")),
@@ -83,6 +99,17 @@ class OutlineStructureEditTest {
         assertEquals(List.of(1, 2, 4, 5), chapterIndices(reloaded));
         assertEquals("第一章", findChapter(reloaded, 1).getTitle());
         assertEquals("已写内容", findChapter(reloaded, 1).getSynopsis());
+        assertEquals(writtenVolumeBefore.getId(), reloaded.getVolumes().get(0).getId(),
+                "已写卷必须保留持久化身份");
+        ChapterSynopsis writtenReloaded = findChapter(reloaded, 1);
+        assertEquals(writtenBefore.getId(), writtenReloaded.getId(), "已写章梗概必须保留持久化身份");
+        assertEquals(writtenBefore.getWritingNotes(), writtenReloaded.getWritingNotes());
+        assertEquals(writtenBefore.getPlotPurpose(), writtenReloaded.getPlotPurpose());
+        assertEquals(writtenBefore.getTensionLevel(), writtenReloaded.getTensionLevel());
+        assertEquals(writtenBefore.getVolumeArcPosition(), writtenReloaded.getVolumeArcPosition());
+        assertEquals(writtenBefore.getCast(), writtenReloaded.getCast());
+        assertEquals(writtenBefore.getBeats(), writtenReloaded.getBeats());
+        assertEquals(writtenBefore.getClimax(), writtenReloaded.getClimax());
         assertEquals(2, volumeOf(reloaded, 2).getVolumeIndex(), "未写章应可跨卷移动");
         assertFalse(chapterIndices(reloaded).contains(3), "缺失的未写章应被删除");
         assertTrue(reloaded.getVolumes().stream()
@@ -128,6 +155,133 @@ class OutlineStructureEditTest {
                 .replaceUnwritten(projectId, incoming);
 
         verify(localCanonPatch, times(1)).replaceOutline(eq(projectId), any(Outline.class), eq(0));
+    }
+
+    @Test
+    void outlineEditOwnsProjectAcrossReadValidateAndSaveSoWriterConflicts() throws Exception {
+        String projectId = "outline-owner-writer";
+        NovelRepository localRepository = mock(NovelRepository.class);
+        when(localRepository.findAllProjects()).thenReturn(List.of());
+        Project project = new Project("owner", "concept", "tag");
+        Outline existing = outline(projectId, "总纲",
+                volume(projectId, 1, "卷一", "摘要", synopsis(projectId, 1, "第一章", "内容")));
+        CountDownLatch readEntered = new CountDownLatch(1);
+        CountDownLatch allowRead = new CountDownLatch(1);
+        when(localRepository.findOutlineByProject(projectId)).thenAnswer(invocation -> {
+            readEntered.countDown();
+            assertTrue(allowRead.await(5, TimeUnit.SECONDS));
+            return java.util.Optional.of(existing);
+        });
+        when(localRepository.findProject(projectId)).thenReturn(java.util.Optional.of(project));
+        WritingTaskExecutor executor = new WritingTaskExecutor(mock(NovelOrchestrator.class), localRepository);
+        CanonPatchService localCanonPatch = mock(CanonPatchService.class);
+        when(localCanonPatch.replaceOutline(eq(projectId), any(Outline.class), eq(0)))
+                .thenAnswer(invocation -> new CanonPatchService.PatchResult(
+                        invocation.getArgument(1), List.of(), true));
+        OutlineStructureService service = new OutlineStructureService(localRepository, localCanonPatch, executor);
+        Outline incoming = outline(projectId, "总纲",
+                volume(projectId, 1, "卷一", "摘要", synopsis(projectId, 1, "第一章", "内容")));
+
+        CompletableFuture<Outline> first = CompletableFuture.supplyAsync(
+                () -> service.replaceUnwritten(projectId, incoming));
+        assertTrue(readEntered.await(5, TimeUnit.SECONDS));
+        try {
+            assertThrows(IllegalStateException.class,
+                    () -> executor.beginWork(projectId, "concurrent-writer"));
+        } finally {
+            executor.endWork(projectId, "concurrent-writer");
+            allowRead.countDown();
+        }
+        first.join();
+
+        executor.beginWork(projectId, "writer-after-edit");
+        executor.endWork(projectId, "writer-after-edit");
+    }
+
+    @Test
+    void secondOutlinePutConflictsWhileFirstOwnsProjectAndOwnerIsReleased() throws Exception {
+        String projectId = "outline-owner-put";
+        NovelRepository localRepository = mock(NovelRepository.class);
+        when(localRepository.findAllProjects()).thenReturn(List.of());
+        Project project = new Project("owner", "concept", "tag");
+        Outline existing = outline(projectId, "总纲",
+                volume(projectId, 1, "卷一", "摘要", synopsis(projectId, 1, "第一章", "内容")));
+        CountDownLatch readEntered = new CountDownLatch(1);
+        CountDownLatch allowRead = new CountDownLatch(1);
+        when(localRepository.findOutlineByProject(projectId)).thenAnswer(invocation -> {
+            readEntered.countDown();
+            assertTrue(allowRead.await(5, TimeUnit.SECONDS));
+            return java.util.Optional.of(existing);
+        });
+        when(localRepository.findProject(projectId)).thenReturn(java.util.Optional.of(project));
+        WritingTaskExecutor executor = new WritingTaskExecutor(mock(NovelOrchestrator.class), localRepository);
+        CanonPatchService localCanonPatch = mock(CanonPatchService.class);
+        when(localCanonPatch.replaceOutline(eq(projectId), any(Outline.class), eq(0)))
+                .thenAnswer(invocation -> new CanonPatchService.PatchResult(
+                        invocation.getArgument(1), List.of(), true));
+        OutlineStructureService service = new OutlineStructureService(localRepository, localCanonPatch, executor);
+        ContentController controller = new ContentController(localRepository, null, null, executor, service);
+        Outline incoming = outline(projectId, "总纲",
+                volume(projectId, 1, "卷一", "摘要", synopsis(projectId, 1, "第一章", "内容")));
+
+        CompletableFuture<Outline> first = CompletableFuture.supplyAsync(
+                () -> controller.updateOutline(projectId, incoming));
+        assertTrue(readEntered.await(5, TimeUnit.SECONDS));
+        try {
+            assertThrows(IllegalStateException.class,
+                    () -> controller.updateOutline(projectId, incoming));
+        } finally {
+            allowRead.countDown();
+        }
+        first.join();
+
+        verify(localRepository, times(1)).findOutlineByProject(projectId);
+        executor.beginWork(projectId, "work-after-put");
+        executor.endWork(projectId, "work-after-put");
+    }
+
+    @Test
+    void outlineOwnerIsReleasedWhenStructureServiceFails() {
+        String projectId = "outline-owner-failure";
+        NovelRepository localRepository = mock(NovelRepository.class);
+        when(localRepository.findAllProjects()).thenReturn(List.of());
+        WritingTaskExecutor executor = new WritingTaskExecutor(mock(NovelOrchestrator.class), localRepository);
+        Outline incoming = outline(projectId, "总纲",
+                volume(projectId, 1, "卷一", "摘要", synopsis(projectId, 1, "第一章", "内容")));
+        when(localRepository.findOutlineByProject(projectId))
+                .thenThrow(new IllegalArgumentException("失败"));
+        OutlineStructureService failing = new OutlineStructureService(
+                localRepository, mock(CanonPatchService.class), executor);
+
+        assertThrows(IllegalArgumentException.class, () -> failing.replaceUnwritten(projectId, incoming));
+
+        executor.beginWork(projectId, "work-after-failure");
+        executor.endWork(projectId, "work-after-failure");
+    }
+
+    @Test
+    void canonFailureRollsBackOutlineFactsAndMemoryRevision() throws Exception {
+        String projectId = seedPartialOutline(1);
+        StoryFact originalFact = storyCanon.applyHumanPatch(projectId,
+                StoryFact.FactType.PLOT_COMMITMENT, "总纲", "原始总纲", 1, 5);
+        String outlineBefore = persistedJson(projectId);
+        List<String> factsBefore = factSnapshot(projectId);
+        long revisionBefore = memoryRevision.current(projectId);
+        installPlotFactFailureTrigger(projectId);
+
+        Outline incoming = outline(projectId, "触发失败的新总纲",
+                volume(projectId, 1, "卷一已写", "已写卷摘要",
+                        synopsis(projectId, 1, "第一章", "已写内容")),
+                volume(projectId, 2, "替换第二卷", "新摘要",
+                        synopsis(projectId, 2, "第二章新稿", "新未写内容")));
+
+        putOutline(projectId, incoming, 500);
+
+        assertEquals(outlineBefore, persistedJson(projectId));
+        assertEquals(factsBefore, factSnapshot(projectId));
+        assertEquals(revisionBefore, memoryRevision.current(projectId));
+        assertEquals(StoryFact.Status.ACTIVE,
+                storyCanon.findById(originalFact.getId()).orElseThrow().getStatus());
     }
 
     @ParameterizedTest(name = "rejects invalid chapter ordering: {0}")
@@ -243,9 +397,17 @@ class OutlineStructureEditTest {
                 .andReturn().getResponse().getContentAsString();
         String projectId = objectMapper.readTree(response).path("id").asText();
 
+        ChapterSynopsis written = synopsis(projectId, 1, "第一章", "已写内容");
+        written.setWritingNotes("已写节奏要求");
+        written.setPlotPurpose("推进既有主线");
+        written.setTensionLevel(8);
+        written.setVolumeArcPosition("RISING");
+        written.setCast("主角,导师");
+        written.setBeats("抵达→冲突→抉择");
+        written.setClimax("守住承诺");
         Outline original = outline(projectId, "原始总纲",
                 volume(projectId, 1, "卷一已写", "已写卷摘要",
-                        synopsis(projectId, 1, "第一章", "已写内容"),
+                        written,
                         synopsis(projectId, 2, "第二章旧稿", "旧未写内容")),
                 volume(projectId, 2, "旧第二卷", "旧第二卷摘要",
                         synopsis(projectId, 3, "第三章旧稿", "待删除内容")));
@@ -265,6 +427,24 @@ class OutlineStructureEditTest {
 
     private String persistedJson(String projectId) throws Exception {
         return objectMapper.writeValueAsString(repository.findOutlineByProject(projectId).orElseThrow());
+    }
+
+    private List<String> factSnapshot(String projectId) {
+        return storyCanon.findAll(projectId).stream()
+                .map(fact -> fact.getId() + "|" + fact.getStatus() + "|" + fact.getSupersededBy()
+                        + "|" + fact.getAssertion())
+                .toList();
+    }
+
+    private void installPlotFactFailureTrigger(String projectId) throws Exception {
+        String triggerName = "fail_plot_" + projectId.replace("-", "");
+        String safeProjectId = projectId.replace("'", "''");
+        try (Connection connection = connectionProvider.getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.execute("CREATE TRIGGER " + triggerName
+                    + " BEFORE INSERT ON story_facts WHEN NEW.project_id='" + safeProjectId
+                    + "' AND NEW.fact_type='PLOT_COMMITMENT' BEGIN SELECT RAISE(ABORT, 'canon failure'); END");
+        }
     }
 
     private static Outline outline(String projectId, String premise, Volume... volumes) {
@@ -311,4 +491,5 @@ class OutlineStructureEditTest {
     private interface OutlineFactory {
         Outline create(String projectId);
     }
+
 }

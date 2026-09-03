@@ -5,6 +5,7 @@ import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.Volume;
 import com.writing.novel.spi.NovelRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * 人工大纲结构替换边界：已写前缀不可变，未写结构按完整 payload 替换。
@@ -22,13 +24,32 @@ public class OutlineStructureService {
 
     private final NovelRepository repository;
     private final CanonPatchService canonPatch;
+    private final WritingTaskExecutor writingTaskExecutor;
 
-    public OutlineStructureService(NovelRepository repository, CanonPatchService canonPatch) {
+    @Autowired
+    public OutlineStructureService(NovelRepository repository, CanonPatchService canonPatch,
+                                   WritingTaskExecutor writingTaskExecutor) {
         this.repository = repository;
         this.canonPatch = canonPatch;
+        this.writingTaskExecutor = writingTaskExecutor;
+    }
+
+    /** Unit-test compatibility for callers that do not exercise project work ownership. */
+    public OutlineStructureService(NovelRepository repository, CanonPatchService canonPatch) {
+        this(repository, canonPatch, null);
     }
 
     public Outline replaceUnwritten(String projectId, Outline incoming) {
+        String workId = "outline-edit-" + UUID.randomUUID();
+        if (writingTaskExecutor != null) writingTaskExecutor.beginWork(projectId, workId);
+        try {
+            return replaceWhileOwningProject(projectId, incoming);
+        } finally {
+            if (writingTaskExecutor != null) writingTaskExecutor.endWork(projectId, workId);
+        }
+    }
+
+    private Outline replaceWhileOwningProject(String projectId, Outline incoming) {
         if (incoming == null) throw new IllegalArgumentException("大纲内容不能为空");
         requireProject(projectId, incoming.getProjectId(), "大纲");
 
@@ -142,13 +163,21 @@ public class OutlineStructureService {
                                  Map<Integer, LocatedSynopsis> existingWritten, int boundary) {
         Outline result = new Outline(projectId, premise);
         for (Volume sourceVolume : incomingVolumes) {
-            Volume volume = new Volume(projectId, sourceVolume.getVolumeIndex(),
+            Volume trustedWrittenVolume = sourceVolume.getSynopses().stream()
+                    .filter(synopsis -> synopsis.getChapterIndex() <= boundary)
+                    .map(synopsis -> existingWritten.get(synopsis.getChapterIndex()).volume())
+                    .findFirst().orElse(null);
+            Volume volume = trustedWrittenVolume != null
+                    ? trustedWrittenVolume.copyPreservingIdentity()
+                    : new Volume(projectId, sourceVolume.getVolumeIndex(),
                     sourceVolume.getTitle(), sourceVolume.getSummary());
             for (ChapterSynopsis sourceSynopsis : sourceVolume.getSynopses()) {
                 ChapterSynopsis source = sourceSynopsis.getChapterIndex() <= boundary
                         ? existingWritten.get(sourceSynopsis.getChapterIndex()).synopsis()
                         : sourceSynopsis;
-                volume.addSynopsis(copySynopsis(projectId, source));
+                volume.addSynopsis(sourceSynopsis.getChapterIndex() <= boundary
+                        ? source.copyPreservingIdentity()
+                        : copySynopsis(projectId, source));
             }
             result.addVolume(volume);
         }

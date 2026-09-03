@@ -15,6 +15,7 @@ import com.writing.novel.domain.NarrativeThread;
 import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.StyleProfile;
+import com.writing.novel.domain.StoryFact;
 import com.writing.novel.domain.Summary;
 import com.writing.novel.domain.WritingPreferences;
 
@@ -52,6 +53,10 @@ public class TestNovelRepositoryStub implements NovelRepository {
     @Override public Optional<Character> findCharacter(String id) { return Optional.empty(); }
     @Override public List<Character> findCharactersByProject(String p) { return List.of(); }
     @Override public void saveOutline(Outline o) {}
+    @Override public Optional<StoryFact> replaceOutlineAtomically(Outline o, StoryFact f) {
+        saveOutline(o);
+        return Optional.ofNullable(f);
+    }
     @Override public Optional<Outline> findOutlineByProject(String p) { return Optional.empty(); }
     @Override public String saveChapter(Chapter c) { return c.getId(); }
     @Override public Optional<Chapter> findChapter(String id) { return Optional.empty(); }

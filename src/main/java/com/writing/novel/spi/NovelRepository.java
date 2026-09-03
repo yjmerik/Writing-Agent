@@ -13,6 +13,7 @@ import com.writing.novel.domain.KnowledgeEntry;
 import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.StyleProfile;
+import com.writing.novel.domain.StoryFact;
 import com.writing.novel.domain.Summary;
 import com.writing.novel.domain.GenerationLog;
 import com.writing.novel.domain.NarrativeThread;
@@ -49,6 +50,11 @@ public interface NovelRepository {
 
     // --- Outline / Volume / Synopsis ---
     void saveOutline(Outline outline);
+    /**
+     * 原子替换大纲，并可在同一事务中取代旧的同主体真典事实、写入新事实。
+     * 任一写入失败时，大纲与真典审计链必须全部回滚。
+     */
+    Optional<StoryFact> replaceOutlineAtomically(Outline outline, StoryFact plotCommitment);
     Optional<Outline> findOutlineByProject(String projectId);
 
     // --- Chapter ---

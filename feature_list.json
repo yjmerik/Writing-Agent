@@ -3300,12 +3300,13 @@
       "phase": 26,
       "type": "feature",
       "dependencies": ["p26-08", "p26-09", "p26-12", "p26-14"],
-      "status": "not-started",
+      "status": "completed",
       "files": ["service/AgentRevisionService.java", "web/RevisionController.java", "web/AgentRevisionApiTest.java"],
       "problem_ref": "P1-06：Agent 修改缺少预览、确认和并发覆盖保护",
       "description": "预览返回源版本和前后内容，确认应用复用各领域写入约束并一次性消费预览。",
       "acceptance": "preview 不写库；apply 只改目标；源版本变化、跨项目或活动任务时拒绝且不产生部分更新。",
-      "verify_cmd": "mvn test -Dtest=AgentRevisionApiTest"
+      "verify_cmd": "mvn test -Dtest=AgentRevisionApiTest",
+      "evidence": "2026-09-04：TDD RED 的 5 组真实 Spring MVC/SQLite 场景因 revisions 路由不存在返回 500；GREEN 新增服务端持有的 UUID 预览及 preview/apply API，WORLD/CHARACTER/VOLUME/CHAPTER/PASSAGE 五类目标均返回 before/after 与 SHA-256 sourceVersion，预览前后仓储不变。apply 重新解析持久化目标并校验项目、ID、卷/章/段落索引、来源指纹和活动写作状态；跨项目、陈旧来源、Agent 篡改身份、活动任务及重复消费分别返回 400/409，失败后预览仍未应用且无部分写入。成功路径一次性消费预览，复用 CanonPatchService/ChapterRevisionService；卷只允许修改所选未写卷的标题与摘要，卷内章级内容及选中/未选卷 UUID 保持不变；章节和段落继续记录版本历史并刷新派生状态。专属 API 5/5、联合 ContentRevisionAgent 15/15 PASS。匹配 canary-mystery 三章 replay 为 3 章、10,191 字、54 calls、0 LLM errors、0 chapter failures，compare-baseline PASS（未 bless）；manual-content-management 真实浏览器回归 1 PASS / 0 XFAIL / 0 ERROR。JDK21 compile、full test 与 ./init.sh PASS：582 tests / 0 failures / 0 errors / 1 skipped，28 prompts 与前端生产构建通过。未增加 UI，未修改自动任务或 mode switch/resume。"
     },
     {
       "id": "p26-16",

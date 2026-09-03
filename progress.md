@@ -2,6 +2,16 @@
 
 ---
 
+## 会话记录（2026-09-04）：Phase 26 p26-15 Agent 修订预览与乐观锁应用 API
+
+- 新增服务端持有的 UUID 修订预览和两段式 API。预览读取单一 WORLD、CHARACTER、VOLUME、CHAPTER 或 PASSAGE 对象，返回 before/after、摘要与 SHA-256 来源指纹，本身不写仓储；应用不接受客户端回传候选，重新读取并校验持久化目标。
+- 应用前统一校验项目归属、目标 ID、卷/章/段落索引、来源指纹、活动写作状态和一次性消费状态。跨项目、陈旧来源、Agent 篡改身份、活动写作与重复应用均在任何目标写入前返回 400/409；失败后预览保持未应用，可在冲突解除且来源未变时重试。
+- 成功路径复用既有 CanonPatchService 与 ChapterRevisionService。卷级修订只允许所选未写卷的标题/摘要，拒绝修改卷内章级内容，并保持选中卷及未选卷 UUID；章节/段落继续进入版本历史和派生状态刷新链。
+- TDD RED 为 **5 组路由缺失失败**；GREEN 后 AgentRevisionApiTest **5/5 PASS**，与 ContentRevisionAgentTest 联合 **15/15 PASS**。匹配 mystery replay 为 **3 章 / 10,191 字 / 54 calls / 0 LLM errors / 0 chapter failures**，baseline PASS（未 bless）；`manual-content-management` 浏览器回归 **1 PASS / 0 XFAIL / 0 ERROR**。
+- JDK21 compile/full/init 全绿：**582 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端生产构建通过。本项未增加 UI，未修改自动任务或 mode switch/resume。
+
+---
+
 ## 会话记录（2026-09-04）：Phase 26 p26-14 通用内容修订 Agent 与外置 Prompt
 
 - 新增 `ContentRevisionAgent.preview(...)`，为 WORLD、CHARACTER、VOLUME、CHAPTER、PASSAGE 五类选中对象生成 detached 修改候选。Agent 不依赖 `NovelRepository`，预览阶段没有持久化能力。

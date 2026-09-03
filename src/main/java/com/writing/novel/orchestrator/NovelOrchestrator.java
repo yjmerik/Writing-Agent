@@ -2115,6 +2115,48 @@ public class NovelOrchestrator {
         }
     }
 
+    /** Passage summaries compute outside the mutation lock and persist only if their source is current. */
+    private void recomputeSummariesForChapter(
+            String projectId, int chapterIndex,
+            com.writing.novel.service.ChapterRevisionService.DerivedWriteBoundary boundary) {
+        if (memoryManager == null) return;
+        for (var existing : repository.findSummariesByProject(projectId)) {
+            if (!existing.isDirty() || !existing.covers(chapterIndex)) continue;
+            StringBuilder chapters = new StringBuilder();
+            for (int i = existing.getFromChapter(); i <= existing.getToChapter(); i++) {
+                repository.findChapterByIndex(projectId, i)
+                        .ifPresent(c -> chapters.append(c.getContent()).append("\n"));
+            }
+            if (chapters.isEmpty()) continue;
+
+            Summary fresh;
+            try {
+                fresh = memoryManager.draftSummary(projectId, existing.getFromChapter(),
+                        existing.getToChapter(), chapters.toString());
+            } catch (Exception ignored) {
+                continue;
+            }
+            boundary.apply(() -> {
+                int sourceVersion = repository.findChapterByIndex(projectId, existing.getToChapter())
+                        .map(Chapter::getVersion).orElse(0);
+                int span = existing.getToChapter() - existing.getFromChapter() + 1;
+                if (span <= 3) {
+                    fresh.setSourceChapterVersion(sourceVersion);
+                    fresh.setDirty(false);
+                    repository.saveSummary(fresh);
+                    removeSupersededSummaries(projectId, existing.getFromChapter(),
+                            existing.getToChapter(), fresh.getId());
+                } else {
+                    existing.setContent(fresh.getContent());
+                    existing.setSourceChapterVersion(sourceVersion);
+                    existing.setDirty(false);
+                    repository.saveSummary(existing);
+                }
+                return true;
+            }, false);
+        }
+    }
+
     /**
      * mc-p3-02: 成书质量门禁——FINAL 前的全局质量检查。
      * 硬性门禁（不通过→NEEDS_REVISION）：
@@ -2550,15 +2592,17 @@ public class NovelOrchestrator {
     /** Passage editing keeps its established fast response while stale workers are version-gated. */
     private void refreshChapterAfterRevisionAsync(String projectId, Chapter chapter) {
         int chapterIndex = chapter.getChapterIndex();
-        if (!isCurrentChapterVersion(projectId, chapter)) return;
-        reindexAndInvalidateChapter(projectId, chapter);
-        markSummariesDirtyForChapter(projectId, chapterIndex);
-        POST_PROCESS.execute(() -> com.writing.novel.service.ChapterRevisionService.withChapterRevisionLock(
-                projectId, chapterIndex, () -> {
-                    if (!isCurrentChapterVersion(projectId, chapter)) return;
-                    recomputeSummariesForChapter(projectId, chapterIndex);
-                    refreshChapterEntitiesAndFacts(projectId, chapter);
-                }));
+        com.writing.novel.service.ChapterRevisionService.withChapterRevisionLock(projectId, chapterIndex, () -> {
+            if (!isCurrentChapterVersion(projectId, chapter)) return;
+            reindexAndInvalidateChapter(projectId, chapter);
+            markSummariesDirtyForChapter(projectId, chapterIndex);
+        });
+        var boundary = new com.writing.novel.service.ChapterRevisionService.DerivedWriteBoundary(
+                repository, projectId, chapterIndex, chapter.getVersion());
+        POST_PROCESS.execute(() -> {
+            recomputeSummariesForChapter(projectId, chapterIndex, boundary);
+            refreshChapterEntitiesAndFacts(projectId, chapter, boundary);
+        });
     }
 
     private void refreshCurrentChapterDerivedState(String projectId, Chapter chapter) {
@@ -2592,6 +2636,20 @@ public class NovelOrchestrator {
         } catch (Exception ignored) {}
         try {
             if (factHarvester != null) factHarvester.harvest(projectId, chapter);
+        } catch (Exception ignored) {}
+    }
+
+    private void refreshChapterEntitiesAndFacts(
+            String projectId, Chapter chapter,
+            com.writing.novel.service.ChapterRevisionService.DerivedWriteBoundary boundary) {
+        try {
+            if (entityGraphService != null) entityGraphService.extractFromChapter(projectId, chapter, boundary);
+        } catch (Exception ignored) {}
+        try {
+            if (foreshadowingExtractor != null) foreshadowingExtractor.extract(projectId, chapter, boundary);
+        } catch (Exception ignored) {}
+        try {
+            if (factHarvester != null) factHarvester.harvest(projectId, chapter, boundary);
         } catch (Exception ignored) {}
     }
 

@@ -9,6 +9,7 @@ import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.spi.NovelRepository;
+import com.writing.novel.service.ChapterRevisionService;
 
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,11 @@ public class ForeshadowingExtractor {
     static final int EXISTING_LIST_CAP = 20;
 
     public int extract(String projectId, Chapter chapter) {
+        return extract(projectId, chapter, null);
+    }
+
+    public int extract(String projectId, Chapter chapter,
+                       ChapterRevisionService.DerivedWriteBoundary boundary) {
         // 已有伏笔清单（防重复）；p16-04: mustResolve 钉住 + 未回收优先 + 最近埋设优先，cap 20
         // （parseAndSave 的去重仍对全量 existing 做，清单收窄只影响 prompt 展示）
         var existing = repository.findForeshadowingsByProject(projectId);
@@ -68,7 +74,9 @@ public class ForeshadowingExtractor {
                 .build();
 
         var resp = gateway.complete(req);
-        return parseAndSave(resp.getContent(), projectId, chapter.getChapterIndex(), existing);
+        var write = (java.util.function.Supplier<Integer>) () ->
+                parseAndSave(resp.getContent(), projectId, chapter.getChapterIndex(), existing);
+        return boundary == null ? write.get() : boundary.apply(write, 0);
     }
 
     private int parseAndSave(String json, String projectId, int chapterIndex, List<Foreshadowing> existing) {

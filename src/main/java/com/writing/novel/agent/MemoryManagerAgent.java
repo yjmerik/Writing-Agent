@@ -27,6 +27,13 @@ public class MemoryManagerAgent {
 
     /** 把 fromChapter 到 toChapter 的正文压缩为一条摘要 */
     public Summary summarize(String projectId, int fromChapter, int toChapter, String chaptersText) {
+        Summary summary = draftSummary(projectId, fromChapter, toChapter, chaptersText);
+        summaryService.save(summary);
+        return summary;
+    }
+
+    /** Compute a summary without persisting it, for version-guarded derived writes. */
+    public Summary draftSummary(String projectId, int fromChapter, int toChapter, String chaptersText) {
         String systemPrompt = promptService.render("memory-summary", Map.of());
 
         var req = LlmRequest.builder()
@@ -38,8 +45,6 @@ public class MemoryManagerAgent {
                 .build();
 
         var resp = gateway.complete(req);
-        Summary summary = new Summary(projectId, fromChapter, toChapter, resp.getContent().trim());
-        summaryService.save(summary);
-        return summary;
+        return new Summary(projectId, fromChapter, toChapter, resp.getContent().trim());
     }
 }

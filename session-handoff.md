@@ -1,11 +1,11 @@
 # Session Handoff
 
-> 状态日期：2026-09-03。历史过程保留在 `progress.md` 与 Git 历史；本文只描述下一会话需要读取的当前事实。
+> 状态日期：2026-09-04。历史过程保留在 `progress.md` 与 Git 历史；本文只描述下一会话需要读取的当前事实。
 
 ## Current Objective
 
 - **Goal**: 以产品一致性审计的浏览器红灯套件驱动下一轮 P0 → P1 → P2 修复。
-- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-12 已完成。章节新增草稿、直接编辑、历史查询和回退 API 已接入不可变历史底座；直接编辑/回退以 expectedVersion 防陈旧覆盖，SQLite 原子保存 current+pre-change snapshot，既有 rewrite/passage 也进入统一版本边界。所有章节 mutation 使用共享项目工作权；直接编辑与回退复用既有向量和后处理刷新路径。`manual-content-management` 的 world/character/outline 子项全绿，aggregate 仅因 p26-13 章节新增、正文编辑和版本 UI 尚未完成而预期 XFAIL。既有 checkpoint merge、服务端动作矩阵、自动任务持续运行和 mode switch/resume 语义均未改动。
+- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-12 已完成。章节新增草稿、直接编辑、历史查询和回退 API 已接入不可变历史底座；直接编辑/回退以 expectedVersion 防陈旧覆盖，SQLite 原子保存 current+pre-change snapshot，既有 rewrite/passage 也进入统一版本边界。检查点章节重写与手工修订共用项目工作权；passage 派生计算在无锁阶段完成，摘要/实体/伏笔/事实只在短锁内重验 chapter version 后落库，过期结果不写入。`manual-content-management` 的 world/character/outline 子项全绿，aggregate 仅因 p26-13 章节新增、正文编辑和版本 UI 尚未完成而预期 XFAIL。自动任务持续运行和 mode switch/resume 语义均未改动。
 - **Branch**: 当前 Phase 26 修复分支；仓库没有 Git remote/upstream。
 - **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-12 completed，下一项为 p26-13。
 - **Current spec**: `docs/specs/2026-09-02-product-audit-browser-e2e.md` 与 `.superpowers/sdd/2026-09-03-product-design-consistency-remediation/` 任务简报。

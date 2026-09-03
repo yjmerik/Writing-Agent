@@ -34,6 +34,11 @@ public class EntityGraphService {
         return extractor.extract(projectId, chapter);
     }
 
+    public EntityExtractorAgent.ExtractionResult extractFromChapter(
+            String projectId, Chapter chapter, ChapterRevisionService.DerivedWriteBoundary boundary) {
+        return extractor.extract(projectId, chapter, boundary);
+    }
+
     /**
      * 写前：从图数据库召回相关实体，格式化为一致性提醒文本。
      *

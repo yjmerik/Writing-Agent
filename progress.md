@@ -2,6 +2,15 @@
 
 ---
 
+## 会话记录（2026-09-04）：Phase 26 p26-12 派生写入竞态收口
+
+- Review round 3 确认连续 passage 时，已开始的旧任务仍可在新版本保存后追加旧实体、伏笔或事实。修复将耗时 LLM 计算与落库分离；摘要、实体、伏笔、事实只在短锁内重验 chapter version 后写入，过期计算直接丢弃。
+- 新回归确认旧新两个后台任务均结束，但只有最新章节版本进入实际写入；第二次 passage 保存不等待前一次慢 LLM。相关 focused **30/30 PASS**。
+- JDK21 `./init.sh` PASS：**567 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端生产构建通过。匹配 mystery replay 为 **3 章 / 10,191 字 / 54 calls / 0 errors / 0 chapter failures**，baseline PASS。范围仍排除自动任务与 mode switch/resume。
+- `manual-content-management` 聚合复验为 **0 PASS / 1 XFAIL / 0 ERROR**；world、character、outline 全部通过，唯一已知失败仍是 p26-13 的章节操作界面。
+
+---
+
 ## 会话记录（2026-09-03）：Phase 26 p26-10 大纲人工结构编辑界面
 
 - 大纲页改为完整本地草稿：卷标题/简介、章标题/梗概及新增、删除、上下移动都只改变草稿，统一点击“保存未写大纲”后才调用 p26-09 的完整 `PUT /outline` 契约。

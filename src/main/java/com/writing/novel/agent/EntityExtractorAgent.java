@@ -8,6 +8,7 @@ import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.memory.RelevanceGateway;
+import com.writing.novel.service.ChapterRevisionService;
 import com.writing.novel.spi.NovelRepository;
 
 import java.util.ArrayList;
@@ -49,6 +50,11 @@ public class EntityExtractorAgent {
      * @return 提取结果统计
      */
     public ExtractionResult extract(String projectId, Chapter chapter) {
+        return extract(projectId, chapter, null);
+    }
+
+    public ExtractionResult extract(String projectId, Chapter chapter,
+                                    ChapterRevisionService.DerivedWriteBoundary boundary) {
         // 已有实体列表（Java 层去重需全量，保证不产生重复实体）
         List<Entity> existingEntities = repository.findEntitiesByProject(projectId);
         // p11-q0-01: 进 LLM 的参考清单经 RelevanceGateway 收窄（recency），token 受控
@@ -88,7 +94,10 @@ public class EntityExtractorAgent {
                 .build();
 
         var resp = gateway.complete(req);
-        return parseAndSave(resp.getContent(), projectId, chapter.getChapterIndex(), existingEntities);
+        var write = (java.util.function.Supplier<ExtractionResult>) () ->
+                parseAndSave(resp.getContent(), projectId, chapter.getChapterIndex(), existingEntities);
+        return boundary == null ? write.get()
+                : boundary.apply(write, new ExtractionResult(0, 0, 0, "stale chapter version"));
     }
 
     private ExtractionResult parseAndSave(String json, String projectId,

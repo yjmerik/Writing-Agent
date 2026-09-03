@@ -9,6 +9,7 @@ import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.spi.StoryCanon;
+import com.writing.novel.service.ChapterRevisionService;
 
 import java.util.List;
 import java.util.Map;
@@ -86,6 +87,11 @@ public class FactHarvesterAgent {
     static final int FACT_LIST_CAP = 80;
 
     public HarvestResult harvest(String projectId, Chapter chapter) {
+        return harvest(projectId, chapter, null);
+    }
+
+    public HarvestResult harvest(String projectId, Chapter chapter,
+                                 ChapterRevisionService.DerivedWriteBoundary boundary) {
         // 现有 ACTIVE 真典（供 LLM 去重 + Java 层比对）
         // p16-03: 按相关性收窄——正文 cast 相关（subject 出现在正文中）优先，其余按重要性/新鲜度补足，
         // 硬上限 FACT_LIST_CAP；未列入清单的事实仍参与 Java 层 merge 比对（findActiveBySubject 按需查）
@@ -121,7 +127,10 @@ public class FactHarvesterAgent {
 
         try {
             var resp = gateway.complete(req);
-            return merge(resp.getContent(), projectId, chapter.getChapterIndex());
+            var write = (java.util.function.Supplier<HarvestResult>) () ->
+                    merge(resp.getContent(), projectId, chapter.getChapterIndex());
+            return boundary == null ? write.get()
+                    : boundary.apply(write, new HarvestResult(0, 0, 0));
         } catch (Exception e) {
             // p16-03: fail-loud——真典停止生长必须可观测，不再静默吞掉
             log.warn("真典收割 LLM 调用失败(项目{}, 第{}章): {}", projectId, chapter.getChapterIndex(), e.getMessage());

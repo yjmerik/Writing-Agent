@@ -25,8 +25,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -44,6 +46,7 @@ class EditPassageReturnsBeforeHarvestTest {
     private final CountDownLatch harvestStarted = new CountDownLatch(1);
     private final CountDownLatch harvestDone = new CountDownLatch(1);
     private final CountDownLatch twoHarvestsDone = new CountDownLatch(2);
+    private final List<Integer> appliedHarvestVersions = new CopyOnWriteArrayList<>();
 
     @BeforeEach
     void setUp() {
@@ -81,13 +84,33 @@ class EditPassageReturnsBeforeHarvestTest {
         FactHarvesterAgent gatedHarvest = new FactHarvesterAgent(gateway, new SqliteStoryCanon(facts), promptSvc) {
             @Override
             public HarvestResult harvest(String projectId, Chapter chapter) {
+                return gatedHarvest(chapter, null);
+            }
+
+            @Override
+            public HarvestResult harvest(String projectId, Chapter chapter,
+                    com.writing.novel.service.ChapterRevisionService.DerivedWriteBoundary boundary) {
+                return gatedHarvest(chapter, boundary);
+            }
+
+            private HarvestResult gatedHarvest(Chapter chapter,
+                    com.writing.novel.service.ChapterRevisionService.DerivedWriteBoundary boundary) {
                 harvestStarted.countDown();
                 try { harvestRelease.await(5, TimeUnit.SECONDS); } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
+                HarvestResult empty = new HarvestResult(0, 0, 0);
+                HarvestResult result = boundary == null
+                        ? recordApplied(chapter, empty)
+                        : boundary.apply(() -> recordApplied(chapter, empty), empty);
                 harvestDone.countDown();
                 twoHarvestsDone.countDown();
-                return new HarvestResult(0, 0, 0);
+                return result;
+            }
+
+            private HarvestResult recordApplied(Chapter chapter, HarvestResult result) {
+                appliedHarvestVersions.add(chapter.getVersion());
+                return result;
             }
         };
         orchestrator = new NovelOrchestrator(repo, new ProjectService(repo),
@@ -163,9 +186,13 @@ class EditPassageReturnsBeforeHarvestTest {
             long ms = (System.nanoTime() - t0) / 1_000_000;
             assertTrue(ms < 800, "second passage save must not wait for old derived work, took " + ms);
             assertTrue(second.getVersion() >= 3);
+            int latestVersion = second.getVersion();
+            harvestRelease.countDown();
+            assertTrue(twoHarvestsDone.await(2, TimeUnit.SECONDS), "both queued refreshes should finish");
+            assertTrue(appliedHarvestVersions.equals(List.of(latestVersion)),
+                    "only the latest passage version may persist derived data: " + appliedHarvestVersions);
         } finally {
             harvestRelease.countDown();
         }
-        assertTrue(twoHarvestsDone.await(2, TimeUnit.SECONDS), "both queued refreshes should finish");
     }
 }

@@ -143,6 +143,14 @@ class VectorCleanupOnRewritePathsTest {
                                 postProcessDone.countDown();
                                 return new HarvestResult(0, 0, 0);
                             }
+
+                            @Override
+                            public HarvestResult harvest(String projectId, Chapter chapter,
+                                    com.writing.novel.service.ChapterRevisionService.DerivedWriteBoundary boundary) {
+                                postProcessDone.countDown();
+                                HarvestResult empty = new HarvestResult(0, 0, 0);
+                                return boundary.apply(() -> empty, empty);
+                            }
                         }, null, null, null));
     }
 

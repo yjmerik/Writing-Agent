@@ -62,6 +62,11 @@ public class ChapterRevisionService {
     /** Used by an already-owned rewrite/passage workflow. */
     public Chapter editInOwnedWork(String projectId, int chapterIndex, int expectedVersion,
                                    String title, String content, String source) {
+        // Passage post-processing is queued in version order. A later passage save must not wait
+        // for an earlier slow LLM-derived refresh; the queued worker will skip every stale version.
+        if ("PASSAGE_EDIT".equals(normalizedSource(source))) {
+            return doEdit(projectId, chapterIndex, expectedVersion, title, content, source);
+        }
         return withChapterRevisionLock(projectId, chapterIndex,
                 () -> doEdit(projectId, chapterIndex, expectedVersion, title, content, source));
     }

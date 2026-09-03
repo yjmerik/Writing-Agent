@@ -863,3 +863,8 @@ W2 的两个独立基石已落地（不依赖 LLM prompt 改动，不影响产�
 
 - 两个范围内竞态 RED：检查点章节重写不受项目 owner 约束，且直接编辑返回时派生刷新仍在后台。GREEN 后 checkpoint revision 统一获取工作权；章节修订与派生刷新经同一分片锁串行。直接编辑/回退在响应前刷新当前版本派生数据；passage 保留快速返回，但先同步标记摘要 dirty，后台任务获锁后以 chapter version 守卫，旧任务无法逆序落库。
 - 相关 focused **18/18 PASS**；JDK21 compile/full/init **566 tests / 0 failures / 0 errors / 1 skipped**，前端构建与 27 prompts PASS。匹配 mystery replay 仍为 **3 章 / 10,191 字 / 54 calls / 0 errors / 0 chapter failures**，baseline PASS；manual aggregate **0/1/0** 且唯一红项仍为 p26-13 的 `chapterActions` UI。
+
+### p26-12 Review round 2
+
+- 回归先精确复现连续 passage 编辑：前一次慢收割未完成时，第二次保存被分片锁阻塞约 5 秒。修复后 passage 持久化不再等待旧派生任务，后台队列仍以分片锁串行、以当前 chapter version 丢弃过期项，最终派生状态按最新版本收敛。
+- 相关 focused **19/19 PASS**；JDK21 compile/full/init **567 tests / 0 failures / 0 errors / 1 skipped**，前端构建与 27 prompts PASS。匹配 mystery replay 仍为 **3 章 / 10,191 字 / 54 calls / 0 errors / 0 chapter failures**，baseline PASS。

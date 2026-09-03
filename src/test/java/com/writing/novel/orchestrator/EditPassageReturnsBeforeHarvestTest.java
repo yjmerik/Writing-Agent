@@ -43,6 +43,7 @@ class EditPassageReturnsBeforeHarvestTest {
     private final CountDownLatch harvestRelease = new CountDownLatch(1);
     private final CountDownLatch harvestStarted = new CountDownLatch(1);
     private final CountDownLatch harvestDone = new CountDownLatch(1);
+    private final CountDownLatch twoHarvestsDone = new CountDownLatch(2);
 
     @BeforeEach
     void setUp() {
@@ -85,6 +86,7 @@ class EditPassageReturnsBeforeHarvestTest {
                     Thread.currentThread().interrupt();
                 }
                 harvestDone.countDown();
+                twoHarvestsDone.countDown();
                 return new HarvestResult(0, 0, 0);
             }
         };
@@ -139,5 +141,31 @@ class EditPassageReturnsBeforeHarvestTest {
         }
         refresh.get(2, TimeUnit.SECONDS);
         assertTrue(harvestDone.await(2, TimeUnit.SECONDS));
+    }
+
+    @Test
+    void secondPassageEdit_returnsBeforePreviousDerivedRefreshCompletes() throws Exception {
+        Project p = new Project("连续段落编辑", "c", "tag");
+        repo.saveProject(p);
+        Chapter ch = new Chapter(p.getId(), 1, "雨夜账");
+        ch.setContent("雨点砸在账桌的窗棂上，噼啪作响。\n\n吴掌柜摔下账册。");
+        repo.saveChapter(ch);
+
+        orchestrator.editPassage(p.getId(), 1, 0, "雨点砸在账桌的窗棂上，噼啪作响。",
+                "加雨声", "REWRITE");
+        assertTrue(harvestStarted.await(2, TimeUnit.SECONDS));
+
+        long t0 = System.nanoTime();
+        try {
+            Chapter second = orchestrator.editPassage(p.getId(), 1, 0,
+                    "雨点砸在账桌的窗棂上，噼啪作响。屋檐滴水成串。",
+                    "再加风声", "REWRITE");
+            long ms = (System.nanoTime() - t0) / 1_000_000;
+            assertTrue(ms < 800, "second passage save must not wait for old derived work, took " + ms);
+            assertTrue(second.getVersion() >= 3);
+        } finally {
+            harvestRelease.countDown();
+        }
+        assertTrue(twoHarvestsDone.await(2, TimeUnit.SECONDS), "both queued refreshes should finish");
     }
 }

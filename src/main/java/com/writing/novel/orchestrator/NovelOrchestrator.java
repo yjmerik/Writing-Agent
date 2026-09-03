@@ -2550,11 +2550,9 @@ public class NovelOrchestrator {
     /** Passage editing keeps its established fast response while stale workers are version-gated. */
     private void refreshChapterAfterRevisionAsync(String projectId, Chapter chapter) {
         int chapterIndex = chapter.getChapterIndex();
-        com.writing.novel.service.ChapterRevisionService.withChapterRevisionLock(projectId, chapterIndex, () -> {
-            if (!isCurrentChapterVersion(projectId, chapter)) return;
-            reindexAndInvalidateChapter(projectId, chapter);
-            markSummariesDirtyForChapter(projectId, chapterIndex);
-        });
+        if (!isCurrentChapterVersion(projectId, chapter)) return;
+        reindexAndInvalidateChapter(projectId, chapter);
+        markSummariesDirtyForChapter(projectId, chapterIndex);
         POST_PROCESS.execute(() -> com.writing.novel.service.ChapterRevisionService.withChapterRevisionLock(
                 projectId, chapterIndex, () -> {
                     if (!isCurrentChapterVersion(projectId, chapter)) return;

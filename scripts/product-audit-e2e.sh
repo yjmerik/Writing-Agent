@@ -371,6 +371,7 @@ await runCase('volume-outline-modify', async () => {
 await runCase('standalone-chapter-rewrite', async () => {
   await go('/#/project/$P_REWRITE')
   const before = await pageJson('/api/projects/$P_REWRITE/chapters/1')
+  const pendingBefore = await pageJson('/api/projects/$P_REWRITE/checkpoints')
   await openTab('章节管理')
   const opened = await clickButtonContaining('重写此章')
   const submitted = opened && await submitModal('改为女医师视角并增加证据推理', '重写此章')
@@ -379,10 +380,14 @@ await runCase('standalone-chapter-rewrite', async () => {
   const closed = !(await modalOpen())
   const versionIncreased = after.version > before.version
   const contentChanged = after.content !== before.content
-  const updatedBodyVisible = await js('document.body.innerText.includes(' + JSON.stringify(after.content.slice(0, 28)) + ')')
-  return { pass: opened && submitted && closed && versionIncreased && contentChanged && updatedBodyVisible,
+  const rewrittenBodyVisible = await js('document.body.innerText.includes(' + JSON.stringify(after.content.slice(0, 28)) + ')')
+  const staleSourceMarkerAbsent = await js('!document.body.innerText.includes("【重写前来源标记】")')
+  const noPendingCheckpoint = pendingBefore.length === 0
+  return { pass: noPendingCheckpoint && opened && submitted && closed && versionIncreased && contentChanged &&
+      rewrittenBodyVisible && staleSourceMarkerAbsent,
     opened, submitted, modalClosed: closed, beforeVersion: before.version,
-    afterVersion: after.version, contentChanged, updatedBodyVisible }
+    afterVersion: after.version, contentChanged, pendingBefore: pendingBefore.length,
+    rewrittenBodyVisible, staleSourceMarkerAbsent }
 })
 
 await runCase('interactive-to-auto', async () => {

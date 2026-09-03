@@ -27,12 +27,29 @@ opened=true, submitted=true, modalClosed=true,
 beforeVersion=3, afterVersion=4, contentChanged=true, updatedBodyVisible=true
 ```
 
+## Review round 1 — E2E proof hardening
+
+本轮不改产品代码。先前的 `updatedBodyVisible` 只匹配正文前 28 个字符；scenario 的新旧正文共享该前缀，因此它不足以单独证明缓存已替换。
+
+- 重写开始前读取 `/checkpoints`，并将 `pendingBefore.length === 0` 作为 strict PASS 条件。
+- 保留“重写正文可见”断言，同时新增 `staleSourceMarkerAbsent`：页面不能包含测试夹具写入旧正文的唯一 `【重写前来源标记】`。两项合取可排除仍渲染旧缓存的假阳性。
+
+这属于已修复路径的测试加固，不能在不回退产品修复的前提下产生新的 RED；旧实现本身已由本报告 RED 记录的 `submitted=false` 覆盖。加固后的严格结果：
+
+```text
+PRODUCT-AUDIT-E2E PASS mode=strict pass=1 xfail=0 error=0
+opened=true, submitted=true, modalClosed=true,
+beforeVersion=3, afterVersion=4, contentChanged=true,
+pendingBefore=0, rewrittenBodyVisible=true, staleSourceMarkerAbsent=true
+```
+
 ## 门禁
 
 - `cd frontend && npm run build`：PASS。
 - `JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home mvn compile -q`：PASS。
 - 同一 JDK 的 `mvn test`：504 tests / 0 failures / 0 errors / 1 skipped。
 - 同一 JDK 的 `./init.sh`：PASS；包含 504 tests、27 个 prompt 模板检查与生产前端构建。
+- Review round 1：`frontend npm run build`、JDK21 `mvn test`、JDK21 `./init.sh` 均再次 PASS（504 tests / 0 failures / 0 errors / 1 skipped）。
 
 ## 自审
 

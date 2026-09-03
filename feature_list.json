@@ -3151,7 +3151,7 @@
       "description": "章节重写使用独立目标状态和 API 分支，不依赖 checkpoint。",
       "acceptance": "无待审核项时重写指定章节后正文变化、版本递增、弹窗关闭且新正文可见。",
       "verify_cmd": "./scripts/product-audit-e2e.sh --case standalone-chapter-rewrite",
-      "evidence": "2026-09-03：严格 TDD RED：standalone-chapter-rewrite 为 0 PASS / 1 XFAIL / 0 ERROR；弹窗可打开但 submitted=false、modalClosed=false、版本 v3→v3、正文未变。GREEN：章节卡创建独立的 {kind:'chapter', chapterIndex, sourceVersion} 目标，提交分支只调用 rewriteChapter；成功更新章节元数据与正文缓存后关闭/reset，失败保留弹窗并显示行内错误。严格浏览器场景为 1 PASS / 0 XFAIL / 0 ERROR，断言 submitted、modalClosed、v3→v4、正文变化及页面新正文可见，并仅移除该项 KNOWN_FAILURES。frontend npm run build PASS；JDK21 mvn compile、mvn test 与 ./init.sh 均通过，504 tests / 0 failures / 0 errors / 1 skipped，init 的 27 个 prompt 与生产前端构建通过。"
+      "evidence": "2026-09-03：严格 TDD RED：standalone-chapter-rewrite 为 0 PASS / 1 XFAIL / 0 ERROR；弹窗可打开但 submitted=false、modalClosed=false、版本 v3→v3、正文未变。GREEN：章节卡创建独立的 {kind:'chapter', chapterIndex, sourceVersion} 目标，提交分支只调用 rewriteChapter；成功更新章节元数据与正文缓存后关闭/reset，失败保留弹窗并显示行内错误。严格浏览器场景为 1 PASS / 0 XFAIL / 0 ERROR，断言 submitted、modalClosed、v3→v4、正文变化及页面新正文可见，并仅移除该项 KNOWN_FAILURES。Review round 1（测试加固）：重写前显式断言 pending checkpoint=0；页面必须显示重写正文且旧【重写前来源标记】不存在，消除共享正文前缀造成的缓存误报。严格场景仍为 1 PASS / 0 XFAIL / 0 ERROR。frontend npm run build PASS；JDK21 mvn compile、mvn test 与 ./init.sh 均通过，504 tests / 0 failures / 0 errors / 1 skipped，init 的 27 个 prompt 与生产前端构建通过。"
     },
     {
       "id": "p26-05",

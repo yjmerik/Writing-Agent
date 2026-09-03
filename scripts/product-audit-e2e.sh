@@ -241,6 +241,11 @@ if need_case approve-keeps-chapter-visible; then
   curl --noproxy '*' -sf -X POST "$BASE/api/projects/$P_APPROVE/checkpoints/$cp_id/approve" >/dev/null || exit 2
   advance_once "$P_APPROVE" || exit 2
   write_one "$P_APPROVE" || exit 2
+  cp_id=$(curl --noproxy '*' -sf "$BASE/api/projects/$P_APPROVE/checkpoints" \
+    | python3 -c "import json,sys; a=json.load(sys.stdin); print(a[-1]['id'])") || exit 2
+  curl --noproxy '*' -sf -X POST "$BASE/api/projects/$P_APPROVE/checkpoints/$cp_id/approve" >/dev/null || exit 2
+  advance_once "$P_APPROVE" || exit 2
+  write_one "$P_APPROVE" || exit 2
 fi
 
 if need_case checkpoint-card-targeting; then
@@ -402,18 +407,20 @@ await runCase('interactive-to-auto', async () => {
 
 await runCase('approve-keeps-chapter-visible', async () => {
   await go('/#/project/$P_APPROVE')
-  const chapter = await pageJson('/api/projects/$P_APPROVE/chapters/1')
+  const chapter = await pageJson('/api/projects/$P_APPROVE/chapters/2')
   const marker = chapter.content.slice(0, 28)
   await openTab('章节管理')
   await wait(3)
+  const switched = await js('(() => {const row=[...document.querySelectorAll("[role=button]")].find(x=>x.innerText.includes("第2章"));if(row){row.click();return true}return false})()')
+  await wait(2)
   const visibleBefore = await js('document.body.innerText.includes(' + JSON.stringify(marker) + ')')
-  const clicked = await clickButtonContaining('批准', '第1章')
+  const clicked = await clickButtonContaining('批准', '第2章')
   await wait(4)
   const state = await pageJson('/api/projects/$P_APPROVE/status')
   const visibleAfter = await js('document.body.innerText.includes(' + JSON.stringify(marker) + ')')
   const bodyLoading = await js('!!document.querySelector("[data-paragraph-index]")===false && !!document.querySelector(".ant-spin-dot-spin")')
-  return { pass: visibleBefore && clicked && visibleAfter && !bodyLoading,
-    visibleBefore, clicked, visibleAfter, bodyLoading, state: state.state }
+  return { pass: switched && visibleBefore && clicked && visibleAfter && !bodyLoading,
+    switched, visibleBefore, clicked, visibleAfter, bodyLoading, state: state.state }
 })
 
 await runCase('checkpoint-card-targeting', async () => {

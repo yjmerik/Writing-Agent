@@ -27,3 +27,11 @@
 ## Concerns
 
 - 无阻塞问题。前端生产构建仍报告既有的大 bundle 警告（约 1.19 MB），不属于本 feature 范围。
+
+## Review Round 1 (base `9440381`)
+
+- 修复：正文请求现在以 `projectId + project generation + chapter generation` 标识；只有当前项目且该章节最新的一次请求可以更新正文缓存、该章的 loading 或该章的 error。项目变更立即失效所有正文请求/缓存状态，章节管理组件也以 `projectId` 参与 remount key。
+- 状态：正文 loading/error 改为按 `chapterIndex` 记录，章节 A 的请求不会清除章节 B 的状态；渲染只采用版本等于当前 metadata 的正文。强制重读失败时，旧正文保持可见，同时在正文下方显示错误与重试。
+- Focused browser proof：审批场景扩为两章，先切到第 2 章、确认其正文可见、批准第 2 章，再断言第 2 章正文仍可见且无正文 spinner；strict **1 PASS / 0 XFAIL / 0 ERROR**。`standalone-chapter-rewrite` 回归同为 **1 PASS / 0 XFAIL / 0 ERROR**。
+- 如实记录：现有真实浏览器链路无法确定性延迟或乱序 `getChapter` 响应，因此本 round **没有 RED**；乱序安全性由请求代际不变量和代码审查保证，未声称浏览器覆盖了合成 race。
+- Gates：frontend `npm run build` PASS；JDK21 `mvn test` 与 `./init.sh` PASS（**504 tests / 0 failures / 0 errors / 1 skipped**，init 另确认 27 个 prompt 与前端生产构建）。

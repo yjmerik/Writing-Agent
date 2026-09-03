@@ -26,19 +26,24 @@ type RewriteTarget =
   };
 
 type ReviewResult = Extract<RewriteTarget, { kind: 'checkpoint' }> & { revision: CheckpointRevision };
+type BodyLoadState = { loading: boolean; error: string };
 
 export default function InteractiveReview({ projectId, onChanged }: Props) {
   // p21-05: 元数据一次加载；正文按选中章节懒加载缓存
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [bodies, setBodies] = useState<Record<number, Chapter>>({});
   const bodiesRef = useRef<Record<number, Chapter>>({});
+  const [bodyLoadStates, setBodyLoadStates] = useState<Record<number, BodyLoadState>>({});
+  const bodyLoadStatesRef = useRef<Record<number, BodyLoadState>>({});
+  const bodyRequestGenerationsRef = useRef<Record<number, number>>({});
+  const projectGenerationRef = useRef(0);
+  const activeProjectIdRef = useRef(projectId);
+  const mountedRef = useRef(true);
   const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const [status, setStatus] = useState<ProjectStatus | null>(null);
   const [selectedIdx, setSelectedIdx] = useState(0);
   const selectedIdxRef = useRef(0);
   const [loading, setLoading] = useState(false);
-  const [bodyLoading, setBodyLoading] = useState(false);
-  const [bodyLoadError, setBodyLoadError] = useState('');
   const [rewriteModalOpen, setRewriteModalOpen] = useState(false);
   const [rewriteTarget, setRewriteTarget] = useState<RewriteTarget | null>(null);
   const [rewriteInstructions, setRewriteInstructions] = useState('');
@@ -51,6 +56,15 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   const [editMode, setEditMode] = useState<'REWRITE' | 'EXPAND' | 'INSERT'>('REWRITE');
   const [editInstruction, setEditInstruction] = useState('');
   const [editing, setEditing] = useState(false);
+
+  if (activeProjectIdRef.current !== projectId) {
+    activeProjectIdRef.current = projectId;
+    projectGenerationRef.current += 1;
+    bodyRequestGenerationsRef.current = {};
+    bodiesRef.current = {};
+    bodyLoadStatesRef.current = {};
+    selectedIdxRef.current = 0;
+  }
 
   const cacheBody = useCallback((chapter: Chapter) => {
     const next = { ...bodiesRef.current, [chapter.chapterIndex]: chapter };
@@ -66,22 +80,38 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
     setBodies(next);
   }, []);
 
+  const setBodyLoadState = useCallback((chapterIndex: number, state: BodyLoadState) => {
+    const next = { ...bodyLoadStatesRef.current, [chapterIndex]: state };
+    bodyLoadStatesRef.current = next;
+    setBodyLoadStates(next);
+  }, []);
+
   const loadBody = useCallback(async (chapterIndex: number, force = false) => {
     if (!force && bodiesRef.current[chapterIndex]) return;
-    setBodyLoading(true);
-    setBodyLoadError('');
+    const requestProjectId = projectId;
+    const requestProjectGeneration = projectGenerationRef.current;
+    const requestGeneration = (bodyRequestGenerationsRef.current[chapterIndex] ?? 0) + 1;
+    bodyRequestGenerationsRef.current[chapterIndex] = requestGeneration;
+    const isLatestRequest = () => mountedRef.current
+      && activeProjectIdRef.current === requestProjectId
+      && projectGenerationRef.current === requestProjectGeneration
+      && bodyRequestGenerationsRef.current[chapterIndex] === requestGeneration;
+
+    setBodyLoadState(chapterIndex, { loading: true, error: '' });
     try {
       const chapter = await api.getChapter(projectId, chapterIndex);
+      if (!isLatestRequest()) return;
       if (!chapter) throw new Error('未找到章节正文');
       cacheBody(chapter);
     } catch (e) {
+      if (!isLatestRequest()) return;
       const error = `加载正文失败: ${(e as Error).message}`;
-      setBodyLoadError(error);
+      setBodyLoadState(chapterIndex, { loading: false, error });
       message.error(error);
-    } finally {
-      setBodyLoading(false);
+      return;
     }
-  }, [cacheBody, projectId]);
+    if (isLatestRequest()) setBodyLoadState(chapterIndex, { loading: false, error: '' });
+  }, [cacheBody, projectId, setBodyLoadState]);
 
   // p21-05 修复: refresh 只依赖 projectId——selectedIdx 变化（点选章节）不得触发
   // 元数据/checkpoints/status 重取（此前 useCallback 依赖 selectedIdx，点章即全量重取）
@@ -115,12 +145,27 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
     }
   }, [loadBody, projectId, retainCurrentBodies]);
 
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  useEffect(() => {
+    setBodies({});
+    setBodyLoadStates({});
+    setSelectedIdx(0);
+  }, [projectId]);
+
   useEffect(() => { refresh(); }, [refresh]);
 
   const isPaused = status?.state === 'PAUSED_AT_CHECKPOINT';
   const hasPendingCheckpoint = checkpoints.length > 0;
   const isInteractive = status?.mode === 'INTERACTIVE';
   const currentMeta = chapters[selectedIdx];
+  const currentBody = currentMeta && bodies[currentMeta.chapterIndex]?.version === currentMeta.version
+    ? bodies[currentMeta.chapterIndex]
+    : undefined;
+  const currentBodyLoadState = currentMeta ? bodyLoadStates[currentMeta.chapterIndex] : undefined;
 
   useEffect(() => {
     selectedIdxRef.current = selectedIdx;
@@ -134,7 +179,7 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   }, [currentMeta?.chapterIndex, currentMeta?.version, loadBody]);
 
   const currentChapter = currentMeta
-    ? (bodies[currentMeta.chapterIndex] ?? currentMeta)
+    ? (currentBody ?? currentMeta)
     : undefined;
 
   // p11-I3: 选中章节时获取质量报告
@@ -448,17 +493,27 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
                 }
                 style={{ maxHeight: '70vh', overflow: 'auto' }}
               >
-                {bodies[currentMeta.chapterIndex]
-                  ? renderChapterContent(currentChapter.content)
-                  : bodyLoading
-                    ? <Spin style={{ display: 'block', margin: '40px auto' }} />
-                    : bodyLoadError
-                      ? <Alert
-                          type="error"
-                          message={bodyLoadError}
-                          action={<Button size="small" onClick={() => void loadBody(currentMeta.chapterIndex, true)}>重试</Button>}
-                        />
-                      : <Text type="secondary">（暂无正文）</Text>}
+                {currentBody ? (
+                  <>
+                    {renderChapterContent(currentChapter.content)}
+                    {currentBodyLoadState?.error && (
+                      <Alert
+                        type="error"
+                        message={currentBodyLoadState.error}
+                        action={<Button size="small" onClick={() => void loadBody(currentMeta.chapterIndex, true)}>重试</Button>}
+                        style={{ marginTop: 16 }}
+                      />
+                    )}
+                  </>
+                ) : currentBodyLoadState?.loading ? (
+                  <Spin style={{ display: 'block', margin: '40px auto' }} />
+                ) : currentBodyLoadState?.error ? (
+                  <Alert
+                    type="error"
+                    message={currentBodyLoadState.error}
+                    action={<Button size="small" onClick={() => void loadBody(currentMeta.chapterIndex, true)}>重试</Button>}
+                  />
+                ) : <Text type="secondary">（暂无正文）</Text>}
 
                 {/* p11-G2: 段落编辑面板 */}
                 {selectedParagraph && (

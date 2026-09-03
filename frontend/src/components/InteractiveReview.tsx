@@ -89,7 +89,8 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   }, []);
 
   const loadBody = useCallback(async (chapterIndex: number, force = false) => {
-    if (!force && bodiesRef.current[chapterIndex]) return;
+    if (!force && (bodiesRef.current[chapterIndex]
+      || bodyLoadStatesRef.current[chapterIndex]?.loading)) return;
     const requestProjectId = projectId;
     const requestProjectGeneration = projectGenerationRef.current;
     const requestGeneration = (bodyRequestGenerationsRef.current[chapterIndex] ?? 0) + 1;

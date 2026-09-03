@@ -463,6 +463,60 @@ public class SqliteNovelRepository implements NovelRepository {
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
+    @Override
+    public void saveChapterVersion(ChapterVersion snapshot) {
+        String sql = "INSERT INTO chapter_versions " +
+                "(id,project_id,chapter_index,version,title,content,source,created_at) " +
+                "VALUES (?,?,?,?,?,?,?,?)";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, snapshot.getId());
+            ps.setString(2, snapshot.getProjectId());
+            ps.setInt(3, snapshot.getChapterIndex());
+            ps.setInt(4, snapshot.getVersion());
+            ps.setString(5, snapshot.getTitle());
+            ps.setString(6, snapshot.getContent());
+            ps.setString(7, snapshot.getSource());
+            ps.setString(8, snapshot.getCreatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public List<ChapterVersion> findChapterVersions(String projectId, int chapterIndex) {
+        List<ChapterVersion> versions = new ArrayList<>();
+        String sql = "SELECT * FROM chapter_versions WHERE project_id=? AND chapter_index=? " +
+                "ORDER BY version DESC";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            ps.setInt(2, chapterIndex);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) versions.add(mapChapterVersion(rs));
+            return versions;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Optional<ChapterVersion> findChapterVersion(String projectId, int chapterIndex, int version) {
+        String sql = "SELECT * FROM chapter_versions " +
+                "WHERE project_id=? AND chapter_index=? AND version=?";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            ps.setInt(2, chapterIndex);
+            ps.setInt(3, version);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? Optional.of(mapChapterVersion(rs)) : Optional.empty();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // --- Task 10: 大纲/摘要/伏笔/风格/连续性/检查点 ---
 
     @Override
@@ -1654,6 +1708,18 @@ public class SqliteNovelRepository implements NovelRepository {
             if (st != null && !st.isEmpty()) c.setStatus(Chapter.Status.valueOf(st));
         } catch (Exception ignored) { /* 旧库无 status 列 */ }
         return c;
+    }
+
+    private ChapterVersion mapChapterVersion(ResultSet rs) throws SQLException {
+        return new ChapterVersion(
+                rs.getString("id"),
+                rs.getString("project_id"),
+                rs.getInt("chapter_index"),
+                rs.getInt("version"),
+                rs.getString("title"),
+                rs.getString("content"),
+                rs.getString("source"),
+                Instant.parse(rs.getString("created_at")));
     }
 
     private Foreshadowing mapForeshadowing(ResultSet rs) throws SQLException {

@@ -1,6 +1,7 @@
 package com.writing.novel.spi;
 
 import com.writing.novel.domain.Chapter;
+import com.writing.novel.domain.ChapterVersion;
 import com.writing.novel.domain.Character;
 import com.writing.novel.domain.ChapterReview;
 import com.writing.novel.domain.Checkpoint;
@@ -73,6 +74,11 @@ public interface NovelRepository {
     List<Chapter> findChaptersByIndexRange(String projectId, int fromIndex, int toIndex);
     /** B2: 章节计数（不加载正文） */
     int countChaptersByProject(String projectId);
+
+    // --- Immutable chapter version history ---
+    void saveChapterVersion(ChapterVersion snapshot);
+    List<ChapterVersion> findChapterVersions(String projectId, int chapterIndex);
+    Optional<ChapterVersion> findChapterVersion(String projectId, int chapterIndex, int version);
 
     // --- Summary ---
     void saveSummary(Summary summary);

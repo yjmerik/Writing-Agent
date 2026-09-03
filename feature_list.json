@@ -3243,12 +3243,13 @@
       "phase": 26,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
-      "files": ["domain/ChapterVersion.java", "spi/NovelRepository.java", "persistence/sqlite/SqliteNovelRepository.java"],
+      "status": "completed",
+      "files": ["domain/ChapterVersion.java", "spi/NovelRepository.java", "persistence/sqlite/SqliteSchemaInitializer.java", "persistence/sqlite/SqliteNovelRepository.java", "persistence/ChapterVersionHistoryTest.java", "agent/TestNovelRepositoryStub.java"],
       "problem_ref": "P1-05：章节只有当前值，无法查看或回退历史",
       "description": "新增向前兼容的 chapter_versions 表和 insert-only 仓储接口。",
       "acceptance": "多个版本快照可按版本倒序查询且内容不可变；重复项目/章号/版本拒绝；现有库迁移无损。",
-      "verify_cmd": "mvn test -Dtest=ChapterVersionHistoryTest"
+      "verify_cmd": "mvn test -Dtest=ChapterVersionHistoryTest",
+      "evidence": "2026-09-03：严格 TDD RED 为 testCompile 29 个预期缺失符号，证明 ChapterVersion 及 save/find-list/find-one 仓储契约尚不存在。GREEN 新增 final ChapterVersion 值对象（8 个 private final 字段、无 setter），source 使用与后续 ChapterRevisionService String source 契约兼容的持久化字符串，createdAt 使用 Instant 并以 ISO-8601 文本精确往返。SQLite 以 CREATE TABLE IF NOT EXISTS 向前新增 chapter_versions，所有业务列 NOT NULL，(project_id,chapter_index,version) UNIQUE；save 仅使用 INSERT、无 upsert，SPI 不暴露 update/delete。6 个真实 SQLite 测试覆盖版本 1/2 倒序、按版本精确查询、八字段精确映射与纳秒时间往返、重复键失败后后续版本仍可插入且原行不变、不同项目/章节同版本、领域/API 不可变、fresh schema 及 legacy chapters 存量数据无损迁移。focused ChapterVersionHistory/SchemaInitializer/Repository 为 18/18 PASS；JDK21 compile、full test、./init.sh PASS：554 tests / 0 failures / 0 errors / 1 skipped，27 prompts 与前端生产构建通过。本项仅提供无产品入口的存储底座，未运行浏览器/产品 E2E；未修改章节变更路径、API、前端、Agent/prompt、自动任务或 mode switch/resume。"
     },
     {
       "id": "p26-12",

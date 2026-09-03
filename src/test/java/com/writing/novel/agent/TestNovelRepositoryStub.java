@@ -2,6 +2,7 @@ package com.writing.novel.agent;
 
 import com.writing.novel.spi.NovelRepository;
 import com.writing.novel.domain.Chapter;
+import com.writing.novel.domain.ChapterVersion;
 import com.writing.novel.domain.Character;
 import com.writing.novel.domain.Checkpoint;
 import com.writing.novel.domain.ContinuityIssue;
@@ -67,6 +68,9 @@ public class TestNovelRepositoryStub implements NovelRepository {
     @Override public List<Chapter> findRecentChapters(String p, int c) { return List.of(); }
     @Override public List<Chapter> findChaptersByIndexRange(String p, int from, int to) { return List.of(); }
     @Override public int countChaptersByProject(String p) { return 0; }
+    @Override public void saveChapterVersion(ChapterVersion snapshot) {}
+    @Override public List<ChapterVersion> findChapterVersions(String p, int i) { return List.of(); }
+    @Override public Optional<ChapterVersion> findChapterVersion(String p, int i, int v) { return Optional.empty(); }
     @Override public void saveSummary(Summary s) {}
     @Override public List<Summary> findSummariesByProject(String p) { return List.of(); }
     @Override public void deleteSummary(String summaryId) {}

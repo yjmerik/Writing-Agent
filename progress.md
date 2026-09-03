@@ -844,3 +844,10 @@ W2 的两个独立基石已落地（不依赖 LLM prompt 改动，不影响产�
 - TDD RED：共享 owner 后，`startConceiving` 把 `outline-edit-*` 当作已落库构思任务并返回 null；服务与真实 HTTP 两条回归为 **7 tests / 2 failures / 0 errors**，`POST /run` 实际 NPE 500。
 - GREEN：构思启动先原子 `tryAcquire`，不再在 `currentOwner` 预读与 acquire 之间留下窗口。竞争失败后，仅 repository 中同项目 `CONCEIVE` task 可按既有语义幂等返回；人工大纲或其他同步 owner 明确抛 `IllegalStateException`（HTTP 409），不创建 WritingTask、不进入 orchestrator、不替换原 owner。首次任务持久化失败时释放刚取得的 token。
 - 直接/HTTP GREEN **7/7**；扩展 `ConceiveTaskOwnershipTest,ConceiveTaskTest,WritingEntryOwnershipTest,ProjectWorkCoordinatorTest,OutlineStructureEditTest` **33/33 PASS**；JDK21 compile/full/init **548 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端生产构建 PASS。未改变自动任务持续运行语义。
+
+## Phase 26 — p26-11 章节不可变版本历史存储（2026-09-03）
+
+- 新增不可变 `ChapterVersion`：8 个字段全部 `private final` 且无 setter；`source` 保持可持久化 String，与后续章节修订入口兼容，`createdAt` 使用 `Instant` 并以 ISO-8601 文本精确往返。
+- SQLite 向前新增 `chapter_versions` 表，业务列全部 `NOT NULL`，以 `(project_id, chapter_index, version)` 保证业务版本唯一；保存只执行普通 `INSERT`，重复键明确失败，不提供更新或删除仓储入口。
+- 严格 TDD RED：`ChapterVersionHistoryTest` testCompile 出现 **29 个预期缺失符号**，覆盖领域类型及三个仓储方法均不存在。GREEN 的 6 个真实 SQLite 测试覆盖版本倒序、精确单版本查询、八字段与纳秒时间往返、重复键失败且旧行不变、跨项目/章节版本隔离、不可变 API、fresh schema 和 legacy chapters 无损迁移。
+- 验证：focused `ChapterVersionHistoryTest,SqliteSchemaInitializerTest,SqliteNovelRepositoryTest` **18/18 PASS**；JDK21 compile、full test、`./init.sh` 全部 PASS（**554 tests / 0 failures / 0 errors / 1 skipped**；27 prompts 与前端生产构建通过）。本 feature 无产品入口且不改变 prompt/产出，因此未跑浏览器、replay 或质量基线；章节改写路径接入历史由 p26-12 完成。

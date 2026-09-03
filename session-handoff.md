@@ -5,9 +5,9 @@
 ## Current Objective
 
 - **Goal**: 以产品一致性审计的浏览器红灯套件驱动下一轮 P0 → P1 → P2 修复。
-- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-10 已完成。大纲页现在使用完整本地草稿，可新增、删除、上下移动未写卷章并编辑标题、简介与梗概；结构操作保留已写边界并全局重编号未写项，点击“保存未写大纲”前不写库。含已写章的卷和已写章有明确锁定文案，结构按钮 disabled；服务端校验失败使用站内错误，草稿保留可重试。成功保存后采用服务端新 UUID，并在整页刷新后保持完整有序结构。`manual-content-management` 的 world/character/outline 子项全绿，aggregate 仅因 p26-13 章节新增、正文编辑和版本 UI 尚未完成而预期 XFAIL。既有 checkpoint merge、服务端动作矩阵、自动任务持续运行和 mode switch/resume 语义均未改动。
+- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-11 已完成。章节现有值之外已有向前兼容的 insert-only 版本历史底座：不可变快照保留项目、章号、版本、标题、正文、来源和精确创建时间，SQLite 以项目+章号+版本唯一且拒绝覆盖，fresh/legacy schema 均已验证。p26-12 将把章节新增、直接编辑、重写与回退接入这一底座；当前尚未新增 API 或前端入口。`manual-content-management` 的 world/character/outline 子项全绿，aggregate 仅因 p26-13 章节新增、正文编辑和版本 UI 尚未完成而预期 XFAIL。既有 checkpoint merge、服务端动作矩阵、自动任务持续运行和 mode switch/resume 语义均未改动。
 - **Branch**: 当前 Phase 26 修复分支；仓库没有 Git remote/upstream。
-- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-10 completed，下一项为 p26-11。
+- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-11 completed，下一项为 p26-12。
 - **Current spec**: `docs/specs/2026-09-02-product-audit-browser-e2e.md` 与 `.superpowers/sdd/2026-09-03-product-design-consistency-remediation/` 任务简报。
 - **Product audit**: `docs/audits/2026-09-02-product-design-consistency-audit.md`（P0 3 项 / P1 8 项 / P2 5 项）。
 
@@ -54,6 +54,8 @@
 - p26-10 RED：真实浏览器 seed 为卷1三章（ch1 已写，ch2/ch3 未写），`manual-content-management` 为 **0 PASS / 1 XFAIL / 0 ERROR**；新增卷/章、删除卷/章、保存与锁定 DOM 子项全 false。GREEN：完整 Outline 本地草稿提供未写卷章增删、上下移动与字段编辑，结构操作后保持已写章号并全局重新编号未写项；已写卷章有明确锁定语义且结构按钮 disabled。真实浏览器完成新增章→上移→删除原 ch2，首次保存被真实服务端 duplicate 校验拒绝并显示站内错误，原草稿随后成功重试；服务端生成 UUID 后的完整有序序列与整页刷新 API 完全一致，刷新 DOM 字段一致。manual aggregate 保持 **0 PASS / 1 XFAIL / 0 ERROR**，world/character/outline 全 true，仅 chapterActions false；两个邻近 strict 各 **1/0/0**。frontend build、JDK21 compile/full/init PASS：**548 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建 PASS。
 - p26-10 review round 1：真实浏览器改用两卷 written boundary，并在删除前单独执行“新增→上移→立即保存→整页刷新精确比对”。强化 RED 命中 `addBoundary.earlyDisabled`、`pendingLocked.inputs/buttons/premiseSaveLocked`、`premiseDraftRetained` 五项 false；移动保存/刷新顺序两项已 true。GREEN 仅允许最后一个含已写章的卷及其后卷新增章；结构 PUT pending 时锁定全部结构字段/动作、刷新、重规划和两个保存按钮，总纲文本仍可继续编辑，响应不覆盖总纲草稿且 persisted premise 保持旧值。增强 manual aggregate 为 **0/1/0** 且 outline/world/character 全 true，仅 future chapterActions false；两个 strict 各 **1/0/0**；frontend build、JDK21 compile/full/init **548 tests / 0 failures / 0 errors / 1 skipped**。
 
+- p26-11 RED：`ChapterVersionHistoryTest` testCompile 为 **29 个预期缺失符号**（领域类型和三个仓储契约不存在）。GREEN：不可变八字段 ChapterVersion，source 为 String，createdAt 为 Instant；SQLite 新表全部业务列 NOT NULL、项目+章号+版本 UNIQUE，普通 INSERT 拒绝重复且不覆盖，查询倒序/精确映射；fresh schema 与已有 legacy chapters 数据迁移均通过。新测试 **6/6**，focused 三套 **18/18**，JDK21 compile/full/init **554 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建 PASS。无产品入口，未跑浏览器/replay；未提前接入 p26-12 API 或章节变更路径。
+
 ## Non-blocking Observations
 
 1. `baselines/golden.json` 与 `baselines/golden-wuxia.json` 的 `minEvaluationScore` 当前均为 null，release replay 也未带 `--evaluate`；现有 baseline 门禁守住章数/字数/错误，不自动守综合质量分。若要修复，必须按新需求协议另立 feature。
@@ -65,7 +67,7 @@
 
 ## Next Entry
 
-- 下一步为 p26-11：章节不可变版本历史存储；先为每次正文变更保存旧快照并提供历史查询，保持现有库无损迁移，不提前实现 p26-12/13 的直接编辑和 UI。
+- 下一步为 p26-12：在统一 ChapterRevisionService 边界接入 p26-11 历史快照，提供章节新增、直接编辑、历史查询与回退 API，并正确失效/重建派生产物；不提前实现 p26-13 UI。
 - 剩余本期红灯聚焦人工内容管理、移动端与文案一致性；按用户指示，自动任务及其 mode switch/resume 生命周期需要架构和系统修复，不在本期计划范围。
 - 新需求继续遵循：写 spec → 拆 1-3 文件 feature → 登记 `feature_list.json` → 实现与验证 → 更新三份状态文档。
 - 本机代理可能劫持 localhost；脚本内 curl 保持 `--noproxy '*'`。ego-browser 内写文件使用绝对路径。

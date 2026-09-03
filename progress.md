@@ -2,6 +2,17 @@
 
 ---
 
+## 会话记录（2026-09-03）：Phase 26 p26-02 review fix round 1
+
+- 世界观替换跨存储顺序调整为“校验独立 candidate ID → 完成候选向量索引 → SQLite 事务替换 → 确定性删除旧向量 → bump memory revision”；候选索引或 DB 替换失败都会清除候选 ID，旧 DB 与旧向量保持可用。
+- StoryCanon 对保留的同 type+subject 键先走 `applyHumanPatch`，保留 `SUPERSEDED` 与 `supersededBy` 审计链；仅 retire 被删除键、仅新增新键。名称恰为 `时代锚点` 的新旧 KnowledgeEntry 均不能覆盖或归档派生真典锚点。
+- `ON_CONTINUITY_FIX` 恢复既有 status-only 语义：reject 不改内容；modify 在 checkpoint 仍为 `PENDING` 时安全推进，成功后才记 `MODIFIED`。只有初始设定、卷大纲和章节 checkpoint 进入内容修订。
+- 四轮 TDD RED→GREEN：知识库向量失败/ID 冲突 **2 failures → 8/8**；同主体真典审计 **1 failure → routing 7/7**；连续性路由 **2 failures → controller 6/6**；时代锚点保护 **2 failures → routing 9/9**。
+- 最终 focused routing/controller/KB/Agent/双 StoryCanon contract 共 **46 tests / 0 failures / 0 errors**；strict 浏览器两场景各 **1 PASS / 0 XFAIL / 0 ERROR**；mystery replay 为 **3 章 / 10,191 字 / 54 calls / 0 errors / 0 chapter failures**，baseline PASS。
+- `mvn test` 与 `./init.sh` 均为 **504 tests / 0 failures / 0 errors / 1 skipped**；init 的 27 个 prompt 与前端生产构建通过。
+
+---
+
 ## 会话记录（2026-09-03）：Phase 26 p26-02 初始设定与卷大纲审核改写真正路由
 
 - `NovelOrchestrator.reviseCheckpoint(...)` 按 checkpoint 类型路由真实改写；返回目标、前后摘要及内容版本，且自身不改变 checkpoint 状态。Controller 只在候选校验和持久化成功后标记 `REJECTED`/`MODIFIED`，失败继续保持 `PENDING`。

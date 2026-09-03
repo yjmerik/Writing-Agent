@@ -727,21 +727,48 @@ public class NovelOrchestrator {
     private void replaceWorldCanon(String projectId, List<KnowledgeEntry> oldEntries,
                                    List<KnowledgeEntry> candidates, int currentChapterIndex) {
         if (storyCanon == null) return;
+        java.util.Set<String> oldKeys = oldEntries.stream()
+                .filter(this::isReplaceableWorldCanonEntry)
+                .map(this::storyCanonKey)
+                .collect(java.util.stream.Collectors.toSet());
+        java.util.Set<String> candidateKeys = candidates.stream()
+                .filter(this::isReplaceableWorldCanonEntry)
+                .map(this::storyCanonKey)
+                .collect(java.util.stream.Collectors.toSet());
+
+        candidates.stream()
+                .filter(this::isReplaceableWorldCanonEntry)
+                .filter(candidate -> oldKeys.contains(storyCanonKey(candidate)))
+                .forEach(candidate -> applyWorldCanonPatch(projectId, candidate, currentChapterIndex));
         for (KnowledgeEntry oldEntry : oldEntries) {
+            if (!isReplaceableWorldCanonEntry(oldEntry)
+                    || candidateKeys.contains(storyCanonKey(oldEntry))) continue;
             StoryFact.FactType type = storyFactType(oldEntry);
-            if (type == null) continue;
             storyCanon.recallBySubject(projectId, oldEntry.getName()).stream()
                     .filter(fact -> fact.getFactType() == type)
                     .toList()
                     .forEach(fact -> storyCanon.retire(projectId, fact.getId()));
         }
-        for (KnowledgeEntry candidate : candidates) {
-            StoryFact.FactType type = storyFactType(candidate);
-            if (type == null) continue;
-            storyCanon.applyHumanPatch(projectId, type, candidate.getName(),
-                    candidate.getName() + "：" + candidate.getContent(), currentChapterIndex,
-                    type == StoryFact.FactType.WORLD_RULE ? 4 : 3);
-        }
+        candidates.stream()
+                .filter(this::isReplaceableWorldCanonEntry)
+                .filter(candidate -> !oldKeys.contains(storyCanonKey(candidate)))
+                .forEach(candidate -> applyWorldCanonPatch(projectId, candidate, currentChapterIndex));
+    }
+
+    private boolean isReplaceableWorldCanonEntry(KnowledgeEntry entry) {
+        return entry != null && !"时代锚点".equals(entry.getName()) && storyFactType(entry) != null;
+    }
+
+    private String storyCanonKey(KnowledgeEntry entry) {
+        return storyFactType(entry) + "\u0000" + entry.getName();
+    }
+
+    private void applyWorldCanonPatch(String projectId, KnowledgeEntry candidate, int currentChapterIndex) {
+        StoryFact.FactType type = storyFactType(candidate);
+        if (type == null) return;
+        storyCanon.applyHumanPatch(projectId, type, candidate.getName(),
+                candidate.getName() + "：" + candidate.getContent(), currentChapterIndex,
+                type == StoryFact.FactType.WORLD_RULE ? 4 : 3);
     }
 
     private CheckpointRevisionResult reviseVolumeOutline(String projectId, Checkpoint checkpoint,

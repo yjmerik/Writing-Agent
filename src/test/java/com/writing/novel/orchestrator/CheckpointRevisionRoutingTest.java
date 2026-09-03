@@ -36,6 +36,7 @@ import java.util.ArrayDeque;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -111,6 +112,75 @@ class CheckpointRevisionRoutingTest {
         assertEquals(1, storyCanon.recallBySubject(project.getId(), "时代锚点").size());
         assertEquals(Checkpoint.Status.PENDING,
                 repository.findCheckpoint(checkpoint.getId()).orElseThrow().getStatus());
+    }
+
+    @Test
+    void sameSubjectWorldRevisionSupersedesOldCanonFactWithAuditLink() {
+        KnowledgeEntry oldEntry = new KnowledgeEntry(
+                project.getId(), "RULE", "方术限制", "方术可炼丹延寿");
+        knowledgeBase.saveEntry(oldEntry);
+        StoryFact oldFact = new StoryFact(project.getId(), StoryFact.FactType.WORLD_RULE,
+                "方术限制", "方术限制：方术可炼丹延寿", 0);
+        storyCanon.saveIfAbsent(oldFact);
+        Checkpoint checkpoint = pending(Checkpoint.Type.AFTER_INITIAL_SETUP, "初始设定生成完成，待审核");
+        gateway.reply(LlmTaskType.WORLDBUILDING,
+                "【规则】方术限制：方术只能辨迹寻物，不能炼丹延寿。");
+
+        orchestrator.reviseCheckpoint(project.getId(), checkpoint, "保留名称，改成低魔限制");
+
+        StoryFact persistedOld = storyCanon.findById(oldFact.getId()).orElseThrow();
+        StoryFact active = storyCanon.recallBySubject(project.getId(), "方术限制").get(0);
+        assertEquals(StoryFact.Status.SUPERSEDED, persistedOld.getStatus());
+        assertEquals(active.getId(), persistedOld.getSupersededBy());
+        assertEquals(StoryFact.Status.ACTIVE, active.getStatus());
+        assertTrue(active.getAssertion().startsWith(StoryCanon.HUMAN_PATCH_PREFIX));
+        assertTrue(active.getAssertion().contains("不能炼丹延寿"));
+    }
+
+    @Test
+    void removedKnowledgeEntryNamedEraAnchorDoesNotRetireDerivedCanonAnchor() {
+        KnowledgeEntry shadowAnchor = new KnowledgeEntry(
+                project.getId(), "RULE", "时代锚点", "用户条目不拥有派生真典");
+        knowledgeBase.saveEntry(shadowAnchor);
+        StoryFact derivedAnchor = new StoryFact(project.getId(), StoryFact.FactType.WORLD_RULE,
+                "时代锚点", "时代一致性铁律：架空王朝", 0);
+        storyCanon.saveIfAbsent(derivedAnchor);
+        Checkpoint checkpoint = pending(Checkpoint.Type.AFTER_INITIAL_SETUP, "初始设定生成完成，待审核");
+        gateway.reply(LlmTaskType.WORLDBUILDING,
+                "【规则】方术限制：方术只能辨迹寻物。");
+
+        orchestrator.reviseCheckpoint(project.getId(), checkpoint, "删除伪造锚点");
+
+        List<StoryFact> activeAnchors = storyCanon.recallBySubject(project.getId(), "时代锚点");
+        assertEquals(1, activeAnchors.size());
+        StoryFact activeAnchor = activeAnchors.get(0);
+        assertEquals(derivedAnchor.getId(), activeAnchor.getId());
+        assertEquals("时代一致性铁律：架空王朝", activeAnchor.getAssertion());
+        assertEquals(StoryFact.Status.ACTIVE, activeAnchor.getStatus());
+    }
+
+    @Test
+    void newKnowledgeEntryNamedEraAnchorDoesNotOverwriteDerivedCanonAnchor() {
+        KnowledgeEntry old = new KnowledgeEntry(project.getId(), "RULE", "旧规则", "旧内容");
+        knowledgeBase.saveEntry(old);
+        StoryFact derivedAnchor = new StoryFact(project.getId(), StoryFact.FactType.WORLD_RULE,
+                "时代锚点", "时代一致性铁律：架空王朝", 0);
+        storyCanon.saveIfAbsent(derivedAnchor);
+        Checkpoint checkpoint = pending(Checkpoint.Type.AFTER_INITIAL_SETUP, "初始设定生成完成，待审核");
+        gateway.reply(LlmTaskType.WORLDBUILDING, """
+                【规则】时代锚点：候选不得覆盖派生铁律。
+                【规则】方术限制：方术只能辨迹寻物。
+                """);
+
+        orchestrator.reviseCheckpoint(project.getId(), checkpoint, "保留派生锚点");
+
+        List<StoryFact> allAnchors = storyCanon.findAll(project.getId()).stream()
+                .filter(fact -> fact.getSubject().equals("时代锚点"))
+                .toList();
+        assertEquals(1, allAnchors.size());
+        assertEquals(derivedAnchor.getId(), allAnchors.get(0).getId());
+        assertEquals(StoryFact.Status.ACTIVE, allAnchors.get(0).getStatus());
+        assertFalse(allAnchors.get(0).getAssertion().startsWith(StoryCanon.HUMAN_PATCH_PREFIX));
     }
 
     @Test

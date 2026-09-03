@@ -5,7 +5,7 @@
 ## Current Objective
 
 - **Goal**: 以产品一致性审计的浏览器红灯套件驱动下一轮 P0 → P1 → P2 修复。
-- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01、p26-02 已完成：审核操作先校验目标归属/PENDING，初始设定与卷大纲的修改意见会生成 detached candidate，校验后事务替换真实持久化内容；失败保留原内容与 `PENDING`。世界观替换同步 DB、向量、memory revision 与 StoryCanon HUMAN_PATCH。产品浏览器既知失败集合已移除 `initial-setup-modify`、`volume-outline-modify`；`checkpoint-card-targeting` 仍为 p26-03 的预期 XFAIL。
+- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01、p26-02 已完成：审核操作先校验目标归属/PENDING，初始设定与卷大纲的修改意见会生成 detached candidate，校验后事务替换真实持久化内容；失败保留原内容与 `PENDING`。世界观替换先索引独立候选 ID，再提交 DB，成功后清旧向量、bump memory revision；StoryCanon 保留 HUMAN_PATCH supersede 审计链并保护派生时代锚点。连续性 checkpoint 保持 status-only 语义。产品浏览器既知失败集合已移除 `initial-setup-modify`、`volume-outline-modify`；`checkpoint-card-targeting` 仍为 p26-03 的预期 XFAIL。
 - **Branch**: 当前 Phase 26 修复分支；仓库没有 Git remote/upstream。
 - **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01、p26-02 completed，p26-03 起仍 not-started。
 - **Current spec**: `docs/specs/2026-09-02-product-audit-browser-e2e.md` 与 `.superpowers/sdd/2026-09-03-product-design-consistency-remediation/` 任务简报。
@@ -34,10 +34,10 @@
 - p26-01 browser：`./scripts/product-audit-e2e.sh --case checkpoint-card-targeting --expect-known-failures` 为 0 PASS / 1 XFAIL / 0 ERROR（卡片绑定保留给 p26-03）。
 - p26-02 RED：focused 首跑因 `reviseCheckpoint`/`replaceKnowledgeEntries` 缺失而 testCompile 失败；加入 Agent candidate 零写入断言后仍有 7 个 missing symbol。
 - p26-02 RED 补充：KnowledgeBaseService 替换测试先缺 `replaceEntries`（2 errors）；canon/controller 闭环测试先缺 `resumeAfterCheckpointRevision`（2 errors）。
-- p26-02 GREEN：routing/controller/KB/Agent focused 为 20 tests / 0 failures / 0 errors；checkpoint/Scenario/StoryCanon 回归为 13 tests / 0 failures / 0 errors。SQLite rollback 覆盖世界观与大纲原内容保留；DB 失败不动向量，成功后清旧/索引新向量并 bump revision；旧世界观真典主体 retire，新主体为 HUMAN_PATCH ACTIVE；候选或推进失败均保持 checkpoint PENDING，成功响应含 revision。
+- p26-02 GREEN：初始实现 routing/controller/KB/Agent focused 为 20 tests / 0 failures / 0 errors；checkpoint/Scenario/StoryCanon 回归为 13 tests / 0 failures / 0 errors。Review fix 的四轮 RED→GREEN 覆盖候选 embedding/索引失败与 ID 冲突、同主体 SUPERSEDED 审计链、连续性 status-only 路由、KnowledgeEntry 同名时代锚点保护；最终 routing/controller/KB/Agent/双 StoryCanon contract focused 为 46 tests / 0 failures / 0 errors。SQLite rollback 覆盖世界观与大纲原内容保留；候选向量先建且失败清理，DB 失败保留旧 DB/向量，成功后清旧向量并 bump revision；同主体新事实为 HUMAN_PATCH ACTIVE 且旧事实带 supersededBy；候选或推进失败均保持 checkpoint PENDING，内容修订成功响应含 revision。
 - p26-02 browser：`initial-setup-modify` 与 `volume-outline-modify` strict 各为 1 PASS / 0 XFAIL / 0 ERROR，并已从 `KNOWN_FAILURES` 精确移除。
 - p26-02 质量：默认 `e2e.sh` 因选中 wuxia fixture 与 mystery 请求不匹配而 fail-fast（diagnose：1 LLM_ERROR / 0 calls）；指定匹配的 `canary-mystery-20260831` fixture 后 3 章、10,191 字、54 calls、0 errors、0 chapter failures，baseline PASS。
-- 全量：`mvn compile` PASS；`mvn test` 与 `./init.sh` 为 497 tests / 0 failures / 0 errors / 1 skipped；init 还通过 27 个 prompt 与前端生产构建检查。
+- 全量：`mvn test` 与 `./init.sh` 为 504 tests / 0 failures / 0 errors / 1 skipped；init 还通过 27 个 prompt 与前端生产构建检查。
 
 ## Non-blocking Observations
 

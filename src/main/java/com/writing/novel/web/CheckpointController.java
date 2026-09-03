@@ -52,13 +52,17 @@ public class CheckpointController {
         var cp = checkpointTargetService.requirePending(id, checkpointId);
         String instructions = body.getOrDefault("instructions", "");
 
-        // 先完成并持久化对应目标的改写；失败时下面的 checkpoint 状态变更不会执行。
-        var revision = orchestrator.reviseCheckpoint(id, cp, instructions);
+        // 连续性修复 checkpoint 保留原有状态型处理；其余类型先完成真实内容改写。
+        NovelOrchestrator.CheckpointRevisionResult revision = reviseContentIfSupported(id, cp, instructions);
 
         cp.reject();
         repository.saveCheckpoint(cp);
 
         // 重新进入 PAUSED_AT_CHECKPOINT 等待再次审核
+        if (revision == null) {
+            return Map.of("status", "rejected", "checkpointId", checkpointId,
+                    "instructions", instructions);
+        }
         return Map.of("status", "rejected", "checkpointId", checkpointId,
                 "instructions", instructions, "revision", revision);
     }
@@ -73,15 +77,28 @@ public class CheckpointController {
         var cp = checkpointTargetService.requirePending(id, checkpointId);
         String instructions = body.getOrDefault("instructions", "");
 
-        // 先完成并持久化对应目标的改写；失败时下面的 checkpoint 状态变更不会执行。
-        var revision = orchestrator.reviseCheckpoint(id, cp, instructions);
+        // 连续性修复 checkpoint 只推进状态；其余类型先完成真实内容改写。
+        NovelOrchestrator.CheckpointRevisionResult revision = reviseContentIfSupported(id, cp, instructions);
 
         // 项目推进成功后才处理 checkpoint；推进异常仍保留 PENDING，便于用户重试。
         orchestrator.resumeAfterCheckpointRevision(id, cp);
         cp.modify();
         repository.saveCheckpoint(cp);
 
+        if (revision == null) {
+            return Map.of("status", "modified", "checkpointId", checkpointId,
+                    "instructions", instructions);
+        }
         return Map.of("status", "modified", "checkpointId", checkpointId,
                 "instructions", instructions, "revision", revision);
+    }
+
+    private NovelOrchestrator.CheckpointRevisionResult reviseContentIfSupported(
+            String projectId, Checkpoint checkpoint, String instructions) {
+        return switch (checkpoint.getType()) {
+            case AFTER_INITIAL_SETUP, AFTER_VOLUME_OUTLINE, AFTER_CHAPTER ->
+                    orchestrator.reviseCheckpoint(projectId, checkpoint, instructions);
+            case ON_CONTINUITY_FIX -> null;
+        };
     }
 }

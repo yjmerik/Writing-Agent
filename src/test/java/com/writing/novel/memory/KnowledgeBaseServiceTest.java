@@ -15,6 +15,7 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -79,7 +80,7 @@ class KnowledgeBaseServiceTest {
     }
 
     @Test
-    void 整体替换知识时先提交数据库_再清旧向量并批量索引新条目() {
+    void 整体替换知识时先索引候选_提交数据库后再清旧向量() {
         KnowledgeEntry old = new KnowledgeEntry("p1", "POWER_SYSTEM", "九境灵气", "修士可飞升");
         service.saveEntry(old);
         long beforeRevision = memoryRevision.current("p1");
@@ -94,6 +95,52 @@ class KnowledgeBaseServiceTest {
         assertEquals(Set.of(history.getId(), rule.getId()), repo.findKnowledgeEntriesByProject("p1").stream()
                 .map(KnowledgeEntry::getId).collect(java.util.stream.Collectors.toSet()));
         assertEquals(beforeRevision + 1, memoryRevision.current("p1"));
+    }
+
+    @Test
+    void 候选向量化失败时保留旧数据库旧向量且清理候选向量() {
+        AtomicBoolean failBatch = new AtomicBoolean(false);
+        EmbeddingProvider embedding = new EmbeddingProvider() {
+            @Override public float[] embed(String text) { return new float[]{1.0f}; }
+            @Override public List<float[]> embedBatch(List<String> texts) {
+                if (failBatch.get()) throw new IllegalStateException("embedding failed");
+                return EmbeddingProvider.super.embedBatch(texts);
+            }
+            @Override public int dimension() { return 1; }
+        };
+        var store = new com.writing.novel.persistence.embedding.EmbeddedVectorStore(
+                tempDir.resolve("failing-kb.idx").toString());
+        var failingService = new KnowledgeBaseService(
+                repo, new VectorRetrievalService(store, embedding), memoryRevision);
+        KnowledgeEntry old = new KnowledgeEntry("p1", "RULE", "旧规则", "旧内容");
+        failingService.saveEntry(old);
+        long beforeRevision = memoryRevision.current("p1");
+        KnowledgeEntry candidate = new KnowledgeEntry("p1", "RULE", "新规则", "新内容");
+        failBatch.set(true);
+
+        assertThrows(IllegalStateException.class,
+                () -> failingService.replaceEntries("p1", List.of(candidate)));
+
+        List<KnowledgeEntry> persisted = repo.findKnowledgeEntriesByProject("p1");
+        assertEquals(List.of(old.getId()), persisted.stream().map(KnowledgeEntry::getId).toList());
+        assertNotNull(failingService.getIndexedText(old.getId()));
+        assertNull(failingService.getIndexedText(candidate.getId()));
+        assertEquals(beforeRevision, memoryRevision.current("p1"));
+    }
+
+    @Test
+    void 拒绝与旧条目ID冲突的候选且不改变任何存储() {
+        KnowledgeEntry old = new KnowledgeEntry("p1", "RULE", "同名规则", "旧内容");
+        service.saveEntry(old);
+        long beforeRevision = memoryRevision.current("p1");
+        old.setContent("新内容");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.replaceEntries("p1", List.of(old)));
+
+        assertEquals("旧内容", repo.findKnowledgeEntriesByProject("p1").get(0).getContent());
+        assertTrue(service.getIndexedText(old.getId()).contains("旧内容"));
+        assertEquals(beforeRevision, memoryRevision.current("p1"));
     }
 
     @Test

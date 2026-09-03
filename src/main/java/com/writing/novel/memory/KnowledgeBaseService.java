@@ -40,19 +40,44 @@ public class KnowledgeBaseService {
 
     /**
      * Replace one project's worldbuilding as a coherent memory set.
-     * The database transaction completes before any vector is changed, so a rejected database
-     * candidate cannot remove the currently retrievable setup.
+     * Candidate vectors use IDs disjoint from the current set and are prepared before the database
+     * transaction. Any pre-commit failure removes those candidates while leaving the old database
+     * and vectors intact; after commit, removing old IDs is deterministic.
      */
     public void replaceEntries(String projectId, List<KnowledgeEntry> candidates) {
-        List<String> oldIds = repository.findKnowledgeEntriesByProject(projectId).stream()
+        java.util.Objects.requireNonNull(projectId, "projectId");
+        java.util.Objects.requireNonNull(candidates, "candidates");
+        java.util.Set<String> oldIds = repository.findKnowledgeEntriesByProject(projectId).stream()
                 .map(KnowledgeEntry::getId)
-                .toList();
-        repository.replaceKnowledgeEntries(projectId, candidates);
-        oldIds.forEach(vectorRetrieval::remove);
-        vectorRetrieval.indexBatch(candidates.stream()
+                .collect(java.util.stream.Collectors.toSet());
+        java.util.Set<String> candidateIds = new java.util.HashSet<>();
+        for (KnowledgeEntry candidate : candidates) {
+            if (candidate == null || !projectId.equals(candidate.getProjectId())
+                    || candidate.getId() == null || candidate.getId().isBlank()) {
+                throw new IllegalArgumentException("世界观候选缺少独立项目 ID");
+            }
+            if (!candidateIds.add(candidate.getId()) || oldIds.contains(candidate.getId())) {
+                throw new IllegalArgumentException("世界观候选 ID 与现有条目冲突: " + candidate.getId());
+            }
+        }
+        List<IndexedText> candidateTexts = candidates.stream()
                 .map(entry -> new IndexedText(entry.getId(), entry.getProjectId(),
                         entry.getName() + "：" + entry.getContent(), "WORLDBUILDING"))
-                .toList());
+                .toList();
+        try {
+            vectorRetrieval.indexBatch(candidateTexts);
+            repository.replaceKnowledgeEntries(projectId, candidates);
+        } catch (RuntimeException failure) {
+            for (String candidateId : candidateIds) {
+                try {
+                    vectorRetrieval.remove(candidateId);
+                } catch (RuntimeException cleanupFailure) {
+                    failure.addSuppressed(cleanupFailure);
+                }
+            }
+            throw failure;
+        }
+        oldIds.forEach(vectorRetrieval::remove);
         invalidate(projectId);
     }
 

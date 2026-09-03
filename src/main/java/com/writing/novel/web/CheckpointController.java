@@ -3,6 +3,7 @@ package com.writing.novel.web;
 import com.writing.novel.domain.Checkpoint;
 import com.writing.novel.orchestrator.NovelOrchestrator;
 import com.writing.novel.service.CheckpointTargetService;
+import com.writing.novel.service.WritingTaskExecutor;
 import com.writing.novel.spi.NovelRepository;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,12 +21,15 @@ public class CheckpointController {
     private final NovelRepository repository;
     private final NovelOrchestrator orchestrator;
     private final CheckpointTargetService checkpointTargetService;
+    private final WritingTaskExecutor writingTaskExecutor;
 
     public CheckpointController(NovelRepository repository, NovelOrchestrator orchestrator,
-                                CheckpointTargetService checkpointTargetService) {
+                                CheckpointTargetService checkpointTargetService,
+                                WritingTaskExecutor writingTaskExecutor) {
         this.repository = repository;
         this.orchestrator = orchestrator;
         this.checkpointTargetService = checkpointTargetService;
+        this.writingTaskExecutor = writingTaskExecutor;
     }
 
     /** 列出待审核 checkpoint */
@@ -97,8 +101,19 @@ public class CheckpointController {
             String projectId, Checkpoint checkpoint, String instructions) {
         return switch (checkpoint.getType()) {
             case AFTER_INITIAL_SETUP, AFTER_VOLUME_OUTLINE, AFTER_CHAPTER ->
-                    orchestrator.reviseCheckpoint(projectId, checkpoint, instructions);
+                    withRevisionWork(projectId,
+                            () -> orchestrator.reviseCheckpoint(projectId, checkpoint, instructions));
             case ON_CONTINUITY_FIX -> null;
         };
+    }
+
+    private <T> T withRevisionWork(String projectId, java.util.function.Supplier<T> work) {
+        String workId = "checkpoint-revision-" + java.util.UUID.randomUUID();
+        writingTaskExecutor.beginWork(projectId, workId);
+        try {
+            return work.get();
+        } finally {
+            writingTaskExecutor.endWork(projectId, workId);
+        }
     }
 }

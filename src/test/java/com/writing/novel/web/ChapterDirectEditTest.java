@@ -3,8 +3,12 @@ package com.writing.novel.web;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.writing.novel.domain.Chapter;
+import com.writing.novel.domain.ChapterSynopsis;
 import com.writing.novel.domain.ChapterVersion;
+import com.writing.novel.domain.Checkpoint;
+import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
+import com.writing.novel.domain.Volume;
 import com.writing.novel.memory.MemoryRevision;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
 import com.writing.novel.service.WritingTaskExecutor;
@@ -232,6 +236,40 @@ class ChapterDirectEditTest {
             writingTaskExecutor.endWork(projectId, "active-writer");
         }
         assertEquals(original.getVersion(), repository.findChapterByIndex(projectId, 1).orElseThrow().getVersion());
+        assertTrue(repository.findChapterVersions(projectId, 1).isEmpty());
+    }
+
+    @Test
+    void 章节检查点重写与直接编辑共用同一工作所有权边界() throws Exception {
+        String projectId = project("检查点并发保护");
+        Chapter original = chapter(projectId, 1, "原始标题", LONG_BODY);
+        Project project = repository.findProject(projectId).orElseThrow();
+        project.setCurrentChapterIndex(1);
+        repository.saveProject(project);
+        Outline outline = new Outline(projectId, "总纲");
+        Volume volume = new Volume(projectId, 1, "第一卷", "卷摘要");
+        volume.addSynopsis(new ChapterSynopsis(projectId, 1, "原始标题", "章节梗概"));
+        outline.addVolume(volume);
+        repository.saveOutline(outline);
+        Checkpoint checkpoint = new Checkpoint(projectId, Checkpoint.Type.AFTER_CHAPTER, "第1章完成");
+        repository.saveCheckpoint(checkpoint);
+
+        writingTaskExecutor.beginWork(projectId, "active-direct-edit");
+        try {
+            mvc.perform(post("/api/projects/{id}/checkpoints/{checkpointId}/modify",
+                            projectId, checkpoint.getId())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json(Map.of("instructions", "增加对话"))))
+                    .andExpect(status().isConflict());
+        } finally {
+            writingTaskExecutor.endWork(projectId, "active-direct-edit");
+        }
+
+        assertEquals(Checkpoint.Status.PENDING,
+                repository.findCheckpoint(checkpoint.getId()).orElseThrow().getStatus());
+        Chapter after = repository.findChapterByIndex(projectId, 1).orElseThrow();
+        assertEquals(original.getVersion(), after.getVersion());
+        assertEquals(original.getContent(), after.getContent());
         assertTrue(repository.findChapterVersions(projectId, 1).isEmpty());
     }
 

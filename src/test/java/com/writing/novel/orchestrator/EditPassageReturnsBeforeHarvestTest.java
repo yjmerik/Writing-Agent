@@ -25,9 +25,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** p14-03: editPassage must return after persist even if harvest is slow. */
@@ -117,5 +119,25 @@ class EditPassageReturnsBeforeHarvestTest {
 
         assertTrue(ms < 800, "should return before 2s harvest, took " + ms);
         assertTrue(out.getContent().contains("屋檐滴水成串"));
+    }
+
+    @Test
+    void directRevisionRefresh_doesNotReturnBeforeDerivedStateIsCurrent() throws Exception {
+        Project p = new Project("直接编辑", "c", "tag");
+        repo.saveProject(p);
+        Chapter ch = new Chapter(p.getId(), 1, "雨夜账");
+        ch.setContent("新版正文");
+        repo.saveChapter(ch);
+
+        CompletableFuture<Void> refresh = CompletableFuture.runAsync(
+                () -> orchestrator.refreshChapterAfterRevision(p.getId(), ch));
+        assertTrue(harvestStarted.await(2, TimeUnit.SECONDS), "derived refresh should reach harvest");
+        try {
+            assertFalse(refresh.isDone(), "direct edit response boundary must wait for derived refresh");
+        } finally {
+            harvestRelease.countDown();
+        }
+        refresh.get(2, TimeUnit.SECONDS);
+        assertTrue(harvestDone.await(2, TimeUnit.SECONDS));
     }
 }

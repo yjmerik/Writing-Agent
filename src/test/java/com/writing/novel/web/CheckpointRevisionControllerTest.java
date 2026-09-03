@@ -7,6 +7,7 @@ import com.writing.novel.persistence.sqlite.ConnectionProvider;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
 import com.writing.novel.service.CheckpointTargetService;
+import com.writing.novel.service.WritingTaskExecutor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -36,6 +37,7 @@ class CheckpointRevisionControllerTest {
     private SqliteNovelRepository repository;
     private NovelOrchestrator orchestrator;
     private CheckpointController controller;
+    private WritingTaskExecutor writingTaskExecutor;
     private Project project;
 
     @BeforeEach
@@ -44,8 +46,9 @@ class CheckpointRevisionControllerTest {
         new SqliteSchemaInitializer(connectionProvider).initialize();
         repository = new SqliteNovelRepository(connectionProvider);
         orchestrator = mock(NovelOrchestrator.class);
+        writingTaskExecutor = new WritingTaskExecutor(orchestrator, repository);
         controller = new CheckpointController(repository, orchestrator,
-                new CheckpointTargetService(repository));
+                new CheckpointTargetService(repository), writingTaskExecutor);
         project = new Project("审核书", "旧构思", "悬疑");
         repository.saveProject(project);
     }
@@ -154,6 +157,22 @@ class CheckpointRevisionControllerTest {
         assertFalse(response.containsKey("revision"));
         assertTrue(advancedWhilePending.get());
         assertEquals(Checkpoint.Status.MODIFIED,
+                repository.findCheckpoint(checkpoint.getId()).orElseThrow().getStatus());
+    }
+
+    @Test
+    void chapterRevisionCheckpointRejectsWhileAnotherChapterMutationOwnsProject() {
+        Checkpoint checkpoint = pending(Checkpoint.Type.AFTER_CHAPTER);
+        writingTaskExecutor.beginWork(project.getId(), "active-direct-edit");
+        try {
+            assertThrows(IllegalStateException.class,
+                    () -> controller.modify(project.getId(), checkpoint.getId(),
+                            Map.of("instructions", "增加对话")));
+        } finally {
+            writingTaskExecutor.endWork(project.getId(), "active-direct-edit");
+        }
+
+        assertEquals(Checkpoint.Status.PENDING,
                 repository.findCheckpoint(checkpoint.getId()).orElseThrow().getStatus());
     }
 

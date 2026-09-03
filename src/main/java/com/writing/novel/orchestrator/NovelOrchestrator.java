@@ -2083,11 +2083,24 @@ public class NovelOrchestrator {
      * 待卷末/FINAL 门禁重算后自动清 dirty。
      */
     private void invalidateSummariesForChapter(String projectId, int chapterIndex) {
+        markSummariesDirtyForChapter(projectId, chapterIndex);
+        recomputeSummariesForChapter(projectId, chapterIndex);
+    }
+
+    private void markSummariesDirtyForChapter(String projectId, int chapterIndex) {
         var summaries = repository.findSummariesByProject(projectId);
         for (var s : summaries) {
             if (chapterIndex >= s.getFromChapter() && chapterIndex <= s.getToChapter()) {
                 s.setDirty(true);
                 repository.saveSummary(s);
+            }
+        }
+    }
+
+    private void recomputeSummariesForChapter(String projectId, int chapterIndex) {
+        var summaries = repository.findSummariesByProject(projectId);
+        for (var s : summaries) {
+            if (s.isDirty() && chapterIndex >= s.getFromChapter() && chapterIndex <= s.getToChapter()) {
                 int span = s.getToChapter() - s.getFromChapter() + 1;
                 if (span <= 3) {
                     // 细粒度摘要——立即重算（重算后 dirty 清 false）
@@ -2522,33 +2535,66 @@ public class NovelOrchestrator {
                 chapter.getVersion(), chapter.getTitle(), newContent.toString(), "PASSAGE_EDIT");
         log.info("段落编辑完成(章{}段{}): {}→{}字", chapterIndex, resolvedIndex,
                 content.length(), newContent.length());
-        refreshChapterAfterRevision(projectId, chapter);
+        refreshChapterAfterRevisionAsync(projectId, chapter);
 
         return chapter;
     }
 
-    /** Reuse the established passage-edit refresh path for direct edits and restores. */
+    /** Direct edits/restores do not return until their derived state matches the saved chapter. */
     public void refreshChapterAfterRevision(String projectId, Chapter chapter) {
         int chapterIndex = chapter.getChapterIndex();
-        // p16-05: clear old chapter chunks and rebuild vectors from the persisted body.
+        com.writing.novel.service.ChapterRevisionService.withChapterRevisionLock(
+                projectId, chapterIndex, () -> refreshCurrentChapterDerivedState(projectId, chapter));
+    }
+
+    /** Passage editing keeps its established fast response while stale workers are version-gated. */
+    private void refreshChapterAfterRevisionAsync(String projectId, Chapter chapter) {
+        int chapterIndex = chapter.getChapterIndex();
+        com.writing.novel.service.ChapterRevisionService.withChapterRevisionLock(projectId, chapterIndex, () -> {
+            if (!isCurrentChapterVersion(projectId, chapter)) return;
+            reindexAndInvalidateChapter(projectId, chapter);
+            markSummariesDirtyForChapter(projectId, chapterIndex);
+        });
+        POST_PROCESS.execute(() -> com.writing.novel.service.ChapterRevisionService.withChapterRevisionLock(
+                projectId, chapterIndex, () -> {
+                    if (!isCurrentChapterVersion(projectId, chapter)) return;
+                    recomputeSummariesForChapter(projectId, chapterIndex);
+                    refreshChapterEntitiesAndFacts(projectId, chapter);
+                }));
+    }
+
+    private void refreshCurrentChapterDerivedState(String projectId, Chapter chapter) {
+        if (!isCurrentChapterVersion(projectId, chapter)) return;
+        reindexAndInvalidateChapter(projectId, chapter);
+        markSummariesDirtyForChapter(projectId, chapter.getChapterIndex());
+        recomputeSummariesForChapter(projectId, chapter.getChapterIndex());
+        refreshChapterEntitiesAndFacts(projectId, chapter);
+    }
+
+    private boolean isCurrentChapterVersion(String projectId, Chapter chapter) {
+        return repository.findChapterByIndex(projectId, chapter.getChapterIndex())
+                .map(current -> current.getVersion() == chapter.getVersion())
+                .orElse(false);
+    }
+
+    private void reindexAndInvalidateChapter(String projectId, Chapter chapter) {
         if (chapterWriter != null) {
-            try { chapterWriter.reindexChapter(projectId, chapterIndex, chapter.getContent()); } catch (Exception ignored) {}
+            try { chapterWriter.reindexChapter(projectId, chapter.getChapterIndex(), chapter.getContent()); }
+            catch (Exception ignored) {}
         }
         if (contextAssembler != null) contextAssembler.invalidateProject(projectId);
+    }
 
-        final Chapter snapshot = chapter;
-        POST_PROCESS.execute(() -> {
-            try { invalidateSummariesForChapter(projectId, chapterIndex); } catch (Exception ignored) {}
-            try {
-                if (entityGraphService != null) entityGraphService.extractFromChapter(projectId, snapshot);
-            } catch (Exception ignored) {}
-            try {
-                if (foreshadowingExtractor != null) foreshadowingExtractor.extract(projectId, snapshot);
-            } catch (Exception ignored) {}
-            try {
-                if (factHarvester != null) factHarvester.harvest(projectId, snapshot);
-            } catch (Exception ignored) {}
-        });
+    private void refreshChapterEntitiesAndFacts(String projectId, Chapter chapter) {
+        try {
+            if (entityGraphService != null) entityGraphService.extractFromChapter(projectId, chapter);
+        } catch (Exception ignored) {}
+        try {
+            if (foreshadowingExtractor != null) foreshadowingExtractor.extract(projectId, chapter);
+        } catch (Exception ignored) {}
+        try {
+            if (factHarvester != null) factHarvester.harvest(projectId, chapter);
+        } catch (Exception ignored) {}
     }
 
     /** 提取上下文段落（向前/向后取 N 段） */

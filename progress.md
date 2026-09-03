@@ -858,3 +858,8 @@ W2 的两个独立基石已落地（不依赖 LLM prompt 改动，不影响产�
 - 真实 Spring MVC + SQLite TDD RED 为 **7 tests / 6 failures / 0 errors**：章节新增、直接编辑、历史与回退端点缺失并返回 500；事务故障用例仅因端点不存在而偶然满足零写入。GREEN 后 `ChapterDirectEditTest` 扩展为 **8/8 PASS**，覆盖下一项目全局章号、DRAFTING/500 字门槛、标题正文与 version+1、不可变变更前快照、历史倒序、精确回退及空白旧草稿回退、陈旧 expectedVersion 409 零副作用、跨项目拒绝、活动写作拒绝、同版本并发唯一成功者和 SQLite 故障原子回滚。
 - 新增 `ChapterRevisionService` 单一版本边界与四个 API；SQLite 以条件 UPDATE current + INSERT snapshot 同事务保存。既有 rewrite/passage mutation 进入同一边界并记录 `REWRITE`/`PASSAGE_EDIT` 历史；所有 mutation 复用共享项目工作权，直接编辑/回退复用既有向量重建、上下文/摘要失效与实体、伏笔、事实后处理刷新路径。
 - 四套 focused **13/13 PASS**；JDK21 compile/full/init **563 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建 PASS。指定匹配 `canary-mystery-20260831` fixture 的 replay 为 3 章、10,191 字、54 calls、0 LLM errors、0 chapter failures，baseline PASS。manual aggregate **0 PASS / 1 XFAIL / 0 ERROR**，唯一剩余 `chapterActions` UI 留给 p26-13；未修改 UI、Agent/prompt、自动任务、mode switch/resume。
+
+### p26-12 Review round 1
+
+- 两个范围内竞态 RED：检查点章节重写不受项目 owner 约束，且直接编辑返回时派生刷新仍在后台。GREEN 后 checkpoint revision 统一获取工作权；章节修订与派生刷新经同一分片锁串行。直接编辑/回退在响应前刷新当前版本派生数据；passage 保留快速返回，但先同步标记摘要 dirty，后台任务获锁后以 chapter version 守卫，旧任务无法逆序落库。
+- 相关 focused **18/18 PASS**；JDK21 compile/full/init **566 tests / 0 failures / 0 errors / 1 skipped**，前端构建与 27 prompts PASS。匹配 mystery replay 仍为 **3 章 / 10,191 字 / 54 calls / 0 errors / 0 chapter failures**，baseline PASS；manual aggregate **0/1/0** 且唯一红项仍为 p26-13 的 `chapterActions` UI。

@@ -7,6 +7,7 @@ import com.writing.novel.spi.NovelRepository;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.locks.ReentrantLock;
 
 /** Single persistence boundary for manual and generated chapter revisions. */
 public class ChapterRevisionService {
@@ -16,6 +17,8 @@ public class ChapterRevisionService {
     }
 
     private static final int COMPLETED_CONTENT_MIN = 500;
+    private static final int LOCK_STRIPES = 64;
+    private static final ReentrantLock[] REVISION_LOCKS = createRevisionLocks();
 
     private final NovelRepository repository;
     private final WritingTaskExecutor writingTaskExecutor;
@@ -59,6 +62,12 @@ public class ChapterRevisionService {
     /** Used by an already-owned rewrite/passage workflow. */
     public Chapter editInOwnedWork(String projectId, int chapterIndex, int expectedVersion,
                                    String title, String content, String source) {
+        return withChapterRevisionLock(projectId, chapterIndex,
+                () -> doEdit(projectId, chapterIndex, expectedVersion, title, content, source));
+    }
+
+    private Chapter doEdit(String projectId, int chapterIndex, int expectedVersion,
+                           String title, String content, String source) {
         Chapter current = requireChapter(projectId, chapterIndex);
         if (current.getVersion() != expectedVersion) {
             throw new IllegalStateException("章节版本已变化");
@@ -90,6 +99,36 @@ public class ChapterRevisionService {
         }
         refresh(projectId, current);
         return current;
+    }
+
+    /** Serialize a chapter mutation with its derived-data refresh. */
+    public static <T> T withChapterRevisionLock(String projectId, int chapterIndex,
+                                                java.util.function.Supplier<T> work) {
+        ReentrantLock lock = revisionLock(projectId, chapterIndex);
+        lock.lock();
+        try {
+            return work.get();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public static void withChapterRevisionLock(String projectId, int chapterIndex, Runnable work) {
+        withChapterRevisionLock(projectId, chapterIndex, () -> {
+            work.run();
+            return null;
+        });
+    }
+
+    private static ReentrantLock revisionLock(String projectId, int chapterIndex) {
+        int hash = 31 * projectId.hashCode() + chapterIndex;
+        return REVISION_LOCKS[Math.floorMod(hash, LOCK_STRIPES)];
+    }
+
+    private static ReentrantLock[] createRevisionLocks() {
+        ReentrantLock[] locks = new ReentrantLock[LOCK_STRIPES];
+        for (int i = 0; i < locks.length; i++) locks[i] = new ReentrantLock(true);
+        return locks;
     }
 
     public Chapter restore(String projectId, int chapterIndex, int historyVersion, int expectedVersion) {

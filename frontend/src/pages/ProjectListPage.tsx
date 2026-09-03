@@ -3,16 +3,16 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Table, Button, Modal, Form, Input, Select, Tag, Space, message, Popconfirm, Card, Progress } from 'antd';
 import { PlusOutlined, DeleteOutlined, ReadOutlined, RocketOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
-import type { Project, CreateProjectRequest, ProjectMode, NovelState } from '../types';
+import type { ProjectListItem, CreateProjectRequest, ProjectMode, NovelState } from '../types';
 
-const STATE_LABELS: Record<NovelState, { text: string; color: string; percent: number }> = {
-  CONCEIVING: { text: '构思中', color: 'blue', percent: 10 },
-  PLANNING: { text: '规划中', color: 'cyan', percent: 25 },
-  WRITING: { text: '创作中', color: 'processing', percent: 50 },
-  VOLUME_DONE: { text: '卷完结', color: 'gold', percent: 75 },
-  FINAL: { text: '已完结', color: 'green', percent: 100 },
-  NEEDS_REVISION: { text: '待修订', color: 'red', percent: 90 },
-  PAUSED_AT_CHECKPOINT: { text: '待审核', color: 'orange', percent: 40 },
+const STATE_LABELS: Record<NovelState, { text: string; color: string }> = {
+  CONCEIVING: { text: '构思中', color: 'blue' },
+  PLANNING: { text: '规划中', color: 'cyan' },
+  WRITING: { text: '创作中', color: 'processing' },
+  VOLUME_DONE: { text: '卷完结', color: 'gold' },
+  FINAL: { text: '已完结', color: 'green' },
+  NEEDS_REVISION: { text: '待修订', color: 'red' },
+  PAUSED_AT_CHECKPOINT: { text: '待审核', color: 'orange' },
 };
 
 const MODE_CONFIG: Record<ProjectMode, { text: string; color: string; bg: string }> = {
@@ -23,7 +23,7 @@ const MODE_CONFIG: Record<ProjectMode, { text: string; color: string; bg: string
 export default function ProjectListPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm] = Form.useForm<CreateProjectRequest>();
@@ -77,7 +77,7 @@ export default function ProjectListPage() {
     }
   };
 
-  const getDisplayTitle = (p: Project) =>
+  const getDisplayTitle = (p: ProjectListItem) =>
     p.title || p.concept?.slice(0, 16) + (p.concept && p.concept.length > 16 ? '…' : '') || '未命名项目';
 
   const columns = [
@@ -85,8 +85,8 @@ export default function ProjectListPage() {
       title: '项目',
       dataIndex: 'title',
       width: 220,
-      render: (_: string, record: Project) => {
-        const stateInfo = STATE_LABELS[record.state] || { text: record.state, color: 'default', percent: 0 };
+      render: (_: string, record: ProjectListItem) => {
+        const stateInfo = STATE_LABELS[record.state] || { text: record.state, color: 'default' };
         const modeInfo = MODE_CONFIG[record.mode] || MODE_CONFIG.SOLO;
         return (
           <div
@@ -110,7 +110,7 @@ export default function ProjectListPage() {
       title: '构思',
       dataIndex: 'concept',
       ellipsis: true,
-      render: (text: string, record: Project) => (
+      render: (text: string, record: ProjectListItem) => (
         <div
           style={{ cursor: 'pointer', color: '#555', fontSize: 13, lineHeight: 1.6 }}
           onClick={() => navigate(`/project/${record.id}`)}
@@ -123,7 +123,7 @@ export default function ProjectListPage() {
       title: '标签',
       dataIndex: 'tags',
       width: 200,
-      render: (tags: string, record: Project) => (
+      render: (tags: string, record: ProjectListItem) => (
         <div style={{ cursor: 'pointer' }} onClick={() => navigate(`/project/${record.id}`)}>
           {tags?.split(',').filter(Boolean).map((t) => (
             <Tag key={t} style={{ margin: '2px 4px 2px 0', fontSize: 11, borderRadius: 10 }}>{t.trim()}</Tag>
@@ -134,14 +134,16 @@ export default function ProjectListPage() {
     {
       title: '进度',
       dataIndex: 'currentChapterIndex',
-      width: 120,
-      render: (n: number, record: Project) => {
-        const stateInfo = STATE_LABELS[record.state] || { text: record.state, color: 'default', percent: 0 };
+      width: 170,
+      render: (n: number, record: ProjectListItem) => {
+        const stateInfo = STATE_LABELS[record.state] || { text: record.state, color: 'default' };
         return (
           <div style={{ cursor: 'pointer' }} onClick={() => navigate(`/project/${record.id}`)}>
-            <div style={{ fontSize: 13, color: '#333', marginBottom: 4 }}>{n} 章</div>
+            <div style={{ fontSize: 13, color: '#333', marginBottom: 4 }}>
+              {n} / {record.targetChapters} 章 · {record.progressPercent}%
+            </div>
             <Progress
-              percent={stateInfo.percent}
+              percent={record.progressPercent}
               size="small"
               strokeColor={stateInfo.color === 'processing' ? '#1677ff' : stateInfo.color === 'green' ? '#52c41a' : stateInfo.color === 'gold' ? '#faad14' : '#1677ff'}
               showInfo={false}
@@ -154,7 +156,7 @@ export default function ProjectListPage() {
     {
       title: '操作',
       width: 140,
-      render: (_: unknown, record: Project) => (
+      render: (_: unknown, record: ProjectListItem) => (
         <Space size="small" onClick={(e) => e.stopPropagation()}>
           <Button
             type="primary"
@@ -293,7 +295,7 @@ export default function ProjectListPage() {
             </Form.Item>
             <Form.Item name="mode" label="运行模式">
               <Select size="large">
-                <Select.Option value="SOLO">🤖 自动模式 — 全自动生成，无需干预</Select.Option>
+                <Select.Option value="SOLO">🤖 自动模式 — 减少审核停顿；写作推进仍由当前任务触发</Select.Option>
                 <Select.Option value="INTERACTIVE">✋ 交互模式 — 每章审核后继续</Select.Option>
               </Select>
             </Form.Item>

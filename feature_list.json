@@ -3328,12 +3328,13 @@
       "phase": 26,
       "type": "bug",
       "dependencies": ["p26-06"],
-      "status": "not-started",
-      "files": ["web/OrchestratorController.java", "frontend/src/components/RunConsole.tsx", "frontend/src/pages/ProjectListPage.tsx"],
+      "status": "completed",
+      "files": ["src/main/java/com/writing/novel/web/OrchestratorController.java", "src/main/java/com/writing/novel/web/ProjectController.java", "frontend/src/components/RunConsole.tsx", "frontend/src/pages/ProjectListPage.tsx", "frontend/src/api/client.ts", "frontend/src/types.ts", "scripts/browser-e2e.sh"],
       "problem_ref": "P2-01/P2-04：暂停步骤和项目百分比为前端硬编码",
       "description": "服务端返回暂停阶段/原因和目标章数/真实百分比，前端直接呈现。",
       "acceptance": "章节 checkpoint 显示写作阶段等待审核；写作项目显示 current/target 章及计算百分比；自动模式文案不承诺无人值守。",
-      "verify_cmd": "mvn test -Dtest=ProjectProgressViewTest"
+      "verify_cmd": "mvn test -Dtest=ProjectProgressViewTest",
+      "evidence": "2026-09-04：先新增真实 Spring MVC/SQLite 回归，RED 为 4 tests / 4 failures / 0 errors，分别证明 status/list 缺少 pauseStage、pauseReason、targetChapters、progressPercent，缺偏好时列表也没有领域默认目标章数。GREEN 后服务端以同一 ProjectProgressSupport 计算状态和列表字段：AFTER_INITIAL_SETUP/AFTER_VOLUME_OUTLINE→PLANNING，AFTER_CHAPTER→WRITING，无 pending checkpoint 返回 null；写作百分比使用 floor(current*100/target) 并封顶 100，3/12=25，缺偏好通过 new WritingPreferences(projectId) 取得领域默认 24 而非前端常量。运行步骤按 pauseStage 显示“规划完成/写作完成”与真实 pauseReason；项目列表直接显示 current / target 章 · percent%，不再按 state 硬编码；自动模式文案改为“减少审核停顿；写作推进仍由当前任务触发”，未改变 mode switch、resume 或调度行为。专属 4/4、相邻 Project/Orchestrator 控制器合计 12/12 PASS；frontend production build PASS。browser-e2e 增加真实进度格式和诚实自动模式文案断言，完整 8/8 PASS。JDK21 full test 与 ./init.sh PASS：587 tests / 0 failures / 0 errors / 1 skipped，28 prompts 与前端构建通过。生产 Agent、Prompt、上下文和文学产出逻辑未修改，不触发质量 replay。"
     },
     {
       "id": "p26-18",

@@ -25,11 +25,22 @@ export interface Project {
   currentChapterIndex: number;
 }
 
+export interface ProjectListItem extends Project {
+  targetChapters: number;
+  progressPercent: number;
+  pauseStage: NovelState | null;
+  pauseReason: string | null;
+}
+
 export interface ProjectStatus {
   projectId: string;
   state: NovelState;
   mode: ProjectMode;
   currentChapter: number;
+  targetChapters: number;
+  progressPercent: number;
+  pauseStage: NovelState | null;
+  pauseReason: string | null;
   totalWords: number;
   allowedActions: ProjectAction[];
   blockedReasons: Partial<Record<ProjectAction, string>>;

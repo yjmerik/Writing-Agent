@@ -2,6 +2,16 @@
 
 ---
 
+## 会话记录（2026-09-04）：Phase 26 p26-17 暂停阶段与真实项目进度
+
+- 服务端状态与项目列表现在共享同一套进度事实：返回 `targetChapters`、`progressPercent`、`pauseStage`、`pauseReason`。初始设定/卷大纲审核映射到规划阶段，章节审核映射到写作阶段；没有待审项时暂停字段为 null。
+- 写作百分比严格按 `floor(currentChapterIndex * 100 / targetChapters)` 计算并封顶 100；缺少项目偏好时从 `WritingPreferences` 领域默认值读取 24。项目列表展示“当前 / 目标 章 · 百分比”，不再按状态写死进度。
+- 运行步骤按服务端 `pauseStage` 定位，暂停点显示“规划完成/写作完成”和真实审核原因。自动模式文案改为“减少审核停顿；写作推进仍由当前任务触发”，没有修改自动执行、模式切换、恢复或调度机制。
+- TDD RED 为 **4 tests / 4 failures / 0 errors**，字段全部缺失；GREEN 后专属 **4/4 PASS**，相邻 Project/Orchestrator 控制器合计 **12/12 PASS**。frontend build PASS；增强后的 browser-e2e 对真实进度格式与自动模式文案做页面断言，完整 **8/8 PASS**。
+- JDK21 full test 与 `./init.sh` 全绿：**587 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端生产构建通过。本项未改生产 Agent、Prompt、上下文或文学产出逻辑，不需要质量 replay。
+
+---
+
 ## 会话记录（2026-09-04）：Phase 26 p26-16 五层级统一 Agent 修改界面
 
 - 新增统一 `AgentRevisionDialog`，世界观、人物、纯未写卷、章节和正文段落共用“指令 → 生成预览 → 前后对照 → 确认应用”闭环；预览展示摘要与来源指纹，修改指令会丢弃旧预览，错误留在站内。

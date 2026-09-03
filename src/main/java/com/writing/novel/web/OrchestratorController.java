@@ -1,8 +1,10 @@
 package com.writing.novel.web;
 
 import com.writing.novel.agent.QualityEvaluationAgent;
+import com.writing.novel.domain.Checkpoint;
 import com.writing.novel.domain.NovelState;
 import com.writing.novel.domain.Project;
+import com.writing.novel.domain.WritingPreferences;
 import com.writing.novel.domain.WritingTask;
 import com.writing.novel.orchestrator.NovelOrchestrator;
 import com.writing.novel.orchestrator.ProjectActionPolicy;
@@ -92,6 +94,11 @@ public class OrchestratorController {
         result.put("state", p.getState().name());
         result.put("mode", p.getMode().name());
         result.put("currentChapter", p.getCurrentChapterIndex());
+        ProjectProgressSupport.Progress progress = ProjectProgressSupport.forProject(p, repository);
+        result.put("targetChapters", progress.targetChapters());
+        result.put("progressPercent", progress.progressPercent());
+        result.put("pauseStage", progress.pauseStage());
+        result.put("pauseReason", progress.pauseReason());
         result.put("totalWords", orchestrator.getTotalWordCount(id));
         result.put("allowedActions", availability.allowedActions());
         result.put("blockedReasons", availability.blockedReasons());
@@ -178,5 +185,50 @@ public class OrchestratorController {
         actionPolicy.requireAllowed(project, action,
                 repository.findOutlineByProject(projectId).isPresent(),
                 !repository.findPendingCheckpoints(projectId).isEmpty());
+    }
+}
+
+/** Shared server-side facts for status and project-list views. */
+final class ProjectProgressSupport {
+
+    private static final int CONCEIVING_MILESTONE_PERCENT = 10;
+    private static final int PLANNING_MILESTONE_PERCENT = 25;
+
+    private ProjectProgressSupport() {
+    }
+
+    static Progress forProject(Project project, NovelRepository repository) {
+        int domainDefault = new WritingPreferences(project.getId()).getTargetChapters();
+        int configuredTarget = repository.findWritingPreferences(project.getId())
+                .map(WritingPreferences::getTargetChapters)
+                .orElse(domainDefault);
+        int targetChapters = configuredTarget > 0 ? configuredTarget : domainDefault;
+
+        Checkpoint checkpoint = repository.findLatestPendingCheckpoint(project.getId()).orElse(null);
+        String pauseStage = checkpoint == null ? null : switch (checkpoint.getType()) {
+            case AFTER_INITIAL_SETUP, AFTER_VOLUME_OUTLINE -> NovelState.PLANNING.name();
+            case AFTER_CHAPTER, ON_CONTINUITY_FIX -> NovelState.WRITING.name();
+        };
+        String pauseReason = checkpoint == null ? null : checkpoint.getDescription();
+
+        int progressPercent = switch (project.getState()) {
+            case CONCEIVING -> CONCEIVING_MILESTONE_PERCENT;
+            case PLANNING -> PLANNING_MILESTONE_PERCENT;
+            case PAUSED_AT_CHECKPOINT -> NovelState.PLANNING.name().equals(pauseStage)
+                    ? PLANNING_MILESTONE_PERCENT
+                    : writingPercent(project.getCurrentChapterIndex(), targetChapters);
+            case WRITING, VOLUME_DONE, NEEDS_REVISION ->
+                    writingPercent(project.getCurrentChapterIndex(), targetChapters);
+            case FINAL -> 100;
+        };
+        return new Progress(targetChapters, progressPercent, pauseStage, pauseReason);
+    }
+
+    private static int writingPercent(int currentChapter, int targetChapters) {
+        long bounded = Math.max(0L, currentChapter) * 100L / targetChapters;
+        return (int) Math.min(100L, bounded);
+    }
+
+    record Progress(int targetChapters, int progressPercent, String pauseStage, String pauseReason) {
     }
 }

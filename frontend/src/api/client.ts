@@ -1,6 +1,7 @@
 /** API 客户端：封装全部后端端点 */
 import type {
   Project,
+  ProjectListItem,
   ProjectStatus,
   Character,
   KnowledgeEntry,
@@ -104,7 +105,7 @@ async function request<T>(url: string, options?: RequestInit, timeoutMs = 300000
 
 export const api = {
   // --- 项目 ---
-  listProjects: () => request<Project[]>('/projects'),
+  listProjects: () => request<ProjectListItem[]>('/projects'),
 
   getProject: (id: string) => request<Project>(`/projects/${id}`),
 

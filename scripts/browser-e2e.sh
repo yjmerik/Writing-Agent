@@ -98,10 +98,20 @@ const task = await useOrCreateTaskSpace('$TASK_ID')
 await openOrReuseTab('$BASE/', { wait: true, timeout: 30 })
 await cdp('Emulation.setDeviceMetricsOverride', { width: 375, height: 667, deviceScaleFactor: 2, mobile: true })
 await wait(2)
+await js(String.raw\`(() => {
+  const create = [...document.querySelectorAll('button')].find(b => b.innerText.trim() === '新建项目')
+  if (create) create.click()
+  return true
+})()\`)
+await wait(1)
 const m = await js(String.raw\`(() => ({
   overflow: document.documentElement.scrollWidth - window.innerWidth,
   delLabeled: !!document.querySelector('button[aria-label^="删除项目"]'),
   rows: document.querySelectorAll('[role="button"][aria-label^="打开项目"]').length,
+  truthfulProgress: [...document.querySelectorAll('[role="button"][aria-label^="打开项目"]')]
+    .every(row => /\\d+\\s*\\/\\s*\\d+\\s*章\\s*·\\s*\\d+%/.test(row.innerText)),
+  truthfulAutoCopy: document.body.innerText.includes('自动模式 — 减少审核停顿；写作推进仍由当前任务触发'),
+  forbiddenAutoCopy: document.body.innerText.includes('全自动生成，无需干预'),
 }))()\`)
 const fs = await import('node:fs')
 fs.writeFileSync('$DIR/list-375.json', JSON.stringify(m))
@@ -110,7 +120,7 @@ await closeTab()
 EGOEOF
 python3 -c "
 import json; d=json.load(open('$DIR/list-375.json'))
-exit(0 if d['overflow'] <= 0 and d['delLabeled'] and d['rows'] > 0 else 1)"; record "list-375-overflow-a11y" $?
+exit(0 if d['overflow'] <= 0 and d['delLabeled'] and d['rows'] > 0 and d['truthfulProgress'] and d['truthfulAutoCopy'] and not d['forbiddenAutoCopy'] else 1)"; record "list-375-overflow-a11y-progress-copy" $?
 
 # ---------- 2. 行键盘可激活（桌面） ----------
 ego-browser nodejs > "$DIR/keyboard.out" 2>&1 <<EGOEOF

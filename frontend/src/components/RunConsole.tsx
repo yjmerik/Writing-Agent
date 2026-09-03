@@ -69,6 +69,9 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
   }, [projectId, projectState]);
 
   const effectiveState = status?.state ?? projectState;
+  const effectiveStage = effectiveState === 'PAUSED_AT_CHECKPOINT'
+    ? status?.pauseStage ?? null
+    : effectiveState;
   const isFinal = effectiveState === 'FINAL';
   const needsRevision = effectiveState === 'NEEDS_REVISION';
   const isAllowed = (action: ProjectAction) => status?.allowedActions.includes(action) ?? false;
@@ -194,11 +197,19 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
         current={effectiveState === 'FINAL'
           ? STATES.length  // 全部完成
           : effectiveState === 'PAUSED_AT_CHECKPOINT'
-            ? STATES.indexOf('PLANNING')
+            ? effectiveStage ? STATES.indexOf(effectiveStage) : -1
             : STATES.indexOf(effectiveState) >= 0
               ? STATES.indexOf(effectiveState)
               : 0}
-        items={STATES.map((s) => ({ title: STATE_TEXT[s] }))}
+        items={STATES.map((s) => {
+          const waitingHere = effectiveState === 'PAUSED_AT_CHECKPOINT' && s === effectiveStage;
+          return {
+            title: waitingHere
+              ? s === 'WRITING' ? '写作完成' : '规划完成'
+              : STATE_TEXT[s],
+            description: waitingHere ? status?.pauseReason ?? '等待审核' : undefined,
+          };
+        })}
         style={{ marginBottom: 24 }}
       />
 

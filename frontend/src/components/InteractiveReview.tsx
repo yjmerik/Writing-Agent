@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin, Progress, Collapse } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, ReloadOutlined, StepForwardOutlined, TrophyOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
+import type { CheckpointRevision } from '../api/client';
 import { renderContent } from '../utils/renderContent';
 import type { Chapter, Checkpoint, ProjectStatus, ChapterQualityReport } from '../types';
 
@@ -12,6 +13,14 @@ interface Props {
   onChanged: () => void;
 }
 
+type RewriteTarget = {
+  kind: 'checkpoint';
+  checkpoint: Checkpoint;
+  action: 'reject' | 'modify';
+};
+
+type ReviewResult = RewriteTarget & { revision: CheckpointRevision };
+
 export default function InteractiveReview({ projectId, onChanged }: Props) {
   // p21-05: 元数据一次加载；正文按选中章节懒加载缓存
   const [chapters, setChapters] = useState<Chapter[]>([]);
@@ -21,8 +30,10 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [loading, setLoading] = useState(false);
   const [rewriteModalOpen, setRewriteModalOpen] = useState(false);
+  const [rewriteTarget, setRewriteTarget] = useState<RewriteTarget | null>(null);
   const [rewriteInstructions, setRewriteInstructions] = useState('');
   const [rewriting, setRewriting] = useState(false);
+  const [reviewResult, setReviewResult] = useState<ReviewResult | null>(null);
   const [qualityReport, setQualityReport] = useState<ChapterQualityReport | null>(null);
   // p11-G2: 段落编辑状态
   const [selectedParagraph, setSelectedParagraph] = useState<{ index: number; text: string } | null>(null);
@@ -57,7 +68,6 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
 
   const isPaused = status?.state === 'PAUSED_AT_CHECKPOINT';
   const hasPendingCheckpoint = checkpoints.length > 0;
-  const currentCheckpoint = checkpoints[checkpoints.length - 1];
   const isInteractive = status?.mode === 'INTERACTIVE';
   const currentMeta = chapters[selectedIdx];
 
@@ -114,12 +124,10 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
     }
   };
 
-  const handleApprove = async (checkpointId?: string) => {
-    const id = checkpointId ?? currentCheckpoint?.id;
-    if (!id) { message.warning('无待审核项'); return; }
+  const handleApprove = async (checkpoint: Checkpoint) => {
     setLoading(true);
     try {
-      await api.approveCheckpoint(projectId, id);
+      await api.approveCheckpoint(projectId, checkpoint.id);
       message.success('已批准');
       await refresh();
       onChanged();
@@ -128,30 +136,29 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
     } finally { setLoading(false); }
   };
 
-  const handleReject = async () => {
-    if (!currentCheckpoint) { message.warning('无待审核项'); return; }
+  const openCheckpointRewrite = (checkpoint: Checkpoint, action: RewriteTarget['action']) => {
+    setRewriteTarget({ kind: 'checkpoint', checkpoint, action });
     setRewriteModalOpen(true);
     setRewriteInstructions('');
   };
 
-  const handleModify = async () => {
-    if (!currentCheckpoint) { message.warning('无待审核项'); return; }
-    setRewriteModalOpen(true);
-    setRewriteInstructions('');
-  };
-
-  const submitRewrite = async (isReject: boolean) => {
-    if (!currentCheckpoint) return;
+  const submitCheckpointRewrite = async () => {
+    if (!rewriteTarget) return;
     setRewriting(true);
     try {
-      if (isReject) {
-        await api.rejectCheckpoint(projectId, currentCheckpoint.id, rewriteInstructions);
+      const result = rewriteTarget.action === 'reject'
+        ? await api.rejectCheckpoint(projectId, rewriteTarget.checkpoint.id, rewriteInstructions)
+        : await api.modifyCheckpoint(projectId, rewriteTarget.checkpoint.id, rewriteInstructions);
+      if (result.revision) {
+        setReviewResult({ ...rewriteTarget, revision: result.revision });
+      }
+      if (rewriteTarget.action === 'reject') {
         message.success('已拒绝并重写');
       } else {
-        await api.modifyCheckpoint(projectId, currentCheckpoint.id, rewriteInstructions);
         message.success('已修改并批准');
       }
       setRewriteModalOpen(false);
+      setRewriteTarget(null);
       await refresh();
       onChanged();
     } catch (e) {
@@ -204,6 +211,9 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
             message={`⏸ 待审核：${cp.description}`}
             description={
               <div>
+              <div style={{ marginBottom: 8, fontSize: 13 }}>
+                审核目标：{cp.type}
+              </div>
               {payload && (
                 <div style={{ marginBottom: 8, fontSize: 13 }}>
                   {payload.score != null && (
@@ -223,13 +233,13 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
                 </div>
               )}
               <Space>
-                <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => handleApprove(cp.id)} loading={loading}>
+                <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => handleApprove(cp)} loading={loading}>
                   ✅ 批准
                 </Button>
-                <Button danger icon={<CloseCircleOutlined />} onClick={handleReject} loading={loading}>
+                <Button danger icon={<CloseCircleOutlined />} onClick={() => openCheckpointRewrite(cp, 'reject')} loading={loading}>
                   ❌ 拒绝并重写
                 </Button>
-                <Button icon={<EditOutlined />} onClick={handleModify} loading={loading}>
+                <Button icon={<EditOutlined />} onClick={() => openCheckpointRewrite(cp, 'modify')} loading={loading}>
                   📝 修改意见重写
                 </Button>
               </Space>
@@ -239,6 +249,21 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
           />
           );
         })}
+
+        {reviewResult && (
+          <Alert
+            type="success"
+            message={`审核操作完成：${reviewResult.checkpoint.description}`}
+            description={
+              <div>
+                <div>审核目标：{reviewResult.revision.targetType}</div>
+                <div>修改前摘要（v{reviewResult.revision.beforeVersion}）：{reviewResult.revision.beforeSummary}</div>
+                <div>修改后摘要（v{reviewResult.revision.afterVersion}）：{reviewResult.revision.afterSummary}</div>
+              </div>
+            }
+            style={{ marginBottom: 16 }}
+          />
+        )}
 
         {/* 状态提示 */}
         {status?.state === 'FINAL' && (
@@ -484,15 +509,18 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
       <Modal
         title="修改意见"
         open={rewriteModalOpen}
-        onCancel={() => setRewriteModalOpen(false)}
+        onCancel={() => { setRewriteModalOpen(false); setRewriteTarget(null); }}
         footer={[
-          <Button key="cancel" onClick={() => setRewriteModalOpen(false)}>取消</Button>,
-          <Button key="modify" type="primary" loading={rewriting} onClick={() => submitRewrite(false)}>
-            重写后批准
-          </Button>,
-          <Button key="reject" danger loading={rewriting} onClick={() => submitRewrite(true)}>
-            重写（拒绝当前版本）
-          </Button>,
+          <Button key="cancel" onClick={() => { setRewriteModalOpen(false); setRewriteTarget(null); }}>取消</Button>,
+          rewriteTarget?.action === 'modify' ? (
+            <Button key="modify" type="primary" loading={rewriting} onClick={submitCheckpointRewrite}>
+              重写后批准
+            </Button>
+          ) : (
+            <Button key="reject" danger loading={rewriting} onClick={submitCheckpointRewrite}>
+              重写（拒绝当前版本）
+            </Button>
+          ),
         ]}
       >
         <Input.TextArea

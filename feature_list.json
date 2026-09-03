@@ -3131,12 +3131,13 @@
       "phase": 26,
       "type": "bug",
       "dependencies": ["p26-01", "p26-02"],
-      "status": "not-started",
+      "status": "completed",
       "files": ["frontend/src/components/InteractiveReview.tsx", "frontend/src/api/client.ts", "scripts/product-audit-e2e.sh"],
       "problem_ref": "P1-07/P1-08：多审核卡使用最新 checkpoint 且反馈缺少修改对象与结果",
       "description": "弹窗保存所点 checkpoint 和操作类型，提交显式 ID，并显示对象及前后摘要。",
       "acceptance": "两张待审核卡中操作较早卡只处理其 ID，较新卡仍待处理，成功反馈包含目标与前后摘要。",
-      "verify_cmd": "./scripts/product-audit-e2e.sh --case checkpoint-card-targeting"
+      "verify_cmd": "./scripts/product-audit-e2e.sh --case checkpoint-card-targeting",
+      "evidence": "2026-09-03：严格 TDD RED：强化后的真实浏览器场景为 0 PASS / 1 XFAIL / 0 ERROR；点击较早卡后 firstHandled=false、latestUntouched=false，且成功结果 alert 缺失目标与前后摘要。GREEN：显式 RewriteTarget 保存所点 checkpoint + action，reject/modify 仅提交 target.checkpoint.id；审核卡显示 type/payload，成功结果持久显示所点描述、目标、revision 的 before/after summary 与版本。严格浏览器 checkpoint-card-targeting 为 1 PASS / 0 XFAIL / 0 ERROR，且仅移除该项 KNOWN_FAILURES；frontend npm run build PASS；JDK21 mvn test 与 ./init.sh 均为 504 tests / 0 failures / 0 errors / 1 skipped，init 的 27 个 prompt 与生产前端构建通过。"
     },
     {
       "id": "p26-04",

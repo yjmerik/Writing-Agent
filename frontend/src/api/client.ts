@@ -18,6 +18,21 @@ import type {
 
 const BASE = '/api';
 
+export interface CheckpointRevision {
+  targetType: string;
+  beforeSummary: string;
+  afterSummary: string;
+  beforeVersion: number;
+  afterVersion: number;
+}
+
+export interface CheckpointOperationResponse {
+  status: string;
+  checkpointId: string;
+  instructions: string;
+  revision?: CheckpointRevision;
+}
+
 /** 封装 fetch，统一处理错误和超时 */
 async function request<T>(url: string, options?: RequestInit, timeoutMs = 300000): Promise<T> {
   const controller = new AbortController();
@@ -324,7 +339,7 @@ export const api = {
 
   /** 拒绝 checkpoint（带修改意见重写当前章） */
   rejectCheckpoint: (id: string, checkpointId: string, instructions: string) =>
-    request<{ status: string; checkpointId: string; instructions: string }>(
+    request<CheckpointOperationResponse>(
       `/projects/${id}/checkpoints/${checkpointId}/reject`,
       { method: 'POST', body: JSON.stringify({ instructions }) },
       300000,
@@ -332,7 +347,7 @@ export const api = {
 
   /** 修改 checkpoint（带意见重写后批准） */
   modifyCheckpoint: (id: string, checkpointId: string, instructions: string) =>
-    request<{ status: string; checkpointId: string; instructions: string }>(
+    request<CheckpointOperationResponse>(
       `/projects/${id}/checkpoints/${checkpointId}/modify`,
       { method: 'POST', body: JSON.stringify({ instructions }) },
       300000,

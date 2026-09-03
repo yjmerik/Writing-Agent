@@ -5,9 +5,9 @@
 ## Current Objective
 
 - **Goal**: 以产品一致性审计的浏览器红灯套件驱动下一轮 P0 → P1 → P2 修复。
-- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01、p26-02 已完成：审核操作先校验目标归属/PENDING，初始设定与卷大纲的修改意见会生成 detached candidate，校验后事务替换真实持久化内容；失败保留原内容与 `PENDING`。世界观替换先索引独立候选 ID，再提交 DB，成功后清旧向量、bump memory revision；StoryCanon 保留 HUMAN_PATCH supersede 审计链并保护派生时代锚点。连续性 checkpoint 保持 status-only 语义。产品浏览器既知失败集合已移除 `initial-setup-modify`、`volume-outline-modify`；`checkpoint-card-targeting` 仍为 p26-03 的预期 XFAIL。
+- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01、p26-02、p26-03 已完成：审核操作先校验目标归属/PENDING，初始设定与卷大纲的修改意见会生成 detached candidate，校验后事务替换真实持久化内容；失败保留原内容与 `PENDING`。世界观替换先索引独立候选 ID，再提交 DB，成功后清旧向量、bump memory revision；StoryCanon 保留 HUMAN_PATCH supersede 审计链并保护派生时代锚点。连续性 checkpoint 保持 status-only 语义。审核卡弹窗现显式绑定被点击的 checkpoint 与动作，成功结果持久展示该卡描述、目标、真实前后摘要和版本。产品浏览器既知失败集合已移除 `initial-setup-modify`、`volume-outline-modify`、`checkpoint-card-targeting`。
 - **Branch**: 当前 Phase 26 修复分支；仓库没有 Git remote/upstream。
-- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01、p26-02 completed，p26-03 起仍 not-started。
+- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01、p26-02、p26-03 completed，下一项为 p26-04。
 - **Current spec**: `docs/specs/2026-09-02-product-audit-browser-e2e.md` 与 `.superpowers/sdd/2026-09-03-product-design-consistency-remediation/` 任务简报。
 - **Product audit**: `docs/audits/2026-09-02-product-design-consistency-audit.md`（P0 3 项 / P1 8 项 / P2 5 项）。
 
@@ -38,6 +38,7 @@
 - p26-02 browser：`initial-setup-modify` 与 `volume-outline-modify` strict 各为 1 PASS / 0 XFAIL / 0 ERROR，并已从 `KNOWN_FAILURES` 精确移除。
 - p26-02 质量：默认 `e2e.sh` 因选中 wuxia fixture 与 mystery 请求不匹配而 fail-fast（diagnose：1 LLM_ERROR / 0 calls）；指定匹配的 `canary-mystery-20260831` fixture 后 3 章、10,191 字、54 calls、0 errors、0 chapter failures，baseline PASS。
 - 全量：`mvn test` 与 `./init.sh` 为 504 tests / 0 failures / 0 errors / 1 skipped；init 还通过 27 个 prompt 与前端生产构建检查。
+- p26-03 RED：强化 `checkpoint-card-targeting` strict 为 0 PASS / 1 XFAIL / 0 ERROR：操作较早卡实际处理最新卡（`firstHandled=false`、`latestUntouched=false`），且页面没有成功摘要。GREEN：strict 为 1 PASS / 0 XFAIL / 0 ERROR；较早卡唯一被处理、最新卡仍 PENDING，卡片 type/payload 与成功 Alert 的所点描述、真实 target/before/after summaries 均可见。仅移除该场景 KNOWN_FAILURES；frontend build PASS。JDK21 下 `mvn test` 与 `./init.sh` 均为 504 tests / 0 failures / 0 errors / 1 skipped。
 
 ## Non-blocking Observations
 
@@ -49,7 +50,7 @@
 
 ## Next Entry
 
-- 下一步为 p26-03：前端多卡片显式绑定和确认摘要；在该 feature 完成前 `checkpoint-card-targeting` 必须继续作为 XFAIL，不得提前从 `KNOWN_FAILURES` 移除。
+- 下一步为 p26-04：独立章节重写接线与反馈；它仍是独立浏览器既知失败，勿与已完成的 checkpoint-card-targeting 混改。
 - 后续红灯还有独立章节重写、交互切自动、审核后正文稳定、人工管理、移动端；自动零干预需单独设计持续运行生命周期。
 - 新需求继续遵循：写 spec → 拆 1-3 文件 feature → 登记 `feature_list.json` → 实现与验证 → 更新三份状态文档。
 - 本机代理可能劫持 localhost；脚本内 curl 保持 `--noproxy '*'`。ego-browser 内写文件使用绝对路径。

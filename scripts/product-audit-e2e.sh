@@ -28,7 +28,6 @@ KNOWN_FAILURES=(
   standalone-chapter-rewrite
   interactive-to-auto
   approve-keeps-chapter-visible
-  checkpoint-card-targeting
   manual-content-management
   mobile-critical-path
 )
@@ -246,7 +245,7 @@ if need_case checkpoint-card-targeting; then
   CP_MULTI_FIRST=$(uuidgen | tr '[:upper:]' '[:lower:]')
   CP_MULTI_LATEST=$(uuidgen | tr '[:upper:]' '[:lower:]')
   sqlite3 "$DIR/novel.db" \
-    "INSERT INTO checkpoints(id,project_id,type,description,status,created_at,payload) VALUES('$CP_MULTI_FIRST','$P_MULTI','AFTER_INITIAL_SETUP','较早审核项','PENDING','2026-09-02T01:00:00Z',NULL); INSERT INTO checkpoints(id,project_id,type,description,status,created_at,payload) VALUES('$CP_MULTI_LATEST','$P_MULTI','AFTER_VOLUME_OUTLINE','最新审核项','PENDING','2026-09-02T01:00:01Z',NULL); UPDATE projects SET state='PAUSED_AT_CHECKPOINT' WHERE id='$P_MULTI';" || exit 2
+    "INSERT INTO checkpoints(id,project_id,type,description,status,created_at,payload) VALUES('$CP_MULTI_FIRST','$P_MULTI','AFTER_INITIAL_SETUP','较早审核项','PENDING','2026-09-02T01:00:00Z','{\"preview\":\"较早卡片审核摘要\",\"score\":8}'); INSERT INTO checkpoints(id,project_id,type,description,status,created_at,payload) VALUES('$CP_MULTI_LATEST','$P_MULTI','AFTER_VOLUME_OUTLINE','最新审核项','PENDING','2026-09-02T01:00:01Z',NULL); UPDATE projects SET state='PAUSED_AT_CHECKPOINT' WHERE id='$P_MULTI';" || exit 2
 fi
 
 SELECTED_JSON=$(printf '%s\n' "${SELECTED[@]}" | python3 -c "import json,sys; print(json.dumps([x.strip() for x in sys.stdin if x.strip()]))")
@@ -410,6 +409,9 @@ await runCase('approve-keeps-chapter-visible', async () => {
 await runCase('checkpoint-card-targeting', async () => {
   await go('/#/project/$P_MULTI')
   await openTab('章节管理')
+  // Regression target: changing submission to the latest checkpoint or dropping the returned
+  // revision result must fail this real browser flow.
+  const card = await js('(() => {const a=[...document.querySelectorAll(".ant-alert")].find(x=>x.innerText.includes("较早审核项"));const text=a?.innerText||"";return {target:text.includes("审核目标：AFTER_INITIAL_SETUP"),payload:text.includes("较早卡片审核摘要")}})()')
   const opened = await clickButtonContaining('拒绝并重写', '较早审核项')
   const submitted = opened && await submitModal('只处理较早审核项', '重写（拒绝当前版本）')
   await wait(3)
@@ -417,8 +419,10 @@ await runCase('checkpoint-card-targeting', async () => {
   const ids = pending.map(cp => cp.id)
   const firstHandled = !ids.includes('$CP_MULTI_FIRST')
   const latestUntouched = ids.includes('$CP_MULTI_LATEST')
-  return { pass: opened && submitted && firstHandled && latestUntouched,
-    opened, submitted, firstHandled, latestUntouched, pendingIds: ids }
+  const result = await js('(() => {const a=[...document.querySelectorAll(".ant-alert.ant-alert-success")].find(x=>x.innerText.includes("较早审核项"));const text=a?.innerText||"";return {description:text.includes("较早审核项"),target:text.includes("INITIAL_SETUP"),before:text.includes("修改前摘要")&&text.includes("CUSTOM|信物001|师门玉佩"),after:text.includes("修改后摘要")&&text.includes("CULTURE|乡约礼俗002|宗族与保甲"),text}})()')
+  return { pass: card.target && card.payload && opened && submitted && firstHandled && latestUntouched &&
+      result.description && result.target && result.before && result.after,
+    card, opened, submitted, firstHandled, latestUntouched, pendingIds: ids, result }
 })
 
 await runCase('manual-content-management', async () => {

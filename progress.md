@@ -2,6 +2,16 @@
 
 ---
 
+## 会话记录（2026-09-03）：Phase 26 p26-03 审核卡目标绑定与修改结果
+
+- 审核卡的批准、拒绝、修改均直接持有被点击的 `Checkpoint`；拒绝/修改弹窗用显式 `RewriteTarget { checkpoint, action }` 保存目标，提交只用 `target.checkpoint.id`，不再读取最后一张审核卡。
+- 审核卡显示 checkpoint 类型与 payload 摘要；成功处理后页面保留成功 Alert，显示所点卡描述、真实 revision 目标类型、修改前/后摘要及版本，不止短暂 toast。
+- 浏览器测试先行：强化场景以两张待审核卡操作较早卡；RED 为 strict **0 PASS / 1 XFAIL / 0 ERROR**（`firstHandled=false`、`latestUntouched=false`、结果摘要缺失）。GREEN 为 strict **1 PASS / 0 XFAIL / 0 ERROR**，同时验证较新卡保持 PENDING、前后摘要来自 Scenario 返回的真实 revision；仅移除 `checkpoint-card-targeting` 的 KNOWN_FAILURES。
+- 完整验证：`frontend npm run build` PASS；`mvn compile -q` PASS；按 JDK21 (`JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home`) 运行 `mvn test` 与 `./init.sh`，均为 **504 tests / 0 failures / 0 errors / 1 skipped**，init 另确认 27 个 prompt 与生产前端构建通过。
+- 非门禁环境记录：未提升权限的 Java 26 首跑受沙箱限制（MockWebServer bind / Mockito ByteBuddy attach）失败；提升权限及 JDK21 后上述门禁全绿。
+
+---
+
 ## 会话记录（2026-09-03）：Phase 26 p26-02 review fix round 1
 
 - 世界观替换跨存储顺序调整为“校验独立 candidate ID → 完成候选向量索引 → SQLite 事务替换 → 确定性删除旧向量 → bump memory revision”；候选索引或 DB 替换失败都会清除候选 ID，旧 DB 与旧向量保持可用。

@@ -36,6 +36,7 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   const [bodyLoadStates, setBodyLoadStates] = useState<Record<number, BodyLoadState>>({});
   const bodyLoadStatesRef = useRef<Record<number, BodyLoadState>>({});
   const bodyRequestGenerationsRef = useRef<Record<number, number>>({});
+  const refreshGenerationRef = useRef(0);
   const projectGenerationRef = useRef(0);
   const activeProjectIdRef = useRef(projectId);
   const mountedRef = useRef(true);
@@ -60,6 +61,7 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   if (activeProjectIdRef.current !== projectId) {
     activeProjectIdRef.current = projectId;
     projectGenerationRef.current += 1;
+    refreshGenerationRef.current += 1;
     bodyRequestGenerationsRef.current = {};
     bodiesRef.current = {};
     bodyLoadStatesRef.current = {};
@@ -116,6 +118,15 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   // p21-05 修复: refresh 只依赖 projectId——selectedIdx 变化（点选章节）不得触发
   // 元数据/checkpoints/status 重取（此前 useCallback 依赖 selectedIdx，点章即全量重取）
   const refresh = useCallback(async (forceSelectedBody = false) => {
+    const requestProjectId = projectId;
+    const requestProjectGeneration = projectGenerationRef.current;
+    const requestGeneration = refreshGenerationRef.current + 1;
+    refreshGenerationRef.current = requestGeneration;
+    const isLatestRefresh = () => mountedRef.current
+      && activeProjectIdRef.current === requestProjectId
+      && projectGenerationRef.current === requestProjectGeneration
+      && refreshGenerationRef.current === requestGeneration;
+
     setLoading(true);
     try {
       const [page, cps, st] = await Promise.all([
@@ -123,6 +134,7 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
         api.listCheckpoints(projectId),
         api.getStatus(projectId),
       ]);
+      if (!isLatestRefresh()) return;
       const metas = page.chapters || [];
       const nextSelectedIdx = metas.length > 0 ? Math.min(selectedIdxRef.current, metas.length - 1) : 0;
       const selectedMeta = metas[nextSelectedIdx];
@@ -139,15 +151,20 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
         await loadBody(selectedMeta.chapterIndex, forceSelectedBody || versionChanged);
       }
     } catch (e) {
+      if (!isLatestRefresh()) return;
       message.error(`加载失败: ${(e as Error).message}`);
     } finally {
-      setLoading(false);
+      if (isLatestRefresh()) setLoading(false);
     }
   }, [loadBody, projectId, retainCurrentBodies]);
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+      projectGenerationRef.current += 1;
+      refreshGenerationRef.current += 1;
+    };
   }, []);
 
   useEffect(() => {
@@ -174,8 +191,9 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   // p21-05: 选中章节正文懒加载（不重取 checkpoints/status，更不全量取章节正文）
   useEffect(() => {
     if (!currentMeta) return;
-    if (bodiesRef.current[currentMeta.chapterIndex]) return;
-    void loadBody(currentMeta.chapterIndex);
+    const cached = bodiesRef.current[currentMeta.chapterIndex];
+    if (cached?.version === currentMeta.version) return;
+    void loadBody(currentMeta.chapterIndex, Boolean(cached));
   }, [currentMeta?.chapterIndex, currentMeta?.version, loadBody]);
 
   const currentChapter = currentMeta
@@ -513,7 +531,13 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
                     message={currentBodyLoadState.error}
                     action={<Button size="small" onClick={() => void loadBody(currentMeta.chapterIndex, true)}>重试</Button>}
                   />
-                ) : <Text type="secondary">（暂无正文）</Text>}
+                ) : (
+                  <Alert
+                    type="warning"
+                    message="正文尚未加载"
+                    action={<Button size="small" onClick={() => void loadBody(currentMeta.chapterIndex, true)}>加载正文</Button>}
+                  />
+                )}
 
                 {/* p11-G2: 段落编辑面板 */}
                 {selectedParagraph && (

@@ -414,13 +414,16 @@ await runCase('approve-keeps-chapter-visible', async () => {
   const switched = await js('(() => {const row=[...document.querySelectorAll("[role=button]")].find(x=>x.innerText.includes("第2章"));if(row){row.click();return true}return false})()')
   await wait(2)
   const visibleBefore = await js('document.body.innerText.includes(' + JSON.stringify(marker) + ')')
+  const refreshed = await js('(() => {const b=[...document.querySelectorAll("button")].find(x=>x.innerText.trim()==="刷新");if(!b)return false;b.click();b.click();return true})()')
+  await wait(2)
+  const visibleAfterRefresh = await js('document.body.innerText.includes(' + JSON.stringify(marker) + ')')
   const clicked = await clickButtonContaining('批准', '第2章')
   await wait(4)
   const state = await pageJson('/api/projects/$P_APPROVE/status')
   const visibleAfter = await js('document.body.innerText.includes(' + JSON.stringify(marker) + ')')
   const bodyLoading = await js('!!document.querySelector("[data-paragraph-index]")===false && !!document.querySelector(".ant-spin-dot-spin")')
-  return { pass: switched && visibleBefore && clicked && visibleAfter && !bodyLoading,
-    switched, visibleBefore, clicked, visibleAfter, bodyLoading, state: state.state }
+  return { pass: switched && visibleBefore && refreshed && visibleAfterRefresh && clicked && visibleAfter && !bodyLoading,
+    switched, visibleBefore, refreshed, visibleAfterRefresh, clicked, visibleAfter, bodyLoading, state: state.state }
 })
 
 await runCase('checkpoint-card-targeting', async () => {

@@ -26,7 +26,6 @@ CASES=(
 KNOWN_FAILURES=(
   auto-zero-intervention
   interactive-to-auto
-  approve-keeps-chapter-visible
   manual-content-management
   mobile-critical-path
 )

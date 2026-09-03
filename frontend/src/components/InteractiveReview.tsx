@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin, Progress, Collapse } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, ReloadOutlined, StepForwardOutlined, TrophyOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
@@ -31,10 +31,14 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   // p21-05: 元数据一次加载；正文按选中章节懒加载缓存
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [bodies, setBodies] = useState<Record<number, Chapter>>({});
+  const bodiesRef = useRef<Record<number, Chapter>>({});
   const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const [status, setStatus] = useState<ProjectStatus | null>(null);
   const [selectedIdx, setSelectedIdx] = useState(0);
+  const selectedIdxRef = useRef(0);
   const [loading, setLoading] = useState(false);
+  const [bodyLoading, setBodyLoading] = useState(false);
+  const [bodyLoadError, setBodyLoadError] = useState('');
   const [rewriteModalOpen, setRewriteModalOpen] = useState(false);
   const [rewriteTarget, setRewriteTarget] = useState<RewriteTarget | null>(null);
   const [rewriteInstructions, setRewriteInstructions] = useState('');
@@ -48,9 +52,40 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   const [editInstruction, setEditInstruction] = useState('');
   const [editing, setEditing] = useState(false);
 
+  const cacheBody = useCallback((chapter: Chapter) => {
+    const next = { ...bodiesRef.current, [chapter.chapterIndex]: chapter };
+    bodiesRef.current = next;
+    setBodies(next);
+  }, []);
+
+  const retainCurrentBodies = useCallback((metas: Chapter[]) => {
+    const currentVersions = new Map(metas.map((chapter) => [chapter.chapterIndex, chapter.version]));
+    const next = Object.fromEntries(Object.entries(bodiesRef.current)
+      .filter(([chapterIndex, chapter]) => currentVersions.get(Number(chapterIndex)) === chapter.version));
+    bodiesRef.current = next;
+    setBodies(next);
+  }, []);
+
+  const loadBody = useCallback(async (chapterIndex: number, force = false) => {
+    if (!force && bodiesRef.current[chapterIndex]) return;
+    setBodyLoading(true);
+    setBodyLoadError('');
+    try {
+      const chapter = await api.getChapter(projectId, chapterIndex);
+      if (!chapter) throw new Error('未找到章节正文');
+      cacheBody(chapter);
+    } catch (e) {
+      const error = `加载正文失败: ${(e as Error).message}`;
+      setBodyLoadError(error);
+      message.error(error);
+    } finally {
+      setBodyLoading(false);
+    }
+  }, [cacheBody, projectId]);
+
   // p21-05 修复: refresh 只依赖 projectId——selectedIdx 变化（点选章节）不得触发
   // 元数据/checkpoints/status 重取（此前 useCallback 依赖 selectedIdx，点章即全量重取）
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (forceSelectedBody = false) => {
     setLoading(true);
     try {
       const [page, cps, st] = await Promise.all([
@@ -59,17 +94,26 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
         api.getStatus(projectId),
       ]);
       const metas = page.chapters || [];
+      const nextSelectedIdx = metas.length > 0 ? Math.min(selectedIdxRef.current, metas.length - 1) : 0;
+      const selectedMeta = metas[nextSelectedIdx];
+      const cachedSelectedBody = selectedMeta ? bodiesRef.current[selectedMeta.chapterIndex] : undefined;
+      const versionChanged = Boolean(selectedMeta && cachedSelectedBody && cachedSelectedBody.version !== selectedMeta.version);
       setChapters(metas);
-      setBodies({}); // 元数据刷新后正文缓存失效，由懒加载按需重建
+      // 保留章节号和版本均仍有效的正文；版本变化时淘汰后显式重读当前章。
+      retainCurrentBodies(metas);
       setCheckpoints(cps);
       setStatus(st);
-      setSelectedIdx((idx) => (metas.length > 0 && idx >= metas.length ? metas.length - 1 : idx));
+      selectedIdxRef.current = nextSelectedIdx;
+      setSelectedIdx(nextSelectedIdx);
+      if (selectedMeta && (forceSelectedBody || !cachedSelectedBody || versionChanged)) {
+        await loadBody(selectedMeta.chapterIndex, forceSelectedBody || versionChanged);
+      }
     } catch (e) {
       message.error(`加载失败: ${(e as Error).message}`);
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [loadBody, projectId, retainCurrentBodies]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
@@ -78,20 +122,16 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   const isInteractive = status?.mode === 'INTERACTIVE';
   const currentMeta = chapters[selectedIdx];
 
+  useEffect(() => {
+    selectedIdxRef.current = selectedIdx;
+  }, [selectedIdx]);
+
   // p21-05: 选中章节正文懒加载（不重取 checkpoints/status，更不全量取章节正文）
   useEffect(() => {
     if (!currentMeta) return;
-    if (bodies[currentMeta.chapterIndex]) return;
-    let cancelled = false;
-    api.getChapter(projectId, currentMeta.chapterIndex)
-      .then((full) => {
-        if (cancelled || !full) return;
-        setBodies((prev) => ({ ...prev, [currentMeta.chapterIndex]: full }));
-      })
-      .catch(() => { /* 正文加载失败不阻塞元信息展示 */ });
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId, currentMeta?.chapterIndex]);
+    if (bodiesRef.current[currentMeta.chapterIndex]) return;
+    void loadBody(currentMeta.chapterIndex);
+  }, [currentMeta?.chapterIndex, currentMeta?.version, loadBody]);
 
   const currentChapter = currentMeta
     ? (bodies[currentMeta.chapterIndex] ?? currentMeta)
@@ -136,7 +176,7 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
     try {
       await api.approveCheckpoint(projectId, checkpoint.id);
       message.success('已批准');
-      await refresh();
+      await refresh(true);
       onChanged();
     } catch (e) {
       message.error(`批准失败: ${(e as Error).message}`);
@@ -201,7 +241,7 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
     setRewriteError('');
     try {
       const chapter = await api.rewriteChapter(projectId, target.chapterIndex, rewriteInstructions);
-      setBodies((previous) => ({ ...previous, [chapter.chapterIndex]: chapter }));
+      cacheBody(chapter);
       setChapters((previous) => previous.map((item) =>
         item.chapterIndex === chapter.chapterIndex ? chapter : item,
       ));
@@ -385,7 +425,7 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
                         try {
                           await api.resolveManualReview(projectId, currentChapter.chapterIndex);
                           message.success('已标为处理完毕');
-                          refresh();
+                          void refresh();
                           onChanged();
                         } catch (err) {
                           message.error((err as Error).message);
@@ -410,7 +450,15 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
               >
                 {bodies[currentMeta.chapterIndex]
                   ? renderChapterContent(currentChapter.content)
-                  : <Spin style={{ display: 'block', margin: '40px auto' }} />}
+                  : bodyLoading
+                    ? <Spin style={{ display: 'block', margin: '40px auto' }} />
+                    : bodyLoadError
+                      ? <Alert
+                          type="error"
+                          message={bodyLoadError}
+                          action={<Button size="small" onClick={() => void loadBody(currentMeta.chapterIndex, true)}>重试</Button>}
+                        />
+                      : <Text type="secondary">（暂无正文）</Text>}
 
                 {/* p11-G2: 段落编辑面板 */}
                 {selectedParagraph && (
@@ -539,7 +587,7 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
         </Row>
 
         {/* 刷新按钮 */}
-        <Button icon={<ReloadOutlined />} onClick={refresh} style={{ marginTop: 16 }} loading={loading}>
+        <Button icon={<ReloadOutlined />} onClick={() => void refresh()} style={{ marginTop: 16 }} loading={loading}>
           刷新
         </Button>
       </Spin>

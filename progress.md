@@ -756,3 +756,10 @@ W2 的两个独立基石已落地（不依赖 LLM prompt 改动，不影响产�
 - 严格浏览器场景 `standalone-chapter-rewrite`：RED 为 0 PASS / 1 XFAIL（无法提交、v3→v3、正文未变、弹窗未关）；GREEN 为 1 PASS / 0 XFAIL / 0 ERROR（v3→v4、正文变化且页面已显示新正文）。仅移除该 case 的 `KNOWN_FAILURES`。
 - 验证：`frontend npm run build` PASS；JDK21 `mvn compile`、`mvn test`、`./init.sh` 均 PASS（504 tests / 0 failures / 0 errors / 1 skipped；init 另通过 27 prompt 与生产前端构建）。
 - Review round 1（仅 E2E 加固）：严格场景在点击前要求 pending checkpoint 数为 0；渲染验证改为“重写正文可见且旧 `【重写前来源标记】` 已消失”，消除新旧正文共享前缀的假阳性。strict 仍为 1 PASS / 0 XFAIL / 0 ERROR；前端构建、JDK21 全量 Maven 与 `./init.sh` 均通过。
+
+## Phase 26 — p26-05 审批后正文加载收敛（2026-09-03）
+
+- 刷新章节元数据时按 `(chapterIndex, version)` 保留仍有效的正文缓存；选中章版本变化会先失效再显式重读，批准操作总会强制重读当前选中章，同时保留旧正文直到新响应到达。
+- 正文请求现在有独立的收敛状态：失败显示站内错误与“重试”，不会遗留永久 spinner；p26-04 的独立重写仍同时更新正文缓存与章节元数据。
+- 严格 TDD：`approve-keeps-chapter-visible` RED 为 **0 PASS / 1 XFAIL / 0 ERROR**（正文 true→false、`bodyLoading=true`）；GREEN 为 **1 PASS / 0 XFAIL / 0 ERROR**。仅从 `KNOWN_FAILURES` 删除该 case。
+- 验证：frontend `npm run build` PASS；JDK21 `mvn compile`、`mvn test`、`./init.sh` 均 PASS（**504 tests / 0 failures / 0 errors / 1 skipped**；init 另通过 27 prompt 与生产前端构建）。

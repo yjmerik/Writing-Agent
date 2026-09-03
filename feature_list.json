@@ -3159,12 +3159,13 @@
       "phase": 26,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": ["frontend/src/components/InteractiveReview.tsx", "scripts/product-audit-e2e.sh"],
       "problem_ref": "P1-03：批准章节后清空正文缓存但未触发重取",
       "description": "元数据刷新保留有效正文缓存，并在版本变化时显式重取当前章。",
       "acceptance": "批准及刷新后当前章节正文持续可见，加载状态正常结束。",
-      "verify_cmd": "./scripts/product-audit-e2e.sh --case approve-keeps-chapter-visible"
+      "verify_cmd": "./scripts/product-audit-e2e.sh --case approve-keeps-chapter-visible",
+      "evidence": "2026-09-03：严格 TDD RED：approve-keeps-chapter-visible 为 0 PASS / 1 XFAIL / 0 ERROR，批准前正文可见，批准后正文消失且 bodyLoading=true。GREEN：metadata refresh 仅保留 chapterIndex/version 仍匹配的正文缓存；当前选中章节版本变化时显式重读，批准刷新强制重读当前章；读取失败以站内错误和重试入口收敛，不再永久 spinner；独立章节重写继续同步正文/元数据。strict 浏览器为 1 PASS / 0 XFAIL / 0 ERROR，仅移除该项 KNOWN_FAILURES。frontend npm run build PASS；JDK21 mvn compile、mvn test 与 ./init.sh 均通过，504 tests / 0 failures / 0 errors / 1 skipped，init 另通过 27 prompt 与生产前端构建。"
     },
     {
       "id": "p26-06",

@@ -5,9 +5,9 @@
 ## Current Objective
 
 - **Goal**: 以产品一致性审计的浏览器红灯套件驱动下一轮 P0 → P1 → P2 修复。
-- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-09 已完成。人工 `/outline` 更新现在先验证完整结构：全局章号正数、唯一、严格递增；已写章及所属卷的字段必须原样携带，删除、改号、篡改或跨卷移动均在副作用前返回 400；未写卷章可完整新增、删除、跨卷移动、重编号并刷新保持。`currentChapterIndex <= 0` 视为无已写前缀，空卷可保留但整个大纲不能零章节。结构服务持有项目 owner 直至数据库提交与记忆失效完成；已写卷章保持可信持久化 UUID/扩展字段，大纲与 PLOT_COMMITMENT 在同一 SQLite 事务中提交，失败不留部分 outline、fact 或 revision。人工大纲 owner 存在时 `/run` 明确返回 409 且不创建构思任务；真实 CONCEIVE owner 的重复启动仍幂等返回同一任务。`manual-content-management` 的世界观/人物 UI 子项保持全绿，aggregate 只因 p26-10 大纲 UI 与后续章节 UI 尚未完成而预期 XFAIL。既有 checkpoint merge、服务端动作矩阵、自动任务持续运行和 mode switch/resume 语义均未改动。
+- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-10 已完成。大纲页现在使用完整本地草稿，可新增、删除、上下移动未写卷章并编辑标题、简介与梗概；结构操作保留已写边界并全局重编号未写项，点击“保存未写大纲”前不写库。含已写章的卷和已写章有明确锁定文案，结构按钮 disabled；服务端校验失败使用站内错误，草稿保留可重试。成功保存后采用服务端新 UUID，并在整页刷新后保持完整有序结构。`manual-content-management` 的 world/character/outline 子项全绿，aggregate 仅因 p26-13 章节新增、正文编辑和版本 UI 尚未完成而预期 XFAIL。既有 checkpoint merge、服务端动作矩阵、自动任务持续运行和 mode switch/resume 语义均未改动。
 - **Branch**: 当前 Phase 26 修复分支；仓库没有 Git remote/upstream。
-- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-09 completed，下一项为 p26-10。
+- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-10 completed，下一项为 p26-11。
 - **Current spec**: `docs/specs/2026-09-02-product-audit-browser-e2e.md` 与 `.superpowers/sdd/2026-09-03-product-design-consistency-remediation/` 任务简报。
 - **Product audit**: `docs/audits/2026-09-02-product-design-consistency-audit.md`（P0 3 项 / P1 8 项 / P2 5 项）。
 
@@ -51,6 +51,8 @@
 - p26-09 review round 1：扩展真实服务/SQLite 回归先为 **14 tests / 4 failures / 0 errors**，分别命中 writer/第二 PUT 的 TOCTOU、已写卷 UUID 被重建、真典 INSERT 失败留下已提交大纲。GREEN 在结构服务内以项目 owner 包围 boundary read→commit→bump；已写卷章复制可信 UUID 与完整扩展字段且忽略 payload ID；SQLite 单事务替换 outline、supersede 旧 ACTIVE PLOT_COMMITMENT 并插入 HUMAN_PATCH，触发器在新 fact INSERT 中断时 outline/facts/revision 全不变。focused **32/32 PASS**；manual aggregate **0/1/0**；JDK21 compile/full/init **546 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建 PASS。
 - p26-09 review round 2：`startConceiving` 面对 `outline-edit-*` owner 的服务/HTTP RED 为 **7 tests / 2 failures / 0 errors**，实际 null 返回并导致 `/run` 500。GREEN 改为先原子 acquire，失败方仅在 owner 是 repository 中同项目 CONCEIVE task 时幂等返回，否则明确 409；不创建 task、不调用 orchestrator且原 owner 保持。构思重复启动旧语义继续通过；工作权 focused **33/33**，JDK21 compile/full/init **548 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建 PASS。
 
+- p26-10 RED：真实浏览器 seed 为卷1三章（ch1 已写，ch2/ch3 未写），`manual-content-management` 为 **0 PASS / 1 XFAIL / 0 ERROR**；新增卷/章、删除卷/章、保存与锁定 DOM 子项全 false。GREEN：完整 Outline 本地草稿提供未写卷章增删、上下移动与字段编辑，结构操作后保持已写章号并全局重新编号未写项；已写卷章有明确锁定语义且结构按钮 disabled。真实浏览器完成新增章→上移→删除原 ch2，首次保存被真实服务端 duplicate 校验拒绝并显示站内错误，原草稿随后成功重试；服务端生成 UUID 后的完整有序序列与整页刷新 API 完全一致，刷新 DOM 字段一致。manual aggregate 保持 **0 PASS / 1 XFAIL / 0 ERROR**，world/character/outline 全 true，仅 chapterActions false；两个邻近 strict 各 **1/0/0**。frontend build、JDK21 compile/full/init PASS：**548 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建 PASS。
+
 ## Non-blocking Observations
 
 1. `baselines/golden.json` 与 `baselines/golden-wuxia.json` 的 `minEvaluationScore` 当前均为 null，release replay 也未带 `--evaluate`；现有 baseline 门禁守住章数/字数/错误，不自动守综合质量分。若要修复，必须按新需求协议另立 feature。
@@ -62,7 +64,7 @@
 
 ## Next Entry
 
-- 下一步为 p26-10：大纲人工结构编辑界面；复用 p26-09 的完整 payload 与服务端错误，不改服务端已写前缀语义，也不要触碰自动任务、mode switch/resume 或共享 browser harness。
+- 下一步为 p26-11：章节不可变版本历史存储；先为每次正文变更保存旧快照并提供历史查询，保持现有库无损迁移，不提前实现 p26-12/13 的直接编辑和 UI。
 - 剩余本期红灯聚焦人工内容管理、移动端与文案一致性；按用户指示，自动任务及其 mode switch/resume 生命周期需要架构和系统修复，不在本期计划范围。
 - 新需求继续遵循：写 spec → 拆 1-3 文件 feature → 登记 `feature_list.json` → 实现与验证 → 更新三份状态文档。
 - 本机代理可能劫持 localhost；脚本内 curl 保持 `--noproxy '*'`。ego-browser 内写文件使用绝对路径。

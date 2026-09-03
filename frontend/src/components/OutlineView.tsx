@@ -1,108 +1,268 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Tree, Spin, Empty, Card, Typography, Button, Space, Input, message } from 'antd';
-import { ReloadOutlined, SaveOutlined } from '@ant-design/icons';
+import {
+  DeleteOutlined,
+  DownOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  SaveOutlined,
+  UpOutlined,
+} from '@ant-design/icons';
 import type { DataNode } from 'antd/es/tree';
 import { api } from '../api/client';
 import type { ChapterSynopsis, Outline, Volume } from '../types';
 
+let draftSequence = 0;
+
+const draftId = (kind: 'volume' | 'chapter') => {
+  draftSequence += 1;
+  return `draft-${kind}-${Date.now()}-${draftSequence}`;
+};
+
+const cloneOutline = (outline: Outline): Outline => ({
+  ...outline,
+  volumes: outline.volumes.map((volume) => ({
+    ...volume,
+    synopses: volume.synopses.map((synopsis) => ({ ...synopsis })),
+  })),
+});
+
 export default function OutlineView({ projectId, currentChapter = 0 }: { projectId: string; currentChapter?: number }) {
-  const [outline, setOutline] = useState<Outline | null>(null);
+  const [persistedOutline, setPersistedOutline] = useState<Outline | null>(null);
+  const [draft, setDraft] = useState<Outline | null>(null);
   const [loading, setLoading] = useState(true);
   const [premiseDraft, setPremiseDraft] = useState('');
-  const [drafts, setDrafts] = useState<Record<string, { title: string; text: string }>>({});
-  const [saving, setSaving] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [replanning, setReplanning] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const o = await api.getOutline(projectId);
-      setOutline(o);
-      setPremiseDraft(o?.premise || '');
-      const next: Record<string, { title: string; text: string }> = {};
-      o?.volumes.forEach((v) => {
-        next[v.id] = { title: v.title, text: v.summary };
-        v.synopses.forEach((s) => {
-          next[s.id] = { title: s.title, text: s.synopsis };
-        });
-      });
-      setDrafts(next);
+      const outline = await api.getOutline(projectId);
+      setPersistedOutline(outline);
+      setDraft(outline ? cloneOutline(outline) : null);
+      setPremiseDraft(outline?.premise || '');
+    } catch (error) {
+      message.error((error as Error).message);
     } finally {
       setLoading(false);
     }
   }, [projectId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { void load(); }, [load]);
+
+  const updateDraft = (change: (outline: Outline) => Outline) => {
+    setDraft((current) => current ? change(current) : current);
+  };
+
+  const normalizeStructure = (volumes: Volume[]) => {
+    const lockedVolumes = volumes.filter((volume) => volumeContainsWritten(volume, currentChapter));
+    let nextVolumeIndex = Math.max(0, ...lockedVolumes.map((volume) => volume.volumeIndex)) + 1;
+    let nextChapterIndex = Math.max(
+      currentChapter,
+      ...volumes.flatMap((volume) => volume.synopses)
+        .filter((synopsis) => synopsis.chapterIndex <= currentChapter)
+        .map((synopsis) => synopsis.chapterIndex),
+    ) + 1;
+
+    return volumes.map((volume) => ({
+      ...volume,
+      volumeIndex: volumeContainsWritten(volume, currentChapter) ? volume.volumeIndex : nextVolumeIndex++,
+      synopses: volume.synopses.map((synopsis) => synopsis.chapterIndex <= currentChapter
+        ? synopsis
+        : { ...synopsis, chapterIndex: nextChapterIndex++ }),
+    }));
+  };
+
+  const updateVolume = (volumeId: string, patch: Partial<Pick<Volume, 'title' | 'summary'>>) => {
+    updateDraft((outline) => ({
+      ...outline,
+      volumes: outline.volumes.map((volume) => volume.id === volumeId ? { ...volume, ...patch } : volume),
+    }));
+  };
+
+  const updateSynopsis = (synopsisId: string, patch: Partial<Pick<ChapterSynopsis, 'title' | 'synopsis'>>) => {
+    updateDraft((outline) => ({
+      ...outline,
+      volumes: outline.volumes.map((volume) => ({
+        ...volume,
+        synopses: volume.synopses.map((synopsis) => synopsis.id === synopsisId
+          ? { ...synopsis, ...patch }
+          : synopsis),
+      })),
+    }));
+  };
+
+  const addVolume = () => {
+    updateDraft((outline) => {
+      const volume: Volume = {
+        id: draftId('volume'),
+        projectId,
+        volumeIndex: outline.volumes.length + 1,
+        title: '新卷',
+        summary: '',
+        synopses: [],
+      };
+      return { ...outline, volumes: normalizeStructure([...outline.volumes, volume]) };
+    });
+  };
+
+  const deleteVolume = (volumeId: string) => {
+    updateDraft((outline) => ({
+      ...outline,
+      volumes: normalizeStructure(outline.volumes.filter((volume) => volume.id !== volumeId)),
+    }));
+  };
+
+  const moveVolume = (volumeIndex: number, direction: -1 | 1) => {
+    updateDraft((outline) => {
+      const targetIndex = volumeIndex + direction;
+      if (targetIndex < 0 || targetIndex >= outline.volumes.length) return outline;
+      const source = outline.volumes[volumeIndex];
+      const target = outline.volumes[targetIndex];
+      if (volumeContainsWritten(source, currentChapter) || volumeContainsWritten(target, currentChapter)) return outline;
+      const volumes = [...outline.volumes];
+      [volumes[volumeIndex], volumes[targetIndex]] = [volumes[targetIndex], volumes[volumeIndex]];
+      return { ...outline, volumes: normalizeStructure(volumes) };
+    });
+  };
+
+  const addChapter = (volumeId: string) => {
+    updateDraft((outline) => {
+      const synopsis: ChapterSynopsis = {
+        id: draftId('chapter'),
+        projectId,
+        chapterIndex: currentChapter + 1,
+        title: '新章节',
+        synopsis: '',
+        writingNotes: null,
+      };
+      return {
+        ...outline,
+        volumes: normalizeStructure(outline.volumes.map((volume) => volume.id === volumeId
+          ? { ...volume, synopses: [...volume.synopses, synopsis] }
+          : volume)),
+      };
+    });
+  };
+
+  const deleteChapter = (synopsisId: string) => {
+    updateDraft((outline) => ({
+      ...outline,
+      volumes: normalizeStructure(outline.volumes.map((volume) => ({
+        ...volume,
+        synopses: volume.synopses.filter((synopsis) => synopsis.id !== synopsisId),
+      }))),
+    }));
+  };
+
+  const moveChapter = (volumeId: string, synopsisIndex: number, direction: -1 | 1) => {
+    updateDraft((outline) => ({
+      ...outline,
+      volumes: normalizeStructure(outline.volumes.map((volume) => {
+        if (volume.id !== volumeId) return volume;
+        const targetIndex = synopsisIndex + direction;
+        if (targetIndex < 0 || targetIndex >= volume.synopses.length) return volume;
+        const source = volume.synopses[synopsisIndex];
+        const target = volume.synopses[targetIndex];
+        if (source.chapterIndex <= currentChapter || target.chapterIndex <= currentChapter) return volume;
+        const synopses = [...volume.synopses];
+        [synopses[synopsisIndex], synopses[targetIndex]] = [synopses[targetIndex], synopses[synopsisIndex]];
+        return { ...volume, synopses };
+      })),
+    }));
+  };
+
+  const saveStructure = async () => {
+    if (!draft) return;
+    if (draft.volumes.flatMap((volume) => volume.synopses).length === 0) {
+      message.error('大纲至少需要一章');
+      return;
+    }
+    setSaving(true);
+    try {
+      const saved = await api.updateOutline(projectId, draft);
+      setPersistedOutline(saved);
+      setDraft(cloneOutline(saved));
+      setPremiseDraft(saved.premise);
+      message.success('未写大纲已保存');
+    } catch (error) {
+      message.error((error as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) return <Spin />;
 
   return (
     <Card>
-      <Space style={{ marginBottom: 16 }}>
-        <Button size="small" icon={<ReloadOutlined />} onClick={load}>刷新</Button>
+      <Space wrap style={{ marginBottom: 16 }}>
+        <Button size="small" icon={<ReloadOutlined />} onClick={() => void load()}>刷新</Button>
         <Button size="small" loading={replanning} onClick={async () => {
           setReplanning(true);
           try {
             await api.replanOutline(projectId);
             message.success('未写卷已重规划');
             await load();
-          } catch (e) {
-            message.error((e as Error).message);
+          } catch (error) {
+            message.error((error as Error).message);
           } finally {
             setReplanning(false);
           }
         }}>重规划未写卷</Button>
       </Space>
-      {!outline ? (
+      {!draft || !persistedOutline ? (
         <Empty description="暂无大纲，请先运行「构思」阶段（生成后点刷新）" />
       ) : (
         <>
-        <div style={{ marginBottom: 16 }}>
-          <Typography.Text strong>总纲</Typography.Text>
-          <Input.TextArea rows={4} value={premiseDraft} onChange={(e) => setPremiseDraft(e.target.value)} style={{ marginTop: 8 }} />
-          <Button size="small" icon={<SaveOutlined />} style={{ marginTop: 8 }}
-            onClick={async () => {
-              try {
-                await api.updateOutline(projectId, { ...outline, premise: premiseDraft });
-                message.success('总纲已保存并写入真典');
-                load();
-              } catch (e) {
-                message.error((e as Error).message);
-              }
-            }}>保存总纲</Button>
-        </div>
-        <OutlineTree
-          outline={outline}
-          currentChapter={currentChapter}
-          drafts={drafts}
-          saving={saving}
-          onDraft={(id, patch) => setDrafts((d) => ({ ...d, [id]: { ...d[id], ...patch } }))}
-          onSave={async (targetId) => {
-            setSaving(targetId);
-            try {
-              const next: Outline = {
-                ...outline,
-                volumes: outline.volumes.map((v) => ({
-                  ...v,
-                  title: drafts[v.id]?.title ?? v.title,
-                  summary: drafts[v.id]?.text ?? v.summary,
-                  synopses: v.synopses.map((s) => ({
-                    ...s,
-                    title: drafts[s.id]?.title ?? s.title,
-                    synopsis: drafts[s.id]?.text ?? s.synopsis,
-                  })),
-                })),
-              };
-              await api.updateOutline(projectId, next);
-              message.success('未写规划已保存');
-              await load();
-            } catch (e) {
-              message.error((e as Error).message);
-            } finally {
-              setSaving(null);
-            }
-          }}
-        />
+          <div style={{ marginBottom: 16 }}>
+            <Typography.Text strong>总纲</Typography.Text>
+            <Input.TextArea
+              aria-label="总纲内容"
+              rows={4}
+              value={premiseDraft}
+              onChange={(event) => setPremiseDraft(event.target.value)}
+              style={{ marginTop: 8 }}
+            />
+            <Button
+              size="small"
+              icon={<SaveOutlined />}
+              style={{ marginTop: 8 }}
+              onClick={async () => {
+                try {
+                  const saved = await api.updateOutline(projectId, { ...persistedOutline, premise: premiseDraft });
+                  setPersistedOutline(saved);
+                  setDraft((current) => current ? { ...current, premise: saved.premise } : cloneOutline(saved));
+                  message.success('总纲已保存并写入真典');
+                } catch (error) {
+                  message.error((error as Error).message);
+                }
+              }}
+            >保存总纲</Button>
+          </div>
+          <Space wrap style={{ marginBottom: 16 }}>
+            <Button icon={<PlusOutlined />} onClick={addVolume} aria-label="新增卷">新增卷</Button>
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              loading={saving}
+              onClick={() => void saveStructure()}
+              aria-label="保存未写大纲"
+            >保存未写大纲</Button>
+          </Space>
+          <OutlineTree
+            outline={draft}
+            currentChapter={currentChapter}
+            saving={saving}
+            onUpdateVolume={updateVolume}
+            onUpdateSynopsis={updateSynopsis}
+            onAddChapter={addChapter}
+            onDeleteChapter={deleteChapter}
+            onMoveChapter={moveChapter}
+            onDeleteVolume={deleteVolume}
+            onMoveVolume={moveVolume}
+          />
         </>
       )}
     </Card>
@@ -110,106 +270,208 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
 }
 
 function OutlineTree({
-  outline, currentChapter, drafts, saving, onDraft, onSave,
+  outline,
+  currentChapter,
+  saving,
+  onUpdateVolume,
+  onUpdateSynopsis,
+  onAddChapter,
+  onDeleteChapter,
+  onMoveChapter,
+  onDeleteVolume,
+  onMoveVolume,
 }: {
   outline: Outline;
   currentChapter: number;
-  drafts: Record<string, { title: string; text: string }>;
-  saving: string | null;
-  onDraft: (id: string, patch: Partial<{ title: string; text: string }>) => void;
-  onSave: (id: string) => void;
+  saving: boolean;
+  onUpdateVolume: (volumeId: string, patch: Partial<Pick<Volume, 'title' | 'summary'>>) => void;
+  onUpdateSynopsis: (synopsisId: string, patch: Partial<Pick<ChapterSynopsis, 'title' | 'synopsis'>>) => void;
+  onAddChapter: (volumeId: string) => void;
+  onDeleteChapter: (synopsisId: string) => void;
+  onMoveChapter: (volumeId: string, synopsisIndex: number, direction: -1 | 1) => void;
+  onDeleteVolume: (volumeId: string) => void;
+  onMoveVolume: (volumeIndex: number, direction: -1 | 1) => void;
 }) {
-  const treeData: DataNode[] = [
-    {
-      title: <strong>📖 总纲</strong>,
-      key: 'premise',
-      children: [
-        {
-          title: <Typography.Paragraph style={{ marginBottom: 0 }}>{outline.premise}</Typography.Paragraph>,
-          key: 'premise-text',
-          selectable: false,
-        },
-      ],
-    },
-    ...outline.volumes.map((v) => ({
-      title: volumeTitle(v, currentChapter, drafts, saving, onDraft, onSave),
-      key: v.id,
-      children: v.synopses.map((s) => ({
-        title: synopsisNode(s, currentChapter, drafts, saving, onDraft, onSave),
-        key: s.id,
+  const treeData: DataNode[] = outline.volumes.map((volume, volumePosition) => {
+    const locked = volumeContainsWritten(volume, currentChapter);
+    const previousLocked = volumePosition === 0 || volumeContainsWritten(outline.volumes[volumePosition - 1], currentChapter);
+    const nextLocked = volumePosition === outline.volumes.length - 1 || volumeContainsWritten(outline.volumes[volumePosition + 1], currentChapter);
+    return {
+      title: (
+        <div data-outline-volume-id={volume.id}>
+          <Space wrap>
+            <strong>📚 卷{volume.volumeIndex}</strong>
+            {locked ? (
+              <>
+                <Typography.Text>{volume.title}</Typography.Text>
+                <Typography.Text type="secondary" aria-label={`卷${volume.volumeIndex}已锁定`}>含已写章节，锁定</Typography.Text>
+              </>
+            ) : (
+              <>
+                <Input
+                  size="small"
+                  aria-label={`卷${volume.volumeIndex}标题`}
+                  style={{ width: 180 }}
+                  value={volume.title}
+                  onChange={(event) => onUpdateVolume(volume.id, { title: event.target.value })}
+                />
+                <Input
+                  size="small"
+                  aria-label={`卷${volume.volumeIndex}简介`}
+                  style={{ width: 220 }}
+                  value={volume.summary}
+                  onChange={(event) => onUpdateVolume(volume.id, { summary: event.target.value })}
+                />
+              </>
+            )}
+            <Button
+              size="small"
+              icon={<PlusOutlined />}
+              aria-label={`新增章节到卷${volume.volumeIndex}`}
+              onClick={() => onAddChapter(volume.id)}
+              disabled={saving}
+            >新增章节</Button>
+            <Button
+              size="small"
+              icon={<UpOutlined />}
+              aria-label={`上移卷${volume.volumeIndex}`}
+              onClick={() => onMoveVolume(volumePosition, -1)}
+              disabled={saving || locked || previousLocked}
+            >上移卷</Button>
+            <Button
+              size="small"
+              icon={<DownOutlined />}
+              aria-label={`下移卷${volume.volumeIndex}`}
+              onClick={() => onMoveVolume(volumePosition, 1)}
+              disabled={saving || locked || nextLocked}
+            >下移卷</Button>
+            <Button
+              danger
+              size="small"
+              icon={<DeleteOutlined />}
+              aria-label={`删除卷${volume.volumeIndex}`}
+              onClick={() => onDeleteVolume(volume.id)}
+              disabled={saving || locked}
+            >删除卷</Button>
+          </Space>
+        </div>
+      ),
+      key: volume.id,
+      children: volume.synopses.map((synopsis, synopsisPosition) => ({
+        title: (
+          <SynopsisRow
+            key={synopsis.id}
+            synopsis={synopsis}
+            synopsisPosition={synopsisPosition}
+            volume={volume}
+            currentChapter={currentChapter}
+            saving={saving}
+            onUpdate={onUpdateSynopsis}
+            onDelete={onDeleteChapter}
+            onMove={onMoveChapter}
+          />
+        ),
+        key: synopsis.id,
         selectable: false,
       })),
-    })),
-  ];
+    };
+  });
 
   return (
     <Tree
       treeData={treeData}
-      defaultExpandAll
+      expandedKeys={outline.volumes.map((volume) => volume.id)}
       showLine
       blockNode
     />
   );
 }
 
-function volumeUnwritten(volume: Volume, currentChapter: number) {
-  return volume.synopses.every((s) => s.chapterIndex > currentChapter);
-}
+function SynopsisRow({
+  synopsis,
+  synopsisPosition,
+  volume,
+  currentChapter,
+  saving,
+  onUpdate,
+  onDelete,
+  onMove,
+}: {
+  synopsis: ChapterSynopsis;
+  synopsisPosition: number;
+  volume: Volume;
+  currentChapter: number;
+  saving: boolean;
+  onUpdate: (synopsisId: string, patch: Partial<Pick<ChapterSynopsis, 'title' | 'synopsis'>>) => void;
+  onDelete: (synopsisId: string) => void;
+  onMove: (volumeId: string, synopsisIndex: number, direction: -1 | 1) => void;
+}) {
+  const locked = synopsis.chapterIndex <= currentChapter;
+  const previousLocked = synopsisPosition === 0 || volume.synopses[synopsisPosition - 1].chapterIndex <= currentChapter;
+  const isLast = synopsisPosition === volume.synopses.length - 1;
+  const isNew = synopsis.id.startsWith('draft-chapter-');
 
-function volumeTitle(
-  v: Volume,
-  currentChapter: number,
-  drafts: Record<string, { title: string; text: string }>,
-  saving: string | null,
-  onDraft: (id: string, patch: Partial<{ title: string; text: string }>) => void,
-  onSave: (id: string) => void,
-) {
-  if (!volumeUnwritten(v, currentChapter)) {
-    return <strong>📚 卷{v.volumeIndex} · {v.title}</strong>;
-  }
-  const draft = drafts[v.id] ?? { title: v.title, text: v.summary };
   return (
-    <span>
-      <strong>📚 卷{v.volumeIndex} · </strong>
-      <Input size="small" style={{ width: 180 }} value={draft.title}
-        onChange={(e) => onDraft(v.id, { title: e.target.value })} />
-      <Input size="small" style={{ width: 220, marginLeft: 8 }} value={draft.text}
-        onChange={(e) => onDraft(v.id, { text: e.target.value })} />
-      <Button size="small" type="link" icon={<SaveOutlined />} loading={saving === v.id}
-        onClick={() => onSave(v.id)}>保存</Button>
-    </span>
-  );
-}
-
-function synopsisNode(
-  s: ChapterSynopsis,
-  currentChapter: number,
-  drafts: Record<string, { title: string; text: string }>,
-  saving: string | null,
-  onDraft: (id: string, patch: Partial<{ title: string; text: string }>) => void,
-  onSave: (id: string) => void,
-) {
-  if (s.chapterIndex <= currentChapter) {
-    return (
-      <span>
-        <strong>第{s.chapterIndex}章 {s.title}</strong>
-        <br />
-        <span style={{ color: '#666', fontSize: 13 }}>{s.synopsis}</span>
-      </span>
-    );
-  }
-  const draft = drafts[s.id] ?? { title: s.title, text: s.synopsis };
-  return (
-    <div>
-      <Space>
-        <span>第{s.chapterIndex}章</span>
-        <Input size="small" style={{ width: 220 }} value={draft.title}
-          onChange={(e) => onDraft(s.id, { title: e.target.value })} />
-        <Button size="small" type="link" icon={<SaveOutlined />} loading={saving === s.id}
-          onClick={() => onSave(s.id)}>保存</Button>
+    <div
+      data-outline-chapter-id={synopsis.id}
+      data-outline-chapter-index={synopsis.chapterIndex}
+      data-outline-new-chapter={isNew ? 'true' : undefined}
+      style={{ padding: '4px 0' }}
+    >
+      <Space wrap>
+        <strong>第{synopsis.chapterIndex}章</strong>
+        {locked ? (
+          <>
+            <Typography.Text>{synopsis.title}</Typography.Text>
+            <Typography.Text type="secondary" aria-label={`第${synopsis.chapterIndex}章已锁定`}>已写，锁定</Typography.Text>
+          </>
+        ) : (
+          <Input
+            size="small"
+            aria-label={`第${synopsis.chapterIndex}章标题`}
+            style={{ width: 220 }}
+            value={synopsis.title}
+            onChange={(event) => onUpdate(synopsis.id, { title: event.target.value })}
+          />
+        )}
+        <Button
+          size="small"
+          icon={<UpOutlined />}
+          aria-label={`上移第${synopsis.chapterIndex}章`}
+          onClick={() => onMove(volume.id, synopsisPosition, -1)}
+          disabled={saving || locked || previousLocked}
+        >上移</Button>
+        <Button
+          size="small"
+          icon={<DownOutlined />}
+          aria-label={`下移第${synopsis.chapterIndex}章`}
+          onClick={() => onMove(volume.id, synopsisPosition, 1)}
+          disabled={saving || locked || isLast}
+        >下移</Button>
+        <Button
+          danger
+          size="small"
+          icon={<DeleteOutlined />}
+          aria-label={`删除第${synopsis.chapterIndex}章`}
+          onClick={() => onDelete(synopsis.id)}
+          disabled={saving || locked}
+        >删除章节</Button>
       </Space>
-      <Input.TextArea rows={2} style={{ marginTop: 6 }} value={draft.text}
-        onChange={(e) => onDraft(s.id, { text: e.target.value })} />
+      {locked ? (
+        <div style={{ color: '#666', fontSize: 13, marginTop: 6 }}>{synopsis.synopsis}</div>
+      ) : (
+        <Input.TextArea
+          rows={2}
+          aria-label={`第${synopsis.chapterIndex}章梗概`}
+          style={{ marginTop: 6 }}
+          value={synopsis.synopsis}
+          onChange={(event) => onUpdate(synopsis.id, { synopsis: event.target.value })}
+        />
+      )}
     </div>
   );
+}
+
+function volumeContainsWritten(volume: Volume, currentChapter: number) {
+  return volume.synopses.some((synopsis) => synopsis.chapterIndex <= currentChapter);
 }

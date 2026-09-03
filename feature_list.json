@@ -3229,12 +3229,13 @@
       "phase": 26,
       "type": "feature",
       "dependencies": ["p26-09"],
-      "status": "not-started",
+      "status": "completed",
       "files": ["frontend/src/components/OutlineView.tsx", "frontend/src/api/client.ts", "scripts/product-audit-e2e.sh"],
       "problem_ref": "P1-05：大纲页面没有新增、删除和排序入口",
       "description": "页面以本地草稿提供未写卷章结构编辑，并显示服务端校验反馈。",
       "acceptance": "用户可新增、删除、排序、保存未写大纲，已写项锁定，刷新后结构和顺序一致。",
-      "verify_cmd": "./scripts/product-audit-e2e.sh --case manual-content-management"
+      "verify_cmd": "./scripts/product-audit-e2e.sh --case manual-content-management",
+      "evidence": "2026-09-03：严格浏览器 TDD RED 为 0 PASS / 1 XFAIL / 0 ERROR；seed 为卷1三章（第1章已写锁定，第2/3章未写），outlineActions 的新增卷/章、删除卷/章、结构保存与锁定 DOM 均缺失。GREEN 将 OutlineView 改为完整本地 Outline draft，卷章标题/梗概、增删与上下移动只改草稿，所有结构操作后保留 <=currentChapter 已写章号并对未写卷章全局连续重编号；含已写章的卷及已写章显示明确锁定语义，移动/删除按钮 disabled，全部 Ant Button 具中文 aria-label。统一“保存未写大纲”调用 p26-09 完整 PUT 契约，成功以响应刷新服务端 UUID，失败 message.error 且草稿不丢；API 类型收紧为完整 Outline。强化 E2E 真实完成新增人工章→上移→删除事件2→首次发送 duplicate payload 获服务端 400/站内错误→原草稿重试保存，并在整页刷新后按 id/volumeIndex/chapterIndex/title/synopsis 完整有序序列比对；所有 outlineActions、world/character 子断言全 true，aggregate 仅因 p26-13 章节入口保持 0 PASS / 1 XFAIL / 0 ERROR。initial-setup-summary 与 checkpoint-card-targeting strict 各 1 PASS / 0 XFAIL / 0 ERROR；frontend build PASS；JDK21 mvn compile/full test 与 ./init.sh PASS：548 tests / 0 failures / 0 errors / 1 skipped，27 prompts 与前端生产构建通过。未修改后端、Agent/prompt、自动任务或 mode switch/resume。"
     },
     {
       "id": "p26-11",

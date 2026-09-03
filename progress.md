@@ -2,6 +2,18 @@
 
 ---
 
+## 会话记录（2026-09-03）：Phase 26 p26-10 大纲人工结构编辑界面
+
+- 大纲页改为完整本地草稿：卷标题/简介、章标题/梗概及新增、删除、上下移动都只改变草稿，统一点击“保存未写大纲”后才调用 p26-09 的完整 `PUT /outline` 契约。
+- 每次结构操作都保持已写章号不变，并对未写卷章按页面顺序全局重新编号，确保卷号、章号为正数、唯一且严格递增。含已写章的卷和已写章显示明确“锁定”状态，结构移动/删除按钮为 disabled。
+- 新增卷、章与移动/删除均使用 Ant Design Button 和清晰中文 `aria-label`；保存失败统一 `message.error`，且失败后原草稿仍可直接重试。前端 API 将 updateOutline 参数收紧为完整 `Outline`。
+- 严格 TDD RED：真实浏览器 seed 为卷1三章（ch1 已写，ch2/ch3 未写），`manual-content-management` 为 **0 PASS / 1 XFAIL / 0 ERROR**，新增卷/章、删除卷/章、保存与锁定 DOM 子项全 false。
+- GREEN 场景真实完成：新增“人工新增待写章”→上移→删除事件2→第一次保存经真实服务端 duplicate 校验返回 400 且站内错误可见→保留草稿后再次保存。服务端为未写章生成新 UUID；保存响应与整页刷新后的 `id/volumeIndex/chapterIndex/title/synopsis` 完整有序序列逐项一致，刷新 DOM 标题与梗概一致。
+- `manual-content-management --expect-known-failures` 为 **0 PASS / 1 XFAIL / 0 ERROR**：world、character、outline 子断言全部 true，只剩 p26-13 范围内的 chapterActions false。`initial-setup-summary` 与 `checkpoint-card-targeting` strict 各 **1 PASS / 0 XFAIL / 0 ERROR**。
+- frontend build PASS；JDK21 `mvn compile && mvn test` 与 `./init.sh` 均 PASS，**548 tests / 0 failures / 0 errors / 1 skipped**，27 个 prompt 与前端生产构建通过。本 feature 未改后端、Agent/prompt、自动任务或 mode switch/resume。
+
+---
+
 ## 会话记录（2026-09-03）：Phase 26 p26-07 初始设定审核内容摘要
 
 - AFTER_INITIAL_SETUP checkpoint 新增 Jackson JSON payload：`worldSummary`、`characterSummary`、`premiseSummary` 和 `links`。三段内容只读取已持久化的世界观条目、人物卡、outline premise 与项目原旨，不使用固定摘要文案。

@@ -152,7 +152,7 @@ export const api = {
   getOutline: (id: string) =>
     request<Outline | null>(`/projects/${id}/outline`),
 
-  updateOutline: (id: string, outline: Partial<Outline>) =>
+  updateOutline: (id: string, outline: Outline) =>
     request<Outline>(`/projects/${id}/outline`, {
       method: 'PUT',
       body: JSON.stringify(outline),

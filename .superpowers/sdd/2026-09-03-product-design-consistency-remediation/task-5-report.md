@@ -43,3 +43,15 @@
 - Focused browser proof：在两章审批场景中选定第 2 章并确认正文可见，连续触发两次“刷新”后仍确认该章正文可见，随后批准第 2 章并确认正文仍可见、无 spinner；strict `approve-keeps-chapter-visible` 为 **1 PASS / 0 XFAIL / 0 ERROR**。`standalone-chapter-rewrite` 回归同为 **1 PASS / 0 XFAIL / 0 ERROR**。
 - 如实记录：本地正常浏览器流不能确定性延迟或重排 metadata 响应，旧实现也会通过该正常流，因此本 round **没有 RED**，且未声称浏览器构造了 race。乱序安全性由 refresh 代际/project token 守卫及代码审查保证。
 - Gates：frontend `npm run build` PASS；JDK21 `mvn test` 与 `./init.sh` PASS（**504 tests / 0 failures / 0 errors / 1 skipped**，init 包含编译、测试、27 个 prompt 完整性检查及前端生产构建）。
+
+## Baseline follow-up: initial body request deduplication
+
+- RED：在 p26-06 交付前运行完整 `./scripts/browser-e2e.sh`，`chapter-lazy-loading` 记录首选章节请求 `b1=2`（期望 1）；第 2 章仍保持点击前 0、点击后 1，定位为 `refresh` 主动读取与 metadata 生效后的 lazy effect 同时发起同章请求。
+- 修复：`loadBody(force=false)` 除版本有效缓存外，也识别该章已有 in-flight 请求并直接复用；`force=true` 路径不受影响，仍创建新 generation 取代旧请求。
+- 验证：独立提交 `e4b20bb fix(chapter): deduplicate initial body load`；干净 worktree 内 frontend build PASS，`approve-keeps-chapter-visible` 与 `standalone-chapter-rewrite` 均为 **1 PASS / 0 XFAIL / 0 ERROR**。
+
+## Baseline follow-up: chapter metadata version
+
+- RED：SQLite repository 聚焦测试将章节保存并更新到 version 3，完整章节返回 3，`findChapterMetaByProject` 实际返回默认值 1。
+- 修复：元数据映射器写回 SQL 已查询的 `version`，不加载正文的语义不变。
+- 验证：SQLite version 回归与 `ChapterNavigationApiTest` 共 **4/4 PASS**；`approve-keeps-chapter-visible` 与 `standalone-chapter-rewrite` 均 **1 PASS / 0 XFAIL / 0 ERROR**；browser suite **8/8 PASS**；JDK21 full Maven 及 `./init.sh` 通过（当前组合工作区 **519 tests / 0 failures / 0 errors / 1 skipped**，init 另通过 27 prompt 和 frontend build）。

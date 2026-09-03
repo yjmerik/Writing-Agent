@@ -398,6 +398,7 @@ public class SqliteNovelRepository implements NovelRepository {
                         rs.getInt("chapter_index"), rs.getString("title"));
                 setField(c, "id", rs.getString("id"));
                 setField(c, "wordCount", rs.getInt("word_count"));
+                setField(c, "version", rs.getInt("version"));
                 // p23-04 修复: 元数据必须携带 status——懒加载列表的「待人审」标记依赖它
                 try { c.setStatus(Chapter.Status.valueOf(rs.getString("status"))); }
                 catch (Exception badStatus) { /* 未知状态保持默认 */ }

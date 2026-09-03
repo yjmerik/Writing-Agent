@@ -1,5 +1,6 @@
 package com.writing.novel.persistence.sqlite;
 
+import com.writing.novel.domain.Chapter;
 import com.writing.novel.domain.WritingTask;
 import com.writing.novel.spi.NovelRepository;
 import com.writing.novel.spi.NovelRepositoryContractTest;
@@ -56,5 +57,21 @@ class SqliteNovelRepositoryTest extends NovelRepositoryContractTest {
         assertTrue(found.isPresent());
         assertEquals(WritingTask.Type.WRITE_CHAPTER, found.get().getType());
         assertEquals(WritingTask.Status.PAUSED, found.get().getStatus());
+    }
+
+    @Test
+    void 章节元数据保留当前版本但不携带正文() {
+        Chapter chapter = new Chapter("p1", 1, "第一章");
+        chapter.setContent("初稿");
+        repository.saveChapter(chapter);
+        chapter.setContent("修订稿");
+        repository.saveChapter(chapter);
+
+        Chapter full = repository.findChapter(chapter.getId()).orElseThrow();
+        Chapter meta = repository.findChapterMetaByProject("p1").get(0);
+
+        assertEquals("", meta.getContent());
+        assertTrue(full.getVersion() > 1);
+        assertEquals(full.getVersion(), meta.getVersion());
     }
 }

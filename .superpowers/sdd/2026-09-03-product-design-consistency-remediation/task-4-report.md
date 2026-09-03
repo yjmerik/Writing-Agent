@@ -46,4 +46,4 @@ beforeVersion=3, afterVersion=4, contentChanged=true, updatedBodyVisible=true
 
 ## Commit
 
-待提交。
+`3385891` — `fix(chapter): wire standalone rewrite dialog`

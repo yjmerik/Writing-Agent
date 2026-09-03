@@ -5,9 +5,9 @@
 ## Current Objective
 
 - **Goal**: 以产品一致性审计的浏览器红灯套件驱动下一轮 P0 → P1 → P2 修复。
-- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-13 已完成。章节新增草稿、正文编辑、版本记录、比较与确认回退已形成完整浏览器闭环；保存与回退绑定目标章及 expectedVersion，409 时保留弹窗、重载服务端最新正文并要求重新确认。`manual-content-management` 已由预期 XFAIL 收敛为 strict PASS。自动任务持续运行和 mode switch/resume 语义均未改动。
+- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-14 已完成。通用内容修订 Agent 已支持世界观、人物、卷、章节、段落五类 detached 候选；输入输出严格校验，Agent 无仓储依赖，预览不会写库。应用 API 与统一界面尚未接入，分别留给 p26-15/p26-16。自动任务持续运行和 mode switch/resume 语义均未改动。
 - **Branch**: 当前 Phase 26 修复分支；仓库没有 Git remote/upstream。
-- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-13 completed，下一项为 p26-14。
+- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-14 completed，下一项为 p26-15。
 - **Current spec**: `docs/specs/2026-09-02-product-audit-browser-e2e.md` 与 `.superpowers/sdd/2026-09-03-product-design-consistency-remediation/` 任务简报。
 - **Product audit**: `docs/audits/2026-09-02-product-design-consistency-audit.md`（P0 3 项 / P1 8 项 / P2 5 项）。
 
@@ -58,6 +58,7 @@
 - p26-11 review round 1：强化 RED 为 **7 tests / 2 failures / 0 errors**，证明 SQLite `id TEXT PRIMARY KEY` 的 `notnull=0` 且接受 null-id。改为 `id TEXT NOT NULL PRIMARY KEY` 后全部 8 列均为 NOT NULL，真实 null-id INSERT 失败且无残留；focused **19/19**，JDK21 compile/full/init **555 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建 PASS。
 - p26-12 RED：真实 Spring MVC + SQLite `ChapterDirectEditTest` 为 **7 tests / 6 failures / 0 errors**，四个新端点缺失并返回 500；事务故障用例只因端点不存在而偶然零写入。GREEN：新增项目全局下一章草稿、直接编辑、历史倒序和精确回退 API；expectedVersion、跨项目、标题/正文/500 字、活动工作与并发唯一胜者均在写入和派生刷新前校验。SQLite 条件 UPDATE current + INSERT pre-change snapshot 同事务提交，故障注入时二者均回滚；空白旧草稿可精确恢复。rewrite/passage 也经统一边界记录 `REWRITE`/`PASSAGE_EDIT`，直接编辑/回退复用既有向量重建和摘要/实体/伏笔/事实刷新。Review round 1 修复 checkpoint 章节重写绕过 owner 及派生数据旧版本逆序回写：checkpoint revision 现在统一取得项目工作权；修订/刷新经同一分片锁串行，直接编辑/回退响应前刷新当前版本，passage 后台任务先 dirty 摘要再以 chapter version 守卫。Review round 2 复现前一次慢收割使第二次 passage 保存阻塞约 5 秒；修复后 passage 持久化不等待旧派生任务，后台队列仍经分片锁与 chapter version 守卫按最新版本收敛。相关 focused **19/19**；JDK21 compile/full/init **567 tests / 0 failures / 0 errors / 1 skipped**，匹配 mystery replay 为 3 章、10,191 字、54 calls、0 errors/failed chapters，baseline PASS。manual aggregate **0/1/0**，唯一 chapterActions UI 留给 p26-13。
 - p26-13 RED：真实浏览器 `manual-content-management` 为 **0 PASS / 1 XFAIL / 0 ERROR**，章节新增、编辑、历史、比较、回退及冲突处理均缺失。GREEN：新增与编辑使用本地草稿，提交目标绑定 chapterIndex/expectedVersion；历史可比较指定旧版本与当前正文并确认回退。模拟外部更新后陈旧保存收到 409，弹窗保持打开并重载服务端最新标题/正文，显示“章节已被更新，请重新确认”。strict 与 expect-known-failures 均为 **1 PASS / 0 XFAIL / 0 ERROR**，并已从 KNOWN_FAILURES 移除；frontend build、JDK21 compile/full/init PASS，仍为 **567 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建通过。
+- p26-14 RED：`ContentRevisionAgentTest` testCompile 为 **23 个预期缺失符号**。GREEN：五类 TargetType 均渲染目标/当前 JSON/指令并返回严格 RevisionCandidate；输入 JSON、目标绑定、必填字段、单 JSON/无 fence/无尾随值及 structuredJson 对象均 fail loud，Agent 无仓储依赖。专属 **10/10**、含 Spring 接线 **11/11**；匹配 mystery replay 为 **3 章 / 10,191 字 / 54 calls / 0 errors / 0 chapter failures**，baseline PASS；manual browser **1/0/0**。JDK21 compile/full/init **577 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端构建通过。
 
 ## Non-blocking Observations
 
@@ -70,7 +71,7 @@
 
 ## Next Entry
 
-- 下一步为 p26-14：实现通用内容修订 Agent 与外置 Prompt，严格限定为世界观、人物、卷、章节、段落五类候选预览且预览零写库；不扩展自动任务、mode switch/resume 或相邻架构。
+- 下一步为 p26-15：实现 source-versioned Agent 修订预览/一次性应用 API，复用既有领域写入约束并验证 preview 零写库、apply 只改目标、陈旧源版本 409；不扩展自动任务、mode switch/resume 或相邻架构。
 - 剩余本期红灯聚焦人工内容管理、移动端与文案一致性；按用户指示，自动任务及其 mode switch/resume 生命周期需要架构和系统修复，不在本期计划范围。
 - 新需求继续遵循：写 spec → 拆 1-3 文件 feature → 登记 `feature_list.json` → 实现与验证 → 更新三份状态文档。
 - 本机代理可能劫持 localhost；脚本内 curl 保持 `--noproxy '*'`。ego-browser 内写文件使用绝对路径。

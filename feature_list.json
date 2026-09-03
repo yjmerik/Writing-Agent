@@ -3286,12 +3286,13 @@
       "phase": 26,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": ["agent/ContentRevisionAgent.java", "prompts/content-revision.st", "agent/ContentRevisionAgentTest.java"],
       "problem_ref": "P1-06：内容层级没有可复用的自然语言 Agent 修改能力",
       "description": "为世界观、人物、卷、章节、段落生成严格结构化候选，预览阶段不写库。",
       "acceptance": "五类目标均返回可解析候选；空或非法响应显式失败；生成预览前后仓储指纹一致。",
-      "verify_cmd": "mvn test -Dtest=ContentRevisionAgentTest"
+      "verify_cmd": "mvn test -Dtest=ContentRevisionAgentTest",
+      "evidence": "2026-09-04：TDD RED 在 testCompile 阶段产生 23 个预期缺失符号，确认 ContentRevisionAgent、TargetType 与 RevisionCandidate 尚不存在。GREEN 新增无 NovelRepository 依赖的 ContentRevisionAgent，支持 WORLD/CHARACTER/VOLUME/CHAPTER/PASSAGE 五类目标；preview 在调用前校验单对象 currentJson 和非空指令，外置 content-revision.st 明确只修改所选对象、保留 ID/索引、只返回单个无 Markdown 包裹 JSON。响应以 FAIL_ON_TRAILING_TOKENS 严格解析，要求 targetType 与请求一致，title/content/structuredJson/summary 均非空，且 structuredJson 自身为单个有效 JSON 对象；空响应、空正文、非法/包裹/尾随 JSON、目标错配和非法 structuredJson 均显式抛错。专属测试 10/10，含 Spring LLM 接线为 11/11；Agent 无仓储字段，不具备预览阶段写库能力。匹配 canary-mystery 三章 replay 为 3 章、10,191 字、54 calls、0 LLM errors、0 chapter failures，compare-baseline PASS（未 bless）；manual-content-management 真实浏览器回归 1 PASS / 0 XFAIL / 0 ERROR。JDK21 compile、full test 与 ./init.sh PASS：577 tests / 0 failures / 0 errors / 1 skipped，28 prompts 与前端生产构建通过；AGENTS.md 规模同步为 24 个职责类/28 个 Prompt。未接入 apply API/UI，未修改自动任务或 mode switch/resume。"
     },
     {
       "id": "p26-15",

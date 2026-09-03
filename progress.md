@@ -2,6 +2,16 @@
 
 ---
 
+## 会话记录（2026-09-04）：Phase 26 p26-14 通用内容修订 Agent 与外置 Prompt
+
+- 新增 `ContentRevisionAgent.preview(...)`，为 WORLD、CHARACTER、VOLUME、CHAPTER、PASSAGE 五类选中对象生成 detached 修改候选。Agent 不依赖 `NovelRepository`，预览阶段没有持久化能力。
+- 外置 `content-revision.st` 将目标类型、当前对象 JSON 和用户指令显式注入，并约束只修改所选对象、保留 ID/卷章/段落索引、返回单个无 Markdown 包裹 JSON。
+- 输入要求单个有效 JSON 对象和非空指令；输出严格拒绝尾随值、Markdown fence、目标类型错配、空 title/content/structuredJson/summary，以及不是单个 JSON 对象的 structuredJson，所有非法候选均 fail loud。
+- TDD RED 为 testCompile **23 个预期缺失符号**；GREEN 专属测试 **10/10 PASS**，含 LLM Spring 接线回归 **11/11 PASS**。
+- 匹配 mystery 确定性 replay 为 **3 章 / 10,191 字 / 54 calls / 0 LLM errors / 0 chapter failures**，baseline PASS（未 bless）；`manual-content-management` 真实浏览器回归为 **1 PASS / 0 XFAIL / 0 ERROR**。JDK21 compile/full/init 全绿：**577 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端生产构建通过。AGENTS.md 规模同步为 24 个职责类/28 个 Prompt；未接入应用 API/UI，未修改自动任务或 mode switch/resume。
+
+---
+
 ## 会话记录（2026-09-04）：Phase 26 p26-13 章节正文编辑与版本界面
 
 - 章节页新增“新增章节”“编辑正文”“版本记录”入口。新增与编辑内容先保存在本地草稿，提交时才调用 p26-12 API；操作目标显式绑定 chapterIndex 与 expectedVersion，不依赖当前列表的陈旧闭包状态。

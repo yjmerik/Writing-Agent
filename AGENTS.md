@@ -6,10 +6,10 @@
 ## 项目概述
 
 多 Agent 图架构的长篇小说自动写作系统：
-- **23 个 Agent/辅助职责类**：7 个核心 Agent（WorldBuilder / CharacterDesigner / Plotter / ChapterWriter / ContinuityChecker / StyleGuardian / MemoryManager）+ 16 个辅助职责（原 12 个基础辅助 Agent，另含 FactHarvester、PassageEditor、PlotMotifTracker、RelationshipEvolutionTracker）
+- **24 个 Agent/辅助职责类**：7 个核心 Agent（WorldBuilder / CharacterDesigner / Plotter / ChapterWriter / ContinuityChecker / StyleGuardian / MemoryManager）+ 17 个辅助职责（原 12 个基础辅助 Agent，另含 FactHarvester、PassageEditor、PlotMotifTracker、RelationshipEvolutionTracker、ContentRevisionAgent）
 - **多层长程记忆**：故事原旨 + StoryCanon 真典 + 全书快照/分层摘要 + 近期正文 + 向量检索 + 实体/线索/伏笔台账（ContextAssembler 按模型窗口预算汇成 WritingContext）
 - **状态机编排**：CONCEIVING → PLANNING → WRITING ↔ VOLUME_DONE → FINAL；另有 PAUSED_AT_CHECKPOINT 与 NEEDS_REVISION
-- **PromptTemplate 系统**：27 个外置 `.st` 模板 + 7 个题材预设（含 wuxia），支持变量插值和条件块
+- **PromptTemplate 系统**：28 个外置 `.st` 模板 + 7 个题材预设（含 wuxia），支持变量插值和条件块
 - **多模型路由**：按 `LlmTaskType`（8 种）路由；当前 8 类任务均使用 DeepSeek v4-flash，DashScope text-embedding-v3 向量化，Scenario/RecordReplay 网关提供零成本确定性验证
 - **多样性与质量控制**：ConceiveGate / PlanGate / QualityCouncil / Arbiter + Continuity/Consistency/Reader/Style 检查，重写预算按项目配置（默认 1 次）
 
@@ -126,7 +126,7 @@ cd frontend && npm run build
 
 ```
 src/main/java/com/writing/novel/
-├── agent/           # 23 个 Agent/辅助职责类 + AgentConfig/AgentHarness + util/ResponseParser
+├── agent/           # 24 个 Agent/辅助职责类 + AgentConfig/AgentHarness + util/ResponseParser
 ├── config/          # PersistenceConfig, PersistenceProperties
 ├── domain/          # 35 个领域模型/枚举 (Project, Chapter, Character, StoryFact, WritingTask, ...)
 ├── llm/             # LlmGateway/DefaultLlmGateway, OpenAiCompatibleClient, PromptTemplateService, LlmTaskType
@@ -139,7 +139,7 @@ src/main/java/com/writing/novel/
 ├── util/            # NameSanitizer
 └── web/             # 11 个 REST/SSE/SPA 入口与支持类
 src/main/resources/
-├── prompts/         # 27 个 .st 模板文件
+├── prompts/         # 28 个 .st 模板文件
 ├── presets/         # 7 个题材预设 (cultivation/general/historical/mystery/romance/thriller/wuxia)
 ├── logback-spring.xml  # 日志落盘 data/logs/app.log
 └── application.yml  # 模型配置 (按 LlmTaskType 路由) + 持久化 + llm.replay 配置

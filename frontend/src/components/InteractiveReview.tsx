@@ -13,13 +13,19 @@ interface Props {
   onChanged: () => void;
 }
 
-type RewriteTarget = {
-  kind: 'checkpoint';
-  checkpoint: Checkpoint;
-  action: 'reject' | 'modify';
-};
+type RewriteTarget =
+  | {
+    kind: 'checkpoint';
+    checkpoint: Checkpoint;
+    action: 'reject' | 'modify';
+  }
+  | {
+    kind: 'chapter';
+    chapterIndex: number;
+    sourceVersion: number;
+  };
 
-type ReviewResult = RewriteTarget & { revision: CheckpointRevision };
+type ReviewResult = Extract<RewriteTarget, { kind: 'checkpoint' }> & { revision: CheckpointRevision };
 
 export default function InteractiveReview({ projectId, onChanged }: Props) {
   // p21-05: 元数据一次加载；正文按选中章节懒加载缓存
@@ -32,6 +38,7 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
   const [rewriteModalOpen, setRewriteModalOpen] = useState(false);
   const [rewriteTarget, setRewriteTarget] = useState<RewriteTarget | null>(null);
   const [rewriteInstructions, setRewriteInstructions] = useState('');
+  const [rewriteError, setRewriteError] = useState('');
   const [rewriting, setRewriting] = useState(false);
   const [reviewResult, setReviewResult] = useState<ReviewResult | null>(null);
   const [qualityReport, setQualityReport] = useState<ChapterQualityReport | null>(null);
@@ -136,15 +143,27 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
     } finally { setLoading(false); }
   };
 
-  const openCheckpointRewrite = (checkpoint: Checkpoint, action: RewriteTarget['action']) => {
+  const openCheckpointRewrite = (
+    checkpoint: Checkpoint,
+    action: Extract<RewriteTarget, { kind: 'checkpoint' }>['action'],
+  ) => {
     setRewriteTarget({ kind: 'checkpoint', checkpoint, action });
     setRewriteModalOpen(true);
     setRewriteInstructions('');
+    setRewriteError('');
+  };
+
+  const closeRewriteModal = () => {
+    setRewriteModalOpen(false);
+    setRewriteTarget(null);
+    setRewriteInstructions('');
+    setRewriteError('');
   };
 
   const submitCheckpointRewrite = async () => {
-    if (!rewriteTarget) return;
+    if (!rewriteTarget || rewriteTarget.kind !== 'checkpoint') return;
     setRewriting(true);
+    setRewriteError('');
     try {
       const result = rewriteTarget.action === 'reject'
         ? await api.rejectCheckpoint(projectId, rewriteTarget.checkpoint.id, rewriteInstructions)
@@ -157,8 +176,7 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
       } else {
         message.success('已修改并批准');
       }
-      setRewriteModalOpen(false);
-      setRewriteTarget(null);
+      closeRewriteModal();
       await refresh();
       onChanged();
     } catch (e) {
@@ -178,19 +196,31 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
     } finally { setLoading(false); }
   };
 
-  const handleRewriteChapter = async () => {
-    if (!currentChapter) return;
+  const submitChapterRewrite = async (target: Extract<RewriteTarget, { kind: 'chapter' }>) => {
     setRewriting(true);
+    setRewriteError('');
     try {
-      await api.rewriteChapter(projectId, currentChapter.chapterIndex, rewriteInstructions);
-      message.success(`第${currentChapter.chapterIndex}章已重写`);
-      setRewriteModalOpen(false);
-      await refresh();
+      const chapter = await api.rewriteChapter(projectId, target.chapterIndex, rewriteInstructions);
+      setBodies((previous) => ({ ...previous, [chapter.chapterIndex]: chapter }));
+      setChapters((previous) => previous.map((item) =>
+        item.chapterIndex === chapter.chapterIndex ? chapter : item,
+      ));
+      message.success(`第${chapter.chapterIndex}章已从 v${target.sourceVersion} 重写为 v${chapter.version}`);
+      closeRewriteModal();
+      onChanged();
     } catch (e) {
-      message.error(`重写失败: ${(e as Error).message}`);
+      setRewriteError(`重写失败: ${(e as Error).message}`);
     } finally { setRewriting(false); }
   };
-  void handleRewriteChapter; // used via Modal footer for standalone rewrite
+
+  const submitRewrite = async () => {
+    if (!rewriteTarget) return;
+    if (rewriteTarget.kind === 'chapter') {
+      await submitChapterRewrite(rewriteTarget);
+      return;
+    }
+    await submitCheckpointRewrite();
+  };
 
   const renderChapterContent = (content: string) => {
     if (!content) return <Text type="secondary">（空）</Text>;
@@ -362,7 +392,16 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
                         }
                       }}>已处理</Button>
                     )}
-                    <Button size="small" icon={<EditOutlined />} onClick={() => { setRewriteInstructions(''); setRewriteModalOpen(true); }}>
+                    <Button size="small" icon={<EditOutlined />} onClick={() => {
+                      setRewriteTarget({
+                        kind: 'chapter',
+                        chapterIndex: currentChapter.chapterIndex,
+                        sourceVersion: currentChapter.version,
+                      });
+                      setRewriteInstructions('');
+                      setRewriteError('');
+                      setRewriteModalOpen(true);
+                    }}>
                       重写此章
                     </Button>
                   </Space>
@@ -509,20 +548,25 @@ export default function InteractiveReview({ projectId, onChanged }: Props) {
       <Modal
         title="修改意见"
         open={rewriteModalOpen}
-        onCancel={() => { setRewriteModalOpen(false); setRewriteTarget(null); }}
+        onCancel={closeRewriteModal}
         footer={[
-          <Button key="cancel" onClick={() => { setRewriteModalOpen(false); setRewriteTarget(null); }}>取消</Button>,
-          rewriteTarget?.action === 'modify' ? (
-            <Button key="modify" type="primary" loading={rewriting} onClick={submitCheckpointRewrite}>
+          <Button key="cancel" onClick={closeRewriteModal}>取消</Button>,
+          rewriteTarget?.kind === 'chapter' ? (
+            <Button key="chapter" type="primary" loading={rewriting} onClick={submitRewrite}>
+              重写此章
+            </Button>
+          ) : rewriteTarget?.action === 'modify' ? (
+            <Button key="modify" type="primary" loading={rewriting} onClick={submitRewrite}>
               重写后批准
             </Button>
           ) : (
-            <Button key="reject" danger loading={rewriting} onClick={submitCheckpointRewrite}>
+            <Button key="reject" danger loading={rewriting} onClick={submitRewrite}>
               重写（拒绝当前版本）
             </Button>
           ),
         ]}
       >
+        {rewriteError && <Alert type="error" message={rewriteError} showIcon style={{ marginBottom: 12 }} />}
         <Input.TextArea
           rows={4}
           placeholder="请输入修改意见，如：增加对话、减少打斗、补充人物心理..."

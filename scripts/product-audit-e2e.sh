@@ -25,7 +25,6 @@ CASES=(
 # 测试先行基线：修复某项后，必须从此数组移除对应 ID；XPASS 会使校验失败。
 KNOWN_FAILURES=(
   auto-zero-intervention
-  standalone-chapter-rewrite
   interactive-to-auto
   approve-keeps-chapter-visible
   manual-content-management
@@ -222,6 +221,12 @@ if need_case standalone-chapter-rewrite || need_case manual-content-management |
   conceive_once "$P_REWRITE" || exit 2
   advance_once "$P_REWRITE" || exit 2
   write_one "$P_REWRITE" || exit 2
+  # Scenario gateway deliberately returns a fixed rewrite body.  Give the existing
+  # chapter a distinct persisted source body so this browser case can assert the
+  # real rewrite contract: a successful request replaces visible content as well
+  # as incrementing the version.
+  sqlite3 "$DIR/novel.db" \
+    "UPDATE chapters SET content = content || char(10) || char(10) || '【重写前来源标记】' WHERE project_id='$P_REWRITE' AND chapter_index=1;" || exit 2
 fi
 
 if need_case interactive-to-auto; then
@@ -302,7 +307,7 @@ async function modalOpen() {
 async function submitModal(instruction, buttonText) {
   if (!await modalOpen()) return false
   await fillInput('.ant-modal-wrap textarea', instruction)
-  return await clickButtonContaining(buttonText)
+  return await js('(() => {const modal=[...document.querySelectorAll(".ant-modal-wrap")].find(x=>getComputedStyle(x).display!=="none");const b=[...modal.querySelectorAll("button")].find(x=>x.innerText.includes(' + JSON.stringify(buttonText) + '));if(b){b.click();return true}return false})()')
 }
 
 async function runCase(id, fn) {
@@ -368,15 +373,16 @@ await runCase('standalone-chapter-rewrite', async () => {
   const before = await pageJson('/api/projects/$P_REWRITE/chapters/1')
   await openTab('章节管理')
   const opened = await clickButtonContaining('重写此章')
-  const submitted = opened && await submitModal('改为女医师视角并增加证据推理', '重写后批准')
+  const submitted = opened && await submitModal('改为女医师视角并增加证据推理', '重写此章')
   await wait(4)
   const after = await pageJson('/api/projects/$P_REWRITE/chapters/1')
   const closed = !(await modalOpen())
   const versionIncreased = after.version > before.version
   const contentChanged = after.content !== before.content
-  return { pass: opened && submitted && closed && versionIncreased && contentChanged,
+  const updatedBodyVisible = await js('document.body.innerText.includes(' + JSON.stringify(after.content.slice(0, 28)) + ')')
+  return { pass: opened && submitted && closed && versionIncreased && contentChanged && updatedBodyVisible,
     opened, submitted, modalClosed: closed, beforeVersion: before.version,
-    afterVersion: after.version, contentChanged }
+    afterVersion: after.version, contentChanged, updatedBodyVisible }
 })
 
 await runCase('interactive-to-auto', async () => {

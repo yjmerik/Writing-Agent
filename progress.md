@@ -748,3 +748,10 @@ W2 的两个独立基石已落地（不依赖 LLM prompt 改动，不影响产�
 2. 确认 `e2e-report.json` 的质量后运行 `python3 scripts/compare-baseline.py --bless`。
 3. 运行 `./scripts/e2e.sh` 验证零成本多章 replay，再运行 `python3 scripts/compare-baseline.py`。
 4. 后续新需求必须从 `docs/specs/TEMPLATE.md` 起步；E2E 的失败分类按 AGENTS.md 回流为 bug feature。
+
+## Phase 26 — p26-04 独立章节重写接线（2026-09-03）
+
+- 章节卡“重写此章”现在保存独立的 discriminated target（`kind: 'chapter'`、`chapterIndex`、`sourceVersion`），不再依赖 pending checkpoint。
+- 提交成功后直接以返回章节更新元数据与正文缓存、显示真实版本变化、关闭并重置弹窗；失败时弹窗保持打开并显示行内错误。
+- 严格浏览器场景 `standalone-chapter-rewrite`：RED 为 0 PASS / 1 XFAIL（无法提交、v3→v3、正文未变、弹窗未关）；GREEN 为 1 PASS / 0 XFAIL / 0 ERROR（v3→v4、正文变化且页面已显示新正文）。仅移除该 case 的 `KNOWN_FAILURES`。
+- 验证：`frontend npm run build` PASS；JDK21 `mvn compile`、`mvn test`、`./init.sh` 均 PASS（504 tests / 0 failures / 0 errors / 1 skipped；init 另通过 27 prompt 与生产前端构建）。

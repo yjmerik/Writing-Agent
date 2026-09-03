@@ -3,6 +3,8 @@ package com.writing.novel.web;
 import com.writing.novel.domain.*;
 import com.writing.novel.domain.Character;
 import com.writing.novel.orchestrator.NovelOrchestrator;
+import com.writing.novel.orchestrator.ProjectActionPolicy;
+import com.writing.novel.orchestrator.ProjectActionPolicy.ProjectAction;
 import com.writing.novel.service.CanonPatchService;
 import com.writing.novel.service.WritingTaskExecutor;
 import com.writing.novel.spi.NovelRepository;
@@ -19,6 +21,7 @@ public class ContentController {
     private final NovelOrchestrator orchestrator;
     private final CanonPatchService canonPatch;
     private final WritingTaskExecutor writingTaskExecutor;
+    private final ProjectActionPolicy actionPolicy = new ProjectActionPolicy();
 
     public ContentController(NovelRepository repository, NovelOrchestrator orchestrator,
                              CanonPatchService canonPatch, WritingTaskExecutor writingTaskExecutor) {
@@ -227,6 +230,10 @@ public class ContentController {
     @PostMapping("/write-chapter")
     public Chapter writeChapter(@PathVariable String id,
                                  @RequestBody(required = false) java.util.Map<String, String> body) {
+        Project project = repository.findProject(id).orElseThrow();
+        actionPolicy.requireAllowed(project, ProjectAction.WRITE_CHAPTER,
+                repository.findOutlineByProject(id).isPresent(),
+                !repository.findPendingCheckpoints(id).isEmpty());
         // p18-03: 写前指令——作者对下一章的定向要求，透传本章 writingNotes
         String instruction = body != null ? body.get("instruction") : null;
         if (writingTaskExecutor == null) {

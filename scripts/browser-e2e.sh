@@ -170,7 +170,7 @@ import json; d=json.load(open('$DIR/ws-viewport.json'))
 m, dk = d['mobile'], d['desktop']
 exit(0 if (m['siderW'] < 60 and m['overflow'] <= 0 and dk['siderW'] >= 300 and dk['overflow'] <= 0) else 1)"; record "workspace-responsive-sider" $?
 
-# ---------- 4. 终态门禁：FINAL 禁用写作控制 ----------
+# ---------- 4. 终态门禁：FINAL 不呈现无效主操作 ----------
 ego-browser nodejs > "$DIR/final.out" 2>&1 <<EGOEOF
 const task = await useOrCreateTaskSpace('$TASK_ID')
 await openOrReuseTab('$BASE/#/project/$P_FINAL', { wait: true, timeout: 30 })
@@ -186,9 +186,9 @@ for (let i = 0; i < 10; i++) {
     const body = document.body.innerText
     return {
       finalAlert: body.includes('全书已完结（FINAL）'),
-      runDisabled: run ? run.disabled : null,
-      oneDisabled: one ? one.disabled : null,
-      batchDisabled: batch ? batch.disabled : null,
+      runAbsent: !run,
+      oneAbsent: !one,
+      batchAbsent: !batch,
       rawEnum: body.includes('NEEDS_REVISION') || body.includes('PAUSED_AT_CHECKPOINT'),
       bodyHead: body.slice(0, 150),
       hash: location.hash,
@@ -204,7 +204,7 @@ await closeTab()
 EGOEOF
 python3 -c "
 import json; d=json.load(open('$DIR/final.json'))
-exit(0 if d['finalAlert'] and d['runDisabled'] and d['oneDisabled'] and d['batchDisabled'] and not d['rawEnum'] else 1)"; record "terminal-final-disabled" $?
+exit(0 if d['finalAlert'] and d['runAbsent'] and d['oneAbsent'] and d['batchAbsent'] and not d['rawEnum'] else 1)"; record "terminal-final-disabled" $?
 
 # ---------- 5. 终态门禁：NEEDS_REVISION 中文提示 + 重新评审 ----------
 ego-browser nodejs > "$DIR/revision.out" 2>&1 <<EGOEOF
@@ -221,7 +221,7 @@ for (let i = 0; i < 10; i++) {
       revisionAlert: body.includes('成书门禁未通过（NEEDS_REVISION）'),
       reason: body.includes('伏笔') || body.includes('硬性门禁'),
       reAudit: !!btns.find(b => b.innerText.trim() === '重新评审'),
-      oneDisabled: one ? one.disabled : null,
+      oneAbsent: !one,
     }
   })()\`)
   if (r.revisionAlert) break
@@ -233,7 +233,7 @@ await closeTab()
 EGOEOF
 python3 -c "
 import json; d=json.load(open('$DIR/revision.json'))
-exit(0 if d['revisionAlert'] and d['reason'] and d['reAudit'] and d['oneDisabled'] else 1)"; record "terminal-needs-revision" $?
+exit(0 if d['revisionAlert'] and d['reason'] and d['reAudit'] and d['oneAbsent'] else 1)"; record "terminal-needs-revision" $?
 
 # ---------- 6. 章节懒加载：元数据一次、正文按选中懒取 ----------
 ego-browser nodejs > "$DIR/lazy.out" 2>&1 <<EGOEOF

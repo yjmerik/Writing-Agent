@@ -11,6 +11,8 @@ export type NovelState =
   | 'NEEDS_REVISION'
   | 'PAUSED_AT_CHECKPOINT';
 
+export type ProjectAction = 'ADVANCE' | 'WRITE_CHAPTER' | 'WRITE_ALL' | 'FINAL_AUDIT';
+
 export interface Project {
   id: string;
   title: string;
@@ -28,6 +30,9 @@ export interface ProjectStatus {
   state: NovelState;
   mode: ProjectMode;
   currentChapter: number;
+  totalWords: number;
+  allowedActions: ProjectAction[];
+  blockedReasons: Partial<Record<ProjectAction, string>>;
 }
 
 export interface Character {

@@ -1,5 +1,8 @@
 package com.writing.novel.web;
 
+import com.writing.novel.domain.NovelState;
+import com.writing.novel.domain.Outline;
+import com.writing.novel.domain.Project;
 import com.writing.novel.orchestrator.NovelOrchestrator;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
@@ -30,6 +33,7 @@ class WriteInstructionTest {
     private SqliteNovelRepository repo;
     private NovelOrchestrator orchestrator;
     private MockMvc mvc;
+    private String projectId;
 
     @BeforeEach
     void setUp() {
@@ -37,26 +41,31 @@ class WriteInstructionTest {
         new SqliteSchemaInitializer(cp).initialize();
         repo = new SqliteNovelRepository(cp);
         orchestrator = mock(NovelOrchestrator.class);
+        Project project = new Project("写前指令", "测试", "悬疑");
+        project.setState(NovelState.WRITING);
+        repo.saveProject(project);
+        repo.saveOutline(new Outline(project.getId(), "总纲"));
+        projectId = project.getId();
         ContentController controller = new ContentController(repo, orchestrator, null, null);
         mvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
     @Test
     void writeChapter携带instruction透传到Orchestrator() throws Exception {
-        mvc.perform(post("/api/projects/p1/write-chapter")
+        mvc.perform(post("/api/projects/" + projectId + "/write-chapter")
                         .contentType("application/json")
                         .content("{\"instruction\":\"本章重点写主角与师父的诀别\"}"))
                 .andExpect(status().isOk());
 
-        verify(orchestrator).runWritingOneChapter(eq("p1"),
+        verify(orchestrator).runWritingOneChapter(eq(projectId),
                 eq("本章重点写主角与师父的诀别"));
     }
 
     @Test
     void 无instruction时走原路径行为不变() throws Exception {
-        mvc.perform(post("/api/projects/p1/write-chapter"))
+        mvc.perform(post("/api/projects/" + projectId + "/write-chapter"))
                 .andExpect(status().isOk());
-        verify(orchestrator).runWritingOneChapter(eq("p1"), eq((String) null));
+        verify(orchestrator).runWritingOneChapter(eq(projectId), eq((String) null));
     }
 
     @Test

@@ -244,7 +244,6 @@ if need_case approve-keeps-chapter-visible; then
   cp_id=$(curl --noproxy '*' -sf "$BASE/api/projects/$P_APPROVE/checkpoints" \
     | python3 -c "import json,sys; a=json.load(sys.stdin); print(a[-1]['id'])") || exit 2
   curl --noproxy '*' -sf -X POST "$BASE/api/projects/$P_APPROVE/checkpoints/$cp_id/approve" >/dev/null || exit 2
-  advance_once "$P_APPROVE" || exit 2
   write_one "$P_APPROVE" || exit 2
 fi
 

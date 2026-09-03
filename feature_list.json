@@ -3165,7 +3165,7 @@
       "description": "元数据刷新保留有效正文缓存，并在版本变化时显式重取当前章。",
       "acceptance": "批准及刷新后当前章节正文持续可见，加载状态正常结束。",
       "verify_cmd": "./scripts/product-audit-e2e.sh --case approve-keeps-chapter-visible",
-      "evidence": "2026-09-03：严格 TDD RED：approve-keeps-chapter-visible 为 0 PASS / 1 XFAIL / 0 ERROR，批准前正文可见，批准后正文消失且 bodyLoading=true。GREEN：metadata refresh 仅保留 chapterIndex/version 仍匹配的正文缓存；当前选中章节版本变化时显式重读，批准刷新强制重读当前章；读取失败以站内错误和重试入口收敛，不再永久 spinner；独立章节重写继续同步正文/元数据。strict 浏览器为 1 PASS / 0 XFAIL / 0 ERROR，仅移除该项 KNOWN_FAILURES。frontend npm run build PASS；JDK21 mvn compile、mvn test 与 ./init.sh 均通过，504 tests / 0 failures / 0 errors / 1 skipped，init 另通过 27 prompt 与生产前端构建。"
+      "evidence": "2026-09-03：严格 TDD RED：approve-keeps-chapter-visible 为 0 PASS / 1 XFAIL / 0 ERROR，批准前正文可见，批准后正文消失且 bodyLoading=true。GREEN：metadata refresh 仅保留 chapterIndex/version 仍匹配的正文缓存；当前选中章节版本变化时显式重读，批准刷新强制重读当前章；读取失败以站内错误和重试入口收敛，不再永久 spinner；独立章节重写继续同步正文/元数据。strict 浏览器为 1 PASS / 0 XFAIL / 0 ERROR，仅移除该项 KNOWN_FAILURES。frontend npm run build PASS；JDK21 mvn compile、mvn test 与 ./init.sh 均通过，504 tests / 0 failures / 0 errors / 1 skipped，init 另通过 27 prompt 与生产前端构建。基线 follow-up 1：完整 browser-e2e RED 为 chapter-lazy-loading 首章请求 b1=2；非 force loadBody 识别同章 in-flight 后去重，force generation 取代语义保持，独立提交 e4b20bb。基线 follow-up 2：SQLite focused RED 为 full.version=3 而 meta.version=1；元数据映射补回 SQL 已查询的 version，focused 4/4、approve/standalone strict 各1/1、browser 8/8、JDK21 full/init 通过，独立提交 2b92249。"
     },
     {
       "id": "p26-06",
@@ -3173,12 +3173,13 @@
       "phase": 26,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": ["orchestrator/ProjectActionPolicy.java", "web/OrchestratorController.java", "frontend/src/components/RunConsole.tsx"],
       "problem_ref": "P1-02：页面在无效状态开放写作操作且由下游报错",
       "description": "由服务端计算和强制允许动作及禁用原因，前端只呈现有效主操作。",
       "acceptance": "所有 NovelState 的动作集合符合矩阵；无大纲、暂停及非写作状态不会创建写作任务。",
-      "verify_cmd": "mvn test -Dtest=ProjectActionPolicyTest"
+      "verify_cmd": "mvn test -Dtest=ProjectActionPolicyTest",
+      "evidence": "2026-09-03：严格 TDD：先加 9 组参数化状态矩阵，RED 为 ProjectActionPolicy/ProjectAction 不存在的 testCompile 失败；再加 endpoint 无副作用回归，RED 为 4 个失败（status 无 allowedActions、WRITING /run 隐式写章、CONCEIVING write-all 创建任务、无效 write-chapter 留下 FAILED 任务）。GREEN：中央 policy 发布 allowedActions/blockedReasons，从 repository 读取大纲与 pending checkpoint；/run、/write-all、/write-chapter、/final-audit 在任务或 orchestrator 副作用前强制。WRITING 不再通过 /run 隐式写章。RunConsole 获取 status，只呈现服务端允许的主操作，无可用动作时显示服务端 blocked reason。focused policy/controller/content/ownership/instruction 为 34/34 PASS；approve-keeps-chapter-visible 与 standalone-chapter-rewrite strict 各 1 PASS / 0 XFAIL / 0 ERROR；browser-e2e 8/8 PASS；frontend build PASS；JDK21 full Maven 与 init 为 521 tests / 0 failures / 0 errors / 1 skipped，init 另通过 27 prompt 与前端构建。前置基线修复为 e4b20bb 与 2b92249。"
     },
     {
       "id": "p26-07",

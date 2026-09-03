@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Steps, Button, Space, message, Alert, Card, Popconfirm, Input, Progress, Tag } from 'antd';
 import { PlayCircleOutlined, FileAddOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
-import type { ProjectStatus, NovelState, Chapter, SseState } from '../types';
+import type { ProjectStatus, NovelState, Chapter, SseState, ProjectAction } from '../types';
 
 const STATES: NovelState[] = ['CONCEIVING', 'PLANNING', 'WRITING', 'VOLUME_DONE', 'FINAL'];
 const STATE_TEXT: Record<string, string> = {
@@ -36,11 +36,48 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
   const unsubRef = useRef<(() => void) | null>(null);
   // p21-08: SSE 连接状态展示
   const [sseState, setSseState] = useState<SseState | null>(null);
-  // p21-03: 终态门禁——FINAL 禁用全部写作控制；NEEDS_REVISION 只允许修订与重审
-  const isFinal = projectState === 'FINAL';
-  const needsRevision = projectState === 'NEEDS_REVISION';
-  const terminal = isFinal || needsRevision;
   const [auditing, setAuditing] = useState(false);
+  const [status, setStatus] = useState<ProjectStatus | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
+
+  const refreshStatus = useCallback(async () => {
+    try {
+      const next = await api.getStatus(projectId);
+      setStatus(next);
+      setStatusError(null);
+      return next;
+    } catch (e) {
+      setStatus(null);
+      setStatusError((e as Error).message);
+      return null;
+    }
+  }, [projectId]);
+
+  useEffect(() => {
+    let active = true;
+    setStatus(null);
+    setStatusError(null);
+    api.getStatus(projectId).then((next) => {
+      if (active) {
+        setStatus(next);
+        setStatusError(null);
+      }
+    }).catch((e) => {
+      if (active) setStatusError((e as Error).message);
+    });
+    return () => { active = false; };
+  }, [projectId, projectState]);
+
+  const effectiveState = status?.state ?? projectState;
+  const isFinal = effectiveState === 'FINAL';
+  const needsRevision = effectiveState === 'NEEDS_REVISION';
+  const isAllowed = (action: ProjectAction) => status?.allowedActions.includes(action) ?? false;
+  const canWrite = isAllowed('WRITE_CHAPTER') || isAllowed('WRITE_ALL');
+  const relevantBlockedReason = status?.blockedReasons[
+    effectiveState === 'WRITING' || effectiveState === 'PAUSED_AT_CHECKPOINT'
+      ? 'WRITE_CHAPTER'
+      : 'ADVANCE'
+  ];
 
   useEffect(() => {
     return () => { unsubRef.current?.(); };
@@ -57,19 +94,22 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
         message.warning('评审未通过，请继续修订');
         setLastResult('⛔ 成书门禁重审未通过：请继续修订设定/正文后再次重审');
       }
+      await refreshStatus();
       onChanged();
     } catch (e) {
       message.error(`重审失败: ${(e as Error).message}`);
     } finally {
       setAuditing(false);
     }
-  }, [projectId, onChanged]);
+  }, [projectId, onChanged, refreshStatus]);
 
   const handleRun = useCallback(async () => {
     setRunning(true);
     setLastResult(null);
     try {
       const status: ProjectStatus = await api.run(projectId);
+      setStatus(status);
+      setStatusError(null);
       message.success(`已推进到：${STATE_TEXT[status.state] || status.state}`);
       const tips: Record<string, string> = {
         PLANNING: '\n💡 设定已生成！切换到「世界观与人物」「大纲」Tab 查看',
@@ -83,7 +123,7 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
     } finally {
       setRunning(false);
     }
-  }, [projectId, onChanged, instruction]);
+  }, [projectId, onChanged]);
 
   const handleWriteChapter = useCallback(async () => {
     setWriting(true);
@@ -97,13 +137,14 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
         message.info('当前卷已写完，无更多章节');
         setLastResult('当前卷已写完');
       }
+      await refreshStatus();
       onChanged();
     } catch (e) {
       message.error(`写作失败: ${(e as Error).message}`);
     } finally {
       setWriting(false);
     }
-  }, [projectId, onChanged]);
+  }, [projectId, onChanged, instruction, refreshStatus]);
 
   const handleWriteAll = useCallback(async () => {
     setBatchWriting(true);
@@ -134,6 +175,7 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
         `任务状态：${result.status}\n` +
         `💡 切换到「章节管理」Tab 查看正文`,
       );
+      await refreshStatus();
       onChanged();
     } catch (e) {
       message.error(`连续写作失败: ${(e as Error).message}`);
@@ -143,18 +185,18 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
       unsubRef.current?.();
       unsubRef.current = null;
     }
-  }, [projectId, onChanged, instruction]);
+  }, [projectId, onChanged, instruction, refreshStatus]);
 
   return (
     <Card>
       <Steps
         size="small"
-        current={projectState === 'FINAL'
+        current={effectiveState === 'FINAL'
           ? STATES.length  // 全部完成
-          : projectState === 'PAUSED_AT_CHECKPOINT'
+          : effectiveState === 'PAUSED_AT_CHECKPOINT'
             ? STATES.indexOf('PLANNING')
-            : STATES.indexOf(projectState) >= 0
-              ? STATES.indexOf(projectState)
+            : STATES.indexOf(effectiveState) >= 0
+              ? STATES.indexOf(effectiveState)
               : 0}
         items={STATES.map((s) => ({ title: STATE_TEXT[s] }))}
         style={{ marginBottom: 24 }}
@@ -173,12 +215,21 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
         style={{ marginBottom: 24 }}
       />
 
+      {statusError ? (
+        <Alert
+          type="error"
+          message="无法读取当前可用操作"
+          description={statusError}
+          style={{ marginBottom: 24 }}
+        />
+      ) : null}
+
       {/* p21-03: 终态门禁——服务端强制 + 前端同步禁用 */}
       {isFinal && (
         <Alert
           type="success"
           message="✅ 全书已完结（FINAL）"
-          description="全书成书门禁已通过。写作命令已停用；如需修改请重写单章（章节管理 Tab）。"
+          description={relevantBlockedReason ?? '全书成书门禁已通过。写作命令已停用；如需修改请重写单章（章节管理 Tab）。'}
           style={{ marginBottom: 24 }}
         />
       )}
@@ -188,75 +239,92 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
           message="⛔ 成书门禁未通过（NEEDS_REVISION）"
           description="存在未达标的硬性门禁（如 mustResolve 伏笔未回收、近 60 章 HIGH 级矛盾超限）。请修订设定或正文，然后点击「重新评审」再次触发成书门禁。"
           style={{ marginBottom: 24 }}
-          action={
+          action={isAllowed('FINAL_AUDIT') ? (
             <Button type="primary" danger loading={auditing} onClick={handleFinalAudit} disabled={busy}>
               重新评审
             </Button>
-          }
+          ) : undefined}
         />
       )}
 
-      <div style={{ marginBottom: 12 }}>
-            <Input.TextArea
-              rows={1}
-              value={instruction}
-              onChange={(e) => setInstruction(e.target.value)}
-              placeholder="写前指令（可选）：对本章/本次连续写作的定向要求，如『本章重点写主角与师父的诀别』"
-              maxLength={200}
-              style={{ marginBottom: 8 }}
-            />
-            {batchWriting && liveProgress && (
-              <div>
-                <Progress
-                  percent={Math.min(99, Math.round((liveProgress.chapter % 50) / 50 * 100))}
-                  size="small"
-                  status="active"
-                  format={() => `已写到第 ${liveProgress.chapter} 章（${liveProgress.words?.toLocaleString?.() ?? liveProgress.words} 字）`}
-                />
-                {liveLog.map((line, i) => (
-                  <div key={i} style={{ fontSize: 12, color: '#666' }}>{line}</div>
-                ))}
-              </div>
-            )}
-          </div>
+      {status && status.allowedActions.length === 0 && !isFinal ? (
+        <Alert
+          type="warning"
+          message="当前没有可执行的主操作"
+          description={relevantBlockedReason ?? '请先完成当前流程要求后再继续。'}
+          style={{ marginBottom: 24 }}
+        />
+      ) : null}
+
+      {canWrite ? (
+        <div style={{ marginBottom: 12 }}>
+          <Input.TextArea
+            rows={1}
+            value={instruction}
+            onChange={(e) => setInstruction(e.target.value)}
+            placeholder="写前指令（可选）：对本章/本次连续写作的定向要求，如『本章重点写主角与师父的诀别』"
+            maxLength={200}
+            style={{ marginBottom: 8 }}
+          />
+          {batchWriting && liveProgress && (
+            <div>
+              <Progress
+                percent={Math.min(99, Math.round((liveProgress.chapter % 50) / 50 * 100))}
+                size="small"
+                status="active"
+                format={() => `已写到第 ${liveProgress.chapter} 章（${liveProgress.words?.toLocaleString?.() ?? liveProgress.words} 字）`}
+              />
+              {liveLog.map((line, i) => (
+                <div key={i} style={{ fontSize: 12, color: '#666' }}>{line}</div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
       <Space size="large" wrap align="center">
-        <Button
-          type="primary"
-          size="large"
-          icon={<PlayCircleOutlined />}
-          loading={running}
-          disabled={busy || terminal}
-          onClick={handleRun}
-        >
-          {running ? '运行中（调 LLM）…' : '推进状态'}
-        </Button>
-        <Button
-          size="large"
-          icon={<FileAddOutlined />}
-          loading={writing}
-          disabled={busy || terminal}
-          onClick={handleWriteChapter}
-        >
-          {writing ? '写作中（调 LLM）…' : '写一章'}
-        </Button>
-        <Popconfirm
-          title="连续写作"
-          description="将连续写作最多 50 章（或到目标章数），可能耗时数十分钟。确定开始？"
-          onConfirm={handleWriteAll}
-          okText="开始连续写作"
-          cancelText="取消"
-          disabled={busy || terminal}
-        >
+        {isAllowed('ADVANCE') ? (
           <Button
-            danger
+            type="primary"
             size="large"
-            icon={<ThunderboltOutlined />}
-            loading={batchWriting}
-            disabled={busy || terminal}
+            icon={<PlayCircleOutlined />}
+            loading={running}
+            disabled={busy}
+            onClick={handleRun}
           >
-            {batchWriting ? '连续写作中（每章 1-2 分钟）…' : '⚡ 连续写作（最多 50 章）'}
+            {running ? '运行中（调 LLM）…' : '推进状态'}
           </Button>
-        </Popconfirm>
+        ) : null}
+        {isAllowed('WRITE_CHAPTER') ? (
+          <Button
+            size="large"
+            icon={<FileAddOutlined />}
+            loading={writing}
+            disabled={busy}
+            onClick={handleWriteChapter}
+          >
+            {writing ? '写作中（调 LLM）…' : '写一章'}
+          </Button>
+        ) : null}
+        {isAllowed('WRITE_ALL') ? (
+          <Popconfirm
+            title="连续写作"
+            description="将连续写作最多 50 章（或到目标章数），可能耗时数十分钟。确定开始？"
+            onConfirm={handleWriteAll}
+            okText="开始连续写作"
+            cancelText="取消"
+            disabled={busy}
+          >
+            <Button
+              danger
+              size="large"
+              icon={<ThunderboltOutlined />}
+              loading={batchWriting}
+              disabled={busy}
+            >
+              {batchWriting ? '连续写作中（每章 1-2 分钟）…' : '⚡ 连续写作（最多 50 章）'}
+            </Button>
+          </Popconfirm>
+        ) : null}
         {batchWriting && activeTaskId && (
           <Button danger onClick={async () => {
             try {

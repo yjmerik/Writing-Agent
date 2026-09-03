@@ -1,6 +1,7 @@
 package com.writing.novel.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.writing.novel.domain.Checkpoint;
 import com.writing.novel.domain.WritingTask;
 import com.writing.novel.service.WritingTaskExecutor;
 import com.writing.novel.spi.NovelRepository;
@@ -91,17 +92,15 @@ class ContentControllerTest {
     }
 
     @Test
-    void 写一章失败标记FAILED并清理活动槽位() throws Exception {
-        String id = createProject();  // 未构思 → 无大纲，写章抛 IllegalStateException
+    void 非写作态写一章被拒绝且不创建任务() throws Exception {
+        String id = createProject();
         mvc.perform(post("/api/projects/" + id + "/write-chapter"))
                 .andExpect(status().isConflict());
 
         WritingTask task = findWriteChapterTask(id);
-        org.junit.jupiter.api.Assertions.assertNotNull(task, "失败也应持久化 WRITE_CHAPTER 任务");
-        org.junit.jupiter.api.Assertions.assertEquals(WritingTask.Type.WRITE_CHAPTER, task.getType());
-        org.junit.jupiter.api.Assertions.assertEquals(WritingTask.Status.FAILED, task.getStatus());
-        org.junit.jupiter.api.Assertions.assertFalse(task.getErrorMessage().isBlank(), "FAILED 任务应带有界错误消息");
-        org.junit.jupiter.api.Assertions.assertFalse(writingTaskExecutor.hasActiveTask(id), "失败后应条件清理活动槽位");
+        org.junit.jupiter.api.Assertions.assertNull(task, "门禁拒绝必须发生在 WRITE_CHAPTER 任务创建前");
+        org.junit.jupiter.api.Assertions.assertTrue(repository.findChaptersByProject(id).isEmpty());
+        org.junit.jupiter.api.Assertions.assertFalse(writingTaskExecutor.hasActiveTask(id));
     }
 
     @Test
@@ -117,6 +116,23 @@ class ContentControllerTest {
         } finally {
             writingTaskExecutor.endWork(id, "write-all");
         }
+    }
+
+    @Test
+    void writing状态存在待审核项时写一章被拒绝且无副作用() throws Exception {
+        String id = createAndConceive();
+        mvc.perform(post("/api/projects/" + id + "/run")).andExpect(status().isOk());
+        repository.saveCheckpoint(new Checkpoint(id, Checkpoint.Type.AFTER_CHAPTER, "待审核"));
+        int tasksBefore = repository.findWritingTasksByProject(id).size();
+
+        mvc.perform(post("/api/projects/" + id + "/write-chapter"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("有待审核项，请先完成审核"));
+
+        org.junit.jupiter.api.Assertions.assertEquals(tasksBefore,
+                repository.findWritingTasksByProject(id).size());
+        org.junit.jupiter.api.Assertions.assertTrue(repository.findChaptersByProject(id).isEmpty());
+        org.junit.jupiter.api.Assertions.assertFalse(writingTaskExecutor.hasActiveTask(id));
     }
 
     private WritingTask findWriteChapterTask(String id) {

@@ -5,10 +5,15 @@ import com.writing.novel.domain.NovelState;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.WritingTask;
 import com.writing.novel.orchestrator.NovelOrchestrator;
+import com.writing.novel.orchestrator.ProjectActionPolicy;
+import com.writing.novel.orchestrator.ProjectActionPolicy.ActionAvailability;
+import com.writing.novel.orchestrator.ProjectActionPolicy.ProjectAction;
 import com.writing.novel.orchestrator.ProjectService;
 import com.writing.novel.service.WritingTaskExecutor;
+import com.writing.novel.spi.NovelRepository;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
@@ -19,20 +24,25 @@ public class OrchestratorController {
     private final ProjectService projectService;
     private final QualityEvaluationAgent qualityAgent;
     private final WritingTaskExecutor writingTaskExecutor;
+    private final NovelRepository repository;
+    private final ProjectActionPolicy actionPolicy = new ProjectActionPolicy();
 
     public OrchestratorController(NovelOrchestrator orchestrator,
                                    ProjectService projectService,
                                    QualityEvaluationAgent qualityAgent,
-                                   WritingTaskExecutor writingTaskExecutor) {
+                                   WritingTaskExecutor writingTaskExecutor,
+                                   NovelRepository repository) {
         this.orchestrator = orchestrator;
         this.projectService = projectService;
         this.qualityAgent = qualityAgent;
         this.writingTaskExecutor = writingTaskExecutor;
+        this.repository = repository;
     }
 
     @PostMapping("/run")
     public Map<String, Object> run(@PathVariable String id) {
         Project project = projectService.find(id).orElseThrow();
+        requireAllowed(project, ProjectAction.ADVANCE);
         if (project.getState() == NovelState.CONCEIVING) {
             WritingTask task = writingTaskExecutor.startConceiving(id);
             return Map.of(
@@ -76,13 +86,16 @@ public class OrchestratorController {
     @GetMapping("/status")
     public Map<String, Object> status(@PathVariable String id) {
         Project p = projectService.find(id).orElseThrow();
-        return Map.of(
-                "projectId", id,
-                "state", p.getState().name(),
-                "mode", p.getMode().name(),
-                "currentChapter", p.getCurrentChapterIndex(),
-                "totalWords", orchestrator.getTotalWordCount(id)
-        );
+        ActionAvailability availability = availability(p);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("projectId", id);
+        result.put("state", p.getState().name());
+        result.put("mode", p.getMode().name());
+        result.put("currentChapter", p.getCurrentChapterIndex());
+        result.put("totalWords", orchestrator.getTotalWordCount(id));
+        result.put("allowedActions", availability.allowedActions());
+        result.put("blockedReasons", availability.blockedReasons());
+        return result;
     }
 
     /**
@@ -93,6 +106,8 @@ public class OrchestratorController {
     public Map<String, Object> writeAll(@PathVariable String id,
                                          @RequestParam(defaultValue = "50") int maxChapters,
                                          @RequestParam(required = false) String instruction) {
+        Project project = projectService.find(id).orElseThrow();
+        requireAllowed(project, ProjectAction.WRITE_ALL);
         WritingTask task = writingTaskExecutor.startWriting(id, maxChapters, instruction);
         return Map.of(
                 "projectId", id,
@@ -134,6 +149,8 @@ public class OrchestratorController {
      */
     @PostMapping("/final-audit")
     public Map<String, Object> finalAudit(@PathVariable String id) {
+        Project project = projectService.find(id).orElseThrow();
+        requireAllowed(project, ProjectAction.FINAL_AUDIT);
         boolean passed = orchestrator.retryFinalAudit(id);
         return Map.of(
                 "projectId", id,
@@ -147,5 +164,19 @@ public class OrchestratorController {
     public Map<String, Object> evaluate(@PathVariable String id) {
         var report = qualityAgent.evaluate(id);
         return report.toMap();
+    }
+
+    private ActionAvailability availability(Project project) {
+        String projectId = project.getId();
+        return actionPolicy.evaluate(project,
+                repository.findOutlineByProject(projectId).isPresent(),
+                !repository.findPendingCheckpoints(projectId).isEmpty());
+    }
+
+    private void requireAllowed(Project project, ProjectAction action) {
+        String projectId = project.getId();
+        actionPolicy.requireAllowed(project, action,
+                repository.findOutlineByProject(projectId).isPresent(),
+                !repository.findPendingCheckpoints(projectId).isEmpty());
     }
 }

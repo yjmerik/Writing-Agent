@@ -5,9 +5,9 @@
 ## Current Objective
 
 - **Goal**: 以产品一致性审计的浏览器红灯套件驱动下一轮 P0 → P1 → P2 修复。
-- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-05 已完成：审核操作先校验目标归属/PENDING，初始设定与卷大纲的修改意见会生成 detached candidate，校验后事务替换真实持久化内容；失败保留原内容与 `PENDING`。世界观替换先索引独立候选 ID，再提交 DB，成功后清旧向量、bump memory revision；StoryCanon 保留 HUMAN_PATCH supersede 审计链并保护派生时代锚点。连续性 checkpoint 保持 status-only 语义。审核卡弹窗现显式绑定被点击的 checkpoint 与动作，成功结果持久展示该卡描述、目标、真实前后摘要和版本。章节卡重写使用独立 chapter target，成功更新正文缓存并显示真实版本变化，失败保留弹窗及行内错误；审批刷新会保留版本仍匹配的正文缓存、在版本改变或批准后显式重读当前章，并在正文读取失败时显示可重试站内错误。产品浏览器既知失败集合已移除 `initial-setup-modify`、`volume-outline-modify`、`checkpoint-card-targeting`、`standalone-chapter-rewrite`、`approve-keeps-chapter-visible`。
+- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-06 已完成。在已有审核目标安全、detached candidate 替换、独立章节重写与审批后正文收敛之上，项目主操作现由服务端 `ProjectActionPolicy` 唯一定义与强制；status 按真实 repository 大纲/待审项发布 `allowedActions`/`blockedReasons`，RunConsole 只呈现当前有效动作。`/run` 不再在 WRITING 隐式写章，四个主 endpoint 在任务/Agent 副作用前统一门禁。p26-05 交付前另独立修复了初次正文请求去重（`e4b20bb`）与 metadata version 映射（`2b92249`）。
 - **Branch**: 当前 Phase 26 修复分支；仓库没有 Git remote/upstream。
-- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-05 completed，下一项为 p26-06。
+- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-06 completed，下一项为 p26-07。
 - **Current spec**: `docs/specs/2026-09-02-product-audit-browser-e2e.md` 与 `.superpowers/sdd/2026-09-03-product-design-consistency-remediation/` 任务简报。
 - **Product audit**: `docs/audits/2026-09-02-product-design-consistency-audit.md`（P0 3 项 / P1 8 项 / P2 5 项）。
 
@@ -17,7 +17,7 @@
 2. **可靠性**：ProjectWorkCoordinator 以 owner-token 保证单项目单 worker；post_process_ledger 支持崩溃后只续跑未完成阶段。
 3. **长程记忆**：ContextAssembler 汇总故事原旨、StoryCanon、全书快照/分层摘要、近期正文、向量检索、实体关系、叙事线索和伏笔。
 4. **真典 seam**：业务层只依赖 StoryCanon；HUMAN_PATCH 5 章保护、ACTIVE 唯一性与 supersede 审计链由适配器实现。
-5. **状态语义**：项目 FINAL 全写锁；NEEDS_REVISION 只允许修订后 retryFinalAudit；章节 NEEDS_MANUAL_REVIEW 会冻结后续写作，resolve-review 后恢复 DONE。
+5. **状态语义**：CONCEIVING/PLANNING/VOLUME_DONE 只允许 ADVANCE；WRITING+大纲+无 pending 只允许 WRITE_CHAPTER/WRITE_ALL；NEEDS_REVISION 只允许 FINAL_AUDIT；PAUSED_AT_CHECKPOINT/FINAL 无主操作。pending checkpoint 关闭所有写作动作；章节 NEEDS_MANUAL_REVIEW 会冻结后续写作，resolve-review 后恢复 DONE。
 
 ## Completed Baseline
 
@@ -42,6 +42,8 @@
 - p26-04 RED：`standalone-chapter-rewrite` strict 为 0 PASS / 1 XFAIL / 0 ERROR；弹窗打开但无法提交（`submitted=false`、`modalClosed=false`、版本 v3→v3、正文未变）。GREEN：chapter target 保存 `chapterIndex` 与 `sourceVersion`，独立提交 `rewriteChapter`，成功更新元数据/正文缓存、关闭并 reset；失败保留弹窗且行内错误。strict 为 1 PASS / 0 XFAIL / 0 ERROR，断言提交、关闭、v3→v4、正文变化与页面新正文可见；仅移除该项 KNOWN_FAILURES。frontend build 与 JDK21 `mvn compile`、`mvn test`、`./init.sh` 均 PASS（504 tests / 0 failures / 0 errors / 1 skipped）。
 - p26-04 review round 1：仅强化 E2E。重写前明确读取 checkpoints 并要求 `pendingBefore=0`；页面验证改为重写正文可见且旧 `【重写前来源标记】` 不存在，避免新旧正文共享前缀导致的假阳性。严格场景为 1 PASS / 0 XFAIL / 0 ERROR；前端 build、JDK21 `mvn test` 和 `./init.sh` 均 PASS（504 tests / 0 failures / 0 errors / 1 skipped）。
 - p26-05 RED：`approve-keeps-chapter-visible` strict 为 0 PASS / 1 XFAIL / 0 ERROR；批准前正文可见，批准后消失且 `bodyLoading=true`。GREEN：刷新按 chapterIndex/version 保留有效缓存，选中章版本变化先淘汰再显式重读，批准强制重读当前章且旧正文保留到新响应；失败显示站内错误与重试，spinner 收敛。独立章节重写继续同步 body/meta。strict 为 1 PASS / 0 XFAIL / 0 ERROR，仅移除该项 KNOWN_FAILURES；frontend build、JDK21 `mvn compile`、`mvn test` 与 `./init.sh` 均 PASS（504 tests / 0 failures / 0 errors / 1 skipped）。
+- p26-05 基线 follow-up：`chapter-lazy-loading` RED 为首章请求 b1=2，非 force 读取复用 in-flight 后 browser 8/8，提交 `e4b20bb`；SQLite metadata focused RED 为 full.version=3/meta.version=1，映射 version 后 focused 4/4、approve/standalone strict 各1/1、browser 8/8、full/init 通过，提交 `2b92249`。
+- p26-06 RED：policy 类/枚举缺失导致 testCompile 失败；endpoint 回归初始 4 失败，覆盖 status 缺字段、WRITING `/run` 隐式写章、CONCEIVING write-all 创建任务、write-chapter 留 FAILED 任务。GREEN：focused **34/34**，直接 mock 证明四个非法 endpoint 无 task/orchestrator 调用；approve/standalone strict 各 **1/1**，browser **8/8**，frontend build PASS，JDK21 full/init **521 tests / 0 failures / 0 errors / 1 skipped**，27 prompt 与前端构建 PASS。
 
 ## Non-blocking Observations
 
@@ -53,7 +55,7 @@
 
 ## Next Entry
 
-- 下一步为 p26-06：状态操作矩阵与服务端门禁；不要改已完成的审核卡绑定、独立章节重写或审批后正文加载路径。
+- 下一步为 p26-07：初始设定审核内容摘要；不要改 p26-06 已锁定的动作矩阵或四个 endpoint 前置门禁。
 - 后续红灯还有独立章节重写、交互切自动、审核后正文稳定、人工管理、移动端；自动零干预需单独设计持续运行生命周期。
 - 新需求继续遵循：写 spec → 拆 1-3 文件 feature → 登记 `feature_list.json` → 实现与验证 → 更新三份状态文档。
 - 本机代理可能劫持 localhost；脚本内 curl 保持 `--noproxy '*'`。ego-browser 内写文件使用绝对路径。

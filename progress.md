@@ -763,3 +763,16 @@ W2 的两个独立基石已落地（不依赖 LLM prompt 改动，不影响产�
 - 正文请求现在有独立的收敛状态：失败显示站内错误与“重试”，不会遗留永久 spinner；p26-04 的独立重写仍同时更新正文缓存与章节元数据。
 - 严格 TDD：`approve-keeps-chapter-visible` RED 为 **0 PASS / 1 XFAIL / 0 ERROR**（正文 true→false、`bodyLoading=true`）；GREEN 为 **1 PASS / 0 XFAIL / 0 ERROR**。仅从 `KNOWN_FAILURES` 删除该 case。
 - 验证：frontend `npm run build` PASS；JDK21 `mvn compile`、`mvn test`、`./init.sh` 均 PASS（**504 tests / 0 failures / 0 errors / 1 skipped**；init 另通过 27 prompt 与生产前端构建）。
+
+### p26-05 交付前基线回归修复
+
+- 完整 browser-e2e 暴露首选章节初次正文请求重复：RED `b1=2`，修复后非 force 读取复用同章 in-flight，force generation 取代语义不变。独立提交：`e4b20bb fix(chapter): deduplicate initial body load`。
+- 原 approve 场景在真实 version 3 章节上暴露 metadata mapper 丢版本：SQLite focused RED 为 full.version=3、meta.version=1；最小映射修复后 focused 4/4、approve/standalone strict 各1/1、browser 8/8、JDK21 full/init 全绿。独立提交：`2b92249 fix(chapter): expose metadata version`。
+
+## Phase 26 — p26-06 状态操作矩阵与服务端门禁（2026-09-03）
+
+- 新增中央 `ProjectActionPolicy`：CONCEIVING/PLANNING/VOLUME_DONE 只允许 ADVANCE；WRITING 仅在有大纲且无 pending checkpoint 时允许 WRITE_CHAPTER/WRITE_ALL；NEEDS_REVISION 只允许 FINAL_AUDIT；PAUSED_AT_CHECKPOINT/FINAL 无主操作。
+- `status` 从 repository 读取大纲和待审项，返回 `allowedActions`/`blockedReasons`；`/run`、`/write-all`、`/write-chapter`、`/final-audit` 在任务创建或 orchestrator 调用前统一拒绝无效动作，WRITING 不再由 `/run` 隐式写章。
+- RunConsole 只呈现 status 当前允许的按钮，写作指令也仅在可写时显示；无有效主操作时呈现服务端 blocked reason。产品 approve 种子按矩阵直接调 `/write-chapter`，未制造额外 pending。
+- TDD RED：policy 首跑因类/枚举不存在而编译失败；endpoint 首跑 4 失败，覆盖 status 缺字段、WRITING `/run` 隐式写章、CONCEIVING write-all 创建任务、write-chapter 留 FAILED 任务。
+- GREEN：focused policy/controller/content/ownership/instruction **34/34 PASS**；approve 与 standalone strict 各 **1 PASS / 0 XFAIL / 0 ERROR**；browser **8/8 PASS**；frontend build PASS；JDK21 full Maven/init **521 tests / 0 failures / 0 errors / 1 skipped**，27 prompt 与生产前端构建 PASS。

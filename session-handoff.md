@@ -55,6 +55,7 @@
 - p26-10 review round 1：真实浏览器改用两卷 written boundary，并在删除前单独执行“新增→上移→立即保存→整页刷新精确比对”。强化 RED 命中 `addBoundary.earlyDisabled`、`pendingLocked.inputs/buttons/premiseSaveLocked`、`premiseDraftRetained` 五项 false；移动保存/刷新顺序两项已 true。GREEN 仅允许最后一个含已写章的卷及其后卷新增章；结构 PUT pending 时锁定全部结构字段/动作、刷新、重规划和两个保存按钮，总纲文本仍可继续编辑，响应不覆盖总纲草稿且 persisted premise 保持旧值。增强 manual aggregate 为 **0/1/0** 且 outline/world/character 全 true，仅 future chapterActions false；两个 strict 各 **1/0/0**；frontend build、JDK21 compile/full/init **548 tests / 0 failures / 0 errors / 1 skipped**。
 
 - p26-11 RED：`ChapterVersionHistoryTest` testCompile 为 **29 个预期缺失符号**（领域类型和三个仓储契约不存在）。GREEN：不可变八字段 ChapterVersion，source 为 String，createdAt 为 Instant；SQLite 新表全部业务列 NOT NULL、项目+章号+版本 UNIQUE，普通 INSERT 拒绝重复且不覆盖，查询倒序/精确映射；fresh schema 与已有 legacy chapters 数据迁移均通过。新测试 **6/6**，focused 三套 **18/18**，JDK21 compile/full/init **554 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建 PASS。无产品入口，未跑浏览器/replay；未提前接入 p26-12 API 或章节变更路径。
+- p26-11 review round 1：强化 RED 为 **7 tests / 2 failures / 0 errors**，证明 SQLite `id TEXT PRIMARY KEY` 的 `notnull=0` 且接受 null-id。改为 `id TEXT NOT NULL PRIMARY KEY` 后全部 8 列均为 NOT NULL，真实 null-id INSERT 失败且无残留；focused **19/19**，JDK21 compile/full/init **555 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建 PASS。
 
 ## Non-blocking Observations
 

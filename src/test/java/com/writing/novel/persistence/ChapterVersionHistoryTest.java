@@ -118,11 +118,23 @@ class ChapterVersionHistoryTest {
             int columnCount = 0;
             while (columns.next()) {
                 columnCount++;
-                assertTrue(columns.getInt("notnull") == 1 || "id".equals(columns.getString("name")),
-                        "除主键外所有版本列都必须 NOT NULL");
+                assertEquals(1, columns.getInt("notnull"),
+                        "所有版本列都必须 NOT NULL: " + columns.getString("name"));
             }
             assertEquals(8, columnCount);
         }
+    }
+
+    @Test
+    void 空快照主键被数据库拒绝且不留下历史行() {
+        ConnectionProvider cp = new ConnectionProvider(tempDir.resolve("null-id.db").toString());
+        new SqliteSchemaInitializer(cp).initialize();
+        NovelRepository repository = new SqliteNovelRepository(cp);
+        ChapterVersion nullId = new ChapterVersion(
+                null, "project-a", 1, 1, "第一章", "正文", "DIRECT_EDIT",
+                Instant.parse("2026-09-03T07:08:09Z"));
+        assertThrows(RuntimeException.class, () -> repository.saveChapterVersion(nullId));
+        assertTrue(repository.findChapterVersions("project-a", 1).isEmpty());
     }
 
     @Test

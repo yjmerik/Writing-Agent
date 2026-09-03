@@ -49,7 +49,7 @@ public class SqliteSchemaInitializer {
             "created_at TEXT, updated_at TEXT)",
 
         "CREATE TABLE IF NOT EXISTS chapter_versions (" +
-            "id TEXT PRIMARY KEY, project_id TEXT NOT NULL, chapter_index INTEGER NOT NULL, " +
+            "id TEXT NOT NULL PRIMARY KEY, project_id TEXT NOT NULL, chapter_index INTEGER NOT NULL, " +
             "version INTEGER NOT NULL, title TEXT NOT NULL, content TEXT NOT NULL, " +
             "source TEXT NOT NULL, created_at TEXT NOT NULL, " +
             "UNIQUE(project_id, chapter_index, version))",

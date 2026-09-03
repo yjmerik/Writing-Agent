@@ -3272,12 +3272,13 @@
       "phase": 26,
       "type": "feature",
       "dependencies": ["p26-12"],
-      "status": "not-started",
-      "files": ["frontend/src/components/InteractiveReview.tsx", "frontend/src/api/client.ts", "frontend/src/types.ts"],
+      "status": "completed",
+      "files": ["frontend/src/components/InteractiveReview.tsx", "frontend/src/api/client.ts", "frontend/src/types.ts", "scripts/product-audit-e2e.sh"],
       "problem_ref": "P1-05：章节管理页面缺少人工正文和版本操作",
       "description": "提供新增、编辑、历史、比较和回退界面，并处理乐观锁冲突。",
       "acceptance": "浏览器中可完成新增、保存、查看差异和回退，刷新后结果一致，冲突提示要求重新确认。",
-      "verify_cmd": "./scripts/product-audit-e2e.sh --case manual-content-management"
+      "verify_cmd": "./scripts/product-audit-e2e.sh --case manual-content-management",
+      "evidence": "2026-09-04：真实浏览器 TDD RED 为 0 PASS / 1 XFAIL / 0 ERROR，新增章节、直接编辑、版本记录、比较、回退与冲突处理断言均为 false。GREEN 后章节页提供本地新增草稿和目标绑定编辑弹窗，只有提交时调用 p26-12 API；版本记录按历史版本展示，可比较历史与当前正文，并经确认回退到指定版本。保存与回退均携带 expectedVersion；模拟外部更新后，陈旧保存收到 409，弹窗保持打开、标题正文重载为服务端最新值，并显示“章节已被更新，请重新确认”。严格与 expect-known-failures 两种 manual-content-management 均为 1 PASS / 0 XFAIL / 0 ERROR；真实完成新增并刷新、编辑并刷新、历史比较、回退并刷新及 v4→外部 v5 冲突收敛，manual-content-management 已从 KNOWN_FAILURES 移除。frontend production build PASS；JDK21 mvn compile、mvn test 与 ./init.sh PASS：567 tests / 0 failures / 0 errors / 1 skipped，27 prompts 与前端生产构建通过。本项仅修改章节管理 UI、前端 API/类型与对应浏览器场景，未修改 Agent/prompt、自动任务或 mode switch/resume。"
     },
     {
       "id": "p26-14",

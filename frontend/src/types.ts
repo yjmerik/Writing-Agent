@@ -97,6 +97,17 @@ export interface Chapter {
   updatedAt: string;
 }
 
+export interface ChapterVersion {
+  id: string;
+  projectId: string;
+  chapterIndex: number;
+  version: number;
+  title: string;
+  content: string;
+  source: string;
+  createdAt: string;
+}
+
 /** p21-04: 章节元数据分页响应（chapters 不含正文） */
 export interface ChapterPage {
   chapters: Chapter[];

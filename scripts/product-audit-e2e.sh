@@ -27,7 +27,6 @@ CASES=(
 KNOWN_FAILURES=(
   auto-zero-intervention
   interactive-to-auto
-  manual-content-management
   mobile-critical-path
 )
 
@@ -621,7 +620,78 @@ await runCase('manual-content-management', async () => {
     newPosition >= 0 && retainedPosition === newPosition + 1
   const refreshedOutlineFields = await js('(() => {const row=[...document.querySelectorAll("[data-outline-chapter-id]")].find(x=>[...x.querySelectorAll("input")].some(i=>i.value===' + JSON.stringify(newTitle) + '));const values=row?[...row.querySelectorAll("input,textarea")].map(x=>x.value):[];return {row:!!row,title:values.includes(' + JSON.stringify(newTitle) + '),synopsis:values.includes(' + JSON.stringify(newSynopsis) + ')}})()')
   await openTab('章节管理')
-  const chapterActions = await js('(() => {const t=document.body.innerText;return {add:t.includes("新增章节"),directEdit:t.includes("编辑正文"),save:t.includes("保存正文")}})()')
+  const chapterActions = await js('(() => {const t=document.body.innerText;return {add:t.includes("新增章节"),directEdit:t.includes("编辑正文"),history:t.includes("版本记录")}})()')
+  const draftTitle = '人工新增章节草稿'
+  const draftContent = '人工草稿初稿，等待作者继续完成。'
+  const editedTitle = '人工编辑后的章节'
+  const editedContent = '人工编辑正文标记。'.repeat(80)
+  const addOpened = chapterActions.add && await clickButtonContaining('新增章节')
+  if (addOpened) {
+    await fillInput('input[aria-label="新增章节标题"]', draftTitle)
+    await fillInput('textarea[aria-label="新增章节正文"]', draftContent)
+  }
+  const createSubmitted = addOpened && await clickButtonContaining('创建草稿')
+  if (createSubmitted) await wait(3)
+  const chaptersAfterCreate = await pageJson('/api/projects/$P_REWRITE/chapters?page=0&size=1000')
+  const created = (chaptersAfterCreate.chapters || []).find(chapter => chapter.title === draftTitle)
+  const createdSelector = created ? '[data-chapter-index="' + created.chapterIndex + '"]' : ''
+  const createdVisible = !!created && await js('!!document.querySelector(' + JSON.stringify(createdSelector) + ')')
+
+  const editOpened = !!created && await clickButtonContaining('编辑正文')
+  const saveActionVisible = editOpened && await js('(() => {const modal=[...document.querySelectorAll(".ant-modal-wrap")].find(x=>getComputedStyle(x).display!=="none");return !!modal&&[...modal.querySelectorAll("button")].some(x=>x.innerText.includes("保存正文"))})()')
+  if (editOpened) {
+    await fillInput('input[aria-label="章节标题"]', editedTitle)
+    await fillInput('textarea[aria-label="章节正文"]', editedContent)
+  }
+  const editSubmitted = editOpened && await clickButtonContaining('保存正文')
+  if (editSubmitted) await wait(4)
+  const edited = created ? await pageJson('/api/projects/$P_REWRITE/chapters/' + created.chapterIndex) : null
+  const editPersisted = !!edited && edited.title === editedTitle && edited.content === editedContent && edited.version > created.version
+
+  if (edited) {
+    await go('/#/project/$P_REWRITE')
+    await openTab('章节管理')
+    const editedSelector = '[data-chapter-index="' + edited.chapterIndex + '"]'
+    await js('(() => {const row=document.querySelector(' + JSON.stringify(editedSelector) + ');if(!row)return false;row.click();return true})()')
+    await wait(2)
+  }
+  const editReloaded = !!edited && await js('document.body.innerText.includes(' + JSON.stringify(editedTitle) + ')&&document.body.innerText.includes(' + JSON.stringify('人工编辑正文标记。') + ')')
+  const historyOpened = !!edited && await clickButtonContaining('版本记录')
+  if (historyOpened) await wait(1)
+  const historySelector = created ? '[data-chapter-version="' + created.version + '"]' : ''
+  const historyState = historyOpened && await js('(() => {const row=document.querySelector(' + JSON.stringify(historySelector) + ');const text=row?.innerText||"";return {row:!!row,oldTitle:text.includes(' + JSON.stringify(draftTitle) + '),compare:!![...(row?.querySelectorAll("button")||[])].find(x=>x.innerText.includes("比较")),restore:!![...(row?.querySelectorAll("button")||[])].find(x=>x.innerText.includes("回退到此版本"))}})()')
+  const compareClicked = historyState?.compare && await js('(() => {const row=document.querySelector(' + JSON.stringify(historySelector) + ');const b=[...(row?.querySelectorAll("button")||[])].find(x=>x.innerText.includes("比较"));if(!b)return false;b.click();return true})()')
+  const comparison = compareClicked && await js('(() => {const oldText=document.querySelector("pre[data-compare-side=old]")?.innerText||"";const currentText=document.querySelector("pre[data-compare-side=current]")?.innerText||"";return {old:oldText.includes(' + JSON.stringify(draftContent) + '),current:currentText.includes(' + JSON.stringify('人工编辑正文标记。') + ')}})()')
+  const restoreClicked = historyState?.restore && await js('(() => {const row=document.querySelector(' + JSON.stringify(historySelector) + ');const b=[...(row?.querySelectorAll("button")||[])].find(x=>x.innerText.includes("回退到此版本"));if(!b)return false;b.click();return true})()')
+  if (restoreClicked) await wait(1)
+  const restoreConfirmed = restoreClicked && await clickButtonContaining('确认回退')
+  if (restoreConfirmed) await wait(4)
+  const restored = created ? await pageJson('/api/projects/$P_REWRITE/chapters/' + created.chapterIndex) : null
+  const restorePersisted = !!restored && restored.title === draftTitle && restored.content === draftContent && restored.version > edited.version
+  if (restored) {
+    await go('/#/project/$P_REWRITE')
+    await openTab('章节管理')
+    const restoredSelector = '[data-chapter-index="' + restored.chapterIndex + '"]'
+    await js('(() => {const row=document.querySelector(' + JSON.stringify(restoredSelector) + ');if(!row)return false;row.click();return true})()')
+    await wait(2)
+  }
+  const restoreReloaded = !!restored && await js('document.body.innerText.includes(' + JSON.stringify(draftContent) + ')')
+
+  const conflictOpened = !!restored && await clickButtonContaining('编辑正文')
+  const externalTitle = '外部并发更新标题'
+  const externalContent = '外部并发更新正文标记。'.repeat(60)
+  const externalUpdate = conflictOpened && await js('(() => {const x=new XMLHttpRequest();x.open("PUT",' + JSON.stringify('/api/projects/$P_REWRITE/chapters/' + (restored?.chapterIndex || 0)) + ',false);x.setRequestHeader("Content-Type","application/json");x.send(JSON.stringify({expectedVersion:' + (restored?.version || 0) + ',title:' + JSON.stringify(externalTitle) + ',content:' + JSON.stringify(externalContent) + '}));return {status:x.status,body:x.responseText?JSON.parse(x.responseText):null}})()')
+  if (conflictOpened) {
+    await fillInput('input[aria-label="章节标题"]', '会产生冲突的本地标题')
+    await fillInput('textarea[aria-label="章节正文"]', '会产生冲突的本地正文。'.repeat(60))
+  }
+  const conflictSubmitted = conflictOpened && await clickButtonContaining('保存正文')
+  if (conflictSubmitted) await wait(4)
+  const conflictState = conflictSubmitted && await js('(() => {const modal=[...document.querySelectorAll(".ant-modal-wrap")].find(x=>getComputedStyle(x).display!=="none"&&x.innerText.includes("编辑正文"));return {modalOpen:!!modal,message:document.body.innerText.includes("章节已被更新，请重新确认"),title:modal?.querySelector("input[aria-label=章节标题]")?.value||"",content:modal?.querySelector("textarea[aria-label=章节正文]")?.value||""}})()')
+  const afterConflict = restored ? await pageJson('/api/projects/$P_REWRITE/chapters/' + restored.chapterIndex) : null
+  const conflictHandled = externalUpdate?.status === 200 && conflictState?.modalOpen && conflictState?.message &&
+    conflictState.title === externalTitle && conflictState.content === externalContent &&
+    afterConflict?.title === externalTitle && afterConflict?.content === externalContent && afterConflict.version > restored.version
   const pass = worldTypeOpened && worldTypeSelected && worldSaveClicked && characterSaveClicked &&
     worldPersisted && characterPersisted && Object.values(worldFields).every(Boolean) && Object.values(characterFields).every(Boolean) &&
     !!targetVolume && targetUnwritten.length >= 2 && Object.values(outlineActions).every(Boolean) &&
@@ -629,14 +699,22 @@ await runCase('manual-content-management', async () => {
     delayInstalled && moveSaveClicked && Object.values(pendingLocked).every(Boolean) && moveSavedInOrder && moveReloadedExactly && premiseDraftRetained &&
     deleteClicked && errorInterceptorInstalled &&
     rejectedSaveClicked && serverErrorVisible && saveClicked && outlinePersisted && Object.values(refreshedOutlineFields).every(Boolean) &&
-    Object.values(chapterActions).every(Boolean)
+    Object.values(chapterActions).every(Boolean) && addOpened && createSubmitted && createdVisible &&
+    editOpened && saveActionVisible && editSubmitted && editPersisted && editReloaded && historyOpened &&
+    Object.values(historyState || {}).every(Boolean) && compareClicked && Object.values(comparison || {}).every(Boolean) &&
+    restoreClicked && restoreConfirmed && restorePersisted && restoreReloaded && conflictHandled
   return { pass, worldSave: { worldTypeOpened, worldTypeSelected, worldSaveClicked, persisted: worldPersisted, refreshed: worldFields },
     characterSave: { characterSaveClicked, persisted: characterPersisted, refreshed: characterFields },
     outlineActions: { ...outlineActions, lockedActions, addBoundary, addClicked, newRowPresent, moveClicked,
       delayInstalled, moveSaveClicked, pendingLocked, moveSavedInOrder, moveReloadedExactly, premiseDraftRetained,
       movePersistedOrder, moveReloadedOrder, deleteClicked, rejectedSaveClicked,
       serverErrorVisible, saveClicked, persisted: outlinePersisted, refreshed: refreshedOutlineFields,
-      seed: seedOrder, persistedOrder, reloadedOrder }, chapterActions }
+      seed: seedOrder, persistedOrder, reloadedOrder },
+    chapterActions: { ...chapterActions, save: saveActionVisible, addOpened, createSubmitted, createdVisible,
+      createdVersion: created?.version, editOpened, editSubmitted, editPersisted, editReloaded,
+      historyOpened, historyState, compareClicked, comparison, restoreClicked, restoreConfirmed,
+      restoredVersion: restored?.version, restorePersisted, restoreReloaded, externalUpdateStatus: externalUpdate?.status,
+      conflictSubmitted, conflictState, afterConflictVersion: afterConflict?.version, conflictHandled } }
 })
 
 await runCase('mobile-critical-path', async () => {

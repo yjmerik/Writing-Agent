@@ -2,6 +2,16 @@
 
 ---
 
+## 会话记录（2026-09-04）：Phase 26 p26-13 章节正文编辑与版本界面
+
+- 章节页新增“新增章节”“编辑正文”“版本记录”入口。新增与编辑内容先保存在本地草稿，提交时才调用 p26-12 API；操作目标显式绑定 chapterIndex 与 expectedVersion，不依赖当前列表的陈旧闭包状态。
+- 版本记录可比较指定历史版本与当前正文，并在确认后回退到所选版本。回退成功会同步刷新章节正文与版本；新增章节则按服务端返回的最新元数据重新选中。
+- 409 冲突会保持编辑弹窗打开，从服务端重载最新标题与正文，并显示“章节已被更新，请重新确认”，避免覆盖他人更新。
+- 浏览器 TDD RED 为 **0 PASS / 1 XFAIL / 0 ERROR**，全部章节操作断言为 false；GREEN 后 strict 与 expect-known-failures 均为 **1 PASS / 0 XFAIL / 0 ERROR**，覆盖新增并刷新、编辑并刷新、历史比较、确认回退并刷新、外部更新导致的陈旧保存冲突与最新内容重载。该场景已从 `KNOWN_FAILURES` 移除。
+- frontend build PASS；JDK21 compile/full/init 全绿：**567 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端生产构建通过。本项未修改 Agent/prompt、自动任务或 mode switch/resume。
+
+---
+
 ## 会话记录（2026-09-04）：Phase 26 p26-12 派生写入竞态收口
 
 - Review round 3 确认连续 passage 时，已开始的旧任务仍可在新版本保存后追加旧实体、伏笔或事实。修复将耗时 LLM 计算与落库分离；摘要、实体、伏笔、事实只在短锁内重验 chapter version 后写入，过期计算直接丢弃。

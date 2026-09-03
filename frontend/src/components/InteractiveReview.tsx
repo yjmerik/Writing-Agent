@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin, Progress, Collapse } from 'antd';
-import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, ReloadOutlined, StepForwardOutlined, TrophyOutlined } from '@ant-design/icons';
-import { api } from '../api/client';
+import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, HistoryOutlined, PlusOutlined, ReloadOutlined, StepForwardOutlined, TrophyOutlined } from '@ant-design/icons';
+import { ApiError, api } from '../api/client';
 import type { CheckpointRevision } from '../api/client';
 import { renderContent } from '../utils/renderContent';
-import type { Chapter, Checkpoint, CheckpointPayload, ProjectStatus, ChapterQualityReport } from '../types';
+import type { Chapter, ChapterVersion, Checkpoint, CheckpointPayload, ProjectStatus, ChapterQualityReport } from '../types';
 
 const { Text } = Typography;
 
@@ -29,6 +29,9 @@ type RewriteTarget =
 type ReviewResult = Extract<RewriteTarget, { kind: 'checkpoint' }> & { revision: CheckpointRevision };
 type BodyLoadState = { loading: boolean; error: string };
 type ReviewNavigationTarget = 'world' | 'outline';
+type ChapterEditorTarget =
+  | { mode: 'create' }
+  | { mode: 'edit'; chapterIndex: number; expectedVersion: number };
 
 const isReviewNavigationTarget = (target: unknown): target is ReviewNavigationTarget =>
   target === 'world' || target === 'outline';
@@ -94,6 +97,16 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
   const [editMode, setEditMode] = useState<'REWRITE' | 'EXPAND' | 'INSERT'>('REWRITE');
   const [editInstruction, setEditInstruction] = useState('');
   const [editing, setEditing] = useState(false);
+  const [chapterEditorTarget, setChapterEditorTarget] = useState<ChapterEditorTarget | null>(null);
+  const [chapterDraftTitle, setChapterDraftTitle] = useState('');
+  const [chapterDraftContent, setChapterDraftContent] = useState('');
+  const [chapterSaveError, setChapterSaveError] = useState('');
+  const [chapterSaving, setChapterSaving] = useState(false);
+  const [historyChapter, setHistoryChapter] = useState<Chapter | null>(null);
+  const [chapterVersions, setChapterVersions] = useState<ChapterVersion[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [compareVersion, setCompareVersion] = useState<ChapterVersion | null>(null);
+  const [restoringVersion, setRestoringVersion] = useState<number | null>(null);
 
   if (activeProjectIdRef.current !== projectId) {
     activeProjectIdRef.current = projectId;
@@ -155,7 +168,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
 
   // p21-05 修复: refresh 只依赖 projectId——selectedIdx 变化（点选章节）不得触发
   // 元数据/checkpoints/status 重取（此前 useCallback 依赖 selectedIdx，点章即全量重取）
-  const refresh = useCallback(async (forceSelectedBody = false) => {
+  const refresh = useCallback(async (forceSelectedBody = false, preferredChapterIndex?: number) => {
     const requestProjectId = projectId;
     const requestProjectGeneration = projectGenerationRef.current;
     const requestGeneration = refreshGenerationRef.current + 1;
@@ -174,7 +187,12 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
       ]);
       if (!isLatestRefresh()) return;
       const metas = page.chapters || [];
-      const nextSelectedIdx = metas.length > 0 ? Math.min(selectedIdxRef.current, metas.length - 1) : 0;
+      const preferredIndex = preferredChapterIndex == null
+        ? -1
+        : metas.findIndex((chapter) => chapter.chapterIndex === preferredChapterIndex);
+      const nextSelectedIdx = preferredIndex >= 0
+        ? preferredIndex
+        : metas.length > 0 ? Math.min(selectedIdxRef.current, metas.length - 1) : 0;
       const selectedMeta = metas[nextSelectedIdx];
       const cachedSelectedBody = selectedMeta ? bodiesRef.current[selectedMeta.chapterIndex] : undefined;
       const versionChanged = Boolean(selectedMeta && cachedSelectedBody && cachedSelectedBody.version !== selectedMeta.version);
@@ -209,6 +227,10 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
     setBodies({});
     setBodyLoadStates({});
     setSelectedIdx(0);
+    setChapterEditorTarget(null);
+    setHistoryChapter(null);
+    setChapterVersions([]);
+    setCompareVersion(null);
   }, [projectId]);
 
   useEffect(() => { refresh(); }, [refresh]);
@@ -270,6 +292,136 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
     } finally {
       setEditing(false);
     }
+  };
+
+  const replaceChapterInView = (chapter: Chapter) => {
+    cacheBody(chapter);
+    setChapters((previous) => previous
+      .map((item) => item.chapterIndex === chapter.chapterIndex ? chapter : item)
+      .sort((a, b) => a.chapterIndex - b.chapterIndex));
+  };
+
+  const openCreateChapter = () => {
+    setChapterEditorTarget({ mode: 'create' });
+    setChapterDraftTitle('');
+    setChapterDraftContent('');
+    setChapterSaveError('');
+  };
+
+  const openEditChapter = (chapter: Chapter) => {
+    setChapterEditorTarget({
+      mode: 'edit',
+      chapterIndex: chapter.chapterIndex,
+      expectedVersion: chapter.version,
+    });
+    setChapterDraftTitle(chapter.title);
+    setChapterDraftContent(chapter.content);
+    setChapterSaveError('');
+  };
+
+  const closeChapterEditor = () => {
+    if (chapterSaving) return;
+    setChapterEditorTarget(null);
+    setChapterSaveError('');
+  };
+
+  const saveChapter = async () => {
+    if (!chapterEditorTarget) return;
+    setChapterSaving(true);
+    setChapterSaveError('');
+    try {
+      if (chapterEditorTarget.mode === 'create') {
+        const chapter = await api.createChapter(projectId, {
+          title: chapterDraftTitle,
+          content: chapterDraftContent,
+        });
+        cacheBody(chapter);
+        await refresh(false, chapter.chapterIndex);
+        message.success(`已新增第${chapter.chapterIndex}章草稿`);
+      } else {
+        const chapter = await api.updateChapter(projectId, chapterEditorTarget.chapterIndex, {
+          expectedVersion: chapterEditorTarget.expectedVersion,
+          title: chapterDraftTitle,
+          content: chapterDraftContent,
+        });
+        replaceChapterInView(chapter);
+        message.success(`第${chapter.chapterIndex}章已保存为 v${chapter.version}`);
+      }
+      setChapterEditorTarget(null);
+      onChanged();
+    } catch (error) {
+      if (chapterEditorTarget.mode === 'edit' && error instanceof ApiError && error.status === 409) {
+        const latest = await api.getChapter(projectId, chapterEditorTarget.chapterIndex);
+        if (latest) {
+          replaceChapterInView(latest);
+          setChapterEditorTarget({
+            mode: 'edit',
+            chapterIndex: latest.chapterIndex,
+            expectedVersion: latest.version,
+          });
+          setChapterDraftTitle(latest.title);
+          setChapterDraftContent(latest.content);
+        }
+        setChapterSaveError('章节已被更新，请重新确认');
+        message.warning('章节已被更新，请重新确认');
+      } else {
+        setChapterSaveError((error as Error).message);
+      }
+    } finally {
+      setChapterSaving(false);
+    }
+  };
+
+  const openChapterHistory = async (chapter: Chapter) => {
+    setHistoryChapter(chapter);
+    setChapterVersions([]);
+    setCompareVersion(null);
+    setHistoryLoading(true);
+    try {
+      setChapterVersions(await api.getChapterVersions(projectId, chapter.chapterIndex));
+    } catch (error) {
+      message.error(`版本记录加载失败: ${(error as Error).message}`);
+      setHistoryChapter(null);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const restoreChapterVersion = (version: ChapterVersion) => {
+    if (!historyChapter) return;
+    Modal.confirm({
+      title: '确认回退',
+      content: `将第${historyChapter.chapterIndex}章回退到 v${version.version}，当前版本会自动保留在版本记录中。`,
+      okText: '确认回退',
+      cancelText: '取消',
+      onOk: async () => {
+        setRestoringVersion(version.version);
+        try {
+          const restored = await api.restoreChapter(
+            projectId,
+            historyChapter.chapterIndex,
+            version.version,
+            historyChapter.version,
+          );
+          replaceChapterInView(restored);
+          setHistoryChapter(null);
+          setCompareVersion(null);
+          message.success(`已回退到 v${version.version}，当前为 v${restored.version}`);
+          onChanged();
+        } catch (error) {
+          if (error instanceof ApiError && error.status === 409) {
+            const latest = await api.getChapter(projectId, historyChapter.chapterIndex);
+            if (latest) replaceChapterInView(latest);
+            message.warning('章节已被更新，请重新确认');
+          } else {
+            message.error(`回退失败: ${(error as Error).message}`);
+          }
+          throw error;
+        } finally {
+          setRestoringVersion(null);
+        }
+      },
+    });
   };
 
   const handleApprove = async (checkpoint: Checkpoint) => {
@@ -500,14 +652,17 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
           <Alert type="info" message="📝 写作中 — 可查看和重写已完成的章节" style={{ marginBottom: 16 }} />
         )}
 
-        {/* 写作控制 */}
-        {status && (status.state === 'WRITING' || status.state === 'VOLUME_DONE') && (
-          <Space style={{ marginBottom: 16 }}>
+        {/* 写作与人工章节控制 */}
+        <Space wrap style={{ marginBottom: 16 }}>
+          {status && (status.state === 'WRITING' || status.state === 'VOLUME_DONE') && (
             <Button type="primary" size="large" icon={<StepForwardOutlined />} onClick={handleWriteNext} loading={loading}>
               {isInteractive ? '📝 写一章（写完自动暂停）' : '📝 写一章'}
             </Button>
-          </Space>
-        )}
+          )}
+          <Button size="large" icon={<PlusOutlined />} onClick={openCreateChapter} disabled={loading}>
+            新增章节
+          </Button>
+        </Space>
 
         <Row gutter={16}>
           {/* 章节列表（p21-06: 小屏堆叠） */}
@@ -518,6 +673,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
                 dataSource={chapters}
                 renderItem={(ch, idx) => (
                   <List.Item
+                    data-chapter-index={ch.chapterIndex}
                     role="button"
                     tabIndex={0}
                     aria-label={`第${ch.chapterIndex}章 ${ch.title}`}
@@ -551,7 +707,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
               <Card
                 title={`第${currentChapter.chapterIndex}章 ${currentChapter.title.replace(/\*\*/g, '')}`}
                 extra={
-                  <Space>
+                  <Space wrap>
                     <Tag color="blue">{currentChapter.wordCount} 字</Tag>
                     <Tag color="purple">v{currentChapter.version}</Tag>
                     {currentChapter.status === 'NEEDS_MANUAL_REVIEW' && (
@@ -566,6 +722,22 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
                         }
                       }}>已处理</Button>
                     )}
+                    <Button
+                      size="small"
+                      icon={<EditOutlined />}
+                      disabled={!currentBody}
+                      onClick={() => currentBody && openEditChapter(currentBody)}
+                    >
+                      编辑正文
+                    </Button>
+                    <Button
+                      size="small"
+                      icon={<HistoryOutlined />}
+                      disabled={!currentBody}
+                      onClick={() => currentBody && void openChapterHistory(currentBody)}
+                    >
+                      版本记录
+                    </Button>
                     <Button size="small" icon={<EditOutlined />} onClick={() => {
                       setRewriteTarget({
                         kind: 'chapter',
@@ -771,6 +943,112 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
           value={rewriteInstructions}
           onChange={e => setRewriteInstructions(e.target.value)}
         />
+      </Modal>
+
+      <Modal
+        title={chapterEditorTarget?.mode === 'create' ? '新增章节' : '编辑正文'}
+        open={chapterEditorTarget !== null}
+        onCancel={closeChapterEditor}
+        maskClosable={!chapterSaving}
+        closable={!chapterSaving}
+        footer={[
+          <Button key="cancel" onClick={closeChapterEditor} disabled={chapterSaving}>取消</Button>,
+          <Button
+            key="save"
+            type="primary"
+            loading={chapterSaving}
+            disabled={!chapterDraftTitle.trim()
+              || (chapterEditorTarget?.mode === 'edit' && !chapterDraftContent.trim())}
+            onClick={() => void saveChapter()}
+          >
+            {chapterEditorTarget?.mode === 'create' ? '创建草稿' : '保存正文'}
+          </Button>,
+        ]}
+      >
+        {chapterSaveError && (
+          <Alert type="warning" showIcon message={chapterSaveError} style={{ marginBottom: 12 }} />
+        )}
+        <Input
+          aria-label={chapterEditorTarget?.mode === 'create' ? '新增章节标题' : '章节标题'}
+          value={chapterDraftTitle}
+          onChange={(event) => setChapterDraftTitle(event.target.value)}
+          placeholder="章节标题"
+          disabled={chapterSaving}
+          style={{ marginBottom: 12 }}
+        />
+        <Input.TextArea
+          aria-label={chapterEditorTarget?.mode === 'create' ? '新增章节正文' : '章节正文'}
+          value={chapterDraftContent}
+          onChange={(event) => setChapterDraftContent(event.target.value)}
+          placeholder={chapterEditorTarget?.mode === 'create'
+            ? '可留空，稍后继续编辑正文'
+            : '请输入章节正文'}
+          disabled={chapterSaving}
+          autoSize={{ minRows: 10, maxRows: 18 }}
+        />
+      </Modal>
+
+      <Modal
+        title={historyChapter ? `第${historyChapter.chapterIndex}章 · 版本记录` : '版本记录'}
+        open={historyChapter !== null}
+        onCancel={() => {
+          if (restoringVersion == null) {
+            setHistoryChapter(null);
+            setCompareVersion(null);
+          }
+        }}
+        footer={<Button onClick={() => setHistoryChapter(null)} disabled={restoringVersion != null}>关闭</Button>}
+        width={900}
+      >
+        <Spin spinning={historyLoading}>
+          {chapterVersions.length > 0 ? (
+            <List
+              size="small"
+              dataSource={chapterVersions}
+              renderItem={(version) => (
+                <List.Item
+                  data-chapter-version={version.version}
+                  actions={[
+                    <Button key="compare" type="link" onClick={() => setCompareVersion(version)}>比较</Button>,
+                    <Button
+                      key="restore"
+                      type="link"
+                      danger
+                      loading={restoringVersion === version.version}
+                      onClick={() => restoreChapterVersion(version)}
+                    >
+                      回退到此版本
+                    </Button>,
+                  ]}
+                >
+                  <List.Item.Meta
+                    title={`v${version.version} · ${version.title}`}
+                    description={`${version.source} · ${new Date(version.createdAt).toLocaleString()}`}
+                  />
+                </List.Item>
+              )}
+            />
+          ) : !historyLoading ? (
+            <Alert type="info" message="暂无历史版本" />
+          ) : null}
+
+          {compareVersion && historyChapter && (
+            <Row gutter={16} style={{ marginTop: 16 }}>
+              <Col xs={24} md={12}>
+                <Text strong>历史 v{compareVersion.version}</Text>
+                <pre data-compare-side="old" style={{ whiteSpace: 'pre-wrap', marginTop: 8, padding: 12, background: '#f5f5f5' }}>
+                  {compareVersion.title}{'\n\n'}{compareVersion.content}
+                </pre>
+              </Col>
+              <Col xs={24} md={12}>
+                <Text strong>当前 v{historyChapter.version}</Text>
+                <pre data-compare-side="current" style={{ whiteSpace: 'pre-wrap', marginTop: 8, padding: 12, background: '#f5f5f5' }}>
+                  {historyChapter.title}{'\n\n'}{historyChapter.content}
+                </pre>
+              </Col>
+            </Row>
+          )}
+        </Spin>
       </Modal>
     </div>
   );

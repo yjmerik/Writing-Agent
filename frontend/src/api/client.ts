@@ -6,6 +6,7 @@ import type {
   KnowledgeEntry,
   Outline,
   Chapter,
+  ChapterVersion,
   Summary,
   CreateProjectRequest,
   ProjectMode,
@@ -17,6 +18,13 @@ import type {
 } from '../types';
 
 const BASE = '/api';
+
+export class ApiError extends Error {
+  constructor(public readonly status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
 
 export interface CheckpointRevision {
   targetType: string;
@@ -54,7 +62,7 @@ async function request<T>(url: string, options?: RequestInit, timeoutMs = 300000
       } catch {
         /* 非 JSON 错误响应 */
       }
-      throw new Error(msg);
+      throw new ApiError(resp.status, msg);
     }
     // 空响应（204 或空 body）
     const text = await resp.text();
@@ -208,6 +216,30 @@ export const api = {
 
   getChapter: (id: string, chapterIndex: number) =>
     request<Chapter | null>(`/projects/${id}/chapters/${chapterIndex}`),
+
+  createChapter: (id: string, body: { title: string; content: string }) =>
+    request<Chapter>(`/projects/${id}/chapters`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  updateChapter: (id: string, chapterIndex: number, body: {
+    expectedVersion: number;
+    title: string;
+    content: string;
+  }) => request<Chapter>(`/projects/${id}/chapters/${chapterIndex}`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  }),
+
+  getChapterVersions: (id: string, chapterIndex: number) =>
+    request<ChapterVersion[]>(`/projects/${id}/chapters/${chapterIndex}/versions`),
+
+  restoreChapter: (id: string, chapterIndex: number, version: number, expectedVersion: number) =>
+    request<Chapter>(`/projects/${id}/chapters/${chapterIndex}/restore/${version}`, {
+      method: 'POST',
+      body: JSON.stringify({ expectedVersion }),
+    }),
 
   /** p21-02: NEEDS_REVISION 人工修订后的显式成书门禁重试 */
   finalAudit: (id: string) =>

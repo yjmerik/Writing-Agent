@@ -230,16 +230,14 @@ public class ContentController {
     @PostMapping("/write-chapter")
     public Chapter writeChapter(@PathVariable String id,
                                  @RequestBody(required = false) java.util.Map<String, String> body) {
-        Project project = repository.findProject(id).orElseThrow();
-        actionPolicy.requireAllowed(project, ProjectAction.WRITE_CHAPTER,
-                repository.findOutlineByProject(id).isPresent(),
-                !repository.findPendingCheckpoints(id).isEmpty());
+        requireWriteChapterAllowed(id);
         // p18-03: 写前指令——作者对下一章的定向要求，透传本章 writingNotes
         String instruction = body != null ? body.get("instruction") : null;
         if (writingTaskExecutor == null) {
             return orchestrator.runWritingOneChapter(id, instruction);
         }
-        WritingTask task = writingTaskExecutor.startWriteChapter(id);
+        WritingTask task = writingTaskExecutor.startWriteChapter(id,
+                () -> requireWriteChapterAllowed(id));
         try {
             Chapter chapter = orchestrator.runWritingOneChapter(id, instruction);
             writingTaskExecutor.finishWriteChapter(id, task, WritingTask.Status.COMPLETED, null);
@@ -249,6 +247,13 @@ public class ContentController {
             writingTaskExecutor.finishWriteChapter(id, task, WritingTask.Status.FAILED, msg);
             throw e;
         }
+    }
+
+    private void requireWriteChapterAllowed(String projectId) {
+        Project project = repository.findProject(projectId).orElseThrow();
+        actionPolicy.requireAllowed(project, ProjectAction.WRITE_CHAPTER,
+                repository.findOutlineByProject(projectId).isPresent(),
+                !repository.findPendingCheckpoints(projectId).isEmpty());
     }
 
     /** p7-1: 重写指定章节（不限项目状态） */

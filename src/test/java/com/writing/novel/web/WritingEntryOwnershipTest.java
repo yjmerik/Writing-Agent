@@ -1,9 +1,11 @@
 package com.writing.novel.web;
 
 import com.writing.novel.agent.QualityEvaluationAgent;
+import com.writing.novel.domain.Checkpoint;
 import com.writing.novel.domain.NovelState;
 import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
+import com.writing.novel.domain.WritingTask;
 import com.writing.novel.orchestrator.NovelOrchestrator;
 import com.writing.novel.orchestrator.ProjectService;
 import com.writing.novel.service.CanonPatchService;
@@ -13,6 +15,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -132,5 +139,69 @@ class WritingEntryOwnershipTest {
 
         verify(mockRepo, never()).saveWritingTask(any());
         verifyNoInteractions(mockOrch);
+    }
+
+    @Test
+    void 首次门禁后暂停抢先时不创建任务或进入orchestrator() throws Exception {
+        Project project = new Project("并发门禁", "概念", "玄幻");
+        project.setState(NovelState.WRITING);
+        AtomicBoolean paused = new AtomicBoolean(false);
+        when(mockRepo.findProject("p1")).thenReturn(Optional.of(project));
+        when(mockRepo.findOutlineByProject("p1"))
+                .thenReturn(Optional.of(new Outline("p1", "总纲")));
+        when(mockRepo.findPendingCheckpoints("p1")).thenAnswer(invocation -> paused.get()
+                ? java.util.List.of(new Checkpoint("p1", Checkpoint.Type.ON_CONTINUITY_FIX, "用户暂停"))
+                : java.util.List.of());
+        BlockingWriteChapterExecutor blockingExecutor =
+                new BlockingWriteChapterExecutor(mockOrch, mockRepo);
+        ContentController controller = new ContentController(mockRepo, mockOrch,
+                mock(CanonPatchService.class), blockingExecutor);
+
+        CompletableFuture<WritingTask> request = CompletableFuture.supplyAsync(() -> {
+            controller.writeChapter("p1", null);
+            return null;
+        });
+        assertTrue(blockingExecutor.awaitStart(), "请求应已通过控制器首次门禁");
+        project.setState(NovelState.PAUSED_AT_CHECKPOINT);
+        paused.set(true);
+        blockingExecutor.allowStart();
+
+        CompletionException rejected = assertThrows(CompletionException.class, request::join);
+        assertInstanceOf(IllegalStateException.class, rejected.getCause());
+        verify(mockRepo, never()).saveWritingTask(any());
+        verifyNoInteractions(mockOrch);
+        assertFalse(blockingExecutor.hasActiveTask("p1"));
+    }
+
+    private static final class BlockingWriteChapterExecutor extends WritingTaskExecutor {
+        private final CountDownLatch startEntered = new CountDownLatch(1);
+        private final CountDownLatch continueStart = new CountDownLatch(1);
+
+        private BlockingWriteChapterExecutor(NovelOrchestrator orchestrator,
+                                             NovelRepository repository) {
+            super(orchestrator, repository);
+        }
+
+        @Override
+        public WritingTask startWriteChapter(String projectId, Runnable actionGate) {
+            startEntered.countDown();
+            try {
+                if (!continueStart.await(5, TimeUnit.SECONDS)) {
+                    throw new IllegalStateException("等待并发状态变更超时");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("等待并发状态变更被中断", e);
+            }
+            return super.startWriteChapter(projectId, actionGate);
+        }
+
+        private boolean awaitStart() throws InterruptedException {
+            return startEntered.await(5, TimeUnit.SECONDS);
+        }
+
+        private void allowStart() {
+            continueStart.countDown();
+        }
     }
 }

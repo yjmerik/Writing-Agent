@@ -135,12 +135,21 @@ public class WritingTaskExecutor {
      * 不得覆盖原 owner。
      */
     public synchronized WritingTask startWriteChapter(String projectId) {
+        return startWriteChapter(projectId, () -> {});
+    }
+
+    /**
+     * 单章写作的原子启动边界：先获取项目工作权，再重验服务端动作门禁，
+     * 门禁通过后才持久化任务。重验失败会释放工作权且不产生任务。
+     */
+    public synchronized WritingTask startWriteChapter(String projectId, Runnable actionGate) {
         WritingTask task = new WritingTask(projectId, 1, WritingTask.Type.WRITE_CHAPTER);
         var token = coordinator.tryAcquire(projectId, task.getId());
         if (token.isEmpty()) {
             throw new IllegalStateException("已有进行中的写作任务，请先暂停或取消再写单章");
         }
         try {
+            actionGate.run();
             repository.saveWritingTask(task);
         } catch (RuntimeException e) {
             coordinator.release(token.get());

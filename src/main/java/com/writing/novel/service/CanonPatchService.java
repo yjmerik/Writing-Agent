@@ -129,6 +129,21 @@ public class CanonPatchService {
         return new PatchResult(existing, written, true);
     }
 
+    /** p26-09: 已由 OutlineStructureService 完整验证的人工结构，按 payload 原子替换。 */
+    public PatchResult replaceOutline(String projectId, Outline replacement, int currentChapter) {
+        Outline existing = repository.findOutlineByProject(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("大纲不存在: " + projectId));
+        repository.saveOutline(replacement);
+        List<StoryFact> written = new ArrayList<>();
+        if (replacement.getPremise() != null && !replacement.getPremise().isBlank()
+                && !Objects.equals(existing.getPremise(), replacement.getPremise())) {
+            written.add(writeHumanFact(projectId, StoryFact.FactType.PLOT_COMMITMENT,
+                    "总纲", replacement.getPremise(), currentChapter));
+        }
+        bump(projectId);
+        return new PatchResult(replacement, written, true);
+    }
+
     private void overwriteUnwrittenOnly(Outline existing, Outline incoming, int currentChapter) {
         Map<Integer, ChapterSynopsis> incomingByChapter = new LinkedHashMap<>();
         Map<Integer, Volume> incomingByVolume = new LinkedHashMap<>();

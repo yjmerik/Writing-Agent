@@ -6,8 +6,10 @@ import com.writing.novel.orchestrator.NovelOrchestrator;
 import com.writing.novel.orchestrator.ProjectActionPolicy;
 import com.writing.novel.orchestrator.ProjectActionPolicy.ProjectAction;
 import com.writing.novel.service.CanonPatchService;
+import com.writing.novel.service.OutlineStructureService;
 import com.writing.novel.service.WritingTaskExecutor;
 import com.writing.novel.spi.NovelRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,15 +22,26 @@ public class ContentController {
     private final NovelRepository repository;
     private final NovelOrchestrator orchestrator;
     private final CanonPatchService canonPatch;
+    private final OutlineStructureService outlineStructure;
     private final WritingTaskExecutor writingTaskExecutor;
     private final ProjectActionPolicy actionPolicy = new ProjectActionPolicy();
 
+    @Autowired
     public ContentController(NovelRepository repository, NovelOrchestrator orchestrator,
-                             CanonPatchService canonPatch, WritingTaskExecutor writingTaskExecutor) {
+                             CanonPatchService canonPatch, WritingTaskExecutor writingTaskExecutor,
+                             OutlineStructureService outlineStructure) {
         this.repository = repository;
         this.orchestrator = orchestrator;
         this.canonPatch = canonPatch;
         this.writingTaskExecutor = writingTaskExecutor;
+        this.outlineStructure = outlineStructure;
+    }
+
+    /** Unit-test compatibility for controller tests that do not exercise outline editing. */
+    public ContentController(NovelRepository repository, NovelOrchestrator orchestrator,
+                             CanonPatchService canonPatch, WritingTaskExecutor writingTaskExecutor) {
+        this(repository, orchestrator, canonPatch, writingTaskExecutor,
+                canonPatch == null ? null : new OutlineStructureService(repository, canonPatch));
     }
 
     @GetMapping("/worldbuilding")
@@ -92,7 +105,7 @@ public class ContentController {
     @PutMapping("/outline")
     public Outline updateOutline(@PathVariable String id, @RequestBody Outline incoming) {
         rejectIfWriting(id);
-        return (Outline) canonPatch.patchOutline(id, incoming, chapterOf(id)).entity();
+        return outlineStructure.replaceUnwritten(id, incoming);
     }
 
     @GetMapping("/facts")

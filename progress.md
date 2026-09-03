@@ -808,3 +808,12 @@ W2 的两个独立基石已落地（不依赖 LLM prompt 改动，不影响产�
 - GREEN：更新前捕获旧 subject 的相关 ACTIVE。有真实新断言时先写新 subject HUMAN_PATCH，再以 `StoryCanon.supersedeFact` 建立 old → new 跨主体审计链；清空正文或人物状态/关系时改为 RETIRED，保留完整审计记录。`canon.recall` 与其真实消费者 `RelevanceGateway` 均不再输出旧主体。
 - 人物状态从更新后完整实体一次组合 role/personality/ability/motivation/appearance/growthArc，空值不产生标签噪声；relationships 独立写一次。重复整卡保存及 ability-only partial 后，每个 type+subject 仍恰好 1 ACTIVE，状态断言同时保留能力、动机和成长弧。
 - 验证：focused ownership/canon/create **17/17 PASS**；frontend build PASS；manual aggregate **0 PASS / 1 XFAIL / 0 ERROR** 且 worldSave/characterSave 全 true；initial-summary/targeting strict 各 **1/0/0**；JDK21 full/init **532 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端生产构建 PASS。
+
+## Phase 26 — p26-09 未写大纲结构安全替换（2026-09-03）
+
+- 新增 `OutlineStructureService.replaceUnwritten`：在任何保存、真典和记忆版本副作用前验证项目归属、卷序、全局章序及已写前缀；章号与卷号均要求正数、唯一、严格递增。
+- `currentChapterIndex <= 0` 统一视为没有已写前缀。存在已写前缀时，incoming 必须保留每个已写章的卷号、卷标题/摘要、章标题/梗概；篡改、删除、改号或跨卷移动均返回 400。验证通过后以 detached Outline 完整替换未写结构，支持卷章新增、删除、跨卷移动、重编号和空卷持久化；零章节大纲明确拒绝。
+- `CanonPatchService.patchOutline` 的既有 merge-only 语义保持不变；新增只供验证后调用的 `replaceOutline`，成功只执行一次 outline save，总纲未变化时不重复写 PLOT_COMMITMENT。
+- 严格 TDD RED：真实 Spring HTTP + SQLite 为 **8 tests / 8 failures / 0 errors**，覆盖旧 merge 无法删除/移动、0/-1 边界残留、三类非法章序放行、已写前缀放行、空大纲放行。GREEN 后新测试 **10/10**；连同旧 synopsis/canon/checkpoint merge 回归 focused **25/25 PASS**。
+- 产品 E2E：`manual-content-management --expect-known-failures` 为 **0 PASS / 1 XFAIL / 0 ERROR**；世界观/人物子项保持全绿，aggregate 仅因 p26-10 大纲 UI 与后续章节 UI 尚未实现。
+- 验证：JDK21 `mvn compile`、`mvn test`、`./init.sh` 全部 PASS（**542 tests / 0 failures / 0 errors / 1 skipped**；27 prompt 与前端生产构建 PASS）。未修改前端、自动任务、Agent/prompt/上下文或产出逻辑。

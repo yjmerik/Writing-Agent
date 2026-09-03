@@ -5,9 +5,9 @@
 ## Current Objective
 
 - **Goal**: 以产品一致性审计的浏览器红灯套件驱动下一轮 P0 → P1 → P2 修复。
-- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-08 已完成。世界观已有项现在可用中文类型 Select 完整编辑类型、名称与正文；人物卡可一次编辑并保存姓名、角色定位和六个现有描述字段，失败保留 draft。人工世界观 API 只接受 9 个锁定类型，非法类型与跨项目目标在任何实体/真典/记忆版本写入前返回 400；系统/存量 ITEM 枚举与中文展示继续保留。世界观/人物改名会保留旧事实并以 supersededBy 指向新 subject 的 HUMAN_PATCH，清空会将旧事实标记 RETIRED；人物状态由更新后完整实体一次组合，关系单独写入，partial 不丢未提交字段。`manual-content-management` 的世界观/人物 UI 保存及刷新子断言已全绿，aggregate 仍只因后续大纲/章节任务保持预期 XFAIL。既有服务端动作矩阵、自动任务和 mode switch/resume 语义均未改动。
+- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-09 已完成。人工 `/outline` 更新现在先验证完整结构：全局章号正数、唯一、严格递增；已写章及所属卷的字段必须原样携带，删除、改号、篡改或跨卷移动均在副作用前返回 400；未写卷章可完整新增、删除、跨卷移动、重编号并刷新保持。`currentChapterIndex <= 0` 视为无已写前缀，空卷可保留但整个大纲不能零章节。`manual-content-management` 的世界观/人物 UI 子项保持全绿，aggregate 只因 p26-10 大纲 UI 与后续章节 UI 尚未完成而预期 XFAIL。既有 checkpoint merge、服务端动作矩阵、自动任务和 mode switch/resume 语义均未改动。
 - **Branch**: 当前 Phase 26 修复分支；仓库没有 Git remote/upstream。
-- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-08 completed，下一项为 p26-09。
+- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-09 completed，下一项为 p26-10。
 - **Current spec**: `docs/specs/2026-09-02-product-audit-browser-e2e.md` 与 `.superpowers/sdd/2026-09-03-product-design-consistency-remediation/` 任务简报。
 - **Product audit**: `docs/audits/2026-09-02-product-design-consistency-audit.md`（P0 3 项 / P1 8 项 / P2 5 项）。
 
@@ -47,6 +47,7 @@
 - p26-07 RED：完整 INTERACTIVE 构思链路的 `InitialSetupCheckpointPayloadTest` 为 **1 failure / 0 errors**，AFTER_INITIAL_SETUP payload 实际为 null；`initial-setup-summary` strict 为 **0 PASS / 1 XFAIL / 0 ERROR**，三段真实摘要、两次跳转与页签选中断言均失败。初版 GREEN 后 review round 1 再以 **3 failures / 0 errors** 复现超长 concept 吞掉 outline、空 premise 生成空摘要、缺少真实来源却仍创建 checkpoint；异常旧 payload strict 为 **0 PASS / 1 XFAIL / 0 ERROR**，非字符串 React child 令卡片崩溃。最终 GREEN：checkpoint 以 Jackson 编码三段持久化内容摘要与 `world`/`outline` links；每段按 code point 限 300 且 surrogate 完整，双来源均保留、单来源可用完整预算。premise 缺失时回退已持久化卷标题/summary，仍空则在状态改变和 checkpoint 创建前 fail-closed 并保持 `CONCEIVING`。审核卡只渲染运行时确认为 string 的摘要，并用原生按钮切 tab；target 白名单防止异常 payload 写入无效 tab。focused checkpoint 回归 **17/17**；含异常 payload 的 `initial-setup-summary` 与 `checkpoint-card-targeting` strict 各 **1 PASS / 0 XFAIL / 0 ERROR**，未改弱 `KNOWN_FAILURES`；frontend build PASS。browser 产品断言分段 **8/8**：完整脚本前 7 项 PASS，第 8 项两阶段重启因旧服务占端口是假失败（base `13f745c` 同样复现，日志为 `Port was already in use`），独立确认 `harsh=true` 新服务后原断言 PASS。JDK21 full/init **525 tests / 0 failures / 0 errors / 1 skipped**，27 prompt 与前端构建 PASS。Agent/prompt/上下文/产出未改，无 replay 质量门禁。
 - p26-08 RED：真实 HTTP/SQLite `WorldCharacterFullEditTest` 为 **4 tests / 4 failures / 0 errors**，复现世界观 type 丢失、人工 ITEM/INVALID 放行及副作用、跨项目路径可修改目标。GREEN：人工 world allowlist 精确为 9 类，更新持久化 type/name/content，world/character 目标均校验 projectId；ITEM 只保留系统/存量 enum 与中文展示。人物八字段改为受控整卡保存，世界观新增/编辑共用中文 Select，失败保留 draft。focused ownership/canon/create **14/14 PASS**；`manual-content-management --expect-known-failures` 为 **0 PASS / 1 XFAIL / 0 ERROR**，worldSave 与 characterSave 的 UI 保存、API 持久化、整页刷新子断言全部 true，aggregate 仅保留大纲/章节预期红灯；`initial-setup-summary`、`checkpoint-card-targeting` strict 各 **1 PASS / 0 XFAIL / 0 ERROR**。frontend build、JDK21 compile/full/init 全绿：**529 tests / 0 failures / 0 errors / 1 skipped**，27 prompt 通过；无 Agent/prompt/上下文改动，不需要 replay。
 - p26-08 review round 1：扩展后的真实 HTTP/SQLite RED 为 **7 tests / 3 failures / 0 errors**，复现 world/character rename 的旧 subject 继续 ACTIVE、人物整卡状态只剩 growthArc。GREEN 在实体更新前捕获相关 ACTIVE，新断言以 `supersedeFact` 建立跨 subject old→new 审计链，清空转 RETIRED；人物由更新后完整实体一次组合六个 state 字段，relationship 独立写，重复/partial 后每类每主体恰好 1 ACTIVE。`canon.recall` 与 `RelevanceGateway` 均不再输出旧主体；focused **17/17**、frontend、manual aggregate 子断言、两个 strict 场景均通过，JDK21 full/init **532 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建 PASS。
+- p26-09 RED：真实 HTTP/SQLite `OutlineStructureEditTest` 为 **8 tests / 8 failures / 0 errors**，复现旧 merge 无法删除/跨卷移动/完整替换，0/-1 边界残留旧章，duplicate/descending/nonpositive、已写前缀替换与零章节大纲全部被错误接受。GREEN：`OutlineStructureService` 在任何写入前验证归属、卷章顺序和完整已写前缀，构造 detached replacement 后只调用一次 `CanonPatchService.replaceOutline`；未写结构可增删、移动、重编号并保存空卷，总纲不变不写冗余剧情承诺。旧 `patchOutline` merge-only 路径不变。focused **25/25 PASS**，其中新测试 **10/10**；manual aggregate **0 PASS / 1 XFAIL / 0 ERROR** 且失败只来自后续 UI；JDK21 compile/full/init **542 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端生产构建 PASS。
 
 ## Non-blocking Observations
 
@@ -59,7 +60,7 @@
 
 ## Next Entry
 
-- 下一步为 p26-09：未写大纲结构校验与变更 API；不要改 p26-08 的人工类型 allowlist、受控 draft、ITEM 存量兼容或既有动作矩阵。
+- 下一步为 p26-10：大纲人工结构编辑界面；复用 p26-09 的完整 payload 与服务端错误，不改服务端已写前缀语义，也不要触碰自动任务、mode switch/resume 或共享 browser harness。
 - 剩余本期红灯聚焦人工内容管理、移动端与文案一致性；按用户指示，自动任务及其 mode switch/resume 生命周期需要架构和系统修复，不在本期计划范围。
 - 新需求继续遵循：写 spec → 拆 1-3 文件 feature → 登记 `feature_list.json` → 实现与验证 → 更新三份状态文档。
 - 本机代理可能劫持 localhost；脚本内 curl 保持 `--noproxy '*'`。ego-browser 内写文件使用绝对路径。

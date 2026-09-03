@@ -50,7 +50,7 @@ class UnwrittenSynopsisEditTest {
     static void createDataDir() { new File("./data").mkdirs(); }
 
     @Test
-    void putUnwrittenSynopsis_keepsWrittenChapters() throws Exception {
+    void putUnwrittenSynopsis_rejectsChangedWrittenPrefix() throws Exception {
         String id = seedProjectWithPartialOutline();
 
         String body = """
@@ -73,7 +73,7 @@ class UnwrittenSynopsisEditTest {
         mvc.perform(put("/api/projects/" + id + "/outline")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isOk());
+                .andExpect(status().isBadRequest());
 
         String json = mvc.perform(get("/api/projects/" + id + "/outline"))
                 .andExpect(status().isOk())
@@ -86,8 +86,8 @@ class UnwrittenSynopsisEditTest {
         assertEquals("已写卷摘要", firstVolume(root).path("summary").asText());
         assertEquals("第1章 旧已写", synopsisAt(root, 1).path("title").asText());
         assertEquals("已写梗概不得改", synopsisAt(root, 1).path("synopsis").asText());
-        assertEquals("人改未写", synopsisAt(root, 2).path("title").asText());
-        assertEquals("新未写梗概", synopsisAt(root, 2).path("synopsis").asText());
+        assertEquals("第2章 旧未写", synopsisAt(root, 2).path("title").asText());
+        assertEquals("旧未写梗概", synopsisAt(root, 2).path("synopsis").asText());
     }
 
     @Test

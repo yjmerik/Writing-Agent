@@ -71,6 +71,13 @@ public class TestNovelRepositoryStub implements NovelRepository {
     @Override public void saveChapterVersion(ChapterVersion snapshot) {}
     @Override public List<ChapterVersion> findChapterVersions(String p, int i) { return List.of(); }
     @Override public Optional<ChapterVersion> findChapterVersion(String p, int i, int v) { return Optional.empty(); }
+    @Override public boolean saveChapterRevision(ChapterVersion snapshot, Chapter revised, int expectedVersion) {
+        Optional<Chapter> current = findChapterByIndex(revised.getProjectId(), revised.getChapterIndex());
+        if (current.isEmpty() || current.get().getVersion() != expectedVersion) return false;
+        saveChapterVersion(snapshot);
+        saveChapter(revised);
+        return true;
+    }
     @Override public void saveSummary(Summary s) {}
     @Override public List<Summary> findSummariesByProject(String p) { return List.of(); }
     @Override public void deleteSummary(String summaryId) {}

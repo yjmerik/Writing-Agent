@@ -5,6 +5,7 @@ import com.writing.novel.domain.*;
 import com.writing.novel.memory.ContextAssembler;
 import com.writing.novel.memory.SummaryService;
 import com.writing.novel.service.ClimaxDiversityTracker;
+import com.writing.novel.service.ChapterRevisionService;
 import com.writing.novel.service.CreativeDiversityService;
 import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.service.GenreDetector;
@@ -88,6 +89,8 @@ public class NovelOrchestrator {
     private final com.writing.novel.service.ArchiveCompactor archiveCompactor;
     /** p10-w3-09: 成本预算监控器——null 时跳过成本回执（测试降级组合） */
     private final com.writing.novel.telemetry.CostBudgetMonitor costBudgetMonitor;
+    /** p26-12: all chapter content replacements persist the pre-change immutable version first. */
+    private final ChapterRevisionService chapterRevisionService;
 
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
@@ -172,6 +175,7 @@ public class NovelOrchestrator {
         this.factHarvester = pol.factHarvester();
         this.archiveCompactor = pol.archiveCompactor();
         this.costBudgetMonitor = pol.costBudgetMonitor();
+        this.chapterRevisionService = new ChapterRevisionService(repository);
         // p22-04: 章节生产模块——写前装配/正文生成/质量链/纠偏重写经此模块
         this.production = new ChapterProduction(this, repository, chapterWriter,
                 continuityChecker, readerReviewAgent, consistencyGuard, consistencyGate,
@@ -2390,8 +2394,8 @@ public class NovelOrchestrator {
                 newContent != null ? newContent.length() : "null");
 
         if (newContent != null && newContent.length() >= 2000) {
-            existing.setContent(newContent);
-            repository.saveChapter(existing);
+            existing = chapterRevisionService.editInOwnedWork(projectId, chapterIndex,
+                    existing.getVersion(), existing.getTitle(), newContent, "REWRITE");
 
             // p16-05: 重写改变了正文——按章重建向量索引（清旧 chunk + 新正文入库）。
             // rewriteForCorrection 内部已重建过一次，此处以持久化后的正文重放，保证向量与 DB 一致。
@@ -2514,15 +2518,22 @@ public class NovelOrchestrator {
             return chapter;
         }
 
-        chapter.setContent(newContent.toString());
-        repository.saveChapter(chapter);
-        // p16-05: 段落编辑改变了正文——按章重建向量索引（清旧 chunk + 新正文入库），
-        // 避免 editPassage 后向量库仍保留编辑前的旧情节被后续章节检索召回
+        chapter = chapterRevisionService.editInOwnedWork(projectId, chapterIndex,
+                chapter.getVersion(), chapter.getTitle(), newContent.toString(), "PASSAGE_EDIT");
+        log.info("段落编辑完成(章{}段{}): {}→{}字", chapterIndex, resolvedIndex,
+                content.length(), newContent.length());
+        refreshChapterAfterRevision(projectId, chapter);
+
+        return chapter;
+    }
+
+    /** Reuse the established passage-edit refresh path for direct edits and restores. */
+    public void refreshChapterAfterRevision(String projectId, Chapter chapter) {
+        int chapterIndex = chapter.getChapterIndex();
+        // p16-05: clear old chapter chunks and rebuild vectors from the persisted body.
         if (chapterWriter != null) {
             try { chapterWriter.reindexChapter(projectId, chapterIndex, chapter.getContent()); } catch (Exception ignored) {}
         }
-        log.info("段落编辑完成(章{}段{}): {}→{}字", chapterIndex, resolvedIndex,
-                content.length(), newContent.length());
         if (contextAssembler != null) contextAssembler.invalidateProject(projectId);
 
         final Chapter snapshot = chapter;
@@ -2538,8 +2549,6 @@ public class NovelOrchestrator {
                 if (factHarvester != null) factHarvester.harvest(projectId, snapshot);
             } catch (Exception ignored) {}
         });
-
-        return chapter;
     }
 
     /** 提取上下文段落（向前/向后取 N 段） */

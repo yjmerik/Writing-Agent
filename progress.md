@@ -852,3 +852,9 @@ W2 的两个独立基石已落地（不依赖 LLM prompt 改动，不影响产�
 - 严格 TDD RED：`ChapterVersionHistoryTest` testCompile 出现 **29 个预期缺失符号**，覆盖领域类型及三个仓储方法均不存在。GREEN 的 6 个真实 SQLite 测试覆盖版本倒序、精确单版本查询、八字段与纳秒时间往返、重复键失败且旧行不变、跨项目/章节版本隔离、不可变 API、fresh schema 和 legacy chapters 无损迁移。
 - 验证：focused `ChapterVersionHistoryTest,SqliteSchemaInitializerTest,SqliteNovelRepositoryTest` **18/18 PASS**；JDK21 compile、full test、`./init.sh` 全部 PASS（**554 tests / 0 failures / 0 errors / 1 skipped**；27 prompts 与前端生产构建通过）。本 feature 无产品入口且不改变 prompt/产出，因此未跑浏览器、replay 或质量基线；章节改写路径接入历史由 p26-12 完成。
 - Review round 1：SQLite rowid 表中 `id TEXT PRIMARY KEY` 的 PRAGMA `notnull=0`，且真实 null-id 快照可被插入。强化测试 RED 为 **7 tests / 2 failures / 0 errors**；DDL 最小改为 `id TEXT NOT NULL PRIMARY KEY` 后，八列均 `notnull=1`，null-id INSERT 明确失败且查询无残留。最终 focused **19/19 PASS**，JDK21 compile/full/init **555 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建 PASS。
+
+## Phase 26 — p26-12 章节新增直接编辑与回退 API（2026-09-03）
+
+- 真实 Spring MVC + SQLite TDD RED 为 **7 tests / 6 failures / 0 errors**：章节新增、直接编辑、历史与回退端点缺失并返回 500；事务故障用例仅因端点不存在而偶然满足零写入。GREEN 后 `ChapterDirectEditTest` 扩展为 **8/8 PASS**，覆盖下一项目全局章号、DRAFTING/500 字门槛、标题正文与 version+1、不可变变更前快照、历史倒序、精确回退及空白旧草稿回退、陈旧 expectedVersion 409 零副作用、跨项目拒绝、活动写作拒绝、同版本并发唯一成功者和 SQLite 故障原子回滚。
+- 新增 `ChapterRevisionService` 单一版本边界与四个 API；SQLite 以条件 UPDATE current + INSERT snapshot 同事务保存。既有 rewrite/passage mutation 进入同一边界并记录 `REWRITE`/`PASSAGE_EDIT` 历史；所有 mutation 复用共享项目工作权，直接编辑/回退复用既有向量重建、上下文/摘要失效与实体、伏笔、事实后处理刷新路径。
+- 四套 focused **13/13 PASS**；JDK21 compile/full/init **563 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建 PASS。指定匹配 `canary-mystery-20260831` fixture 的 replay 为 3 章、10,191 字、54 calls、0 LLM errors、0 chapter failures，baseline PASS。manual aggregate **0 PASS / 1 XFAIL / 0 ERROR**，唯一剩余 `chapterActions` UI 留给 p26-13；未修改 UI、Agent/prompt、自动任务、mode switch/resume。

@@ -79,6 +79,8 @@ public interface NovelRepository {
     void saveChapterVersion(ChapterVersion snapshot);
     List<ChapterVersion> findChapterVersions(String projectId, int chapterIndex);
     Optional<ChapterVersion> findChapterVersion(String projectId, int chapterIndex, int version);
+    /** Atomically replace the expected current chapter and insert its pre-change snapshot. */
+    boolean saveChapterRevision(ChapterVersion snapshot, Chapter revised, int expectedVersion);
 
     // --- Summary ---
     void saveSummary(Summary summary);

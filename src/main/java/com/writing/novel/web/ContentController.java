@@ -6,6 +6,7 @@ import com.writing.novel.orchestrator.NovelOrchestrator;
 import com.writing.novel.orchestrator.ProjectActionPolicy;
 import com.writing.novel.orchestrator.ProjectActionPolicy.ProjectAction;
 import com.writing.novel.service.CanonPatchService;
+import com.writing.novel.service.ChapterRevisionService;
 import com.writing.novel.service.OutlineStructureService;
 import com.writing.novel.service.WritingTaskExecutor;
 import com.writing.novel.spi.NovelRepository;
@@ -24,6 +25,7 @@ public class ContentController {
     private final CanonPatchService canonPatch;
     private final OutlineStructureService outlineStructure;
     private final WritingTaskExecutor writingTaskExecutor;
+    private final ChapterRevisionService chapterRevision;
     private final ProjectActionPolicy actionPolicy = new ProjectActionPolicy();
 
     @Autowired
@@ -35,6 +37,8 @@ public class ContentController {
         this.canonPatch = canonPatch;
         this.writingTaskExecutor = writingTaskExecutor;
         this.outlineStructure = outlineStructure;
+        this.chapterRevision = new ChapterRevisionService(repository, writingTaskExecutor,
+                orchestrator == null ? null : orchestrator::refreshChapterAfterRevision);
     }
 
     /** Unit-test compatibility for controller tests that do not exercise outline editing. */
@@ -220,6 +224,34 @@ public class ContentController {
         return repository.findChapterByIndex(id, chapterIndex).orElse(null);
     }
 
+    @PostMapping("/chapters")
+    public Chapter createChapterDraft(@PathVariable String id,
+                                      @RequestBody Map<String, Object> body) {
+        return chapterRevision.createDraft(id,
+                stringValue(body.get("title")), stringValue(body.get("content")));
+    }
+
+    @PutMapping("/chapters/{chapterIndex}")
+    public Chapter editChapter(@PathVariable String id, @PathVariable int chapterIndex,
+                               @RequestBody Map<String, Object> body) {
+        return chapterRevision.edit(id, chapterIndex, intValue(body.get("expectedVersion")),
+                stringValue(body.get("title")), stringValue(body.get("content")), "DIRECT_EDIT");
+    }
+
+    @GetMapping("/chapters/{chapterIndex}/versions")
+    public List<ChapterVersion> chapterVersions(@PathVariable String id,
+                                                @PathVariable int chapterIndex) {
+        return chapterRevision.history(id, chapterIndex);
+    }
+
+    @PostMapping("/chapters/{chapterIndex}/restore/{version}")
+    public Chapter restoreChapter(@PathVariable String id, @PathVariable int chapterIndex,
+                                  @PathVariable int version,
+                                  @RequestBody Map<String, Object> body) {
+        return chapterRevision.restore(id, chapterIndex, version,
+                intValue(body.get("expectedVersion")));
+    }
+
     @PostMapping("/expand/characters")
     public Character expandCharacters(@PathVariable String id, @RequestBody(required = false) Map<String, String> body) {
         rejectIfWriting(id);
@@ -275,7 +307,7 @@ public class ContentController {
     public Chapter rewriteChapter(@PathVariable String id, @PathVariable int chapterIndex,
                                    @RequestBody(required = false) java.util.Map<String, String> body) {
         String instructions = body != null ? body.get("instructions") : null;
-        return orchestrator.rewriteChapter(id, chapterIndex, instructions);
+        return withChapterWork(id, () -> orchestrator.rewriteChapter(id, chapterIndex, instructions));
     }
 
     /** p10.1-e1: 伏笔重要性回溯审计——手动触发 */
@@ -296,9 +328,9 @@ public class ContentController {
     @PostMapping("/chapters/{chapterIndex}/passage")
     public Chapter editPassage(@PathVariable String id, @PathVariable int chapterIndex,
                                 @RequestBody PassageEditRequest req) {
-        return orchestrator.editPassage(id, chapterIndex,
+        return withChapterWork(id, () -> orchestrator.editPassage(id, chapterIndex,
                 req.getParagraphIndex(), req.getSelectedText(),
-                req.getInstruction(), req.getMode());
+                req.getInstruction(), req.getMode()));
     }
 
     @GetMapping("/memory/summary")
@@ -314,5 +346,30 @@ public class ContentController {
 
     private int chapterOf(String projectId) {
         return canonPatch.currentChapter(projectId);
+    }
+
+    private String stringValue(Object value) {
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private int intValue(Object value) {
+        if (value instanceof Number number) return number.intValue();
+        if (value == null) throw new IllegalArgumentException("expectedVersion 不能为空");
+        try {
+            return Integer.parseInt(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("expectedVersion 必须是整数");
+        }
+    }
+
+    private <T> T withChapterWork(String projectId, java.util.function.Supplier<T> work) {
+        if (writingTaskExecutor == null) return work.get();
+        String workId = "chapter-change-" + java.util.UUID.randomUUID();
+        writingTaskExecutor.beginWork(projectId, workId);
+        try {
+            return work.get();
+        } finally {
+            writingTaskExecutor.endWork(projectId, workId);
+        }
     }
 }

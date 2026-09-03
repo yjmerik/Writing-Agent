@@ -173,6 +173,8 @@ class VectorCleanupOnRewritePathsTest {
 
         assertNotNull(out);
         assertTrue(out.getContent().contains(NEW_MARKER), "重写后 DB 正文应为新版");
+        assertEquals("REWRITE", repo.findChapterVersions(pid, 1).get(0).getSource(),
+                "整章重写必须进入统一版本历史");
         assertOldChunksCleared(cid);
         assertNewContentIndexed(pid, cid);
     }
@@ -188,6 +190,8 @@ class VectorCleanupOnRewritePathsTest {
 
         assertNotNull(out);
         assertTrue(out.getContent().contains(NEW_MARKER), "段落编辑应写入新版文本");
+        assertEquals("PASSAGE_EDIT", repo.findChapterVersions(pid, 1).get(0).getSource(),
+                "段落编辑必须进入统一版本历史");
         assertOldChunksCleared(cid);
         assertNewContentIndexed(pid, cid);
 

@@ -5,9 +5,9 @@
 ## Current Objective
 
 - **Goal**: 以产品一致性审计的浏览器红灯套件驱动下一轮 P0 → P1 → P2 修复。
-- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-11 已完成。章节现有值之外已有向前兼容的 insert-only 版本历史底座：不可变快照保留项目、章号、版本、标题、正文、来源和精确创建时间，SQLite 以项目+章号+版本唯一且拒绝覆盖，fresh/legacy schema 均已验证。p26-12 将把章节新增、直接编辑、重写与回退接入这一底座；当前尚未新增 API 或前端入口。`manual-content-management` 的 world/character/outline 子项全绿，aggregate 仅因 p26-13 章节新增、正文编辑和版本 UI 尚未完成而预期 XFAIL。既有 checkpoint merge、服务端动作矩阵、自动任务持续运行和 mode switch/resume 语义均未改动。
+- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-12 已完成。章节新增草稿、直接编辑、历史查询和回退 API 已接入不可变历史底座；直接编辑/回退以 expectedVersion 防陈旧覆盖，SQLite 原子保存 current+pre-change snapshot，既有 rewrite/passage 也进入统一版本边界。所有章节 mutation 使用共享项目工作权；直接编辑与回退复用既有向量和后处理刷新路径。`manual-content-management` 的 world/character/outline 子项全绿，aggregate 仅因 p26-13 章节新增、正文编辑和版本 UI 尚未完成而预期 XFAIL。既有 checkpoint merge、服务端动作矩阵、自动任务持续运行和 mode switch/resume 语义均未改动。
 - **Branch**: 当前 Phase 26 修复分支；仓库没有 Git remote/upstream。
-- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-11 completed，下一项为 p26-12。
+- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-12 completed，下一项为 p26-13。
 - **Current spec**: `docs/specs/2026-09-02-product-audit-browser-e2e.md` 与 `.superpowers/sdd/2026-09-03-product-design-consistency-remediation/` 任务简报。
 - **Product audit**: `docs/audits/2026-09-02-product-design-consistency-audit.md`（P0 3 项 / P1 8 项 / P2 5 项）。
 
@@ -56,6 +56,7 @@
 
 - p26-11 RED：`ChapterVersionHistoryTest` testCompile 为 **29 个预期缺失符号**（领域类型和三个仓储契约不存在）。GREEN：不可变八字段 ChapterVersion，source 为 String，createdAt 为 Instant；SQLite 新表全部业务列 NOT NULL、项目+章号+版本 UNIQUE，普通 INSERT 拒绝重复且不覆盖，查询倒序/精确映射；fresh schema 与已有 legacy chapters 数据迁移均通过。新测试 **6/6**，focused 三套 **18/18**，JDK21 compile/full/init **554 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建 PASS。无产品入口，未跑浏览器/replay；未提前接入 p26-12 API 或章节变更路径。
 - p26-11 review round 1：强化 RED 为 **7 tests / 2 failures / 0 errors**，证明 SQLite `id TEXT PRIMARY KEY` 的 `notnull=0` 且接受 null-id。改为 `id TEXT NOT NULL PRIMARY KEY` 后全部 8 列均为 NOT NULL，真实 null-id INSERT 失败且无残留；focused **19/19**，JDK21 compile/full/init **555 tests / 0 failures / 0 errors / 1 skipped**，27 prompts 与前端构建 PASS。
+- p26-12 RED：真实 Spring MVC + SQLite `ChapterDirectEditTest` 为 **7 tests / 6 failures / 0 errors**，四个新端点缺失并返回 500；事务故障用例只因端点不存在而偶然零写入。GREEN：新增项目全局下一章草稿、直接编辑、历史倒序和精确回退 API；expectedVersion、跨项目、标题/正文/500 字、活动工作与并发唯一胜者均在写入和派生刷新前校验。SQLite 条件 UPDATE current + INSERT pre-change snapshot 同事务提交，故障注入时二者均回滚；空白旧草稿可精确恢复。rewrite/passage 也经统一边界记录 `REWRITE`/`PASSAGE_EDIT`，直接编辑/回退复用既有向量重建和摘要/实体/伏笔/事实刷新。新测试 **8/8**、四套 focused **13/13**；JDK21 compile/full/init **563 tests / 0 failures / 0 errors / 1 skipped**，匹配 mystery replay 为 3 章、10,191 字、54 calls、0 errors/failed chapters，baseline PASS。manual aggregate **0/1/0**，唯一 chapterActions UI 留给 p26-13。
 
 ## Non-blocking Observations
 
@@ -68,7 +69,7 @@
 
 ## Next Entry
 
-- 下一步为 p26-12：在统一 ChapterRevisionService 边界接入 p26-11 历史快照，提供章节新增、直接编辑、历史查询与回退 API，并正确失效/重建派生产物；不提前实现 p26-13 UI。
+- 下一步为 p26-13：消费 p26-12 API，实现章节新增、正文编辑、版本记录、比较与回退 UI；不扩展自动任务、mode switch/resume 或相邻架构。
 - 剩余本期红灯聚焦人工内容管理、移动端与文案一致性；按用户指示，自动任务及其 mode switch/resume 生命周期需要架构和系统修复，不在本期计划范围。
 - 新需求继续遵循：写 spec → 拆 1-3 文件 feature → 登记 `feature_list.json` → 实现与验证 → 更新三份状态文档。
 - 本机代理可能劫持 localhost；脚本内 curl 保持 `--noproxy '*'`。ego-browser 内写文件使用绝对路径。

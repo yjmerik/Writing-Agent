@@ -3257,12 +3257,13 @@
       "phase": 26,
       "type": "feature",
       "dependencies": ["p26-11"],
-      "status": "not-started",
-      "files": ["service/ChapterRevisionService.java", "web/ContentController.java", "web/ChapterDirectEditTest.java"],
+      "status": "completed",
+      "files": ["service/ChapterRevisionService.java", "web/ContentController.java", "orchestrator/NovelOrchestrator.java", "spi/NovelRepository.java", "persistence/sqlite/SqliteNovelRepository.java", "web/ChapterDirectEditTest.java", "agent/VectorCleanupOnRewritePathsTest.java", "agent/TestNovelRepositoryStub.java"],
       "problem_ref": "P1-05：章节不能新增、直接编辑、比较或回退",
       "description": "所有章节正文变更进入统一版本边界，提供新增、保存、历史查询和回退端点。",
       "acceptance": "草稿新增、标题正文编辑和回退均持久化并产生版本；陈旧 expectedVersion 返回冲突且派生产物正确刷新。",
-      "verify_cmd": "mvn test -Dtest=ChapterDirectEditTest"
+      "verify_cmd": "mvn test -Dtest=ChapterDirectEditTest",
+      "evidence": "2026-09-03：真实 Spring MVC + SQLite TDD RED 为 7 tests / 6 failures / 0 errors，四个新端点均不存在并返回 500；事务故障测试因端点缺失而仅偶然满足零写入。GREEN 新增 ChapterRevisionService 单一版本边界与 POST 新增草稿、PUT 直接编辑、GET 历史、POST 回退 API：新增使用项目全局最大章号+1，空白/短正文保持 DRAFTING，达到 500 字转 DONE；直接编辑校验 expectedVersion、标题/正文与已完成章节 500 字门槛，current version +1，并原子保存变更前不可变快照；历史按版本倒序，回退精确复制指定历史标题/正文、生成新的当前版本和回退前快照，空白旧草稿也可精确回退。共享 ProjectWorkCoordinator owner 覆盖新增/编辑/回退及既有 rewrite/passage mutation，活动写作冲突和同 expectedVersion 并发均只有唯一成功者；跨项目、陈旧版本、校验失败在 chapter/history/MemoryRevision 派生刷新前拒绝。NovelRepository/SQLite 新增最小 saveChapterRevision contract，以条件 UPDATE + history INSERT 同事务提交，触发器故障验证 current/history 均回滚。rewrite/passage 复用同一边界并记录 REWRITE/PASSAGE_EDIT 历史；直接编辑和回退复用既有章节向量重建、上下文失效以及摘要/实体/伏笔/事实后处理刷新路径。最终 ChapterDirectEditTest 8/8，四套 focused 13/13；JDK21 compile、full test、./init.sh PASS：563 tests / 0 failures / 0 errors / 1 skipped，27 prompts 与前端生产构建通过。匹配 canary-mystery fixture 的 replay 为 3 章、10,191 字、54 calls、0 LLM errors、0 chapter failures，compare-baseline PASS。manual-content-management 为 0 PASS / 1 XFAIL / 0 ERROR，world/character/outline 均 true，唯一剩余 chapterActions UI 留给 p26-13。本项未修改 UI、Agent/prompt、自动任务、mode switch/resume。"
     },
     {
       "id": "p26-13",

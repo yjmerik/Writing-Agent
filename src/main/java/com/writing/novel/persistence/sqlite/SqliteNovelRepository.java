@@ -517,6 +517,47 @@ public class SqliteNovelRepository implements NovelRepository {
         }
     }
 
+    @Override
+    public boolean saveChapterRevision(ChapterVersion snapshot, Chapter revised, int expectedVersion) {
+        return runInTransaction(conn -> {
+            String update = "UPDATE chapters SET title=?,content=?,word_count=?,version=?,status=?,updated_at=? " +
+                    "WHERE id=? AND project_id=? AND chapter_index=? AND version=?";
+            try (PreparedStatement ps = conn.prepareStatement(update)) {
+                ps.setString(1, revised.getTitle());
+                ps.setString(2, revised.getContent());
+                ps.setInt(3, revised.getWordCount());
+                ps.setInt(4, revised.getVersion());
+                ps.setString(5, revised.getStatus().name());
+                ps.setString(6, revised.getUpdatedAt().toString());
+                ps.setString(7, revised.getId());
+                ps.setString(8, revised.getProjectId());
+                ps.setInt(9, revised.getChapterIndex());
+                ps.setInt(10, expectedVersion);
+                if (ps.executeUpdate() != 1) return false;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+
+            String insert = "INSERT INTO chapter_versions " +
+                    "(id,project_id,chapter_index,version,title,content,source,created_at) " +
+                    "VALUES (?,?,?,?,?,?,?,?)";
+            try (PreparedStatement ps = conn.prepareStatement(insert)) {
+                ps.setString(1, snapshot.getId());
+                ps.setString(2, snapshot.getProjectId());
+                ps.setInt(3, snapshot.getChapterIndex());
+                ps.setInt(4, snapshot.getVersion());
+                ps.setString(5, snapshot.getTitle());
+                ps.setString(6, snapshot.getContent());
+                ps.setString(7, snapshot.getSource());
+                ps.setString(8, snapshot.getCreatedAt().toString());
+                ps.executeUpdate();
+                return true;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
     // --- Task 10: 大纲/摘要/伏笔/风格/连续性/检查点 ---
 
     @Override

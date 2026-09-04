@@ -3342,12 +3342,13 @@
       "phase": 26,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": ["frontend/src/components/QualityView.tsx", "frontend/src/api/client.ts", "scripts/product-audit-e2e.sh"],
       "problem_ref": "P2-05：未评价显示 0 分/无问题且失败使用浏览器 alert",
       "description": "显式区分未评价、运行、成功、失败，失败站内反馈并可重试。",
       "acceptance": "未评价和失败不显示 0 分或未发现问题；成功零分可区分；失败显示站内错误和重试入口。",
-      "verify_cmd": "./scripts/product-audit-e2e.sh --case quality-evaluation-state"
+      "verify_cmd": "./scripts/product-audit-e2e.sh --case quality-evaluation-state",
+      "evidence": "2026-09-04：严格 ego-browser RED 为 0 PASS / 1 XFAIL / 0 ERROR，实际命中初始无“尚未评价”、运行态不可识别、失败调用原生 alert 且无站内错误/重试。GREEN 将 QualityView 收口为 NOT_EVALUATED/RUNNING/SUCCEEDED/FAILED 四态：未评价和失败不展示 0 分或“未发现问题”，运行时禁用重复提交并显示进度，失败用 Ant Design 站内消息+行内 Alert+可访问重试按钮，成功零分显示“评价完成”且仍如实展示零分/无问题。切换项目会失效化旧请求并重置状态，API 结果使用统一 QualityEvaluationResult 类型。测试拦截并记录原生 alert 而不真实弹窗，且只为本场景添加 cache marker 以加载当前构建。最终 strict 为 1 PASS / 0 XFAIL / 0 ERROR：四态、原生弹窗缺席、失败重试和成功零分全部通过；相邻 initial-setup-summary 与 checkpoint-card-targeting 独立 strict 各 1 PASS / 0 XFAIL / 0 ERROR。frontend production build PASS；JDK21 mvn test 与 ./init.sh PASS：587 tests / 0 failures / 0 errors / 1 skipped，28 prompts 与前端构建通过。未改生产 Agent、Prompt、上下文、自动任务或 mode switch/resume，不触发文学质量 replay。"
     },
     {
       "id": "p26-19",

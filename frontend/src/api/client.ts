@@ -72,6 +72,13 @@ export interface AgentRevisionApplyResult {
   result: unknown;
 }
 
+export interface QualityEvaluationResult {
+  scores: Record<string, number>;
+  overallScore: number;
+  summary: string;
+  issues: { dimension: string; severity: string; description: string }[];
+}
+
 /** 封装 fetch，统一处理错误和超时 */
 async function request<T>(url: string, options?: RequestInit, timeoutMs = 300000): Promise<T> {
   const controller = new AbortController();
@@ -400,12 +407,7 @@ export const api = {
 
   /** 质量评价（慢操作，调 LLM 分析） */
   evaluate: (id: string) =>
-    request<{
-      scores: Record<string, number>;
-      overallScore: number;
-      summary: string;
-      issues: { dimension: string; severity: string; description: string }[];
-    }>(`/projects/${id}/evaluate`, { method: 'POST' }, 300000),
+    request<QualityEvaluationResult>(`/projects/${id}/evaluate`, { method: 'POST' }, 300000),
 
   // --- p7: 交互式审核 + 章节重写 + 预设 ---
 

@@ -2,6 +2,16 @@
 
 ---
 
+## 会话记录（2026-09-04）：Phase 26 p26-18 质量评价四态与统一错误反馈
+
+- 质量评价收口为 `NOT_EVALUATED / RUNNING / SUCCEEDED / FAILED` 四态。未评价显示“尚未评价”，不显示 0 分或“未发现问题”；运行时显示进度并禁用重复提交。
+- 失败改为 Ant Design 站内消息和行内 Alert，保留错误原因与可访问的重试入口，不再使用浏览器 `alert`。成功零分则明确显示“评价完成”、0 分和“未发现问题”，与未评价区分。
+- 切换项目会失效化旧请求并重置评价状态；前端 API 导出统一 `QualityEvaluationResult` 类型。浏览器套件只在本场景使用 cache marker，防止旧构建缓存造成假结果，不改变其他场景的导航。
+- ego-browser TDD RED 为 **0 PASS / 1 XFAIL / 0 ERROR**，命中未评价、运行、失败反馈和原生弹窗缺陷；GREEN 为 **1 PASS / 0 XFAIL / 0 ERROR**，四态、重试和成功零分断言全部通过。相邻 `initial-setup-summary` 和 `checkpoint-card-targeting` 独立 strict 各 **1 PASS / 0 XFAIL / 0 ERROR**。
+- frontend production build PASS；JDK21 `mvn test` 与 `./init.sh` 全绿：**587 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端生产构建通过。本项未改生产 Agent、Prompt、上下文或调度，不需要文学质量 replay。
+
+---
+
 ## 会话记录（2026-09-04）：Phase 26 p26-17 暂停阶段与真实项目进度
 
 - 服务端状态与项目列表现在共享同一套进度事实：返回 `targetChapters`、`progressPercent`、`pauseStage`、`pauseReason`。初始设定/卷大纲审核映射到规划阶段，章节审核映射到写作阶段；没有待审项时暂停字段为 null。

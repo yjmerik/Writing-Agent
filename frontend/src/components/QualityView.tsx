@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { Card, Button, Spin, Empty, Progress, Tag, Alert, Divider, Typography, Space } from 'antd';
+import { useEffect, useRef, useState } from 'react';
+import { Card, Button, Spin, Empty, Progress, Tag, Alert, Divider, Typography, Space, message } from 'antd';
 import { SafetyCertificateOutlined } from '@ant-design/icons';
-import { api } from '../api/client';
+import { api, type QualityEvaluationResult } from '../api/client';
 
 const { Paragraph, Title } = Typography;
 
@@ -21,42 +21,56 @@ const SEVERITY_CONFIG: Record<string, { color: string; text: string }> = {
   low: { color: 'blue', text: '轻微' },
 };
 
-interface EvalResult {
-  scores: Record<string, number>;
-  overallScore: number;
-  summary: string;
-  issues: { dimension: string; severity: string; description: string }[];
-}
+type EvaluationState = 'NOT_EVALUATED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED';
 
 export default function QualityView({ projectId }: { projectId: string }) {
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<EvalResult | null>(null);
+  const [evaluationState, setEvaluationState] = useState<EvaluationState>('NOT_EVALUATED');
+  const [result, setResult] = useState<QualityEvaluationResult | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [messageApi, messageContextHolder] = message.useMessage();
+  const requestSequence = useRef(0);
+  const running = evaluationState === 'RUNNING';
+
+  useEffect(() => {
+    requestSequence.current += 1;
+    setEvaluationState('NOT_EVALUATED');
+    setResult(null);
+    setErrorMessage('');
+  }, [projectId]);
 
   const handleEvaluate = async () => {
-    setLoading(true);
+    const requestId = ++requestSequence.current;
+    setEvaluationState('RUNNING');
     setResult(null);
+    setErrorMessage('');
     try {
-      setResult(await api.evaluate(projectId));
+      const nextResult = await api.evaluate(projectId);
+      if (requestSequence.current !== requestId) return;
+      setResult(nextResult);
+      setEvaluationState('SUCCEEDED');
     } catch (e) {
+      if (requestSequence.current !== requestId) return;
+      const nextErrorMessage = e instanceof Error ? e.message : '未知错误';
       setResult(null);
-      // eslint-disable-next-line no-alert
-      alert(`评价失败: ${(e as Error).message}`);
-    } finally {
-      setLoading(false);
+      setErrorMessage(nextErrorMessage);
+      setEvaluationState('FAILED');
+      messageApi.error(`评价失败：${nextErrorMessage}`);
     }
   };
 
   return (
     <Card>
+      {messageContextHolder}
       <Space style={{ marginBottom: 16 }}>
         <Button
           type="primary"
           size="large"
           icon={<SafetyCertificateOutlined />}
-          loading={loading}
+          loading={running}
+          disabled={running}
           onClick={handleEvaluate}
         >
-          {loading ? 'AI 评审中（分析全文）…' : '🔍 开始质量评价'}
+          {running ? 'AI 评审中（分析全文）…' : '🔍 开始质量评价'}
         </Button>
       </Space>
 
@@ -67,10 +81,29 @@ export default function QualityView({ projectId }: { projectId: string }) {
         style={{ marginBottom: 24 }}
       />
 
-      {loading && <Spin tip="AI 正在阅读全文并评审..." size="large" style={{ display: 'block', margin: '40px auto' }} />}
+      {evaluationState === 'NOT_EVALUATED' && <Empty description="尚未评价" />}
 
-      {result && !loading && (
+      {running && (
+        <div aria-live="polite" style={{ textAlign: 'center', padding: '40px 0' }}>
+          <Spin tip="AI 正在阅读全文并评审..." size="large">
+            <div style={{ height: 48 }} />
+          </Spin>
+        </div>
+      )}
+
+      {evaluationState === 'FAILED' && (
+        <Alert
+          type="error"
+          showIcon
+          message="评价失败"
+          description={errorMessage}
+          action={<Button aria-label="重试质量评价" onClick={handleEvaluate}>重试</Button>}
+        />
+      )}
+
+      {evaluationState === 'SUCCEEDED' && result && (
         <div>
+          <Alert type="success" showIcon message="评价完成" style={{ marginBottom: 24 }} />
           {/* 总分 */}
           <div style={{ textAlign: 'center', marginBottom: 24 }}>
             <Title level={2}>

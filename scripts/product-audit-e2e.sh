@@ -20,6 +20,7 @@ CASES=(
   approve-keeps-chapter-visible
   checkpoint-card-targeting
   manual-content-management
+  quality-evaluation-state
   mobile-critical-path
 )
 
@@ -41,6 +42,7 @@ describe_case() {
     approve-keeps-chapter-visible) echo "P1-03|P1|批准章节后正文持续可见" ;;
     checkpoint-card-targeting) echo "P1-07|P1|多审核卡操作命中所点 checkpoint" ;;
     manual-content-management) echo "P1-04/P1-05/P1-06|P1|四类内容具备完整人工管理入口" ;;
+    quality-evaluation-state) echo "P2-05|P2|质量评价区分未评价、运行、失败和成功零分" ;;
     mobile-critical-path) echo "P2-02|P2|375px 关键路径无遮挡且可键盘操作" ;;
   esac
 }
@@ -192,6 +194,7 @@ P_REWRITE=""
 P_SWITCH=""
 P_APPROVE=""
 P_MULTI=""
+P_QUALITY=""
 CP_SETUP=""
 CP_VOLUME=""
 CP_MULTI_FIRST=""
@@ -277,6 +280,10 @@ if need_case checkpoint-card-targeting; then
   CP_MULTI_LATEST=$(uuidgen | tr '[:upper:]' '[:lower:]')
   sqlite3 "$DIR/novel.db" \
     "INSERT INTO checkpoints(id,project_id,type,description,status,created_at,payload) VALUES('$CP_MULTI_FIRST','$P_MULTI','AFTER_INITIAL_SETUP','较早审核项','PENDING','2026-09-02T01:00:00Z','{\"preview\":\"较早卡片审核摘要\",\"score\":8}'); INSERT INTO checkpoints(id,project_id,type,description,status,created_at,payload) VALUES('$CP_MULTI_LATEST','$P_MULTI','AFTER_VOLUME_OUTLINE','最新审核项','PENDING','2026-09-02T01:00:01Z',NULL); UPDATE projects SET state='PAUSED_AT_CHECKPOINT' WHERE id='$P_MULTI';" || exit 2
+fi
+
+if need_case quality-evaluation-state; then
+  P_QUALITY=$(create_project "audit-quality" SOLO 3) || exit 2
 fi
 
 SELECTED_JSON=$(printf '%s\n' "${SELECTED[@]}" | python3 -c "import json,sys; print(json.dumps([x.strip() for x in sys.stdin if x.strip()]))")
@@ -909,6 +916,30 @@ await runCase('manual-content-management', async () => {
       restoredVersion: restored?.version, restorePersisted, restoreReloaded, externalUpdateStatus: externalUpdate?.status,
       conflictSubmitted, conflictState, afterConflictVersion: afterConflict?.version, conflictHandled },
     agentRevisions }
+})
+
+await runCase('quality-evaluation-state', async () => {
+  await gotoAndWait(base + '/?qualityAuditRun=' + Date.now() + '#/project/$P_QUALITY', { timeout: 30, settle: 1 })
+  await wait(2)
+  await openTab('质量评价')
+  const initial = await js('(() => {const body=document.body.innerText;return {empty:body.includes("尚未评价"),scoreAbsent:!body.includes("总评分："),noIssuesAbsent:!body.includes("未发现问题")}})()')
+
+  await js('(() => {const original=window.fetch.bind(window);window.__qualityOriginalFetch=original;window.__qualityFailedOnce=false;window.__qualityOriginalAlert=window.alert;window.__qualityNativeAlertCalled=false;window.alert=()=>{window.__qualityNativeAlertCalled=true};window.fetch=(input,init)=>{const url=typeof input==="string"?input:input.url;if(url.endsWith("/evaluate")&&!window.__qualityFailedOnce){window.__qualityFailedOnce=true;return new Promise(resolve=>setTimeout(()=>resolve(new Response(JSON.stringify({error:"确定性评价故障"}),{status:500,headers:{"Content-Type":"application/json"}})),1200))}return original(input,init)};return true})()')
+  const started = await clickButtonInScope('body', '🔍 开始质量评价', '')
+  await wait(0.3)
+  const running = await js('(() => {const body=document.body.innerText;const button=[...document.querySelectorAll("button")].find(b=>b.innerText.includes("AI 评审中"));return {busy:!!button&&button.disabled,spin:body.includes("AI 正在阅读全文并评审"),scoreAbsent:!body.includes("总评分：")}})()')
+  await wait(1.5)
+  const nativeAlert = await js('!!window.__qualityNativeAlertCalled')
+  const failed = await js('(() => {const body=document.body.innerText;const retry=[...document.querySelectorAll("button")].find(b=>b.getAttribute("aria-label")==="重试质量评价");return {inline:body.includes("评价失败")&&body.includes("确定性评价故障"),retry:!!retry,scoreAbsent:!body.includes("总评分："),noIssuesAbsent:!body.includes("未发现问题")}})()')
+  const retried = failed.retry && await clickButtonInScope('body', '', '重试质量评价')
+  if (retried) await wait(2)
+  const succeeded = await js('(() => {const body=document.body.innerText;return {completed:body.includes("评价完成"),zeroScore:body.includes("总评分：")&&body.includes("0")&&body.includes("/ 10"),noIssues:body.includes("未发现问题"),notInitial:!body.includes("尚未评价")}})()')
+  await js('(() => {if(window.__qualityOriginalAlert)window.alert=window.__qualityOriginalAlert;return true})()')
+  const pass = initial.empty && initial.scoreAbsent && initial.noIssuesAbsent && started &&
+    running.busy && running.spin && running.scoreAbsent && !nativeAlert && failed.inline && failed.retry &&
+    failed.scoreAbsent && failed.noIssuesAbsent && retried && succeeded.completed && succeeded.zeroScore &&
+    succeeded.noIssues && succeeded.notInitial
+  return { pass, initial, started, running, nativeAlert, failed, retried, succeeded }
 })
 
 await runCase('mobile-critical-path', async () => {

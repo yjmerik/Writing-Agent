@@ -2,6 +2,15 @@
 
 ---
 
+## 会话记录（2026-09-04）：Phase 26 p26-19 移动端关键布局与可访问交互
+
+- 375x812 项目列表标题与操作改为自适应纵向排列，标题保持单行且有足够宽度，刷新/新建项目按钮为至少 44px 的可触达主操作；页面无横向溢出或遮挡。
+- 工作台窄屏侧栏改为可开合的 off-canvas 布局，打开/关闭入口均为具可访问名称的真实按钮。正文段落不再依赖装饰点击区，新增显式“编辑段落”按钮及可访问关闭入口。
+- ego-browser TDD RED 为 **0 PASS / 1 XFAIL / 0 ERROR**；GREEN 使用真实 CDP Enter/Space 键盘事件验证侧栏与段落编辑器开关，strict 与 expect-known-failures 各为 **1 PASS / 0 XFAIL / 0 ERROR**。相邻桌面端 `manual-content-management` strict 为 **1 PASS / 0 XFAIL / 0 ERROR**。
+- frontend production build、JDK21 compile/full/init 全绿：**587 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端生产构建通过。本项未改 Agent、Prompt、上下文、自动任务或 mode switch/resume，不需要文学质量 replay。
+
+---
+
 ## 会话记录（2026-09-04）：Phase 26 p26-18 质量评价四态与统一错误反馈
 
 - 质量评价收口为 `NOT_EVALUATED / RUNNING / SUCCEEDED / FAILED` 四态。未评价显示“尚未评价”，不显示 0 分或“未发现问题”；运行时显示进度并禁用重复提交。

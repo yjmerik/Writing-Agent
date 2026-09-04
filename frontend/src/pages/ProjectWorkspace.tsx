@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Layout, Tabs, Button, Descriptions, Tag, Space, message, Spin, Collapse, Input, Slider, Switch, Select } from 'antd';
-import { ArrowLeftOutlined, PlusOutlined, SettingOutlined, SendOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, CloseOutlined, MenuUnfoldOutlined, PlusOutlined, SettingOutlined, SendOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
 import type { Project, ProjectMode } from '../types';
 import RunConsole from '../components/RunConsole';
@@ -37,6 +37,8 @@ export default function ProjectWorkspace() {
   const [chatMsg, setChatMsg] = useState('');
   const [chatReply, setChatReply] = useState('');
   const [chatting, setChatting] = useState(false);
+  const [narrowLayout, setNarrowLayout] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -89,24 +91,63 @@ export default function ProjectWorkspace() {
   const displayTitle = project.title || project.concept?.slice(0, 12) + '…' || '未命名项目';
 
   return (
-    <Layout style={{ background: 'transparent', minHeight: '100vh' }}>
+    <Layout style={{ background: 'transparent', minHeight: '100vh', position: 'relative' }}>
+      {narrowLayout && sidebarCollapsed && (
+        <Button
+          data-sidebar-toggle
+          type="primary"
+          icon={<MenuUnfoldOutlined />}
+          aria-label="打开项目侧栏"
+          onClick={() => setSidebarCollapsed(false)}
+          style={{ position: 'fixed', top: 76, left: 8, zIndex: 1001, width: 44, height: 44 }}
+        />
+      )}
       {/* p21-06: 响应式侧栏——小于 lg 自动折叠，375px 下无页面级横向溢出 */}
       <Sider
         width={320}
         breakpoint="lg"
         collapsedWidth="0"
+        collapsible
+        collapsed={sidebarCollapsed}
+        trigger={null}
+        onBreakpoint={(broken) => {
+          setNarrowLayout(broken);
+          setSidebarCollapsed(broken);
+        }}
+        onCollapse={setSidebarCollapsed}
         theme="light"
-        style={{ padding: '16px 12px', background: '#fafaf8', borderRight: '1px solid #eee' }}
+        style={{
+          padding: narrowLayout && sidebarCollapsed ? 0 : '16px 12px',
+          background: '#fafaf8',
+          borderRight: narrowLayout && sidebarCollapsed ? 'none' : '1px solid #eee',
+          ...(narrowLayout ? {
+            position: 'fixed',
+            top: 64,
+            bottom: 0,
+            left: 0,
+            zIndex: 1000,
+            overflowY: 'auto',
+            boxShadow: sidebarCollapsed ? 'none' : '4px 0 18px rgba(0,0,0,0.16)',
+          } : {}),
+        }}
       >
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
           {/* 顶部操作 */}
           <div style={{ display: 'flex', gap: 8 }}>
-            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/')} style={{ flex: 1 }}>
+            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/')} style={{ flex: 1, minHeight: narrowLayout ? 44 : undefined }}>
               返回列表
             </Button>
-            <Button icon={<PlusOutlined />} onClick={() => navigate('/?new=1')} style={{ flex: 1 }}>
+            <Button icon={<PlusOutlined />} onClick={() => navigate('/?new=1')} style={{ flex: 1, minHeight: narrowLayout ? 44 : undefined }}>
               新建
             </Button>
+            {narrowLayout && (
+              <Button
+                icon={<CloseOutlined />}
+                aria-label="关闭项目侧栏"
+                onClick={() => setSidebarCollapsed(true)}
+                style={{ flex: '0 0 44px', width: 44, height: 44 }}
+              />
+            )}
           </div>
 
           {/* 项目信息 */}
@@ -257,7 +298,7 @@ export default function ProjectWorkspace() {
         </Space>
       </Sider>
 
-      <Content style={{ padding: '0 16px' }}>
+      <Content style={{ padding: narrowLayout ? '52px 0 0' : '0 16px', minWidth: 0, width: '100%' }}>
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}

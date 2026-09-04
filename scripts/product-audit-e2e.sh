@@ -28,7 +28,6 @@ CASES=(
 KNOWN_FAILURES=(
   auto-zero-intervention
   interactive-to-auto
-  mobile-critical-path
 )
 
 describe_case() {
@@ -943,19 +942,55 @@ await runCase('quality-evaluation-state', async () => {
 })
 
 await runCase('mobile-critical-path', async () => {
-  await cdp('Emulation.setDeviceMetricsOverride', { width: 375, height: 667, deviceScaleFactor: 2, mobile: true })
-  await go('/')
-  const list = await js('(() => {const h=[...document.querySelectorAll("h1")].find(x=>x.innerText.includes("长篇小说写作系统"));const r=h?h.getBoundingClientRect():null;return {titleWidth:r?r.width:0,titleSingleLine:h?getComputedStyle(h).whiteSpace!=="normal"||h.scrollHeight<55:false,overflow:document.documentElement.scrollWidth-window.innerWidth}})()')
-  await go('/#/project/$P_REWRITE')
-  const workspace = await js('(() => {const trigger=document.querySelector(".ant-layout-sider-zero-width-trigger");const alert=document.querySelector(".ant-alert");const tr=trigger?trigger.getBoundingClientRect():null;const ar=alert?alert.getBoundingClientRect():null;const overlap=!!(tr&&ar&&tr.left<ar.right&&tr.right>ar.left&&tr.top<ar.bottom&&tr.bottom>ar.top);return {triggerFocusable:!!trigger&&trigger.tabIndex>=0,triggerNamed:!!trigger&&(!!trigger.getAttribute("aria-label")||!!trigger.getAttribute("title")),triggerIsButton:!!trigger&&trigger.tagName==="BUTTON",overlap}})()')
+  const pressKey = async (key, code, keyCode) => {
+    const down = { type: 'keyDown', key, code, windowsVirtualKeyCode: keyCode, nativeVirtualKeyCode: keyCode }
+    if (code === 'Enter') {
+      down.text = '\r'
+      down.unmodifiedText = '\r'
+    }
+    await cdp('Input.dispatchKeyEvent', down)
+    await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key, code, windowsVirtualKeyCode: keyCode, nativeVirtualKeyCode: keyCode })
+  }
+  const marker = Date.now()
+  await cdp('Emulation.setDeviceMetricsOverride', { width: 375, height: 812, deviceScaleFactor: 2, mobile: true })
+  await gotoAndWait(base + '/?mobileAuditRun=' + marker + '#/', { timeout: 30, settle: 1 })
+  await wait(2)
+  const list = await js('(() => {const h=document.querySelector("[data-project-list-title]");const header=document.querySelector("[data-project-list-header]");const actions=document.querySelector("[data-project-list-actions]");const buttons=actions?[...actions.querySelectorAll("button")]:[];const r=h?h.getBoundingClientRect():null;const hr=header?header.getBoundingClientRect():null;const ar=actions?actions.getBoundingClientRect():null;const within=x=>!!x&&x.left>=-0.5&&x.right<=window.innerWidth+0.5;const overlap=!!(r&&ar&&r.left<ar.right&&r.right>ar.left&&r.top<ar.bottom&&r.bottom>ar.top);return {titleWidth:r?r.width:0,titleSingleLine:!!h&&h.scrollHeight<=h.clientHeight+1,overflow:document.documentElement.scrollWidth-window.innerWidth,headerWithin:within(hr),actionsWithin:within(ar),actionsBelow:!!(r&&ar)&&!overlap&&ar.top>=r.bottom+7,primaryReachable:buttons.length>=2&&buttons.every(b=>{const x=b.getBoundingClientRect();return !b.disabled&&within(x)&&x.height>=43})}})()')
+  await gotoAndWait(base + '/?mobileAuditRun=' + marker + '#/project/$P_REWRITE', { timeout: 30, settle: 1 })
+  await wait(2)
+  const workspaceInitial = await js('(() => {const trigger=document.querySelector("button[data-sidebar-toggle]");const alert=document.querySelector(".ant-layout-content .ant-alert");const tr=trigger?trigger.getBoundingClientRect():null;const ar=alert?alert.getBoundingClientRect():null;const overlap=!!(tr&&ar&&tr.left<ar.right&&tr.right>ar.left&&tr.top<ar.bottom&&tr.bottom>ar.top);return {triggerFocusable:!!trigger&&trigger.tabIndex>=0,triggerNamed:!!trigger&&!!trigger.getAttribute("aria-label"),triggerIsButton:!!trigger&&trigger.tagName==="BUTTON",triggerWithin:!!tr&&tr.left>=0&&tr.right<=window.innerWidth,overlap,pageOverflow:document.documentElement.scrollWidth-window.innerWidth}})()')
+  const openFocused = await js('(() => {const b=document.querySelector("button[data-sidebar-toggle]");if(!b)return false;b.focus();return document.activeElement===b})()')
+  if (openFocused) await pressKey('Enter', 'Enter', 13)
+  await wait(0.4)
+  const sidebarOpened = await js('(() => {const s=document.querySelector(".ant-layout-sider");const r=s?s.getBoundingClientRect():null;return !!r&&r.width>0})()')
+  const closeFocused = await js('(() => {const b=[...document.querySelectorAll("button")].find(x=>x.getAttribute("aria-label")==="关闭项目侧栏");if(!b)return false;b.focus();return document.activeElement===b})()')
+  if (closeFocused) await pressKey(' ', 'Space', 32)
+  await wait(0.4)
+  const sidebarClosed = await js('(() => {const s=document.querySelector(".ant-layout-sider");const r=s?s.getBoundingClientRect():null;return !!r&&r.width===0})()')
   await openTab('章节管理')
   await wait(3)
-  const paragraph = await js('(() => {const p=document.querySelector("[data-paragraph-index]");const explicit=[...document.querySelectorAll("button")].some(b=>(b.getAttribute("aria-label")||"").includes("编辑段落"));return {focusable:!!p&&p.tabIndex>=0,named:!!p&&(!!p.getAttribute("aria-label")||!!p.getAttribute("title")),explicitButton:explicit}})()')
+  const workspace = await js('(() => {const active=document.querySelector(".ant-tabs-tab-active");const holder=document.querySelector(".ant-tabs-content-holder");const within=x=>!!x&&x.left>=-0.5&&x.right<=window.innerWidth+0.5;const ar=active?active.getBoundingClientRect():null;const hr=holder?holder.getBoundingClientRect():null;return {tabReachable:within(ar)&&!!ar&&ar.bottom>0&&ar.top<window.innerHeight,contentReachable:within(hr)&&!!hr&&hr.bottom>0&&hr.top<window.innerHeight}})()')
+  const paragraphFocused = await js('(() => {const b=[...document.querySelectorAll("button")].find(x=>(x.getAttribute("aria-label")||"").startsWith("编辑第 "));if(!b)return false;b.focus();return document.activeElement===b})()')
+  if (paragraphFocused) await pressKey('Enter', 'Enter', 13)
+  await wait(0.3)
+  const enterOpened = await js('[...document.querySelectorAll(".ant-card-head-title")].some(x=>x.innerText.trim()==="段落编辑")')
+  const paragraphCloseFocused = await js('(() => {const b=[...document.querySelectorAll("button")].find(x=>x.getAttribute("aria-label")==="关闭段落编辑");if(!b)return false;b.focus();return document.activeElement===b})()')
+  if (paragraphCloseFocused) await pressKey(' ', 'Space', 32)
+  await wait(0.3)
+  const closedAfterEnter = await js('![...document.querySelectorAll(".ant-card-head-title")].some(x=>x.innerText.trim()==="段落编辑")')
+  const paragraphSpaceFocused = await js('(() => {const b=[...document.querySelectorAll("button")].find(x=>(x.getAttribute("aria-label")||"").startsWith("编辑第 "));if(!b)return false;b.focus();return document.activeElement===b})()')
+  if (paragraphSpaceFocused) await pressKey(' ', 'Space', 32)
+  await wait(0.3)
+  const spaceOpened = await js('[...document.querySelectorAll(".ant-card-head-title")].some(x=>x.innerText.trim()==="段落编辑")')
+  const paragraph = { focusable: paragraphFocused && paragraphSpaceFocused, named: paragraphFocused, enterOpened, closedAfterEnter, spaceOpened }
   await cdp('Emulation.clearDeviceMetricsOverride')
-  const pass = list.overflow <= 0 && list.titleWidth >= 160 && list.titleSingleLine &&
-    workspace.triggerFocusable && workspace.triggerNamed && workspace.triggerIsButton && !workspace.overlap &&
-    ((paragraph.focusable && paragraph.named) || paragraph.explicitButton)
-  return { pass, list, workspace, paragraph }
+  const pass = list.overflow <= 0 && list.titleWidth >= 160 && list.titleSingleLine && list.headerWithin &&
+    list.actionsWithin && list.actionsBelow && list.primaryReachable && workspaceInitial.triggerFocusable &&
+    workspaceInitial.triggerNamed && workspaceInitial.triggerIsButton && workspaceInitial.triggerWithin &&
+    !workspaceInitial.overlap && workspaceInitial.pageOverflow <= 0 && openFocused && sidebarOpened &&
+    closeFocused && sidebarClosed && workspace.tabReachable && workspace.contentReachable &&
+    paragraph.focusable && paragraph.named && paragraph.enterOpened && paragraph.closedAfterEnter && paragraph.spaceOpened
+  return { pass, list, workspaceInitial, openFocused, sidebarOpened, closeFocused, sidebarClosed, workspace, paragraph }
 })
 
 fs.writeFileSync('$DIR/results.json', JSON.stringify({ taskSpace: task.id, results }, null, 2))

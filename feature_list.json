@@ -3356,12 +3356,13 @@
       "phase": 26,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
-      "files": ["frontend/src/pages/ProjectListPage.tsx", "frontend/src/pages/ProjectWorkspace.tsx", "frontend/src/components/InteractiveReview.tsx"],
+      "status": "completed",
+      "files": ["frontend/src/pages/ProjectListPage.tsx", "frontend/src/pages/ProjectWorkspace.tsx", "frontend/src/components/InteractiveReview.tsx", "scripts/product-audit-e2e.sh"],
       "problem_ref": "P2-02：375px 标题/操作挤压且侧栏与段落入口不可键盘操作",
       "description": "关键标题操作在窄屏分行，装饰点击区替换为具可访问名称的按钮。",
       "acceptance": "375x812 无横向遮挡；侧栏和段落编辑按钮可聚焦、有名称并通过 Enter/Space 执行。",
-      "verify_cmd": "./scripts/product-audit-e2e.sh --case mobile-critical-path"
+      "verify_cmd": "./scripts/product-audit-e2e.sh --case mobile-critical-path",
+      "evidence": "2026-09-04：先强化 ego-browser 移动端场景，严格 RED 为 0 PASS / 1 XFAIL / 0 ERROR，复现 375x812 项目列表标题/操作未分行、侧栏触发器缺失、段落编辑入口不可聚焦且 Enter/Space 无法执行。GREEN 后项目列表标题与操作自适应纵向排列，主操作均为至少 44px 的可触达按钮；工作台窄屏侧栏改为可开合的 off-canvas 布局，开关均为有 aria-label 的真实 Button；正文段落使用显式“编辑段落”按钮，关闭入口同样可聚焦。真实 CDP Enter/Space 键盘事件验证侧栏与段落编辑器均可开关，页面横向溢出为 0，标题宽 311px 且单行，主按钮和内容均在视口内。最终 strict 与 expect-known-failures 各为 1 PASS / 0 XFAIL / 0 ERROR，并从 KNOWN_FAILURES 移除 mobile-critical-path；相邻 desktop manual-content-management strict 为 1 PASS / 0 XFAIL / 0 ERROR。frontend build、JDK21 compile/full/init 全绿：587 tests / 0 failures / 0 errors / 1 skipped，28 prompts 与前端生产构建通过。未改 Agent、Prompt、上下文、自动任务或 mode switch/resume，不触发文学质量 replay。"
     },
     {
       "id": "p26-20",

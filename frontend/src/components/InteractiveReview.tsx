@@ -521,7 +521,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
   const renderChapterContent = (content: string) => {
     if (!content) return <Text type="secondary">（空）</Text>;
     const lines = content.split('\n');
-    return renderContent(content, handleParagraphClick).map((node, index) => {
+    return renderContent(content).map((node, index) => {
       const trimmed = lines[index]?.trim() ?? '';
       const isParagraph = Boolean(trimmed)
         && !trimmed.startsWith('# ')
@@ -533,22 +533,31 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
         <div
           key={`passage-action-${index}`}
           data-passage-action-index={index}
-          style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}
+          style={{ display: 'flex', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}
         >
-          <div style={{ flex: 1, minWidth: 0 }}>{node}</div>
-          <Button
-            size="small"
-            type="text"
-            aria-label={`让 Agent 修改第 ${index + 1} 段`}
-            onClick={() => setRevisionTarget({
-              projectId,
-              targetType: 'PASSAGE',
-              targetId: currentChapter.id,
-              chapterIndex: currentChapter.chapterIndex,
-              passageIndex: index,
-              label: `第${currentChapter.chapterIndex}章 · 第${index + 1}段`,
-            })}
-          >让 Agent 修改</Button>
+          <div style={{ flex: '1 1 240px', minWidth: 0 }}>{node}</div>
+          <Space wrap size={4} style={{ marginLeft: 'auto' }}>
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              aria-label={`编辑第 ${index + 1} 段`}
+              onClick={() => handleParagraphClick(index, trimmed)}
+              style={{ minHeight: 44 }}
+            >编辑段落</Button>
+            <Button
+              type="text"
+              aria-label={`让 Agent 修改第 ${index + 1} 段`}
+              onClick={() => setRevisionTarget({
+                projectId,
+                targetType: 'PASSAGE',
+                targetId: currentChapter.id,
+                chapterIndex: currentChapter.chapterIndex,
+                passageIndex: index,
+                label: `第${currentChapter.chapterIndex}章 · 第${index + 1}段`,
+              })}
+              style={{ minHeight: 44 }}
+            >让 Agent 修改</Button>
+          </Space>
         </div>
       );
     });
@@ -831,7 +840,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
                 {/* p11-G2: 段落编辑面板 */}
                 {selectedParagraph && (
                   <Card size="small" title="段落编辑" style={{ marginTop: 16, borderColor: '#1890ff' }}
-                    extra={<Button size="small" type="text" onClick={() => setSelectedParagraph(null)}>✕</Button>}>
+                    extra={<Button type="text" aria-label="关闭段落编辑" onClick={() => setSelectedParagraph(null)} style={{ width: 44, height: 44 }}>✕</Button>}>
                     <div style={{ marginBottom: 8, padding: 8, background: '#f6f8fa', borderRadius: 4, fontSize: 13 }}>
                       <Text type="secondary">选中段落（第 {selectedParagraph.index} 段）：</Text>
                       <div style={{ marginTop: 4 }}>{selectedParagraph.text.substring(0, 100)}

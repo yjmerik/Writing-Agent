@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Table, Button, Modal, Form, Input, Select, Tag, Space, message, Popconfirm, Card, Progress } from 'antd';
+import { Table, Button, Modal, Form, Input, Select, Tag, Space, message, Popconfirm, Card, Progress, Grid } from 'antd';
 import { PlusOutlined, DeleteOutlined, ReadOutlined, RocketOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
 import type { ProjectListItem, CreateProjectRequest, ProjectMode, NovelState } from '../types';
@@ -22,6 +22,8 @@ const MODE_CONFIG: Record<ProjectMode, { text: string; color: string; bg: string
 
 export default function ProjectListPage() {
   const navigate = useNavigate();
+  const screens = Grid.useBreakpoint();
+  const isMobile = screens.sm === false;
   const [searchParams, setSearchParams] = useSearchParams();
   const [projects, setProjects] = useState<ProjectListItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -182,28 +184,49 @@ export default function ProjectListPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #f8f6f0 0%, #f0ece4 100%)' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: isMobile ? '24px 0' : '32px 24px' }}>
         {/* Header */}
-        <div style={{ marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div
+          data-project-list-header
+          style={{
+            marginBottom: 28,
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            justifyContent: 'space-between',
+            alignItems: isMobile ? 'stretch' : 'center',
+            gap: isMobile ? 16 : 0,
+            minWidth: 0,
+          }}
+        >
           <div>
-            <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1a1a2e', margin: 0, letterSpacing: 1 }}>
+            <h1
+              data-project-list-title
+              style={{
+                fontSize: isMobile ? 22 : 26,
+                fontWeight: 800,
+                color: '#1a1a2e',
+                margin: 0,
+                letterSpacing: isMobile ? 0 : 1,
+                whiteSpace: 'nowrap',
+              }}
+            >
               📖 长篇小说写作系统
             </h1>
             <p style={{ color: '#888', fontSize: 13, margin: '6px 0 0' }}>
               AI 驱动的多 Agent 协作创作 · 已有 {projects.length} 个项目
             </p>
           </div>
-          <Space>
-            <Button onClick={load} style={{ borderRadius: 8 }}>刷新</Button>
+          <div data-project-list-actions style={{ display: 'flex', gap: 8, width: isMobile ? '100%' : 'auto' }}>
+            <Button onClick={load} style={{ borderRadius: 8, flex: isMobile ? 1 : undefined, height: isMobile ? 44 : undefined }}>刷新</Button>
             <Button
               type="primary"
               icon={<RocketOutlined />}
               onClick={() => setCreateOpen(true)}
-              style={{ borderRadius: 8, fontWeight: 600, padding: '4px 20px', height: 38 }}
+              style={{ borderRadius: 8, fontWeight: 600, padding: '4px 20px', height: isMobile ? 44 : 38, flex: isMobile ? 1 : undefined }}
             >
               新建项目
             </Button>
-          </Space>
+          </div>
         </div>
 
         {/* Project cards / table */}

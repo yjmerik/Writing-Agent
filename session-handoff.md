@@ -5,9 +5,9 @@
 ## Current Objective
 
 - **Goal**: 以产品一致性审计的浏览器红灯套件驱动下一轮 P0 → P1 → P2 修复。
-- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-18 已完成。质量评价已区分未评价/运行/成功/失败，失败使用站内反馈并可重试；自动任务持续运行和 mode switch/resume 语义均未改动。
+- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-19 已完成。375px 关键布局无横向遮挡，侧栏与段落编辑入口已具备可访问名称并支持 Enter/Space；自动任务持续运行和 mode switch/resume 语义均未改动。
 - **Branch**: `codex/product-design-consistency-fixes`；仓库没有 Git remote/upstream。
-- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-18 completed，下一项为 p26-19。
+- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-19 completed，下一项为 p26-20。
 - **Current spec**: `docs/specs/2026-09-02-product-audit-browser-e2e.md` 与 `.superpowers/sdd/2026-09-03-product-design-consistency-remediation/` 任务简报。
 - **Product audit**: `docs/audits/2026-09-02-product-design-consistency-audit.md`（P0 3 项 / P1 8 项 / P2 5 项）。
 
@@ -63,6 +63,7 @@
 - p26-16 RED：扩展后的 `manual-content-management` 为 **0 PASS / 1 XFAIL / 0 ERROR**，既有人工管理断言全绿而五类 Agent 入口缺失；Scenario 严格候选单测先为 **1 failure**。GREEN：统一对话框覆盖指令、生成、前后预览、确认和站内错误；世界观/人物/卷/章节/段落均有目标绑定入口，未保存本地草稿和含已写章节卷会禁用以避免覆盖，段落使用真实可访问 Button。真实浏览器执行一次预览取消和五类确认，逐项证明 preview/cancel 零写入、确认只改目标，strict **1 PASS / 0 XFAIL / 0 ERROR**。focused Scenario/Agent/API **23/23**；frontend build、JDK21 compile/full/init PASS：**583 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端构建通过。Scenario 适配仅供确定性测试，生产 Prompt/Agent/上下文未改，无 replay。
 - p26-17 RED：真实 Spring MVC/SQLite `ProjectProgressViewTest` 为 **4 tests / 4 failures / 0 errors**，status/list 均缺暂停阶段、原因、目标章数与真实百分比。GREEN：服务端共享计算将初始设定/卷大纲审核映射到 PLANNING、章节审核映射到 WRITING；写作进度按 `floor(current*100/target)` 且封顶 100，3/12=25，缺偏好从领域默认读取 24。运行步骤和列表只消费服务端事实，列表展示 current/target 与百分比；自动模式文案不再承诺无人值守，执行行为未改。专属 **4/4**、相邻控制器 **12/12**、frontend build、browser-e2e **8/8**、JDK21 full/init 全部 PASS：**587 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端构建通过；无 replay。
 - p26-18 RED：真实 ego-browser strict 为 **0 PASS / 1 XFAIL / 0 ERROR**，未评价提示缺失、运行态不可识别、失败使用原生 alert 且无站内错误/重试。GREEN：`QualityView` 明确四态，未评价和失败不显示零分/无问题，失败保留原因并可重试，成功零分显示完成标记。最终 strict **1 PASS / 0 XFAIL / 0 ERROR**，相邻两场景独立 strict 各 **1/0/0**，frontend build PASS；JDK21 full/init 为 **587 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端构建通过；无 replay。
+- p26-19 RED：强化后的 `mobile-critical-path` strict 为 **0 PASS / 1 XFAIL / 0 ERROR**，复现 375x812 标题/操作挤压、侧栏无可访问触发器、段落编辑入口不可聚焦且键盘无效。GREEN：标题与操作纵向排列，页面横向溢出为 0；侧栏使用具名真实 Button 开合，正文段落使用显式编辑按钮，全部关键入口至少 44px。真实 CDP Enter/Space 验证 strict 与 expect-known-failures 各 **1 PASS / 0 XFAIL / 0 ERROR**，相邻桌面端 manual strict **1/0/0**；frontend build、JDK21 compile/full/init 全绿：**587 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端构建通过；无 replay。
 
 ## Non-blocking Observations
 
@@ -75,7 +76,7 @@
 
 ## Next Entry
 
-- 下一步为 p26-19：只修复 375px 关键布局与侧栏/段落入口的可聚焦、可访问交互；不进入自动任务、mode switch/resume 或任何调度架构。
-- 剩余本期红灯聚焦人工内容管理、移动端与文案一致性；按用户指示，自动任务及其 mode switch/resume 生命周期需要架构和系统修复，不在本期计划范围。
+- 下一步为 p26-20：只统一报告指出的用户术语/错字并增加静态文案门禁；不进入自动任务、mode switch/resume 或任何调度架构。
+- 剩余本期工作只包括文案一致性与全量验收；按用户指示，自动任务及其 mode switch/resume 生命周期需要架构和系统修复，不在本期计划范围。
 - 新需求继续遵循：写 spec → 拆 1-3 文件 feature → 登记 `feature_list.json` → 实现与验证 → 更新三份状态文档。
 - 本机代理可能劫持 localhost；脚本内 curl 保持 `--noproxy '*'`。ego-browser 内写文件使用绝对路径。

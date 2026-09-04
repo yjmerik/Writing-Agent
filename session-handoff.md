@@ -5,9 +5,9 @@
 ## Current Objective
 
 - **Goal**: 以产品一致性审计的浏览器红灯套件驱动下一轮 P0 → P1 → P2 修复。
-- **Current status**: Phase 26 正在按产品一致性审计逐项修复。p26-01 至 p26-20 已完成。用户可见术语已统一并有静态防回归门禁；自动任务持续运行和 mode switch/resume 语义均未改动。
+- **Current status**: Phase 26 产品一致性审计修复已完成。p26-01 至 p26-21 全部 completed；14 项本期问题已修复并通过完整产品套件、文学回放、基线与 init。自动任务持续运行和 mode switch/resume 语义仍按用户决定延期。
 - **Branch**: `codex/product-design-consistency-fixes`；仓库没有 Git remote/upstream。
-- **Feature 台账**: `feature_list.json`，`current_phase=26`；p26-01 至 p26-20 completed，下一项为 p26-21 全量验收。
+- **Feature 台账**: `feature_list.json`，`current_phase=26`；Phase 26 共 21 项全部 completed，无 in-progress 项。
 - **Current spec**: `docs/specs/2026-09-02-product-audit-browser-e2e.md` 与 `.superpowers/sdd/2026-09-03-product-design-consistency-remediation/` 任务简报。
 - **Product audit**: `docs/audits/2026-09-02-product-design-consistency-audit.md`（P0 3 项 / P1 8 项 / P2 5 项）。
 
@@ -65,6 +65,7 @@
 - p26-18 RED：真实 ego-browser strict 为 **0 PASS / 1 XFAIL / 0 ERROR**，未评价提示缺失、运行态不可识别、失败使用原生 alert 且无站内错误/重试。GREEN：`QualityView` 明确四态，未评价和失败不显示零分/无问题，失败保留原因并可重试，成功零分显示完成标记。最终 strict **1 PASS / 0 XFAIL / 0 ERROR**，相邻两场景独立 strict 各 **1/0/0**，frontend build PASS；JDK21 full/init 为 **587 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端构建通过；无 replay。
 - p26-19 RED：强化后的 `mobile-critical-path` strict 为 **0 PASS / 1 XFAIL / 0 ERROR**，复现 375x812 标题/操作挤压、侧栏无可访问触发器、段落编辑入口不可聚焦且键盘无效。GREEN：标题与操作纵向排列，页面横向溢出为 0；侧栏使用具名真实 Button 开合，正文段落使用显式编辑按钮，全部关键入口至少 44px。真实 CDP Enter/Space 验证 strict 与 expect-known-failures 各 **1 PASS / 0 XFAIL / 0 ERROR**，相邻桌面端 manual strict **1/0/0**；frontend build、JDK21 compile/full/init 全绿：**587 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端构建通过；无 replay。
 - p26-20 RED：新 `user-copy-check` 非零退出并精确定位 4 处可见字符串：“人種伏笔”“人種”“人收”“章节阅读”。GREEN：统一为“种下伏笔”“回收”“章节管理”，P26-17 的诚实自动模式描述保持不变；静态门禁和 frontend build PASS，ego-browser manual strict **1 PASS / 0 XFAIL / 0 ERROR**。JDK21 compile/full/init 全绿：**587 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端构建通过；无 replay。
+- p26-21：9 个已修复产品场景逐项 ego-browser strict 均 **1 PASS / 0 XFAIL / 0 ERROR**。首次聚合发现固定弹窗等待与 Scenario 序号硬编码造成额外假 XFAIL，仅修复测试夹具后完整套件为 **9 PASS / 2 XFAIL / 0 ERROR**，XFAIL 精确为 `auto-zero-intervention`、`interactive-to-auto`。匹配 mystery replay 为 **3 章 / 10,191 字 / 54 calls / 0 LLM errors / 0 chapter failures**，baseline PASS；JDK21 init 为 **587 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端构建通过。自动化范围关键词审计无新增实现，Standards/Spec 本地双轴审查无 in-scope finding。
 
 ## Non-blocking Observations
 
@@ -77,7 +78,7 @@
 
 ## Next Entry
 
-- 下一步为 p26-21：只执行本期全量端到端与质量门禁、审计范围并收口状态；不新增产品行为。
-- 剩余本期工作只包括全量验收；按用户指示，自动任务及其 mode switch/resume 生命周期需要架构和系统修复，不在本期计划范围，最终已知失败必须精确保留这两项。
+- 本期没有剩余 feature；继续工作前应从新的用户需求按协议建立 spec 和独立 feature。
+- 自动任务及其 mode switch/resume 生命周期需要架构和系统修复，明确不属于本期；只有用户另行批准架构专项后再规划，现有两个产品场景继续作为显式 XFAIL 保存。
 - 新需求继续遵循：写 spec → 拆 1-3 文件 feature → 登记 `feature_list.json` → 实现与验证 → 更新三份状态文档。
 - 本机代理可能劫持 localhost；脚本内 curl 保持 `--noproxy '*'`。ego-browser 内写文件使用绝对路径。

@@ -2,6 +2,15 @@
 
 ---
 
+## 会话记录（2026-09-04）：Phase 26 p26-21 产品一致性审计全量验收收口
+
+- 使用 ego-browser 将 9 个已修复产品路径逐项严格运行，全部 **1 PASS / 0 XFAIL / 0 ERROR**。首次完整聚合暴露两处测试夹具脆弱性：修改弹窗固定等待不足，以及摘要断言硬编码 Scenario 全局调用序号；均只收紧验收脚本，没有修改产品行为。
+- 修复后完整产品审计套件 PASS：**9 PASS / 2 XFAIL / 0 ERROR**，XFAIL 精确为明确延期的 `auto-zero-intervention` 与 `interactive-to-auto`。`KNOWN_FAILURES` 没有其他项目。
+- 匹配 `canary-mystery-20260831` fixture 的文学 replay 为 **3 章 / 10,191 字 / 54 calls / 0 LLM errors / 0 chapter failures**，`compare-baseline.py` PASS。JDK21 `./init.sh` PASS：**587 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端生产构建通过。
+- 范围审计未发现 `AUTO_RUN`、后台调度器、持久化自动任务、自动恢复或重启恢复实现；Phase 26 共 21 个 feature 均 completed。Standards/Spec 双轴本地审查无本期范围内发现；只读审查代理因独立额度耗尽未产出，不影响机器门禁结果。
+
+---
+
 ## 会话记录（2026-09-04）：Phase 26 p26-20 用户术语与异常文案门禁
 
 - 新增用户可见文案静态门禁，扫描 `frontend/src` 并拒绝“人種”“人收”“章节阅读”“全自动生成，无需干预”；纯注释行不作为用户文案。门禁在修复前非零退出并精确定位 4 处真实页面字符串。

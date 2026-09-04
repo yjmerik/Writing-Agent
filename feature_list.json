@@ -3384,12 +3384,13 @@
       "phase": 26,
       "type": "test",
       "dependencies": ["p26-01", "p26-02", "p26-03", "p26-04", "p26-05", "p26-06", "p26-07", "p26-08", "p26-09", "p26-10", "p26-11", "p26-12", "p26-13", "p26-14", "p26-15", "p26-16", "p26-17", "p26-18", "p26-19", "p26-20"],
-      "status": "not-started",
+      "status": "completed",
       "files": ["scripts/product-audit-e2e.sh", "feature_list.json", "progress.md"],
       "problem_ref": "本期 14 项修复需要统一端到端证据且自动任务范围必须保持明确",
       "description": "严格运行全部已修复场景与完整质量门禁，最终已知失败集合只保留两项自动任务场景。",
       "acceptance": "产品审计套件仅 auto-zero-intervention 与 interactive-to-auto 为 XFAIL 且 0 ERROR；其余场景、e2e、基线和 init 全绿。",
-      "verify_cmd": "./scripts/product-audit-e2e.sh --expect-known-failures && ./scripts/e2e.sh && python3 scripts/compare-baseline.py && ./init.sh"
+      "verify_cmd": "./scripts/product-audit-e2e.sh --expect-known-failures && ./scripts/e2e.sh && python3 scripts/compare-baseline.py && ./init.sh",
+      "evidence": "2026-09-04：先逐项用 ego-browser 严格运行全部已修复产品路径，initial-setup-summary、initial-setup-modify、volume-outline-modify、standalone-chapter-rewrite、approve-keeps-chapter-visible、checkpoint-card-targeting、manual-content-management、quality-evaluation-state、mobile-critical-path 均为 1 PASS / 0 XFAIL / 0 ERROR。首次聚合暴露两类仅在同进程出现的测试夹具脆弱性：修改弹窗用固定 3-4 秒判断慢响应，且摘要/结果把 Scenario 全局调用序号硬编码为 001/002；业务内容变化、版本、目标 checkpoint 与持久化均正确。收紧为等待标题为“修改意见”的目标弹窗真实关闭、摘要比对项目实际持久化人物、前后结果比对稳定语义后，两项回归独立 strict 通过，完整套件最终 PASS：9 PASS / 2 XFAIL / 0 ERROR；XFAIL 精确为延期的 auto-zero-intervention 与 interactive-to-auto。匹配 canary-mystery-20260831 fixture 的文学 replay PASS：3 章、10,191 字、54 calls、0 LLM errors、0 chapter failures；compare-baseline PASS。JDK21 ./init.sh PASS：587 tests / 0 failures / 0 errors / 1 skipped，28 prompts 与前端生产构建通过。分支增量与当前 diff 的自动化关键词审计未发现 AUTO_RUN、后台调度器、持久化自动任务、自动恢复或重启恢复实现；Phase 26 共 21 个 feature 均 completed。Standards/Spec 双轴本地审查无 in-scope finding；两个只读审查代理因独立额度耗尽未产出结果，不影响已执行的本地审查和机器门禁。"
     }
   ]
 }

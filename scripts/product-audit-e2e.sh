@@ -364,6 +364,23 @@ async function modalOpen() {
   return await js('!![...document.querySelectorAll(".ant-modal-wrap")].find(x=>getComputedStyle(x).display!=="none")')
 }
 
+async function modalWithTitleOpen(title) {
+  return await js('!![...document.querySelectorAll(".ant-modal-wrap")].find(x=>getComputedStyle(x).display!=="none"&&[...x.querySelectorAll(".ant-modal-title")].some(t=>t.innerText.includes(' + JSON.stringify(title) + ')))')
+}
+
+async function waitForModalWithTitleClosed(title, timeoutSeconds = 20) {
+  const attempts = Math.ceil(timeoutSeconds * 2)
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    if (!(await modalWithTitleOpen(title))) return true
+    await wait(0.5)
+  }
+  return !(await modalWithTitleOpen(title))
+}
+
+async function modalWithTitleState(title) {
+  return await js('(() => {const modal=[...document.querySelectorAll(".ant-modal-wrap")].find(x=>getComputedStyle(x).display!=="none"&&[...x.querySelectorAll(".ant-modal-title")].some(t=>t.innerText.includes(' + JSON.stringify(title) + ')));if(!modal)return null;const error=modal.querySelector(".ant-alert-error");const primary=[...modal.querySelectorAll("button")].find(b=>b.classList.contains("ant-btn-primary")||b.classList.contains("ant-btn-dangerous"));return {error:error?.innerText||null,busy:!!primary&&(primary.classList.contains("ant-btn-loading")||primary.disabled)}})()')
+}
+
 async function submitModal(instruction, buttonText) {
   if (!await modalOpen()) return false
   await fillInput('.ant-modal-wrap textarea', instruction)
@@ -433,8 +450,12 @@ await runCase('auto-zero-intervention', async () => {
 
 await runCase('initial-setup-summary', async () => {
   await go('/#/project/$P_SETUP_SUMMARY')
+  const persistedWorld = await pageJson('/api/projects/$P_SETUP_SUMMARY/worldbuilding')
+  const persistedCharacters = await pageJson('/api/projects/$P_SETUP_SUMMARY/characters')
+  const expectedWorldNames = persistedWorld.map(item => item.name).filter(Boolean)
+  const expectedCharacterNames = persistedCharacters.map(item => item.name).filter(Boolean)
   await openTab('章节管理')
-  const summary = await js('(() => {const a=[...document.querySelectorAll(".ant-alert")].find(x=>x.innerText.includes("初始设定"));const text=a?.innerText||"";return {world:text.includes("场景大陆001"),character:text.includes("主角001"),premise:text.includes("产品审计确定性场景")&&text.includes("查清师门旧案")}})()')
+  const summary = await js('(() => {const a=[...document.querySelectorAll(".ant-alert")].find(x=>x.innerText.includes("初始设定"));const text=a?.innerText||"";const worldNames=' + JSON.stringify(expectedWorldNames) + ';const characterNames=' + JSON.stringify(expectedCharacterNames) + ';return {world:worldNames.length>0&&worldNames.some(name=>text.includes(name)),character:characterNames.length>0&&characterNames.some(name=>text.includes(name)),premise:text.includes("产品审计确定性场景")&&text.includes("查清师门旧案")}})()')
   const malformed = await js('(() => {const a=[...document.querySelectorAll(".ant-alert")].find(x=>x.innerText.includes("旧异常摘要"));const text=a?.innerText||"";const buttons=a?[...a.querySelectorAll("button")]:[];return {visible:!!a,invalidSummariesHidden:!text.includes("世界观摘要")&&!text.includes("人物摘要")&&!text.includes("原旨与大纲摘要")&&!text.includes("invalid-"),safeLink:!!buttons.find(b=>b.innerText.trim()==="安全跳转"),badLinkAbsent:!buttons.find(b=>b.innerText.trim()==="异常跳转")}})()')
   const worldClicked = await clickButtonContaining('查看世界观与人物', '初始设定')
   await wait(2)
@@ -453,14 +474,14 @@ await runCase('initial-setup-modify', async () => {
   await openTab('章节管理')
   const opened = await clickButtonContaining('修改意见重写', '初始设定')
   const submitted = opened && await submitModal('改成低魔历史题材，删除所有修炼体系', '重写后批准')
-  await wait(4)
+  const closed = submitted && await waitForModalWithTitleClosed('修改意见')
   const after = await pageJson('/api/projects/$P_SETUP/worldbuilding')
   const pending = await pageJson('/api/projects/$P_SETUP/checkpoints')
   const changed = worldFingerprint(before) !== worldFingerprint(after)
-  const closed = !(await modalOpen())
+  const modalState = closed ? null : await modalWithTitleState('修改意见')
   const handled = !pending.some(cp => cp.id === '$CP_SETUP')
   return { pass: opened && submitted && changed && closed && handled,
-    opened, submitted, changed, modalClosed: closed, checkpointHandled: handled }
+    opened, submitted, changed, modalClosed: closed, modalState, checkpointHandled: handled }
 })
 
 await runCase('volume-outline-modify', async () => {
@@ -488,9 +509,8 @@ await runCase('standalone-chapter-rewrite', async () => {
   await openTab('章节管理')
   const opened = await clickButtonContaining('重写此章')
   const submitted = opened && await submitModal('改为女医师视角并增加证据推理', '重写此章')
-  await wait(4)
+  const closed = submitted && await waitForModalWithTitleClosed('修改意见')
   const after = await pageJson('/api/projects/$P_REWRITE/chapters/1')
-  const closed = !(await modalOpen())
   const versionIncreased = after.version > before.version
   const contentChanged = after.content !== before.content
   const rewrittenBodyVisible = await js('document.body.innerText.includes(' + JSON.stringify(after.content.slice(0, 28)) + ')')
@@ -548,7 +568,7 @@ await runCase('checkpoint-card-targeting', async () => {
   const ids = pending.map(cp => cp.id)
   const firstHandled = !ids.includes('$CP_MULTI_FIRST')
   const latestUntouched = ids.includes('$CP_MULTI_LATEST')
-  const result = await js('(() => {const a=[...document.querySelectorAll(".ant-alert.ant-alert-success")].find(x=>x.innerText.includes("较早审核项"));const text=a?.innerText||"";return {description:text.includes("较早审核项"),target:text.includes("INITIAL_SETUP"),before:text.includes("修改前摘要")&&text.includes("CUSTOM|信物001|师门玉佩"),after:text.includes("修改后摘要")&&text.includes("CULTURE|乡约礼俗002|宗族与保甲"),text}})()')
+  const result = await js('(() => {const a=[...document.querySelectorAll(".ant-alert.ant-alert-success")].find(x=>x.innerText.includes("较早审核项"));const text=a?.innerText||"";return {description:text.includes("较早审核项"),target:text.includes("INITIAL_SETUP"),before:text.includes("修改前摘要")&&text.includes("CUSTOM|信物")&&text.includes("师门玉佩"),after:text.includes("修改后摘要")&&text.includes("CULTURE|乡约礼俗")&&text.includes("宗族与保甲"),text}})()')
   return { pass: card.target && card.payload && opened && submitted && firstHandled && latestUntouched &&
       result.description && result.target && result.before && result.after,
     card, opened, submitted, firstHandled, latestUntouched, pendingIds: ids, result }

@@ -2,6 +2,15 @@
 
 ---
 
+## 会话记录（2026-09-04）：Phase 26 p26-20 用户术语与异常文案门禁
+
+- 新增用户可见文案静态门禁，扫描 `frontend/src` 并拒绝“人種”“人收”“章节阅读”“全自动生成，无需干预”；纯注释行不作为用户文案。门禁在修复前非零退出并精确定位 4 处真实页面字符串。
+- 世界观伏笔操作统一为“种下伏笔”“回收”，写章后的导航提示统一为“章节管理”。P26-17 已修正自动模式描述，本项没有改变其文案或执行语义。
+- `user-copy-check` 与 bash 语法检查、frontend production build 均 PASS；ego-browser `manual-content-management` strict 为 **1 PASS / 0 XFAIL / 0 ERROR**，实际人工内容页面链路无回归。
+- JDK21 compile/full/init 全绿：**587 tests / 0 failures / 0 errors / 1 skipped**，28 prompts 与前端生产构建通过。本项未改 Agent、Prompt、上下文、自动任务或 mode switch/resume，不需要文学质量 replay。
+
+---
+
 ## 会话记录（2026-09-04）：Phase 26 p26-19 移动端关键布局与可访问交互
 
 - 375x812 项目列表标题与操作改为自适应纵向排列，标题保持单行且有足够宽度，刷新/新建项目按钮为至少 44px 的可触达主操作；页面无横向溢出或遮挡。

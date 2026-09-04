@@ -434,7 +434,7 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
       <Space style={{ marginBottom: 8 }} wrap>
         <Input
           style={{ width: 360 }}
-          placeholder="人種伏笔，如：账册缺页尚未对上人"
+          placeholder="种下伏笔，如：账册缺页尚未对上人"
           value={newForeshadow}
           onChange={(e) => setNewForeshadow(e.target.value)}
         />
@@ -448,7 +448,7 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
           } catch (err) {
             message.error((err as Error).message);
           }
-        }}>人種</Button>
+        }}>种下伏笔</Button>
       </Space>
       {foreshadowings.length === 0 ? <Empty description="暂无伏笔" /> : (
         <List
@@ -465,7 +465,7 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
                   } catch (err) {
                     message.error((err as Error).message);
                   }
-                }}>人收</Button>,
+                }}>回收</Button>,
               ]}
             >
               <Tag color={item.resolved ? 'default' : 'red'}>{item.resolved ? '已回收' : '未回收'}</Tag>

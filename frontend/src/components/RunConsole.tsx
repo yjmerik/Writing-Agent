@@ -135,7 +135,7 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
       const chapter: Chapter = await api.writeChapter(projectId, instruction.trim() || undefined);
       if (chapter) {
         message.success(`第${chapter.chapterIndex}章「${chapter.title}」已完成（${chapter.wordCount}字）`);
-        setLastResult(`新章节：第${chapter.chapterIndex}章「${chapter.title}」（${chapter.wordCount}字）\n💡 切换到「章节阅读」Tab 查看正文`);
+        setLastResult(`新章节：第${chapter.chapterIndex}章「${chapter.title}」（${chapter.wordCount}字）\n💡 切换到「章节管理」Tab 查看正文`);
       } else {
         message.info('当前卷已写完，无更多章节');
         setLastResult('当前卷已写完');

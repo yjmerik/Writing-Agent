@@ -3370,12 +3370,13 @@
       "phase": 26,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": ["scripts/user-copy-check.sh", "frontend/src/components/RunConsole.tsx", "frontend/src/components/WorldbuildingView.tsx"],
       "problem_ref": "P2-03：章节阅读/章节管理混用及人種、人收等错字",
       "description": "统一用户术语并用脚本阻止已知错误字符串回归。",
       "acceptance": "前端用户文案不含人種、人收、章节阅读或无人值守承诺；检查脚本和构建通过。",
-      "verify_cmd": "./scripts/user-copy-check.sh"
+      "verify_cmd": "./scripts/user-copy-check.sh",
+      "evidence": "2026-09-04：先创建用户可见文案静态门禁并保留现有错误，RED 非零退出且精确定位 4 处：WorldbuildingView 的“人種伏笔”“人種”“人收”及 RunConsole 的“章节阅读”。GREEN 将用户术语统一为“种下伏笔”“回收”“章节管理”；P26-17 已使用“自动模式减少审核停顿；写作推进仍由当前任务触发”的诚实表述，本项没有再次改动自动模式。门禁忽略纯注释行但扫描全部 frontend/src 用户界面源文件，四个禁用短语任一进入可见源码都会失败。最终 user-copy-check 与 bash 语法检查 PASS，frontend production build PASS；ego-browser manual-content-management strict 为 1 PASS / 0 XFAIL / 0 ERROR，验证实际人工内容页面无回归。JDK21 compile/full/init 全绿：587 tests / 0 failures / 0 errors / 1 skipped，28 prompts 与前端构建通过。未改 Agent、Prompt、上下文、自动任务或 mode switch/resume，不触发文学质量 replay。"
     },
     {
       "id": "p26-21",

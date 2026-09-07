@@ -294,6 +294,17 @@
       "implementation_commit": "d17e8cbb4b2ebdecd0012f1671b92b8a75954a14",
       "main_commit": "d17e8cbb4b2ebdecd0012f1671b92b8a75954a14",
       "evidence": "docs/harness/evidence/reconciled-p27-03.json"
+    },
+    {
+      "id": "reconciled-p27-04",
+      "kind": "verified",
+      "feature_ids": [
+        "p27-04"
+      ],
+      "branch": "codex/p27-04-author-edit-ownership",
+      "implementation_commit": "9add96a9fa769189f664e19d0ebe2ae3f807f4ce",
+      "main_commit": "9add96a9fa769189f664e19d0ebe2ae3f807f4ce",
+      "evidence": "docs/harness/evidence/reconciled-p27-04.json"
     }
   ]
 }

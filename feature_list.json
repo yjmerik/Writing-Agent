@@ -3861,7 +3861,7 @@
       "dependencies": [
         "p27-03"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/web/ContentController.java",
         "src/main/java/com/writing/novel/web/CheckpointController.java",
@@ -3871,9 +3871,9 @@
       "problem_ref": "2026-09-05 用户统一人机协作需求与架构审查",
       "acceptance": "mvn test -Dtest=CollaborationEditOwnershipTest,WorldCharacterFullEditTest,CheckpointTargetValidationTest 返回 0，满足 spec 对应行为断言",
       "verify_cmd": "mvn test -Dtest=CollaborationEditOwnershipTest,WorldCharacterFullEditTest,CheckpointTargetValidationTest",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 RED 3 tests / 2 failures 精确复现缺失工作权，GREEN 28 tests PASS（人工/审核互斥、世界观整卡、checkpoint、章节直接编辑）；异常释放 owner。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。",
-      "delivery_state": "verification-in-progress",
-      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md"
+      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 RED 3 tests / 2 failures 精确复现缺失工作权，GREEN 28 tests PASS（人工/审核互斥、世界观整卡、checkpoint、章节直接编辑）；异常释放 owner。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-04-author-edit-ownership实现9add96a9fa769189f664e19d0ebe2ae3f807f4ce已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-04.json。",
+      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
+      "completion_record": "reconciled-p27-04"
     },
     {
       "id": "p27-05",
@@ -4363,5 +4363,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": "p27-04"
+  "active_feature": null
 }

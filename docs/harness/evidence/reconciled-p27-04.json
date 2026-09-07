@@ -1,0 +1,31 @@
+{
+  "verifiedAt": "2026-09-08T00:27:26.075145",
+  "commit": "9add96a9fa769189f664e19d0ebe2ae3f807f4ce",
+  "cleanCheckout": true,
+  "branch": "codex/p27-04-author-edit-ownership",
+  "checks": [
+    {
+      "command": "./init.sh && mvn test -Dtest=CollaborationEditOwnershipTest,WorldCharacterFullEditTest,CheckpointTargetValidationTest && python3 scripts/check-harness.py --check-git",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=656,0,0,1; final focused run=12,0,0,0",
+      "verifiedAt": "2026-09-08T00:26:51.355098",
+      "durationSeconds": 44.04,
+      "log": "/tmp/writingagent-reconcile-14/p27-04-main.log",
+      "inputDigest": "c34b422bd3a89282f408191bbe29c95b725d538bde4ff1439b8eb43ac68cba1b"
+    }
+  ],
+  "logs": {
+    "data/verification/reconcile-14/p27-04-main.log": "3248c0e5b7a82b55faa6075c6353c1a90b303238666ed6b7733534ad3e6561fd"
+  },
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。",
+  "regressionProof": {
+    "command": "mvn test -q -Dtest=CollaborationEditOwnershipTest",
+    "exitCode": 1,
+    "result": "FAIL; Maven full/largest run tests/failures/errors/skipped=3,2,0,0",
+    "verifiedAt": "2026-09-08T00:24:19.969083",
+    "durationSeconds": 3.22,
+    "log": "/tmp/writingagent-reconcile-14/p27-04-red.log",
+    "inputDigest": "b9cb4a4b5732b6b9424569b85ddcafafa64eab58129f8e222659824bf03a95b3",
+    "expectedFailure": true
+  }
+}

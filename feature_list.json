@@ -3933,7 +3933,7 @@
         "p27-11",
         "p27-12"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "scripts/collaboration-e2e.sh",
         "scripts/product-audit-e2e.sh",
@@ -3943,9 +3943,9 @@
       "problem_ref": "2026-09-05 用户统一人机协作需求与架构审查",
       "acceptance": "verify_cmd 返回 0：协作6项、严格产品审计11项（0 XFAIL / 0 ERROR）、旧浏览器8项、后台章节推进草稿保护1项，共26项通过；完整Maven和前端构建、mystery replay与基线PASS。",
       "verify_cmd": "./scripts/collaboration-e2e.sh && ./scripts/product-audit-e2e.sh --port 18096 && ./scripts/browser-e2e.sh --port 18095 && ./scripts/draft-preservation-e2e.sh",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 最终代码 ego-browser：协作6/6、产品11/11（0 XFAIL / 0 ERROR）、旧界面8/8，共25/25 PASS。覆盖三章 FINAL、接手保存再续写、作者正文/设定保留、草稿刷新保持、每章/卷末审核、切换节奏不自动批准、创作要求刷新续用及空串清除、375px 与既有编辑/改写/历史/质量/SSE。最终 ./init.sh：615 tests / 0 failures / 0 errors / 1 skipped，28 prompts 与 frontend build PASS。mystery replay：3章/10,191字/54 calls/0 LLM errors/0 chapter failures，baseline PASS。证据 data/verification/phase27/final/；Scenario/回放验证，未修改 golden。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。",
-      "delivery_state": "verification-in-progress",
-      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md"
+      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 最终代码 ego-browser：协作6/6、产品11/11（0 XFAIL / 0 ERROR）、旧界面8/8，共25/25 PASS。覆盖三章 FINAL、接手保存再续写、作者正文/设定保留、草稿刷新保持、每章/卷末审核、切换节奏不自动批准、创作要求刷新续用及空串清除、375px 与既有编辑/改写/历史/质量/SSE。最终 ./init.sh：615 tests / 0 failures / 0 errors / 1 skipped，28 prompts 与 frontend build PASS。mystery replay：3章/10,191字/54 calls/0 LLM errors/0 chapter failures，baseline PASS。证据 data/verification/phase27/final/；Scenario/回放验证，未修改 golden。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-07-collaboration-acceptance实现82ba1f9a83504f468ebacd3f368b677c3a9a9e33已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-07.json。",
+      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
+      "completion_record": "reconciled-p27-07"
     },
     {
       "id": "p27-08",
@@ -4359,5 +4359,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": "p27-07"
+  "active_feature": null
 }

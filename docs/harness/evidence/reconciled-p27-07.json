@@ -1,0 +1,21 @@
+{
+  "verifiedAt": "2026-09-08T01:21:06.100689",
+  "commit": "82ba1f9a83504f468ebacd3f368b677c3a9a9e33",
+  "cleanCheckout": true,
+  "branch": "codex/p27-07-collaboration-acceptance",
+  "checks": [
+    {
+      "command": "./init.sh && ./scripts/collaboration-e2e.sh && ./scripts/product-audit-e2e.sh --port 18096 && ./scripts/browser-e2e.sh --port 18095 && ./scripts/draft-preservation-e2e.sh && python3 -c 'import shutil;shutil.copytree(\"data/e2e\",\"/Users/erik/ZCodeProject/WritingAgent/data/verification/reconcile-14/p27-07-main-browser\",dirs_exist_ok=True)' && E2E_FIXTURE_DIR=data/e2e-fixtures/canary-mystery-20260831 ./scripts/e2e.sh && python3 scripts/compare-baseline.py && python3 scripts/check-harness.py --check-git",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=664,0,0,1",
+      "verifiedAt": "2026-09-08T01:20:54.641769",
+      "durationSeconds": 492.54,
+      "log": "/tmp/writingagent-reconcile-14/p27-07-main.log",
+      "inputDigest": "a8b1cc5c6eea60d992f330dc26fb69dabeec1e90195ca5cac7bb90436648d3d5"
+    }
+  ],
+  "logs": {
+    "data/verification/reconcile-14/p27-07-main.log": "b28c27a107ed7af9cbc301879c4fe885d003c963a86dc30548fc4b76b804f938"
+  },
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。"
+}

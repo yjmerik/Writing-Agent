@@ -1,0 +1,31 @@
+{
+  "verifiedAt": "2026-09-08T00:53:10.238316",
+  "commit": "17517f8f7671043ec7b5a4741db428c21eeea459",
+  "cleanCheckout": true,
+  "branch": "codex/p27-08-preserve-author-drafts",
+  "checks": [
+    {
+      "command": "./init.sh && (cd frontend && npm run build) && ./scripts/draft-preservation-e2e.sh && python3 scripts/check-harness.py --check-git",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=657,0,0,1",
+      "verifiedAt": "2026-09-08T00:52:52.773969",
+      "durationSeconds": 55.22,
+      "log": "/tmp/writingagent-reconcile-14/p27-08-main.log",
+      "inputDigest": "1296eb26adadcf28450a1225c1ee106bf56309e9e20d6bc76d54e94ed01ef8ac"
+    }
+  ],
+  "logs": {
+    "data/verification/reconcile-14/p27-08-main.log": "be321d35b260c80f4de2dcb4f7e1ea528b194a7496fc773e6ca55aed1a3ecac3"
+  },
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。",
+  "regressionProof": {
+    "command": "./scripts/draft-preservation-e2e.sh",
+    "exitCode": 1,
+    "result": "FAIL",
+    "verifiedAt": "2026-09-08T00:46:55.821914",
+    "durationSeconds": 13.59,
+    "log": "/tmp/writingagent-reconcile-14/p27-08-red.log",
+    "inputDigest": "9c7266799b55a31875f60a026882f6d338221beefc567365be950e04d9050835",
+    "expectedFailure": true
+  }
+}

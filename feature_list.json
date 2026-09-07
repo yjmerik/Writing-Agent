@@ -3955,7 +3955,7 @@
       "dependencies": [
         "p27-06"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "frontend/src/pages/ProjectWorkspace.tsx",
         "frontend/src/components/InteractiveReview.tsx",
@@ -3965,10 +3965,10 @@
       "problem_ref": "统一协作深度审查：正文随进度重挂载及已写内容按模型最小长度重写",
       "acceptance": "前端构建及draft-preservation-e2e.sh退出0；后台章节号实际增加后，未保存的章节标题和正文仍保留。",
       "verify_cmd": "(cd frontend && npm run build) && ./scripts/draft-preservation-e2e.sh",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 前端构建 PASS；项目 key 稳定，refreshSignal 在编辑/修订草稿打开时延后刷新；章节页续写统一到协作栏。 真实浏览器证明外部审批引起父刷新后章节标题草稿保持，统一协作4/4与既有产品11/11通过。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。",
-      "delivery_state": "verification-in-progress",
+      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 前端构建 PASS；项目 key 稳定，refreshSignal 在编辑/修订草稿打开时延后刷新；章节页续写统一到协作栏。 真实浏览器证明外部审批引起父刷新后章节标题草稿保持，统一协作4/4与既有产品11/11通过。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-08-preserve-author-drafts实现17517f8f7671043ec7b5a4741db428c21eeea459已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-08.json。",
       "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
-      "audit_notes": "核验增强：补充真实后台章节推进的浏览器回归，避免只用构建结果声称草稿保护；脚本使用隔离Scenario项目。"
+      "audit_notes": "核验增强：补充真实后台章节推进的浏览器回归，避免只用构建结果声称草稿保护；脚本使用隔离Scenario项目。",
+      "completion_record": "reconciled-p27-08"
     },
     {
       "id": "p27-09",
@@ -4361,5 +4361,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": "p27-08"
+  "active_feature": null
 }

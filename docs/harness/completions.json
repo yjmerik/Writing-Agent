@@ -338,6 +338,17 @@
       "implementation_commit": "02b46afcd798cde979738ebe410bd28475cbc05d",
       "main_commit": "02b46afcd798cde979738ebe410bd28475cbc05d",
       "evidence": "docs/harness/evidence/reconciled-p27-06.json"
+    },
+    {
+      "id": "reconciled-p27-08",
+      "kind": "verified",
+      "feature_ids": [
+        "p27-08"
+      ],
+      "branch": "codex/p27-08-preserve-author-drafts",
+      "implementation_commit": "17517f8f7671043ec7b5a4741db428c21eeea459",
+      "main_commit": "17517f8f7671043ec7b5a4741db428c21eeea459",
+      "evidence": "docs/harness/evidence/reconciled-p27-08.json"
     }
   ]
 }

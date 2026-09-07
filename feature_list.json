@@ -4086,7 +4086,7 @@
       "dependencies": [
         "p28-01"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/resources/application.yml",
         "scripts/load-env.sh",
@@ -4096,10 +4096,10 @@
       "problem_ref": "docs/specs/2026-09-07-qwen38-token-plan-configuration.md",
       "acceptance": "TokenPlanModelConfigurationTest（9处路由、密钥隔离、真实客户端模拟SSE及5项隔离ZCode加载）和完整init、打包通过；真实Token Plan短提示流式连接返回200及非空内容。原项目第21章UI续写证据单独保留，本轮不重启或推进原小说。",
       "verify_cmd": "mvn test -Dtest=TokenPlanModelConfigurationTest",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-07：配置契约RED 3 tests/2 failures/1 error，GREEN 3/3（全部8路由+默认、专用key隔离、本地模拟SSE真实客户端请求）；全量init 622 tests/0 failures/0 errors/1 skipped、frontend build、package PASS。ZCode套餐key静默加载匹配、向量key独立；安装包9处Token Plan/Qwen配置确认。仅18098重启保留20章66880字，ego-browser点击继续后20:12生成第21章2542字，全书69422字，越过原402。配置证据data/verification/qwen38-token-plan，UI证据116—119及chapter-021-visible-first.txt。无Agent/prompt/数据库变更，未用业务API推进小说；后续真实UI推进至23章82750字；用户改为共性问题收敛，不再要求写满200章。22:03:21使用启动脚本加载环境后编译与622项测试再次通过（0失败/0错误/1跳过），证据data/verification/qwen38-token-plan/convergence-verification.json。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。",
-      "delivery_state": "verification-in-progress",
+      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-07：配置契约RED 3 tests/2 failures/1 error，GREEN 3/3（全部8路由+默认、专用key隔离、本地模拟SSE真实客户端请求）；全量init 622 tests/0 failures/0 errors/1 skipped、frontend build、package PASS。ZCode套餐key静默加载匹配、向量key独立；安装包9处Token Plan/Qwen配置确认。仅18098重启保留20章66880字，ego-browser点击继续后20:12生成第21章2542字，全书69422字，越过原402。配置证据data/verification/qwen38-token-plan，UI证据116—119及chapter-021-visible-first.txt。无Agent/prompt/数据库变更，未用业务API推进小说；后续真实UI推进至23章82750字；用户改为共性问题收敛，不再要求写满200章。22:03:21使用启动脚本加载环境后编译与622项测试再次通过（0失败/0错误/1跳过），证据data/verification/qwen38-token-plan/convergence-verification.json。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p29-01-token-plan-configuration实现c8c7a3fdffc01c82e20b212e4b15f9e6d2ef9d17已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p29-01.json。",
       "spec": "docs/specs/2026-09-07-qwen38-token-plan-configuration.md",
-      "audit_notes": "依赖修正：本项明确保留p28-01向量配置，契约也依赖该配置，不能标记为无依赖。新增5项ZCode加载契约；保留p28-01显式空值修复，历史UI证据和本轮协议验证分开登记。"
+      "audit_notes": "依赖修正：本项明确保留p28-01向量配置，契约也依赖该配置，不能标记为无依赖。新增5项ZCode加载契约；保留p28-01显式空值修复，历史UI证据和本轮协议验证分开登记。",
+      "completion_record": "reconciled-p29-01"
     },
     {
       "id": "p30-01",
@@ -4361,5 +4361,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": "p29-01"
+  "active_feature": null
 }

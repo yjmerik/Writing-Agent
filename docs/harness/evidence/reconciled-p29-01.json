@@ -1,0 +1,21 @@
+{
+  "verifiedAt": "2026-09-08T01:30:27.696651",
+  "commit": "c8c7a3fdffc01c82e20b212e4b15f9e6d2ef9d17",
+  "cleanCheckout": true,
+  "branch": "codex/p29-01-token-plan-configuration",
+  "checks": [
+    {
+      "command": "./init.sh && mvn test -Dtest=TokenPlanModelConfigurationTest,EmbeddingModelConfigurationTest && mvn package -DskipTests -q && python3 /tmp/writingagent-reconcile-14/probe-token-plan.py main && python3 scripts/check-harness.py --check-git",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=682,0,0,1; final focused run=18,0,0,0",
+      "verifiedAt": "2026-09-08T01:29:59.155333",
+      "durationSeconds": 47.73,
+      "log": "/tmp/writingagent-reconcile-14/p29-01-main.log",
+      "inputDigest": "29e9553a964f75d72f425cc075e44ee0c65af43b3ae689b28951fee1b8504861"
+    }
+  ],
+  "logs": {
+    "data/verification/reconcile-14/p29-01-main.log": "3eccc88c1001f784004efec75d2aa725559b9f7ac934d8da0f4ec816f54e6375"
+  },
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。"
+}

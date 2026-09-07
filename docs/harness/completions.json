@@ -393,6 +393,17 @@
       "implementation_commit": "5e8e1786ba77714eb3acadef90f77fecd2e63716",
       "main_commit": "5e8e1786ba77714eb3acadef90f77fecd2e63716",
       "evidence": "docs/harness/evidence/reconciled-p28-01.json"
+    },
+    {
+      "id": "reconciled-p29-01",
+      "kind": "verified",
+      "feature_ids": [
+        "p29-01"
+      ],
+      "branch": "codex/p29-01-token-plan-configuration",
+      "implementation_commit": "c8c7a3fdffc01c82e20b212e4b15f9e6d2ef9d17",
+      "main_commit": "c8c7a3fdffc01c82e20b212e4b15f9e6d2ef9d17",
+      "evidence": "docs/harness/evidence/reconciled-p29-01.json"
     }
   ]
 }

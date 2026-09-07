@@ -360,6 +360,17 @@
       "implementation_commit": "74b5932173bb94de93b75db6bcd4869b080f5b39",
       "main_commit": "74b5932173bb94de93b75db6bcd4869b080f5b39",
       "evidence": "docs/harness/evidence/reconciled-p27-09.json"
+    },
+    {
+      "id": "reconciled-p27-10",
+      "kind": "verified",
+      "feature_ids": [
+        "p27-10"
+      ],
+      "branch": "codex/p27-10-browser-compatibility",
+      "implementation_commit": "bd9872232ab3e31e98b1d99a135aac3de27ad5a2",
+      "main_commit": "bd9872232ab3e31e98b1d99a135aac3de27ad5a2",
+      "evidence": "docs/harness/evidence/reconciled-p27-10.json"
     }
   ]
 }

@@ -4000,7 +4000,7 @@
         "p27-06",
         "p27-08"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "scripts/browser-e2e.sh"
       ],
@@ -4008,10 +4008,10 @@
       "problem_ref": "升级验收发现旧门禁依赖原控制台默认页与三类任务枚举",
       "acceptance": "mvn test -Dtest=WritingTaskTest 与 ./scripts/browser-e2e.sh --port 18095 全部通过，保留原八项行为断言。",
       "verify_cmd": "mvn test -Dtest=WritingTaskTest && ./scripts/browser-e2e.sh --port 18095",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 WritingTaskTest 契约通过；旧 browser-e2e 默认页前提改为显式进入单步工具，懒加载/SSE 断言保留；侧栏等待宽度过渡稳定（手机0/桌面320）。最终 8/8 PASS，Maven 613 tests PASS。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。",
-      "delivery_state": "verification-in-progress",
+      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 WritingTaskTest 契约通过；旧 browser-e2e 默认页前提改为显式进入单步工具，懒加载/SSE 断言保留；侧栏等待宽度过渡稳定（手机0/桌面320）。最终 8/8 PASS，Maven 613 tests PASS。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-10-browser-compatibility实现bd9872232ab3e31e98b1d99a135aac3de27ad5a2已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-10.json。",
       "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
-      "audit_notes": "任务类型契约已前移到p27-01，当前项只适配旧浏览器入口，保留原完整验收命令。"
+      "audit_notes": "任务类型契约已前移到p27-01，当前项只适配旧浏览器入口，保留原完整验收命令。",
+      "completion_record": "reconciled-p27-10"
     },
     {
       "id": "p27-11",
@@ -4359,5 +4359,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": "p27-10"
+  "active_feature": null
 }

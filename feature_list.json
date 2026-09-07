@@ -4351,7 +4351,7 @@
       "phase": 31,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "scripts/check-harness.py",
         "scripts/test_check_harness.py",
@@ -4360,10 +4360,11 @@
       "spec": "docs/specs/2026-09-07-harness-integrity.md",
       "acceptance": "python3 scripts/test_check_harness.py 与 python3 scripts/check-harness.py --check-git 均退出 0；./init.sh 和干净合并后的 Maven 编译测试通过。",
       "verify_cmd": "python3 scripts/test_check_harness.py && python3 scripts/check-harness.py --check-git",
-      "evidence": "审计发现14项未合并误报completed、8项历史元数据缺失、当前交接混入历史、完成证据只存本机。修复与验证中。"
+      "evidence": "2026-09-07：独立分支 codex/p31-01-harness-integrity，实现 ae7ee790cbc73ab3948c33de7fe3185f80b75751 已合入 main。分支及干净合并后 ./init.sh 均通过：11项harness测试、636项Maven测试/0失败/0错误/1跳过、编译和前端构建PASS；Git完成归属核验PASS。记录 docs/harness/evidence/harness-integrity.json；712个既有非harness文件内容保持不变。",
+      "completion_record": "harness-integrity"
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-09-07",
-  "active_feature": "p31-01"
+  "active_feature": null
 }

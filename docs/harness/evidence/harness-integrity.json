@@ -1,0 +1,42 @@
+{
+  "verifiedAt": "2026-09-07T23:59:52.314231",
+  "commit": "ae7ee790cbc73ab3948c33de7fe3185f80b75751",
+  "cleanCheckout": true,
+  "branch": "codex/p31-01-harness-integrity",
+  "checks": [
+    {
+      "command": "./init.sh",
+      "scope": "clean merged main checkout",
+      "exitCode": 0,
+      "result": "harness checker PASS; 11 harness tests PASS; compile PASS; 636 Maven tests, 0 failures, 0 errors, 1 skipped; frontend build PASS"
+    },
+    {
+      "command": "python3 scripts/check-harness.py --check-git",
+      "scope": "clean merged main checkout",
+      "exitCode": 0,
+      "result": "PASS; historical evidence limitation explicitly reported"
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "result": "PASS"
+    }
+  ],
+  "logSha256": {
+    "state-red.txt": "acc25169ee3769b0ed77da0a1cc3dcab200cc8e4c8d5a87698e73f5122bcbf0d",
+    "baseline-init.log": "bc40e492885477eae628d440b93e2aadc80087913fe112f4a76d8278f9ad6b60",
+    "main-init.log": "9e0da269788d27ff4462c3d0a97a56083d41639f84514e8e93630d9b9c60ee5a",
+    "main-harness.txt": "3541fe03c840b714c07b1063a9300d3b3c446ced27de1c6bb878c11754ed187a",
+    "checker-red.txt": "9dc2cd16fe653bca2767d7bdb9fbc96b3f8417643eb9370635e5b53815887ba4",
+    "branch-init.log": "c78af8dae00cfb72d374ee0b28befcf20df1d35d7d1c62dfa6ea9fd993e815b6",
+    "checker-green.txt": "8a38b148f8e928b5dd51a1a1387e6158537ac262aed69d22fb26f0233e584c17",
+    "assessment-after.json": "4dc66b577ccf6a15e66ccabd69f9d99473dbb9a6cbc7268f902a979746747500"
+  },
+  "localLogs": "data/verification/harness-integrity/",
+  "preservation": {
+    "nonHarnessFilesChecked": 712,
+    "allUnchanged": true,
+    "originalStateArchive": "docs/harness/archive/2026-09-07-*"
+  },
+  "scope": "Only harness scripts and records; business source, running service and user data unchanged. Full logs local; this summary is version controlled."
+}

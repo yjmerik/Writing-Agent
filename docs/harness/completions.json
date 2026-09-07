@@ -239,6 +239,17 @@
       "implementation_commit": "05f7f2ee06f78741112bd1bda7c9d0836a1c81e5",
       "main_commit": "05f7f2ee06f78741112bd1bda7c9d0836a1c81e5",
       "evidence": "docs/harness/evidence/feature-workflow.json"
+    },
+    {
+      "id": "harness-integrity",
+      "kind": "verified",
+      "feature_ids": [
+        "p31-01"
+      ],
+      "branch": "codex/p31-01-harness-integrity",
+      "implementation_commit": "ae7ee790cbc73ab3948c33de7fe3185f80b75751",
+      "main_commit": "ae7ee790cbc73ab3948c33de7fe3185f80b75751",
+      "evidence": "docs/harness/evidence/harness-integrity.json"
     }
   ]
 }

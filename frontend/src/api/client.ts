@@ -1,6 +1,9 @@
 /** API 客户端：封装全部后端端点 */
 import type {
   Project,
+  CollaborationStatus,
+  CollaborationTask,
+  ReviewPolicy,
   ProjectListItem,
   ProjectStatus,
   Character,
@@ -111,6 +114,14 @@ async function request<T>(url: string, options?: RequestInit, timeoutMs = 300000
 }
 
 export const api = {
+  collaboration: (id: string) => request<CollaborationStatus>(`/projects/${id}/collaboration`),
+  startCollaboration: (id: string, instruction?: string) => request<CollaborationTask>(`/projects/${id}/collaboration/start`, {
+    method: 'POST', body: JSON.stringify({ instruction }),
+  }),
+  stopCollaboration: (id: string) => request<CollaborationStatus>(`/projects/${id}/collaboration/stop`, { method: 'POST' }),
+  setReviewPolicy: (id: string, policy: ReviewPolicy) => request<CollaborationStatus>(`/projects/${id}/collaboration/review-policy`, {
+    method: 'PUT', body: JSON.stringify({ policy }),
+  }),
   // --- 项目 ---
   listProjects: () => request<ProjectListItem[]>('/projects'),
 

@@ -214,3 +214,26 @@ export interface Checkpoint {
   createdAt: string;
   payload?: string | null;
 }
+
+export type ReviewPolicy = 'MANUAL' | 'CHAPTER' | 'VOLUME';
+export interface CollaborationTask {
+  id: string;
+  status: 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+  instruction: string | null;
+  errorMessage: string | null;
+  stopRequested: boolean;
+}
+export interface CollaborationStatus {
+  projectId: string;
+  state: NovelState;
+  busy: boolean;
+  task: CollaborationTask | null;
+  stopRequested: boolean;
+  pendingReviews: number;
+  canContinue: boolean;
+  blockedReason: string | null;
+  reviewPolicy: ReviewPolicy;
+  currentChapter: number;
+  targetChapters: number;
+  totalWords: number;
+}

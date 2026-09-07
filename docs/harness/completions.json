@@ -382,6 +382,17 @@
       "implementation_commit": "82ba1f9a83504f468ebacd3f368b677c3a9a9e33",
       "main_commit": "82ba1f9a83504f468ebacd3f368b677c3a9a9e33",
       "evidence": "docs/harness/evidence/reconciled-p27-07.json"
+    },
+    {
+      "id": "reconciled-p28-01",
+      "kind": "verified",
+      "feature_ids": [
+        "p28-01"
+      ],
+      "branch": "codex/p28-01-embedding-configuration",
+      "implementation_commit": "5e8e1786ba77714eb3acadef90f77fecd2e63716",
+      "main_commit": "5e8e1786ba77714eb3acadef90f77fecd2e63716",
+      "evidence": "docs/harness/evidence/reconciled-p28-01.json"
     }
   ]
 }

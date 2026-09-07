@@ -4063,7 +4063,7 @@
       "phase": 28,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/resources/application.yml",
         "src/test/java/com/writing/novel/config/EmbeddingModelConfigurationTest.java",
@@ -4073,10 +4073,10 @@
       "problem_ref": "docs/specs/2026-09-05-qwen37-embedding-configuration.md；真实UI向量401见docs/reports/2026-09-05-ui-experience/14-retry-status.txt",
       "acceptance": "EmbeddingModelConfigurationTest（配置/HTTP请求契约及隔离凭据加载）和完整init通过；新模型独立索引、凭据优先级与显式空值保留正确；真实短文本向量连接返回200/1024维。原项目UI消除401的历史记录单独保留，本轮不重复推进原小说。",
       "verify_cmd": "mvn test -Dtest=EmbeddingModelConfigurationTest",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 配置契约RED 4 tests/3 failures（旧模型、标准key未读取、地址不可覆盖）；GREEN 4/4。最终./init.sh：619 tests/0 failures/0 errors/1 skipped，compile/frontend build PASS；package PASS。启动凭据专用/标准key优先级保留检查PASS。本机通用key为套餐型；从本机百炼CLI复用已有按量key，官方真实向量连接HTTP200、2条1024维有限非零向量、42 tokens。18098实例保留SQLite重启，ego-browser原项目继续协作后世界观由3条增至10条、无Embedding错误且持续创作，越过原401阻断。证据data/verification/qwen37-embedding/；仅配置/启动加载/测试变更，未改Agent或prompt、未混用旧模型索引。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。",
-      "delivery_state": "verification-in-progress",
+      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 配置契约RED 4 tests/3 failures（旧模型、标准key未读取、地址不可覆盖）；GREEN 4/4。最终./init.sh：619 tests/0 failures/0 errors/1 skipped，compile/frontend build PASS；package PASS。启动凭据专用/标准key优先级保留检查PASS。本机通用key为套餐型；从本机百炼CLI复用已有按量key，官方真实向量连接HTTP200、2条1024维有限非零向量、42 tokens。18098实例保留SQLite重启，ego-browser原项目继续协作后世界观由3条增至10条、无Embedding错误且持续创作，越过原401阻断。证据data/verification/qwen37-embedding/；仅配置/启动加载/测试变更，未改Agent或prompt、未混用旧模型索引。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p28-01-embedding-configuration实现5e8e1786ba77714eb3acadef90f77fecd2e63716已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p28-01.json。",
       "spec": "docs/specs/2026-09-05-qwen37-embedding-configuration.md",
-      "audit_notes": "重新验收新增6项隔离启动脚本契约，先复现2项显式空值覆盖失败，再修复；只调整本项向量凭据语义。历史UI恢复与本轮主分支验证区分登记。"
+      "audit_notes": "重新验收新增6项隔离启动脚本契约，先复现2项显式空值覆盖失败，再修复；只调整本项向量凭据语义。历史UI恢复与本轮主分支验证区分登记。",
+      "completion_record": "reconciled-p28-01"
     },
     {
       "id": "p29-01",
@@ -4359,5 +4359,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": "p28-01"
+  "active_feature": null
 }

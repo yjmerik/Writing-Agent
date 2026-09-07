@@ -1,0 +1,31 @@
+{
+  "verifiedAt": "2026-09-08T01:26:12.394894",
+  "commit": "5e8e1786ba77714eb3acadef90f77fecd2e63716",
+  "cleanCheckout": true,
+  "branch": "codex/p28-01-embedding-configuration",
+  "checks": [
+    {
+      "command": "./init.sh && mvn test -Dtest=EmbeddingModelConfigurationTest && mvn package -DskipTests -q && python3 /tmp/writingagent-reconcile-14/probe-embedding.py main && python3 scripts/check-harness.py --check-git",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=674,0,0,1; final focused run=10,0,0,0",
+      "verifiedAt": "2026-09-08T01:26:00.569134",
+      "durationSeconds": 46.47,
+      "log": "/tmp/writingagent-reconcile-14/p28-01-main.log",
+      "inputDigest": "ea732b767e094b205fe0d04521b559c7cdc1a4f788fba44b50856c8840ed0158"
+    }
+  ],
+  "logs": {
+    "data/verification/reconcile-14/p28-01-main.log": "dd8e25e6590c604759a100d414b866f5f57d1e5edf2f1f47b13f5c2b97366d2a"
+  },
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。",
+  "regressionProof": {
+    "command": "mvn test -Dtest=EmbeddingModelConfigurationTest",
+    "exitCode": 1,
+    "result": "FAIL; Maven full/largest run tests/failures/errors/skipped=10,2,0,0",
+    "verifiedAt": "2026-09-08T01:22:50.379627",
+    "durationSeconds": 2.95,
+    "log": "/tmp/writingagent-reconcile-14/p28-01-red.log",
+    "inputDigest": "91bd02af2aa20f84065bf6f38eb81b83a0124bcd4894f9044593f0a1c2bf67e0",
+    "expectedFailure": true
+  }
+}

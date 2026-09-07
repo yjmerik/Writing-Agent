@@ -3905,7 +3905,7 @@
       "dependencies": [
         "p27-05"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "frontend/src/pages/ProjectWorkspace.tsx",
         "frontend/src/pages/ProjectListPage.tsx",
@@ -3915,9 +3915,9 @@
       "problem_ref": "2026-09-05 用户统一人机协作需求与架构审查",
       "acceptance": "./scripts/user-copy-check.sh && (cd frontend && npm run build) 返回 0，满足 spec 对应行为断言",
       "verify_cmd": "./scripts/user-copy-check.sh && (cd frontend && npm run build)",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 frontend production build PASS；工作台全局协作栏、新建审核节奏、单步工具降级。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。",
-      "delivery_state": "verification-in-progress",
-      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md"
+      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 frontend production build PASS；工作台全局协作栏、新建审核节奏、单步工具降级。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-06-unified-workspace实现02b46afcd798cde979738ebe410bd28475cbc05d已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-06.json。",
+      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
+      "completion_record": "reconciled-p27-06"
     },
     {
       "id": "p27-07",
@@ -4360,5 +4360,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": "p27-06"
+  "active_feature": null
 }

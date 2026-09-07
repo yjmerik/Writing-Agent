@@ -1,0 +1,21 @@
+{
+  "verifiedAt": "2026-09-08T00:43:51.653699",
+  "commit": "02b46afcd798cde979738ebe410bd28475cbc05d",
+  "cleanCheckout": true,
+  "branch": "codex/p27-06-unified-workspace",
+  "checks": [
+    {
+      "command": "./init.sh && ./scripts/user-copy-check.sh && (cd frontend && npm run build) && python3 scripts/check-harness.py --check-git",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=657,0,0,1",
+      "verifiedAt": "2026-09-08T00:43:25.356423",
+      "durationSeconds": 39.69,
+      "log": "/tmp/writingagent-reconcile-14/p27-06-main.log",
+      "inputDigest": "a17be9d36a43b7168234498b5d00bfe17d4c3d31194f4eda5994b3982d062404"
+    }
+  ],
+  "logs": {
+    "data/verification/reconcile-14/p27-06-main.log": "e6db58ccffbab8929af322af78f7ccb1ac60f027b36f58a7041b8efdc469f1ee"
+  },
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。"
+}

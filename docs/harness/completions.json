@@ -327,6 +327,17 @@
       "implementation_commit": "caba1ea987d8a836c04d224e596e3853198e520a",
       "main_commit": "caba1ea987d8a836c04d224e596e3853198e520a",
       "evidence": "docs/harness/evidence/reconciled-p27-11.json"
+    },
+    {
+      "id": "reconciled-p27-06",
+      "kind": "verified",
+      "feature_ids": [
+        "p27-06"
+      ],
+      "branch": "codex/p27-06-unified-workspace",
+      "implementation_commit": "02b46afcd798cde979738ebe410bd28475cbc05d",
+      "main_commit": "02b46afcd798cde979738ebe410bd28475cbc05d",
+      "evidence": "docs/harness/evidence/reconciled-p27-06.json"
     }
   ]
 }

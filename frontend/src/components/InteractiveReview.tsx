@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin, Progress, Collapse } from 'antd';
-import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, HistoryOutlined, PlusOutlined, ReloadOutlined, StepForwardOutlined, TrophyOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, HistoryOutlined, PlusOutlined, ReloadOutlined, TrophyOutlined } from '@ant-design/icons';
 import { ApiError, api } from '../api/client';
 import type { AgentRevisionTarget, CheckpointRevision } from '../api/client';
 import { renderContent } from '../utils/renderContent';
@@ -11,6 +11,7 @@ const { Text } = Typography;
 
 interface Props {
   projectId: string;
+  refreshSignal?: number;
   onChanged: () => void;
   onNavigateTab: (target: 'world' | 'outline') => void;
 }
@@ -69,7 +70,7 @@ export const normalizeCheckpointPayload = (value: unknown): CheckpointPayload | 
   };
 };
 
-export default function InteractiveReview({ projectId, onChanged, onNavigateTab }: Props) {
+export default function InteractiveReview({ projectId, onChanged, onNavigateTab, refreshSignal }: Props) {
   // p21-05: 元数据一次加载；正文按选中章节懒加载缓存
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [bodies, setBodies] = useState<Record<number, Chapter>>({});
@@ -236,11 +237,15 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
     setRevisionTarget(null);
   }, [projectId]);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    // Refresh persisted metadata without unmounting author drafts or revision dialogs.
+    if (!chapterEditorTarget && !rewriteModalOpen && !selectedParagraph && !revisionTarget) {
+      void refresh();
+    }
+  }, [refreshSignal, chapterEditorTarget, rewriteModalOpen, selectedParagraph, revisionTarget, refresh]);
 
   const isPaused = status?.state === 'PAUSED_AT_CHECKPOINT';
   const hasPendingCheckpoint = checkpoints.length > 0;
-  const isInteractive = status?.mode === 'INTERACTIVE';
   const currentMeta = chapters[selectedIdx];
   const currentBody = currentMeta && bodies[currentMeta.chapterIndex]?.version === currentMeta.version
     ? bodies[currentMeta.chapterIndex]
@@ -480,17 +485,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
     } finally { setRewriting(false); }
   };
 
-  const handleWriteNext = async () => {
-    setLoading(true);
-    try {
-      await api.writeChapter(projectId);
-      message.success('新章节已完成');
-      await refresh();
-      onChanged();
-    } catch (e) {
-      message.error(`写作失败: ${(e as Error).message}`);
-    } finally { setLoading(false); }
-  };
+
 
   const submitChapterRewrite = async (target: Extract<RewriteTarget, { kind: 'chapter' }>) => {
     setRewriting(true);
@@ -697,11 +692,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab 
 
         {/* 写作与人工章节控制 */}
         <Space wrap style={{ marginBottom: 16 }}>
-          {status && (status.state === 'WRITING' || status.state === 'VOLUME_DONE') && (
-            <Button type="primary" size="large" icon={<StepForwardOutlined />} onClick={handleWriteNext} loading={loading}>
-              {isInteractive ? '📝 写一章（写完自动暂停）' : '📝 写一章'}
-            </Button>
-          )}
+
           <Button size="large" icon={<PlusOutlined />} onClick={openCreateChapter} disabled={loading}>
             新增章节
           </Button>

@@ -35,6 +35,7 @@ export default function ProjectWorkspace() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('review');
   const [prefs, setPrefs] = useState<Record<string, unknown> | null>(null);
+  const [refreshSignal, setRefreshSignal] = useState(0);
   const [chatMsg, setChatMsg] = useState('');
   const [chatReply, setChatReply] = useState('');
   const [chatting, setChatting] = useState(false);
@@ -49,6 +50,7 @@ export default function ProjectWorkspace() {
         api.getPreferences(id).catch(() => null),
       ]);
       setProject(p);
+      setRefreshSignal(v => v + 1);
       setPrefs(pr);
     } catch (e) {
       message.error(`加载项目失败: ${(e as Error).message}`);
@@ -255,7 +257,7 @@ export default function ProjectWorkspace() {
             { key: 'run', label: '创作工具', children: <RunConsole projectId={project.id} projectState={project.state} onChanged={load} /> },
             { key: 'world', label: '🌍 世界观与人物', children: <WorldbuildingView key={`world-${project.id}`} projectId={project.id} /> },
             { key: 'outline', label: '📋 大纲', children: <OutlineView key={`outline-${project.id}`} projectId={project.id} currentChapter={project.currentChapterIndex} /> },
-            { key: 'review', label: '📖 章节管理', children: <InteractiveReview key={`review-${project.id}-${project.currentChapterIndex}`} projectId={project.id} onChanged={load} onNavigateTab={setActiveTab} /> },
+            { key: 'review', label: '📖 章节管理', children: <InteractiveReview key={`review-${project.id}`} refreshSignal={refreshSignal} projectId={project.id} onChanged={load} onNavigateTab={setActiveTab} /> },
             { key: 'quality', label: '🔍 质量评价', children: <QualityView projectId={project.id} /> },
           ]}
         />

@@ -3955,19 +3955,20 @@
       "dependencies": [
         "p27-06"
       ],
-      "status": "deferred",
+      "status": "in-progress",
       "files": [
         "frontend/src/pages/ProjectWorkspace.tsx",
-        "frontend/src/components/InteractiveReview.tsx"
+        "frontend/src/components/InteractiveReview.tsx",
+        "scripts/draft-preservation-e2e.sh"
       ],
       "description": "后台刷新保留作者草稿与统一正文续写入口",
       "problem_ref": "统一协作深度审查：正文随进度重挂载及已写内容按模型最小长度重写",
-      "acceptance": "cd frontend && npm run build 返回0，已有草稿/正文不被后台进度覆盖",
-      "verify_cmd": "cd frontend && npm run build",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 前端构建 PASS；项目 key 稳定，refreshSignal 在编辑/修订草稿打开时延后刷新；章节页续写统一到协作栏。 真实浏览器证明外部审批引起父刷新后章节标题草稿保持，统一协作4/4与既有产品11/11通过。",
-      "delivery_state": "local-unmerged",
-      "deferred_reason": "实现及既往验证仅存在原工作区，尚无独立特性提交/主分支合并证明；本次只恢复登记，不合入业务改动。续做时按依赖逐个建分支、迁移当前特性、复验和合并。",
-      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md"
+      "acceptance": "前端构建及draft-preservation-e2e.sh退出0；后台章节号实际增加后，未保存的章节标题和正文仍保留。",
+      "verify_cmd": "(cd frontend && npm run build) && ./scripts/draft-preservation-e2e.sh",
+      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 前端构建 PASS；项目 key 稳定，refreshSignal 在编辑/修订草稿打开时延后刷新；章节页续写统一到协作栏。 真实浏览器证明外部审批引起父刷新后章节标题草稿保持，统一协作4/4与既有产品11/11通过。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。",
+      "delivery_state": "verification-in-progress",
+      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
+      "audit_notes": "核验增强：补充真实后台章节推进的浏览器回归，避免只用构建结果声称草稿保护；脚本使用隔离Scenario项目。"
     },
     {
       "id": "p27-09",
@@ -4360,5 +4361,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": null
+  "active_feature": "p27-08"
 }

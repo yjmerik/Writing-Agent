@@ -64,15 +64,17 @@ public class WritingTaskExecutor {
                 var active = repository.findActiveWritingTask(project.getId());
                 if (active.isPresent() && active.get().getStatus() == WritingTask.Status.RUNNING) {
                     var task = active.get();
-                    task.setStatus(WritingTask.Status.FAILED);
-                    task.setErrorMessage("进程未干净退出");
+                    task.setStatus(task.getType() == WritingTask.Type.AUTO_RUN
+                            ? WritingTask.Status.PAUSED : WritingTask.Status.FAILED);
+                    task.setErrorMessage(task.getType() == WritingTask.Type.AUTO_RUN
+                            ? "服务曾中断，已保留进度与指令，检查内容后可继续" : "进程未干净退出");
                     repository.saveWritingTask(task);
                     swept++;
-                    log.warn("孤儿任务清扫: taskId={}, projectId={} → FAILED", task.getId(), project.getId());
+                    log.warn("孤儿任务清扫: taskId={}, projectId={} → {}", task.getId(), project.getId(), task.getStatus());
                 }
             }
             if (swept > 0) {
-                log.info("孤儿任务清扫完成: {} 个 RUNNING 任务收敛为 FAILED", swept);
+                log.info("孤儿任务清扫完成: {} 个 RUNNING 任务已收敛", swept);
             }
         } catch (Exception e) {
             log.warn("孤儿任务清扫失败: {}", e.getMessage());
@@ -324,6 +326,134 @@ public class WritingTaskExecutor {
 
     public boolean hasActiveTask(String projectId) {
         return coordinator.hasOwner(projectId);
+    }
+
+    /** Whole-book collaboration shares ownership with every existing writer/editor. */
+    public synchronized WritingTask startCollaborative(String projectId, String instruction) {
+        String owner = coordinator.currentOwner(projectId).orElse(null);
+        if (owner != null) {
+            WritingTask active = getTask(owner);
+            if (active != null && active.getType() == WritingTask.Type.AUTO_RUN
+                    && active.getStatus() == WritingTask.Status.RUNNING) return active;
+            throw new IllegalStateException("项目正在处理内容，请等待完成后继续");
+        }
+        WritingTask task = new WritingTask(projectId, repository.findWritingPreferences(projectId)
+                .map(WritingPreferences::getTargetChapters).orElse(24), WritingTask.Type.AUTO_RUN);
+        beginWork(projectId, task.getId());
+        try {
+            String blocked = collaborationBlocker(projectId);
+            if (blocked != null) throw new IllegalStateException(blocked);
+            WritingTask previous = latestCollaborativeTask(projectId);
+            task.setInstruction(instruction != null ? instruction.trim()
+                    : previous == null ? null : previous.getInstruction());
+            repository.saveWritingTask(task);
+            executor.submit(() -> executeCollaborative(task));
+            return task;
+        } catch (RuntimeException e) {
+            endWork(projectId, task.getId());
+            throw e;
+        }
+    }
+
+    public WritingTask latestCollaborativeTask(String projectId) {
+        return repository.findWritingTasksByProject(projectId).stream()
+                .filter(t -> t.getType() == WritingTask.Type.AUTO_RUN).findFirst().orElse(null);
+    }
+
+    public String collaborationBlocker(String projectId) {
+        var project = repository.findProject(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("项目不存在"));
+        if (project.getState() == NovelState.FINAL) return "全书已完成，可继续审阅和编辑";
+        if (project.getState() == NovelState.NEEDS_REVISION) return "终审需要修订，请修改内容后重新评审";
+        if (!repository.findPendingCheckpoints(projectId).isEmpty()) return "请先处理待审核内容，再继续创作";
+        if (repository.findChapterByIndex(projectId, project.getCurrentChapterIndex())
+                .map(c -> c.getStatus() == com.writing.novel.domain.Chapter.Status.NEEDS_MANUAL_REVIEW).orElse(false)) {
+            return "当前章节需要人工复核，请处理后继续";
+        }
+        if (overBudget(projectId)) return "已达到成本预算，请调整预算后继续";
+        return null;
+    }
+
+    public synchronized void stopCollaborative(String projectId) {
+        repository.findProject(projectId).orElseThrow(() -> new IllegalArgumentException("项目不存在"));
+        String owner = coordinator.currentOwner(projectId).orElse(null);
+        if (owner == null) return;
+        WritingTask task = getTask(owner);
+        if (task == null) return; // A synchronous edit finishes normally; never release its owner early.
+        task.setStopRequested(true);
+        repository.saveWritingTask(task);
+        cancel(owner);
+    }
+
+    private boolean overBudget(String projectId) {
+        double budget = repository.findWritingPreferences(projectId)
+                .map(WritingPreferences::getCostBudgetYuan).orElse(0.0);
+        return costBudgetMonitor != null && costBudgetMonitor.isOverBudget(projectId, budget);
+    }
+
+    private void executeCollaborative(WritingTask task) {
+        String id = task.getProjectId();
+        int written = 0;
+        try {
+            // Keep one writing loop so cross-chapter failure and quality counters retain meaning.
+            while (!isCancelled(task.getId()) && !overBudget(id)) {
+                var project = repository.findProject(id).orElseThrow();
+                NovelState state = project.getState();
+                if (state == NovelState.FINAL || collaborationBlocker(id) != null) break;
+                if (state == NovelState.PAUSED_AT_CHECKPOINT) {
+                    // Legacy rejected checkpoints can leave a paused phase with no pending item.
+                    // No approval is implicit: all actual pending items were checked above.
+                    project.setState(repository.findOutlineByProject(id).isPresent()
+                            ? NovelState.PLANNING : NovelState.CONCEIVING);
+                    repository.saveProject(project);
+                    continue;
+                }
+                if (state == NovelState.WRITING || state == NovelState.VOLUME_DONE) {
+                    written = orchestrator.runWritingLoop(id, Integer.MAX_VALUE,
+                            () -> isCancelled(task.getId()) || overBudget(id), task.getInstruction());
+                    break;
+                }
+                orchestrator.step(id);
+                if (repository.findProject(id).orElseThrow().getState() == state) {
+                    throw new IllegalStateException("创作步骤未推进，请检查内容或错误后重试");
+                }
+            }
+            var state = repository.findProject(id).orElseThrow().getState();
+            if (state == NovelState.FINAL) {
+                task.setStatus(WritingTask.Status.COMPLETED);
+            } else {
+                task.setStatus(WritingTask.Status.PAUSED);
+                String reason = collaborationBlocker(id);
+                task.setErrorMessage(isCancelled(task.getId()) ? "已交给作者，可编辑内容后继续"
+                        : reason != null ? reason : "创作已停下，请检查章节质量或运行记录后继续");
+            }
+        } catch (Exception e) {
+            task.setStatus(WritingTask.Status.FAILED);
+            task.setErrorMessage(e.getMessage() == null ? "创作失败，请检查后重试" : e.getMessage());
+            log.error("协作任务失败: {}", task.getId(), e);
+        } finally {
+            task.setChaptersWritten(written);
+            finishCollaborative(task);
+        }
+    }
+
+    private synchronized void finishCollaborative(WritingTask task) {
+        try {
+            task.setStopRequested(repository.findWritingTask(task.getId())
+                    .map(WritingTask::isStopRequested).orElse(false));
+            task.setCurrentChapter(repository.findProject(task.getProjectId())
+                    .map(p -> p.getCurrentChapterIndex()).orElse(0));
+            task.setTotalWords(repository.getTotalWordCount(task.getProjectId()));
+            repository.saveWritingTask(task);
+        } finally {
+            endWork(task.getProjectId(), task.getId());
+            cancelFlags.remove(task.getId());
+        }
+    }
+
+    @jakarta.annotation.PreDestroy
+    public void shutdown() {
+        executor.shutdownNow();
     }
 
     /** p20-05: 同步工作注册——占坑失败（已有 owner）时抛 409 语义异常 */

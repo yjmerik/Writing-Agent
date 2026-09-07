@@ -1,3 +1,15 @@
+# 2026-09-07 AGENTS.md 特性开发约束已完成
+
+- 用户要求每次一个特性、新开分支、完成后合并。AGENTS.md新增完整硬规则，并同步Startup、Working Rules、Definition of Done和交接步骤；完成状态只在合并及合并后验证通过后登记。
+- 每个feature从main创建codex/<feature-id>-<slug>；已有其他未提交工作时独立worktree开发；每个feature逐个完成闭环，不积压在长期分支。授权实现默认包含本地提交/合并，远端push和部署另需授权，用户的明确例外优先。
+- 本次文档维护分支codex/docs-feature-workflow，实现提交05f7f2e已合入main。独立分支./init.sh通过，合并后干净main重新编译并运行636 tests / 0 failures / 0 errors / 1 skipped通过；未改业务实现，无需新增业务测试或质量E2E。
+- 证据data/verification/agents-feature-workflow/verification.json。纯文档维护不新增业务feature，feature_list及原有业务状态保持；其他工作区文件已核对内容指纹保留。
+- 当前分支main，本地合并完成，无blocker；没有推送远端或重启服务。下一特性直接遵循AGENTS.md的新流程。
+
+以下为历史记录。
+
+---
+
 # 2026-09-07 合并完成：本地 main
 
 - fallback实现提交c81bbcb6e499f0af43454cf5efa108551402d938已快进合并到main，并已切换当前工作区到main。该分支此前44个提交一并合入，没有冲突。

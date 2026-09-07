@@ -3794,7 +3794,7 @@
       "phase": 27,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/domain/WritingTask.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
@@ -3805,10 +3805,10 @@
       "problem_ref": "2026-09-05 用户统一人机协作需求与架构审查",
       "acceptance": "mvn compile 返回 0，满足 spec 对应行为断言",
       "verify_cmd": "mvn compile",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 新库/旧表迁移 2 tests PASS；instruction、stop_requested 和原始任务时间往返；最终 JDK21 init 613 tests / 0 failures / 0 errors / 1 skipped，28 prompts 与前端构建 PASS。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。",
-      "delivery_state": "verification-in-progress",
+      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 新库/旧表迁移 2 tests PASS；instruction、stop_requested 和原始任务时间往返；最终 JDK21 init 613 tests / 0 failures / 0 errors / 1 skipped，28 prompts 与前端构建 PASS。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-01-task-persistence实现1d6422ce28b3253ef8015230b26a08f2811374ea已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-01.json。",
       "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
-      "audit_notes": "核验拆分修正：AUTO_RUN枚举的既有契约适配必须与领域变更同批验证，不能延至p27-10导致中间main测试失败；3个业务文件附1个既有门禁测试。"
+      "audit_notes": "核验拆分修正：AUTO_RUN枚举的既有契约适配必须与领域变更同批验证，不能延至p27-10导致中间main测试失败；3个业务文件附1个既有门禁测试。",
+      "completion_record": "reconciled-p27-01"
     },
     {
       "id": "p27-02",
@@ -4367,5 +4367,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": "p27-01"
+  "active_feature": null
 }

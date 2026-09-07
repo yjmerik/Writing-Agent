@@ -250,6 +250,17 @@
       "implementation_commit": "ae7ee790cbc73ab3948c33de7fe3185f80b75751",
       "main_commit": "ae7ee790cbc73ab3948c33de7fe3185f80b75751",
       "evidence": "docs/harness/evidence/harness-integrity.json"
+    },
+    {
+      "id": "reconciled-p27-01",
+      "kind": "verified",
+      "feature_ids": [
+        "p27-01"
+      ],
+      "branch": "codex/p27-01-task-persistence",
+      "implementation_commit": "1d6422ce28b3253ef8015230b26a08f2811374ea",
+      "main_commit": "1d6422ce28b3253ef8015230b26a08f2811374ea",
+      "evidence": "docs/harness/evidence/reconciled-p27-01.json"
     }
   ]
 }

@@ -1,0 +1,20 @@
+{
+  "verifiedAt": "2026-09-08T00:12:08.548198",
+  "commit": "1d6422ce28b3253ef8015230b26a08f2811374ea",
+  "cleanCheckout": true,
+  "branch": "codex/p27-01-task-persistence",
+  "checks": [
+    {
+      "command": "./init.sh && mvn compile -q && python3 scripts/check-harness.py --check-git",
+      "exitCode": 0,
+      "result": "PASS; Maven tests/failures/errors/skipped=636,0,0,1",
+      "verifiedAt": "2026-09-08T00:11:22.341052",
+      "durationSeconds": 37.03,
+      "log": "/tmp/writingagent-reconcile-14/p27-01-main.log"
+    }
+  ],
+  "logs": {
+    "data/verification/reconcile-14/p27-01-main.log": "d1db55bdbf416b828e3f7b125e402c71ae25e84fa2515214e477a56cae89bbf4"
+  },
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。"
+}

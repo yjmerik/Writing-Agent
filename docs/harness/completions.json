@@ -305,6 +305,17 @@
       "implementation_commit": "9add96a9fa769189f664e19d0ebe2ae3f807f4ce",
       "main_commit": "9add96a9fa769189f664e19d0ebe2ae3f807f4ce",
       "evidence": "docs/harness/evidence/reconciled-p27-04.json"
+    },
+    {
+      "id": "reconciled-p27-05",
+      "kind": "verified",
+      "feature_ids": [
+        "p27-05"
+      ],
+      "branch": "codex/p27-05-collaboration-bar",
+      "implementation_commit": "54c1dfab45e74d8b5fb2289a850bedbceb7ba1fe",
+      "main_commit": "54c1dfab45e74d8b5fb2289a850bedbceb7ba1fe",
+      "evidence": "docs/harness/evidence/reconciled-p27-05.json"
     }
   ]
 }

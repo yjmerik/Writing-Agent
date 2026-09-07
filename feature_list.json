@@ -3883,7 +3883,7 @@
       "dependencies": [
         "p27-04"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "frontend/src/components/CollaborationBar.tsx",
         "frontend/src/api/client.ts",
@@ -3893,9 +3893,9 @@
       "problem_ref": "2026-09-05 用户统一人机协作需求与架构审查",
       "acceptance": "cd frontend && npm run build 返回 0，满足 spec 对应行为断言",
       "verify_cmd": "cd frontend && npm run build",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 frontend production build PASS；协作栏从服务器轮询真实任务/进度、支持接手与继续、持久指令及审核策略。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。",
-      "delivery_state": "verification-in-progress",
-      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md"
+      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 frontend production build PASS；协作栏从服务器轮询真实任务/进度、支持接手与继续、持久指令及审核策略。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-05-collaboration-bar实现54c1dfab45e74d8b5fb2289a850bedbceb7ba1fe已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-05.json。",
+      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
+      "completion_record": "reconciled-p27-05"
     },
     {
       "id": "p27-06",
@@ -4362,5 +4362,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": "p27-05"
+  "active_feature": null
 }

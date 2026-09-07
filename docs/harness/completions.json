@@ -261,6 +261,17 @@
       "implementation_commit": "1d6422ce28b3253ef8015230b26a08f2811374ea",
       "main_commit": "1d6422ce28b3253ef8015230b26a08f2811374ea",
       "evidence": "docs/harness/evidence/reconciled-p27-01.json"
+    },
+    {
+      "id": "reconciled-p27-02",
+      "kind": "verified",
+      "feature_ids": [
+        "p27-02"
+      ],
+      "branch": "codex/p27-02-collaborative-lifecycle",
+      "implementation_commit": "a4ce8862f8a983dc9b63683bad2c5b8284a7e2d8",
+      "main_commit": "a4ce8862f8a983dc9b63683bad2c5b8284a7e2d8",
+      "evidence": "docs/harness/evidence/reconciled-p27-02.json"
     }
   ]
 }

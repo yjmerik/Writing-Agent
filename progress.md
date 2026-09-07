@@ -4,9 +4,9 @@ Last Updated: 2026-09-08
 
 ## Current（当前）
 
-用户已授权逐项检验14项Phase27–29并推进到一致状态。当前p27-02，分支codex/p27-02-collaborative-lifecycle，提交尚未提交。正在验收，尚未完成本项合并后验证。
+用户已授权逐项检验14项Phase27–29并推进到一致状态。当前p27-02，分支codex/p27-02-collaborative-lifecycle，提交a4ce8862f8a983dc9b63683bad2c5b8284a7e2d8。本项已完成主分支合并和合并后验证。
 
-14项核验进度：1/14完成；已完成：p27-01。待完成：p27-02, p27-03, p27-04, p27-05, p27-06, p27-07, p27-08, p27-09, p27-10, p27-11, p27-12, p28-01, p29-01。
+14项核验进度：2/14完成；已完成：p27-01, p27-02。待完成：p27-03, p27-04, p27-05, p27-06, p27-07, p27-08, p27-09, p27-10, p27-11, p27-12, p28-01, p29-01。
 
 唯一状态源：[feature_list.json](feature_list.json)，完成索引[completions.json](docs/harness/completions.json)。按依赖一项一分支、验证、合并、主分支复验再继续。
 

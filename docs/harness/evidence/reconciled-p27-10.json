@@ -10,12 +10,24 @@
       "result": "PASS; Maven full/largest run tests/failures/errors/skipped=664,0,0,1; final focused run=3,0,0,0",
       "verifiedAt": "2026-09-08T01:02:33.133424",
       "durationSeconds": 139.47,
-      "log": "/tmp/writingagent-reconcile-14/p27-10-main.log",
+      "log": "data/verification/reconcile-14/p27-10-main.log",
       "inputDigest": "eb150868ff5707f559cc623c6e6dbb966f7d7c4bd4e772bcc8887fc06ac8f613"
     }
   ],
   "logs": {
     "data/verification/reconcile-14/p27-10-main.log": "21c2be772bc8235ff3a09ffb8e572e876929a4fa2f8fac39f67f2d9da4ed9b58"
   },
-  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。"
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。",
+  "branchVerification": [
+    {
+      "command": "./init.sh && mvn test -Dtest=WritingTaskTest && ./scripts/browser-e2e.sh --port 18095",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=664,0,0,1; final focused run=3,0,0,0",
+      "verifiedAt": "2026-09-08T01:00:00.263152",
+      "durationSeconds": 139.49,
+      "log": "data/verification/reconcile-14/p27-10-branch.log",
+      "inputDigest": "eb150868ff5707f559cc623c6e6dbb966f7d7c4bd4e772bcc8887fc06ac8f613"
+    }
+  ],
+  "inputManifest": "data/verification/reconcile-14/p27-10-main.inputs.json"
 }

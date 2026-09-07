@@ -10,7 +10,7 @@
       "result": "PASS; Maven full/largest run tests/failures/errors/skipped=649,0,0,1; final focused run=11,0,0,0",
       "verifiedAt": "2026-09-08T00:19:27.073710",
       "durationSeconds": 58.49,
-      "log": "/tmp/writingagent-reconcile-14/p27-12-main.log"
+      "log": "data/verification/reconcile-14/p27-12-main.log"
     }
   ],
   "logs": {
@@ -23,7 +23,18 @@
     "result": "FAIL; Maven tests/failures/errors/skipped=11,2,0,0",
     "verifiedAt": "2026-09-08T00:16:33.780941",
     "durationSeconds": 3.72,
-    "log": "/tmp/writingagent-reconcile-14/p27-12-red.log",
+    "log": "data/verification/reconcile-14/p27-12-red.log",
     "expectedFailure": true
-  }
+  },
+  "branchVerification": [
+    {
+      "command": "./init.sh && mvn test -Dtest=CollaborativeRunTest && E2E_FIXTURE_DIR=data/e2e-fixtures/canary-mystery-20260831 ./scripts/e2e.sh && python3 scripts/compare-baseline.py",
+      "exitCode": 0,
+      "result": "PASS; Maven tests/failures/errors/skipped=11,0,0,0",
+      "verifiedAt": "2026-09-08T00:17:31.538132",
+      "durationSeconds": 57.67,
+      "log": "data/verification/reconcile-14/p27-12-branch.log"
+    }
+  ],
+  "inputEvidenceNote": "本轮较早的此项验证记录使用干净Git提交和运行日志，尚未启用逐文件输入指纹；不补造运行时指纹。后续最终回归覆盖该实现。"
 }

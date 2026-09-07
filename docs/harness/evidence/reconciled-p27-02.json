@@ -10,11 +10,22 @@
       "result": "PASS; Maven tests/failures/errors/skipped=647,0,0,1",
       "verifiedAt": "2026-09-08T00:15:06.264478",
       "durationSeconds": 60.81,
-      "log": "/tmp/writingagent-reconcile-14/p27-02-main.log"
+      "log": "data/verification/reconcile-14/p27-02-main.log"
     }
   ],
   "logs": {
     "data/verification/reconcile-14/p27-02-main.log": "3046dade43b6c7af217f8d235bf1675dba76fabf168ab2901352bef9bd7449f0"
   },
-  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。"
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。",
+  "branchVerification": [
+    {
+      "command": "./init.sh && mvn test -q -Dtest=CollaborationTaskPersistenceTest,CollaborativeRunTest && E2E_FIXTURE_DIR=data/e2e-fixtures/canary-mystery-20260831 ./scripts/e2e.sh && python3 scripts/compare-baseline.py",
+      "exitCode": 0,
+      "result": "PASS; Maven tests/failures/errors/skipped=647,0,0,1",
+      "verifiedAt": "2026-09-08T00:13:50.131074",
+      "durationSeconds": 59.44,
+      "log": "data/verification/reconcile-14/p27-02-branch.log"
+    }
+  ],
+  "inputEvidenceNote": "本轮较早的此项验证记录使用干净Git提交和运行日志，尚未启用逐文件输入指纹；不补造运行时指纹。后续最终回归覆盖该实现。"
 }

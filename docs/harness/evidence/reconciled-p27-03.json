@@ -10,12 +10,23 @@
       "result": "PASS; Maven full/largest run tests/failures/errors/skipped=653,0,0,1; final focused run=4,0,0,0",
       "verifiedAt": "2026-09-08T00:22:28.197786",
       "durationSeconds": 39.65,
-      "log": "/tmp/writingagent-reconcile-14/p27-03-main.log",
+      "log": "data/verification/reconcile-14/p27-03-main.log",
       "inputDigest": "94c0a9d5ef5a78db6f5b8b89e4f1c1213446af213f984861ae920eb79a394ce6"
     }
   ],
   "logs": {
     "data/verification/reconcile-14/p27-03-main.log": "ad7204a877e286ad46cc94ff2a1c0e3de54b81f88e8f3b9c8260da9f650256ee"
   },
-  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。"
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。",
+  "branchVerification": [
+    {
+      "command": "./init.sh && mvn test -Dtest=CollaborationApiTest",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=653,0,0,1; final focused run=4,0,0,0",
+      "verifiedAt": "2026-09-08T00:21:01.836175",
+      "durationSeconds": 39.15,
+      "log": "data/verification/reconcile-14/p27-03-branch.log"
+    }
+  ],
+  "inputManifest": "data/verification/reconcile-14/p27-03-main.inputs.json"
 }

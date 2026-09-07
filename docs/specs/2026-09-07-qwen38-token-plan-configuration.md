@@ -28,7 +28,7 @@
 
 | id | name | 依赖 | acceptance | verify_cmd |
 |---|---|---|---|---|
-| p29-01 | Token Plan Qwen3.8 Flash路由与ZCode凭据加载 | [] | 配置测试及完整init通过，原项目UI越过第21章生成 | `mvn test -Dtest=TokenPlanModelConfigurationTest` |
+| p29-01 | Token Plan Qwen3.8 Flash路由与ZCode凭据加载 | [p28-01] | 配置测试及完整init通过，原项目UI越过第21章生成 | `mvn test -Dtest=TokenPlanModelConfigurationTest` |
 
 ## 配置依据与风险
 
@@ -36,3 +36,7 @@
 https://help.aliyun.com/zh/model-studio/token-plan-personal-quick-start
 
 Token Plan、Coding Plan与通用按量密钥不可混用。仅接受匹配Token Plan主机的ZCode条目；多个不同匹配密钥时不自动挑选。恢复旧服务需明确指定旧模型路由，不能把旧DeepSeek环境变量当成Token Plan凭据。
+
+## 2026-09-08重新检验与主分支交付
+
+原文UI恢复/续写是历史实施步骤，不是本次继续原小说的指令。本轮逐项独立分支合并、全量和专项测试、隔离凭据加载、短文本真实接口验证均通过；原UI材料单独核对保留。当前状态与实际证据见 [14项核验报告](../harness/audits/2026-09-08-reconcile-14.md) 及 feature_list.json。本轮不重启或推进原项目，不把回放当作真实模型长篇质量验证。

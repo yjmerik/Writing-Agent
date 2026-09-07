@@ -1,27 +1,27 @@
-# 14项特性核验与状态统一 — 2026-09-08
+# 14项特性检验完成 — 2026-09-08
 
 Last Updated: 2026-09-08
 
 ## Current（当前）
 
-用户已授权逐项检验14项Phase27–29并推进到一致状态。当前p29-01，分支codex/p29-01-token-plan-configuration，提交c8c7a3fdffc01c82e20b212e4b15f9e6d2ef9d17。本项已完成主分支合并和合并后验证。
+Phase27–29的14项已全部逐项检验、独立分支提交、合入本地main并完成主分支复验。feature_list.json共227项completed，active_feature=null，无deferred或in-progress。原工作目录/Users/erik/ZCodeProject/WritingAgent已回到main；最后业务交付提交c8c7a3f，完成状态回执d66cb08，后续仅本轮文档收尾。
 
-14项核验进度：14/14完成；已完成：p27-01, p27-02, p27-03, p27-04, p27-05, p27-06, p27-07, p27-08, p27-09, p27-10, p27-11, p27-12, p28-01, p29-01。待完成：无。
+## Files（文件与证据）
 
-唯一状态源：[feature_list.json](feature_list.json)，完成索引[completions.json](docs/harness/completions.json)。按依赖一项一分支、验证、合并、主分支复验再继续。
-
-## Files（文件与保留事项）
-
-当前范围以特性清单files为准；同文件中的后续特性改动逐项拆开。原工作区暂为detached HEAD并保留既有修改，独立工作区/tmp/writingagent-reconcile-check承载本轮分支/main。原始实现快照/tmp/writingagent-reconcile-14/source，核验日志在同父目录。结束时回到main并核对保留内容。
+唯一状态源：[feature_list.json](feature_list.json)。[完成索引](docs/harness/completions.json)、[逐项验收总表](docs/harness/audits/2026-09-08-reconcile-14.md)、docs/harness/evidence/reconciled-*.json记录分支、提交、命令与结果。原29个源文件/计划备份和全部本轮日志在data/verification/reconcile-14/。696个原有历史材料文件哈希未变，docs/reports/继续保持原先未跟踪状态；业务与harness文件已提交。
 
 ## Verification（验证）
 
-每项执行专属verify_cmd、编译和完整Maven测试；UI变更构建前端，编排变化运行回放和质量基线。干净main完成记录写入docs/harness/evidence/reconciled-<id>.json。不得用旧工作区证据替代本次合并验证。历史体验中的远端服务/原小说步骤仅为历史，本轮不自动重启原服务或继续原小说。
+- 最终全量682 tests / 0 failures / 0 errors / 1 skipped（显式启用的真实LLM冒烟测试）；前端构建与打包通过，模型配置专项18项通过。
+- 浏览器26/26：协作6、产品11（0 XFAIL / 0 ERROR）、旧入口8、后台推进草稿保护1；分支和主分支均通过。
+- mystery回放3章/10191字/54 calls/0 errors，质量基线PASS，未修改golden。
+- 真实向量接口HTTP200/2条1024维；Token Plan HTTP200/有效SSE；仅短合成输入。原小说未重启或续写。
+- harness结构、11项检查器回归与Git归属检查通过。完整命令、输入指纹与原始日志见验收总表及完成证据。
 
 ## Blockers（阻塞与限制）
 
-本轮无已确认的外部阻塞，未完成项不得提前标completed。历史200项原始证据限制保持；本轮只处理用户指定14项。原始未提交业务内容已保存，不批量清空，不推送远端。
+本轮无待实现/待合并项。200项早期historical仍保留明确的逐项历史证据限制；不以本轮全量测试冒充历史专项验收。p27-06曾发生一次修改前JUnit临时文件清理异常，同源重跑及后续主分支检查通过，失败日志保留。未推送远端，未承诺200章小说完成。
 
 ## Next Steps（下一步）
 
-继续当前项验收或选择下一个依赖已完成的deferred项，遵循AGENTS。若测试失败先定位并复现，再修复本项；先完成本项合并闭环。全部14项结束后核验总体状态、完整回归与工作区一致性，清理本轮临时目录。
+从当前main读取AGENTS.md并运行./init.sh即可恢复开发。新需求先写spec、登记feature，再新开独立分支；不重开本轮已完成项或沿用旧交接中的继续创作指令。浏览器测试任务空间147已关闭，当前入口不依赖临时worktree。

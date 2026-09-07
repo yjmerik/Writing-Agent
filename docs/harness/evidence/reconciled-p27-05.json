@@ -10,12 +10,24 @@
       "result": "PASS; Maven full/largest run tests/failures/errors/skipped=656,0,0,1",
       "verifiedAt": "2026-09-08T00:30:03.757901",
       "durationSeconds": 39.94,
-      "log": "/tmp/writingagent-reconcile-14/p27-05-main.log",
+      "log": "data/verification/reconcile-14/p27-05-main.log",
       "inputDigest": "df481d476a1f8dc92adc2dba6a3b362b74b71edbca153816b33f8e78581f2698"
     }
   ],
   "logs": {
     "data/verification/reconcile-14/p27-05-main.log": "201eb60d7e56d3610f13b779d8eae7c9c03f417c690536a9d238a958c565dd72"
   },
-  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。"
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。",
+  "branchVerification": [
+    {
+      "command": "./init.sh && cd frontend && npm run build",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=656,0,0,1",
+      "verifiedAt": "2026-09-08T00:28:43.314704",
+      "durationSeconds": 39.72,
+      "log": "data/verification/reconcile-14/p27-05-branch.log",
+      "inputDigest": "df481d476a1f8dc92adc2dba6a3b362b74b71edbca153816b33f8e78581f2698"
+    }
+  ],
+  "inputManifest": "data/verification/reconcile-14/p27-05-main.inputs.json"
 }

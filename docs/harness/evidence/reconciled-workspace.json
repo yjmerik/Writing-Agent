@@ -1,0 +1,19 @@
+{
+  "main": "d66cb083542eb73a55f8ec3e0598bf1f7345d702",
+  "branch": "main",
+  "migratedFiles": 29,
+  "restoredTrackedFiles": 18,
+  "integratedPreviouslyUntrackedFiles": 11,
+  "updatedHarnessFiles": [
+    "docs/harness/completions.json",
+    "feature_list.json",
+    "progress.md",
+    "session-handoff.md"
+  ],
+  "preservedUnrelatedFiles": 696,
+  "allOriginalHashesCheckedBeforeMigration": 729,
+  "trackedWorktreeClean": true,
+  "remainingUntracked": "Previously existing docs/reports/ preserved; not feature implementation",
+  "originalBackup": "data/verification/reconcile-14/original-source",
+  "verificationNote": "Initial preservation assertion also included four harness files; these changed intentionally with the completed main status. Final check excludes only those four and the explicitly migrated source/plan files."
+}

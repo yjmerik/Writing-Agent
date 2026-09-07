@@ -10,12 +10,43 @@
       "result": "PASS; Maven full/largest run tests/failures/errors/skipped=682,0,0,1; final focused run=18,0,0,0",
       "verifiedAt": "2026-09-08T01:29:59.155333",
       "durationSeconds": 47.73,
-      "log": "/tmp/writingagent-reconcile-14/p29-01-main.log",
+      "log": "data/verification/reconcile-14/p29-01-main.log",
       "inputDigest": "29e9553a964f75d72f425cc075e44ee0c65af43b3ae689b28951fee1b8504861"
     }
   ],
   "logs": {
     "data/verification/reconcile-14/p29-01-main.log": "3eccc88c1001f784004efec75d2aa725559b9f7ac934d8da0f4ec816f54e6375"
   },
-  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。"
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。",
+  "branchVerification": [
+    {
+      "command": "./init.sh && mvn test -Dtest=TokenPlanModelConfigurationTest,EmbeddingModelConfigurationTest && mvn package -DskipTests -q",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=682,0,0,1; final focused run=18,0,0,0",
+      "verifiedAt": "2026-09-08T01:28:53.630919",
+      "durationSeconds": 46.47,
+      "log": "data/verification/reconcile-14/p29-01-branch.log",
+      "inputDigest": "29e9553a964f75d72f425cc075e44ee0c65af43b3ae689b28951fee1b8504861"
+    }
+  ],
+  "inputManifest": "data/verification/reconcile-14/p29-01-main.inputs.json",
+  "liveConnectivity": {
+    "verifiedAt": "2026-09-08T01:29:57.853644",
+    "model": "qwen3.8-flash",
+    "endpoint": "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1/chat/completions",
+    "syntheticPrompt": true,
+    "maxTokens": 64,
+    "stream": true,
+    "passed": true,
+    "httpStatus": 200,
+    "contentType": "text/event-stream; charset=utf-8",
+    "contentCharacters": 2,
+    "chunks": 13,
+    "done": true
+  },
+  "liveProbeSource": {
+    "path": "data/verification/reconcile-14/probe-token-plan.py",
+    "sha256": "9476cedc961beaaaaf6d7a812e547f5e05c96c0aad42bf1b3e7fb9dc36d91cf6"
+  },
+  "historicalUiScope": "原项目UI恢复/第21章续写为2026-09-05/07历史证据；本次检验配置、隔离加载、协议和短文本真实连接，不重启或续写原小说。"
 }

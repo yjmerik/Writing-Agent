@@ -10,7 +10,7 @@
       "result": "PASS; Maven full/largest run tests/failures/errors/skipped=657,0,0,1; final focused run=5,0,0,0",
       "verifiedAt": "2026-09-08T00:34:56.739595",
       "durationSeconds": 50.14,
-      "log": "/tmp/writingagent-reconcile-14/p27-11-main.log",
+      "log": "data/verification/reconcile-14/p27-11-main.log",
       "inputDigest": "2cb10f7d0ec79ac8ef92933f757f4dc956496ace16711805203f66fd59ca14ee"
     }
   ],
@@ -24,8 +24,20 @@
     "result": "FAIL; Maven full/largest run tests/failures/errors/skipped=5,1,0,0",
     "verifiedAt": "2026-09-08T00:31:45.587600",
     "durationSeconds": 3.94,
-    "log": "/tmp/writingagent-reconcile-14/p27-11-red.log",
+    "log": "data/verification/reconcile-14/p27-11-red.log",
     "inputDigest": "c6958d6bcadc4e10fab8460eb2c2d84b7d96075c6adf49fda6397e9317c665e1",
     "expectedFailure": true
-  }
+  },
+  "branchVerification": [
+    {
+      "command": "./init.sh && mvn test -Dtest=CollaborationApiTest && (cd frontend && npm run build)",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=657,0,0,1; final focused run=5,0,0,0",
+      "verifiedAt": "2026-09-08T00:32:32.425735",
+      "durationSeconds": 46.74,
+      "log": "data/verification/reconcile-14/p27-11-branch.log",
+      "inputDigest": "2cb10f7d0ec79ac8ef92933f757f4dc956496ace16711805203f66fd59ca14ee"
+    }
+  ],
+  "inputManifest": "data/verification/reconcile-14/p27-11-main.inputs.json"
 }

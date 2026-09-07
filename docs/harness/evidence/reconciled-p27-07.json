@@ -10,12 +10,107 @@
       "result": "PASS; Maven full/largest run tests/failures/errors/skipped=664,0,0,1",
       "verifiedAt": "2026-09-08T01:20:54.641769",
       "durationSeconds": 492.54,
-      "log": "/tmp/writingagent-reconcile-14/p27-07-main.log",
+      "log": "data/verification/reconcile-14/p27-07-main.log",
       "inputDigest": "a8b1cc5c6eea60d992f330dc26fb69dabeec1e90195ca5cac7bb90436648d3d5"
     }
   ],
   "logs": {
     "data/verification/reconcile-14/p27-07-main.log": "b28c27a107ed7af9cbc301879c4fe885d003c963a86dc30548fc4b76b804f938"
   },
-  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。"
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。",
+  "branchVerification": [
+    {
+      "command": "./init.sh && ./scripts/collaboration-e2e.sh && ./scripts/product-audit-e2e.sh --port 18096 && ./scripts/browser-e2e.sh --port 18095 && ./scripts/draft-preservation-e2e.sh && python3 -c 'import shutil;shutil.copytree(\"data/e2e\",\"/Users/erik/ZCodeProject/WritingAgent/data/verification/reconcile-14/p27-07-branch-browser\",dirs_exist_ok=True)' && E2E_FIXTURE_DIR=data/e2e-fixtures/canary-mystery-20260831 ./scripts/e2e.sh && python3 scripts/compare-baseline.py && python3 scripts/check-harness.py --check-git",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=664,0,0,1",
+      "verifiedAt": "2026-09-08T01:12:15.558834",
+      "durationSeconds": 490.93,
+      "log": "data/verification/reconcile-14/p27-07-branch.log",
+      "inputDigest": "a8b1cc5c6eea60d992f330dc26fb69dabeec1e90195ca5cac7bb90436648d3d5"
+    }
+  ],
+  "inputManifest": "data/verification/reconcile-14/p27-07-main.inputs.json",
+  "browserAcceptance": {
+    "total": 26,
+    "collaboration": {
+      "passed": true,
+      "results": [
+        {
+          "name": "one-start-framework-to-final",
+          "passed": true
+        },
+        {
+          "name": "review-edit-continue-same-workspace",
+          "passed": true
+        },
+        {
+          "name": "takeover-during-writing-and-edit",
+          "passed": true
+        },
+        {
+          "name": "chapter-cadence-and-author-instruction",
+          "passed": true
+        },
+        {
+          "name": "volume-cadence-review-before-final",
+          "passed": true
+        },
+        {
+          "name": "mobile-global-controls",
+          "passed": true
+        }
+      ]
+    },
+    "productAudit": {
+      "mode": "strict",
+      "passed": true,
+      "counts": {
+        "pass": 11,
+        "xfail": 0,
+        "error": 0
+      },
+      "passes": [
+        "approve-keeps-chapter-visible",
+        "auto-zero-intervention",
+        "checkpoint-card-targeting",
+        "initial-setup-modify",
+        "initial-setup-summary",
+        "interactive-to-auto",
+        "manual-content-management",
+        "mobile-critical-path",
+        "quality-evaluation-state",
+        "standalone-chapter-rewrite",
+        "volume-outline-modify"
+      ],
+      "failures": [],
+      "errors": []
+    },
+    "legacy": {
+      "generatedAt": "2026-09-08T01:20:23.420792",
+      "kind": "browser-e2e",
+      "tool": "ego-browser",
+      "artifacts": [
+        "final.json",
+        "keyboard.json",
+        "lazy.json",
+        "list-375.json",
+        "manual.json",
+        "mr-ch1.json",
+        "revision.json",
+        "sse.json",
+        "ws-viewport.json"
+      ]
+    },
+    "draftPreservation": {
+      "passed": true,
+      "scenario": "draft-survives-background-chapter-advance",
+      "currentChapter": 3
+    },
+    "sourceHashes": {
+      "data/verification/reconcile-14/p27-07-main-browser/collaboration/latest-results.json": "8cb482db418f6d243a62938fdbde852528722f951e9e24f6803b95f4288df7fe",
+      "data/verification/reconcile-14/p27-07-main-browser/product-audit-browser/summary.json": "f7df6b9910ecfc7c63d89828866538ef76aa748e6e1b2dd2c783c9e7fa115c5b",
+      "data/verification/reconcile-14/p27-07-main-browser/browser/summary.json": "1714899684982544e85e049691a69127a74c25103dc0e91e24589b614008f3d5",
+      "data/verification/reconcile-14/p27-07-main-browser/draft-preservation/latest-results.json": "ec16e5de8b872dd49a87eb94af740fa227cb687a09212f3a51f1b8adbfad4071"
+    }
+  }
 }

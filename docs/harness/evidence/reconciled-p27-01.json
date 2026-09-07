@@ -10,11 +10,30 @@
       "result": "PASS; Maven tests/failures/errors/skipped=636,0,0,1",
       "verifiedAt": "2026-09-08T00:11:22.341052",
       "durationSeconds": 37.03,
-      "log": "/tmp/writingagent-reconcile-14/p27-01-main.log"
+      "log": "data/verification/reconcile-14/p27-01-main.log"
     }
   ],
   "logs": {
     "data/verification/reconcile-14/p27-01-main.log": "d1db55bdbf416b828e3f7b125e402c71ae25e84fa2515214e477a56cae89bbf4"
   },
-  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。"
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。",
+  "branchVerification": [
+    {
+      "command": "mvn clean -q && ./init.sh && mvn compile -q",
+      "exitCode": 0,
+      "result": "PASS; Maven tests/failures/errors/skipped=636,0,0,1",
+      "verifiedAt": "2026-09-08T00:08:29.123871",
+      "durationSeconds": 37.79,
+      "log": "data/verification/reconcile-14/p27-01-branch-clean.log"
+    },
+    {
+      "command": "./init.sh && mvn compile -q",
+      "exitCode": 1,
+      "result": "FAIL; Maven tests/failures/errors/skipped=636,1,0,1",
+      "verifiedAt": "2026-09-08T00:06:48.527267",
+      "durationSeconds": 30.78,
+      "log": "data/verification/reconcile-14/p27-01-branch.log"
+    }
+  ],
+  "inputEvidenceNote": "本轮较早的此项验证记录使用干净Git提交和运行日志，尚未启用逐文件输入指纹；不补造运行时指纹。后续最终回归覆盖该实现。"
 }

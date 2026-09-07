@@ -10,7 +10,7 @@
       "result": "PASS; Maven full/largest run tests/failures/errors/skipped=664,0,0,1; final focused run=7,0,0,0",
       "verifiedAt": "2026-09-08T00:56:18.364099",
       "durationSeconds": 64.45,
-      "log": "/tmp/writingagent-reconcile-14/p27-09-main.log",
+      "log": "data/verification/reconcile-14/p27-09-main.log",
       "inputDigest": "3ffca3deb9a57e884df5bb7712a21168eb42611f7ef2f6d7debcce7fad4da7d4"
     }
   ],
@@ -24,8 +24,20 @@
     "result": "FAIL; Maven full/largest run tests/failures/errors/skipped=7,2,0,0",
     "verifiedAt": "2026-09-08T00:53:53.666535",
     "durationSeconds": 4.17,
-    "log": "/tmp/writingagent-reconcile-14/p27-09-red.log",
+    "log": "data/verification/reconcile-14/p27-09-red.log",
     "inputDigest": "cf05db4bfe48925531625c680052b006d5e5044926570d7bee2738416aea44c2",
     "expectedFailure": true
-  }
+  },
+  "branchVerification": [
+    {
+      "command": "./init.sh && (mvn test -Dtest=AuthorChapterPreservationTest) && E2E_FIXTURE_DIR=data/e2e-fixtures/canary-mystery-20260831 ./scripts/e2e.sh && python3 scripts/compare-baseline.py",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=664,0,0,1; final focused run=7,0,0,0",
+      "verifiedAt": "2026-09-08T00:54:57.797564",
+      "durationSeconds": 64.03,
+      "log": "data/verification/reconcile-14/p27-09-branch.log",
+      "inputDigest": "3ffca3deb9a57e884df5bb7712a21168eb42611f7ef2f6d7debcce7fad4da7d4"
+    }
+  ],
+  "inputManifest": "data/verification/reconcile-14/p27-09-main.inputs.json"
 }

@@ -10,7 +10,7 @@
       "result": "PASS; Maven full/largest run tests/failures/errors/skipped=656,0,0,1; final focused run=12,0,0,0",
       "verifiedAt": "2026-09-08T00:26:51.355098",
       "durationSeconds": 44.04,
-      "log": "/tmp/writingagent-reconcile-14/p27-04-main.log",
+      "log": "data/verification/reconcile-14/p27-04-main.log",
       "inputDigest": "c34b422bd3a89282f408191bbe29c95b725d538bde4ff1439b8eb43ac68cba1b"
     }
   ],
@@ -24,8 +24,20 @@
     "result": "FAIL; Maven full/largest run tests/failures/errors/skipped=3,2,0,0",
     "verifiedAt": "2026-09-08T00:24:19.969083",
     "durationSeconds": 3.22,
-    "log": "/tmp/writingagent-reconcile-14/p27-04-red.log",
+    "log": "data/verification/reconcile-14/p27-04-red.log",
     "inputDigest": "b9cb4a4b5732b6b9424569b85ddcafafa64eab58129f8e222659824bf03a95b3",
     "expectedFailure": true
-  }
+  },
+  "branchVerification": [
+    {
+      "command": "./init.sh && mvn test -Dtest=CollaborationEditOwnershipTest,WorldCharacterFullEditTest,CheckpointTargetValidationTest",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=656,0,0,1; final focused run=12,0,0,0",
+      "verifiedAt": "2026-09-08T00:25:01.085884",
+      "durationSeconds": 41.03,
+      "log": "data/verification/reconcile-14/p27-04-branch.log",
+      "inputDigest": "c34b422bd3a89282f408191bbe29c95b725d538bde4ff1439b8eb43ac68cba1b"
+    }
+  ],
+  "inputManifest": "data/verification/reconcile-14/p27-04-main.inputs.json"
 }

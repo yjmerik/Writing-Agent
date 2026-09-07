@@ -10,7 +10,7 @@
       "result": "PASS; Maven full/largest run tests/failures/errors/skipped=657,0,0,1",
       "verifiedAt": "2026-09-08T00:52:52.773969",
       "durationSeconds": 55.22,
-      "log": "/tmp/writingagent-reconcile-14/p27-08-main.log",
+      "log": "data/verification/reconcile-14/p27-08-main.log",
       "inputDigest": "1296eb26adadcf28450a1225c1ee106bf56309e9e20d6bc76d54e94ed01ef8ac"
     }
   ],
@@ -24,8 +24,20 @@
     "result": "FAIL",
     "verifiedAt": "2026-09-08T00:46:55.821914",
     "durationSeconds": 13.59,
-    "log": "/tmp/writingagent-reconcile-14/p27-08-red.log",
+    "log": "data/verification/reconcile-14/p27-08-red.log",
     "inputDigest": "9c7266799b55a31875f60a026882f6d338221beefc567365be950e04d9050835",
     "expectedFailure": true
-  }
+  },
+  "branchVerification": [
+    {
+      "command": "./init.sh && (cd frontend && npm run build) && ./scripts/draft-preservation-e2e.sh",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=657,0,0,1",
+      "verifiedAt": "2026-09-08T00:51:44.383812",
+      "durationSeconds": 53.69,
+      "log": "data/verification/reconcile-14/p27-08-branch.log",
+      "inputDigest": "1296eb26adadcf28450a1225c1ee106bf56309e9e20d6bc76d54e94ed01ef8ac"
+    }
+  ],
+  "inputManifest": "data/verification/reconcile-14/p27-08-main.inputs.json"
 }

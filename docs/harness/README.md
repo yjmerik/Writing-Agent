@@ -1,6 +1,6 @@
 # 开发 Harness 导航
 
-[本次审计报告](audits/2026-09-07.md)列出发现、修复及结构评分。
+[最新14项核验报告](audits/2026-09-08-reconcile-14.md)记录逐项合并、主分支验证和工作区收敛；[2026-09-07设施审计](audits/2026-09-07.md)保留当时发现和修复。
 
 ## 当前事实与历史证据
 
@@ -19,7 +19,7 @@
 | deferred | 已有工作暂停、尚不能登记为完成 | 阅读deferred_reason；按依赖选择一项，从main新分支恢复该项 |
 | completed | 已交付；查看completion_record判定证据等级 | 新工作另开分支 |
 
-14项Phase27–29采用deferred并标注`delivery_state: local-unmerged`：业务内容仍在原工作区，过去的测试不等于主分支验证。恢复时把该项改in-progress并设置active_feature；其余项保持deferred。合并前清除local-unmerged标记，保留历史证据。
+2026-09-08已逐项检验并合入14项Phase27–29：227项均completed，active_feature=null，原工作目录已回到main。先前deferred/local-unmerged仅代表2026-09-07审计时的历史状态；当前完成记录以reconciled-p27/p28/p29对应的verified记录为准。
 
 ## 完成证据格式
 
@@ -27,7 +27,7 @@
 
 `historical`只适用于本次审计迁移的Phase0–26：原始evidence保留，但逐项分支/合并/日志不能完整追溯。本次未补造证明，未把一次全量回归当成所有历史专项验收。Phase31起必须使用verified。早期未记录的dependencies/files暂填空数组并加audit_notes；不能将其解释为已证明没有依赖/文件变化。
 
-files已尽量统一为仓库相对路径；历史丢失信息在审计快照中保留。未实现特性的目标文件允许暂不存在。deferred所引用的三份spec本次补入Git，业务源码和UI体验材料仍留原工作区。
+files已尽量统一为仓库相对路径；历史丢失信息在审计快照中保留。未实现特性的目标文件允许暂不存在。三份spec、相关业务源码及协作实施计划均已进入Git；原有未跟踪UI体验材料保留在原目录。
 
 ## 检查与维护
 

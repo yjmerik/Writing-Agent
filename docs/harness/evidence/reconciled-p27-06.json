@@ -10,12 +10,47 @@
       "result": "PASS; Maven full/largest run tests/failures/errors/skipped=657,0,0,1",
       "verifiedAt": "2026-09-08T00:43:25.356423",
       "durationSeconds": 39.69,
-      "log": "/tmp/writingagent-reconcile-14/p27-06-main.log",
+      "log": "data/verification/reconcile-14/p27-06-main.log",
       "inputDigest": "a17be9d36a43b7168234498b5d00bfe17d4c3d31194f4eda5994b3982d062404"
     }
   ],
   "logs": {
     "data/verification/reconcile-14/p27-06-main.log": "e6db58ccffbab8929af322af78f7ccb1ac60f027b36f58a7041b8efdc469f1ee"
   },
-  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。"
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。",
+  "branchVerification": [
+    {
+      "command": "./init.sh && ./scripts/user-copy-check.sh && (cd frontend && npm run build)",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=657,0,0,1",
+      "verifiedAt": "2026-09-08T00:42:27.635706",
+      "durationSeconds": 40.78,
+      "log": "data/verification/reconcile-14/p27-06-branch.log",
+      "inputDigest": "a17be9d36a43b7168234498b5d00bfe17d4c3d31194f4eda5994b3982d062404"
+    }
+  ],
+  "inputManifest": "data/verification/reconcile-14/p27-06-main.inputs.json",
+  "verificationNotes": [
+    {
+      "baselineAttempt": {
+        "command": "./init.sh",
+        "exitCode": 1,
+        "result": "FAIL; Maven full/largest run tests/failures/errors/skipped=657,0,1,1",
+        "verifiedAt": "2026-09-08T00:36:20.802447",
+        "durationSeconds": 35.11,
+        "log": "data/verification/reconcile-14/p27-06-baseline.log",
+        "inputDigest": "2cb10f7d0ec79ac8ef92933f757f4dc956496ace16711805203f66fd59ca14ee"
+      },
+      "retry": {
+        "command": "mvn test -Dtest=VectorCleanupOnRewritePathsTest && ./init.sh",
+        "exitCode": 0,
+        "result": "PASS; Maven full/largest run tests/failures/errors/skipped=657,0,0,1",
+        "verifiedAt": "2026-09-08T00:40:28.766767",
+        "durationSeconds": 40.07,
+        "log": "data/verification/reconcile-14/p27-06-baseline-retry.log",
+        "inputDigest": "2cb10f7d0ec79ac8ef92933f757f4dc956496ace16711805203f66fd59ca14ee"
+      },
+      "explanation": "修改前基线出现一次JUnit临时目录清理NoSuchFileException（p16.db-wal已删除），0断言失败/1清理错误；未修改代码，定向和完整基线重跑通过，后续分支及主分支通过。保留失败证据，不声称修复了生产代码。"
+    }
+  ]
 }

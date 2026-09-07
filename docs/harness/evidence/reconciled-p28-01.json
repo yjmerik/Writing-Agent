@@ -10,7 +10,7 @@
       "result": "PASS; Maven full/largest run tests/failures/errors/skipped=674,0,0,1; final focused run=10,0,0,0",
       "verifiedAt": "2026-09-08T01:26:00.569134",
       "durationSeconds": 46.47,
-      "log": "/tmp/writingagent-reconcile-14/p28-01-main.log",
+      "log": "data/verification/reconcile-14/p28-01-main.log",
       "inputDigest": "ea732b767e094b205fe0d04521b559c7cdc1a4f788fba44b50856c8840ed0158"
     }
   ],
@@ -24,8 +24,42 @@
     "result": "FAIL; Maven full/largest run tests/failures/errors/skipped=10,2,0,0",
     "verifiedAt": "2026-09-08T01:22:50.379627",
     "durationSeconds": 2.95,
-    "log": "/tmp/writingagent-reconcile-14/p28-01-red.log",
+    "log": "data/verification/reconcile-14/p28-01-red.log",
     "inputDigest": "91bd02af2aa20f84065bf6f38eb81b83a0124bcd4894f9044593f0a1c2bf67e0",
     "expectedFailure": true
-  }
+  },
+  "branchVerification": [
+    {
+      "command": "./init.sh && mvn test -Dtest=EmbeddingModelConfigurationTest && mvn package -DskipTests -q",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=674,0,0,1; final focused run=10,0,0,0",
+      "verifiedAt": "2026-09-08T01:24:26.443233",
+      "durationSeconds": 45.53,
+      "log": "data/verification/reconcile-14/p28-01-branch.log",
+      "inputDigest": "ea732b767e094b205fe0d04521b559c7cdc1a4f788fba44b50856c8840ed0158"
+    }
+  ],
+  "inputManifest": "data/verification/reconcile-14/p28-01-main.inputs.json",
+  "liveConnectivity": {
+    "verifiedAt": "2026-09-08T01:25:59.991782",
+    "model": "qwen3.7-text-embedding",
+    "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings",
+    "syntheticInputCount": 2,
+    "passed": true,
+    "httpStatus": 200,
+    "dimensions": [
+      1024,
+      1024
+    ],
+    "finiteNonzeroVectors": true,
+    "usage": {
+      "prompt_tokens": 40,
+      "total_tokens": 40
+    }
+  },
+  "liveProbeSource": {
+    "path": "data/verification/reconcile-14/probe-embedding.py",
+    "sha256": "da495142fee3427069ca56e52e12392e497e5b5a7e0b4b8b2a42205c3634025b"
+  },
+  "historicalUiScope": "原项目UI恢复/第21章续写为2026-09-05/07历史证据；本次检验配置、隔离加载、协议和短文本真实连接，不重启或续写原小说。"
 }

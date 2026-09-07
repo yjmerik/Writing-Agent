@@ -41,9 +41,11 @@ public class CheckpointController {
     /** 批准 checkpoint — 推进项目状态 */
     @PostMapping("/{checkpointId}/approve")
     public Map<String, Object> approve(@PathVariable String id, @PathVariable String checkpointId) {
-        checkpointTargetService.requirePending(id, checkpointId);
-        orchestrator.approveCheckpoint(id, checkpointId);
-        return Map.of("status", "approved", "checkpointId", checkpointId);
+        return withRevisionWork(id, () -> {
+            checkpointTargetService.requirePending(id, checkpointId);
+            orchestrator.approveCheckpoint(id, checkpointId);
+            return Map.of("status", "approved", "checkpointId", checkpointId);
+        });
     }
 
     /**
@@ -53,22 +55,24 @@ public class CheckpointController {
     @PostMapping("/{checkpointId}/reject")
     public Map<String, Object> reject(@PathVariable String id, @PathVariable String checkpointId,
                                        @RequestBody Map<String, String> body) {
-        var cp = checkpointTargetService.requirePending(id, checkpointId);
-        String instructions = body.getOrDefault("instructions", "");
+        return withRevisionWork(id, () -> {
+            var cp = checkpointTargetService.requirePending(id, checkpointId);
+            String instructions = body.getOrDefault("instructions", "");
 
-        // 连续性修复 checkpoint 保留原有状态型处理；其余类型先完成真实内容改写。
-        NovelOrchestrator.CheckpointRevisionResult revision = reviseContentIfSupported(id, cp, instructions);
+            // 连续性修复 checkpoint 保留原有状态型处理；其余类型先完成真实内容改写。
+            NovelOrchestrator.CheckpointRevisionResult revision = reviseContentIfSupported(id, cp, instructions);
 
-        cp.reject();
-        repository.saveCheckpoint(cp);
+            cp.reject();
+            repository.saveCheckpoint(cp);
 
-        // 重新进入 PAUSED_AT_CHECKPOINT 等待再次审核
-        if (revision == null) {
+            // 重新进入 PAUSED_AT_CHECKPOINT 等待再次审核
+            if (revision == null) {
+                return Map.of("status", "rejected", "checkpointId", checkpointId,
+                        "instructions", instructions);
+            }
             return Map.of("status", "rejected", "checkpointId", checkpointId,
-                    "instructions", instructions);
-        }
-        return Map.of("status", "rejected", "checkpointId", checkpointId,
-                "instructions", instructions, "revision", revision);
+                    "instructions", instructions, "revision", revision);
+        });
     }
 
     /**
@@ -78,31 +82,32 @@ public class CheckpointController {
     @PostMapping("/{checkpointId}/modify")
     public Map<String, Object> modify(@PathVariable String id, @PathVariable String checkpointId,
                                        @RequestBody Map<String, String> body) {
-        var cp = checkpointTargetService.requirePending(id, checkpointId);
-        String instructions = body.getOrDefault("instructions", "");
+        return withRevisionWork(id, () -> {
+            var cp = checkpointTargetService.requirePending(id, checkpointId);
+            String instructions = body.getOrDefault("instructions", "");
 
-        // 连续性修复 checkpoint 只推进状态；其余类型先完成真实内容改写。
-        NovelOrchestrator.CheckpointRevisionResult revision = reviseContentIfSupported(id, cp, instructions);
+            // 连续性修复 checkpoint 只推进状态；其余类型先完成真实内容改写。
+            NovelOrchestrator.CheckpointRevisionResult revision = reviseContentIfSupported(id, cp, instructions);
 
-        // 项目推进成功后才处理 checkpoint；推进异常仍保留 PENDING，便于用户重试。
-        orchestrator.resumeAfterCheckpointRevision(id, cp);
-        cp.modify();
-        repository.saveCheckpoint(cp);
+            // 项目推进成功后才处理 checkpoint；推进异常仍保留 PENDING，便于用户重试。
+            orchestrator.resumeAfterCheckpointRevision(id, cp);
+            cp.modify();
+            repository.saveCheckpoint(cp);
 
-        if (revision == null) {
+            if (revision == null) {
+                return Map.of("status", "modified", "checkpointId", checkpointId,
+                        "instructions", instructions);
+            }
             return Map.of("status", "modified", "checkpointId", checkpointId,
-                    "instructions", instructions);
-        }
-        return Map.of("status", "modified", "checkpointId", checkpointId,
-                "instructions", instructions, "revision", revision);
+                    "instructions", instructions, "revision", revision);
+        });
     }
 
     private NovelOrchestrator.CheckpointRevisionResult reviseContentIfSupported(
             String projectId, Checkpoint checkpoint, String instructions) {
         return switch (checkpoint.getType()) {
             case AFTER_INITIAL_SETUP, AFTER_VOLUME_OUTLINE, AFTER_CHAPTER ->
-                    withRevisionWork(projectId,
-                            () -> orchestrator.reviseCheckpoint(projectId, checkpoint, instructions));
+                    orchestrator.reviseCheckpoint(projectId, checkpoint, instructions);
             case ON_CONTINUITY_FIX -> null;
         };
     }

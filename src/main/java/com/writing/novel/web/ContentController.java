@@ -56,12 +56,13 @@ public class ContentController {
 
     @PostMapping("/worldbuilding")
     public KnowledgeEntry createWorld(@PathVariable String id, @RequestBody Map<String, String> body) {
-        rejectIfWriting(id);
-        KnowledgeEntry entry = new KnowledgeEntry(id,
-                body.getOrDefault("type", "CUSTOM"),
-                body.getOrDefault("name", ""),
-                body.getOrDefault("content", ""));
-        return (KnowledgeEntry) canonPatch.createWorld(id, entry, chapterOf(id)).entity();
+        return withChapterWork(id, () -> {
+            KnowledgeEntry entry = new KnowledgeEntry(id,
+                    body.getOrDefault("type", "CUSTOM"),
+                    body.getOrDefault("name", ""),
+                    body.getOrDefault("content", ""));
+            return (KnowledgeEntry) canonPatch.createWorld(id, entry, chapterOf(id)).entity();
+        });
     }
 
     @GetMapping("/characters")
@@ -71,40 +72,43 @@ public class ContentController {
 
     @PostMapping("/characters")
     public Character createCharacter(@PathVariable String id, @RequestBody Map<String, String> body) {
-        rejectIfWriting(id);
-        Character created = new Character(id, body.get("name"), body.getOrDefault("role", "配角"));
-        if (body.get("personality") != null) created.setPersonality(body.get("personality"));
-        if (body.get("ability") != null) created.setAbility(body.get("ability"));
-        if (body.get("motivation") != null) created.setMotivation(body.get("motivation"));
-        if (body.get("appearance") != null) created.setAppearance(body.get("appearance"));
-        if (body.get("relationships") != null) created.setRelationships(body.get("relationships"));
-        if (body.get("growthArc") != null) created.setGrowthArc(body.get("growthArc"));
-        return (Character) canonPatch.createCharacter(id, created, chapterOf(id)).entity();
+        return withChapterWork(id, () -> {
+            Character created = new Character(id, body.get("name"), body.getOrDefault("role", "配角"));
+            if (body.get("personality") != null) created.setPersonality(body.get("personality"));
+            if (body.get("ability") != null) created.setAbility(body.get("ability"));
+            if (body.get("motivation") != null) created.setMotivation(body.get("motivation"));
+            if (body.get("appearance") != null) created.setAppearance(body.get("appearance"));
+            if (body.get("relationships") != null) created.setRelationships(body.get("relationships"));
+            if (body.get("growthArc") != null) created.setGrowthArc(body.get("growthArc"));
+            return (Character) canonPatch.createCharacter(id, created, chapterOf(id)).entity();
+        });
     }
 
     @PutMapping("/characters/{charId}")
     public Character updateCharacter(@PathVariable String id, @PathVariable String charId,
                                      @RequestBody Map<String, String> body) {
-        rejectIfWriting(id);
-        Character patch = new Character(id, body.get("name"), body.get("role"));
-        if (body.get("personality") != null) patch.setPersonality(body.get("personality"));
-        if (body.get("ability") != null) patch.setAbility(body.get("ability"));
-        if (body.get("motivation") != null) patch.setMotivation(body.get("motivation"));
-        if (body.get("appearance") != null) patch.setAppearance(body.get("appearance"));
-        if (body.get("relationships") != null) patch.setRelationships(body.get("relationships"));
-        if (body.get("growthArc") != null) patch.setGrowthArc(body.get("growthArc"));
-        return (Character) canonPatch.patchCharacter(id, charId, patch, chapterOf(id)).entity();
+        return withChapterWork(id, () -> {
+            Character patch = new Character(id, body.get("name"), body.get("role"));
+            if (body.get("personality") != null) patch.setPersonality(body.get("personality"));
+            if (body.get("ability") != null) patch.setAbility(body.get("ability"));
+            if (body.get("motivation") != null) patch.setMotivation(body.get("motivation"));
+            if (body.get("appearance") != null) patch.setAppearance(body.get("appearance"));
+            if (body.get("relationships") != null) patch.setRelationships(body.get("relationships"));
+            if (body.get("growthArc") != null) patch.setGrowthArc(body.get("growthArc"));
+            return (Character) canonPatch.patchCharacter(id, charId, patch, chapterOf(id)).entity();
+        });
     }
 
     @PutMapping("/worldbuilding/{entryId}")
     public KnowledgeEntry updateWorld(@PathVariable String id, @PathVariable String entryId,
                                       @RequestBody Map<String, String> body) {
-        rejectIfWriting(id);
-        KnowledgeEntry patch = new KnowledgeEntry(id,
-                body.getOrDefault("type", "CUSTOM"),
-                body.getOrDefault("name", ""),
-                body.getOrDefault("content", ""));
-        return (KnowledgeEntry) canonPatch.patchWorld(id, entryId, patch, chapterOf(id)).entity();
+        return withChapterWork(id, () -> {
+            KnowledgeEntry patch = new KnowledgeEntry(id,
+                    body.getOrDefault("type", "CUSTOM"),
+                    body.getOrDefault("name", ""),
+                    body.getOrDefault("content", ""));
+            return (KnowledgeEntry) canonPatch.patchWorld(id, entryId, patch, chapterOf(id)).entity();
+        });
     }
 
     @PutMapping("/outline")
@@ -121,27 +125,30 @@ public class ContentController {
     @PostMapping("/facts")
     public com.writing.novel.domain.StoryFact addFact(@PathVariable String id,
                                                       @RequestBody Map<String, String> body) {
-        rejectIfWriting(id);
-        var type = com.writing.novel.domain.StoryFact.FactType.valueOf(
-                body.getOrDefault("factType", "PLOT_COMMITMENT"));
-        return canonPatch.addFact(id, type, body.getOrDefault("subject", "补丁"),
-                body.getOrDefault("assertion", ""), chapterOf(id));
+        return withChapterWork(id, () -> {
+            var type = com.writing.novel.domain.StoryFact.FactType.valueOf(
+                    body.getOrDefault("factType", "PLOT_COMMITMENT"));
+            return canonPatch.addFact(id, type, body.getOrDefault("subject", "补丁"),
+                    body.getOrDefault("assertion", ""), chapterOf(id));
+        });
     }
 
     @PutMapping("/facts/{factId}")
     public com.writing.novel.domain.StoryFact updateFact(@PathVariable String id,
                                                          @PathVariable String factId,
                                                          @RequestBody Map<String, String> body) {
-        rejectIfWriting(id);
-        Integer importance = body.containsKey("importance") ? Integer.parseInt(body.get("importance")) : null;
-        return (com.writing.novel.domain.StoryFact) canonPatch.patchFact(
-                id, factId, body.get("assertion"), importance, chapterOf(id)).entity();
+        return withChapterWork(id, () -> {
+            Integer importance = body.containsKey("importance") ? Integer.parseInt(body.get("importance")) : null;
+            return (com.writing.novel.domain.StoryFact) canonPatch.patchFact(
+                    id, factId, body.get("assertion"), importance, chapterOf(id)).entity();
+        });
     }
 
     @PostMapping("/facts/{factId}/retire")
     public com.writing.novel.domain.StoryFact retireFact(@PathVariable String id, @PathVariable String factId) {
-        rejectIfWriting(id);
-        return canonPatch.retireFact(id, factId);
+        return withChapterWork(id, () -> {
+            return canonPatch.retireFact(id, factId);
+        });
     }
 
     @GetMapping("/foreshadowings")
@@ -151,43 +158,47 @@ public class ContentController {
 
     @PostMapping("/foreshadowings")
     public Foreshadowing createForeshadowing(@PathVariable String id, @RequestBody Map<String, Object> body) {
-        rejectIfWriting(id);
-        String content = String.valueOf(body.getOrDefault("content", body.getOrDefault("description", "")));
-        Foreshadowing planted = new Foreshadowing(id, content, "HUMAN", chapterOf(id));
-        planted.setMustResolve(Boolean.parseBoolean(String.valueOf(body.getOrDefault("mustResolve", "false"))));
-        repository.saveForeshadowing(planted);
-        return planted;
+        return withChapterWork(id, () -> {
+            String content = String.valueOf(body.getOrDefault("content", body.getOrDefault("description", "")));
+            Foreshadowing planted = new Foreshadowing(id, content, "HUMAN", chapterOf(id));
+            planted.setMustResolve(Boolean.parseBoolean(String.valueOf(body.getOrDefault("mustResolve", "false"))));
+            repository.saveForeshadowing(planted);
+            return planted;
+        });
     }
 
     @PostMapping("/foreshadowings/{fid}/resolve")
     public Foreshadowing resolveForeshadowing(@PathVariable String id, @PathVariable String fid) {
-        rejectIfWriting(id);
-        Foreshadowing existing = repository.findForeshadowingsByProject(id).stream()
-                .filter(f -> fid.equals(f.getId()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("伏笔不存在: " + fid));
-        existing.resolve(chapterOf(id));
-        repository.saveForeshadowing(existing);
-        return existing;
+        return withChapterWork(id, () -> {
+            Foreshadowing existing = repository.findForeshadowingsByProject(id).stream()
+                    .filter(f -> fid.equals(f.getId()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("伏笔不存在: " + fid));
+            existing.resolve(chapterOf(id));
+            repository.saveForeshadowing(existing);
+            return existing;
+        });
     }
 
     @PostMapping("/chapters/{chapterIndex}/resolve-review")
     public Chapter resolveManualReview(@PathVariable String id, @PathVariable int chapterIndex) {
-        rejectIfWriting(id);
-        Chapter chapter = repository.findChapterByIndex(id, chapterIndex)
-                .orElseThrow(() -> new IllegalArgumentException("章节不存在: " + chapterIndex));
-        if (chapter.getStatus() != Chapter.Status.NEEDS_MANUAL_REVIEW) {
-            throw new IllegalStateException("仅 NEEDS_MANUAL_REVIEW 状态的章节可处理人工复核");
-        }
-        chapter.setStatus(Chapter.Status.DONE);
-        repository.saveChapter(chapter);
-        return chapter;
+        return withChapterWork(id, () -> {
+            Chapter chapter = repository.findChapterByIndex(id, chapterIndex)
+                    .orElseThrow(() -> new IllegalArgumentException("章节不存在: " + chapterIndex));
+            if (chapter.getStatus() != Chapter.Status.NEEDS_MANUAL_REVIEW) {
+                throw new IllegalStateException("仅 NEEDS_MANUAL_REVIEW 状态的章节可处理人工复核");
+            }
+            chapter.setStatus(Chapter.Status.DONE);
+            repository.saveChapter(chapter);
+            return chapter;
+        });
     }
 
     @PostMapping("/replan")
     public Outline replan(@PathVariable String id) {
-        rejectIfWriting(id);
-        return orchestrator.replanRemaining(id);
+        return withChapterWork(id, () -> {
+            return orchestrator.replanRemaining(id);
+        });
     }
 
     @GetMapping("/outline")
@@ -254,22 +265,25 @@ public class ContentController {
 
     @PostMapping("/expand/characters")
     public Character expandCharacters(@PathVariable String id, @RequestBody(required = false) Map<String, String> body) {
-        rejectIfWriting(id);
-        String instruction = body != null ? body.getOrDefault("instruction", "") : "";
-        return orchestrator.expandCharacters(id, instruction);
+        return withChapterWork(id, () -> {
+            String instruction = body != null ? body.getOrDefault("instruction", "") : "";
+            return orchestrator.expandCharacters(id, instruction);
+        });
     }
 
     @PostMapping("/expand/world")
     public List<KnowledgeEntry> expandWorld(@PathVariable String id, @RequestBody(required = false) Map<String, String> body) {
-        rejectIfWriting(id);
-        String instruction = body != null ? body.getOrDefault("instruction", "") : "";
-        return orchestrator.expandWorld(id, instruction);
+        return withChapterWork(id, () -> {
+            String instruction = body != null ? body.getOrDefault("instruction", "") : "";
+            return orchestrator.expandWorld(id, instruction);
+        });
     }
 
     @PostMapping("/characters/promote/{entityId}")
     public Character promoteEntity(@PathVariable String id, @PathVariable String entityId) {
-        rejectIfWriting(id);
-        return orchestrator.promoteEntity(id, entityId);
+        return withChapterWork(id, () -> {
+            return orchestrator.promoteEntity(id, entityId);
+        });
     }
 
     /** p15-05: 单章写作——登记 WRITE_CHAPTER 任务，正文落库后返回 Chapter；失败置 FAILED 并重抛 */

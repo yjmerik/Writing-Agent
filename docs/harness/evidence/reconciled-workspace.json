@@ -1,5 +1,5 @@
 {
-  "main": "d66cb083542eb73a55f8ec3e0598bf1f7345d702",
+  "main": "d7cc460f9a7439ce4be0fb12f5cca301a94d73d5",
   "branch": "main",
   "migratedFiles": 29,
   "restoredTrackedFiles": 18,
@@ -8,12 +8,16 @@
     "docs/harness/completions.json",
     "feature_list.json",
     "progress.md",
-    "session-handoff.md"
+    "session-handoff.md",
+    "docs/harness/README.md",
+    "docs/specs/2026-09-05-qwen37-embedding-configuration.md",
+    "docs/specs/2026-09-07-qwen38-token-plan-configuration.md"
   ],
-  "preservedUnrelatedFiles": 696,
+  "preservedUnrelatedFiles": 693,
   "allOriginalHashesCheckedBeforeMigration": 729,
   "trackedWorktreeClean": true,
   "remainingUntracked": "Previously existing docs/reports/ preserved; not feature implementation",
   "originalBackup": "data/verification/reconcile-14/original-source",
-  "verificationNote": "Initial preservation assertion also included four harness files; these changed intentionally with the completed main status. Final check excludes only those four and the explicitly migrated source/plan files."
+  "verificationNote": "核对全部729个初始文件；29个实现/计划已备份迁移，7个状态/说明文档按本轮授权更新，其余693个文件逐一哈希一致，其中包含219个历史体验文件。",
+  "historicalReportsPreserved": 219
 }

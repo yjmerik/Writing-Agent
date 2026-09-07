@@ -1,0 +1,51 @@
+{
+  "verifiedAt": "2026-09-08T01:40:03.955097",
+  "commit": "d7cc460f9a7439ce4be0fb12f5cca301a94d73d5",
+  "featureStatus": {
+    "completed": 227,
+    "active_feature": null,
+    "targetFeaturesVerified": 14
+  },
+  "checks": [
+    {
+      "command": "./init.sh && python3 scripts/check-harness.py --check-git",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=682,0,0,1",
+      "verifiedAt": "2026-09-08T01:39:02.736553",
+      "durationSeconds": 40.64,
+      "log": "data/verification/reconcile-14/final-main.log",
+      "inputDigest": "29e9553a964f75d72f425cc075e44ee0c65af43b3ae689b28951fee1b8504861",
+      "scope": "clean checkout of main commit",
+      "sha256": "324a18bc2cad2be1f6f7821a61a7e8f58cd303f058a3d6c33b6ee5ad8b30ae27"
+    },
+    {
+      "command": "./init.sh && python3 scripts/check-harness.py --check-git",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=682,0,0,1",
+      "verifiedAt": "2026-09-08T01:40:03.955097",
+      "durationSeconds": 49.25,
+      "log": "data/verification/reconcile-14/final-root.log",
+      "inputDigest": "41d65a0cd5626dad69170d082b23ae53c7d35d6bc6b0617264ddd352ddde1463",
+      "scope": "original workspace with only existing untracked reports",
+      "sha256": "3f2efa98cb1d64eaf573a568f1e72e91fa44d51a39a3691ce5b3a7befb4b351a"
+    }
+  ],
+  "trackedVerificationInputsMatch": true,
+  "ignoredFixtureDifferences": 399,
+  "otherOriginalFileHashesPreserved": 693,
+  "historicalReportHashesPreserved": 219,
+  "browserAcceptance": {
+    "passed": 26,
+    "failed": 0,
+    "evidence": "docs/harness/evidence/reconciled-p27-07.json"
+  },
+  "diagnosticFailureCategories": 0,
+  "baseline": "PASS",
+  "temporaryWorktreeRemoved": true,
+  "browserTaskSpace": {
+    "id": 147,
+    "closed": true
+  },
+  "remainingUntracked": "docs/reports/ (pre-existing historical material)",
+  "historicalEvidenceLimitation": "200 early features retain historical evidence; not newly reconstructed per-feature validation."
+}

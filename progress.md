@@ -4,11 +4,11 @@ Last Updated: 2026-09-08
 
 ## Current（当前）
 
-Phase27–29的14项已全部逐项检验、独立分支提交、合入本地main并完成主分支复验。feature_list.json共227项completed，active_feature=null，无deferred或in-progress。原工作目录/Users/erik/ZCodeProject/WritingAgent已回到main；最后业务交付提交c8c7a3f，完成状态回执d66cb08，后续仅本轮文档收尾。
+Phase27–29的14项已全部逐项检验、独立分支提交、合入本地main并完成主分支复验。feature_list.json共227项completed，active_feature=null，无deferred或in-progress。原工作目录/Users/erik/ZCodeProject/WritingAgent已回到main；最后业务交付提交c8c7a3f，完成状态回执d66cb08，收尾文档d7cc460及原目录复验已完成，本轮临时worktree已清理。
 
 ## Files（文件与证据）
 
-唯一状态源：[feature_list.json](feature_list.json)。[完成索引](docs/harness/completions.json)、[逐项验收总表](docs/harness/audits/2026-09-08-reconcile-14.md)、docs/harness/evidence/reconciled-*.json记录分支、提交、命令与结果。原29个源文件/计划备份和全部本轮日志在data/verification/reconcile-14/。696个原有历史材料文件哈希未变，docs/reports/继续保持原先未跟踪状态；业务与harness文件已提交。
+唯一状态源：[feature_list.json](feature_list.json)。[完成索引](docs/harness/completions.json)、[逐项验收总表](docs/harness/audits/2026-09-08-reconcile-14.md)、docs/harness/evidence/reconciled-*.json记录分支、提交、命令与结果。原29个源文件/计划备份和全部本轮日志在data/verification/reconcile-14/。693个其他原文件（含219个历史体验文件）哈希未变，docs/reports/继续保持原先未跟踪状态；业务与harness文件已提交。
 
 ## Verification（验证）
 
@@ -16,7 +16,7 @@ Phase27–29的14项已全部逐项检验、独立分支提交、合入本地mai
 - 浏览器26/26：协作6、产品11（0 XFAIL / 0 ERROR）、旧入口8、后台推进草稿保护1；分支和主分支均通过。
 - mystery回放3章/10191字/54 calls/0 errors，质量基线PASS，未修改golden。
 - 真实向量接口HTTP200/2条1024维；Token Plan HTTP200/有效SSE；仅短合成输入。原小说未重启或续写。
-- harness结构、11项检查器回归与Git归属检查通过。完整命令、输入指纹与原始日志见验收总表及完成证据。
+- harness结构、11项检查器回归与Git归属检查通过。干净主分支和原工作目录的./init.sh均通过；完整命令、输入指纹与原始日志见[收尾复验](docs/harness/evidence/reconciled-final.json)。
 
 ## Blockers（阻塞与限制）
 

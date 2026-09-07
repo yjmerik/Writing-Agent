@@ -1,14 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Layout, Tabs, Button, Descriptions, Tag, Space, message, Spin, Collapse, Input, Slider, Switch, Select } from 'antd';
+import { Layout, Tabs, Button, Descriptions, Tag, Space, message, Spin, Collapse, Input, Slider, Switch } from 'antd';
 import { ArrowLeftOutlined, CloseOutlined, MenuUnfoldOutlined, PlusOutlined, SettingOutlined, SendOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
-import type { Project, ProjectMode } from '../types';
+import type { Project } from '../types';
 import RunConsole from '../components/RunConsole';
 import WorldbuildingView from '../components/WorldbuildingView';
 import OutlineView from '../components/OutlineView';
 import InteractiveReview from '../components/InteractiveReview';
 import QualityView from '../components/QualityView';
+import CollaborationBar from '../components/CollaborationBar';
 
 const { Sider, Content } = Layout;
 
@@ -32,7 +33,7 @@ export default function ProjectWorkspace() {
   const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('run');
+  const [activeTab, setActiveTab] = useState('review');
   const [prefs, setPrefs] = useState<Record<string, unknown> | null>(null);
   const [chatMsg, setChatMsg] = useState('');
   const [chatReply, setChatReply] = useState('');
@@ -57,17 +58,6 @@ export default function ProjectWorkspace() {
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
-
-  const handleModeSwitch = async (mode: ProjectMode) => {
-    if (!id) return;
-    try {
-      await api.switchMode(id, mode);
-      message.success(`已切换到${mode === 'SOLO' ? '自动' : '交互'}模式`);
-      load();
-    } catch (e) {
-      message.error(`切换失败: ${(e as Error).message}`);
-    }
-  };
 
   const handleChat = async () => {
     if (!id || !chatMsg.trim()) return;
@@ -157,33 +147,7 @@ export default function ProjectWorkspace() {
             </div>
             <Descriptions column={1} size="small" colon={false} style={{ marginBottom: 0 }}>
               <Descriptions.Item label={<Tag color={STATE_COLOR[project.state] || 'default'} style={{ margin: 0 }}>{STATE_TEXT[project.state] || project.state}</Tag>}>
-                <Space size={4}>
-                  <Tag color={project.mode === 'SOLO' ? 'default' : 'purple'} style={{ margin: 0, fontSize: 11 }}>
-                    {project.mode === 'SOLO' ? '自动' : '交互'}
-                  </Tag>
-                  <Button size="small" type="link" style={{ padding: 0, height: 'auto', fontSize: 11 }}
-                    onClick={() => handleModeSwitch(project.mode === 'SOLO' ? 'INTERACTIVE' : 'SOLO')}>
-                    切换
-                  </Button>
-                  {project.state !== 'FINAL' && project.state !== 'PAUSED_AT_CHECKPOINT' && (
-                    <Button size="small" type="link" style={{ padding: 0, height: 'auto', fontSize: 11 }}
-                      onClick={async () => {
-                        try { await api.pause(project.id); message.success('已暂停'); load(); }
-                        catch (e) { message.error((e as Error).message); }
-                      }}>
-                      暂停
-                    </Button>
-                  )}
-                  {project.state === 'PAUSED_AT_CHECKPOINT' && (
-                    <Button size="small" type="link" style={{ padding: 0, height: 'auto', fontSize: 11 }}
-                      onClick={async () => {
-                        try { await api.resume(project.id); message.success('已继续'); load(); }
-                        catch (e) { message.error((e as Error).message); }
-                      }}>
-                      续写
-                    </Button>
-                  )}
-                </Space>
+                <Tag color="purple">人机协作</Tag>
               </Descriptions.Item>
               <Descriptions.Item label={<span style={{ color: '#999', fontSize: 12 }}>进度</span>}>
                 <span style={{ fontWeight: 600 }}>{project.currentChapterIndex} 章</span>
@@ -255,24 +219,7 @@ export default function ProjectWorkspace() {
                           }}
                         />
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-                        <span style={{ color: '#666' }}>检查点间隔</span>
-                        <Select
-                          size="small"
-                          style={{ width: 110 }}
-                          value={(prefs.checkpointSpan as number) ?? 1}
-                          onChange={async (v) => {
-                            try {
-                              setPrefs(await api.updatePreferences(id!, { checkpointSpan: v }));
-                            } catch { /* ignore */ }
-                          }}
-                          options={[
-                            { value: 1, label: '每章' },
-                            { value: 0, label: '仅手动' },
-                            { value: -1, label: '卷末' },
-                          ]}
-                        />
-                      </div>
+
                     </div>
                   )}
                   <div style={{ display: 'flex', gap: 6 }}>
@@ -299,14 +246,15 @@ export default function ProjectWorkspace() {
       </Sider>
 
       <Content style={{ padding: narrowLayout ? '52px 0 0' : '0 16px', minWidth: 0, width: '100%' }}>
+        <CollaborationBar projectId={project.id} onChanged={load} onReview={() => setActiveTab('review')} />
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
           destroyInactiveTabPane
           items={[
-            { key: 'run', label: '🎮 运行控制台', children: <RunConsole projectId={project.id} projectState={project.state} onChanged={load} /> },
-            { key: 'world', label: '🌍 世界观与人物', children: <WorldbuildingView key={`world-${project.currentChapterIndex}`} projectId={project.id} /> },
-            { key: 'outline', label: '📋 大纲', children: <OutlineView key={`outline-${project.state}-${project.currentChapterIndex}`} projectId={project.id} currentChapter={project.currentChapterIndex} /> },
+            { key: 'run', label: '创作工具', children: <RunConsole projectId={project.id} projectState={project.state} onChanged={load} /> },
+            { key: 'world', label: '🌍 世界观与人物', children: <WorldbuildingView key={`world-${project.id}`} projectId={project.id} /> },
+            { key: 'outline', label: '📋 大纲', children: <OutlineView key={`outline-${project.id}`} projectId={project.id} currentChapter={project.currentChapterIndex} /> },
             { key: 'review', label: '📖 章节管理', children: <InteractiveReview key={`review-${project.id}-${project.currentChapterIndex}`} projectId={project.id} onChanged={load} onNavigateTab={setActiveTab} /> },
             { key: 'quality', label: '🔍 质量评价', children: <QualityView projectId={project.id} /> },
           ]}

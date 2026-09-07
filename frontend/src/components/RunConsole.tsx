@@ -117,7 +117,7 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
       const tips: Record<string, string> = {
         PLANNING: '\n💡 设定已生成！切换到「世界观与人物」「大纲」Tab 查看',
         WRITING: '\n💡 现在可以点「写一章」生成正文',
-        PAUSED_AT_CHECKPOINT: '\n💡 交互模式：设定已生成，已暂停等待审核',
+        PAUSED_AT_CHECKPOINT: '\n💡 设定已生成，等待作者审核',
       };
       setLastResult(`当前状态：${STATE_TEXT[status.state] || status.state} | 已写 ${status.currentChapter} 章${tips[status.state] || ''}`);
       onChanged();
@@ -214,12 +214,12 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
       />
 
       <Alert
-        message="操作说明"
+        message="单步创作工具"
         description={
           <ul style={{ margin: 0, paddingLeft: 20 }}>
             <li><b>推进</b>：从当前状态前进一步（构思→规划→写作）。首次运行会生成世界观/人物/大纲。</li>
             <li><b>写一章</b>：在写作阶段，生成下一章正文。每次调用 LLM，可能耗时 30-60 秒。</li>
-            <li>交互模式下，运行后会在检查点暂停，等待你确认。</li>
+            <li>日常创作请使用上方协作栏；以下工具供需要单独执行某一步时使用。</li>
           </ul>
         }
         type="info"

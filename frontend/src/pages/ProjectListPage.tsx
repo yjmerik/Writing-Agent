@@ -16,8 +16,8 @@ const STATE_LABELS: Record<NovelState, { text: string; color: string }> = {
 };
 
 const MODE_CONFIG: Record<ProjectMode, { text: string; color: string; bg: string }> = {
-  SOLO: { text: '自动', color: '#666', bg: '#f5f5f5' },
-  INTERACTIVE: { text: '交互', color: '#722ed1', bg: '#f9f0ff' },
+  SOLO: { text: '主动接手', color: '#666', bg: '#f5f5f5' },
+  INTERACTIVE: { text: '定期审阅', color: '#722ed1', bg: '#f9f0ff' },
 };
 
 export default function ProjectListPage() {
@@ -316,10 +316,10 @@ export default function ProjectListPage() {
                 <Select.Option value={400}>400 章 · 百万字</Select.Option>
               </Select>
             </Form.Item>
-            <Form.Item name="mode" label="运行模式">
+            <Form.Item name="mode" label="审核节奏">
               <Select size="large">
-                <Select.Option value="SOLO">🤖 自动模式 — 减少审核停顿；写作推进仍由当前任务触发</Select.Option>
-                <Select.Option value="INTERACTIVE">✋ 交互模式 — 每章审核后继续</Select.Option>
+                <Select.Option value="SOLO">仅主动接手 — Agent 持续创作，你随时介入</Select.Option>
+                <Select.Option value="INTERACTIVE">每章审阅 — Agent 完成后等你检查</Select.Option>
               </Select>
             </Form.Item>
           </Form>

@@ -9,12 +9,13 @@ persistence:
   sqlite:
     db-path: ./data/novel.db
   vector-store:
-    index-path: ./data/vectors.idx
+    # 不同模型的向量不能混用；旧 vectors.idx 保留，历史项目需另行重建索引。
+    index-path: ./data/vectors-qwen3.7-text-embedding-1024.idx
   embedding-cfg:
-    # 百炼（DashScope）OpenAI 兼容端点 + text-embedding-v3
-    api-base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
-    api-key: ${DASHSCOPE_EMBEDDING_API_KEY:}
-    model: text-embedding-v3
+    # 百炼北京 OpenAI 兼容接口；默认 1024 维，可用环境变量指定业务空间专属地址。
+    api-base-url: ${DASHSCOPE_EMBEDDING_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+    api-key: ${DASHSCOPE_EMBEDDING_API_KEY:${DASHSCOPE_API_KEY:}}
+    model: qwen3.7-text-embedding
 
 llm:
   # 多 provider 自动 fallback 配置见 docs/llm-provider-fallback.md；显式添加 providers/routing 后启用。

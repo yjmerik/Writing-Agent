@@ -1,0 +1,31 @@
+{
+  "verifiedAt": "2026-09-08T00:35:45.319655",
+  "commit": "caba1ea987d8a836c04d224e596e3853198e520a",
+  "cleanCheckout": true,
+  "branch": "codex/p27-11-current-work-status",
+  "checks": [
+    {
+      "command": "./init.sh && mvn test -Dtest=CollaborationApiTest && (cd frontend && npm run build) && python3 scripts/check-harness.py --check-git",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=657,0,0,1; final focused run=5,0,0,0",
+      "verifiedAt": "2026-09-08T00:34:56.739595",
+      "durationSeconds": 50.14,
+      "log": "/tmp/writingagent-reconcile-14/p27-11-main.log",
+      "inputDigest": "2cb10f7d0ec79ac8ef92933f757f4dc956496ace16711805203f66fd59ca14ee"
+    }
+  ],
+  "logs": {
+    "data/verification/reconcile-14/p27-11-main.log": "51701b59ca94f6085dff9ac57a131bdf3d297c652623581a8b99c1b3e9cce26f"
+  },
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。",
+  "regressionProof": {
+    "command": "mvn test -q -Dtest=CollaborationApiTest",
+    "exitCode": 1,
+    "result": "FAIL; Maven full/largest run tests/failures/errors/skipped=5,1,0,0",
+    "verifiedAt": "2026-09-08T00:31:45.587600",
+    "durationSeconds": 3.94,
+    "log": "/tmp/writingagent-reconcile-14/p27-11-red.log",
+    "inputDigest": "c6958d6bcadc4e10fab8460eb2c2d84b7d96075c6adf49fda6397e9317c665e1",
+    "expectedFailure": true
+  }
+}

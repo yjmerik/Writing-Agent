@@ -316,6 +316,17 @@
       "implementation_commit": "54c1dfab45e74d8b5fb2289a850bedbceb7ba1fe",
       "main_commit": "54c1dfab45e74d8b5fb2289a850bedbceb7ba1fe",
       "evidence": "docs/harness/evidence/reconciled-p27-05.json"
+    },
+    {
+      "id": "reconciled-p27-11",
+      "kind": "verified",
+      "feature_ids": [
+        "p27-11"
+      ],
+      "branch": "codex/p27-11-current-work-status",
+      "implementation_commit": "caba1ea987d8a836c04d224e596e3853198e520a",
+      "main_commit": "caba1ea987d8a836c04d224e596e3853198e520a",
+      "evidence": "docs/harness/evidence/reconciled-p27-11.json"
     }
   ]
 }

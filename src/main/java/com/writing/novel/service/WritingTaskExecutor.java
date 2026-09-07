@@ -34,6 +34,7 @@ public class WritingTaskExecutor {
     /** p10-w1-04: 成本预算熔断；null 时不启用（向后兼容） */
     private final CostBudgetMonitor costBudgetMonitor;
     private final ExecutorService executor = Executors.newCachedThreadPool();
+    private volatile boolean shuttingDown;
 
     /** 内存中的取消标志（taskId → cancelled） */
     private final Map<String, Boolean> cancelFlags = new ConcurrentHashMap<>();
@@ -396,7 +397,7 @@ public class WritingTaskExecutor {
         int written = 0;
         try {
             // Keep one writing loop so cross-chapter failure and quality counters retain meaning.
-            while (!isCancelled(task.getId()) && !overBudget(id)) {
+            while (!shuttingDown && !isCancelled(task.getId()) && !overBudget(id)) {
                 var project = repository.findProject(id).orElseThrow();
                 NovelState state = project.getState();
                 if (state == NovelState.FINAL || collaborationBlocker(id) != null) break;
@@ -410,7 +411,7 @@ public class WritingTaskExecutor {
                 }
                 if (state == NovelState.WRITING || state == NovelState.VOLUME_DONE) {
                     written = orchestrator.runWritingLoop(id, Integer.MAX_VALUE,
-                            () -> isCancelled(task.getId()) || overBudget(id), task.getInstruction());
+                            () -> shuttingDown || isCancelled(task.getId()) || overBudget(id), task.getInstruction());
                     break;
                 }
                 orchestrator.step(id);
@@ -424,13 +425,20 @@ public class WritingTaskExecutor {
             } else {
                 task.setStatus(WritingTask.Status.PAUSED);
                 String reason = collaborationBlocker(id);
-                task.setErrorMessage(isCancelled(task.getId()) ? "已交给作者，可编辑内容后继续"
+                task.setErrorMessage(shuttingDown ? "服务曾中断，已保留进度与指令，检查内容后可继续"
+                        : isCancelled(task.getId()) ? "已交给作者，可编辑内容后继续"
                         : reason != null ? reason : "创作已停下，请检查章节质量或运行记录后继续");
             }
         } catch (Exception e) {
-            task.setStatus(WritingTask.Status.FAILED);
-            task.setErrorMessage(e.getMessage() == null ? "创作失败，请检查后重试" : e.getMessage());
-            log.error("协作任务失败: {}", task.getId(), e);
+            if (shuttingDown) {
+                task.setStatus(WritingTask.Status.PAUSED);
+                task.setErrorMessage("服务曾中断，已保留进度与指令，检查内容后可继续");
+                log.info("服务关闭，协作任务等待作者恢复: {}", task.getId());
+            } else {
+                task.setStatus(WritingTask.Status.FAILED);
+                task.setErrorMessage(e.getMessage() == null ? "创作失败，请检查后重试" : e.getMessage());
+                log.error("协作任务失败: {}", task.getId(), e);
+            }
         } finally {
             task.setChaptersWritten(written);
             finishCollaborative(task);
@@ -453,6 +461,7 @@ public class WritingTaskExecutor {
 
     @jakarta.annotation.PreDestroy
     public void shutdown() {
+        shuttingDown = true;
         executor.shutdownNow();
     }
 

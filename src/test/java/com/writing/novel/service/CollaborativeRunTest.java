@@ -91,7 +91,41 @@ class CollaborativeRunTest {
         assertFalse(executor.hasActiveTask(project.getId()));
         verifyNoInteractions(orchestrator);
     }
-
+    @Test void gracefulShutdownKeepsActiveCollaborationPausedForAuthorRecovery() throws Exception {
+        CountDownLatch entered = new CountDownLatch(1);
+        doAnswer(call -> {
+            entered.countDown();
+            new CountDownLatch(1).await(); // Shutdown interrupts the in-flight model step.
+            return null;
+        }).when(orchestrator).step(project.getId());
+        WritingTask task = executor.startCollaborative(project.getId(), "重启后仍保留作者要求");
+        assertTrue(entered.await(2, TimeUnit.SECONDS));
+        executor.shutdown();
+        WritingTask interrupted = awaitDone(task);
+        assertEquals(WritingTask.Status.PAUSED, interrupted.getStatus());
+        assertEquals("重启后仍保留作者要求", interrupted.getInstruction());
+        assertEquals(NovelState.CONCEIVING, repo.findProject(project.getId()).orElseThrow().getState());
+        verify(orchestrator, times(1)).step(project.getId());
+    }
+    @Test void shutdownDoesNotStartAnotherStepWhenAgentConsumesInterruption() throws Exception {
+        CountDownLatch entered = new CountDownLatch(1);
+        doAnswer(call -> {
+            entered.countDown();
+            try {
+                new CountDownLatch(1).await();
+            } catch (InterruptedException ignored) {
+                state(NovelState.PLANNING); // Some agents finish their step after a cancelled call.
+            }
+            return null;
+        }).doAnswer(call -> { state(NovelState.FINAL); return null; })
+                .when(orchestrator).step(project.getId());
+        WritingTask task = executor.startCollaborative(project.getId(), "保留完成的框架");
+        assertTrue(entered.await(2, TimeUnit.SECONDS));
+        executor.shutdown();
+        assertEquals(WritingTask.Status.PAUSED, awaitDone(task).getStatus());
+        assertEquals(NovelState.PLANNING, repo.findProject(project.getId()).orElseThrow().getState());
+        verify(orchestrator, times(1)).step(project.getId());
+    }
     @Test void qualityStopIsPausedAndNotBookCompletion() throws Exception {
         state(NovelState.WRITING);
         when(orchestrator.runWritingLoop(anyString(),anyInt(),any(BooleanSupplier.class),isNull())).thenReturn(0);

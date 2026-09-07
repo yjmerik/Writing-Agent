@@ -4000,7 +4000,7 @@
         "p27-06",
         "p27-08"
       ],
-      "status": "deferred",
+      "status": "in-progress",
       "files": [
         "scripts/browser-e2e.sh"
       ],
@@ -4008,9 +4008,8 @@
       "problem_ref": "升级验收发现旧门禁依赖原控制台默认页与三类任务枚举",
       "acceptance": "mvn test -Dtest=WritingTaskTest 与 ./scripts/browser-e2e.sh --port 18095 全部通过，保留原八项行为断言。",
       "verify_cmd": "mvn test -Dtest=WritingTaskTest && ./scripts/browser-e2e.sh --port 18095",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 WritingTaskTest 契约通过；旧 browser-e2e 默认页前提改为显式进入单步工具，懒加载/SSE 断言保留；侧栏等待宽度过渡稳定（手机0/桌面320）。最终 8/8 PASS，Maven 613 tests PASS。",
-      "delivery_state": "local-unmerged",
-      "deferred_reason": "实现及既往验证仅存在原工作区，尚无独立特性提交/主分支合并证明；本次只恢复登记，不合入业务改动。续做时按依赖逐个建分支、迁移当前特性、复验和合并。",
+      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 WritingTaskTest 契约通过；旧 browser-e2e 默认页前提改为显式进入单步工具，懒加载/SSE 断言保留；侧栏等待宽度过渡稳定（手机0/桌面320）。最终 8/8 PASS，Maven 613 tests PASS。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。",
+      "delivery_state": "verification-in-progress",
       "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
       "audit_notes": "任务类型契约已前移到p27-01，当前项只适配旧浏览器入口，保留原完整验收命令。"
     },
@@ -4360,5 +4359,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": null
+  "active_feature": "p27-10"
 }

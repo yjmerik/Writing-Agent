@@ -85,7 +85,7 @@ echo "OK seeds: final=$P_FINAL rev=$P_REV lazy=$P_LAZY sse=$P_SSE"
 
 ego-browser nodejs <<EGOEOF
 const fs = await import('node:fs')
-const task = await useOrCreateTaskSpace('browser e2e writing agent')
+const task = await useOrCreateTaskSpace('writingagent acceptance tests')
 fs.writeFileSync('$DIR/task-space.txt', String(task.id))
 cliLog('task space ' + task.id)
 EGOEOF
@@ -110,7 +110,7 @@ const m = await js(String.raw\`(() => ({
   rows: document.querySelectorAll('[role="button"][aria-label^="打开项目"]').length,
   truthfulProgress: [...document.querySelectorAll('[role="button"][aria-label^="打开项目"]')]
     .every(row => /\\d+\\s*\\/\\s*\\d+\\s*章\\s*·\\s*\\d+%/.test(row.innerText)),
-  truthfulAutoCopy: document.body.innerText.includes('自动模式 — 减少审核停顿；写作推进仍由当前任务触发'),
+  truthfulAutoCopy: document.body.innerText.includes('仅主动接手 — Agent 持续创作，你随时介入'),
   forbiddenAutoCopy: document.body.innerText.includes('全自动生成，无需干预'),
 }))()\`)
 const fs = await import('node:fs')
@@ -155,16 +155,28 @@ ego-browser nodejs > "$DIR/ws-375.out" 2>&1 <<EGOEOF
 const task = await useOrCreateTaskSpace('$TASK_ID')
 await openOrReuseTab('$BASE/#/project/$P_FINAL', { wait: true, timeout: 30 })
 await cdp('Emulation.setDeviceMetricsOverride', { width: 375, height: 667, deviceScaleFactor: 2, mobile: true })
+await gotoAndWait('$BASE/#/project/$P_FINAL', {timeout:30,settle:1})
 await wait(2)
+for (let i = 0; i < 40; i++) {
+  const width = await js('document.querySelector(".ant-layout-sider")?.getBoundingClientRect().width ?? -1')
+  if (width >= 0 && width < 60) break
+  await wait(0.25)
+}
 const mobile = await js(String.raw\`(() => {
   const sider = document.querySelector('.ant-layout-sider')
   return {
     siderW: sider ? sider.getBoundingClientRect().width : -1,
+    viewport: innerWidth, media: matchMedia('(max-width: 991px)').matches, collapsed: sider?.classList.contains('ant-layout-sider-collapsed'),
     overflow: document.documentElement.scrollWidth - window.innerWidth,
   }
 })()\`)
 await cdp('Emulation.clearDeviceMetricsOverride')
 await wait(1)
+for (let i = 0; i < 40; i++) {
+  const width = await js('document.querySelector(".ant-layout-sider")?.getBoundingClientRect().width ?? -1')
+  if (width >= 300) break
+  await wait(0.25)
+}
 const desktop = await js(String.raw\`(() => {
   const sider = document.querySelector('.ant-layout-sider')
   return { siderW: sider ? sider.getBoundingClientRect().width : -1,
@@ -195,7 +207,7 @@ for (let i = 0; i < 10; i++) {
     const batch = byText(/连续写作（最多 50 章）/)
     const body = document.body.innerText
     return {
-      finalAlert: body.includes('全书已完结（FINAL）'),
+      finalAlert: body.includes('全书已完成') && !!document.querySelector('[data-collaboration-start]:disabled'),
       runAbsent: !run,
       oneAbsent: !one,
       batchAbsent: !batch,
@@ -228,7 +240,7 @@ for (let i = 0; i < 10; i++) {
     const one = btns.find(b => /^写一章$/.test(b.innerText.trim()))
     const body = document.body.innerText
     return {
-      revisionAlert: body.includes('成书门禁未通过（NEEDS_REVISION）'),
+      revisionAlert: body.includes('成书门禁未通过（待修订）'),
       reason: body.includes('伏笔') || body.includes('硬性门禁'),
       reAudit: !!btns.find(b => b.innerText.trim() === '重新评审'),
       oneAbsent: !one,
@@ -250,6 +262,8 @@ ego-browser nodejs > "$DIR/lazy.out" 2>&1 <<EGOEOF
 const task = await useOrCreateTaskSpace('$TASK_ID')
 await openOrReuseTab('$BASE/#/project/$P_LAZY', { wait: true, timeout: 30 })
 await wait(2)
+await js('(()=>{const t=[...document.querySelectorAll("[role=tab]")].find(x=>x.innerText.includes("创作工具"));if(!t)throw new Error("Missing tools tab");t.click()})()')
+await wait(1)
 await js(String.raw\`(() => { performance.clearResourceTimings(); return true })()\`)
 await js(String.raw\`(() => {
   const t = [...document.querySelectorAll('.ant-tabs-tab')].find(x => x.innerText.includes('章节管理'))
@@ -293,6 +307,8 @@ ego-browser nodejs > "$DIR/sse.out" 2>&1 <<EGOEOF
 const task = await useOrCreateTaskSpace('$TASK_ID')
 await openOrReuseTab('$BASE/#/project/$P_SSE', { wait: true, timeout: 30 })
 await wait(2)
+await js('(()=>{const t=[...document.querySelectorAll("[role=tab]")].find(x=>x.innerText.includes("创作工具"));if(!t)throw new Error("Missing tools tab");t.click()})()')
+await wait(1)
 await js(String.raw\`(() => {
   const batch = [...document.querySelectorAll('button')].find(b => b.innerText.includes('连续写作（最多 50 章）'))
   if (batch) batch.click()

@@ -3794,20 +3794,21 @@
       "phase": 27,
       "type": "feature",
       "dependencies": [],
-      "status": "deferred",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/domain/WritingTask.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
-        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java"
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/test/java/com/writing/novel/domain/WritingTaskTest.java"
       ],
       "description": "协作任务领域及持久化；见 docs/specs/2026-09-05-unified-author-agent-collaboration.md",
       "problem_ref": "2026-09-05 用户统一人机协作需求与架构审查",
       "acceptance": "mvn compile 返回 0，满足 spec 对应行为断言",
       "verify_cmd": "mvn compile",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 新库/旧表迁移 2 tests PASS；instruction、stop_requested 和原始任务时间往返；最终 JDK21 init 613 tests / 0 failures / 0 errors / 1 skipped，28 prompts 与前端构建 PASS。",
-      "delivery_state": "local-unmerged",
-      "deferred_reason": "实现及既往验证仅存在原工作区，尚无独立特性提交/主分支合并证明；本次只恢复登记，不合入业务改动。续做时按依赖逐个建分支、迁移当前特性、复验和合并。",
-      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md"
+      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 新库/旧表迁移 2 tests PASS；instruction、stop_requested 和原始任务时间往返；最终 JDK21 init 613 tests / 0 failures / 0 errors / 1 skipped，28 prompts 与前端构建 PASS。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。",
+      "delivery_state": "verification-in-progress",
+      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
+      "audit_notes": "核验拆分修正：AUTO_RUN枚举的既有契约适配必须与领域变更同批验证，不能延至p27-10导致中间main测试失败；3个业务文件附1个既有门禁测试。"
     },
     {
       "id": "p27-02",
@@ -4006,7 +4007,6 @@
       ],
       "status": "deferred",
       "files": [
-        "src/test/java/com/writing/novel/domain/WritingTaskTest.java",
         "scripts/browser-e2e.sh"
       ],
       "description": "AUTO_RUN 契约与默认章节页接线后，旧测试显式进入单步工具验证懒加载、SSE；终态检查统一协作状态。",
@@ -4016,7 +4016,8 @@
       "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 WritingTaskTest 契约通过；旧 browser-e2e 默认页前提改为显式进入单步工具，懒加载/SSE 断言保留；侧栏等待宽度过渡稳定（手机0/桌面320）。最终 8/8 PASS，Maven 613 tests PASS。",
       "delivery_state": "local-unmerged",
       "deferred_reason": "实现及既往验证仅存在原工作区，尚无独立特性提交/主分支合并证明；本次只恢复登记，不合入业务改动。续做时按依赖逐个建分支、迁移当前特性、复验和合并。",
-      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md"
+      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
+      "audit_notes": "任务类型契约已前移到p27-01，当前项只适配旧浏览器入口，保留原完整验收命令。"
     },
     {
       "id": "p27-11",
@@ -4366,5 +4367,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": null
+  "active_feature": "p27-01"
 }

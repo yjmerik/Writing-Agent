@@ -297,5 +297,7 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN checkpoint_span INTEGER DEFAULT 1");
         // p15-05: 写作任务类型（旧库无此列时补列，存量行默认 WRITE_ALL）
         safeAddColumn(st, "ALTER TABLE writing_tasks ADD COLUMN task_type TEXT DEFAULT 'WRITE_ALL'");
+        safeAddColumn(st, "ALTER TABLE writing_tasks ADD COLUMN instruction TEXT");
+        safeAddColumn(st, "ALTER TABLE writing_tasks ADD COLUMN stop_requested INTEGER NOT NULL DEFAULT 0");
     }
 }

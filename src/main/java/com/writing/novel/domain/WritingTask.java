@@ -6,17 +6,21 @@ import java.util.UUID;
 /**
  * p12-K2: 异步写作任务——后台执行写作循环，解决 HTTP 超时问题。
  * 状态机：RUNNING → PAUSED / COMPLETED / FAILED / CANCELLED
- * p15-05: 任务类型（CONCEIVE 构思 / WRITE_CHAPTER 单章 / WRITE_ALL 全卷）
+ * p15-05: 任务类型（CONCEIVE 构思 / WRITE_CHAPTER 单章 / WRITE_ALL 批写 / AUTO_RUN 全书协作）
  */
 public class WritingTask {
 
-    /** p18-03: 作者写前指令（进程内传递，不持久化）——write-all 逐章沿用 */
-    private transient String instruction;
+    /** p18-03: 作者创作指令，随任务持久化；持续协作恢复时沿用 */
+    private String instruction;
+    private boolean stopRequested;
+
+    public boolean isStopRequested() { return stopRequested; }
+    public void setStopRequested(boolean value) { stopRequested = value; updatedAt = Instant.now(); }
 
     public String getInstruction() { return instruction; }
     public void setInstruction(String instruction) { this.instruction = instruction; }
     public enum Status { RUNNING, PAUSED, COMPLETED, FAILED, CANCELLED }
-    public enum Type { CONCEIVE, WRITE_CHAPTER, WRITE_ALL }
+    public enum Type { CONCEIVE, WRITE_CHAPTER, WRITE_ALL, AUTO_RUN }
 
     private String id;
     private String projectId;

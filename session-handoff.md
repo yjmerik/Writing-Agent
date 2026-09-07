@@ -1,33 +1,27 @@
-# 会话交接 — 2026-09-08
+# 14项特性核验与状态统一 — 2026-09-08
 
 Last Updated: 2026-09-08
 
-## Current（当前目标与结果）
+## Current（当前）
 
-用户要求的harness检查补齐已完成，当前无活跃特性。p31-01从codex/p31-01-harness-integrity实现并合入本地main，提交ae7ee790cbc73ab3948c33de7fe3185f80b75751；合并后干净main复验通过。完成索引[harness记录](docs/harness/completions.json)，状态源[feature_list.json](feature_list.json)。
+用户已授权逐项检验14项Phase27–29并推进到一致状态。当前p27-01，分支codex/p27-01-task-persistence，提交尚未提交。正在验收，尚未完成本项合并后验证。
 
-## Files（涉及文件与保留工作）
+14项核验进度：0/14完成；已完成：无。待完成：p27-01, p27-02, p27-03, p27-04, p27-05, p27-06, p27-07, p27-08, p27-09, p27-10, p27-11, p27-12, p28-01, p29-01。
 
-本次交付检查脚本、init门禁、特性状态修复、精简交接、完成证据及历史归档，见[使用说明](docs/harness/README.md)与[审计报告](docs/harness/audits/2026-09-07.md)。
+唯一状态源：[feature_list.json](feature_list.json)，完成索引[completions.json](docs/harness/completions.json)。按依赖一项一分支、验证、合并、主分支复验再继续。
 
-原工作区/Users/erik/ZCodeProject/WritingAgent保留Phase27–29未合并实现：协作任务/持久化/前后端、Qwen向量与Token Plan配置及测试、体验报告。14项已标deferred/local-unmerged，原历史验证保留；不要reset或批量暂存。原工作区671项历史测试不能替代main验证。
+## Files（文件与保留事项）
 
-## Verification（验证证据）
+当前范围以特性清单files为准；同文件中的后续特性改动逐项拆开。原工作区暂为detached HEAD并保留既有修改，独立工作区/tmp/writingagent-reconcile-check承载本轮分支/main。原始实现快照/tmp/writingagent-reconcile-14/source，核验日志在同父目录。结束时回到main并核对保留内容。
 
-分支与干净合并后main的./init.sh均通过：11项harness测试、编译、636 tests / 0 failures / 0 errors / 1 skipped、前端构建。Git归属核验通过；712个既有非harness文件SHA256保持不变。
+## Verification（验证）
 
-[验证摘要](docs/harness/evidence/harness-integrity.json)已纳入Git，含命令、结果、验证提交及本地日志哈希。完整日志在原工作区data/verification/harness-integrity/，其他机器可重跑命令，无需依赖/tmp目录。
+每项执行专属verify_cmd、编译和完整Maven测试；UI变更构建前端，编排变化运行回放和质量基线。干净main完成记录写入docs/harness/evidence/reconciled-<id>.json。不得用旧工作区证据替代本次合并验证。历史体验中的远端服务/原小说步骤仅为历史，本轮不自动重启原服务或继续原小说。
 
-## Blockers（阻塞与边界）
+## Blockers（阻塞与限制）
 
-本次无blocker。200项历史记录的逐项分支和日志未完整记录，明确historical；14项本地业务工作尚待逐项恢复、复验和合并。不把历史缺证据伪装为已补全。
+本轮无已确认的外部阻塞，未完成项不得提前标completed。历史200项原始证据限制保持；本轮只处理用户指定14项。原始未提交业务内容已保存，不批量清空，不推送远端。
 
-此前UI体验已收敛到23章，该数字为上次观察结果，本次未重新查询服务状态。不要自动继续写作、创建观察任务、重启服务或读写用户数据库；旧PID和“继续200章”不是当前指令。未推送远端。
+## Next Steps（下一步）
 
-## Next Steps（恢复入口）
-
-1. 读取AGENTS.md，检查当前Git状态，运行python3 scripts/check-harness.py --check-git。
-2. 本次p31-01已完成，无后续收尾。恢复既有业务实现时可先评估无依赖的p27-01；一次选一项，从main新分支，把该项改in-progress并设置active_feature，其余保持deferred。
-3. 对照原工作区，只迁移当前特性相关改动，复用既有实现及测试，验证和合并后再登记completed。不得直接合入全部未提交业务修改。
-
-历史：[原交接](docs/harness/archive/2026-09-07-session-handoff.md)、[原进度](docs/harness/archive/2026-09-07-progress.md)。其中失效指令仅供追溯。
+继续当前项验收或选择下一个依赖已完成的deferred项，遵循AGENTS。若测试失败先定位并复现，再修复本项；先完成本项合并闭环。全部14项结束后核验总体状态、完整回归与工作区一致性，清理本轮临时目录。

@@ -20,10 +20,11 @@ class WritingTaskTest {
     }
 
     @Test
-    void Type枚举含三种任务类型() {
-        assertEquals(3, WritingTask.Type.values().length);
+    void Type枚举包含持续协作与原有任务类型() {
+        assertEquals(4, WritingTask.Type.values().length);
         assertNotNull(WritingTask.Type.valueOf("CONCEIVE"));
         assertNotNull(WritingTask.Type.valueOf("WRITE_CHAPTER"));
         assertNotNull(WritingTask.Type.valueOf("WRITE_ALL"));
+        assertNotNull(WritingTask.Type.valueOf("AUTO_RUN"));
     }
 }

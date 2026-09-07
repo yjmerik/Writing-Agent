@@ -1,31 +1,27 @@
-# 项目进度 — 2026-09-08
+# 14项特性核验与状态统一 — 2026-09-08
 
 Last Updated: 2026-09-08
 
 ## Current（当前）
 
-p31-01已完成并合入本地main：分支codex/p31-01-harness-integrity，实现提交ae7ee790cbc73ab3948c33de7fe3185f80b75751；干净main复验通过。当前无活跃特性。
+用户已授权逐项检验14项Phase27–29并推进到一致状态。当前p27-01，分支codex/p27-01-task-persistence，提交尚未提交。正在验收，尚未完成本项合并后验证。
 
-唯一状态源：[feature_list.json](feature_list.json)。共227项：213 completed、14 deferred。200项Phase0–26保留historical证据等级，12项Phase30及本次p31-01有verified完成记录；历史226 completed不等于226项均已合并。
+14项核验进度：0/14完成；已完成：无。待完成：p27-01, p27-02, p27-03, p27-04, p27-05, p27-06, p27-07, p27-08, p27-09, p27-10, p27-11, p27-12, p28-01, p29-01。
 
-## Files（本轮完成）
+唯一状态源：[feature_list.json](feature_list.json)，完成索引[completions.json](docs/harness/completions.json)。按依赖一项一分支、验证、合并、主分支复验再继续。
 
-补齐[完成记录](docs/harness/completions.json)、[harness说明](docs/harness/README.md)、近期持久证据和3份既有spec；修复8项缺失元数据和171项路径记录。新增检查器及11个测试，接入init.sh，更新AGENTS规则。
+## Files（文件与保留事项）
 
-原进度和交接逐字归档，当前入口精简。详细发现与评分见[审计报告](docs/harness/audits/2026-09-07.md)。
+当前范围以特性清单files为准；同文件中的后续特性改动逐项拆开。原工作区暂为detached HEAD并保留既有修改，独立工作区/tmp/writingagent-reconcile-check承载本轮分支/main。原始实现快照/tmp/writingagent-reconcile-14/source，核验日志在同父目录。结束时回到main并核对保留内容。
 
 ## Verification（验证）
 
-分支及合并后干净main的./init.sh均通过：11项harness测试、编译、636 tests / 0 failures / 0 errors / 1 skipped、前端构建。python3 scripts/check-harness.py --check-git通过。结构评分96→100，只反映文档结构。
+每项执行专属verify_cmd、编译和完整Maven测试；UI变更构建前端，编排变化运行回放和质量基线。干净main完成记录写入docs/harness/evidence/reconciled-<id>.json。不得用旧工作区证据替代本次合并验证。历史体验中的远端服务/原小说步骤仅为历史，本轮不自动重启原服务或继续原小说。
 
-持久证据：[本轮验证摘要](docs/harness/evidence/harness-integrity.json)。712个既有非harness文件核对内容不变。未改业务逻辑，无需质量E2E。
+## Blockers（阻塞与限制）
 
-## Blockers（阻塞与保留）
-
-本次无blocker。14项Phase27–29仍是原工作区未合并业务实现，标deferred/local-unmerged；本轮仅修正登记。历史逐项提交和日志无法完整恢复，保留证据限制，不伪造完成证明。
+本轮无已确认的外部阻塞，未完成项不得提前标completed。历史200项原始证据限制保持；本轮只处理用户指定14项。原始未提交业务内容已保存，不批量清空，不推送远端。
 
 ## Next Steps（下一步）
 
-本轮结束。后续恢复业务特性时先读[交接入口](session-handoff.md)，按依赖选择一项，从main独立分支恢复、复验和合并。当前不推进小说、不启动观察、不改运行中服务。
-
-历史：[审计前进度](docs/harness/archive/2026-09-07-progress.md)。过期批准提示和写作计划仅供追溯。
+继续当前项验收或选择下一个依赖已完成的deferred项，遵循AGENTS。若测试失败先定位并复现，再修复本项；先完成本项合并闭环。全部14项结束后核验总体状态、完整回归与工作区一致性，清理本轮临时目录。

@@ -1,0 +1,29 @@
+{
+  "date": "2026-09-07T23:43:14.684667",
+  "branch": "codex/docs-feature-workflow",
+  "implementationCommit": "05f7f2ee06f78741112bd1bda7c9d0836a1c81e5",
+  "mergedInto": "main",
+  "checks": [
+    {
+      "command": "./init.sh",
+      "result": "compile, 636 tests (0 failures, 0 errors, 1 skipped), frontend build PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "source scripts/load-env.sh; mvn compile -q && mvn test",
+      "scope": "clean merged main checkout",
+      "result": "636 tests (0 failures, 0 errors, 1 skipped), PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "result": "PASS"
+    }
+  ],
+  "source_path": "data/verification/agents-feature-workflow/verification.json",
+  "source_sha256": "c20ebaea6411f2a02a2a6bd017f4d780b80c3f6ab7f366344c3665877cd183bd",
+  "evidence_scope": "既有验证报告的持久摘要；完整日志仅保存在原工作区，不声称已提交日志。",
+  "commit": "05f7f2ee06f78741112bd1bda7c9d0836a1c81e5",
+  "cleanCheckout": true
+}

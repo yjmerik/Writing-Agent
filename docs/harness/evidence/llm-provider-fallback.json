@@ -1,0 +1,30 @@
+{
+  "verifiedAt": "2026-09-07T23:30:52.032241",
+  "branch": "main",
+  "commit": "c81bbcb6e499f0af43454cf5efa108551402d938",
+  "tree": "a87e90c97a1629e7c240622e8d56d2087565d7e1",
+  "cleanCheckout": true,
+  "checks": [
+    {
+      "command": "./init.sh",
+      "exitCode": 0,
+      "result": "636 tests, 0 failures, 0 errors, 1 skipped; compile and frontend build PASS"
+    },
+    {
+      "command": "E2E_FIXTURE_DIR=data/e2e-fixtures/canary-mystery-20260831 ./scripts/e2e.sh",
+      "exitCode": 0,
+      "result": "replay 3 chapters / 10191 words / 54 calls / 0 errors"
+    },
+    {
+      "command": "python3 scripts/compare-baseline.py",
+      "exitCode": 0,
+      "result": "PASS; baseline unchanged"
+    }
+  ],
+  "scope": "Main excludes 14 unrelated uncommitted Phase27-29 features; main has 212 completed features, original working tree retains 226. No remote push, production restart or paid LLM calls.",
+  "finalMainHead": "3e2956622c7f32bf9010d4118351cc3b90306bfc",
+  "unrelatedWorkingFilesPreserved": true,
+  "source_path": "data/verification/llm-provider-fallback/merge-verification.json",
+  "source_sha256": "71dc6d3ea7f4df4b235697a489e6a10280e50c729dbf475519a355537912eb78",
+  "evidence_scope": "既有验证报告的持久摘要；完整日志仅保存在原工作区，不声称已提交日志。"
+}

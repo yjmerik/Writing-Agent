@@ -10,10 +10,19 @@
 - **多层长程记忆**：故事原旨 + StoryCanon 真典 + 全书快照/分层摘要 + 近期正文 + 向量检索 + 实体/线索/伏笔台账（ContextAssembler 按模型窗口预算汇成 WritingContext）
 - **状态机编排**：CONCEIVING → PLANNING → WRITING ↔ VOLUME_DONE → FINAL；另有 PAUSED_AT_CHECKPOINT 与 NEEDS_REVISION
 - **PromptTemplate 系统**：28 个外置 `.st` 模板 + 7 个题材预设（含 wuxia），支持变量插值和条件块
-- **多模型路由**：按 `LlmTaskType`（8 种）路由；当前 8 类任务均使用 DeepSeek v4-flash，DashScope text-embedding-v3 向量化，Scenario/RecordReplay 网关提供零成本确定性验证
+- **多模型路由**：按 `LlmTaskType`（8 种）路由；具体 provider/模型以当前检出的 `application.yml` 和环境配置为准，embedding 独立配置，Scenario/RecordReplay 网关提供零成本确定性验证
 - **多样性与质量控制**：ConceiveGate / PlanGate / QualityCouncil / Arbiter + Continuity/Consistency/Reader/Style 检查，重写预算按项目配置（默认 1 次）
 
 设计文档：`docs/superpowers/specs/2026-07-10-novel-writing-system-design.md`
+
+## Harness 状态与完成记录
+
+当前事实入口：`feature_list.json` → `progress.md` → `session-handoff.md`；完成索引为 `docs/harness/completions.json`，字段与维护说明见 `docs/harness/README.md`。历史归档仅供追溯，不作为当前操作指令。
+
+- `active_feature` 与唯一 `in-progress` 项保持一致；`deferred` 表示暂停的既有工作，恢复时只选一项、核对依赖并新开分支。
+- 新特性完成必须引用 `verified` 完成记录及已提交的验证摘要；Phase0–26的 `historical` 是有明确证据限制的迁移记录，不用于新特性。
+- `./init.sh` 先执行离线状态核验；合并/交接另跑 `python3 scripts/check-harness.py --check-git` 核对提交归属。
+- 当前进度与交接各不超过150行，含 Current / Files / Verification / Blockers / Next Steps；旧内容移到 `docs/harness/archive/`，当天更新三个状态入口的日期。
 
 ## Startup Workflow
 
@@ -172,5 +181,5 @@ frontend/src/        # React + Ant Design 前端 (2 页面 + 6 组件 + api/clie
 
 - **Architecture decisions**: 参考 spec 文档或 `session-handoff.md`
 - **Prompt tuning**: 改 `.st` 文件后如果测试失败，检查模板变量名是否与 Agent 代码的 `Map.of(...)` 一致
-- **LLM API errors**: 当前写作任务走 DeepSeek v4-flash，embedding 走 DashScope；遇余额/限流先查 `data/logs/events.jsonl`，再在 `application.yml` 切换模型配置
+- **LLM API errors**: 写作与 embedding 配置相互独立；遇余额/限流先查 `data/logs/events.jsonl`，再在 `application.yml` 切换模型配置
 - **SQLite locked**: 单进程使用，避免多个 `write-all` 并发调用同一项目

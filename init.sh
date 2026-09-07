@@ -3,6 +3,9 @@ set -euo pipefail
 
 echo "=== WritingAgent 环境验证 ==="
 
+python3 scripts/check-harness.py
+python3 scripts/test_check_harness.py
+
 # 加载系统 shell 配置中的 LLM api-key（凭据 fail-fast 校验需要真实 key）
 source scripts/load-env.sh
 if [ -z "${DEEPSEEK_API_KEY:-}" ]; then

@@ -25,10 +25,7 @@ CASES=(
 )
 
 # 测试先行基线：修复某项后，必须从此数组移除对应 ID；XPASS 会使校验失败。
-KNOWN_FAILURES=(
-  auto-zero-intervention
-  interactive-to-auto
-)
+KNOWN_FAILURES=()
 
 describe_case() {
   case "$1" in
@@ -37,7 +34,7 @@ describe_case() {
     initial-setup-modify) echo "P0-01|P0|初始设定带意见重做后内容发生变化" ;;
     volume-outline-modify) echo "P0-01|P0|卷大纲带意见重做且不覆盖已写章节" ;;
     standalone-chapter-rewrite) echo "P0-02|P0|无待审核项时独立重写章节" ;;
-    interactive-to-auto) echo "P0-03|P0|审核点切自动后解除等待并续跑" ;;
+    interactive-to-auto) echo "P0-03|P0|审核后调整节奏并继续协作到全书完成" ;;
     approve-keeps-chapter-visible) echo "P1-03|P1|批准章节后正文持续可见" ;;
     checkpoint-card-targeting) echo "P1-07|P1|多审核卡操作命中所点 checkpoint" ;;
     manual-content-management) echo "P1-04/P1-05/P1-06|P1|四类内容具备完整人工管理入口" ;;
@@ -202,7 +199,6 @@ CP_SETUP_MALFORMED=""
 
 if need_case auto-zero-intervention; then
   P_AUTO=$(create_project "audit-auto" SOLO 3) || exit 2
-  conceive_once "$P_AUTO" || exit 2
 fi
 
 if need_case initial-setup-summary; then
@@ -293,7 +289,7 @@ const crypto = await import('node:crypto')
 const selected = new Set($SELECTED_JSON)
 const results = []
 const base = '$BASE'
-const task = await useOrCreateTaskSpace('writing agent product audit e2e')
+const task = await useOrCreateTaskSpace('writingagent acceptance tests')
 fs.writeFileSync('$DIR/task-space.txt', String(task.id))
 await openOrReuseTab(base + '/', { wait: true, timeout: 30 })
 
@@ -441,10 +437,12 @@ async function runCase(id, fn) {
 
 await runCase('auto-zero-intervention', async () => {
   await go('/#/project/$P_AUTO')
+  const started = await js('(() => {const b=document.querySelector("[data-collaboration-start]");if(!b||b.disabled)return false;b.click();return true})()')
+  for(let i=0;i<90;i++){const current=await pageJson('/api/projects/$P_AUTO/collaboration');if(!current.busy&&current.state==='FINAL')break;await wait(1)}
   const status = await pageJson('/api/projects/$P_AUTO/status')
   const chapters = await pageJson('/api/projects/$P_AUTO/chapters?page=0&size=10')
   const count = (chapters.chapters || []).length
-  return { pass: status.state === 'FINAL' && status.currentChapter === 3 && count === 3,
+  return { pass: started && status.state === 'FINAL' && status.currentChapter === 3 && count === 3,
     state: status.state, currentChapter: status.currentChapter, chapterCount: count }
 })
 
@@ -525,13 +523,20 @@ await runCase('standalone-chapter-rewrite', async () => {
 
 await runCase('interactive-to-auto', async () => {
   await go('/#/project/$P_SWITCH')
-  const clicked = await clickButtonContaining('切换')
-  await wait(4)
-  const project = await pageJson('/api/projects/$P_SWITCH')
-  const pending = await pageJson('/api/projects/$P_SWITCH/checkpoints')
-  const resumed = project.state !== 'PAUSED_AT_CHECKPOINT' && pending.length === 0
-  return { pass: clicked && project.mode === 'SOLO' && resumed,
-    clicked, mode: project.mode, state: project.state, pending: pending.length }
+  await openTab('章节管理')
+  const approved=await clickButtonContaining('批准')
+  await wait(2)
+  await click('[data-collaboration-bar] .ant-select-selector')
+  await wait(1)
+  const changed=await js('(()=>{const o=[...document.querySelectorAll(".ant-select-item-option")].find(x=>x.innerText.includes("仅主动接手"));if(!o)return false;o.click();return true})()')
+  await wait(2)
+  const started=await js('(()=>{const b=document.querySelector("[data-collaboration-start]");if(!b||b.disabled)return false;b.click();return true})()')
+  for(let i=0;i<90;i++){const s=await pageJson('/api/projects/$P_SWITCH/collaboration');if(!s.busy&&s.state==='FINAL')break;await wait(1)}
+  const project=await pageJson('/api/projects/$P_SWITCH')
+  const pending=await pageJson('/api/projects/$P_SWITCH/checkpoints')
+  const chapters=await pageJson('/api/projects/$P_SWITCH/chapters')
+  return {pass:approved&&changed&&started&&project.state==='FINAL'&&pending.length===0&&chapters.chapters.length===3,
+    approved,changed,started,state:project.state,pending:pending.length,chapters:chapters.chapters.length}
 })
 
 await runCase('approve-keeps-chapter-visible', async () => {
@@ -1024,7 +1029,7 @@ if [ "$browser_exit" != "0" ] || [ ! -f "$DIR/results.json" ]; then
 fi
 
 EXPECTED_JSON=$(for id in "${SELECTED[@]}"; do
-  if contains_case "$id" "${KNOWN_FAILURES[@]}"; then echo "$id"; fi
+  if contains_case "$id" "${KNOWN_FAILURES[@]-}"; then echo "$id"; fi
 done | python3 -c "import json,sys; print(json.dumps([x.strip() for x in sys.stdin if x.strip()]))")
 
 python3 - "$DIR/results.json" "$DIR/summary.json" "$EXPECT_KNOWN" "$EXPECTED_JSON" <<'PY'

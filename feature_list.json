@@ -4050,7 +4050,7 @@
       "dependencies": [
         "p27-02"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/WritingTaskExecutor.java",
         "src/test/java/com/writing/novel/service/CollaborativeRunTest.java"
@@ -4059,9 +4059,9 @@
       "problem_ref": "2026-09-05 unified-author-agent-collaboration 非目标：服务器重启后中断记录应持久化为 PAUSED，作者明确继续。",
       "acceptance": "mvn test -Dtest=CollaborativeRunTest 通过；关闭过程中等待中的构思被中断后 task=PAUSED、小说阶段与指令保留且无额外 step。",
       "verify_cmd": "mvn test -Dtest=CollaborativeRunTest",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 RED：CollaborativeRunTest 11 tests / 2 failures，关闭步骤中断时错误落 FAILED，以及 Agent 吞中断后继续至 COMPLETED。GREEN：11 tests / 0 failures / 0 errors。关闭标记覆盖协作步骤与既有写作循环的停止条件，关闭异常收敛 PAUSED，保留小说阶段和作者要求。最终 init 615 tests / 0 failures / 0 errors / 1 skipped，25项 ego-browser、replay/baseline PASS。证据 data/verification/phase27/final/shutdown-red.log、shutdown-green.log、init.log。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。",
-      "delivery_state": "verification-in-progress",
-      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md"
+      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 RED：CollaborativeRunTest 11 tests / 2 failures，关闭步骤中断时错误落 FAILED，以及 Agent 吞中断后继续至 COMPLETED。GREEN：11 tests / 0 failures / 0 errors。关闭标记覆盖协作步骤与既有写作循环的停止条件，关闭异常收敛 PAUSED，保留小说阶段和作者要求。最终 init 615 tests / 0 failures / 0 errors / 1 skipped，25项 ego-browser、replay/baseline PASS。证据 data/verification/phase27/final/shutdown-red.log、shutdown-green.log、init.log。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-12-shutdown-recovery实现447b53edddbdb115b11e5bd6311c78fb3cb5245d已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-12.json。",
+      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
+      "completion_record": "reconciled-p27-12"
     },
     {
       "id": "p28-01",
@@ -4365,5 +4365,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": "p27-12"
+  "active_feature": null
 }

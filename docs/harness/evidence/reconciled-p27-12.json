@@ -1,0 +1,29 @@
+{
+  "verifiedAt": "2026-09-08T00:19:48.174699",
+  "commit": "447b53edddbdb115b11e5bd6311c78fb3cb5245d",
+  "cleanCheckout": true,
+  "branch": "codex/p27-12-shutdown-recovery",
+  "checks": [
+    {
+      "command": "./init.sh && mvn test -Dtest=CollaborativeRunTest && E2E_FIXTURE_DIR=data/e2e-fixtures/canary-mystery-20260831 ./scripts/e2e.sh && python3 scripts/compare-baseline.py && python3 scripts/check-harness.py --check-git",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=649,0,0,1; final focused run=11,0,0,0",
+      "verifiedAt": "2026-09-08T00:19:27.073710",
+      "durationSeconds": 58.49,
+      "log": "/tmp/writingagent-reconcile-14/p27-12-main.log"
+    }
+  ],
+  "logs": {
+    "data/verification/reconcile-14/p27-12-main.log": "2e163118de7c7165a08a3d7f63ad9147a43bba4650cff55ea9c9f378ad249d85"
+  },
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。",
+  "regressionProof": {
+    "command": "mvn test -q -Dtest=CollaborativeRunTest",
+    "exitCode": 1,
+    "result": "FAIL; Maven tests/failures/errors/skipped=11,2,0,0",
+    "verifiedAt": "2026-09-08T00:16:33.780941",
+    "durationSeconds": 3.72,
+    "log": "/tmp/writingagent-reconcile-14/p27-12-red.log",
+    "expectedFailure": true
+  }
+}

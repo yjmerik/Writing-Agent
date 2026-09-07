@@ -1,3 +1,17 @@
+# 2026-09-07 LLM provider fallback 合并交接
+
+本轮用户已授权合入main。提交范围为Phase30的12个fallback feature及对应实现、测试和文档；此前分支的44个已提交变更随快进合入。Phase27–29的14项工作区功能与模型配置尚未提交，继续保留在原工作区，不计入此提交。提交中的feature_list共212项completed，原工作区完整backlog共226项。
+
+已实现命名provider、任务/默认有序路由、不可用分类、每候选一次预算、60秒冷却恢复、流式防拼接、实际模型计费与回放兼容。配置入口docs/llm-provider-fallback.md；设计docs/specs/2026-09-07-llm-provider-fallback.md。
+
+开发验证：包含原工作区未提交功能的671项测试全绿（0失败/0错误/1跳过），init编译与前端构建PASS；独立本地双provider模拟通过；悬疑fixture回放3章10191字/54调用/0错误，compare-baseline PASS。此计数属于开发工作区，不代表去除其他未提交功能后的独立提交计数。合并过程还会在干净主分支检出中重新验证，结果记录在data/verification/llm-provider-fallback/merge-verification.json。
+
+本次没有启用真实备用或重启运行中服务；main保留其原有默认模型配置（工作区另有尚未提交的Token Plan/Qwen配置）。所有原小说数据和其他未提交内容保持。下一步可按配置文档接入实际provider。本合并仅更新本地main，不推送远端。
+
+以下是此前已提交的历史记录。
+
+---
+
 # Session Progress Log
 
 ---

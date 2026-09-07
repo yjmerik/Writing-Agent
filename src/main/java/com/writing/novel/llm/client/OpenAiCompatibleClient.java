@@ -52,6 +52,7 @@ public class OpenAiCompatibleClient implements LlmClient {
 
     @Override
     public LlmResponse complete(ModelConfig config, LlmRequest request) {
+        if (config.isSingleAttempt()) return singleAttempt(config, request, config.isStreaming(), null);
         // p16-e2e: streaming 配置为 true 时走 SSE 聚合——长生成（>5 分钟）非流式响应会被
         // 网关/中间层 StreamReset CANCEL（e2e 实证 23 点后 100% 复现），流式逐 token 心跳保活；
         // 对上层透明（聚合完整 content 返回），fixture 录制在 gateway 层不受影响
@@ -251,6 +252,19 @@ public class OpenAiCompatibleClient implements LlmClient {
 
     @Override
     public void streamComplete(ModelConfig config, LlmRequest request, StreamHandler handler) {
+        if (config.isSingleAttempt()) {
+            LlmResponse result;
+            try {
+                result = singleAttempt(config, request, true, handler);
+            } catch (CallbackFailure e) {
+                throw e.original;
+            } catch (RuntimeException e) {
+                handler.onError(e);
+                return;
+            }
+            handler.onComplete(result);
+            return;
+        }
         ObjectNode body = buildRequestBody(config, request, true);
         String url = config.getBaseUrl() + "/chat/completions";
 
@@ -285,6 +299,131 @@ public class OpenAiCompatibleClient implements LlmClient {
         } catch (Exception e) {
             handler.onError(e);
         }
+    }
+
+    /** Named providers have one bounded attempt; retry/cooldown is owned by the gateway. */
+    private LlmResponse singleAttempt(ModelConfig config, LlmRequest request, boolean stream, StreamHandler handler) {
+        checkCancelled();
+        ObjectNode body = buildRequestBody(config, request, stream);
+        if (stream) body.putObject("stream_options").put("include_usage", true);
+        Request httpRequest = new Request.Builder()
+                .url(config.getBaseUrl().replaceAll("/+$", "") + "/chat/completions")
+                .header("Authorization", "Bearer " + config.getApiKey())
+                .post(RequestBody.create(body.toString(), MediaType.parse("application/json"))).build();
+        var transport = httpClient.newBuilder()
+                .callTimeout(Duration.ofSeconds(config.getRequestTimeoutSeconds()))
+                .readTimeout(Duration.ofSeconds(config.getRequestTimeoutSeconds()))
+                .retryOnConnectionFailure(false).followRedirects(false).followSslRedirects(false)
+                // OkHttp follows 503 + Retry-After:0 even when connection retries are disabled.
+                // The provider gateway owns retry policy; suppress that hidden follow-up.
+                .addNetworkInterceptor(chain -> {
+                    Response result = chain.proceed(chain.request());
+                    return result.code() == 503 ? result.newBuilder().removeHeader("Retry-After").build() : result;
+                }).build();
+        try (Response response = transport.newCall(httpRequest).execute()) {
+            if (!response.isSuccessful()) {
+                String errorBody = response.body() == null ? "" : response.body().string();
+                JsonNode error = MAPPER.createObjectNode();
+                try { error = MAPPER.readTree(errorBody); } catch (IOException ignored) { }
+                throw remoteError(response.code(), error);
+            }
+            if (response.body() == null) throw unavailable(LlmUnavailableException.Reason.EMPTY_RESPONSE, 0);
+            if (!stream) {
+                JsonNode root = MAPPER.readTree(response.body().string());
+                if (root == null) throw unavailable(LlmUnavailableException.Reason.EMPTY_RESPONSE, 0);
+                if (root.has("error")) throw remoteError(200, root);
+                JsonNode choice = root.path("choices").path(0);
+                if ("content_filter".equals(choice.path("finish_reason").asText())) {
+                    throw new ContentFilterException("LLM content filtered");
+                }
+                String content = choice.path("message").path("content").asText("");
+                if (content.isBlank()) throw unavailable(LlmUnavailableException.Reason.EMPTY_RESPONSE, 0);
+                checkCancelled();
+                return new LlmResponse(content, root.path("usage").path("prompt_tokens").asInt(),
+                        root.path("usage").path("completion_tokens").asInt());
+            }
+            StringBuilder content = new StringBuilder();
+            int promptTokens = 0, completionTokens = 0;
+            boolean terminated = false;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                    response.body().byteStream(), java.nio.charset.StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    checkCancelled();
+                    if (!line.startsWith("data:")) continue;
+                    String data = line.substring(5).trim();
+                    if (data.isEmpty()) continue;
+                    if ("[DONE]".equals(data)) { terminated = true; break; }
+                    JsonNode chunk = MAPPER.readTree(data);
+                    if (chunk.has("error")) throw remoteError(200, chunk);
+                    JsonNode choice = chunk.path("choices").path(0);
+                    String finish = choice.path("finish_reason").asText("");
+                    if ("content_filter".equals(finish)) throw new ContentFilterException("LLM content filtered");
+                    if (!finish.isEmpty()) terminated = true;
+                    String token = choice.path("delta").path("content").asText("");
+                    content.append(token);
+                    if (handler != null && !token.isEmpty()) {
+                        try { handler.onToken(token); }
+                        catch (RuntimeException e) { throw new CallbackFailure(e); }
+                    }
+                    JsonNode usage = chunk.path("usage");
+                    promptTokens = usage.path("prompt_tokens").asInt(promptTokens);
+                    completionTokens = usage.path("completion_tokens").asInt(completionTokens);
+                }
+            }
+            checkCancelled();
+            if (!terminated) throw unavailable(LlmUnavailableException.Reason.PROTOCOL, 0);
+            if (content.toString().isBlank()) throw unavailable(LlmUnavailableException.Reason.EMPTY_RESPONSE, 0);
+            return new LlmResponse(content.toString(), promptTokens, completionTokens);
+        } catch (IOException e) {
+            checkCancelled();
+            // Do not attach the raw exception: transport diagnostics can include request URLs.
+            var reason = e instanceof com.fasterxml.jackson.core.JsonProcessingException
+                    ? LlmUnavailableException.Reason.PROTOCOL
+                    : e instanceof java.io.InterruptedIOException
+                    ? LlmUnavailableException.Reason.TIMEOUT : LlmUnavailableException.Reason.NETWORK;
+            throw unavailable(reason, 0);
+        }
+    }
+
+    private static void checkCancelled() {
+        if (Thread.currentThread().isInterrupted()) throw new java.util.concurrent.CancellationException("LLM request interrupted");
+    }
+
+    private static final class CallbackFailure extends RuntimeException {
+        final RuntimeException original;
+        CallbackFailure(RuntimeException original) { this.original = original; }
+    }
+
+    private static LlmUnavailableException unavailable(LlmUnavailableException.Reason reason, int status) {
+        return new LlmUnavailableException(reason, status);
+    }
+
+    private static RuntimeException remoteError(int status, JsonNode body) {
+        JsonNode error = body == null ? MAPPER.createObjectNode() : body.path("error");
+        String code = error.path("code").asText(error.path("type").asText("")).toLowerCase(java.util.Locale.ROOT);
+        String type = error.path("type").asText("").toLowerCase(java.util.Locale.ROOT);
+        var codes = java.util.Set.of("content_filter", "contentfilter", "1301", "data_inspection_failed", "content_policy_violation");
+        if (codes.contains(code) || codes.contains(type)) return new ContentFilterException("LLM content filtered");
+        if (code.equals("context_length_exceeded")) {
+            return new IllegalArgumentException("LLM request rejected (HTTP " + status + ")");
+        }
+        if (java.util.Set.of("insufficient_quota", "quota_exceeded", "insufficient_balance", "arrearage", "balance_not_enough").contains(code)) {
+            return unavailable(LlmUnavailableException.Reason.QUOTA, status);
+        }
+        if (code.equals("rate_limit_exceeded") || type.equals("rate_limit_error")) return unavailable(LlmUnavailableException.Reason.RATE_LIMIT, status);
+        int effectiveStatus = error.path("status").asInt(error.path("code").asInt(status));
+        if (effectiveStatus == 401 || effectiveStatus == 403) return unavailable(LlmUnavailableException.Reason.AUTH, effectiveStatus);
+        if (effectiveStatus == 402) return unavailable(LlmUnavailableException.Reason.QUOTA, effectiveStatus);
+        if (effectiveStatus == 404) return unavailable(LlmUnavailableException.Reason.ENDPOINT, effectiveStatus);
+        if (effectiveStatus == 408) return unavailable(LlmUnavailableException.Reason.TIMEOUT, effectiveStatus);
+        if (effectiveStatus == 429) return unavailable(LlmUnavailableException.Reason.RATE_LIMIT, effectiveStatus);
+        if (effectiveStatus >= 500) return unavailable(LlmUnavailableException.Reason.SERVER, effectiveStatus);
+        if (code.equals("invalid_request_error") || type.equals("invalid_request_error")) {
+            return new IllegalArgumentException("LLM request rejected (HTTP " + status + ")");
+        }
+        if (status == 200) return unavailable(LlmUnavailableException.Reason.PROTOCOL, 0);
+        return new IllegalArgumentException("LLM request rejected (HTTP " + status + ")");
     }
 
     /** 组装 OpenAI 兼容的请求体：messages = [system] + history + [user] */

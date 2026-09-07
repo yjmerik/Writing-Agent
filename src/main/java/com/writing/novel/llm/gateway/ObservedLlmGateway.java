@@ -41,19 +41,7 @@ public class ObservedLlmGateway implements LlmGateway {
         long start = System.currentTimeMillis();
         try {
             LlmResponse response = delegate.complete(request);
-            // p10-w1-04: 按 taskType 模型 pricing 真实计价（替代硬编码单一费率）
-            double estimatedCostCny = estimateCost(request.getTaskType(),
-                    response.getPromptTokens(), response.getCompletionTokens());
-            EventLog.emit("LLM_CALL", Map.of(
-                    "taskType", request.getTaskType().name(),
-                    "durationMs", System.currentTimeMillis() - start,
-                    "promptTokens", response.getPromptTokens(),
-                    "completionTokens", response.getCompletionTokens(),
-                    "estimatedCostCny", Math.round(estimatedCostCny * 10000) / 10000.0));
-            // p10-w1-04: 累计到项目成本（经 EventContext ThreadLocal 归因 projectId）
-            if (costBudgetMonitor != null) {
-                costBudgetMonitor.add(EventContext.projectId(), estimatedCostCny);
-            }
+            recordResponse(request, response, start, false);
             return response;
         } catch (RuntimeException e) {
             EventLog.emit("LLM_ERROR", Map.of(
@@ -84,6 +72,12 @@ public class ObservedLlmGateway implements LlmGateway {
             }
 
             @Override
+            public void onComplete(LlmResponse response) {
+                recordResponse(request, response, start, true);
+                handler.onComplete(response);
+            }
+
+            @Override
             public void onError(Throwable error) {
                 EventLog.emit("LLM_ERROR", Map.of(
                         "taskType", request.getTaskType().name(),
@@ -94,6 +88,27 @@ public class ObservedLlmGateway implements LlmGateway {
                 handler.onError(error);
             }
         });
+    }
+
+    private void recordResponse(LlmRequest request, LlmResponse response, long start, boolean streaming) {
+        LlmResponse.Execution execution = response.getExecution();
+        double cost = execution == null
+                ? estimateCost(request.getTaskType(), response.getPromptTokens(), response.getCompletionTokens())
+                : response.getPromptTokens() / 1000.0 * execution.inputPrice()
+                    + response.getCompletionTokens() / 1000.0 * execution.outputPrice();
+        var fields = new java.util.LinkedHashMap<String, Object>();
+        fields.put("taskType", request.getTaskType().name());
+        fields.put("durationMs", System.currentTimeMillis() - start);
+        fields.put("promptTokens", response.getPromptTokens());
+        fields.put("completionTokens", response.getCompletionTokens());
+        fields.put("estimatedCostCny", Math.round(cost * 10000) / 10000.0);
+        if (streaming) fields.put("streaming", true);
+        if (execution != null) {
+            fields.put("provider", execution.providerId());
+            fields.put("model", execution.model());
+        }
+        EventLog.emit("LLM_CALL", fields);
+        if (costBudgetMonitor != null) costBudgetMonitor.add(EventContext.projectId(), cost);
     }
 
     /**

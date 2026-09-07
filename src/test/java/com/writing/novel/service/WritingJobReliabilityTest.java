@@ -159,21 +159,26 @@ class WritingJobReliabilityTest {
     @Test
     void 限流时网关降级到fallback模型重试() {
         // 主模型 CHAPTER_WRITING；fallback defaultModel 是不同端点
-        LlmProperties props = mock(LlmProperties.class);
+        LlmProperties props = new LlmProperties();
         ModelConfig primary = new ModelConfig();
         primary.setBaseUrl("https://main.api/v1");
         primary.setModel("deepseek-v4");
         ModelConfig fallback = new ModelConfig();
         fallback.setBaseUrl("http://localhost:8000/v1");
         fallback.setModel("qwen3-4b-wuxia");
-        when(props.forTaskType("CHAPTER_WRITING")).thenReturn(primary);
-        when(props.getDefaultModel()).thenReturn(fallback);
+        props.getModels().put("CHAPTER_WRITING", primary);
+        props.setDefaultModel(fallback);
 
         // client：主模型抛 RateLimitException，第二次（fallback）成功（连续 stub）
         LlmClient client = mock(LlmClient.class);
         when(client.complete(any(), any()))
-                .thenThrow(new RateLimitException("429"))
-                .thenReturn(new LlmResponse("降级后正文", 100, 200));
+                .thenAnswer(invocation -> {
+                    ModelConfig selected = invocation.getArgument(0);
+                    if ("deepseek-v4".equals(selected.getModel())) throw new RateLimitException("429");
+                    assertEquals("qwen3-4b-wuxia", selected.getModel());
+                    assertEquals("http://localhost:8000/v1", selected.getBaseUrl());
+                    return new LlmResponse("降级后正文", 100, 200);
+                });
 
         DefaultLlmGateway gateway = new DefaultLlmGateway(props, client);
         LlmResponse resp = gateway.complete(LlmRequest.builder()
@@ -185,13 +190,13 @@ class WritingJobReliabilityTest {
 
     @Test
     void 无fallback时限流异常向上抛() {
-        LlmProperties props = mock(LlmProperties.class);
+        LlmProperties props = new LlmProperties();
         ModelConfig primary = new ModelConfig();
         primary.setBaseUrl("https://main.api/v1");
         primary.setModel("deepseek-v4");
-        when(props.forTaskType("CHAPTER_WRITING")).thenReturn(primary);
+        props.getModels().put("CHAPTER_WRITING", primary);
         // defaultModel 与主模型相同 → 无可用 fallback
-        when(props.getDefaultModel()).thenReturn(primary);
+        props.setDefaultModel(primary);
 
         LlmClient client = mock(LlmClient.class);
         when(client.complete(any(), any())).thenThrow(new RateLimitException("429"));

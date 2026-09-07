@@ -5,11 +5,24 @@ package com.writing.novel.llm;
  */
 public class LlmResponse {
 
+    /** Pricing snapshot contains no endpoint, credentials or request payload. */
+    public record Execution(String providerId, String model, double inputPrice, double outputPrice) {}
+    private final Execution execution;
+    public Execution getExecution() { return execution; }
+    public LlmResponse withExecution(Execution execution) {
+        return new LlmResponse(content, promptTokens, completionTokens, execution);
+    }
+
     private final String content;
     private final int promptTokens;
     private final int completionTokens;
 
     public LlmResponse(String content, int promptTokens, int completionTokens) {
+        this(content, promptTokens, completionTokens, null);
+    }
+
+    public LlmResponse(String content, int promptTokens, int completionTokens, Execution execution) {
+        this.execution = execution;
         this.content = content;
         this.promptTokens = promptTokens;
         this.completionTokens = completionTokens;

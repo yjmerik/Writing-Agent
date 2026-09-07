@@ -5,6 +5,14 @@ package com.writing.novel.llm.config;
  */
 public class ModelConfig {
 
+    private int requestTimeoutSeconds = 180;
+    // Resolved by the gateway for named routes; legacy calls retain their retry policy.
+    private boolean singleAttempt;
+    public int getRequestTimeoutSeconds() { return requestTimeoutSeconds; }
+    public void setRequestTimeoutSeconds(int value) { requestTimeoutSeconds = value; }
+    public boolean isSingleAttempt() { return singleAttempt; }
+    public void setSingleAttempt(boolean value) { singleAttempt = value; }
+
     private String baseUrl;
     private String apiKey;
     private String model;

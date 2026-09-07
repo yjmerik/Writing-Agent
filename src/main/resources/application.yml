@@ -17,6 +17,7 @@ persistence:
     model: text-embedding-v3
 
 llm:
+  # 多 provider 自动 fallback 配置见 docs/llm-provider-fallback.md；显式添加 providers/routing 后启用。
   # 录制/回放：确定性 E2E 的基石。mode: "off" | "record" | "replay"（off 必须加引号，否则 YAML 解析为 false）
   replay:
     mode: "off"

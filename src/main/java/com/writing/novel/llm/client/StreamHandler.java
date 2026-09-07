@@ -9,6 +9,9 @@ public interface StreamHandler {
     /** 流式完成 */
     void onComplete();
 
+    /** Optional usage-bearing completion. Existing consumers keep receiving onComplete(). */
+    default void onComplete(com.writing.novel.llm.LlmResponse response) { onComplete(); }
+
     /** 发生错误 */
     void onError(Throwable error);
 }

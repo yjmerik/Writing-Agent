@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": 26,
+  "current_phase": 30,
   "features": [
     {
       "id": "p1-01",
@@ -3391,6 +3391,232 @@
       "acceptance": "产品审计套件仅 auto-zero-intervention 与 interactive-to-auto 为 XFAIL 且 0 ERROR；其余场景、e2e、基线和 init 全绿。",
       "verify_cmd": "./scripts/product-audit-e2e.sh --expect-known-failures && ./scripts/e2e.sh && python3 scripts/compare-baseline.py && ./init.sh",
       "evidence": "2026-09-04：先逐项用 ego-browser 严格运行全部已修复产品路径，initial-setup-summary、initial-setup-modify、volume-outline-modify、standalone-chapter-rewrite、approve-keeps-chapter-visible、checkpoint-card-targeting、manual-content-management、quality-evaluation-state、mobile-critical-path 均为 1 PASS / 0 XFAIL / 0 ERROR。首次聚合暴露两类仅在同进程出现的测试夹具脆弱性：修改弹窗用固定 3-4 秒判断慢响应，且摘要/结果把 Scenario 全局调用序号硬编码为 001/002；业务内容变化、版本、目标 checkpoint 与持久化均正确。收紧为等待标题为“修改意见”的目标弹窗真实关闭、摘要比对项目实际持久化人物、前后结果比对稳定语义后，两项回归独立 strict 通过，完整套件最终 PASS：9 PASS / 2 XFAIL / 0 ERROR；XFAIL 精确为延期的 auto-zero-intervention 与 interactive-to-auto。匹配 canary-mystery-20260831 fixture 的文学 replay PASS：3 章、10,191 字、54 calls、0 LLM errors、0 chapter failures；compare-baseline PASS。JDK21 ./init.sh PASS：587 tests / 0 failures / 0 errors / 1 skipped，28 prompts 与前端生产构建通过。分支增量与当前 diff 的自动化关键词审计未发现 AUTO_RUN、后台调度器、持久化自动任务、自动恢复或重启恢复实现；Phase 26 共 21 个 feature 均 completed。Standards/Spec 双轴本地审查无 in-scope finding；两个只读审查代理因独立额度耗尽未产出结果，不影响已执行的本地审查和机器门禁。"
+    },
+    {
+      "id": "p30-01",
+      "name": "命名 provider 与路由配置",
+      "description": "配置绑定、旧格式兼容、有效路由引用/凭据/窗口校验测试通过；设计细节见spec，待用户确认后实施。",
+      "phase": 30,
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "llm/config/LlmProperties.java",
+        "llm/config/ModelConfig.java",
+        "test/llm/LlmProviderConfigurationTest.java"
+      ],
+      "spec": "docs/specs/2026-09-07-llm-provider-fallback.md",
+      "acceptance": "配置绑定、旧格式兼容、有效路由引用/凭据/窗口校验测试通过",
+      "verify_cmd": "mvn test -Dtest=LlmProviderConfigurationTest,LlmConfigTest,LlmPropertiesValidateTest",
+      "evidence": "2026-09-07：配置RED 5项/4失败，GREEN配置+兼容15项通过，日志/tmp/fallback-p01-{red,green}.log；用户已确认设计开始实施。 最终全量及E2E/基线均通过，汇总证据data/verification/llm-provider-fallback/verification.json。"
+    },
+    {
+      "id": "p30-02",
+      "name": "服务不可用分类及请求预算",
+      "description": "HTTP/SSE/网络错误分类、超时和取消测试通过；设计细节见spec，待用户确认后实施。",
+      "phase": 30,
+      "dependencies": [
+        "p30-01"
+      ],
+      "status": "completed",
+      "files": [
+        "llm/client/LlmUnavailableException.java",
+        "llm/client/OpenAiCompatibleClient.java",
+        "test/llm/LlmAvailabilityTest.java"
+      ],
+      "spec": "docs/specs/2026-09-07-llm-provider-fallback.md",
+      "acceptance": "HTTP/SSE/网络错误分类、超时和取消测试通过",
+      "verify_cmd": "mvn test -Dtest=LlmAvailabilityTest,OpenAiCompatibleClientTest",
+      "evidence": "2026-09-07：本地HTTP/SSE错误、空响应、断流、超时、取消及回调异常验证通过；旧客户端测试通过。RED/GREEN日志/tmp/fallback-p02-*.log。 最终全量及E2E/基线均通过，汇总证据data/verification/llm-provider-fallback/verification.json。"
+    },
+    {
+      "id": "p30-03",
+      "name": "有序切换与故障冷却恢复",
+      "description": "多级切换、完整配置参数、冷却及并发恢复测试通过；设计细节见spec，待用户确认后实施。",
+      "phase": 30,
+      "dependencies": [
+        "p30-02"
+      ],
+      "status": "completed",
+      "files": [
+        "llm/gateway/DefaultLlmGateway.java",
+        "llm/gateway/ProviderHealthTracker.java",
+        "test/llm/LlmProviderFallbackTest.java"
+      ],
+      "spec": "docs/specs/2026-09-07-llm-provider-fallback.md",
+      "acceptance": "多级切换、完整配置参数、冷却及并发恢复测试通过",
+      "verify_cmd": "mvn test -Dtest=LlmProviderFallbackTest,DefaultLlmGatewayRoutingTest",
+      "evidence": "2026-09-07：顺序切换、全部冷却快速失败、完整参数、取消和60秒冷却/并发单探针测试12项通过；旧参数复制缺陷已先RED复现后修复。日志/tmp/fallback-p03-{red,green}.log。 最终全量及E2E/基线均通过，汇总证据data/verification/llm-provider-fallback/verification.json。"
+    },
+    {
+      "id": "p30-04",
+      "name": "流式切换边界",
+      "description": "token前失败切换、token后失败不拼接、取消及终态一次测试通过；设计细节见spec，待用户确认后实施。",
+      "phase": 30,
+      "dependencies": [
+        "p30-03"
+      ],
+      "status": "completed",
+      "files": [
+        "llm/gateway/DefaultLlmGateway.java",
+        "test/llm/LlmStreamingFallbackTest.java"
+      ],
+      "spec": "docs/specs/2026-09-07-llm-provider-fallback.md",
+      "acceptance": "token前失败切换、token后失败不拼接、取消及终态一次测试通过",
+      "verify_cmd": "mvn test -Dtest=LlmStreamingFallbackTest",
+      "evidence": "2026-09-07：流式首token前切换、输出后不拼接、取消、重复终态、调用方异常和全冷却测试通过；连同核心路由共17项通过。日志/tmp/fallback-p04-{red,green}.log。 最终全量及E2E/基线均通过，汇总证据data/verification/llm-provider-fallback/verification.json。"
+    },
+    {
+      "id": "p30-05",
+      "name": "实际 provider 响应元数据",
+      "description": "响应记录实际provider，按实际价格计费且日志脱敏测试通过；设计细节见spec，待用户确认后实施。",
+      "phase": 30,
+      "dependencies": [
+        "p30-03",
+        "p30-08"
+      ],
+      "status": "completed",
+      "files": [
+        "llm/LlmResponse.java",
+        "llm/gateway/DefaultLlmGateway.java",
+        "test/llm/LlmFallbackTelemetryTest.java"
+      ],
+      "spec": "docs/specs/2026-09-07-llm-provider-fallback.md",
+      "acceptance": "响应记录实际provider，按实际价格计费且日志脱敏测试通过",
+      "verify_cmd": "mvn test -Dtest=LlmFallbackTelemetryTest",
+      "evidence": "2026-09-07：同步与流式响应携带实际成功provider/model/价格快照及usage，凭据不进入响应和切换事件；新增2测试RED→GREEN，路由/流式共19项回归通过。 最终全量及E2E/基线均通过，汇总证据data/verification/llm-provider-fallback/verification.json。"
+    },
+    {
+      "id": "p30-06",
+      "name": "回放元数据兼容",
+      "description": "新旧fixture回放兼容且不发真实网络请求；设计细节见spec，待用户确认后实施。",
+      "phase": 30,
+      "dependencies": [
+        "p30-09"
+      ],
+      "status": "completed",
+      "files": [
+        "llm/gateway/RecordReplayLlmGateway.java",
+        "test/llm/RecordReplayLlmGatewayTest.java"
+      ],
+      "spec": "docs/specs/2026-09-07-llm-provider-fallback.md",
+      "acceptance": "新旧fixture回放兼容且不发真实网络请求",
+      "verify_cmd": "mvn test -Dtest=RecordReplayLlmGatewayTest",
+      "evidence": "2026-09-07：新增provider/model/价格与usage可完整record/replay，流式回放不访问delegate；旧8个fixture兼容测试继续通过，新旧共9项，日志/tmp/fallback-p06-{red,green}.log。 最终全量及E2E/基线均通过，汇总证据data/verification/llm-provider-fallback/verification.json。"
+    },
+    {
+      "id": "p30-07",
+      "name": "配置示例与完整回归",
+      "description": "init、确定性E2E与质量基线对比通过；设计细节见spec，待用户确认后实施。",
+      "phase": 30,
+      "dependencies": [
+        "p30-04",
+        "p30-06",
+        "p30-10",
+        "p30-11",
+        "p30-12"
+      ],
+      "status": "completed",
+      "files": [
+        "src/main/resources/application.yml",
+        "docs/llm-provider-fallback.md",
+        "src/test/java/com/writing/novel/llm/LlmProviderIntegrationTest.java"
+      ],
+      "spec": "docs/specs/2026-09-07-llm-provider-fallback.md",
+      "acceptance": "init、确定性E2E与质量基线对比通过",
+      "verify_cmd": "./init.sh && ./scripts/e2e.sh && python3 scripts/compare-baseline.py",
+      "evidence": "2026-09-07：本地双provider集成2项通过；完整init 671 tests/0 failures/0 errors/1 skipped、compile与frontend build PASS；匹配悬疑fixture replay E2E 3章10191字/54次调用/0错误，compare-baseline PASS，未bless。证据data/verification/llm-provider-fallback/verification.json。"
+    },
+    {
+      "id": "p30-08",
+      "name": "流式完成响应与usage透传",
+      "description": "在已批准方案内细拆，确保每个feature不超过3个实现/测试文件。",
+      "phase": 30,
+      "dependencies": [
+        "p30-04"
+      ],
+      "status": "completed",
+      "files": [
+        "llm/client/StreamHandler.java",
+        "llm/client/OpenAiCompatibleClient.java",
+        "test/llm/LlmAvailabilityTest.java"
+      ],
+      "spec": "docs/specs/2026-09-07-llm-provider-fallback.md",
+      "acceptance": "mvn test -Dtest=LlmAvailabilityTest,OpenAiCompatibleClientTest通过，覆盖流式实际usage或成功provider计价。",
+      "verify_cmd": "mvn test -Dtest=LlmAvailabilityTest,OpenAiCompatibleClientTest",
+      "evidence": "2026-09-07：流式usage回调RED 1失败，GREEN新旧客户端25项通过；onComplete(LlmResponse)向后兼容旧无参回调。日志/tmp/fallback-p08-{red,green}.log。 最终全量及E2E/基线均通过，汇总证据data/verification/llm-provider-fallback/verification.json。"
+    },
+    {
+      "id": "p30-09",
+      "name": "实际 provider 成本与事件归属",
+      "description": "在已批准方案内细拆，确保每个feature不超过3个实现/测试文件。",
+      "phase": 30,
+      "dependencies": [
+        "p30-05"
+      ],
+      "status": "completed",
+      "files": [
+        "llm/gateway/ObservedLlmGateway.java",
+        "test/llm/LlmProviderCostTest.java"
+      ],
+      "spec": "docs/specs/2026-09-07-llm-provider-fallback.md",
+      "acceptance": "mvn test -Dtest=LlmProviderCostTest,LlmCostTelemetryTest通过，覆盖流式实际usage或成功provider计价。",
+      "verify_cmd": "mvn test -Dtest=LlmProviderCostTest,LlmCostTelemetryTest",
+      "evidence": "2026-09-07：实际provider费率用于同步和流式计费，事件透传provider/model与usage；计费新旧3项通过，日志/tmp/fallback-p09-{red,green}.log。 最终全量及E2E/基线均通过，汇总证据data/verification/llm-provider-fallback/verification.json。"
+    },
+    {
+      "id": "p30-10",
+      "name": "供应商错误优先级与底层重复请求防护",
+      "type": "bug",
+      "description": "实现自查发现的同范围边界问题，先复现再修复。",
+      "phase": 30,
+      "dependencies": [
+        "p30-06"
+      ],
+      "status": "completed",
+      "files": [
+        "llm/client/OpenAiCompatibleClient.java",
+        "test/llm/LlmAvailabilityTest.java"
+      ],
+      "spec": "docs/specs/2026-09-07-llm-provider-fallback.md",
+      "acceptance": "mvn test -Dtest=LlmAvailabilityTest,OpenAiCompatibleClientTest通过，新增复现测试先RED后GREEN。",
+      "verify_cmd": "mvn test -Dtest=LlmAvailabilityTest,OpenAiCompatibleClientTest",
+      "evidence": "2026-09-07：新增两项均RED复现，GREEN客户端27项通过：通用invalid_request_error不遮盖401/403/429/余额code；503 Retry-After:0不再引起隐藏第二次HTTP请求。日志/tmp/fallback-p10-{red,green}.log。 最终全量及E2E/基线均通过，汇总证据data/verification/llm-provider-fallback/verification.json。"
+    },
+    {
+      "id": "p30-11",
+      "name": "备用输出预留兼容性校验",
+      "type": "bug",
+      "description": "实现自查发现的同范围边界问题，先复现再修复。",
+      "phase": 30,
+      "dependencies": [
+        "p30-06"
+      ],
+      "status": "completed",
+      "files": [
+        "llm/config/LlmProperties.java",
+        "test/llm/LlmProviderConfigurationTest.java"
+      ],
+      "spec": "docs/specs/2026-09-07-llm-provider-fallback.md",
+      "acceptance": "mvn test -Dtest=LlmProviderConfigurationTest通过，新增复现测试先RED后GREEN。",
+      "verify_cmd": "mvn test -Dtest=LlmProviderConfigurationTest",
+      "evidence": "2026-09-07：备用模型窗口相同但输出预留更大导致输入空间不足：新增failing test复现后添加校验；6项配置测试通过。日志/tmp/fallback-p11-{red,green}.log。 最终全量及E2E/基线均通过，汇总证据data/verification/llm-provider-fallback/verification.json。"
+    },
+    {
+      "id": "p30-12",
+      "name": "旧降级回归测试改用真实配置",
+      "phase": 30,
+      "dependencies": [
+        "p30-03"
+      ],
+      "status": "completed",
+      "files": [
+        "src/test/java/com/writing/novel/service/WritingJobReliabilityTest.java"
+      ],
+      "spec": "docs/specs/2026-09-07-llm-provider-fallback.md",
+      "description": "全量验证发现旧测试对配置对象的mock不提供新增字段；改为真实配置保留旧429降级契约。",
+      "acceptance": "mvn test -Dtest=WritingJobReliabilityTest通过，旧429有/无fallback断言不变。",
+      "verify_cmd": "mvn test -Dtest=WritingJobReliabilityTest",
+      "evidence": "2026-09-07：使用真实配置保留并加强原429降级目标断言，6项WritingJobReliabilityTest通过；RED来自全量2个mock初始化错误，GREEN日志/tmp/fallback-p12-green.log。 最终全量及E2E/基线均通过，汇总证据data/verification/llm-provider-fallback/verification.json。"
     }
   ]
 }

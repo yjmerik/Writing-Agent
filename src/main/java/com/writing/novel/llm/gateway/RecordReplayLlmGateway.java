@@ -86,7 +86,7 @@ public class RecordReplayLlmGateway implements LlmGateway {
         if (mode == Mode.REPLAY) {
             LlmResponse replayed = loadFixture(fixture, request, n);
             handler.onToken(replayed.getContent());
-            handler.onComplete();
+            handler.onComplete(replayed);
             return;
         }
         // RECORD：包装 handler 累积完整内容，完成时落盘
@@ -102,6 +102,12 @@ public class RecordReplayLlmGateway implements LlmGateway {
             public void onComplete() {
                 saveFixture(fixture, request, new LlmResponse(accumulated.toString(), 0, 0));
                 handler.onComplete();
+            }
+
+            @Override
+            public void onComplete(LlmResponse response) {
+                saveFixture(fixture, request, response);
+                handler.onComplete(response);
             }
 
             @Override
@@ -140,7 +146,9 @@ public class RecordReplayLlmGateway implements LlmGateway {
             return new LlmResponse(
                     node.path("content").asText(),
                     node.path("promptTokens").asInt(0),
-                    node.path("completionTokens").asInt(0));
+                    node.path("completionTokens").asInt(0),
+                    node.hasNonNull("execution")
+                            ? MAPPER.treeToValue(node.get("execution"), LlmResponse.Execution.class) : null);
         } catch (IOException e) {
             throw new IllegalStateException("回放 fixture 解析失败: " + fixture, e);
         }
@@ -184,6 +192,7 @@ public class RecordReplayLlmGateway implements LlmGateway {
             node.put("content", response.getContent());
             node.put("promptTokens", response.getPromptTokens());
             node.put("completionTokens", response.getCompletionTokens());
+            if (response.getExecution() != null) node.set("execution", MAPPER.valueToTree(response.getExecution()));
             Files.writeString(fixture, MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(node),
                     StandardCharsets.UTF_8);
             log.info("已录制 LLM fixture: {}", fixture.getFileName());

@@ -210,4 +210,43 @@ class RecordReplayLlmGatewayTest {
                 .userMessage("设置每章字数")
                 .build();
     }
+    @Test
+    void executionMetadataAndUsageSurviveCompleteAndStreamingReplay() {
+        var response = new LlmResponse("backup content", 1000, 500,
+                new LlmResponse.Execution("backup", "backup-model", 2, 4));
+        var delegate = new LlmGateway() {
+            public LlmResponse complete(LlmRequest req) { return response; }
+            public void streamComplete(LlmRequest req, StreamHandler h) {
+                h.onToken(response.getContent()); h.onComplete(response);
+            }
+        };
+        var noNetwork = new LlmGateway() {
+            public LlmResponse complete(LlmRequest req) { throw new AssertionError("replay contacted provider"); }
+            public void streamComplete(LlmRequest req, StreamHandler h) { throw new AssertionError("replay contacted provider"); }
+        };
+        var record = new RecordReplayLlmGateway(delegate, RecordReplayLlmGateway.Mode.RECORD, fixtureDir);
+        record.complete(request("complete metadata"));
+        var recorded = new java.util.ArrayList<LlmResponse>();
+        var replayed = new java.util.ArrayList<LlmResponse>();
+        record.streamComplete(request("stream metadata"), responseHandler(recorded));
+        var replay = new RecordReplayLlmGateway(noNetwork, RecordReplayLlmGateway.Mode.REPLAY, fixtureDir);
+        var loaded = replay.complete(request("complete metadata"));
+        assertEquals(response.getExecution(), loaded.getExecution());
+        replay.streamComplete(request("stream metadata"), responseHandler(replayed));
+        assertEquals(1, recorded.size()); assertEquals(1, replayed.size());
+        assertEquals(response.getExecution(), replayed.get(0).getExecution());
+        assertEquals(1000, replayed.get(0).getPromptTokens());
+        assertEquals(500, replayed.get(0).getCompletionTokens());
+        assertEquals("backup content", replayed.get(0).getContent());
+    }
+
+    private static StreamHandler responseHandler(java.util.List<LlmResponse> responses) {
+        return new StreamHandler() {
+            public void onToken(String token) {}
+            public void onComplete() {}
+            public void onComplete(LlmResponse response) { responses.add(response); }
+            public void onError(Throwable error) { fail(error); }
+        };
+    }
+
 }

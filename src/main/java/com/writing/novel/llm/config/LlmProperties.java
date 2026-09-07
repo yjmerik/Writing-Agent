@@ -3,8 +3,8 @@ package com.writing.novel.llm.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import com.writing.novel.llm.LlmTaskType;
 
 /**
  * LLM 模型配置绑定。yml 中 llm.models.<TASK_TYPE> 映射到 ModelConfig。
@@ -19,6 +19,36 @@ public class LlmProperties {
 
     /** 默认模型配置，未显式配置的任务类型回退到此 */
     private ModelConfig defaultModel = new ModelConfig();
+
+    private Map<String, ModelConfig> providers = new HashMap<>();
+    private Routing routing = new Routing();
+    private Fallback fallback = new Fallback();
+
+    public Map<String, ModelConfig> getProviders() { return providers; }
+    public void setProviders(Map<String, ModelConfig> providers) { this.providers = providers; }
+    public Routing getRouting() { return routing; }
+    public void setRouting(Routing routing) { this.routing = routing; }
+    public Fallback getFallback() { return fallback; }
+    public void setFallback(Fallback fallback) { this.fallback = fallback; }
+
+    public static class Routing {
+        private List<String> defaultProviders = new ArrayList<>();
+        private Map<String, List<String>> tasks = new HashMap<>();
+        public List<String> getDefaultProviders() { return defaultProviders; }
+        public void setDefaultProviders(List<String> value) { defaultProviders = value; }
+        public Map<String, List<String>> getTasks() { return tasks; }
+        public void setTasks(Map<String, List<String>> value) { tasks = value; }
+    }
+
+    public static class Fallback {
+        private long cooldownSeconds = 60;
+        public long getCooldownSeconds() { return cooldownSeconds; }
+        public void setCooldownSeconds(long value) { cooldownSeconds = value; }
+    }
+
+    public List<String> providerIdsForTask(String task) {
+        return routing.tasks.getOrDefault(task, routing.defaultProviders);
+    }
 
     /** mc-p0-04: replay 模式标志——replay 时不校验 key */
     private boolean replayMode = false;
@@ -38,10 +68,68 @@ public class LlmProperties {
      */
     public void validateKeys() {
         if (replayMode) return;
-        if (defaultModel != null) {
-            requireKey("default-model", defaultModel);
+        if (fallback.cooldownSeconds <= 0 || fallback.cooldownSeconds > 86400) {
+            throw new IllegalStateException("llm.fallback.cooldown-seconds must be between 1 and 86400");
         }
-        models.forEach((task, cfg) -> requireKey(task, cfg));
+        routing.tasks.forEach((task, ids) -> {
+            try { LlmTaskType.valueOf(task); }
+            catch (IllegalArgumentException e) { throw new IllegalStateException("Unknown LLM task: " + task); }
+            if (ids == null || ids.isEmpty()) throw new IllegalStateException("Empty LLM route: " + task);
+        });
+        boolean legacy = routing.defaultProviders.isEmpty() && routing.tasks.isEmpty();
+        if (legacy) {
+            if (defaultModel != null) requireKey("default-model", defaultModel);
+            models.forEach(this::requireKey);
+            return;
+        }
+        for (LlmTaskType task : LlmTaskType.values()) {
+            List<String> ids = providerIdsForTask(task.name());
+            if (ids.isEmpty()) {
+                requireKey(task.name(), models.getOrDefault(task.name(), defaultModel));
+                continue;
+            }
+            Set<String> seen = new HashSet<>();
+            int primaryWindow = 0;
+            int primaryInputSpace = 0;
+            for (String id : ids) {
+                if (id == null || !id.matches("[A-Za-z0-9_-]{1,64}") || !seen.add(id)) {
+                    throw new IllegalStateException("Invalid or duplicate provider ID in route " + task);
+                }
+                ModelConfig cfg = providers.get(id);
+                if (cfg == null) throw new IllegalStateException("Unknown LLM provider: " + id);
+                validateProvider(id, cfg);
+                if (primaryWindow == 0) {
+                    primaryWindow = cfg.getContextWindow();
+                    primaryInputSpace = cfg.getContextWindow() - cfg.getMaxTokens();
+                }
+                if (cfg.getContextWindow() < primaryWindow
+                        || cfg.getContextWindow() - cfg.getMaxTokens() < primaryInputSpace) {
+                    throw new IllegalStateException("Fallback context-window or input space smaller than primary: " + id);
+                }
+            }
+        }
+    }
+
+    private void validateProvider(String id, ModelConfig cfg) {
+        try {
+            var uri = java.net.URI.create(cfg.getBaseUrl());
+            if (!("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
+                    || uri.getHost() == null || uri.getUserInfo() != null || uri.getQuery() != null
+                    || uri.getFragment() != null) throw new IllegalArgumentException();
+        } catch (RuntimeException e) {
+            throw new IllegalStateException("Invalid provider base-url: " + id);
+        }
+        if (cfg.getModel() == null || cfg.getModel().isBlank() || cfg.getContextWindow() <= 0
+                || cfg.getMaxTokens() <= 0 || cfg.getMaxTokens() >= cfg.getContextWindow()
+                || cfg.getRequestTimeoutSeconds() <= 0 || cfg.getRequestTimeoutSeconds() > 86400
+                || !Double.isFinite(cfg.getTemperature()) || cfg.getTemperature() < 0
+                || !Double.isFinite(cfg.getInputPriceYuanPerKTokens()) || cfg.getInputPriceYuanPerKTokens() < 0
+                || !Double.isFinite(cfg.getOutputPriceYuanPerKTokens()) || cfg.getOutputPriceYuanPerKTokens() < 0) {
+            throw new IllegalStateException("Invalid model, window, tokens, timeout or price for provider: " + id);
+        }
+        if (!isLocalBaseUrl(cfg.getBaseUrl()) && (cfg.getApiKey() == null || cfg.getApiKey().isBlank())) {
+            throw new IllegalStateException("Missing api-key for provider: " + id);
+        }
     }
 
     private void requireKey(String task, ModelConfig cfg) {
@@ -72,6 +160,8 @@ public class LlmProperties {
      * 按任务类型获取模型配置。若该类型未配置，回退到 defaultModel。
      */
     public ModelConfig forTaskType(String taskType) {
+        List<String> ids = providerIdsForTask(taskType);
+        if (!ids.isEmpty()) return providers.get(ids.get(0));
         ModelConfig cfg = models.get(taskType);
         return cfg != null ? cfg : defaultModel;
     }

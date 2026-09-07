@@ -1,3 +1,16 @@
+# 2026-09-07 合并完成：本地 main
+
+- fallback实现提交c81bbcb6e499f0af43454cf5efa108551402d938已快进合并到main，并已切换当前工作区到main。该分支此前44个提交一并合入，没有冲突。
+- 合并后的干净主分支独立验证：./init.sh编译通过，636 tests / 0 failures / 0 errors / 1 skipped，前端构建通过；3章replay共10191字/54次调用/0错误；compare-baseline PASS。
+- 合并前完整开发工作区671项测试通过；两处计数差异来自未提交的Phase27–29功能，不是删除fallback测试。main提交的backlog为212 completed，原工作区完整backlog226 completed仍保留。
+- 当前其他未提交修改全部保留；合并前后已逐文件核对内容指纹一致。本轮仅提交fallback相关实现和状态记录，没有提交其他模型切换/协作功能；也没有推送远端、重启服务或推进小说。
+- 合并证据：data/verification/llm-provider-fallback/merge-verification.json；配置说明：docs/llm-provider-fallback.md。
+- 下一步：如需远端发布，再执行push；如需运行中服务启用备用，按配置文档设置provider并重启。合并任务已完成，无blocker。
+
+以下为历史记录，旧“未提交/未合并”的说明已被本记录取代。
+
+---
+
 # 2026-09-07 LLM provider fallback 合并交接
 
 本轮用户已授权合入main。提交范围为Phase30的12个fallback feature及对应实现、测试和文档；此前分支的44个已提交变更随快进合入。Phase27–29的14项工作区功能与模型配置尚未提交，继续保留在原工作区，不计入此提交。提交中的feature_list共212项completed，原工作区完整backlog共226项。

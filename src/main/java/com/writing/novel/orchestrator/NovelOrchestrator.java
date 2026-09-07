@@ -1142,7 +1142,11 @@ public class NovelOrchestrator {
         // 幂等检查：该章已存在且内容有效则跳过（断点续写时避免重复）
         var existing = repository.findChapterByIndex(projectId, chapterIndex);
         int idempotentMinLen = repository.findWritingPreferences(projectId).map(pref -> pref.getMinChapterLength()).orElse(2000);
-        if (existing.isPresent() && existing.get().getWordCount() >= idempotentMinLen) {
+        if (existing.isPresent() && existing.get().getStatus() == Chapter.Status.DRAFTING) {
+            throw new IllegalStateException("第" + chapterIndex + "章有未完成的作者草稿，请完成编辑后继续");
+        }
+        if (existing.isPresent() && (existing.get().getWordCount() >= idempotentMinLen
+                || (existing.get().getStatus() == Chapter.Status.DONE && existing.get().getWordCount() >= 500))) {
             // p10-w1-06: 后处理未完成的章节（POST_PROCESSING）标记可观测，便于识别需重跑的章节
             if (existing.get().getStatus() == com.writing.novel.domain.Chapter.Status.POST_PROCESSING) {
                 log.warn("第{}章后处理未完成（status=POST_PROCESSING），可能需重跑后处理", chapterIndex);

@@ -1,0 +1,31 @@
+{
+  "verifiedAt": "2026-09-08T00:56:37.137112",
+  "commit": "74b5932173bb94de93b75db6bcd4869b080f5b39",
+  "cleanCheckout": true,
+  "branch": "codex/p27-09-author-chapter-preservation",
+  "checks": [
+    {
+      "command": "./init.sh && mvn test -Dtest=AuthorChapterPreservationTest && E2E_FIXTURE_DIR=data/e2e-fixtures/canary-mystery-20260831 ./scripts/e2e.sh && python3 scripts/compare-baseline.py && python3 scripts/check-harness.py --check-git",
+      "exitCode": 0,
+      "result": "PASS; Maven full/largest run tests/failures/errors/skipped=664,0,0,1; final focused run=7,0,0,0",
+      "verifiedAt": "2026-09-08T00:56:18.364099",
+      "durationSeconds": 64.45,
+      "log": "/tmp/writingagent-reconcile-14/p27-09-main.log",
+      "inputDigest": "3ffca3deb9a57e884df5bb7712a21168eb42611f7ef2f6d7debcce7fad4da7d4"
+    }
+  ],
+  "logs": {
+    "data/verification/reconcile-14/p27-09-main.log": "1f2594f091f55cc76f7dfe81d1caf8c1a2627d47484fe467218a8cecb59aabfc"
+  },
+  "scope": "独立特性分支恢复既有实现；干净合并后main验证；未重启原写作服务或推进原小说。",
+  "regressionProof": {
+    "command": "mvn test -q -Dtest=AuthorChapterPreservationTest",
+    "exitCode": 1,
+    "result": "FAIL; Maven full/largest run tests/failures/errors/skipped=7,2,0,0",
+    "verifiedAt": "2026-09-08T00:53:53.666535",
+    "durationSeconds": 4.17,
+    "log": "/tmp/writingagent-reconcile-14/p27-09-red.log",
+    "inputDigest": "cf05db4bfe48925531625c680052b006d5e5044926570d7bee2738416aea44c2",
+    "expectedFailure": true
+  }
+}

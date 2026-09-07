@@ -349,6 +349,17 @@
       "implementation_commit": "17517f8f7671043ec7b5a4741db428c21eeea459",
       "main_commit": "17517f8f7671043ec7b5a4741db428c21eeea459",
       "evidence": "docs/harness/evidence/reconciled-p27-08.json"
+    },
+    {
+      "id": "reconciled-p27-09",
+      "kind": "verified",
+      "feature_ids": [
+        "p27-09"
+      ],
+      "branch": "codex/p27-09-author-chapter-preservation",
+      "implementation_commit": "74b5932173bb94de93b75db6bcd4869b080f5b39",
+      "main_commit": "74b5932173bb94de93b75db6bcd4869b080f5b39",
+      "evidence": "docs/harness/evidence/reconciled-p27-09.json"
     }
   ]
 }

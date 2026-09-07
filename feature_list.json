@@ -3840,7 +3840,7 @@
       "dependencies": [
         "p27-02"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/web/CollaborationController.java",
         "src/test/java/com/writing/novel/web/CollaborationApiTest.java"
@@ -3849,9 +3849,9 @@
       "problem_ref": "2026-09-05 用户统一人机协作需求与架构审查",
       "acceptance": "mvn test -Dtest=CollaborationApiTest 返回 0，满足 spec 对应行为断言",
       "verify_cmd": "mvn test -Dtest=CollaborationApiTest",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 CollaborationApiTest 4 tests PASS，覆盖真实状态、停止幂等、审核偏好不隐式批准、活动工作拒绝偏好修改与非法项目/策略。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。",
-      "delivery_state": "verification-in-progress",
-      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md"
+      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 CollaborationApiTest 4 tests PASS，覆盖真实状态、停止幂等、审核偏好不隐式批准、活动工作拒绝偏好修改与非法项目/策略。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-03-collaboration-api实现d17e8cbb4b2ebdecd0012f1671b92b8a75954a14已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-03.json。",
+      "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
+      "completion_record": "reconciled-p27-03"
     },
     {
       "id": "p27-04",
@@ -4364,5 +4364,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": "p27-03"
+  "active_feature": null
 }

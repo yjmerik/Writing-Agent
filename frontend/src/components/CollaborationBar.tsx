@@ -72,7 +72,7 @@ export default function CollaborationBar({ projectId, onChanged, onReview }: {
   const busy = status?.busy ?? false;
   const stopped = !busy && status?.state !== 'FINAL' && status?.task?.status === 'PAUSED';
   const failed = !busy && status?.state !== 'FINAL' && status?.task?.status === 'FAILED';
-  const label = busy ? status?.stopRequested ? '正在停下' : 'Agent 正在创作'
+  const label = busy ? !status?.task ? '正在处理内容' : status.stopRequested ? '正在停下' : 'Agent 正在创作'
     : status?.state === 'FINAL' ? '全书已完成'
     : status?.pendingReviews ? '等待你审阅'
     : failed ? '创作遇到问题' : stopped ? '已交给作者' : '准备协作';

@@ -43,6 +43,16 @@ class CollaborationApiTest {
   assertEquals(-1,repo.findWritingPreferences(project.getId()).orElseThrow().getCheckpointSpan());
  }
  @Test void missingProjectIsRejected() throws Exception {mvc.perform(get("/api/projects/missing/collaboration")).andExpect(status().isBadRequest());}
-
+ @Test void currentManualSaveDoesNotInheritPreviousStopRequest() throws Exception {
+  var task=new WritingTask(project.getId(),24,WritingTask.Type.AUTO_RUN);
+  task.setStatus(WritingTask.Status.PAUSED);task.setStopRequested(true);repo.saveWritingTask(task);
+  executor.beginWork(project.getId(),"manual-save");
+  try {
+   mvc.perform(get(url)).andExpect(status().isOk())
+     .andExpect(jsonPath("$.busy").value(true))
+     .andExpect(jsonPath("$.stopRequested").value(false))
+     .andExpect(jsonPath("$.task").doesNotExist());
+  } finally { executor.endWork(project.getId(),"manual-save"); }
+ }
 
 }

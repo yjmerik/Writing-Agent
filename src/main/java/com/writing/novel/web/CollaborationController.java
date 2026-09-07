@@ -30,7 +30,7 @@ public class CollaborationController {
         Project project = requireProject(id);
         WritingTask task = executor.latestCollaborativeTask(id);
         boolean busy = executor.hasActiveTask(id);
-        if (busy) task = repository.findActiveWritingTask(id).orElse(task);
+        if (busy) task = repository.findActiveWritingTask(id).orElse(null);
         String blocked = executor.collaborationBlocker(id);
         var prefs = preferences(id);
         Map<String, Object> result = new LinkedHashMap<>();

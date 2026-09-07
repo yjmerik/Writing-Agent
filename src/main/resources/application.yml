@@ -23,11 +23,11 @@ llm:
   replay:
     mode: "off"
     dir: data/fixtures/llm
-  # 2026-08-29 切回 DeepSeek v4-flash（GLM coding 网关夜间对 >5min 长响应 StreamReset，不稳定）
+  # 2026-09-07：百炼 Token Plan；专用套餐凭据与向量按量凭据隔离。
   default-model:
-    base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
-    api-key: ${DEEPSEEK_API_KEY:}
-    model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+    base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
+    api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
+    model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
     temperature: 0.7
     max-tokens: 8192
     context-window: 64000
@@ -35,61 +35,61 @@ llm:
     style-guide: "严格遵循世界观设定中已确立的类型风格。不要引入与世界观类型不兼容的元素。人物名字必须与【出场人物】完全一致，绝对不得改名。"
   models:
     CHAPTER_WRITING:
-      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
-      api-key: ${DEEPSEEK_API_KEY:}
-      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
+      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
+      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.8
       # 推理模型 reasoning_content 消耗大量输出 token；8192 会截断 3000+ 字正文
       max-tokens: 20000
       context-window: 64000
       style-guide: "严格遵循世界观设定中已确立的类型风格。人物名字必须与【出场人物】完全一致，绝对不得改名。不得引入与世界观不兼容的元素。"
     CONTINUITY_CHECK:
-      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
-      api-key: ${DEEPSEEK_API_KEY:}
-      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
+      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
+      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.3
       max-tokens: 4096
       context-window: 64000
     PLOTTING:
-      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
-      api-key: ${DEEPSEEK_API_KEY:}
-      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
+      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
+      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.7
       # op-fix: 推理模型 reasoning_content 耗 token，8192 致总纲正文为空
       max-tokens: 16000
       context-window: 64000
     WORLDBUILDING:
-      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
-      api-key: ${DEEPSEEK_API_KEY:}
-      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
+      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
+      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.7
       max-tokens: 8192
       context-window: 64000
     CHARACTER_DESIGN:
-      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
-      api-key: ${DEEPSEEK_API_KEY:}
-      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
+      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
+      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.7
       max-tokens: 8192
       context-window: 64000
     STYLE_GUARDIAN:
-      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
-      api-key: ${DEEPSEEK_API_KEY:}
-      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
+      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
+      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.3
       max-tokens: 4096
       context-window: 64000
     MEMORY_SUMMARY:
-      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
-      api-key: ${DEEPSEEK_API_KEY:}
-      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
+      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
+      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.3
       max-tokens: 4096
       context-window: 64000
     GENERAL:
-      base-url: ${DEEPSEEK_END_POINT:https://api.deepseek.com}
-      api-key: ${DEEPSEEK_API_KEY:}
-      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
+      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
+      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.3
       max-tokens: 4096
       context-window: 64000

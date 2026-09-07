@@ -6,7 +6,7 @@
 # 注意：本脚本以 source 方式使用，必须始终以成功状态返回（不用 exit）。
 set -u
 
-KEYS="DEEPSEEK_API_KEY DEEPSEEK_END_POINT DEEPSEEK_MODEL LOCAL_LLM_API_KEY GLM_API_KEY GLM_END_POINT GLM_MODEL GLM_EMBEDDING_API_KEY DASHSCOPE_API_KEY DASHSCOPE_EMBEDDING_API_KEY ALIYUN_LLM_API_KEY"
+KEYS="DEEPSEEK_API_KEY DEEPSEEK_END_POINT DEEPSEEK_MODEL LOCAL_LLM_API_KEY GLM_API_KEY GLM_END_POINT GLM_MODEL GLM_EMBEDDING_API_KEY DASHSCOPE_API_KEY DASHSCOPE_EMBEDDING_API_KEY ALIYUN_LLM_API_KEY DASHSCOPE_TOKEN_PLAN_API_KEY DASHSCOPE_TOKEN_PLAN_BASE_URL DASHSCOPE_TOKEN_PLAN_MODEL"
 
 # 已存在的变量跳过；向量专用密钥显式为空也必须保留。
 MISSING=()
@@ -61,6 +61,38 @@ PY
       fi
       ;;
   esac
+fi
+
+# Token Plan 专用环境变量优先；否则只读复用 ZCode 已有的套餐凭据。
+# 不回退到通用/向量/DeepSeek key，避免串用不同计费通道；不修改 ZCode。
+if [ -z "${DASHSCOPE_TOKEN_PLAN_API_KEY:-}" ] && [ -f "$HOME/.zcode/v2/config.json" ]; then
+  if command -v python3 >/dev/null 2>&1; then
+    token_plan_profile_key="$(python3 - "$HOME/.zcode/v2/config.json" <<'PY'
+import json, sys
+from urllib.parse import urlparse
+try:
+    with open(sys.argv[1]) as source:
+        providers = json.load(source).get("provider", {})
+    keys = set()
+    for provider in providers.values():
+        options = provider.get("options", {})
+        url = urlparse(options.get("baseURL", ""))
+        key = options.get("apiKey", "")
+        if (url.scheme == "https" and url.hostname == "token-plan.cn-beijing.maas.aliyuncs.com"
+                and "qwen3.8-flash" in provider.get("models", {})
+                and isinstance(key, str) and key.startswith("sk-sp-")):
+            keys.add(key)
+    if len(keys) == 1:
+        print(next(iter(keys)), end="")
+except (OSError, ValueError, AttributeError, TypeError):
+    pass
+PY
+)"
+    if [ -n "$token_plan_profile_key" ]; then
+      export DASHSCOPE_TOKEN_PLAN_API_KEY="$token_plan_profile_key"
+    fi
+    unset token_plan_profile_key
+  fi
 fi
 
 :  # 始终以成功状态返回，避免 source 场景下中断调用方（set -e）

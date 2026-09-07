@@ -4083,8 +4083,10 @@
       "name": "Token Plan Qwen3.8 Flash路由与ZCode凭据加载",
       "phase": 29,
       "type": "feature",
-      "dependencies": [],
-      "status": "deferred",
+      "dependencies": [
+        "p28-01"
+      ],
+      "status": "in-progress",
       "files": [
         "src/main/resources/application.yml",
         "scripts/load-env.sh",
@@ -4092,12 +4094,12 @@
       ],
       "description": "用户授权参考ZCode套餐配置切换全部写作模型，保留向量配置和原项目后纯UI续测。",
       "problem_ref": "docs/specs/2026-09-07-qwen38-token-plan-configuration.md",
-      "acceptance": "配置测试和init通过；打包重启18098后从原20章项目UI继续生成21章。",
+      "acceptance": "TokenPlanModelConfigurationTest（9处路由、密钥隔离、真实客户端模拟SSE及5项隔离ZCode加载）和完整init、打包通过；真实Token Plan短提示流式连接返回200及非空内容。原项目第21章UI续写证据单独保留，本轮不重启或推进原小说。",
       "verify_cmd": "mvn test -Dtest=TokenPlanModelConfigurationTest",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-07：配置契约RED 3 tests/2 failures/1 error，GREEN 3/3（全部8路由+默认、专用key隔离、本地模拟SSE真实客户端请求）；全量init 622 tests/0 failures/0 errors/1 skipped、frontend build、package PASS。ZCode套餐key静默加载匹配、向量key独立；安装包9处Token Plan/Qwen配置确认。仅18098重启保留20章66880字，ego-browser点击继续后20:12生成第21章2542字，全书69422字，越过原402。配置证据data/verification/qwen38-token-plan，UI证据116—119及chapter-021-visible-first.txt。无Agent/prompt/数据库变更，未用业务API推进小说；后续真实UI推进至23章82750字；用户改为共性问题收敛，不再要求写满200章。22:03:21使用启动脚本加载环境后编译与622项测试再次通过（0失败/0错误/1跳过），证据data/verification/qwen38-token-plan/convergence-verification.json。",
-      "delivery_state": "local-unmerged",
-      "deferred_reason": "实现及既往验证仅存在原工作区，尚无独立特性提交/主分支合并证明；本次只恢复登记，不合入业务改动。续做时按依赖逐个建分支、迁移当前特性、复验和合并。",
-      "spec": "docs/specs/2026-09-07-qwen38-token-plan-configuration.md"
+      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-07：配置契约RED 3 tests/2 failures/1 error，GREEN 3/3（全部8路由+默认、专用key隔离、本地模拟SSE真实客户端请求）；全量init 622 tests/0 failures/0 errors/1 skipped、frontend build、package PASS。ZCode套餐key静默加载匹配、向量key独立；安装包9处Token Plan/Qwen配置确认。仅18098重启保留20章66880字，ego-browser点击继续后20:12生成第21章2542字，全书69422字，越过原402。配置证据data/verification/qwen38-token-plan，UI证据116—119及chapter-021-visible-first.txt。无Agent/prompt/数据库变更，未用业务API推进小说；后续真实UI推进至23章82750字；用户改为共性问题收敛，不再要求写满200章。22:03:21使用启动脚本加载环境后编译与622项测试再次通过（0失败/0错误/1跳过），证据data/verification/qwen38-token-plan/convergence-verification.json。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。",
+      "delivery_state": "verification-in-progress",
+      "spec": "docs/specs/2026-09-07-qwen38-token-plan-configuration.md",
+      "audit_notes": "依赖修正：本项明确保留p28-01向量配置，契约也依赖该配置，不能标记为无依赖。新增5项ZCode加载契约；保留p28-01显式空值修复，历史UI证据和本轮协议验证分开登记。"
     },
     {
       "id": "p30-01",
@@ -4359,5 +4361,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": null
+  "active_feature": "p29-01"
 }

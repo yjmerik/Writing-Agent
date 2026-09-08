@@ -4541,6 +4541,41 @@
       "acceptance": "未指定 E2E_FIXTURE_DIR 时 ./scripts/e2e.sh 以最新语料 replay 通过（构思与 3 章写作终态非 FAILED），或给出明确报错指引。",
       "verify_cmd": "./scripts/e2e.sh",
       "evidence": "2026-09-08 发现：/tmp/p32-02-e2e.log（主区 canary-wuxia 分叉 miss）与 /tmp/ctrl-e2e3.log（基线 glm53 分叉）；固定 canary-mystery 后两侧均通过。"
+    },
+    {
+      "id": "p32-11",
+      "name": "全书质量评价结果无持久化与读回",
+      "description": "POST /api/projects/{id}/evaluate 返回结果但不落库、无 GET 端点；前端切 tab/刷新后显示「尚未评价」（体验报告 #7 复现：UI 实测评价完成后切页即丢）。需持久化评审历史（含时间/章节数/结果 JSON），页面加载时读回最近结果。",
+      "phase": 32,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/web/OrchestratorController.java",
+        "frontend/src/components/QualityEvaluationPanel.tsx"
+      ],
+      "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
+      "acceptance": "mvn test -Dtest=QualityEvaluationPersistenceTest：evaluate 后 GET 读回同结果；页面重载显示最近评价。",
+      "verify_cmd": "mvn test -Dtest=QualityEvaluationPersistenceTest",
+      "evidence": ""
+    },
+    {
+      "id": "p32-12",
+      "name": "活动写作期 restore/rollback 的 409 文案误导",
+      "description": "活动任务期章节 mutation 被所有权门正确拒绝（实测 restore 返回 409，行为正确），但前端统一显示「章节已被更新，请重新确认」，诱导用户重试；应区分 409 来源：所有权占用提示「Agent 正在创作，请先接手编辑后回退」。同类：编辑保存失败的 409 文案同样混用（体验报告 #6 状态语义问题在回退路径的实例）。",
+      "phase": 32,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/ChapterRevisionService.java",
+        "src/main/java/com/writing/novel/web/ContentController.java",
+        "frontend/src/components/InteractiveReview.tsx"
+      ],
+      "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
+      "acceptance": "mvn test -Dtest=RestoreOwnershipMessageTest：active task 时 restore 返回带 owner 原因；前端按原因显示接手提示。",
+      "verify_cmd": "mvn test -Dtest=RestoreOwnershipMessageTest",
+      "evidence": ""
     }
   ],
   "schema_version": 2,

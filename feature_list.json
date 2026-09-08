@@ -4469,7 +4469,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "backlog：mvn test -Dtest=FactEvidenceGradingTest——角色台词/推测类断言不直接成为 ACTIVE WORLD_RULE（引用报告 #4 复验标准）。",
       "verify_cmd": "mvn test -Dtest=FactEvidenceGradingTest",
-      "evidence": "2026-09-08：分支codex/p32-06-fact-evidence-grading 实现提交696cc6d ff合入main（用户决定：先合并，e2e 分叉另行登记）。FactEvidenceGradingTest 3项RED→GREEN（收割WORLD_RULE待核+事件/不取代确认铁律/状态类与人工补丁不受影响）；canon系29项回归全过；mvn test 705/0失败/1跳过。e2e replay FAIL 归因：canary-mystery 语料(08-31)与当前代码演化路径分叉——三章写作prompt与语料逐字一致（similarity 1.000）但LLM输出历史不同致指纹序列不同，且语料record当日本就依赖mtime偶然匹配；非本改动引入。登记p32-15。",
+      "evidence": "2026-09-08：分支codex/p32-06-fact-evidence-grading 实现提交696cc6d ff合入main（用户决定：先合并，e2e 分叉另行登记）。FactEvidenceGradingTest 3项RED→GREEN（收割WORLD_RULE待核+事件/不取代确认铁律/状态类与人工补丁不受影响）；canon系29项回归全过；mvn test 705/0失败/1跳过。e2e replay FAIL 归因：canary-mystery 语料(08-31)与当前代码演化路径分叉——三章写作prompt与语料逐字一致（similarity 1.000）但LLM输出历史不同致指纹序列不同，且语料record当日本就依赖mtime偶然匹配；非本改动引入。登记p32-15。 后续修正：bisect 证实 e2e 分叉由本改动引入（圣经段【待核】标注/待核不恒注入改变 CHAPTER_WRITING prompt）——属预期行为变更，语料重建+bless 由 p32-15 完成。",
       "completion_record": "p32-06-author-trust"
     },
     {
@@ -4625,8 +4625,10 @@
     },
     {
       "id": "p32-15",
-      "name": "e2e 回放语料与当前代码演化路径分叉（LLM 输出非确定性）",
-      "description": "canary-mystery/wuxia-20260831 语料以 record 当时的 LLM 输出序列固化，回放对 evolving-state 敏感：2026-09-08 实测同指纹 prompt 与语料逐字一致（similarity 1.000）但三章写作调用落在同一新指纹 bb26e26f 上（语料为 4 个不同指纹），且第二章 systemPrompt 多一条播种 CHARACTER_STATE——语料与当前代码/演化路径不再匹配。当日 p32-10 合入时侥幸 PASS（mtime 恰好选中可用语料），p32-06 合入后暴露。需决策修复方案：--mode record 重建版本化语料+bless 基线（消耗真实额度），或让 replay 对非确定性 prompt 段做归一化/容忍匹配。",
+      "name": "prompt 变更后回放语料重建流程缺失",
+      "description": [
+        "定性修正（git bisect 实证）：a32832c（p32-06 前）同语料 replay PASS、696cc6d FAIL——分叉由 p32-06 引入，且属预期行为变更：待核事实不再以铁律注入、注入文本带【待核】标注，CHAPTER_WRITING systemPrompt 改变 → 旧语料指纹 miss。此前'LLM 输出非确定性'的归因错误。暴露的真实流程缺陷：任何改变注入上下文的改动合入后，没有强制的『record 重建语料 + 人工 bless 基线』步骤，导致 e2e/基线门禁静默失效。修复：建立语料重建流程——本 feature 以 record 重建 canary-mystery 语料、双次 replay 一致、质量对比后 bless golden，并把该流程写入 AGENTS.md DoD 检查（prompt/上下文改动合入后必须重建对应 preset 语料）。"
+      ],
       "phase": 32,
       "type": "bug",
       "dependencies": [],
@@ -4637,9 +4639,13 @@
         "baselines/golden.json"
       ],
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
-      "acceptance": "./scripts/e2e.sh 零参数连续两次运行终态均 COMPLETED 且 compare-baseline PASS（确定性回放恢复）；修复方案与理由记录在证据中。",
-      "verify_cmd": "./scripts/e2e.sh && python3 scripts/compare-baseline.py",
-      "evidence": "2026-09-08 取证：data/e2e-fixtures/canary-mystery-20260831/CHAPTER_WRITING-bb26e26f359662db-{1,2,3}.miss.json（miss 转储）；三章 miss prompt userMessage 与语料 a3e94a68 逐字一致但指纹不同；系统段差异为播种时序产生的 CHARACTER_STATE。基线 FAIL 明细：章节数2<3、总字数6626<8459、失败3、LLM错误6。等待用户决策修复方案。"
+      "acceptance": [
+        "record 后 ./scripts/e2e.sh 连续两次 COMPLETED 且第二次与第一次质量指标一致；compare-baseline PASS（bless 后的新 golden，人工确认理由记录证据）；AGENTS.md DoD 增补语料重建条款。"
+      ],
+      "verify_cmd": [
+        "./scripts/e2e.sh && ./scripts/e2e.sh && python3 scripts/compare-baseline.py"
+      ],
+      "evidence": "2026-09-08 取证修正：ctrl worktree 对照——2b8677e 与 a32832c 同语料均 COMPLETED，696cc6d（p32-06）miss 于 CHAPTER_WRITING 第2-4次调用；prompt diff 定位到圣经段【待核】标注与 importance 排序变化。结论：预期行为变更需重建语料。record 重建进行中。"
     }
   ],
   "schema_version": 2,

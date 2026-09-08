@@ -525,6 +525,17 @@
       "implementation_commit": "a32832c9bca3d54bd2348b17e0380905811ab11e",
       "main_commit": "a32832c9bca3d54bd2348b17e0380905811ab11e",
       "evidence": "docs/harness/evidence/p32-10-author-trust.json"
+    },
+    {
+      "id": "p32-15-author-trust",
+      "kind": "verified",
+      "feature_ids": [
+        "p32-15"
+      ],
+      "branch": "codex/p32-15-corpus-rebuild",
+      "implementation_commit": "7407268348c3e202a079635436ab8b9c014bb4c9",
+      "main_commit": "7407268348c3e202a079635436ab8b9c014bb4c9",
+      "evidence": "docs/harness/evidence/p32-15-author-trust.json"
     }
   ]
 }

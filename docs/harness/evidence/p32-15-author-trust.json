@@ -1,0 +1,38 @@
+{
+  "commit": "7407268348c3e202a079635436ab8b9c014bb4c9",
+  "cleanCheckout": true,
+  "checkoutNote": "record/replay/bless 在当前干净 main 检出执行；本轮代码改动（e2e.sh PAUSED 终态、AGENTS.md 条款）与 golden 更新同属本 feature 提交。",
+  "feature": "p32-15",
+  "checks": [
+    {
+      "command": "E2E_FIXTURE_DIR=data/e2e-fixtures/canary-mystery-20260908 ./scripts/e2e.sh --mode record",
+      "result": "构思 WRITING + 写作 PAUSED（第2章后人审停点）+ 40 fixtures 录制",
+      "exitCode": 0
+    },
+    {
+      "command": "./scripts/e2e.sh（第1次 replay）",
+      "result": "2章/7798字/40调用/0错误/0失败 E2E 通过",
+      "exitCode": 0
+    },
+    {
+      "command": "./scripts/e2e.sh（第2次 replay）",
+      "result": "与第1次逐项一致——确定性恢复",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/compare-baseline.py --bless",
+      "result": "golden 更新 minChapters=2/minTotalWords=6238/minAvgWordCount=2729；随后 PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test",
+      "result": "710 tests / 0 failures / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/check-harness.py --check-git",
+      "result": "PASS 242 features",
+      "exitCode": 0
+    }
+  ]
+}

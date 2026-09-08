@@ -155,6 +155,9 @@ for i in $(seq 1 "$POLL_LIMIT"); do
   TASK_STATE=$(echo "$TASK_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['status'])")
   case "$TASK_STATE" in
     COMPLETED|FAILED|CANCELLED) break ;;
+    # p32-15: PAUSED 是合法流程停点（如一致性门禁标记人审后写作循环暂停）——
+    # 与 record 行为一致，按已写章节评估，不再傻等
+    PAUSED) break ;;
   esac
   if [ $(( i % 30 )) -eq 0 ]; then
     TASK_CHAPTERS=$(echo "$TASK_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['chaptersWritten'])")

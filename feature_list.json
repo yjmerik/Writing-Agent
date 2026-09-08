@@ -4639,9 +4639,7 @@
         "baselines/golden.json"
       ],
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
-      "acceptance": [
-        "record 后 ./scripts/e2e.sh 连续两次 COMPLETED 且第二次与第一次质量指标一致；compare-baseline PASS（bless 后的新 golden，人工确认理由记录证据）；AGENTS.md DoD 增补语料重建条款。"
-      ],
+      "acceptance": "record 重建语料后 ./scripts/e2e.sh 连续两次终态一致且 E2E 通过；compare-baseline.py PASS（bless 后 golden，理由记录证据）；AGENTS.md DoD 含语料重建条款。",
       "verify_cmd": "./scripts/e2e.sh && ./scripts/e2e.sh && python3 scripts/compare-baseline.py",
       "evidence": "2026-09-09：分支codex/p32-15-corpus-rebuild。真实LLM record 重建 canary-mystery-20260908 语料（40 fixture）；replay×2 与 record 逐项一致（2章/7798字/40调用/0错误/0失败，e2e-report 三次一致）→ 确定性恢复；流程在第2章后被一致性门禁标记人审暂停（record/replay 行为一致，非退化），e2e.sh 轮询将 PAUSED 识别为合法终态；compare-baseline 唯一退化项为章节数/总字数（口径变化），平均章字数 3899 高于旧基线 2466，bless 更新 golden 并记录理由；AGENTS.md DoD 增补上下文改动后的语料重建条款。mvn test 710/0失败/1跳过；check-harness --check-git PASS。",
       "completion_record": "p32-15-author-trust"

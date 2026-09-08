@@ -1,26 +1,25 @@
-# Phase32 UI 验证发现的 4 项修复完成 — 2026-09-08
+# Phase32 全部完成（14/14） — 2026-09-09
 
-Last Updated: 2026-09-08
+Last Updated: 2026-09-09
 
 ## Current（当前）
 
-UI 验证发现的 4 个问题（p32-11~14）与第二批前两项（p32-10 e2e 语料 preset 匹配、p32-06 StoryFact 证据分级 696cc6d）已合入 main。feature_list 共 242 项：238 completed / 4 not-started（p32-07/08/09 + **p32-15 e2e 回放语料与代码演化路径分叉**——LLM 输出非确定性使 canary-20260831 语料不再可靠，p32-06 合入后 e2e FAIL 即此因，取证见 feature evidence；修复方案——record 重建语料+bless，或 replay 归一化容忍——待用户决策）。active_feature=null，main=本轮 docs 提交。
+Phase32 的 14 个 feature 全部完成合入 main：第一批 P1（p32-01~05 作者信任闭环）、UI 验证修复（p32-11~14）、第二批记忆分级（p32-06 事实证据分级、p32-07 收割收紧、p32-08 伏笔回收证据、p32-09 提醒去重）、流程修复（p32-10 e2e 语料 preset 匹配、p32-15 语料重建+bless+DoD 条款）。feature_list 242 项全部 completed，active_feature=null，main=本轮 docs 提交，工作区干净。
 
 ## Files（文件与证据）
 
-状态源 [feature_list.json](feature_list.json)；完成索引 [docs/harness/completions.json](docs/harness/completions.json)（本轮新增 p32-11~14 四条 verified）；逐项证据 docs/harness/evidence/p32-1*-author-trust.json；spec [docs/specs/2026-09-08-author-trust-closed-loop.md](docs/specs/2026-09-08-author-trust-closed-loop.md)。
+状态源 [feature_list.json](feature_list.json)；完成索引 [docs/harness/completions.json](docs/harness/completions.json)（p32 系 14 条 verified）；逐项证据 docs/harness/evidence/p32-*-author-trust.json；spec [docs/specs/2026-09-08-author-trust-closed-loop.md](docs/specs/2026-09-08-author-trust-closed-loop.md)；UI 验证记录 docs/reports/2026-09-08-ui-verification/UI验证记录.md。
 
 ## Verification（验证）
 
-- 每项先 RED 复现（p32-13 实测同步阻塞 4082ms；p32-11/12/14 均先失败）后 GREEN。
-- p32-06：FactEvidenceGradingTest 3 项 RED→GREEN；canon 系 29 项回归全过；main 全量 705/0失败/1跳过；check-harness --check-git PASS。
-- e2e 零参数当前 FAIL（基线四项退化）——归因 p32-15 语料分叉（prompt 逐字一致但 LLM 输出历史不同），非 p32-06 引入；修复决策留待下轮。
-- p32-13 行为：修订响应 <2.5s、所有权立即释放、摘要后台最终一致、异步失败发 CHAPTER_REFRESH_FAILED(async=true)。
+- mvn test 710/0失败/1跳过（干净 main）；前端构建通过；check-harness --check-git PASS。
+- e2e：canary-mystery-20260908 语料（真实 LLM record 重建，40 fixtures）replay×2 与 record 逐项一致（2章/7798字/40调用/0错误）——确定性恢复；golden bless 为 2 章口径（一致性门禁人审停点为预期行为，平均章字数 3899 > 旧基线 2466），compare-baseline PASS。
+- AGENTS.md DoD 增补：影响注入上下文的改动合入后必须 record 重建语料 + 双次 replay + 人工确认 bless。
 
 ## Blockers（阻塞与限制）
 
-未推送远端。截图 CDP 超时未修（环境现象）。**p32-15 阻塞后续质量类改动的 e2e/基线验证**：p32-07（prompt 收紧）合入前必须先重建语料或实现 replay 容忍，否则无法按 DoD 验证。p32-08/09 不直接改 prompt，可在现有条件下验证。验证实例数据与 miss 取证保留（data/verify-fullrun-0908.db、data/e2e-fixtures/canary-mystery-20260831/*.miss.json）。
+未推送远端。e2e 冒烟口径为 2 章（第 2 章后一致性门禁人审停点）；若需 3 章全量冒烟，可在 replay 流程中自动处理人审后继续（新需求按协议登记）。截图 CDP 超时未修（环境现象）。写作循环内部派生链仍同步；REST 修订已异步（p32-13）。
 
 ## Next Steps（下一步）
 
-./init.sh 恢复（mvn 需 bash -c 'source scripts/load-env.sh'）。建议顺序：p32-10（恢复 e2e 零参数可跑）→ 第二批 p32-06 StoryFact 证据分级 → p32-07/08/09。UI 回归可复用 docs/reports/2026-09-08-ui-verification 的操作路径。
+./init.sh 恢复（mvn 需 bash -c 'source scripts/load-env.sh'）。可验证系统新行为：canary-mystery-20260908 replay 是 Phase32 全部修复后的参考基线；UI 回归路径见 docs/reports/2026-09-08-ui-verification。新需求先写 spec 登记再开发。

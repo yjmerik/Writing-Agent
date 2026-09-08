@@ -4365,7 +4365,7 @@
       "phase": 32,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/ChapterRevisionService.java",
         "frontend/src/components/AgentRevisionDialog.tsx",
@@ -4374,7 +4374,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=ChapterRevisionRefreshIsolationTest 通过：派生刷新抛异常时编辑/应用仍 2xx 且 derivedRefreshPending=true、正文回读一致、CHAPTER_REFRESH_FAILED 事件已发；前端构建通过且保存失败/刷新失败文案分级。",
       "verify_cmd": "mvn test -Dtest=ChapterRevisionRefreshIsolationTest",
-      "evidence": ""
+      "evidence": "2026-09-08：分支codex/p32-01-revision-refresh-isolation 实现提交552f880（含spec与p32登记），ff合入main；合并即同树，干净检出复核mvn test 684/0失败/1跳过、前端构建PASS。RED=刷新失败端点409/无pending字段，GREEN=ChapterRevisionRefreshIsolationTest 2项+30项局部回归。派生刷新失败发CHAPTER_REFRESH_FAILED事件，PUT/apply响应与前端文案区分『已保存待处理』与『应用失败』。"
     },
     {
       "id": "p32-02",
@@ -4383,7 +4383,7 @@
       "phase": 32,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java",
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
@@ -4391,7 +4391,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=AuthorDraftConflictProtectionTest 通过：章节后处理自动重写期间作者保存新版本后，自动稿被版本门拒绝落库、DB 保留作者稿、CHAPTER_AUTHOR_CONFLICT 事件已发。",
       "verify_cmd": "mvn test -Dtest=AuthorDraftConflictProtectionTest",
-      "evidence": ""
+      "evidence": "2026-09-08：分支codex/p32-02-author-draft-conflict 实现提交5545160 ff-only合入main。AuthorDraftConflictProtectionTest 3项RED→GREEN；mvn test 687/0失败/1跳过；E2E_FIXTURE_DIR=canary-mystery-20260831 ./scripts/e2e.sh 写作COMPLETED + compare-baseline PASS（基线2b8677e对照组同语料同结果）。自动重写/状态标记经版本门，冲突保留作者稿并发CHAPTER_AUTHOR_CONFLICT。"
     },
     {
       "id": "p32-03",
@@ -4519,9 +4519,26 @@
       "acceptance": "backlog：mvn test -Dtest=ForeshadowIssueDedupTest——同一伏笔跨章不重复追加 ContinuityIssue；质量报告当章阻断项优先、长期提醒另列。",
       "verify_cmd": "mvn test -Dtest=ForeshadowIssueDedupTest",
       "evidence": ""
+    },
+    {
+      "id": "p32-10",
+      "name": "e2e 自动语料选择与 prompt 指纹分叉",
+      "description": "e2e.sh 未指定 E2E_FIXTURE_DIR 时按 mtime 自动选语料，选中 canary-wuxia-20260831 的 WORLDBUILDING 指纹缺失导致构思 FAILED（基线 2b8677e 对照同样分叉，属既有问题非 p32 引入）。需重建/归档匹配语料或让脚本显式校验指纹可用性。",
+      "phase": 32,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "scripts/e2e.sh",
+        "data/e2e-fixtures/"
+      ],
+      "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
+      "acceptance": "未指定 E2E_FIXTURE_DIR 时 ./scripts/e2e.sh 以最新语料 replay 通过（构思与 3 章写作终态非 FAILED），或给出明确报错指引。",
+      "verify_cmd": "./scripts/e2e.sh",
+      "evidence": "2026-09-08 发现：/tmp/p32-02-e2e.log（主区 canary-wuxia 分叉 miss）与 /tmp/ctrl-e2e3.log（基线 glm53 分叉）；固定 canary-mystery 后两侧均通过。"
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": "p32-01"
+  "active_feature": "p32-03"
 }

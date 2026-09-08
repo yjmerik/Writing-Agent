@@ -4593,9 +4593,26 @@
       "acceptance": "mvn test -Dtest=WorkOwnershipLeakTest：协作任务交还+回退+再回退后 hasActiveTask=false，第二次回退不再 409。",
       "verify_cmd": "mvn test -Dtest=WorkOwnershipLeakTest",
       "evidence": "2026-09-08 UI 验证实锤：verify-fullrun-0908.db 项目 1e242f32，21:16 回退成功后 busy 持续 true/task=None，restore expectedVersion=5 正确仍 409；响应体「已有进行中的写作任务，请先暂停或取消」。 补充：重启后第二次复现——restore v4→v6 同样 100% 成功即泄漏（busy=true/task=None，30s+60s 持续），P1：任何章节 mutation 后协作/编辑被锁至下次重启。复现路径=交还作者→版本回退成功。"
+    },
+    {
+      "id": "p32-14",
+      "name": "API 响应无缓存控制导致界面读旧数据",
+      "description": "UI 实测：GET /api 响应无 Cache-Control，浏览器启发式缓存使普通刷新(F5)后章节卡仍显示旧版本/旧字数（v3/4981 vs 实际 v4/5008），需硬刷新才更新；作者保存后误以为未生效。修复：/api/** 响应统一 no-store + 前端 request() 显式 cache:'no-store'。",
+      "phase": 32,
+      "type": "bug",
+      "dependencies": [],
+      "status": "in-progress",
+      "files": [
+        "src/main/java/com/writing/novel/web/ApiCacheControlFilter.java",
+        "frontend/src/api/client.ts"
+      ],
+      "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
+      "acceptance": "mvn test -Dtest=ApiCacheControlTest：GET /api 响应头含 Cache-Control no-store；前端构建通过。",
+      "verify_cmd": "mvn test -Dtest=ApiCacheControlTest",
+      "evidence": ""
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": null
+  "active_feature": "p32-14"
 }

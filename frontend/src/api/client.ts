@@ -92,6 +92,8 @@ async function request<T>(url: string, options?: RequestInit, timeoutMs = 300000
   try {
     const resp = await fetch(`${BASE}${url}`, {
       ...options,
+      // p32-14: 显式禁用 HTTP 缓存——普通刷新必须读到最新数据
+      cache: 'no-store',
       signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',

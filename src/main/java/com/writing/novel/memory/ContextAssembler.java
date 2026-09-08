@@ -204,7 +204,12 @@ public class ContextAssembler {
         StringBuilder sb = new StringBuilder();
         for (var f : facts) {
             sb.append("■ [").append(f.getFactType()).append("] ").append(f.getSubject())
-                    .append("：").append(f.getAssertion()).append("\n");
+                    .append("：").append(f.getAssertion());
+            // p32-06: 待核事实明确标注——写作模型不得把角色台词/推测当已确认铁律引用
+            if (f.getEvidenceGrade() == StoryFact.EvidenceGrade.UNVERIFIED) {
+                sb.append("【待核：来源为角色陈述或推测，未经确认，不得作为铁律引用】");
+            }
+            sb.append("\n");
         }
         return sb.toString().trim();
     }

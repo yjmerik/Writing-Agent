@@ -164,6 +164,12 @@ public class FactHarvesterAgent {
                 // p22-02: 冲突裁决 / HUMAN_PATCH 保护窗口 / 审计链全部在 StoryCanon 端口内
                 StoryFact machine = new StoryFact(projectId, type, subject, assertion, chapterIndex);
                 machine.setImportance(3);
+                // p32-06（体验报告 #4/P1）: 机器收割的世界铁律一律待核——
+                // LLM 可能把角色台词/推测分类为 WORLD_RULE，未确认前不得以铁律身份约束创作
+                if (type == StoryFact.FactType.WORLD_RULE) {
+                    machine.setEvidenceGrade(StoryFact.EvidenceGrade.UNVERIFIED);
+                    machine.setImportance(2);
+                }
                 var result = canon.harvest(machine);
                 switch (result.outcome()) {
                     case ADDED -> {
@@ -172,7 +178,19 @@ public class FactHarvesterAgent {
                         if (type == StoryFact.FactType.CHARACTER_STATE) {
                             detectDeath(projectId, subject, assertion, chapterIndex);
                         }
+                        // p32-06: 待核铁律可观测——作者/诊断链路能看到"哪句话成了待核规则"
+                        if (type == StoryFact.FactType.WORLD_RULE) {
+                            com.writing.novel.telemetry.EventLog.emit("FACT_UNVERIFIED_RULE", java.util.Map.of(
+                                    "projectId", projectId,
+                                    "subject", subject,
+                                    "chapterIndex", chapterIndex,
+                                    "assertion", com.writing.novel.telemetry.EventLog.truncate(assertion, 150)));
+                        }
                     }
+                    case SKIPPED_UNVERIFIED ->
+                            // p32-06: 待核断言不取代已确认铁律——机器断言丢弃，确认级事实优先
+                            log.warn("真典收割跳过：待核断言不得取代已确认铁律(项目{}, 章{}): subject={}",
+                                    projectId, chapterIndex, subject);
                     case VALIDATED -> validated++;
                     case SUPERSEDED -> superseded++;
                     case SKIPPED_PROTECTED ->

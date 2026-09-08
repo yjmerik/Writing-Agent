@@ -25,6 +25,13 @@ public class StoryFact {
     /** 事实状态：ACTIVE 有效 / SUPERSEDED 被新事实取代 / RETIRED 归档 */
     public enum Status { ACTIVE, SUPERSEDED, RETIRED }
 
+    /**
+     * p32-06（体验报告 #4/P1）: 证据分级——CONFIRMED 已确认（人工补丁/播种/状态类收割），
+     * UNVERIFIED 待核（机器收割的世界铁律：可能只是角色台词或推测，未确认前不得
+     * 以铁律身份恒注入约束创作，也不得取代已确认铁律）。
+     */
+    public enum EvidenceGrade { CONFIRMED, UNVERIFIED }
+
     private String id;
     private String projectId;
     private FactType factType;
@@ -34,6 +41,8 @@ public class StoryFact {
     private int sourceChapterVersion;// 溯源：建立时该章版本
     private int importance;          // 1-5，用于检索排序与衰减
     private Status status;
+    /** p32-06: 证据分级，默认确认（兼容旧数据/播种/人工补丁） */
+    private EvidenceGrade evidenceGrade = EvidenceGrade.CONFIRMED;
     private String supersededBy;     // 指向取代它的新事实 id（审计链）
     private int lastValidatedChapter;// 最近一次被本章确认的章节
     private Instant createdAt;
@@ -88,6 +97,8 @@ public class StoryFact {
     public void setImportance(int i) { this.importance = Math.max(1, Math.min(5, i)); }
     public Status getStatus() { return status; }
     public void setStatus(Status s) { this.status = s; }
+    public EvidenceGrade getEvidenceGrade() { return evidenceGrade; }
+    public void setEvidenceGrade(EvidenceGrade g) { this.evidenceGrade = g == null ? EvidenceGrade.CONFIRMED : g; }
     public String getSupersededBy() { return supersededBy; }
     public void setSupersededBy(String s) { this.supersededBy = s; }
     public int getLastValidatedChapter() { return lastValidatedChapter; }

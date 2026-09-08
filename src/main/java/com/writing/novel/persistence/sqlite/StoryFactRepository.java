@@ -28,11 +28,12 @@ public class StoryFactRepository {
     public void save(StoryFact f) {
         String sql = "INSERT INTO story_facts (id,project_id,fact_type,subject,assertion," +
                 "chapter_established,source_chapter_version,importance,status,superseded_by," +
-                "last_validated_chapter,created_at,updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?) " +
+                "last_validated_chapter,created_at,updated_at,evidence_grade) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) " +
                 "ON CONFLICT(id) DO UPDATE SET subject=excluded.subject, assertion=excluded.assertion, " +
                 "importance=excluded.importance, status=excluded.status, superseded_by=excluded.superseded_by, " +
-                "last_validated_chapter=excluded.last_validated_chapter, updated_at=excluded.updated_at";
+                "last_validated_chapter=excluded.last_validated_chapter, updated_at=excluded.updated_at, " +
+                "evidence_grade=excluded.evidence_grade";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, f.getId()); ps.setString(2, f.getProjectId());
@@ -42,6 +43,7 @@ public class StoryFactRepository {
             ps.setString(9, f.getStatus().name());
             ps.setString(10, f.getSupersededBy()); ps.setInt(11, f.getLastValidatedChapter());
             ps.setString(12, f.getCreatedAt().toString()); ps.setString(13, f.getUpdatedAt().toString());
+            ps.setString(14, f.getEvidenceGrade().name());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
@@ -125,6 +127,9 @@ public class StoryFactRepository {
         String sb = rs.getString("superseded_by");
         if (sb != null) f.setSupersededBy(sb);
         f.setLastValidatedChapter(rs.getInt("last_validated_chapter"));
+        // p32-06: 证据分级（迁移前旧行 NULL 视为已确认）
+        String grade = rs.getString("evidence_grade");
+        if (grade != null && !grade.isEmpty()) f.setEvidenceGrade(StoryFact.EvidenceGrade.valueOf(grade));
         return f;
     }
 }

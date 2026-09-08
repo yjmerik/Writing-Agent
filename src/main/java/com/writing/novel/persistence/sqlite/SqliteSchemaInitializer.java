@@ -306,6 +306,8 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE writing_tasks ADD COLUMN stop_requested INTEGER NOT NULL DEFAULT 0");
         // p32-04: 章节写作采用的计划出处（卷号+梗概指纹），旧行 NULL
         safeAddColumn(st, "ALTER TABLE chapters ADD COLUMN plan_ref TEXT");
+        // p32-06: 真典事实证据分级（机器收割的世界铁律=UNVERIFIED），旧行默认 CONFIRMED
+        safeAddColumn(st, "ALTER TABLE story_facts ADD COLUMN evidence_grade TEXT DEFAULT 'CONFIRMED'");
         // p32-05: 审核产物绑定产生时点的章节版本与正文指纹，旧行 NULL
         safeAddColumn(st, "ALTER TABLE continuity_issues ADD COLUMN chapter_version INTEGER");
         safeAddColumn(st, "ALTER TABLE continuity_issues ADD COLUMN content_hash TEXT");

@@ -60,6 +60,11 @@ public class SqliteStoryCanon implements StoryCanon {
         if (isProtectedHumanPatch(old, machineFact.getChapterEstablished())) {
             return new WriteResult(Outcome.SKIPPED_PROTECTED, null);
         }
+        // p32-06: 待核断言（机器收割的世界铁律）不得取代已确认铁律
+        if (old.getEvidenceGrade() == com.writing.novel.domain.StoryFact.EvidenceGrade.CONFIRMED
+                && machineFact.getEvidenceGrade() == com.writing.novel.domain.StoryFact.EvidenceGrade.UNVERIFIED) {
+            return new WriteResult(Outcome.SKIPPED_UNVERIFIED, null);
+        }
         factRepo.supersede(old, machineFact);
         return new WriteResult(Outcome.SUPERSEDED, machineFact);
     }

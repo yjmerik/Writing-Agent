@@ -101,7 +101,9 @@ public class RelevanceGateway {
     private boolean isMustInclude(StoryFact f, List<String> cast, int chapterIndex) {
         String assertion = f.getAssertion() == null ? "" : f.getAssertion();
         if (assertion.startsWith("【HUMAN_PATCH】")) return true;
-        if (f.getFactType() == StoryFact.FactType.WORLD_RULE && f.getImportance() >= 4) return true;
+        // p32-06: 待核铁律不恒注入——确认级才以铁律身份约束上下文
+        if (f.getFactType() == StoryFact.FactType.WORLD_RULE && f.getImportance() >= 4
+                && f.getEvidenceGrade() == StoryFact.EvidenceGrade.CONFIRMED) return true;
         if (matchesCast(f, cast) && (f.getFactType() == StoryFact.FactType.CHARACTER_STATE
                 || f.getFactType() == StoryFact.FactType.RELATIONSHIP_STATE)) return true;
         if (f.getFactType() == StoryFact.FactType.PLOT_COMMITMENT

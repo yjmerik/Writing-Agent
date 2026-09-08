@@ -4400,7 +4400,7 @@
       "phase": 32,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
         "src/test/java/com/writing/novel/orchestrator/LayeredOutlineParsingTest.java"
@@ -4408,7 +4408,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=LayeredOutlineParsingTest 通过：请求区间 1-8 时喂入 41-48 章号文本不产生区间外条目且 PLAN_VOLUME_RANGE_REJECTED 事件已发；正常解析回归不变。",
       "verify_cmd": "mvn test -Dtest=LayeredOutlineParsingTest",
-      "evidence": ""
+      "evidence": "2026-09-08：分支codex/p32-03-volume-range-validation 实现提交f25fba4 ff合入main。LayeredOutlineParsingTest 8项（新增区间外拒绝/混合区间两条 RED→GREEN）；全量689/0失败/1跳过；canary-mystery e2e+基线 PASS。replan 桩越界章号（报告 #1 形态）现被区间门拒绝，测试桩改为区间内输出。"
     },
     {
       "id": "p32-04",
@@ -4419,7 +4419,7 @@
       "dependencies": [
         "p32-03"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
         "src/main/java/com/writing/novel/orchestrator/ChapterProduction.java",
@@ -4428,7 +4428,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=ChapterPlanProvenanceTest 通过：写作落库章节含 plan_ref（卷号+synopsis id），GET chapters API 暴露该字段；旧行 NULL 兼容。",
       "verify_cmd": "mvn test -Dtest=ChapterPlanProvenanceTest",
-      "evidence": ""
+      "evidence": "2026-09-08：分支codex/p32-04-plan-provenance 实现提交7516bde ff合入main。ChapterPlanProvenanceTest 2项（plan_ref 经 write-chapter 落库+GET 透出；旧行 NULL 兼容）；全量691/0失败/1跳过；e2e COMPLETED + compare-baseline PASS。plan_ref=volume=N;synopsis=<sha12>，ADD COLUMN 迁移。"
     },
     {
       "id": "p32-05",
@@ -4540,5 +4540,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": "p32-03"
+  "active_feature": "p32-05"
 }

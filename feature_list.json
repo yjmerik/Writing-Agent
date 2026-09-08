@@ -4576,6 +4576,23 @@
       "acceptance": "mvn test -Dtest=RestoreOwnershipMessageTest：active task 时 restore 返回带 owner 原因；前端按原因显示接手提示。",
       "verify_cmd": "mvn test -Dtest=RestoreOwnershipMessageTest",
       "evidence": ""
+    },
+    {
+      "id": "p32-13",
+      "name": "交还后工作权泄漏互锁",
+      "description": "UI 实测：交还作者（banner=已交给作者、busy=false）并完成一次成功回退（v4→v5）后，coordinator owner 未释放——collaboration 持续 busy=true 但 task=None，作者任何章节 mutation（restore/编辑）都被 beginWork 409「已有进行中的写作任务」拒绝，重启进程才恢复（复现体验报告 #6 的编辑互锁需重启）。可疑点：finishCollaborative 中 endWork(:457) 在 saveWritingTask 之后非 finally 顺序依赖；以及嵌套 beginWork（withChapterWork→withProjectWork 双 workId）路径。",
+      "phase": 32,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/WritingTaskExecutor.java",
+        "src/main/java/com/writing/novel/service/ProjectWorkCoordinator.java"
+      ],
+      "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
+      "acceptance": "mvn test -Dtest=WorkOwnershipLeakTest：协作任务交还+回退+再回退后 hasActiveTask=false，第二次回退不再 409。",
+      "verify_cmd": "mvn test -Dtest=WorkOwnershipLeakTest",
+      "evidence": "2026-09-08 UI 验证实锤：verify-fullrun-0908.db 项目 1e242f32，21:16 回退成功后 busy 持续 true/task=None，restore expectedVersion=5 正确仍 409；响应体「已有进行中的写作任务，请先暂停或取消」。"
     }
   ],
   "schema_version": 2,

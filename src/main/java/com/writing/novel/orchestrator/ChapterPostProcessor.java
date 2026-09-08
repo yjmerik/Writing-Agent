@@ -211,6 +211,8 @@ public class ChapterPostProcessor {
                 log.info("章节评分 {} < {}，自动重写", review.getScore(), readerReviewAgent.getPassThreshold());
                 var reviewSynopsis = orch.findSynopsis(outline, chapterIndex);
                 int originalLength = chapter.getContent().length();
+                // p32-02: LLM 重写前记录版本基线——处理期间作者保存新稿时拒绝覆盖
+                int revisionBase = chapter.getVersion();
                 String newContent = chapterWriter.rewriteForCorrection(
                         projectId, chapterIndex, chapter.getTitle(),
                         reviewSynopsis != null ? reviewSynopsis.getSynopsis() : "",
@@ -218,16 +220,22 @@ public class ChapterPostProcessor {
                         "读者检验改进建议：" + review.getImprovementSuggestion());
                 // p9-1: 长度保护——重写不能比原版短太多（≥70%）
                 if (newContent != null && newContent.length() >= originalLength * 0.7) {
-                    chapter.setContent(newContent);
-                    repository.saveChapter(chapter);
-                    log.info("章节重写完成(章{}): {}字→{}字", chapterIndex, originalLength, newContent.length());
-                    var reReview = readerReviewAgent.review(chapterIndex, chapter.getContent());
-                    log.info("重写后检验(章{}): {}/10", chapterIndex, reReview.getScore());
-                    // p11-I1: 持久化重写后的最终评价
-                    review = reReview;
-                    // p11-q3-01: 质量事件遥测——重写决策可观测
-                    com.writing.novel.telemetry.EventLog.emit("REWRITE_TRIGGERED", Map.of(
-                            "reason", "reader_review", "afterScore", reReview.getScore()));
+                    if (orch.autoRewriteIfCurrent(projectId, chapterIndex, revisionBase,
+                            chapter.getTitle(), newContent, "REWRITE")) {
+                        chapter.setContent(newContent); // 与库内版本自增保持同步
+                        log.info("章节重写完成(章{}): {}字→{}字", chapterIndex, originalLength, newContent.length());
+                        var reReview = readerReviewAgent.review(chapterIndex, chapter.getContent());
+                        log.info("重写后检验(章{}): {}/10", chapterIndex, reReview.getScore());
+                        // p11-I1: 持久化重写后的最终评价
+                        review = reReview;
+                        // p11-q3-01: 质量事件遥测——重写决策可观测
+                        com.writing.novel.telemetry.EventLog.emit("REWRITE_TRIGGERED", Map.of(
+                                "reason", "reader_review", "afterScore", reReview.getScore()));
+                    } else {
+                        repository.findChapterByIndex(projectId, chapterIndex)
+                                .ifPresent(chapter::adoptStateFrom);
+                        log.warn("章{}: 自动重写遇作者保存新稿，弃用重写稿并同步内存至作者稿", chapterIndex);
+                    }
                 } else if (newContent != null) {
                     log.warn("重写内容过短({}字 < 原版{}字的70%)，保留原版", newContent.length(), originalLength);
                     // p16-05: 拒收重写——rewriteForCorrection 已把向量切到被拒版本，

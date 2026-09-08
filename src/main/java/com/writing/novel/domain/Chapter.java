@@ -47,6 +47,23 @@ public class Chapter {
         this.updatedAt = Instant.now();
     }
 
+    /**
+     * p32-02: 以库中最新稿整体接管本内存对象（含版本号，不额外自增）。
+     * 自动重写/状态标记遇作者版本冲突后调用，防止陈旧对象继续整行覆盖。
+     */
+    public void adoptStateFrom(Chapter latest) {
+        this.id = latest.id;
+        this.projectId = latest.projectId;
+        this.chapterIndex = latest.chapterIndex;
+        this.title = latest.title;
+        this.content = latest.content;
+        this.wordCount = latest.wordCount;
+        this.version = latest.version;
+        this.status = latest.status;
+        this.createdAt = latest.createdAt;
+        this.updatedAt = latest.updatedAt;
+    }
+
     public String getId() { return id; }
     public String getProjectId() { return projectId; }
     public int getChapterIndex() { return chapterIndex; }

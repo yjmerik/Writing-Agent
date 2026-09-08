@@ -2428,6 +2428,29 @@ public class NovelOrchestrator {
     }
 
     /**
+     * p32-02（体验报告 #2/P1）: 后处理自动重写的版本门。
+     * 仅当章节仍处 expectedVersion 时经统一修订边界落库（变更前快照+派生刷新，失败已在 p32-01 隔离）；
+     * 处理期间作者保存了新稿时拒绝覆盖、发出 CHAPTER_AUTHOR_CONFLICT 事件并返回 false，
+     * 调用方必须放弃新稿并重新加载章节，不得继续消费陈旧内存对象。
+     */
+    public boolean autoRewriteIfCurrent(String projectId, int chapterIndex, int expectedVersion,
+                                        String title, String newContent, String source) {
+        try {
+            chapterRevisionService.editInOwnedWork(projectId, chapterIndex, expectedVersion,
+                    title, newContent, source);
+            return true;
+        } catch (IllegalStateException conflict) {
+            EventLog.emit("CHAPTER_AUTHOR_CONFLICT", java.util.Map.of(
+                    "projectId", projectId,
+                    "chapterIndex", chapterIndex,
+                    "expectedVersion", expectedVersion,
+                    "source", source,
+                    "reason", String.valueOf(conflict.getMessage())));
+            return false;
+        }
+    }
+
+    /**
      * p7-1: 重写指定章节（不限项目状态，FINAL 也能用）。
      * @param instructions 可选修改意见（如"增加对话""减少打斗"）
      */

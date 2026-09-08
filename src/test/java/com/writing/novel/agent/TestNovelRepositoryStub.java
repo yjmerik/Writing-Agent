@@ -78,6 +78,11 @@ public class TestNovelRepositoryStub implements NovelRepository {
         saveChapter(revised);
         return true;
     }
+    // p32-02: 基类无章节存储，状态版本门默认拒绝（子类按需覆写）
+    @Override public boolean updateChapterStatusIfVersion(String projectId, int chapterIndex,
+                                                          Chapter.Status status, int expectedVersion) {
+        return false;
+    }
     @Override public void saveSummary(Summary s) {}
     @Override public List<Summary> findSummariesByProject(String p) { return List.of(); }
     @Override public void deleteSummary(String summaryId) {}

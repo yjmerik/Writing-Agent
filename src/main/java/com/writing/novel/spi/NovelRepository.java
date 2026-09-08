@@ -82,6 +82,13 @@ public interface NovelRepository {
     /** Atomically replace the expected current chapter and insert its pre-change snapshot. */
     boolean saveChapterRevision(ChapterVersion snapshot, Chapter revised, int expectedVersion);
 
+    /**
+     * p32-02: 状态标记的轻量版本门——仅当章节仍处 expectedVersion 时更新状态，
+     * 绝不触碰正文（陈旧内存对象不得整行覆盖作者内容）。
+     */
+    boolean updateChapterStatusIfVersion(String projectId, int chapterIndex,
+                                         Chapter.Status status, int expectedVersion);
+
     // --- Summary ---
     void saveSummary(Summary summary);
     List<Summary> findSummariesByProject(String projectId);

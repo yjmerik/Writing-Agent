@@ -367,13 +367,20 @@ public class ChapterProduction {
             var synopsis = findSynopsis(outline, chapterIndex);
             if (synopsis == null) return;
 
+            // p32-02: LLM 重写前记录版本基线——处理期间作者保存新稿时拒绝覆盖
+            int revisionBase = chapter.getVersion();
             String newContent = chapterWriter.rewriteForCorrection(
                     projectId, chapterIndex, synopsis.getTitle(),
                     synopsis.getSynopsis(), synopsis.getWritingNotes(), issueDesc);
-            // 重写成功则用新内容原地更新（复用原 chapter 的 id，触发 ON CONFLICT DO UPDATE）
+            // 重写成功则用新内容原地更新（经版本门，不产生重复）
             if (newContent != null && newContent.length() >= 2000) {
-                chapter.setContent(newContent);
-                repository.saveChapter(chapter); // 用原 id 覆盖，不产生重复
+                if (orch.autoRewriteIfCurrent(projectId, chapterIndex, revisionBase,
+                        chapter.getTitle(), newContent, "REWRITE")) {
+                    chapter.setContent(newContent); // 与库内版本自增保持同步
+                } else {
+                    repository.findChapterByIndex(projectId, chapterIndex)
+                            .ifPresent(chapter::adoptStateFrom);
+                }
             } else if (newContent != null) {
                 // p16-05: 拒收重写——rewriteForCorrection 已把向量切到被拒版本，
                 // 用保留的原正文重放向量索引，恢复向量库与 DB 一致
@@ -473,9 +480,16 @@ public class ChapterProduction {
                 "action", action.name(), "desc", EventLog.truncate(issue.getDescription(), 150)));
         switch (action) {
             case MANUAL_REVIEW -> {
-                chapter.setStatus(Chapter.Status.NEEDS_MANUAL_REVIEW);
-                repository.saveChapter(chapter);
-                log.warn("章{} 标记 NEEDS_MANUAL_REVIEW（根源性矛盾待人工）：{}", chapterIndex, issue.getDescription());
+                // p32-02: 状态标记走轻量版本门——绝不整行覆盖处理期间作者保存的正文
+                if (repository.updateChapterStatusIfVersion(projectId, chapterIndex,
+                        Chapter.Status.NEEDS_MANUAL_REVIEW, chapter.getVersion())) {
+                    chapter.setStatus(Chapter.Status.NEEDS_MANUAL_REVIEW);
+                    log.warn("章{} 标记 NEEDS_MANUAL_REVIEW（根源性矛盾待人工）：{}", chapterIndex, issue.getDescription());
+                } else {
+                    repository.findChapterByIndex(projectId, chapterIndex)
+                            .ifPresent(chapter::adoptStateFrom);
+                    log.warn("章{} 状态标记被版本门拒绝（已有更新稿），内存对象已同步最新稿", chapterIndex);
+                }
             }
             case SUPERSEDE_CANON -> correctCanon(projectId, chapterIndex, issue);
             case REWRITE -> { /* 已重写，不再重写（最多 1 次） */ }

@@ -558,6 +558,25 @@ public class SqliteNovelRepository implements NovelRepository {
         });
     }
 
+    @Override
+    public boolean updateChapterStatusIfVersion(String projectId, int chapterIndex,
+                                                Chapter.Status status, int expectedVersion) {
+        // p32-02: 只更新 status/updated_at——版本不匹配（作者已保存）时零写入
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "UPDATE chapters SET status=?, updated_at=? " +
+                             "WHERE project_id=? AND chapter_index=? AND version=?")) {
+            ps.setString(1, status.name());
+            ps.setString(2, java.time.Instant.now().toString());
+            ps.setString(3, projectId);
+            ps.setInt(4, chapterIndex);
+            ps.setInt(5, expectedVersion);
+            return ps.executeUpdate() == 1;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     // --- Task 10: 大纲/摘要/伏笔/风格/连续性/检查点 ---
 
     @Override

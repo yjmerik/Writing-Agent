@@ -97,7 +97,7 @@ public class WritingTaskExecutor {
         WritingTask task = new WritingTask(projectId, maxChapters, WritingTask.Type.WRITE_ALL);
         var token = coordinator.tryAcquire(projectId, task.getId());
         if (token.isEmpty()) {
-            throw new IllegalStateException("项目已有进行中的写作任务，请等待其完成或先取消");
+            throw new WorkConflictException("项目已有进行中的写作任务，请等待其完成或先取消");
         }
         try {
             task.setInstruction(instruction);
@@ -158,7 +158,7 @@ public class WritingTaskExecutor {
         WritingTask task = new WritingTask(projectId, 1, WritingTask.Type.WRITE_CHAPTER);
         var token = coordinator.tryAcquire(projectId, task.getId());
         if (token.isEmpty()) {
-            throw new IllegalStateException("已有进行中的写作任务，请先暂停或取消再写单章");
+            throw new WorkConflictException("已有进行中的写作任务，请先暂停或取消再写单章");
         }
         try {
             actionGate.run();
@@ -336,7 +336,7 @@ public class WritingTaskExecutor {
             WritingTask active = getTask(owner);
             if (active != null && active.getType() == WritingTask.Type.AUTO_RUN
                     && active.getStatus() == WritingTask.Status.RUNNING) return active;
-            throw new IllegalStateException("项目正在处理内容，请等待完成后继续");
+            throw new WorkConflictException("项目正在处理内容，请等待完成后继续");
         }
         WritingTask task = new WritingTask(projectId, repository.findWritingPreferences(projectId)
                 .map(WritingPreferences::getTargetChapters).orElse(24), WritingTask.Type.AUTO_RUN);
@@ -468,7 +468,7 @@ public class WritingTaskExecutor {
     /** p20-05: 同步工作注册——占坑失败（已有 owner）时抛 409 语义异常 */
     public void beginWork(String projectId, String workId) {
         if (coordinator.tryAcquire(projectId, workId).isEmpty()) {
-            throw new IllegalStateException("已有进行中的写作任务，请先暂停或取消");
+            throw new WorkConflictException("已有进行中的写作任务，请先暂停或取消");
         }
     }
 

@@ -362,7 +362,12 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
       setChapterEditorTarget(null);
       onChanged();
     } catch (error) {
-      if (chapterEditorTarget.mode === 'edit' && error instanceof ApiError && error.status === 409) {
+      if (chapterEditorTarget.mode === 'edit' && error instanceof ApiError && error.status === 409
+          && error.code === 'WORK_OWNERSHIP_CONFLICT') {
+        // p32-12: 所有权占用不是版本冲突——不要诱导按旧稿重试
+        setChapterSaveError('Agent 正在处理本项目，请等待当前步骤完成或先接手编辑');
+        message.warning('Agent 正在处理本项目，请等待当前步骤完成或先接手编辑');
+      } else if (chapterEditorTarget.mode === 'edit' && error instanceof ApiError && error.status === 409) {
         const latest = await api.getChapter(projectId, chapterEditorTarget.chapterIndex);
         if (latest) {
           replaceChapterInView(latest);
@@ -421,7 +426,11 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
           message.success(`已回退到 v${version.version}，当前为 v${restored.version}`);
           onChanged();
         } catch (error) {
-          if (error instanceof ApiError && error.status === 409) {
+          if (error instanceof ApiError && error.status === 409
+              && error.code === 'WORK_OWNERSHIP_CONFLICT') {
+            // p32-12: 所有权占用——提示等待/接手，而非版本冲突重试
+            message.warning('Agent 正在处理本项目，请等待当前步骤完成或先接手编辑后再回退');
+        } else if (error instanceof ApiError && error.status === 409) {
             const latest = await api.getChapter(projectId, historyChapter.chapterIndex);
             if (latest) replaceChapterInView(latest);
             message.warning('章节已被更新，请重新确认');

@@ -73,9 +73,12 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
     try {
       result = await api.applyAgentRevision(target.projectId, preview.previewId);
     } catch (cause) {
-      const stale = cause instanceof ApiError && cause.status === 409;
-      setError(stale
-        ? `当前内容已变化，请关闭后刷新并重新生成预览：${cause.message}`
+      const conflict = cause instanceof ApiError && cause.status === 409;
+      // p32-12: 所有权占用与内容变化分开提示
+      setError(conflict && (cause as ApiError).code === 'WORK_OWNERSHIP_CONFLICT'
+        ? `Agent 正在处理本项目，请等待当前步骤完成或先接手编辑：${(cause as Error).message}`
+        : conflict
+        ? `当前内容已变化，请关闭后刷新并重新生成预览：${(cause as Error).message}`
         : `应用失败：${(cause as Error).message}`);
       setApplying(false);
       return;

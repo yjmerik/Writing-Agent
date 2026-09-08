@@ -19,6 +19,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
     }
 
+    /** p32-12: 工作所有权占用 → 409 + code，前端据此提示等待/接手而非按版本冲突重试 */
+    @ExceptionHandler(com.writing.novel.service.WorkConflictException.class)
+    public ResponseEntity<Map<String, String>> handleWorkConflict(
+            com.writing.novel.service.WorkConflictException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", e.getMessage(),
+                "code", "WORK_OWNERSHIP_CONFLICT"));
+    }
+
     /** 非法状态（如从错误状态推进）→ 409 */
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<Map<String, String>> handleIllegalState(IllegalStateException e) {

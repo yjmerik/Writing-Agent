@@ -24,7 +24,8 @@ import type {
 const BASE = '/api';
 
 export class ApiError extends Error {
-  constructor(public readonly status: number, message: string) {
+  /** p32-12: 服务端结构化错误码（如 WORK_OWNERSHIP_CONFLICT） */
+  constructor(public readonly status: number, message: string, public readonly code?: string) {
     super(message);
     this.name = 'ApiError';
   }
@@ -99,13 +100,15 @@ async function request<T>(url: string, options?: RequestInit, timeoutMs = 300000
     });
     if (!resp.ok) {
       let msg = `HTTP ${resp.status}`;
+      let code: string | undefined;
       try {
         const body = await resp.json();
         msg = body.error || msg;
+        code = body.code;
       } catch {
         /* 非 JSON 错误响应 */
       }
-      throw new ApiError(resp.status, msg);
+      throw new ApiError(resp.status, msg, code);
     }
     // 空响应（204 或空 body）
     const text = await resp.text();

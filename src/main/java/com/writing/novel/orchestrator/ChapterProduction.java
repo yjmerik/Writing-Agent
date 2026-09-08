@@ -199,21 +199,15 @@ public class ChapterProduction {
         try {
             int threshold = repository.findWritingPreferences(projectId)
                     .map(p -> p.getForeshadowSuspenseThreshold()).orElse(8);
-            var stale = repository.findUnresolvedForeshadowings(projectId).stream()
+            var staleCount = repository.findUnresolvedForeshadowings(projectId).stream()
                     .filter(f -> f.isMustResolve() || f.getPriority() == Foreshadowing.Priority.HIGH)
                     .filter(f -> f.isStale(chapterIndex, threshold))
-                    .toList();
-            for (var f : stale) {
-                repository.saveContinuityIssue(new ContinuityIssue(
-                        projectId, chapterIndex,
-                        ContinuityIssue.Type.FORESHADOWING,
-                        ContinuityIssue.Severity.MEDIUM,
-                        "伏笔悬置过久：「" + f.getDescription().substring(0, Math.min(30, f.getDescription().length()))
-                        + "...」已悬置" + f.suspenseChapters(chapterIndex) + "章（埋于第"
-                        + f.getPlantedAtChapter() + "章），建议在近期章节回收"));
-            }
-            if (!stale.isEmpty()) {
-                log.warn("伏笔悬置告警(章{}): {} 条悬置过久", chapterIndex, stale.size());
+                    .count();
+            // p32-09: 同一伏笔只保留一条未关闭提醒（旧行为逐章重复追加淹没当章阻断项）
+            int written = com.writing.novel.service.SuspenseReminderPolicy.refresh(
+                    repository, projectId, chapterIndex, threshold);
+            if (staleCount > 0) {
+                log.warn("伏笔悬置告警(章{}): {} 条悬置过久，新提醒 {} 条", chapterIndex, staleCount, written);
             }
         } catch (Exception e) {
             log.warn("伏笔悬置检测失败(章{}): {}", chapterIndex, e.getMessage());

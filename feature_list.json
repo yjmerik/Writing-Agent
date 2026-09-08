@@ -4592,7 +4592,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=WorkOwnershipLeakTest：协作任务交还+回退+再回退后 hasActiveTask=false，第二次回退不再 409。",
       "verify_cmd": "mvn test -Dtest=WorkOwnershipLeakTest",
-      "evidence": "2026-09-08 UI 验证实锤：verify-fullrun-0908.db 项目 1e242f32，21:16 回退成功后 busy 持续 true/task=None，restore expectedVersion=5 正确仍 409；响应体「已有进行中的写作任务，请先暂停或取消」。"
+      "evidence": "2026-09-08 UI 验证实锤：verify-fullrun-0908.db 项目 1e242f32，21:16 回退成功后 busy 持续 true/task=None，restore expectedVersion=5 正确仍 409；响应体「已有进行中的写作任务，请先暂停或取消」。 补充：重启后第二次复现——restore v4→v6 同样 100% 成功即泄漏（busy=true/task=None，30s+60s 持续），P1：任何章节 mutation 后协作/编辑被锁至下次重启。复现路径=交还作者→版本回退成功。"
     }
   ],
   "schema_version": 2,

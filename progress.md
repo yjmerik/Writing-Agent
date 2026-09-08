@@ -1,27 +1,26 @@
-# 14项特性检验完成 — 2026-09-08
+# Phase32 第一批 P1（作者信任闭环）完成 — 2026-09-08
 
 Last Updated: 2026-09-08
 
 ## Current（当前）
 
-Phase27–29的14项已全部逐项检验、独立分支提交、合入本地main并完成主分支复验。feature_list.json共227项completed，active_feature=null，无deferred或in-progress。原工作目录/Users/erik/ZCodeProject/WritingAgent已回到main；最后业务交付提交c8c7a3f，完成状态回执d66cb08，收尾文档d7cc460及原目录复验已完成，本轮临时worktree已清理。
+体验报告 `docs/reports/2026-09-05-ui-experience/体验报告.md` 的 P1 前三组问题（#2 保存一致性、#1 计划约束、#3 评审版本绑定）已按 spec `docs/specs/2026-09-08-author-trust-closed-loop.md` 拆为 p32-01~05 五个 feature，全部独立分支实现、ff 合入本地 main（HEAD b75b819 + docs 回执）并逐项登记 verified 完成记录。feature_list 共 237 项：232 completed / 5 not-started（p32-06~09 第二批记忆分级、p32-10 e2e 语料分叉既有 bug）；active_feature=null。临时 worktree 已清理，主工作区在 main。
 
 ## Files（文件与证据）
 
-唯一状态源：[feature_list.json](feature_list.json)。[完成索引](docs/harness/completions.json)、[逐项验收总表](docs/harness/audits/2026-09-08-reconcile-14.md)、docs/harness/evidence/reconciled-*.json记录分支、提交、命令与结果。原29个源文件/计划备份和全部本轮日志在data/verification/reconcile-14/。693个其他原文件（含219个历史体验文件）哈希未变，docs/reports/继续保持原先未跟踪状态；业务与harness文件已提交。
+唯一状态源 [feature_list.json](feature_list.json)；完成索引 [docs/harness/completions.json](docs/harness/completions.json)，逐项证据 `docs/harness/evidence/p32-0*-author-trust.json`（commit/cleanCheckout/checks）。实现提交：p32-01=552f880、p32-02=5545160、p32-03=f25fba4、p32-04=7516bde、p32-05=b75b819。
 
 ## Verification（验证）
 
-- 最终全量682 tests / 0 failures / 0 errors / 1 skipped（显式启用的真实LLM冒烟测试）；前端构建与打包通过，模型配置专项18项通过。
-- 浏览器26/26：协作6、产品11（0 XFAIL / 0 ERROR）、旧入口8、后台推进草稿保护1；分支和主分支均通过。
-- mystery回放3章/10191字/54 calls/0 errors，质量基线PASS，未修改golden。
-- 真实向量接口HTTP200/2条1024维；Token Plan HTTP200/有效SSE；仅短合成输入。原小说未重启或续写。
-- harness结构、11项检查器回归与Git归属检查通过。干净主分支和原工作目录的./init.sh均通过；完整命令、输入指纹与原始日志见[收尾复验](docs/harness/evidence/reconciled-final.json)。
+- 最终干净 main 树全量 694 tests / 0 failures / 0 errors / 1 skipped；各 feature verify_cmd 单独通过。
+- `E2E_FIXTURE_DIR=data/e2e-fixtures/canary-mystery-20260831 ./scripts/e2e.sh`：构思 WRITING、3 章写作 COMPLETED；`python3 scripts/compare-baseline.py` PASS，golden 未改。
+- 前端构建通过（p32-01 文案分级）；`python3 scripts/check-harness.py --check-git` PASS。
+- 行为变化：派生刷新失败仍 2xx+`derivedRefreshPending`+`CHAPTER_REFRESH_FAILED`；自动重写经版本门+`CHAPTER_AUTHOR_CONFLICT`；卷计划章号区间门+`PLAN_VOLUME_RANGE_REJECTED`；章节落 `plan_ref=volume=N;synopsis=<sha12>`；质量报告输出 `stale/staleIssueCount/reviewStale`。
 
 ## Blockers（阻塞与限制）
 
-本轮无待实现/待合并项。200项早期historical仍保留明确的逐项历史证据限制；不以本轮全量测试冒充历史专项验收。p27-06曾发生一次修改前JUnit临时文件清理异常，同源重跑及后续主分支检查通过，失败日志保留。未推送远端，未承诺200章小说完成。
+未推送远端。e2e.sh 不带 E2E_FIXTURE_DIR 时按 mtime 自动选语料，与当前 prompt 指纹分叉（基线 2b8677e 对照同样分叉，属既有问题），登记为 p32-10。第二批记忆分级（p32-06~08 涉及 fact-harvest.st/伏笔 detector 行为）与评审 UI 展示 stale 尚未实现。
 
 ## Next Steps（下一步）
 
-从当前main读取AGENTS.md并运行./init.sh即可恢复开发。新需求先写spec、登记feature，再新开独立分支；不重开本轮已完成项或沿用旧交接中的继续创作指令。浏览器测试任务空间147已关闭，当前入口不依赖临时worktree。
+从 main 运行 `./init.sh` 恢复。按 spec「建议的后续顺序」推进第二批：p32-06 StoryFact 证据分级 → p32-07 收割规则收紧 → p32-08 伏笔回收证据 → p32-09 提醒去重；或先修 p32-10 恢复 e2e 零参数可跑。新需求仍走 spec→feature 协议。

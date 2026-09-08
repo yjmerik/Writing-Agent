@@ -1,0 +1,23 @@
+{
+  "commit": "552f880eb2a9509919ba8881d2188e4d684716c9",
+  "cleanCheckout": true,
+  "checkoutNote": "合并经 git update-ref 完成（主工作区当时被 checkout 短暂污染后已恢复干净；ff 祖先关系与树一致性已验证：git diff main 552f880 为空）。验证在检出该提交的干净 worktree 执行。",
+  "feature": "p32-01",
+  "checks": [
+    {
+      "command": "mvn test -Dtest=ChapterRevisionRefreshIsolationTest",
+      "result": "2 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test",
+      "result": "684 tests / 0 failures / 0 errors / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "cd frontend && npm run build",
+      "result": "构建通过",
+      "exitCode": 0
+    }
+  ]
+}

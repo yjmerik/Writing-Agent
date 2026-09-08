@@ -404,6 +404,61 @@
       "implementation_commit": "c8c7a3fdffc01c82e20b212e4b15f9e6d2ef9d17",
       "main_commit": "c8c7a3fdffc01c82e20b212e4b15f9e6d2ef9d17",
       "evidence": "docs/harness/evidence/reconciled-p29-01.json"
+    },
+    {
+      "id": "p32-01-author-trust",
+      "kind": "verified",
+      "feature_ids": [
+        "p32-01"
+      ],
+      "branch": "codex/p32-01-revision-refresh-isolation",
+      "implementation_commit": "552f880eb2a9509919ba8881d2188e4d684716c9",
+      "main_commit": "552f880eb2a9509919ba8881d2188e4d684716c9",
+      "evidence": "docs/harness/evidence/p32-01-author-trust.json"
+    },
+    {
+      "id": "p32-02-author-trust",
+      "kind": "verified",
+      "feature_ids": [
+        "p32-02"
+      ],
+      "branch": "codex/p32-02-author-draft-conflict",
+      "implementation_commit": "5545160db688cc4a2bb59af638e2d2cedb6b7be3",
+      "main_commit": "5545160db688cc4a2bb59af638e2d2cedb6b7be3",
+      "evidence": "docs/harness/evidence/p32-02-author-trust.json"
+    },
+    {
+      "id": "p32-03-author-trust",
+      "kind": "verified",
+      "feature_ids": [
+        "p32-03"
+      ],
+      "branch": "codex/p32-03-volume-range-validation",
+      "implementation_commit": "f25fba45d6b38b48df84bb16b5f0324d0229125b",
+      "main_commit": "f25fba45d6b38b48df84bb16b5f0324d0229125b",
+      "evidence": "docs/harness/evidence/p32-03-author-trust.json"
+    },
+    {
+      "id": "p32-04-author-trust",
+      "kind": "verified",
+      "feature_ids": [
+        "p32-04"
+      ],
+      "branch": "codex/p32-04-plan-provenance",
+      "implementation_commit": "7516bde937db13be5c0881a78f599ba9744545dd",
+      "main_commit": "7516bde937db13be5c0881a78f599ba9744545dd",
+      "evidence": "docs/harness/evidence/p32-04-author-trust.json"
+    },
+    {
+      "id": "p32-05-author-trust",
+      "kind": "verified",
+      "feature_ids": [
+        "p32-05"
+      ],
+      "branch": "codex/p32-05-review-version-binding",
+      "implementation_commit": "b75b819c8e4e57decd60634da8b55d6458f9d511",
+      "main_commit": "b75b819c8e4e57decd60634da8b55d6458f9d511",
+      "evidence": "docs/harness/evidence/p32-05-author-trust.json"
     }
   ]
 }

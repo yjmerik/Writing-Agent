@@ -1,27 +1,25 @@
-# 14项特性检验完成 — 2026-09-08
+# Phase32 第一批交接 — 2026-09-08
 
 Last Updated: 2026-09-08
 
 ## Current（当前）
 
-Phase27–29的14项已全部逐项检验、独立分支提交、合入本地main并完成主分支复验。feature_list.json共227项completed，active_feature=null，无deferred或in-progress。原工作目录/Users/erik/ZCodeProject/WritingAgent已回到main；最后业务交付提交c8c7a3f，完成状态回执d66cb08，收尾文档d7cc460及原目录复验已完成，本轮临时worktree已清理。
+feature：p32-01~05（Phase32 第一批 P1，体验报告 #1/#2/#3）。分支：5 个 `codex/p32-0*` 全部已 ff 合入 main。main HEAD=b75b819（feat p32-05）。active_feature=null，无 in-progress/deferred。
 
 ## Files（文件与证据）
 
-唯一状态源：[feature_list.json](feature_list.json)。[完成索引](docs/harness/completions.json)、[逐项验收总表](docs/harness/audits/2026-09-08-reconcile-14.md)、docs/harness/evidence/reconciled-*.json记录分支、提交、命令与结果。原29个源文件/计划备份和全部本轮日志在data/verification/reconcile-14/。693个其他原文件（含219个历史体验文件）哈希未变，docs/reports/继续保持原先未跟踪状态；业务与harness文件已提交。
+spec [docs/specs/2026-09-08-author-trust-closed-loop.md](docs/specs/2026-09-08-author-trust-closed-loop.md)；证据 `docs/harness/evidence/p32-0*-author-trust.json`；完成索引 [docs/harness/completions.json](docs/harness/completions.json)（5 条 verified）。实现提交：552f880 / 5545160 / f25fba4 / 7516bde / b75b819。
 
 ## Verification（验证）
 
-- 最终全量682 tests / 0 failures / 0 errors / 1 skipped（显式启用的真实LLM冒烟测试）；前端构建与打包通过，模型配置专项18项通过。
-- 浏览器26/26：协作6、产品11（0 XFAIL / 0 ERROR）、旧入口8、后台推进草稿保护1；分支和主分支均通过。
-- mystery回放3章/10191字/54 calls/0 errors，质量基线PASS，未修改golden。
-- 真实向量接口HTTP200/2条1024维；Token Plan HTTP200/有效SSE；仅短合成输入。原小说未重启或续写。
-- harness结构、11项检查器回归与Git归属检查通过。干净主分支和原工作目录的./init.sh均通过；完整命令、输入指纹与原始日志见[收尾复验](docs/harness/evidence/reconciled-final.json)。
+干净 main 树：694 tests/0失败/1跳过；canary-mystery e2e COMPLETED；基线 PASS；`python3 scripts/check-harness.py --check-git` PASS。合并方式：p32-01 因主工作区并行修改用 update-ref ff（树 diff 为空）；p32-02~05 用常规 `git merge --ff-only`。
 
 ## Blockers（阻塞与限制）
 
-本轮无待实现/待合并项。200项早期historical仍保留明确的逐项历史证据限制；不以本轮全量测试冒充历史专项验收。p27-06曾发生一次修改前JUnit临时文件清理异常，同源重跑及后续主分支检查通过，失败日志保留。未推送远端，未承诺200章小说完成。
+无 BROKEN 项。未推送远端。e2e 自动选语料分叉=既有问题登记为 p32-10。主工作区遗留未跟踪 `docs/reports/`（体验证据，用户资产，勿动）。
 
 ## Next Steps（下一步）
 
-从当前main读取AGENTS.md并运行./init.sh即可恢复开发。新需求先写spec、登记feature，再新开独立分支；不重开本轮已完成项或沿用旧交接中的继续创作指令。浏览器测试任务空间147已关闭，当前入口不依赖临时worktree。
+1. 恢复会话：`./init.sh`（mvn 测试需先 `source scripts/load-env.sh`，zsh 下用 `bash -c`）。
+2. 第二批按 spec 顺序 p32-06~09：先写 failing test（如「角色台词不得直升 ACTIVE WORLD_RULE」可在 FactHarvester 系列测试扩展；fact-harvest.st 不改变量名，改后必跑 e2e+基线）。
+3. 前端展示质量报告 stale 字段属新 slice，按协议先登记再做。

@@ -4374,7 +4374,8 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=ChapterRevisionRefreshIsolationTest 通过：派生刷新抛异常时编辑/应用仍 2xx 且 derivedRefreshPending=true、正文回读一致、CHAPTER_REFRESH_FAILED 事件已发；前端构建通过且保存失败/刷新失败文案分级。",
       "verify_cmd": "mvn test -Dtest=ChapterRevisionRefreshIsolationTest",
-      "evidence": "2026-09-08：分支codex/p32-01-revision-refresh-isolation 实现提交552f880（含spec与p32登记），ff合入main；合并即同树，干净检出复核mvn test 684/0失败/1跳过、前端构建PASS。RED=刷新失败端点409/无pending字段，GREEN=ChapterRevisionRefreshIsolationTest 2项+30项局部回归。派生刷新失败发CHAPTER_REFRESH_FAILED事件，PUT/apply响应与前端文案区分『已保存待处理』与『应用失败』。"
+      "evidence": "2026-09-08：分支codex/p32-01-revision-refresh-isolation 实现提交552f880（含spec与p32登记），ff合入main；合并即同树，干净检出复核mvn test 684/0失败/1跳过、前端构建PASS。RED=刷新失败端点409/无pending字段，GREEN=ChapterRevisionRefreshIsolationTest 2项+30项局部回归。派生刷新失败发CHAPTER_REFRESH_FAILED事件，PUT/apply响应与前端文案区分『已保存待处理』与『应用失败』。",
+      "completion_record": "p32-01-author-trust"
     },
     {
       "id": "p32-02",
@@ -4391,7 +4392,8 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=AuthorDraftConflictProtectionTest 通过：章节后处理自动重写期间作者保存新版本后，自动稿被版本门拒绝落库、DB 保留作者稿、CHAPTER_AUTHOR_CONFLICT 事件已发。",
       "verify_cmd": "mvn test -Dtest=AuthorDraftConflictProtectionTest",
-      "evidence": "2026-09-08：分支codex/p32-02-author-draft-conflict 实现提交5545160 ff-only合入main。AuthorDraftConflictProtectionTest 3项RED→GREEN；mvn test 687/0失败/1跳过；E2E_FIXTURE_DIR=canary-mystery-20260831 ./scripts/e2e.sh 写作COMPLETED + compare-baseline PASS（基线2b8677e对照组同语料同结果）。自动重写/状态标记经版本门，冲突保留作者稿并发CHAPTER_AUTHOR_CONFLICT。"
+      "evidence": "2026-09-08：分支codex/p32-02-author-draft-conflict 实现提交5545160 ff-only合入main。AuthorDraftConflictProtectionTest 3项RED→GREEN；mvn test 687/0失败/1跳过；E2E_FIXTURE_DIR=canary-mystery-20260831 ./scripts/e2e.sh 写作COMPLETED + compare-baseline PASS（基线2b8677e对照组同语料同结果）。自动重写/状态标记经版本门，冲突保留作者稿并发CHAPTER_AUTHOR_CONFLICT。",
+      "completion_record": "p32-02-author-trust"
     },
     {
       "id": "p32-03",
@@ -4408,7 +4410,8 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=LayeredOutlineParsingTest 通过：请求区间 1-8 时喂入 41-48 章号文本不产生区间外条目且 PLAN_VOLUME_RANGE_REJECTED 事件已发；正常解析回归不变。",
       "verify_cmd": "mvn test -Dtest=LayeredOutlineParsingTest",
-      "evidence": "2026-09-08：分支codex/p32-03-volume-range-validation 实现提交f25fba4 ff合入main。LayeredOutlineParsingTest 8项（新增区间外拒绝/混合区间两条 RED→GREEN）；全量689/0失败/1跳过；canary-mystery e2e+基线 PASS。replan 桩越界章号（报告 #1 形态）现被区间门拒绝，测试桩改为区间内输出。"
+      "evidence": "2026-09-08：分支codex/p32-03-volume-range-validation 实现提交f25fba4 ff合入main。LayeredOutlineParsingTest 8项（新增区间外拒绝/混合区间两条 RED→GREEN）；全量689/0失败/1跳过；canary-mystery e2e+基线 PASS。replan 桩越界章号（报告 #1 形态）现被区间门拒绝，测试桩改为区间内输出。",
+      "completion_record": "p32-03-author-trust"
     },
     {
       "id": "p32-04",
@@ -4428,7 +4431,8 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=ChapterPlanProvenanceTest 通过：写作落库章节含 plan_ref（卷号+synopsis id），GET chapters API 暴露该字段；旧行 NULL 兼容。",
       "verify_cmd": "mvn test -Dtest=ChapterPlanProvenanceTest",
-      "evidence": "2026-09-08：分支codex/p32-04-plan-provenance 实现提交7516bde ff合入main。ChapterPlanProvenanceTest 2项（plan_ref 经 write-chapter 落库+GET 透出；旧行 NULL 兼容）；全量691/0失败/1跳过；e2e COMPLETED + compare-baseline PASS。plan_ref=volume=N;synopsis=<sha12>，ADD COLUMN 迁移。"
+      "evidence": "2026-09-08：分支codex/p32-04-plan-provenance 实现提交7516bde ff合入main。ChapterPlanProvenanceTest 2项（plan_ref 经 write-chapter 落库+GET 透出；旧行 NULL 兼容）；全量691/0失败/1跳过；e2e COMPLETED + compare-baseline PASS。plan_ref=volume=N;synopsis=<sha12>，ADD COLUMN 迁移。",
+      "completion_record": "p32-04-author-trust"
     },
     {
       "id": "p32-05",
@@ -4437,7 +4441,7 @@
       "phase": 32,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/domain/ContinuityIssue.java",
         "src/main/java/com/writing/novel/domain/ChapterReview.java",
@@ -4447,7 +4451,8 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=ReviewVersionBindingTest 通过：continuity_issues/chapter_reviews 持久化 chapter_version 与 content_hash；章节升版后旧条目在质量报告标记过期，新条目为当前。",
       "verify_cmd": "mvn test -Dtest=ReviewVersionBindingTest",
-      "evidence": ""
+      "evidence": "2026-09-08：分支codex/p32-05-review-version-binding 实现提交b75b819 ff合入main。ReviewVersionBindingTest 3项（盖章/升版过期/同版本不误报）RED→GREEN；全量694/0失败/1跳过；e2e COMPLETED + 基线 PASS。continuity_issues/chapter_reviews 绑定 chapter_version+content_hash，质量报告输出 stale/staleIssueCount/reviewStale。",
+      "completion_record": "p32-05-author-trust"
     },
     {
       "id": "p32-06",
@@ -4540,5 +4545,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": "p32-05"
+  "active_feature": null
 }

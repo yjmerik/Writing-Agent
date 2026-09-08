@@ -1,0 +1,28 @@
+{
+  "commit": "b75b819c8e4e57decd60634da8b55d6458f9d511",
+  "cleanCheckout": true,
+  "checkoutNote": "验证在 ff 合并后的干净主分支检出树（与该提交完全相同）执行。",
+  "feature": "p32-05",
+  "checks": [
+    {
+      "command": "mvn test -Dtest=ReviewVersionBindingTest",
+      "result": "3 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test",
+      "result": "694 tests / 0 failures / 0 errors / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "E2E_FIXTURE_DIR=data/e2e-fixtures/canary-mystery-20260831 ./scripts/e2e.sh",
+      "result": "构思 WRITING；写作任务终态 COMPLETED",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/compare-baseline.py",
+      "result": "PASS 质量未退化",
+      "exitCode": 0
+    }
+  ]
+}

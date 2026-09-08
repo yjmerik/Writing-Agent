@@ -1,0 +1,28 @@
+{
+  "commit": "5545160db688cc4a2bb59af638e2d2cedb6b7be3",
+  "cleanCheckout": true,
+  "checkoutNote": "e2e 默认 mtime 自动选语料与 prompt 指纹分叉为既有现象（基线 2b8677e 对照同样分叉），已登记 p32-10；验证使用显式 canary-mystery 语料。",
+  "feature": "p32-02",
+  "checks": [
+    {
+      "command": "mvn test -Dtest=AuthorDraftConflictProtectionTest",
+      "result": "3 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test",
+      "result": "687 tests / 0 failures / 0 errors / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "E2E_FIXTURE_DIR=data/e2e-fixtures/canary-mystery-20260831 ./scripts/e2e.sh",
+      "result": "构思完成 WRITING；写作任务终态 COMPLETED",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/compare-baseline.py",
+      "result": "PASS 质量未退化",
+      "exitCode": 0
+    }
+  ]
+}

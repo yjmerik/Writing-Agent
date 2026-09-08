@@ -2471,15 +2471,7 @@ public class NovelOrchestrator {
     }
 
     private static String sha256Hex12(String input) {
-        try {
-            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
-                    .digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            StringBuilder hex = new StringBuilder();
-            for (int i = 0; i < 6; i++) hex.append(String.format("%02x", digest[i]));
-            return hex.toString();
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return com.writing.novel.util.ReviewFingerprint.sha256Hex12(input);
     }
 
     /**
@@ -2771,16 +2763,27 @@ public class NovelOrchestrator {
         }
         ChapterQualityReport report = new ChapterQualityReport(
                 chapterIndex, chapter.getTitle(), chapter.getWordCount());
+        // p32-05: 报告绑定章节当前版本——绑定旧版本的条目在报告中标记过期
+        report.setChapterVersion(chapter.getVersion());
 
         // 读者评审
         repository.findChapterReview(projectId, chapterIndex)
-                .ifPresent(report::setReview);
+                .ifPresent(r -> {
+                    r.setStale(r.getChapterVersion() != null
+                            && r.getChapterVersion() != chapter.getVersion());
+                    report.setReview(r);
+                    report.setReviewStale(r.isStale());
+                });
 
         // 该章的 ContinuityIssue
         var issues = repository.findUnresolvedIssues(projectId).stream()
                 .filter(i -> i.getDetectedAtChapter() == chapterIndex)
+                .peek(i -> i.setStale(i.getChapterVersion() != null
+                        && i.getChapterVersion() != chapter.getVersion()))
                 .toList();
         report.setIssues(issues);
+        report.setStaleIssueCount(issues.stream().filter(
+                com.writing.novel.domain.ContinuityIssue::isStale).count());
         report.setNeedsManualReview(chapter.getStatus() == Chapter.Status.NEEDS_MANUAL_REVIEW);
         report.setQualityRisk(issues.stream().anyMatch(i ->
                 i.getDescription() != null && i.getDescription().startsWith("[quality_risk]"))

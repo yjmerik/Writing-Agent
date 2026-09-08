@@ -26,6 +26,10 @@ public class ChapterQualityReport {
     private List<String> topCliches;
     private boolean needsManualReview;
     private boolean qualityRisk;
+    /** p32-05: 报告对应章节的当前版本；绑定版本≠当前版本的条目判过期。 */
+    private int chapterVersion;
+    private long staleIssueCount;
+    private boolean reviewStale;
 
     public ChapterQualityReport(int chapterIndex, String chapterTitle, int wordCount) {
         this.chapterIndex = chapterIndex;
@@ -74,4 +78,10 @@ public class ChapterQualityReport {
     public void setNeedsManualReview(boolean v) { this.needsManualReview = v; }
     public boolean isQualityRisk() { return qualityRisk; }
     public void setQualityRisk(boolean v) { this.qualityRisk = v; }
+    public int getChapterVersion() { return chapterVersion; }
+    public void setChapterVersion(int v) { this.chapterVersion = v; }
+    public long getStaleIssueCount() { return staleIssueCount; }
+    public void setStaleIssueCount(long v) { this.staleIssueCount = v; }
+    public boolean isReviewStale() { return reviewStale; }
+    public void setReviewStale(boolean v) { this.reviewStale = v; }
 }

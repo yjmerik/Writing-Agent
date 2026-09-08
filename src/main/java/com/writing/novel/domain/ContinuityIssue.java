@@ -16,6 +16,11 @@ public class ContinuityIssue {
     private String description;
     private boolean resolved;
     private Instant createdAt;
+    /** p32-05: 产生时点的章节版本与正文指纹（NULL=功能前旧数据），由持久化边界盖章。 */
+    private Integer chapterVersion;
+    private String contentHash;
+    /** p32-05: 质量报告响应期判定——绑定版本是否已非当前（非持久化）。 */
+    private boolean stale;
 
     public ContinuityIssue(String projectId, int detectedAtChapter, Type type,
                            Severity severity, String description) {
@@ -39,4 +44,10 @@ public class ContinuityIssue {
     public String getDescription() { return description; }
     public boolean isResolved() { return resolved; }
     public Instant getCreatedAt() { return createdAt; }
+    public Integer getChapterVersion() { return chapterVersion; }
+    public void setChapterVersion(Integer v) { this.chapterVersion = v; }
+    public String getContentHash() { return contentHash; }
+    public void setContentHash(String h) { this.contentHash = h; }
+    public boolean isStale() { return stale; }
+    public void setStale(boolean s) { this.stale = s; }
 }

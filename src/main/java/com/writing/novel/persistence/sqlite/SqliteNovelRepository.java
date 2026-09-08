@@ -5,6 +5,7 @@ import com.writing.novel.domain.Character;
 import com.writing.novel.domain.ThreadStatus;  // 显式导入，避免与 java.lang.Character 歧义
 import com.writing.novel.domain.WritingPreferences;
 import com.writing.novel.spi.NovelRepository;
+import com.writing.novel.util.ReviewFingerprint;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -949,18 +950,46 @@ public class SqliteNovelRepository implements NovelRepository {
 
     /** B1: 事务内保存连续性问题 */
     public void saveContinuityIssue(Connection conn, ContinuityIssue i) {
+        // p32-05: 持久化边界盖章——记录问题针对的章节版本与正文指纹（无章节行为 NULL）
+        if (i.getChapterVersion() == null) {
+            ChapterBinding binding = currentChapterBinding(conn, i.getProjectId(), i.getDetectedAtChapter());
+            if (binding != null) {
+                i.setChapterVersion(binding.version());
+                i.setContentHash(binding.hash());
+            }
+        }
         try (PreparedStatement ps = conn.prepareStatement(
-                "INSERT INTO continuity_issues (id,project_id,detected_at_chapter,type,severity,description,resolved,created_at) " +
-                "VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET resolved=excluded.resolved")) {
+                "INSERT INTO continuity_issues (id,project_id,detected_at_chapter,type,severity,description,resolved,created_at,chapter_version,content_hash) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET resolved=excluded.resolved")) {
             ps.setString(1, i.getId()); ps.setString(2, i.getProjectId());
             ps.setInt(3, i.getDetectedAtChapter());
             ps.setString(4, i.getType().name()); ps.setString(5, i.getSeverity().name());
             ps.setString(6, i.getDescription());
             ps.setInt(7, i.isResolved() ? 1 : 0);
             ps.setString(8, i.getCreatedAt().toString());
+            if (i.getChapterVersion() != null) ps.setInt(9, i.getChapterVersion()); else ps.setNull(9, java.sql.Types.INTEGER);
+            ps.setString(10, i.getContentHash());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
+
+    /** p32-05: 审核产物绑定用的章节当前版本与正文指纹。 */
+    private static ChapterBinding currentChapterBinding(Connection conn, String projectId, int chapterIndex) {
+        try (PreparedStatement q = conn.prepareStatement(
+                "SELECT version, content FROM chapters WHERE project_id=? AND chapter_index=?")) {
+            q.setString(1, projectId);
+            q.setInt(2, chapterIndex);
+            try (ResultSet rs = q.executeQuery()) {
+                if (rs.next()) {
+                    return new ChapterBinding(rs.getInt("version"),
+                            ReviewFingerprint.sha256Hex12(rs.getString("content")));
+                }
+            }
+        } catch (SQLException ignored) {}
+        return null;
+    }
+
+    private record ChapterBinding(int version, String hash) {}
 
     @Override
     public List<ContinuityIssue> findContinuityIssuesByProject(String projectId) {
@@ -1322,10 +1351,20 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public void saveChapterReview(ChapterReview r) {
+        // p32-05: 持久化边界盖章——评语绑定其针对的章节版本与正文指纹
+        if (r.getChapterVersion() == null) {
+            try (Connection probe = cp.getConnection()) {
+                ChapterBinding binding = currentChapterBinding(probe, r.getProjectId(), r.getChapterIndex());
+                if (binding != null) {
+                    r.setChapterVersion(binding.version());
+                    r.setContentHash(binding.hash());
+                }
+            } catch (SQLException ignored) {}
+        }
         String sql = "INSERT INTO chapter_reviews (id,project_id,chapter_index," +
                 "overall_score,engagement,coherence,character_score,hook," +
-                "summary,issues,improvement,created_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
+                "summary,issues,improvement,created_at,chapter_version,content_hash) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
                 "overall_score=excluded.overall_score, engagement=excluded.engagement, " +
                 "coherence=excluded.coherence, character_score=excluded.character_score, " +
                 "hook=excluded.hook, summary=excluded.summary, issues=excluded.issues, " +
@@ -1338,6 +1377,8 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setInt(7, r.getCharacter()); ps.setInt(8, r.getHook());
             ps.setString(9, r.getSummary()); ps.setString(10, r.getIssues());
             ps.setString(11, r.getImprovement()); ps.setString(12, r.getCreatedAt().toString());
+            if (r.getChapterVersion() != null) ps.setInt(13, r.getChapterVersion()); else ps.setNull(13, java.sql.Types.INTEGER);
+            ps.setString(14, r.getContentHash());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
@@ -1378,6 +1419,12 @@ public class SqliteNovelRepository implements NovelRepository {
         r.setSummary(rs.getString("summary"));
         r.setIssues(rs.getString("issues"));
         r.setImprovement(rs.getString("improvement"));
+        // p32-05: 绑定版本与指纹（迁移前旧行 NULL）
+        try {
+            int boundVersion = rs.getInt("chapter_version");
+            if (!rs.wasNull()) r.setChapterVersion(boundVersion);
+            r.setContentHash(rs.getString("content_hash"));
+        } catch (SQLException ignored) {}
         return r;
     }
 
@@ -1817,6 +1864,12 @@ public class SqliteNovelRepository implements NovelRepository {
                 rs.getString("description"));
         setField(i, "id", rs.getString("id"));
         if (rs.getInt("resolved") == 1) i.resolve();
+        // p32-05: 绑定版本与指纹（迁移前旧行 NULL）
+        try {
+            int boundVersion = rs.getInt("chapter_version");
+            if (!rs.wasNull()) i.setChapterVersion(boundVersion);
+            i.setContentHash(rs.getString("content_hash"));
+        } catch (SQLException ignored) {}
         return i;
     }
 

@@ -20,6 +20,11 @@ public class ChapterReview {
     private String issues;             // 问题列表（分号分隔）
     private String improvement;        // 改进建议
     private Instant createdAt;
+    /** p32-05: 评语针对的章节版本与正文指纹（NULL=功能前旧数据），持久化边界盖章。 */
+    private Integer chapterVersion;
+    private String contentHash;
+    /** p32-05: 响应期标记——绑定版本是否已非当前（非持久化）。 */
+    private boolean stale;
 
     public ChapterReview(String projectId, int chapterIndex) {
         this.id = UUID.randomUUID().toString();
@@ -65,4 +70,10 @@ public class ChapterReview {
     public String getImprovement() { return improvement; }
     public void setImprovement(String i) { this.improvement = i; }
     public Instant getCreatedAt() { return createdAt; }
+    public Integer getChapterVersion() { return chapterVersion; }
+    public void setChapterVersion(Integer v) { this.chapterVersion = v; }
+    public String getContentHash() { return contentHash; }
+    public void setContentHash(String h) { this.contentHash = h; }
+    public boolean isStale() { return stale; }
+    public void setStale(boolean s) { this.stale = s; }
 }

@@ -4,7 +4,7 @@ Last Updated: 2026-09-08
 
 ## Current（当前）
 
-浏览器 UI 全流程验证（docs/reports/2026-09-08-ui-verification/UI验证记录.md）发现的 4 个问题已全部按 Bugfix gate 修复合入 main：p32-13 REST 修订同步派生刷新假死锁（c115248，定性从"所有权泄漏"更正为"同步 LLM 链阻塞响应/所有权十几分钟"）、p32-11 全书评价持久化+读回（ad9e444）、p32-12 所有权 409 与版本冲突 409 分级（673c020）、p32-14 /api no-store（73da06f）。加上此前 p32-01~05，feature_list 共 241 项：236 completed / 5 not-started（第二批 p32-06~09 + e2e 语料 p32-10）；active_feature=null，主工作区在 main=87962e4。
+UI 验证发现的 4 个问题（p32-11~14）与第二批前两项（p32-10 e2e 语料 preset 匹配、p32-06 StoryFact 证据分级 696cc6d）已合入 main。feature_list 共 242 项：238 completed / 4 not-started（p32-07/08/09 + **p32-15 e2e 回放语料与代码演化路径分叉**——LLM 输出非确定性使 canary-20260831 语料不再可靠，p32-06 合入后 e2e FAIL 即此因，取证见 feature evidence；修复方案——record 重建语料+bless，或 replay 归一化容忍——待用户决策）。active_feature=null，main=本轮 docs 提交。
 
 ## Files（文件与证据）
 
@@ -13,12 +13,13 @@ Last Updated: 2026-09-08
 ## Verification（验证）
 
 - 每项先 RED 复现（p32-13 实测同步阻塞 4082ms；p32-11/12/14 均先失败）后 GREEN。
-- 最终干净 main：mvn test 702/0失败/1跳过；前端构建通过；canary-mystery e2e COMPLETED + compare-baseline PASS；check-harness --check-git PASS。
+- p32-06：FactEvidenceGradingTest 3 项 RED→GREEN；canon 系 29 项回归全过；main 全量 705/0失败/1跳过；check-harness --check-git PASS。
+- e2e 零参数当前 FAIL（基线四项退化）——归因 p32-15 语料分叉（prompt 逐字一致但 LLM 输出历史不同），非 p32-06 引入；修复决策留待下轮。
 - p32-13 行为：修订响应 <2.5s、所有权立即释放、摘要后台最终一致、异步失败发 CHAPTER_REFRESH_FAILED(async=true)。
 
 ## Blockers（阻塞与限制）
 
-未推送远端。截图 CDP 超时未修（环境现象）。第二批（记忆分级 p32-06~09）与 e2e 语料分叉 p32-10 仍在 backlog。验证实例数据保留 data/verify-fullrun-0908.db（18100 服务已停）。
+未推送远端。截图 CDP 超时未修（环境现象）。**p32-15 阻塞后续质量类改动的 e2e/基线验证**：p32-07（prompt 收紧）合入前必须先重建语料或实现 replay 容忍，否则无法按 DoD 验证。p32-08/09 不直接改 prompt，可在现有条件下验证。验证实例数据与 miss 取证保留（data/verify-fullrun-0908.db、data/e2e-fixtures/canary-mystery-20260831/*.miss.json）。
 
 ## Next Steps（下一步）
 

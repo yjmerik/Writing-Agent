@@ -503,6 +503,28 @@
       "implementation_commit": "73da06f86b0cb362c8e4d022e2d77370947dbac9",
       "main_commit": "73da06f86b0cb362c8e4d022e2d77370947dbac9",
       "evidence": "docs/harness/evidence/p32-14-author-trust.json"
+    },
+    {
+      "id": "p32-06-author-trust",
+      "kind": "verified",
+      "feature_ids": [
+        "p32-06"
+      ],
+      "branch": "codex/p32-06-fact-evidence-grading",
+      "implementation_commit": "696cc6d14b02f200c324c8cc2a5c3f903ef03de3",
+      "main_commit": "696cc6d14b02f200c324c8cc2a5c3f903ef03de3",
+      "evidence": "docs/harness/evidence/p32-06-author-trust.json"
+    },
+    {
+      "id": "p32-10-author-trust",
+      "kind": "verified",
+      "feature_ids": [
+        "p32-10"
+      ],
+      "branch": "codex/p32-10-e2e-fixture-selection",
+      "implementation_commit": "a32832c9bca3d54bd2348b17e0380905811ab11e",
+      "main_commit": "a32832c9bca3d54bd2348b17e0380905811ab11e",
+      "evidence": "docs/harness/evidence/p32-10-author-trust.json"
     }
   ]
 }

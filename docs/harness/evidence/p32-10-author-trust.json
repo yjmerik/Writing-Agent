@@ -1,0 +1,23 @@
+{
+  "commit": "a32832c9bca3d54bd2348b17e0380905811ab11e",
+  "cleanCheckout": true,
+  "checkoutNote": "验证在 ff 合并后的干净检出执行；语料长期分叉问题另见 p32-15。",
+  "feature": "p32-10",
+  "checks": [
+    {
+      "command": "bash scripts/e2e-fixture-dir-test.sh",
+      "result": "preset匹配/wuxia/无匹配报错 3断言 GREEN",
+      "exitCode": 0
+    },
+    {
+      "command": "./scripts/e2e.sh（零参数，合入时）",
+      "result": "构思 WRITING + 写作 COMPLETED",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test",
+      "result": "702 tests / 0 failures / 1 skipped",
+      "exitCode": 0
+    }
+  ]
+}

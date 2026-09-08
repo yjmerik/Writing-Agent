@@ -1,0 +1,23 @@
+{
+  "commit": "696cc6d14b02f200c324c8cc2a5c3f903ef03de3",
+  "cleanCheckout": true,
+  "checkoutNote": "验证在 ff 合并后的干净主分支检出树执行。注意：e2e replay 语料与当前代码演化路径分叉已登记 p32-15（非 p32-06/10 引入；分叉证据含 prompt 逐字一致的 miss 转储）。",
+  "feature": "p32-06",
+  "checks": [
+    {
+      "command": "mvn test -Dtest=FactEvidenceGradingTest",
+      "result": "3 tests / 0 failures",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=\"FactHarvesterTest,FactHarvesterScopedTest,HumanPatchHarvestProtectionTest,CanonConsumedByCheckersTest,StoryBibleTest,CanonActiveUniquenessTest,CanonPatchServiceTest,StoryCanonContractTest\"",
+      "result": "canon 系回归全过",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test",
+      "result": "705 tests / 0 failures / 1 skipped",
+      "exitCode": 0
+    }
+  ]
+}

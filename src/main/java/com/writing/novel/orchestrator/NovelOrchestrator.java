@@ -2068,7 +2068,8 @@ public class NovelOrchestrator {
                         nextStart, nextStart + 7, "", "", replanGenre);
                 Outline scratch = new Outline(projectId, outline.getPremise());
                 int nextVol = outline.getVolumes().stream().mapToInt(Volume::getVolumeIndex).max().orElse(0) + 1;
-                parseAndAppendVolume(scratch, generated, projectId, nextVol, nextStart);
+                // p32-03: 用与 planVolume 请求一致的区间校验解析结果
+                parseAndAppendVolume(scratch, generated, projectId, nextVol, nextStart, nextStart + 7);
                 new com.writing.novel.service.OutlineReplanner()
                         .replaceUnwritten(outline, currentChapter, scratch.getVolumes());
             }
@@ -2319,7 +2320,9 @@ public class NovelOrchestrator {
 
             // 解析并追加到 outline
             Outline outline = outlineOpt.get();
-            int parsed = parseAndAppendVolume(outline, volumeText, projectId, volumeNumber, nextStartChapter);
+            // p32-03: 用 planVolume 请求区间校验解析结果，越界章号拒绝入库
+            int parsed = parseAndAppendVolume(outline, volumeText, projectId, volumeNumber,
+                    nextStartChapter, nextEndChapter);
             if (parsed == 0) {
                 // mc-p3-01: LLM 输出被截断/格式漂移导致解析 0 章时，用卷梗概占位生成该卷章节，
                 // 保证写作循环不空转（宁可先写出来，再由大纲延迟扩展补齐细节）
@@ -2375,10 +2378,13 @@ public class NovelOrchestrator {
      * mc-p3-01: 正则改为行首锚定——避免与正文中的"预计第N章回收"等
      * 行内章号引用冲突（旧正则的 (?=第\d+章) lookahead 会被截断，
      * 导致 8 章大纲误解析为 5 章、章节错乱）。
+     * p32-03（体验报告 #1/P1）: 启用请求区间 [startChapter, endChapter] 校验——
+     * LLM 照抄总纲中其它卷的"章节范围"会产出 41-48 这类错误章号（首卷 0 正文时曾实测发生），
+     * 区间外条目拒绝入库并发 PLAN_VOLUME_RANGE_REJECTED 事件，由调用方占位兜底。
      * @return 解析出的章节数（0 表示解析失败）
      */
     private int parseAndAppendVolume(Outline outline, String text, String projectId,
-                                       int volumeNumber, int startChapter) {
+                                       int volumeNumber, int startChapter, int endChapter) {
         // 创建新卷
         Volume volume = new Volume(projectId, volumeNumber, "卷" + volumeNumber, "延迟生成");
         outline.addVolume(volume);
@@ -2392,9 +2398,15 @@ public class NovelOrchestrator {
                 java.util.regex.Pattern.DOTALL);
         java.util.regex.Matcher m = chapterPattern.matcher(cleanText);
         int parsed = 0;
+        List<Integer> rejectedChapters = new java.util.ArrayList<>();
         while (m.find()) {
             try {
                 int chIdx = Integer.parseInt(m.group(1));
+                // p32-03: 章号区间门——错误范围的计划绝不进入权威 outline
+                if (chIdx < startChapter || chIdx > endChapter) {
+                    rejectedChapters.add(chIdx);
+                    continue;
+                }
                 String title = m.group(2).trim();
                 String body = m.group(3).trim();
                 // 去重：跳过已存在的章号
@@ -2413,6 +2425,18 @@ public class NovelOrchestrator {
                 volume.addSynopsis(syn);
                 parsed++;
             } catch (Exception ignored) {}
+        }
+        if (!rejectedChapters.isEmpty()) {
+            // p32-03: 让作者/诊断链路看到被拒章号与请求区间——错误计划被阻止而非静默采纳
+            EventLog.emit("PLAN_VOLUME_RANGE_REJECTED", java.util.Map.of(
+                    "projectId", projectId,
+                    "volumeNumber", volumeNumber,
+                    "requestedStart", startChapter,
+                    "requestedEnd", endChapter,
+                    "rejectedChapters", rejectedChapters,
+                    "acceptedChapters", parsed));
+            log.warn("卷{}计划章号越界拒绝(请求区间{}-{}, 被拒{}): {}", volumeNumber,
+                    startChapter, endChapter, rejectedChapters.size(), rejectedChapters);
         }
         log.info("解析追加卷{}: {} 章", volumeNumber, parsed);
         if (parsed > 0) {

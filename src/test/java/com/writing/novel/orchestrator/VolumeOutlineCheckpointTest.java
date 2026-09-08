@@ -38,10 +38,10 @@ class VolumeOutlineCheckpointTest {
                 null, null, null, null, null);
 
         Method m = NovelOrchestrator.class.getDeclaredMethod("parseAndAppendVolume",
-                Outline.class, String.class, String.class, int.class, int.class);
+                Outline.class, String.class, String.class, int.class, int.class, int.class);
         m.setAccessible(true);
         Outline outline = repo.findOutlineByProject(p.getId()).orElseThrow();
-        m.invoke(orchestrator, outline, "第1章 新卷开端：开场。\n第2章 推进：冲突。", p.getId(), 1, 1);
+        m.invoke(orchestrator, outline, "第1章 新卷开端：开场。\n第2章 推进：冲突。", p.getId(), 1, 1, 8);
 
         assertEquals(NovelState.PAUSED_AT_CHECKPOINT, repo.findProject(p.getId()).orElseThrow().getState());
         assertTrue(repo.findPendingCheckpoints(p.getId()).stream()

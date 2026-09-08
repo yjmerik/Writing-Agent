@@ -72,9 +72,9 @@ class OutlineReplanningTest {
                 + "第2章 暗流：场景节拍：夜探\n爽点：发现密信\n人物：沈墨\n张力：6";
 
         Method m = NovelOrchestrator.class.getDeclaredMethod("parseAndAppendVolume",
-                Outline.class, String.class, String.class, int.class, int.class);
+                Outline.class, String.class, String.class, int.class, int.class, int.class);
         m.setAccessible(true);
-        int parsed = (int) m.invoke(orchestrator, outline, volumeText, pid, 1, 1);
+        int parsed = (int) m.invoke(orchestrator, outline, volumeText, pid, 1, 1, 8);
 
         assertEquals(2, parsed, "应解析 2 章");
         ChapterSynopsis ch1 = outline.getVolumes().get(0).getSynopses().stream()

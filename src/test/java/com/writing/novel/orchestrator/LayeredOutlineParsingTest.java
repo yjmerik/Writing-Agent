@@ -5,12 +5,20 @@ import com.writing.novel.domain.Project;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
 import com.writing.novel.persistence.sqlite.SqliteNovelRepository;
 import com.writing.novel.persistence.sqlite.SqliteSchemaInitializer;
+import com.writing.novel.telemetry.EventLog;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,6 +32,31 @@ class LayeredOutlineParsingTest {
     Path tempDir;
     private SqliteNovelRepository repo;
     private NovelOrchestrator orchestrator;
+
+    /** p32-03: 计划章号区间校验事件捕获 */
+    private static final List<Map<String, Object>> RANGE_EVENTS = new CopyOnWriteArrayList<>();
+    private static final EventLog.Listener RANGE_LISTENER = record -> {
+        if ("PLAN_VOLUME_RANGE_REJECTED".equals(record.get("event"))) RANGE_EVENTS.add(record);
+    };
+
+    @BeforeAll
+    static void redirectEventLog() {
+        new File("./data").mkdirs();
+        System.setProperty(EventLog.PATH_PROPERTY, "./data/test-layered-parsing-events.jsonl");
+        EventLog.subscribe(RANGE_LISTENER);
+    }
+
+    @AfterAll
+    static void restoreEventLog() {
+        EventLog.unsubscribe(RANGE_LISTENER);
+        System.clearProperty(EventLog.PATH_PROPERTY);
+    }
+
+    @BeforeEach
+    @AfterEach
+    void clearRangeEvents() {
+        RANGE_EVENTS.clear();
+    }
 
     @BeforeEach
     void setUp() {
@@ -56,10 +89,57 @@ class LayeredOutlineParsingTest {
     }
 
     private int invokeParse(Outline outline, String text, String projectId, int volNum, int startChapter) throws Exception {
+        return invokeParse(outline, text, projectId, volNum, startChapter, startChapter + 7);
+    }
+
+    /** p32-03: 解析入口带显式区间（start..end），区间外章号拒绝入库 */
+    private int invokeParse(Outline outline, String text, String projectId, int volNum,
+                            int startChapter, int endChapter) throws Exception {
         Method m = NovelOrchestrator.class.getDeclaredMethod(
-                "parseAndAppendVolume", Outline.class, String.class, String.class, int.class, int.class);
+                "parseAndAppendVolume", Outline.class, String.class, String.class,
+                int.class, int.class, int.class);
         m.setAccessible(true);
-        return (int) m.invoke(orchestrator, outline, text, projectId, volNum, startChapter);
+        return (int) m.invoke(orchestrator, outline, text, projectId, volNum, startChapter, endChapter);
+    }
+
+    /** 报告 #1 复现：请求 1-8 卷，LLM 照抄总纲中另一卷范围输出 41-48 */
+    private String wrongRangeVolumeText(int from) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("【总纲】卷1（重规划）\n\n");
+        for (int i = from; i < from + 8; i++) {
+            sb.append("第").append(i).append("章 错误章节").append(i)
+              .append("：场景节拍：开场→推进→冲突→收尾。爽点：爽感。人物：沈砚。")
+              .append("目的：推进。张力：7。伏笔：无。\n");
+        }
+        return sb.toString();
+    }
+
+    @Test
+    void 章号全在区间外时拒绝入库并发出计划校验事件() throws Exception {
+        Outline outline = new Outline("p1", "总纲");
+        int parsed = invokeParse(outline, wrongRangeVolumeText(41), "p1", 1, 1, 8);
+        assertEquals(0, parsed, "41-48 全部落在请求区间 1-8 之外，应解析 0 章走占位兜底");
+        assertTrue(outline.getVolumes().get(0).getSynopses().isEmpty(),
+                "区间外章号不得入库: " + outline.getVolumes().get(0).getSynopses());
+        assertTrue(RANGE_EVENTS.stream().anyMatch(e -> "p1".equals(e.get("projectId"))
+                        && Integer.valueOf(41).equals(((java.util.List<Integer>) e.get("rejectedChapters")).get(0))),
+                "应发出 PLAN_VOLUME_RANGE_REJECTED 事件，实际: " + RANGE_EVENTS);
+    }
+
+    @Test
+    void 混合章号仅区间内条目入库并记录被拒章号() throws Exception {
+        String text = "第1章 甲：节拍。\n第2章 乙：节拍。\n第41章 丙：节拍。\n第9章 丁：节拍。\n";
+        Outline outline = new Outline("p1", "总纲");
+        int parsed = invokeParse(outline, text, "p1", 1, 1, 8);
+        assertEquals(2, parsed, "只应接受区间 1-8 内的第1、2章");
+        var synopses = outline.getVolumes().get(0).getSynopses();
+        assertEquals(java.util.Set.of(1, 2),
+                synopses.stream().map(com.writing.novel.domain.ChapterSynopsis::getChapterIndex)
+                        .collect(java.util.stream.Collectors.toSet()));
+        assertTrue(RANGE_EVENTS.stream().anyMatch(e ->
+                        ((java.util.List<Integer>) e.get("rejectedChapters")).contains(41)
+                                && ((java.util.List<Integer>) e.get("rejectedChapters")).contains(9)),
+                "事件应记录被拒章号 41 与 9，实际: " + RANGE_EVENTS);
     }
 
     @Test
@@ -116,7 +196,8 @@ class LayeredOutlineParsingTest {
             + "**第10章 雨吏的脚印**\n**场景节拍：** 雨夜追踪。\n**爽点：** 反杀。\n**人物：** 裴照临\n**目的：** 推进。\n**张力：** 7\n**伏笔：** 无。\n\n"
             + "**第11章 账册的裂缝**\n**场景节拍：** 账册异变。\n**爽点：** 玄奇。\n**人物：** 沈砚舟\n**目的：** 揭示设定。\n**张力：** 8\n**伏笔：** 埋设裂缝原因。\n";
         Outline outline = new Outline("p1", "总纲");
-        int parsed = invokeParse(outline, text, "p1", 1, 1);
+        // p32-03: 卷2 真实调用 start=9（第9-16章区间）
+        int parsed = invokeParse(outline, text, "p1", 1, 9);
         assertEquals(3, parsed, "markdown 加粗章节行应解析 3 章，实际 " + parsed);
         var synopses = outline.getVolumes().get(0).getSynopses();
         assertEquals(3, synopses.size());

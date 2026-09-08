@@ -34,13 +34,40 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(StubLlmGatewayTestConfig.class)
+@Import(UnwrittenSynopsisEditTest.ReplanRangeAwareGatewayConfig.class)
 @TestPropertySource(properties = {
         "persistence.embedding=stub",
         "persistence.sqlite.db-path=./data/test-hitl-synopsis.db",
         "persistence.vector-store.index-path=./data/test-hitl-synopsis-vecs.idx"
 })
 class UnwrittenSynopsisEditTest {
+
+    /**
+     * p32-03: replan 请求区间为当前章+1 起——桩 PLOTTING 输出必须落在区间内
+     * （原共享桩返回第1章，正是报告 #1 的越界章号形态，现被区间门正确拒绝）。
+     */
+    @org.springframework.boot.test.context.TestConfiguration
+    static class ReplanRangeAwareGatewayConfig {
+        @org.springframework.context.annotation.Primary
+        @org.springframework.context.annotation.Bean
+        com.writing.novel.llm.LlmGateway replanRangeAwareGateway() {
+            return new com.writing.novel.llm.LlmGateway() {
+                @Override
+                public com.writing.novel.llm.LlmResponse complete(com.writing.novel.llm.LlmRequest req) {
+                    String content = switch (req.getTaskType()) {
+                        case PLOTTING -> "【总纲】重规划。\n\n【卷1】新未写卷\n梗概。\n第2章 重规划新章：灵根测试后续。";
+                        default -> "这是桩 LLM 生成的正文内容，足够长用于测试章节写入和存储。".repeat(80);
+                    };
+                    return new com.writing.novel.llm.LlmResponse(content, 50, 100);
+                }
+
+                @Override
+                public void streamComplete(com.writing.novel.llm.LlmRequest req,
+                                           com.writing.novel.llm.client.StreamHandler handler) {
+                }
+            };
+        }
+    }
 
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper om;

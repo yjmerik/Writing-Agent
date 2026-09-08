@@ -4549,15 +4549,19 @@
       "phase": 32,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
+        "src/main/java/com/writing/novel/persistence/sqlite/QualityEvaluationRepository.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
         "src/main/java/com/writing/novel/web/OrchestratorController.java",
-        "frontend/src/components/QualityEvaluationPanel.tsx"
+        "frontend/src/components/QualityView.tsx",
+        "frontend/src/api/client.ts"
       ],
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=QualityEvaluationPersistenceTest：evaluate 后 GET 读回同结果；页面重载显示最近评价。",
       "verify_cmd": "mvn test -Dtest=QualityEvaluationPersistenceTest",
-      "evidence": ""
+      "evidence": "2026-09-08：分支codex/p32-11-evaluation-persistence 实现提交ad9e444 ff合入main。QualityEvaluationPersistenceTest 2项RED→GREEN（跨请求读回/最新一次）；mvn test 697/0失败/1跳过；前端构建通过。quality_evaluations表+GET /evaluate读回+QualityView挂载加载。",
+      "completion_record": "p32-11-author-trust"
     },
     {
       "id": "p32-12",
@@ -4566,33 +4570,38 @@
       "phase": 32,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
-        "src/main/java/com/writing/novel/service/ChapterRevisionService.java",
-        "src/main/java/com/writing/novel/web/ContentController.java",
-        "frontend/src/components/InteractiveReview.tsx"
+        "src/main/java/com/writing/novel/service/WorkConflictException.java",
+        "src/main/java/com/writing/novel/service/WritingTaskExecutor.java",
+        "src/main/java/com/writing/novel/web/GlobalExceptionHandler.java",
+        "frontend/src/components/InteractiveReview.tsx",
+        "frontend/src/components/AgentRevisionDialog.tsx"
       ],
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=RestoreOwnershipMessageTest：active task 时 restore 返回带 owner 原因；前端按原因显示接手提示。",
       "verify_cmd": "mvn test -Dtest=RestoreOwnershipMessageTest",
-      "evidence": ""
+      "evidence": "2026-09-08：分支codex/p32-12-ownership-conflict-message 实现提交673c020 ff合入main。RestoreOwnershipMessageTest 3项RED→GREEN；mvn test 700/0失败/1跳过；前端构建通过。WorkConflictException+code=WORK_OWNERSHIP_CONFLICT，前端三处409分支分级文案。",
+      "completion_record": "p32-12-author-trust"
     },
     {
       "id": "p32-13",
-      "name": "交还后工作权泄漏互锁",
-      "description": "UI 实测：交还作者（banner=已交给作者、busy=false）并完成一次成功回退（v4→v5）后，coordinator owner 未释放——collaboration 持续 busy=true 但 task=None，作者任何章节 mutation（restore/编辑）都被 beginWork 409「已有进行中的写作任务」拒绝，重启进程才恢复（复现体验报告 #6 的编辑互锁需重启）。可疑点：finishCollaborative 中 endWork(:457) 在 saveWritingTask 之后非 finally 顺序依赖；以及嵌套 beginWork（withChapterWork→withProjectWork 双 workId）路径。",
+      "name": "REST修订同步派生刷新阻塞响应与所有权（假死锁）",
+      "description": "UI实测更正定性：并非工作权泄漏——编辑/回退/Agent应用的同步派生刷新链（摘要重算等LLM调用，实测>5分钟）阻塞HTTP响应并持有项目所有权，UI呈现「等待内容处理完成」假死锁，数据实际已落库。修复：REST修订接线改用refreshChapterAfterRevisionAsync（DerivedWriteBoundary版本门保证最终一致），异步失败发CHAPTER_REFRESH_FAILED(async)事件不再静默。",
       "phase": 32,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
-        "src/main/java/com/writing/novel/service/WritingTaskExecutor.java",
-        "src/main/java/com/writing/novel/service/ProjectWorkCoordinator.java"
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+        "src/main/java/com/writing/novel/web/ContentController.java",
+        "src/main/java/com/writing/novel/service/AgentRevisionService.java"
       ],
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=WorkOwnershipLeakTest：协作任务交还+回退+再回退后 hasActiveTask=false，第二次回退不再 409。",
       "verify_cmd": "mvn test -Dtest=WorkOwnershipLeakTest",
-      "evidence": "2026-09-08 UI 验证实锤：verify-fullrun-0908.db 项目 1e242f32，21:16 回退成功后 busy 持续 true/task=None，restore expectedVersion=5 正确仍 409；响应体「已有进行中的写作任务，请先暂停或取消」。 补充：重启后第二次复现——restore v4→v6 同样 100% 成功即泄漏（busy=true/task=None，30s+60s 持续），P1：任何章节 mutation 后协作/编辑被锁至下次重启。复现路径=交还作者→版本回退成功。"
+      "evidence": "2026-09-08：定性更正——非所有权泄漏，而是REST修订路径同步派生刷新链（摘要重算等LLM调用）阻塞HTTP响应与所有权十几分钟（实测restore挂起>5min、busy持续>4min，重启前后行为一致）。分支codex/p32-13-revision-async-refresh 实现提交c115248 ff合入main。RevisionResponseLatencyTest RED(4082ms阻塞)→GREEN(<2.5s+所有权立即释放+摘要最终一致)；ChapterRevisionRefreshIsolationTest按异步契约演进；mvn test 695/0失败/1跳过；e2e COMPLETED+基线PASS。",
+      "completion_record": "p32-13-author-trust"
     },
     {
       "id": "p32-14",
@@ -4601,7 +4610,7 @@
       "phase": 32,
       "type": "bug",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/web/ApiCacheControlFilter.java",
         "frontend/src/api/client.ts"
@@ -4609,10 +4618,11 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=ApiCacheControlTest：GET /api 响应头含 Cache-Control no-store；前端构建通过。",
       "verify_cmd": "mvn test -Dtest=ApiCacheControlTest",
-      "evidence": ""
+      "evidence": "2026-09-08：分支codex/p32-14-api-no-store 实现提交73da06f ff合入main。ApiCacheControlTest 2项RED→GREEN；mvn test 702/0失败/1跳过；前端构建通过。/api/**统一no-store+前端fetch cache:'no-store'。",
+      "completion_record": "p32-14-author-trust"
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": "p32-14"
+  "active_feature": null
 }

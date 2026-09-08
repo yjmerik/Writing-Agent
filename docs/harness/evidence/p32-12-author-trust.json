@@ -1,0 +1,23 @@
+{
+  "commit": "673c020f162c28d587addf4ff33c94dc4450a941",
+  "cleanCheckout": true,
+  "checkoutNote": "验证在 ff 合并后的干净主分支检出树（与该提交完全相同）执行；合并后另跑 e2e+基线+harness 全绿（73da06f 树）。",
+  "feature": "p32-12",
+  "checks": [
+    {
+      "command": "mvn test -Dtest=RestoreOwnershipMessageTest",
+      "result": "3 tests / 0 failures",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test",
+      "result": "700 tests / 0 failures / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "cd frontend && npm run build",
+      "result": "构建通过",
+      "exitCode": 0
+    }
+  ]
+}

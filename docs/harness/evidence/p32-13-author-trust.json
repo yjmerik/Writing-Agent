@@ -1,0 +1,28 @@
+{
+  "commit": "c1152486de6fbbe7656b753898abc909897b2f33",
+  "cleanCheckout": true,
+  "checkoutNote": "验证在 ff 合并后的干净主分支检出树（与该提交完全相同）执行；合并后另跑 e2e+基线+harness 全绿（73da06f 树）。",
+  "feature": "p32-13",
+  "checks": [
+    {
+      "command": "mvn test -Dtest=RevisionResponseLatencyTest",
+      "result": "1 test / 0 failures（RED时4082ms阻塞复现）",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test",
+      "result": "695 tests / 0 failures / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "E2E_FIXTURE_DIR=data/e2e-fixtures/canary-mystery-20260831 ./scripts/e2e.sh",
+      "result": "写作任务终态 COMPLETED",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/compare-baseline.py",
+      "result": "PASS 质量未退化",
+      "exitCode": 0
+    }
+  ]
+}

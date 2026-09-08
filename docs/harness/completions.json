@@ -459,6 +459,50 @@
       "implementation_commit": "b75b819c8e4e57decd60634da8b55d6458f9d511",
       "main_commit": "b75b819c8e4e57decd60634da8b55d6458f9d511",
       "evidence": "docs/harness/evidence/p32-05-author-trust.json"
+    },
+    {
+      "id": "p32-11-author-trust",
+      "kind": "verified",
+      "feature_ids": [
+        "p32-11"
+      ],
+      "branch": "codex/p32-11-evaluation-persistence",
+      "implementation_commit": "ad9e4444f2c2e4da76ccf886ad908e258c70512c",
+      "main_commit": "ad9e4444f2c2e4da76ccf886ad908e258c70512c",
+      "evidence": "docs/harness/evidence/p32-11-author-trust.json"
+    },
+    {
+      "id": "p32-12-author-trust",
+      "kind": "verified",
+      "feature_ids": [
+        "p32-12"
+      ],
+      "branch": "codex/p32-12-ownership-conflict-message",
+      "implementation_commit": "673c020f162c28d587addf4ff33c94dc4450a941",
+      "main_commit": "673c020f162c28d587addf4ff33c94dc4450a941",
+      "evidence": "docs/harness/evidence/p32-12-author-trust.json"
+    },
+    {
+      "id": "p32-13-author-trust",
+      "kind": "verified",
+      "feature_ids": [
+        "p32-13"
+      ],
+      "branch": "codex/p32-13-revision-async-refresh",
+      "implementation_commit": "c1152486de6fbbe7656b753898abc909897b2f33",
+      "main_commit": "c1152486de6fbbe7656b753898abc909897b2f33",
+      "evidence": "docs/harness/evidence/p32-13-author-trust.json"
+    },
+    {
+      "id": "p32-14-author-trust",
+      "kind": "verified",
+      "feature_ids": [
+        "p32-14"
+      ],
+      "branch": "codex/p32-14-api-no-store",
+      "implementation_commit": "73da06f86b0cb362c8e4d022e2d77370947dbac9",
+      "main_commit": "73da06f86b0cb362c8e4d022e2d77370947dbac9",
+      "evidence": "docs/harness/evidence/p32-14-author-trust.json"
     }
   ]
 }

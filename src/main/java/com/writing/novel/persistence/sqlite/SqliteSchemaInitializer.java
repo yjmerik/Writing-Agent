@@ -313,5 +313,7 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE continuity_issues ADD COLUMN content_hash TEXT");
         safeAddColumn(st, "ALTER TABLE chapter_reviews ADD COLUMN chapter_version INTEGER");
         safeAddColumn(st, "ALTER TABLE chapter_reviews ADD COLUMN content_hash TEXT");
+        // p32-08: 伏笔回收证据（detector reason/人工确认），旧行 NULL
+        safeAddColumn(st, "ALTER TABLE foreshadowings ADD COLUMN resolve_evidence TEXT");
     }
 }

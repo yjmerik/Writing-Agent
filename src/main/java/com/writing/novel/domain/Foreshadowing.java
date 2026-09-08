@@ -15,6 +15,8 @@ public class Foreshadowing {
     private int plantedAtChapter;    // 埋设于第几章
     private boolean resolved;
     private Integer resolvedAtChapter; // 回收于第几章
+    /** p32-08: 回收证据——解释谜题的具体依据（detector 给出的 reason/人工确认说明），NULL=功能前旧数据 */
+    private String resolveEvidence;
     private Instant updatedAt;
 
     // p10-c1: 重要性 / 截止章节 / 必须回收标记
@@ -32,9 +34,23 @@ public class Foreshadowing {
         this.updatedAt = Instant.now();
     }
 
+    /** p32-08: 人工/兼容路径回收——标注来源为人工确认。 */
     public void resolve(int atChapter) {
+        resolve(atChapter, "人工回收确认（作者）");
+    }
+
+    /** p32-08: 仅供行映射从库恢复状态使用（不产生来源标注）。 */
+    public void resolveRaw(int atChapter) {
         this.resolved = true;
         this.resolvedAtChapter = atChapter;
+        this.updatedAt = Instant.now();
+    }
+
+    /** p32-08: 回收必须携带证据（哪段正文/哪条解释兑现了该伏笔）。 */
+    public void resolve(int atChapter, String evidence) {
+        this.resolved = true;
+        this.resolvedAtChapter = atChapter;
+        this.resolveEvidence = evidence;
         this.updatedAt = Instant.now();
     }
 
@@ -61,6 +77,8 @@ public class Foreshadowing {
     public int getPlantedAtChapter() { return plantedAtChapter; }
     public boolean isResolved() { return resolved; }
     public Integer getResolvedAtChapter() { return resolvedAtChapter; }
+    public String getResolveEvidence() { return resolveEvidence; }
+    public void setResolveEvidence(String e) { this.resolveEvidence = e; }
     public Instant getUpdatedAt() { return updatedAt; }
     public Priority getPriority() { return priority; }
     public void setPriority(Priority p) { this.priority = p; }

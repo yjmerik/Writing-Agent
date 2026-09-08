@@ -853,12 +853,12 @@ public class SqliteNovelRepository implements NovelRepository {
              PreparedStatement ps = conn.prepareStatement(
                      "INSERT INTO foreshadowings (id,project_id,description,planted_context," +
                      "planted_at_chapter,resolved,resolved_at_chapter,updated_at," +
-                     "priority,expected_resolve_chapter,must_resolve) VALUES (?,?,?,?,?,?,?,?,?,?,?) " +
+                     "priority,expected_resolve_chapter,must_resolve,resolve_evidence) VALUES (?,?,?,?,?,?,?,?,?,?,?,?) " +
                      "ON CONFLICT(id) DO UPDATE SET description=excluded.description, " +
                      "planted_context=excluded.planted_context, resolved=excluded.resolved, " +
                      "resolved_at_chapter=excluded.resolved_at_chapter, updated_at=excluded.updated_at, " +
                      "priority=excluded.priority, expected_resolve_chapter=excluded.expected_resolve_chapter, " +
-                     "must_resolve=excluded.must_resolve")) {
+                     "must_resolve=excluded.must_resolve, resolve_evidence=excluded.resolve_evidence")) {
             ps.setString(1, f.getId()); ps.setString(2, f.getProjectId());
             ps.setString(3, f.getDescription()); ps.setString(4, f.getPlantedContext());
             ps.setInt(5, f.getPlantedAtChapter());
@@ -870,6 +870,7 @@ public class SqliteNovelRepository implements NovelRepository {
             if (f.getExpectedResolveChapter() != null) ps.setInt(10, f.getExpectedResolveChapter());
             else ps.setNull(10, Types.INTEGER);
             ps.setInt(11, f.isMustResolve() ? 1 : 0);
+            ps.setString(12, f.getResolveEvidence()); // p32-08
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
@@ -1844,7 +1845,9 @@ public class SqliteNovelRepository implements NovelRepository {
                 rs.getString("description"), rs.getString("planted_context"),
                 rs.getInt("planted_at_chapter"));
         setField(f, "id", rs.getString("id"));
-        if (rs.getInt("resolved") == 1) f.resolve(rs.getInt("resolved_at_chapter"));
+        if (rs.getInt("resolved") == 1) f.resolveRaw(rs.getInt("resolved_at_chapter"));
+        // p32-08: 回收证据（迁移前旧行 NULL）
+        try { f.setResolveEvidence(rs.getString("resolve_evidence")); } catch (SQLException ignored) {}
         // p10-c1: 读取新字段（兼容旧库无列的情况）
         try {
             String pri = rs.getString("priority");

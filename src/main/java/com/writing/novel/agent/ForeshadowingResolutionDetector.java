@@ -120,13 +120,17 @@ public class ForeshadowingResolutionDetector {
             for (JsonNode node : resolvedArray) {
                 String desc = node.path("description").asText("");
                 if (desc.isBlank()) continue;
+                // p32-08（体验报告 #4/P1）: 回收必须给出证据——reason 缺失/空白
+                // 视为"再次提及"而非回收，不得置 resolved（报告实测：仅再出现日期被误判回收）
+                String evidence = node.path("reason").asText("").trim();
+                if (evidence.isEmpty()) continue;
 
                 // p10-c1: 改进匹配——从前 6 字模糊匹配升级为语义匹配
                 // 策略：取 LLM 返回描述的关键词（≥2字），与库存伏笔描述做关键词交集
                 for (var f : unresolved) {
                     if (f.isResolved()) continue;
                     if (descriptionsMatch(f.getDescription(), desc)) {
-                        f.resolve(chapterIndex);
+                        f.resolve(chapterIndex, evidence);
                         repository.saveForeshadowing(f);
                         count++;
                         break;

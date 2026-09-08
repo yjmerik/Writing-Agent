@@ -422,6 +422,11 @@ export const api = {
   evaluate: (id: string) =>
     request<QualityEvaluationResult>(`/projects/${id}/evaluate`, { method: 'POST' }, 300000),
 
+  /** p32-11: 读回最近一次全书评价（未评价时 evaluation=null） */
+  getQualityEvaluation: (id: string) =>
+    request<{ evaluation: QualityEvaluationResult | null; evaluatedAt?: string }>(
+      `/projects/${id}/evaluate`),
+
   // --- p7: 交互式审核 + 章节重写 + 预设 ---
 
   /** 列出待审核 checkpoint */

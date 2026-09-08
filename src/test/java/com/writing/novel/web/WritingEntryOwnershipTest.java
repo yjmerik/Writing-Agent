@@ -51,7 +51,8 @@ class WritingEntryOwnershipTest {
         when(mockRepo.findAllProjects()).thenReturn(java.util.List.of());
         executor = new WritingTaskExecutor(mockOrch, mockRepo);
         orchestratorController = new OrchestratorController(mockOrch,
-                new ProjectService(mockRepo), mock(QualityEvaluationAgent.class), executor, mockRepo);
+                new ProjectService(mockRepo), mock(QualityEvaluationAgent.class), executor, mockRepo,
+                mock(com.writing.novel.persistence.sqlite.QualityEvaluationRepository.class));
         contentController = new ContentController(mockRepo, mockOrch,
                 mock(CanonPatchService.class), executor);
         when(mockRepo.findPendingCheckpoints("p1")).thenReturn(java.util.List.of());

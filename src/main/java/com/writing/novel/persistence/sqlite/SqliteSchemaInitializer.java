@@ -77,6 +77,11 @@ public class SqliteSchemaInitializer {
             "id TEXT PRIMARY KEY, project_id TEXT, type TEXT, " +
             "description TEXT, status TEXT, created_at TEXT, payload TEXT)",
 
+        // p32-11: 全书质量评价历史（POST /evaluate 落库，GET 读回最近一次）
+        "CREATE TABLE IF NOT EXISTS quality_evaluations (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, overall_score INTEGER, " +
+            "report_json TEXT, created_at TEXT)",
+
         // 图数据库：实体表
         "CREATE TABLE IF NOT EXISTS entities (" +
             "id TEXT PRIMARY KEY, project_id TEXT, name TEXT, type TEXT, " +

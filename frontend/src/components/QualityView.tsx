@@ -26,16 +26,27 @@ type EvaluationState = 'NOT_EVALUATED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED';
 export default function QualityView({ projectId }: { projectId: string }) {
   const [evaluationState, setEvaluationState] = useState<EvaluationState>('NOT_EVALUATED');
   const [result, setResult] = useState<QualityEvaluationResult | null>(null);
+  const [evaluatedAt, setEvaluatedAt] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState('');
   const [messageApi, messageContextHolder] = message.useMessage();
   const requestSequence = useRef(0);
   const running = evaluationState === 'RUNNING';
 
   useEffect(() => {
-    requestSequence.current += 1;
+    const requestId = ++requestSequence.current;
     setEvaluationState('NOT_EVALUATED');
     setResult(null);
+    setEvaluatedAt('');
     setErrorMessage('');
+    // p32-11: 挂载时读回最近一次已持久化的评价——切 tab/刷新不再丢失
+    void api.getQualityEvaluation(projectId).then((stored) => {
+      if (requestSequence.current !== requestId) return;
+      if (stored.evaluation) {
+        setResult(stored.evaluation);
+        setEvaluatedAt(stored.evaluatedAt ?? '');
+        setEvaluationState('SUCCEEDED');
+      }
+    }).catch(() => { /* 读回失败保持未评价态，可手动重新评价 */ });
   }, [projectId]);
 
   const handleEvaluate = async () => {
@@ -47,6 +58,7 @@ export default function QualityView({ projectId }: { projectId: string }) {
       const nextResult = await api.evaluate(projectId);
       if (requestSequence.current !== requestId) return;
       setResult(nextResult);
+      setEvaluatedAt(new Date().toISOString());
       setEvaluationState('SUCCEEDED');
     } catch (e) {
       if (requestSequence.current !== requestId) return;
@@ -112,6 +124,11 @@ export default function QualityView({ projectId }: { projectId: string }) {
               </span>
               <span style={{ fontSize: 16, color: '#999' }}> / 10</span>
             </Title>
+            {evaluatedAt && (
+              <Paragraph style={{ color: '#999', fontSize: 12, margin: '4px 0 0' }}>
+                上次评价时间：{new Date(evaluatedAt).toLocaleString()}
+              </Paragraph>
+            )}
             <Paragraph style={{ color: '#666', maxWidth: 600, margin: '0 auto' }}>
               {result.summary}
             </Paragraph>

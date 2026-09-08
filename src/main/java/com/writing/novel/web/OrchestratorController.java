@@ -27,18 +27,21 @@ public class OrchestratorController {
     private final QualityEvaluationAgent qualityAgent;
     private final WritingTaskExecutor writingTaskExecutor;
     private final NovelRepository repository;
+    private final com.writing.novel.persistence.sqlite.QualityEvaluationRepository evaluationRepository;
     private final ProjectActionPolicy actionPolicy = new ProjectActionPolicy();
 
     public OrchestratorController(NovelOrchestrator orchestrator,
                                    ProjectService projectService,
                                    QualityEvaluationAgent qualityAgent,
                                    WritingTaskExecutor writingTaskExecutor,
-                                   NovelRepository repository) {
+                                   NovelRepository repository,
+                                   com.writing.novel.persistence.sqlite.QualityEvaluationRepository evaluationRepository) {
         this.orchestrator = orchestrator;
         this.projectService = projectService;
         this.qualityAgent = qualityAgent;
         this.writingTaskExecutor = writingTaskExecutor;
         this.repository = repository;
+        this.evaluationRepository = evaluationRepository;
     }
 
     @PostMapping("/run")
@@ -170,7 +173,17 @@ public class OrchestratorController {
     @PostMapping("/evaluate")
     public Map<String, Object> evaluate(@PathVariable String id) {
         var report = qualityAgent.evaluate(id);
-        return report.toMap();
+        Map<String, Object> result = report.toMap();
+        // p32-11: 评价历史落库——切页/刷新后可读回
+        evaluationRepository.save(id, report.overallScore, result);
+        return result;
+    }
+
+    /** p32-11: 读回最近一次全书评价（无记录时 evaluation=null）。 */
+    @GetMapping("/evaluate")
+    public Map<String, Object> latestEvaluation(@PathVariable String id) {
+        return evaluationRepository.findLatest(id)
+                .orElseGet(() -> java.util.Collections.singletonMap("evaluation", null));
     }
 
     private ActionAvailability availability(Project project) {

@@ -4626,9 +4626,7 @@
     {
       "id": "p32-15",
       "name": "prompt 变更后回放语料重建流程缺失",
-      "description": [
-        "定性修正（git bisect 实证）：a32832c（p32-06 前）同语料 replay PASS、696cc6d FAIL——分叉由 p32-06 引入，且属预期行为变更：待核事实不再以铁律注入、注入文本带【待核】标注，CHAPTER_WRITING systemPrompt 改变 → 旧语料指纹 miss。此前'LLM 输出非确定性'的归因错误。暴露的真实流程缺陷：任何改变注入上下文的改动合入后，没有强制的『record 重建语料 + 人工 bless 基线』步骤，导致 e2e/基线门禁静默失效。修复：建立语料重建流程——本 feature 以 record 重建 canary-mystery 语料、双次 replay 一致、质量对比后 bless golden，并把该流程写入 AGENTS.md DoD 检查（prompt/上下文改动合入后必须重建对应 preset 语料）。"
-      ],
+      "description": "定性修正（git bisect 实证）：a32832c（p32-06 前）同语料 replay PASS、696cc6d FAIL——分叉由 p32-06 引入，属预期行为变更：待核事实不再以铁律注入、注入文本带【待核】标注，CHAPTER_WRITING systemPrompt 改变 → 旧语料指纹 miss。此前'LLM 输出非确定性'的归因错误。暴露的真实流程缺陷：改变注入上下文的改动合入后没有强制的『record 重建语料 + bless 基线』步骤，e2e/基线门禁静默失效。修复：record 重建 canary-mystery-20260908、双次 replay 一致、质量对比后 bless golden，并把该流程写入 AGENTS.md DoD。另发现并修复 e2e.sh 不识别 PAUSED 合法终态的问题。",
       "phase": 32,
       "type": "bug",
       "dependencies": [],

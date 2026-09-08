@@ -42,14 +42,17 @@ E2E_DIR="data/e2e"
 # 显式指定的目录原样透传（缺失时由 replay 首个 fixture miss 快速失败）
 FIXTURE_DIR="${E2E_FIXTURE_DIR:-}"
 if [ -z "$FIXTURE_DIR" ]; then
-  for d in $(ls -dt data/e2e-fixtures/*/ 2>/dev/null); do
-    if ls "$d"*.json > /dev/null 2>&1; then FIXTURE_DIR="${d%/}"; break; fi
+  # p32-10: 自动选择必须与 preset 匹配，且按目录名（含日期后缀）字典序取最新——
+  # mtime 会被复制/checkout 扰动，曾让默认 mystery 流程选中 wuxia 语料，
+  # WORLDBUILDING 指纹 miss 导致构思 FAILED
+  for d in $(ls -d data/e2e-fixtures/*"$PRESET"* 2>/dev/null | sort -r); do
+    if ls "$d"/*.json > /dev/null 2>&1; then FIXTURE_DIR="$d"; break; fi
   done
   if [ -z "$FIXTURE_DIR" ]; then
-    echo "❌ 未找到可用的回放语料：请先 record（./scripts/e2e.sh --mode record）或设置 E2E_FIXTURE_DIR"
+    echo "❌ 未找到与 preset '$PRESET' 匹配的回放语料：请先录制 (./scripts/e2e.sh --mode record --preset $PRESET) 或显式设置 E2E_FIXTURE_DIR=<语料目录>"
     exit 1
   fi
-  echo "ℹ️ 未指定 E2E_FIXTURE_DIR，自动选用最新语料: $FIXTURE_DIR"
+  echo "ℹ️ 未指定 E2E_FIXTURE_DIR，自动选用与 preset '$PRESET' 匹配的最新语料: $FIXTURE_DIR"
 fi
 BASE="http://localhost:$PORT"
 REPLAY_MODE="off"

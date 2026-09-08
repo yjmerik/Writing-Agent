@@ -56,4 +56,38 @@ if ! ls "$AUTO_DIR"/*.json >/dev/null 2>&1; then
 fi
 echo "auto-resolved default corpus: $AUTO_DIR"
 
+# p32-10: 自动选择必须与 preset 匹配（mtime 排序曾被文件复制扰动选中错误语料，
+# 导致默认 mystery 流程命中 wuxia 语料、WORLDBUILDING 指纹 miss、构思 FAILED）
+case "$AUTO_DIR" in
+  *mystery*) ;;
+  *) echo "default preset is mystery but auto-resolved corpus is $AUTO_DIR" >&2; exit 1 ;;
+esac
+
+wuxia_capture="$TMP_DIR/wuxia-args"
+set +e
+PATH="$TMP_DIR/bin:$PATH" E2E_MVN_ARGS_FILE="$wuxia_capture" \
+  ./scripts/e2e.sh --mode replay --preset wuxia --port 61999 >/dev/null 2>&1
+set -e
+WUXIA_DIR=$(grep -oE -- "--llm.replay.dir=[^ ]+" "$wuxia_capture" | head -1 | cut -d= -f2)
+case "$WUXIA_DIR" in
+  *wuxia*) ;;
+  *) echo "preset wuxia must resolve to a wuxia corpus (got: $WUXIA_DIR)" >&2; exit 1 ;;
+esac
+
+# 无匹配语料的 preset：必须明确报错指引而不是静默用错语料
+missing_out="$TMP_DIR/missing-out"
+set +e
+PATH="$TMP_DIR/bin:$PATH" E2E_MVN_ARGS_FILE="$TMP_DIR/missing-args" \
+  ./scripts/e2e.sh --mode replay --preset romance --port 61999 >"$missing_out" 2>&1
+missing_status=$?
+set -e
+if [ "$missing_status" -eq 0 ]; then
+  echo "preset without corpus must fail" >&2
+  exit 1
+fi
+if ! grep -q "E2E_FIXTURE_DIR" "$missing_out"; then
+  echo "missing-corpus failure must mention E2E_FIXTURE_DIR guidance" >&2
+  exit 1
+fi
+
 echo "e2e fixture directory forwarding verified"

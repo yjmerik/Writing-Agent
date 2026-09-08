@@ -27,6 +27,8 @@ public class Chapter {
     private Instant updatedAt;
     /** p32-01: 派生数据（摘要/索引/收割）刷新失败的响应期标记——非持久化，不入库。 */
     private boolean derivedRefreshPending;
+    /** p32-04: 写作时采用的计划出处（"volume=N;synopsis=<sha12>"），NULL=功能前旧数据。 */
+    private String planRef;
 
     public Chapter(String projectId, int chapterIndex, String title) {
         this.id = UUID.randomUUID().toString();
@@ -78,4 +80,6 @@ public class Chapter {
     public Instant getUpdatedAt() { return updatedAt; }
     public boolean isDerivedRefreshPending() { return derivedRefreshPending; }
     public void setDerivedRefreshPending(boolean p) { this.derivedRefreshPending = p; }
+    public String getPlanRef() { return planRef; }
+    public void setPlanRef(String ref) { this.planRef = ref; }
 }

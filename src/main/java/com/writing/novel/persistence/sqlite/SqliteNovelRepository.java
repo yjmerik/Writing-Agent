@@ -334,9 +334,10 @@ public class SqliteNovelRepository implements NovelRepository {
     /** B1: 事务内保存章节——使用传入连接 */
     public String saveChapter(Connection conn, Chapter c) {
         String sql = "INSERT INTO chapters (id,project_id,chapter_index,title,content,word_count," +
-                "version,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?) " +
+                "version,status,created_at,updated_at,plan_ref) VALUES (?,?,?,?,?,?,?,?,?,?,?) " +
                 "ON CONFLICT(id) DO UPDATE SET title=excluded.title, content=excluded.content, " +
-                "word_count=excluded.word_count, version=excluded.version, status=excluded.status, updated_at=excluded.updated_at";
+                "word_count=excluded.word_count, version=excluded.version, status=excluded.status, " +
+                "updated_at=excluded.updated_at, plan_ref=excluded.plan_ref";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, c.getId()); ps.setString(2, c.getProjectId());
             ps.setInt(3, c.getChapterIndex()); ps.setString(4, c.getTitle());
@@ -345,6 +346,7 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setString(8, c.getStatus() != null ? c.getStatus().name() : "DONE");
             ps.setString(9, c.getCreatedAt().toString());
             ps.setString(10, c.getUpdatedAt().toString());
+            ps.setString(11, c.getPlanRef());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
         return c.getId();
@@ -1773,6 +1775,8 @@ public class SqliteNovelRepository implements NovelRepository {
             String st = rs.getString("status");
             if (st != null && !st.isEmpty()) c.setStatus(Chapter.Status.valueOf(st));
         } catch (Exception ignored) { /* 旧库无 status 列 */ }
+        // p32-04: 计划出处（迁移前旧库无列时保持 NULL）
+        try { c.setPlanRef(rs.getString("plan_ref")); } catch (Exception ignored) {}
         return c;
     }
 

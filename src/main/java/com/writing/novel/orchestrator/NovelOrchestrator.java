@@ -1196,6 +1196,8 @@ public class NovelOrchestrator {
 
         // p10-w1-06: 正文已落库，进入后处理阶段——status=POST_PROCESSING 持久化
         // 后处理若中途失败，重启后可识别 POST_PROCESSING 章节（而非误判为完成）
+        // p32-04: 记录本章生成时点采用的计划出处（卷号+梗概指纹），作者可核对偏离来源
+        chapter.setPlanRef(planRefFor(outline, chapterIndex));
         chapter.setStatus(com.writing.novel.domain.Chapter.Status.POST_PROCESSING);
         repository.saveChapter(chapter);
 
@@ -2449,6 +2451,35 @@ public class NovelOrchestrator {
             }
         }
         return parsed;
+    }
+
+    /**
+     * p32-04（体验报告 #1/P1）: 章节生成时点的计划出处——卷号+章梗概内容指纹。
+     * 作者修订计划后指纹变化，据此可判定"本章按哪份梗概写"；无匹配梗概返回 null。
+     */
+    private static String planRefFor(Outline outline, int chapterIndex) {
+        if (outline == null) return null;
+        for (Volume v : outline.getVolumes()) {
+            for (ChapterSynopsis s : v.getSynopses()) {
+                if (s.getChapterIndex() == chapterIndex) {
+                    return "volume=" + v.getVolumeIndex() + ";synopsis="
+                            + sha256Hex12(s.getTitle() + "\n" + s.getSynopsis() + "\n" + s.getWritingNotes());
+                }
+            }
+        }
+        return null;
+    }
+
+    private static String sha256Hex12(String input) {
+        try {
+            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder();
+            for (int i = 0; i < 6; i++) hex.append(String.format("%02x", digest[i]));
+            return hex.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /**

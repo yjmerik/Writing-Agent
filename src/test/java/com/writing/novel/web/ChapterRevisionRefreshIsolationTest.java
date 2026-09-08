@@ -108,10 +108,12 @@ class ChapterRevisionRefreshIsolationTest {
     }
 
     @Test
-    void 派生刷新失败时正文保存仍成功且响应标记待处理并记录事件() throws Exception {
+    void 派生刷新失败时正文保存仍成功且异步失败被记录为事件() throws Exception {
         String projectId = projectWithChapter("刷新失败仍保存");
         int currentVersion = repository.findChapterByIndex(projectId, 1).orElseThrow().getVersion();
 
+        // p32-13: 派生刷新已异步化——响应不再等待/感知后台失败，
+        // 保存成功语义不变，失败经 CHAPTER_REFRESH_FAILED(async=true) 事件可观测。
         MvcResult result = mvc.perform(put("/api/projects/{id}/chapters/{index}", projectId, 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of(
@@ -119,7 +121,6 @@ class ChapterRevisionRefreshIsolationTest {
                                 "title", "第一章",
                                 "content", LONG_BODY + "作者补记：九月五日。"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.derivedRefreshPending").value(true))
                 .andReturn();
         JsonNode body = objectMapper.readTree(
                 result.getResponse().getContentAsString(StandardCharsets.UTF_8));
@@ -128,12 +129,18 @@ class ChapterRevisionRefreshIsolationTest {
         Chapter saved = repository.findChapterByIndex(projectId, 1).orElseThrow();
         assertEquals(LONG_BODY + "作者补记：九月五日。", saved.getContent(), "作者正文必须逐字保留");
 
-        assertTrue(EVENTS.stream().anyMatch(e -> projectId.equals(e.get("projectId"))),
-                "应发出带 projectId 的 CHAPTER_REFRESH_FAILED 事件，实际: " + EVENTS);
+        long deadline = System.currentTimeMillis() + 15_000;
+        boolean failed = false;
+        while (System.currentTimeMillis() < deadline) {
+            failed = EVENTS.stream().anyMatch(e -> projectId.equals(e.get("projectId")));
+            if (failed) break;
+            Thread.sleep(200);
+        }
+        assertTrue(failed, "后台派生刷新失败应发出 CHAPTER_REFRESH_FAILED 事件，实际: " + EVENTS);
     }
 
     @Test
-    void 派生刷新成功时响应不携带待处理标记() throws Exception {
+    void 派生刷新成功时不产生失败事件() throws Exception {
         String projectId = chapterOnly("刷新正常");
         int currentVersion = repository.findChapterByIndex(projectId, 1).orElseThrow().getVersion();
         // 无覆盖该章的摘要行 → 刷新链路无事可做，正常返回
@@ -145,7 +152,9 @@ class ChapterRevisionRefreshIsolationTest {
                                 "content", LONG_BODY + "正常保存。"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.derivedRefreshPending").value(false));
-        assertTrue(EVENTS.isEmpty(), "刷新成功不应发出失败事件: " + EVENTS);
+        Thread.sleep(1500); // 给潜在异步失败留窗口
+        assertTrue(EVENTS.stream().noneMatch(e -> projectId.equals(e.get("projectId"))),
+                "刷新成功不应发出失败事件: " + EVENTS);
     }
 
     private String projectWithChapter(String title) {

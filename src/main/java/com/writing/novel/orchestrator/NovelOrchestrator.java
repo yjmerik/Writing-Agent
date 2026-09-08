@@ -2140,7 +2140,17 @@ public class NovelOrchestrator {
             try {
                 fresh = memoryManager.draftSummary(projectId, existing.getFromChapter(),
                         existing.getToChapter(), chapters.toString());
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                // p32-13: 异步派生失败不再静默——保持跳过语义但发出可观测事件
+                log.warn("异步摘要重算失败(项目{}, 章{}-{}): {}", projectId,
+                        existing.getFromChapter(), existing.getToChapter(), e.getMessage());
+                EventLog.emit("CHAPTER_REFRESH_FAILED", java.util.Map.of(
+                        "projectId", projectId,
+                        "chapterIndex", chapterIndex,
+                        "async", true,
+                        "stage", "summary_recompute",
+                        "errorClass", e.getClass().getSimpleName(),
+                        "message", String.valueOf(e.getMessage())));
                 continue;
             }
             boundary.apply(() -> {
@@ -2663,8 +2673,14 @@ public class NovelOrchestrator {
                 projectId, chapterIndex, () -> refreshCurrentChapterDerivedState(projectId, chapter));
     }
 
-    /** Passage editing keeps its established fast response while stale workers are version-gated. */
-    private void refreshChapterAfterRevisionAsync(String projectId, Chapter chapter) {
+    /**
+     * Passage editing keeps its established fast response while stale workers are version-gated.
+     * p32-13（UI 验证）: REST 修订路径（编辑/回退/Agent 应用）同样改用本异步刷新——
+     * 同步派生链（摘要重算等 LLM 调用）曾把响应与工作所有权阻塞十几分钟，
+     * UI 呈现为"等待内容处理完成"的假死锁；数据虽已落库但作者无法继续操作。
+     * 陈旧 worker 由 DerivedWriteBoundary 版本门丢弃，最终一致。
+     */
+    public void refreshChapterAfterRevisionAsync(String projectId, Chapter chapter) {
         int chapterIndex = chapter.getChapterIndex();
         com.writing.novel.service.ChapterRevisionService.withChapterRevisionLock(projectId, chapterIndex, () -> {
             if (!isCurrentChapterVersion(projectId, chapter)) return;
@@ -2674,8 +2690,19 @@ public class NovelOrchestrator {
         var boundary = new com.writing.novel.service.ChapterRevisionService.DerivedWriteBoundary(
                 repository, projectId, chapterIndex, chapter.getVersion());
         POST_PROCESS.execute(() -> {
-            recomputeSummariesForChapter(projectId, chapterIndex, boundary);
-            refreshChapterEntitiesAndFacts(projectId, chapter, boundary);
+            try {
+                recomputeSummariesForChapter(projectId, chapterIndex, boundary);
+                refreshChapterEntitiesAndFacts(projectId, chapter, boundary);
+            } catch (Exception e) {
+                log.warn("异步派生刷新失败(项目{}, 章{}): {}", projectId, chapterIndex, e.getMessage());
+                EventLog.emit("CHAPTER_REFRESH_FAILED", java.util.Map.of(
+                        "projectId", projectId,
+                        "chapterIndex", chapterIndex,
+                        "version", chapter.getVersion(),
+                        "async", true,
+                        "errorClass", e.getClass().getSimpleName(),
+                        "message", String.valueOf(e.getMessage())));
+            }
         });
     }
 

@@ -54,7 +54,7 @@ public class AgentRevisionService {
         this.canonPatch = canonPatch;
         this.writingTaskExecutor = writingTaskExecutor;
         this.chapterRevision = new ChapterRevisionService(repository, writingTaskExecutor,
-                orchestrator::refreshChapterAfterRevision);
+                orchestrator::refreshChapterAfterRevisionAsync);
         this.objectMapper = objectMapper;
     }
 

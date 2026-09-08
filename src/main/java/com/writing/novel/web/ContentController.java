@@ -38,7 +38,7 @@ public class ContentController {
         this.writingTaskExecutor = writingTaskExecutor;
         this.outlineStructure = outlineStructure;
         this.chapterRevision = new ChapterRevisionService(repository, writingTaskExecutor,
-                orchestrator == null ? null : orchestrator::refreshChapterAfterRevision);
+                orchestrator == null ? null : orchestrator::refreshChapterAfterRevisionAsync);
     }
 
     /** Unit-test compatibility for controller tests that do not exercise outline editing. */

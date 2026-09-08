@@ -102,6 +102,7 @@ A feature is done only when ALL of the following are true:
 - [ ] Evidence recorded in `feature_list.json`
 - [ ] If prompt changed: corresponding Agent test still passes
 - [ ] If 影响产出质量（prompt/上下文组装/Agent 逻辑）: `./scripts/e2e.sh` + `compare-baseline.py` PASS
+- [ ] If 改动改变注入上下文的 prompt（`.st` 模板、真典/伏笔注入、Relevance 选择逻辑）: 旧回放语料必然分叉（p32-15 教训）——合入后必须以 `E2E_FIXTURE_DIR=data/e2e-fixtures/<preset>-<日期> ./scripts/e2e.sh --mode record` 重建匹配语料，连续两次 replay 一致，展示新旧质量对比并经人工确认后 `compare-baseline.py --bless` 更新 golden，重建理由记入证据
 - [ ] 本 feature 的提交已合入 `main`，且干净主分支检出的合并后验证通过
 - [ ] 已记录分支、实现/主分支提交和验证结果，再将 feature 标记为 `completed`
 

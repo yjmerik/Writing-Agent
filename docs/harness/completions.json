@@ -536,6 +536,39 @@
       "implementation_commit": "7407268348c3e202a079635436ab8b9c014bb4c9",
       "main_commit": "7407268348c3e202a079635436ab8b9c014bb4c9",
       "evidence": "docs/harness/evidence/p32-15-author-trust.json"
+    },
+    {
+      "id": "p32-07-author-trust",
+      "kind": "verified",
+      "feature_ids": [
+        "p32-07"
+      ],
+      "branch": "codex/p32-07-fact-harvest-tightening",
+      "implementation_commit": "dcf59a3dea6ee1f4fbe95cf66defa9da211f0ff1",
+      "main_commit": "dcf59a3dea6ee1f4fbe95cf66defa9da211f0ff1",
+      "evidence": "docs/harness/evidence/p32-07-author-trust.json"
+    },
+    {
+      "id": "p32-08-author-trust",
+      "kind": "verified",
+      "feature_ids": [
+        "p32-08"
+      ],
+      "branch": "codex/p32-08-foreshadow-evidence",
+      "implementation_commit": "8fbb0637dbd72d8354a89fa5099235da26554257",
+      "main_commit": "8fbb0637dbd72d8354a89fa5099235da26554257",
+      "evidence": "docs/harness/evidence/p32-08-author-trust.json"
+    },
+    {
+      "id": "p32-09-author-trust",
+      "kind": "verified",
+      "feature_ids": [
+        "p32-09"
+      ],
+      "branch": "codex/p32-09-stale-foreshadow-dedup",
+      "implementation_commit": "943c4c6685d8cd890110dbcf9f9b9b0ae811f1f6",
+      "main_commit": "943c4c6685d8cd890110dbcf9f9b9b0ae811f1f6",
+      "evidence": "docs/harness/evidence/p32-09-author-trust.json"
     }
   ]
 }

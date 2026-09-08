@@ -4481,14 +4481,15 @@
       "dependencies": [
         "p32-06"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/resources/prompts/fact-harvest.st"
       ],
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "backlog：模板不改变量名，mvn test -Dtest=FactHarvesterTest 通过；./scripts/e2e.sh + compare-baseline.py PASS 或经人工确认 bless。",
       "verify_cmd": "mvn test -Dtest=FactHarvesterTest",
-      "evidence": ""
+      "evidence": "2026-09-09：分支codex/p32-07-fact-harvest-tightening 实现提交dcf59a3 ff合入main。fact-harvest.st 收紧（变量名不变）：WORLD_RULE 仅提取叙述层确认规则，对白/猜测/传闻中的规则不得提取，存疑承诺按 PLOT_COMMITMENT 保留存疑性质；与 p32-06 Java 侧降级形成双保险。FactHarvesterTest 系 10 项通过（模板渲染正常）；e2e/基线由 p32-15 语料重建统一验证（replay×2 一致 + bless PASS）。",
+      "completion_record": "p32-07-author-trust"
     },
     {
       "id": "p32-08",
@@ -4497,7 +4498,7 @@
       "phase": 32,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/agent/ForeshadowingResolutionDetector.java",
         "src/main/java/com/writing/novel/domain/Foreshadowing.java",
@@ -4506,7 +4507,8 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "backlog：mvn test -Dtest=ForeshadowEvidenceTest——resolve 必须携带证据引用文本；仅再次提及不置 resolved。",
       "verify_cmd": "mvn test -Dtest=ForeshadowEvidenceTest",
-      "evidence": ""
+      "evidence": "2026-09-09：分支codex/p32-08-foreshadow-evidence 实现提交8fbb063 ff合入main。ForeshadowEvidenceTest 3项RED→GREEN（reason 落库 resolve_evidence/无证据不置 resolved/人工回收标注来源）；伏笔系 10 项回归全过；foreshadowing-resolve-check.st 收紧（再出现≠兑现、★部分揭晓须引用具体内容、无据宁空）。e2e/基线由 p32-15 统一验证。",
+      "completion_record": "p32-08-author-trust"
     },
     {
       "id": "p32-09",
@@ -4517,14 +4519,15 @@
       "dependencies": [
         "p32-08"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/ChapterProduction.java"
       ],
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "backlog：mvn test -Dtest=ForeshadowIssueDedupTest——同一伏笔跨章不重复追加 ContinuityIssue；质量报告当章阻断项优先、长期提醒另列。",
       "verify_cmd": "mvn test -Dtest=ForeshadowIssueDedupTest",
-      "evidence": ""
+      "evidence": "2026-09-09：分支codex/p32-09-stale-foreshadow-dedup 实现提交943c4c6 ff合入main。SuspenseReminderPolicy：同一伏笔只保留一条未关闭悬置提醒（旧行为 22 章 35/41、23 章 35/36 为重复提醒）；关闭后跨章可重提一次。ForeshadowIssueDedupTest 2项RED→GREEN + 回归 8 项；mvn test 710/0失败；e2e/基线由 p32-15 统一验证。",
+      "completion_record": "p32-09-author-trust"
     },
     {
       "id": "p32-10",

@@ -353,7 +353,11 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
           content: chapterDraftContent,
         });
         replaceChapterInView(chapter);
-        message.success(`第${chapter.chapterIndex}章已保存为 v${chapter.version}`);
+        if (chapter.derivedRefreshPending) {
+          message.warning(`第${chapter.chapterIndex}章正文已保存为 v${chapter.version}，但后续处理（摘要/索引）未完成，稍后自动重算，无需重新保存`);
+        } else {
+          message.success(`第${chapter.chapterIndex}章已保存为 v${chapter.version}`);
+        }
       }
       setChapterEditorTarget(null);
       onChanged();

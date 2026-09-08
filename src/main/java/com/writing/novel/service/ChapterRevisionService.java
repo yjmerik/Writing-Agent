@@ -3,9 +3,11 @@ package com.writing.novel.service;
 import com.writing.novel.domain.Chapter;
 import com.writing.novel.domain.ChapterVersion;
 import com.writing.novel.spi.NovelRepository;
+import com.writing.novel.telemetry.EventLog;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -48,7 +50,7 @@ public class ChapterRevisionService {
             draft.setStatus(safeContent.length() >= COMPLETED_CONTENT_MIN
                     ? Chapter.Status.DONE : Chapter.Status.DRAFTING);
             repository.saveChapter(draft);
-            refresh(projectId, draft);
+            refreshIsolated(projectId, draft);
             return draft;
         });
     }
@@ -97,8 +99,27 @@ public class ChapterRevisionService {
         if (!repository.saveChapterRevision(snapshot, current, expectedVersion)) {
             throw new IllegalStateException("章节版本已变化");
         }
-        refresh(projectId, current);
+        refreshIsolated(projectId, current);
         return current;
+    }
+
+    /**
+     * p32-01（体验报告 #2/P1）: 正文事务已提交，派生刷新失败不得回滚为"保存失败"。
+     * 失败时保留已保存内容，标记 derivedRefreshPending 并发 CHAPTER_REFRESH_FAILED 事件，
+     * 派生数据（摘要/索引/收割）由后续写作或下次刷新重算。
+     */
+    private void refreshIsolated(String projectId, Chapter chapter) {
+        try {
+            refresh(projectId, chapter);
+        } catch (Exception e) {
+            chapter.setDerivedRefreshPending(true);
+            EventLog.emit("CHAPTER_REFRESH_FAILED", Map.of(
+                    "projectId", projectId,
+                    "chapterIndex", chapter.getChapterIndex(),
+                    "version", chapter.getVersion(),
+                    "errorClass", e.getClass().getSimpleName(),
+                    "message", String.valueOf(e.getMessage())));
+        }
     }
 
     /** Serialize a chapter mutation with its derived-data refresh. */

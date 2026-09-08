@@ -73,6 +73,8 @@ export interface AgentRevisionApplyResult {
   sourceVersion: string;
   applied: boolean;
   result: unknown;
+  /** p32-01: 修改已保存，但派生数据（摘要/索引/收割）刷新未完成 */
+  derivedRefreshPending?: boolean;
 }
 
 export interface QualityEvaluationResult {

@@ -25,6 +25,8 @@ public class Chapter {
     private Status status = Status.DONE;
     private Instant createdAt;
     private Instant updatedAt;
+    /** p32-01: 派生数据（摘要/索引/收割）刷新失败的响应期标记——非持久化，不入库。 */
+    private boolean derivedRefreshPending;
 
     public Chapter(String projectId, int chapterIndex, String title) {
         this.id = UUID.randomUUID().toString();
@@ -57,4 +59,6 @@ public class Chapter {
     public void setStatus(Status s) { this.status = s; this.updatedAt = Instant.now(); }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+    public boolean isDerivedRefreshPending() { return derivedRefreshPending; }
+    public void setDerivedRefreshPending(boolean p) { this.derivedRefreshPending = p; }
 }

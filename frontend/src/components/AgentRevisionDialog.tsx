@@ -81,7 +81,11 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
       return;
     }
 
-    message.success(`${target.label}已应用 Agent 修改`);
+    if (result.derivedRefreshPending) {
+      message.warning(`${target.label}的修改已保存，但后续处理（摘要/索引）未完成，稍后会自动重算，无需重新应用`);
+    } else {
+      message.success(`${target.label}已应用 Agent 修改`);
+    }
     try {
       await onApplied(result);
     } catch (cause) {

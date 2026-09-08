@@ -100,8 +100,9 @@ public class AgentRevisionService {
             validateCandidate(current, stored.after);
             Object result = applyCandidate(current, stored.after);
             stored.consumed = true;
+            boolean refreshPending = result instanceof Chapter chapter && chapter.isDerivedRefreshPending();
             return new ApplyResult(stored.previewId, stored.address.targetType,
-                    stored.address.targetId, stored.sourceVersion, true, result);
+                    stored.address.targetId, stored.sourceVersion, true, result, refreshPending);
         }
     }
 
@@ -424,8 +425,10 @@ public class AgentRevisionService {
                                   String sourceVersion, JsonNode before, JsonNode after,
                                   String summary) {}
 
+    /** p32-01: derivedRefreshPending=true 表示修改已保存，但派生数据（摘要/索引/收割）刷新未完成。 */
     public record ApplyResult(String previewId, TargetType targetType, String targetId,
-                              String sourceVersion, boolean applied, Object result) {}
+                              String sourceVersion, boolean applied, Object result,
+                              boolean derivedRefreshPending) {}
 
     private record TargetAddress(String projectId, TargetType targetType, String targetId,
                                  Integer chapterIndex, Integer passageIndex) {}

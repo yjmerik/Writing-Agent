@@ -106,6 +106,8 @@ export interface Chapter {
   status?: string;
   createdAt: string;
   updatedAt: string;
+  /** p32-01: 正文已保存，但派生数据（摘要/索引/收割）刷新未完成 */
+  derivedRefreshPending?: boolean;
 }
 
 export interface ChapterVersion {

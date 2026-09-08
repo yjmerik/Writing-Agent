@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": 31,
+  "current_phase": 32,
   "features": [
     {
       "id": "p1-01",
@@ -4357,9 +4357,171 @@
       "verify_cmd": "python3 scripts/test_check_harness.py && python3 scripts/check-harness.py --check-git",
       "evidence": "2026-09-07：独立分支 codex/p31-01-harness-integrity，实现 ae7ee790cbc73ab3948c33de7fe3185f80b75751 已合入 main。分支及干净合并后 ./init.sh 均通过：11项harness测试、636项Maven测试/0失败/0错误/1跳过、编译和前端构建PASS；Git完成归属核验PASS。记录 docs/harness/evidence/harness-integrity.json；712个既有非harness文件内容保持不变。",
       "completion_record": "harness-integrity"
+    },
+    {
+      "id": "p32-01",
+      "name": "保存与派生刷新解耦",
+      "description": "ChapterRevisionService 在正文事务提交后的派生 refresh 失败不再让端点报错：捕获异常、发 CHAPTER_REFRESH_FAILED 事件、响应标记派生步骤待处理；前端区分保存失败与后续处理失败。",
+      "phase": 32,
+      "type": "feature",
+      "dependencies": [],
+      "status": "in-progress",
+      "files": [
+        "src/main/java/com/writing/novel/service/ChapterRevisionService.java",
+        "frontend/src/components/AgentRevisionDialog.tsx",
+        "frontend/src/components/InteractiveReview.tsx"
+      ],
+      "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
+      "acceptance": "mvn test -Dtest=ChapterRevisionRefreshIsolationTest 通过：派生刷新抛异常时编辑/应用仍 2xx 且 derivedRefreshPending=true、正文回读一致、CHAPTER_REFRESH_FAILED 事件已发；前端构建通过且保存失败/刷新失败文案分级。",
+      "verify_cmd": "mvn test -Dtest=ChapterRevisionRefreshIsolationTest",
+      "evidence": ""
+    },
+    {
+      "id": "p32-02",
+      "name": "作者稿冲突保护",
+      "description": "ChapterPostProcessor 等自动重写点从无条件 saveChapter 改为经 ChapterRevisionService.editInOwnedWork（REWRITE）版本门；冲突保留作者稿并标记人工复核。",
+      "phase": 32,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java",
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
+      ],
+      "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
+      "acceptance": "mvn test -Dtest=AuthorDraftConflictProtectionTest 通过：章节后处理自动重写期间作者保存新版本后，自动稿被版本门拒绝落库、DB 保留作者稿、CHAPTER_AUTHOR_CONFLICT 事件已发。",
+      "verify_cmd": "mvn test -Dtest=AuthorDraftConflictProtectionTest",
+      "evidence": ""
+    },
+    {
+      "id": "p32-03",
+      "name": "卷计划章号区间校验",
+      "description": "parseAndAppendVolume 启用 startChapter 形参：解析章号落在请求区间外即拒绝入库、发事件并走占位卷兜底。",
+      "phase": 32,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+        "src/test/java/com/writing/novel/orchestrator/LayeredOutlineParsingTest.java"
+      ],
+      "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
+      "acceptance": "mvn test -Dtest=LayeredOutlineParsingTest 通过：请求区间 1-8 时喂入 41-48 章号文本不产生区间外条目且 PLAN_VOLUME_RANGE_REJECTED 事件已发；正常解析回归不变。",
+      "verify_cmd": "mvn test -Dtest=LayeredOutlineParsingTest",
+      "evidence": ""
+    },
+    {
+      "id": "p32-04",
+      "name": "章节记录计划出处",
+      "description": "chapters 表加 plan_ref 列（ADD COLUMN 迁移），ChapterProduction 写章时记录所用卷与梗概标识，REST 响应透出。",
+      "phase": 32,
+      "type": "feature",
+      "dependencies": [
+        "p32-03"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
+        "src/main/java/com/writing/novel/orchestrator/ChapterProduction.java",
+        "src/main/java/com/writing/novel/web/ContentController.java"
+      ],
+      "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
+      "acceptance": "mvn test -Dtest=ChapterPlanProvenanceTest 通过：写作落库章节含 plan_ref（卷号+synopsis id），GET chapters API 暴露该字段；旧行 NULL 兼容。",
+      "verify_cmd": "mvn test -Dtest=ChapterPlanProvenanceTest",
+      "evidence": ""
+    },
+    {
+      "id": "p32-05",
+      "name": "审核产物绑定版本",
+      "description": "问题与评语记录绑定产生时的章节版本与正文指纹；buildChapterQualityReport 按当前版本标记过期条目。",
+      "phase": 32,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/domain/ContinuityIssue.java",
+        "src/main/java/com/writing/novel/domain/ChapterReview.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
+      ],
+      "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
+      "acceptance": "mvn test -Dtest=ReviewVersionBindingTest 通过：continuity_issues/chapter_reviews 持久化 chapter_version 与 content_hash；章节升版后旧条目在质量报告标记过期，新条目为当前。",
+      "verify_cmd": "mvn test -Dtest=ReviewVersionBindingTest",
+      "evidence": ""
+    },
+    {
+      "id": "p32-06",
+      "name": "StoryFact 证据分级与 WORLD_RULE 门",
+      "description": "StoryFact 增加 evidence_grade；收割时对无动作/对话来源证据的 WORLD_RULE 降级为待核，进入 RelevanceGateway 前不约束创作。",
+      "phase": 32,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/domain/StoryFact.java",
+        "src/main/java/com/writing/novel/agent/FactHarvesterAgent.java"
+      ],
+      "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
+      "acceptance": "backlog：mvn test -Dtest=FactEvidenceGradingTest——角色台词/推测类断言不直接成为 ACTIVE WORLD_RULE（引用报告 #4 复验标准）。",
+      "verify_cmd": "mvn test -Dtest=FactEvidenceGradingTest",
+      "evidence": ""
+    },
+    {
+      "id": "p32-07",
+      "name": "fact-harvest 收割规则收紧",
+      "description": "fact-harvest.st 强化『仅叙述者确认的事件可入 WORLD_RULE』输出约束（保持变量名不变）。",
+      "phase": 32,
+      "type": "feature",
+      "dependencies": [
+        "p32-06"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/resources/prompts/fact-harvest.st"
+      ],
+      "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
+      "acceptance": "backlog：模板不改变量名，mvn test -Dtest=FactHarvesterTest 通过；./scripts/e2e.sh + compare-baseline.py PASS 或经人工确认 bless。",
+      "verify_cmd": "mvn test -Dtest=FactHarvesterTest",
+      "evidence": ""
+    },
+    {
+      "id": "p32-08",
+      "name": "伏笔回收证据落库",
+      "description": "detector 不再丢弃 reason：foreshadowings 加 resolve_evidence 列，回收要求引用具体解释段落。",
+      "phase": 32,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/agent/ForeshadowingResolutionDetector.java",
+        "src/main/java/com/writing/novel/domain/Foreshadowing.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java"
+      ],
+      "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
+      "acceptance": "backlog：mvn test -Dtest=ForeshadowEvidenceTest——resolve 必须携带证据引用文本；仅再次提及不置 resolved。",
+      "verify_cmd": "mvn test -Dtest=ForeshadowEvidenceTest",
+      "evidence": ""
+    },
+    {
+      "id": "p32-09",
+      "name": "伏笔超期提醒去重与当章优先",
+      "description": "ChapterProduction 陈旧伏笔提醒改为对同一伏笔只保留一条未关闭 issue，并在报告中按当章/长期分区展示。",
+      "phase": 32,
+      "type": "feature",
+      "dependencies": [
+        "p32-08"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/orchestrator/ChapterProduction.java"
+      ],
+      "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
+      "acceptance": "backlog：mvn test -Dtest=ForeshadowIssueDedupTest——同一伏笔跨章不重复追加 ContinuityIssue；质量报告当章阻断项优先、长期提醒另列。",
+      "verify_cmd": "mvn test -Dtest=ForeshadowIssueDedupTest",
+      "evidence": ""
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-09-08",
-  "active_feature": null
+  "active_feature": "p32-01"
 }

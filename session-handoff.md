@@ -1,25 +1,26 @@
-# Phase32 第一批交接 — 2026-09-08
+# Phase32 UI 验证修复批次交接 — 2026-09-08
 
 Last Updated: 2026-09-08
 
 ## Current（当前）
 
-feature：p32-01~05（Phase32 第一批 P1，体验报告 #1/#2/#3）。分支：5 个 `codex/p32-0*` 全部已 ff 合入 main。main HEAD=b75b819（feat p32-05）。active_feature=null，无 in-progress/deferred。
+feature：p32-11~14（UI 验证发现项）全部完成合入 main（实现提交 ad9e444/673c020/c115248/73da06f，登记回执 87962e4）。分支 codex/p32-11~14 已合并保留。active_feature=null。
 
 ## Files（文件与证据）
 
-spec [docs/specs/2026-09-08-author-trust-closed-loop.md](docs/specs/2026-09-08-author-trust-closed-loop.md)；证据 `docs/harness/evidence/p32-0*-author-trust.json`；完成索引 [docs/harness/completions.json](docs/harness/completions.json)（5 条 verified）。实现提交：552f880 / 5545160 / f25fba4 / 7516bde / b75b819。
+证据 docs/harness/evidence/p32-1*-author-trust.json；UI 验证记录（含 p32-13 定性更正）docs/reports/2026-09-08-ui-verification/UI验证记录.md；spec docs/specs/2026-09-08-author-trust-closed-loop.md。
 
 ## Verification（验证）
 
-干净 main 树：694 tests/0失败/1跳过；canary-mystery e2e COMPLETED；基线 PASS；`python3 scripts/check-harness.py --check-git` PASS。合并方式：p32-01 因主工作区并行修改用 update-ref ff（树 diff 为空）；p32-02~05 用常规 `git merge --ff-only`。
+干净 main：702 tests/0失败/1跳过；e2e COMPLETED；基线 PASS；check-harness --check-git PASS（241 features：236 completed/5 not-started）。
 
 ## Blockers（阻塞与限制）
 
-无 BROKEN 项。未推送远端。e2e 自动选语料分叉=既有问题登记为 p32-10。主工作区遗留未跟踪 `docs/reports/`（体验证据，用户资产，勿动）。
+无 BROKEN。未推送远端。p32-13 修复改变了 REST 修订响应时序（同步→异步最终一致）——依赖"编辑后派生数据立即可读"的调用方需知悉（写作循环内部路径未变，仍同步）。
 
 ## Next Steps（下一步）
 
-1. 恢复会话：`./init.sh`（mvn 测试需先 `source scripts/load-env.sh`，zsh 下用 `bash -c`）。
-2. 第二批按 spec 顺序 p32-06~09：先写 failing test（如「角色台词不得直升 ACTIVE WORLD_RULE」可在 FactHarvester 系列测试扩展；fact-harvest.st 不改变量名，改后必跑 e2e+基线）。
-3. 前端展示质量报告 stale 字段属新 slice，按协议先登记再做。
+1. ./init.sh 恢复；mvn 测试需 bash -c 'source scripts/load-env.sh && mvn ...'（zsh 下 load-env.sh bad substitution）。
+2. 优先 p32-10（e2e 自动语料分叉）恢复 ./scripts/e2e.sh 零参数可跑。
+3. 第二批 p32-06~09 按 spec 顺序（fact-harvest.st 改动必跑 e2e+基线，FAIL 时展示对比待人工确认再 bless）。
+4. 浏览器回归：重启 18100 实例（data/verify-fullrun-0908.db 保留 3 章现场）验证修订即时返回与评价读回。

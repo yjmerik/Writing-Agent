@@ -190,6 +190,8 @@ public class ContentController {
             }
             chapter.setStatus(Chapter.Status.DONE);
             repository.saveChapter(chapter);
+            // p33-01: 放行即解决该章全部人审屏障，写作调度恢复
+            repository.resolveReviewBarriers(id, chapterIndex);
             return chapter;
         });
     }

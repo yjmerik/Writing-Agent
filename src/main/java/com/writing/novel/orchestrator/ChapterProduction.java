@@ -478,6 +478,14 @@ public class ChapterProduction {
                 if (repository.updateChapterStatusIfVersion(projectId, chapterIndex,
                         Chapter.Status.NEEDS_MANUAL_REVIEW, chapter.getVersion())) {
                     chapter.setStatus(Chapter.Status.NEEDS_MANUAL_REVIEW);
+                    // p33-01（体验 #18）：屏障立即持久化——调度只认屏障，状态字段不再被单点绕过
+                    repository.saveReviewBarrier(new com.writing.novel.domain.ReviewBarrier(
+                            projectId, chapterIndex, chapter.getVersion(),
+                            "根源性矛盾待人工：" + issue.getDescription()));
+                    EventLog.emit("REVIEW_BARRIER_RAISED", Map.of(
+                            "projectId", projectId, "chapterIndex", chapterIndex,
+                            "version", chapter.getVersion(),
+                            "reason", EventLog.truncate(issue.getDescription(), 150)));
                     log.warn("章{} 标记 NEEDS_MANUAL_REVIEW（根源性矛盾待人工）：{}", chapterIndex, issue.getDescription());
                 } else {
                     repository.findChapterByIndex(projectId, chapterIndex)

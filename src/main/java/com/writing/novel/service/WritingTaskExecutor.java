@@ -273,6 +273,14 @@ public class WritingTaskExecutor {
                     task.setErrorMessage("第 " + project.get().getCurrentChapterIndex()
                             + " 章待人工复核，处理后再续写");
                     log.info("写作任务暂停于人工复核: taskId={}, 已写 {} 章", taskId, written);
+                } else if (!repository.findActiveReviewBarriers(projectId).isEmpty()) {
+                    // p33-01（体验 #18）：屏障可能在任一章节（不只当前章）——按屏障判 PAUSED，
+                    // 原单点状态检查会让"标记后索引推进"的场景误报 FAILED
+                    int first = repository.findActiveReviewBarriers(projectId).stream()
+                            .mapToInt(com.writing.novel.domain.ReviewBarrier::getChapterIndex).min().orElse(0);
+                    task.setStatus(WritingTask.Status.PAUSED);
+                    task.setErrorMessage("第 " + first + " 章待人工复核，处理后再续写");
+                    log.info("写作任务暂停于人审屏障: taskId={}, 已写 {} 章", taskId, written);
                 } else {
                     boolean outlineExhausted = outline.isPresent() && project.isPresent() &&
                             !outline.get().getVolumes().stream()
@@ -367,9 +375,12 @@ public class WritingTaskExecutor {
         if (project.getState() == NovelState.FINAL) return "全书已完成，可继续审阅和编辑";
         if (project.getState() == NovelState.NEEDS_REVISION) return "终审需要修订，请修改内容后重新评审";
         if (!repository.findPendingCheckpoints(projectId).isEmpty()) return "请先处理待审核内容，再继续创作";
-        if (repository.findChapterByIndex(projectId, project.getCurrentChapterIndex())
-                .map(c -> c.getStatus() == com.writing.novel.domain.Chapter.Status.NEEDS_MANUAL_REVIEW).orElse(false)) {
-            return "当前章节需要人工复核，请处理后继续";
+        // p33-01（体验 #18）：检查项目全部 ACTIVE 人审屏障——不再只查当前章状态字段，
+        // 防止标记后索引推进绕过停点继续写作
+        var barriers = repository.findActiveReviewBarriers(projectId);
+        if (!barriers.isEmpty()) {
+            int first = barriers.stream().mapToInt(com.writing.novel.domain.ReviewBarrier::getChapterIndex).min().orElse(0);
+            return "第 " + first + " 章需要人工复核（共 " + barriers.size() + " 项待处理），处理后再继续";
         }
         if (overBudget(projectId)) return "已达到成本预算，请调整预算后继续";
         return null;

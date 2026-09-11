@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": 32,
+  "current_phase": 33,
   "features": [
     {
       "id": "p1-01",
@@ -4644,9 +4644,153 @@
       "verify_cmd": "./scripts/e2e.sh && ./scripts/e2e.sh && python3 scripts/compare-baseline.py",
       "evidence": "2026-09-09：分支codex/p32-15-corpus-rebuild。真实LLM record 重建 canary-mystery-20260908 语料（40 fixture）；replay×2 与 record 逐项一致（2章/7798字/40调用/0错误/0失败，e2e-report 三次一致）→ 确定性恢复；流程在第2章后被一致性门禁标记人审暂停（record/replay 行为一致，非退化），e2e.sh 轮询将 PAUSED 识别为合法终态；compare-baseline 唯一退化项为章节数/总字数（口径变化），平均章字数 3899 高于旧基线 2466，bless 更新 golden 并记录理由；AGENTS.md DoD 增补上下文改动后的语料重建条款。mvn test 710/0失败/1跳过；check-harness --check-git PASS。",
       "completion_record": "p32-15-author-trust"
+    },
+    {
+      "id": "p33-01",
+      "name": "持久化审查屏障与调度闸门",
+      "description": "体验#18 根治：review_barriers 持久化表（章节/稿号/原因/状态），标记 NEEDS_MANUAL_REVIEW 时立即写入；写作调度改查全部有效屏障而非单章状态字段。",
+      "phase": 33,
+      "type": "feature",
+      "dependencies": [],
+      "status": "in-progress",
+      "files": [
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/main/java/com/writing/novel/service/WritingTaskExecutor.java"
+      ],
+      "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
+      "acceptance": "mvn test -Dtest=ReviewBarrierGateTest：标记人审即落盘屏障；write-all/write-chapter 调度前检查项目全部有效屏障，存在则不启动新章；屏障解决后恢复写作；并发/重启后屏障仍有效。",
+      "verify_cmd": "mvn test -Dtest=ReviewBarrierGateTest",
+      "evidence": ""
+    },
+    {
+      "id": "p33-02",
+      "name": "统一工作区状态 API",
+      "description": "设计 7：单一状态来源。前端按钮可用性由后端 allowedActions 驱动，含待办清单与协作状态（4.2 矩阵的机器可读形式）。",
+      "phase": 33,
+      "type": "feature",
+      "dependencies": [
+        "p33-01"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/web/CollaborationController.java"
+      ],
+      "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
+      "acceptance": "mvn test -Dtest=WorkspaceStatusApiTest：GET /api/projects/{id}/workspace 返回 stage/collabState/todoList（含章节、稿号、原因）/allowedActions+blockedReason；写作中/待人审/已解决三情形字段正确。",
+      "verify_cmd": "mvn test -Dtest=WorkspaceStatusApiTest",
+      "evidence": ""
+    },
+    {
+      "id": "p33-03",
+      "name": "前端状态栏与待办直达",
+      "description": "设计 4.2/5.1 界面：状态栏消费 workspace 端点，待办指向具体章节稿号，一键定位。",
+      "phase": 33,
+      "type": "feature",
+      "dependencies": [
+        "p33-02"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/CollaborationBar.tsx",
+        "frontend/src/api/client.ts"
+      ],
+      "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
+      "acceptance": "cd frontend && npm run build 通过；CollaborationBar 按协作状态矩阵显示状态与主行动；待审章点击直达（选中章节目录与正文）。",
+      "verify_cmd": "cd frontend && npm run build",
+      "evidence": ""
+    },
+    {
+      "id": "p33-04",
+      "name": "正文与审查三栏布局",
+      "description": "设计 4.1/草图：三栏协同第一版。目录标识当前稿状态，正文主区可收起侧栏，审查面板展示本章待办。",
+      "phase": 33,
+      "type": "feature",
+      "dependencies": [
+        "p33-03"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/InteractiveReview.tsx",
+        "frontend/src/pages/ProjectWorkspace.tsx"
+      ],
+      "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
+      "acceptance": "cd frontend && npm run build 通过；正文与审查视图呈左目录（章+状态）/中正文（阅读·编辑·比较）/右审查面板（本章待办页签）三栏；窄屏右侧改抽屉。",
+      "verify_cmd": "cd frontend && npm run build",
+      "evidence": ""
+    },
+    {
+      "id": "p33-05",
+      "name": "P0-B 统一版本提交与幂等",
+      "description": "设计 5.2 的后端统一修订入口，含体验#9/#12 的版本审计链修复。",
+      "phase": 33,
+      "type": "feature",
+      "dependencies": [
+        "p33-01"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/ChapterRevisionService.java"
+      ],
+      "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
+      "acceptance": "backlog（设计 5.2）：统一修订入口（候选→校验→原子保存→派生→复核→批准）、幂等键去重版本、批准绑定稿号与指纹。",
+      "verify_cmd": "mvn test -Dtest=UnifiedRevisionCommitTest",
+      "evidence": ""
+    },
+    {
+      "id": "p33-06",
+      "name": "P1 作者意见闭环",
+      "description": "设计 5.3。",
+      "phase": 33,
+      "type": "feature",
+      "dependencies": [
+        "p33-05"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/"
+      ],
+      "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
+      "acceptance": "backlog（设计 5.3）：要求账本、范围与生效区间、候选落实清单、系统/作者确认分离。",
+      "verify_cmd": "mvn test -Dtest=DirectiveLoopTest",
+      "evidence": ""
+    },
+    {
+      "id": "p33-07",
+      "name": "P2 记忆事实证据与知识边界",
+      "description": "设计 5.5，含体验#15/#16 伏笔台账分层。",
+      "phase": 33,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/agent/FactHarvesterAgent.java"
+      ],
+      "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
+      "acceptance": "backlog（设计 5.5）：事实来源版本/原文锚点、属性细分、知情者边界、影响追踪。",
+      "verify_cmd": "mvn test -Dtest=FactEvidenceModelTest",
+      "evidence": ""
+    },
+    {
+      "id": "p33-08",
+      "name": "P3 计划版本与成书审查",
+      "description": "设计 5.6/5.7，含体验#1 篇幅自定义与 24→20 收尾。",
+      "phase": 33,
+      "type": "feature",
+      "dependencies": [
+        "p33-04"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
+      ],
+      "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
+      "acceptance": "backlog（设计 5.6/5.7）：篇幅一致、删章影响预览、承诺分层、成书版本清单与导出。",
+      "verify_cmd": "mvn test -Dtest=PlanEditionTest",
+      "evidence": ""
     }
   ],
   "schema_version": 2,
-  "updated_at": "2026-09-08",
-  "active_feature": null
+  "updated_at": "2026-09-11",
+  "active_feature": "p33-01"
 }

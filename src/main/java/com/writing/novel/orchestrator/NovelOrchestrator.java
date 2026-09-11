@@ -1584,6 +1584,12 @@ public class NovelOrchestrator {
                 log.info("写作循环被取消（用户请求），已写 {} 章", written);
                 break;
             }
+            // p33-01（体验 #18）：每章前检查人审屏障——任一 ACTIVE 屏障存在即停，
+            // 修复标记后循环绕过停点继续写下一章
+            if (!repository.findActiveReviewBarriers(projectId).isEmpty()) {
+                log.info("写作循环遇人审屏障暂停，已写 {} 章", written);
+                break;
+            }
             Project p = loadProject(projectId);
             if (p.getState() == NovelState.PAUSED_AT_CHECKPOINT) {
                 log.info("写作循环遇暂停，已写 {} 章", written);

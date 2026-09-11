@@ -561,6 +561,70 @@ public class SqliteNovelRepository implements NovelRepository {
         });
     }
 
+    // --- p33-01: 人审屏障 ---
+
+    @Override
+    public void saveReviewBarrier(com.writing.novel.domain.ReviewBarrier barrier) {
+        String sql = "INSERT INTO review_barriers (id,project_id,chapter_index,chapter_version," +
+                "reason,status,created_at,resolved_at) VALUES (?,?,?,?,?,?,?,?) " +
+                "ON CONFLICT(id) DO UPDATE SET status=excluded.status, resolved_at=excluded.resolved_at";
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, barrier.getId()); ps.setString(2, barrier.getProjectId());
+            ps.setInt(3, barrier.getChapterIndex()); ps.setInt(4, barrier.getChapterVersion());
+            ps.setString(5, barrier.getReason()); ps.setString(6, barrier.getStatus().name());
+            ps.setString(7, barrier.getCreatedAt().toString());
+            if (barrier.getResolvedAt() != null) ps.setString(8, barrier.getResolvedAt().toString());
+            else ps.setNull(8, Types.NULL);
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public List<com.writing.novel.domain.ReviewBarrier> findActiveReviewBarriers(String projectId) {
+        List<com.writing.novel.domain.ReviewBarrier> barriers = new ArrayList<>();
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM review_barriers WHERE project_id=? AND status='ACTIVE' ORDER BY chapter_index")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) barriers.add(mapBarrier(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        // 惰性补建：遗留 NEEDS_MANUAL_REVIEW 章节无屏障行时按需补（不动旧章节数据，仅补审计对象）
+        Set<Integer> barrierChapters = barriers.stream()
+                .map(com.writing.novel.domain.ReviewBarrier::getChapterIndex)
+                .collect(java.util.stream.Collectors.toSet());
+        for (Chapter ch : findChaptersByProject(projectId)) {
+            if (ch.getStatus() == Chapter.Status.NEEDS_MANUAL_REVIEW && !barrierChapters.contains(ch.getChapterIndex())) {
+                com.writing.novel.domain.ReviewBarrier backfill = new com.writing.novel.domain.ReviewBarrier(
+                        projectId, ch.getChapterIndex(), ch.getVersion(), "章节处于待人审状态（自动补建屏障）");
+                saveReviewBarrier(backfill);
+                barriers.add(backfill);
+            }
+        }
+        barriers.sort(java.util.Comparator.comparingInt(com.writing.novel.domain.ReviewBarrier::getChapterIndex));
+        return barriers;
+    }
+
+    @Override
+    public int resolveReviewBarriers(String projectId, int chapterIndex) {
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "UPDATE review_barriers SET status='RESOLVED', resolved_at=? " +
+                        "WHERE project_id=? AND chapter_index=? AND status='ACTIVE'")) {
+            ps.setString(1, java.time.Instant.now().toString());
+            ps.setString(2, projectId); ps.setInt(3, chapterIndex);
+            return ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    private com.writing.novel.domain.ReviewBarrier mapBarrier(ResultSet rs) throws SQLException {
+        java.time.Instant resolvedAt = rs.getString("resolved_at") == null ? null
+                : java.time.Instant.parse(rs.getString("resolved_at"));
+        return new com.writing.novel.domain.ReviewBarrier(
+                rs.getString("id"), rs.getString("project_id"), rs.getInt("chapter_index"),
+                rs.getInt("chapter_version"), rs.getString("reason"),
+                com.writing.novel.domain.ReviewBarrier.Status.valueOf(rs.getString("status")),
+                java.time.Instant.parse(rs.getString("created_at")), resolvedAt);
+    }
+
     @Override
     public boolean updateChapterStatusIfVersion(String projectId, int chapterIndex,
                                                 Chapter.Status status, int expectedVersion) {

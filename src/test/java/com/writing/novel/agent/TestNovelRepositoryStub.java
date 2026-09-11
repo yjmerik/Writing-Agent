@@ -83,6 +83,27 @@ public class TestNovelRepositoryStub implements NovelRepository {
                                                           Chapter.Status status, int expectedVersion) {
         return false;
     }
+    // p33-01: 内存屏障（基类为空实现，子类按需覆写）
+    private final java.util.List<com.writing.novel.domain.ReviewBarrier> stubBarriers = new java.util.ArrayList<>();
+    @Override public void saveReviewBarrier(com.writing.novel.domain.ReviewBarrier barrier) {
+        stubBarriers.add(barrier);
+    }
+    @Override public java.util.List<com.writing.novel.domain.ReviewBarrier> findActiveReviewBarriers(String projectId) {
+        return stubBarriers.stream()
+                .filter(b -> b.getProjectId().equals(projectId))
+                .filter(b -> b.getStatus() == com.writing.novel.domain.ReviewBarrier.Status.ACTIVE)
+                .toList();
+    }
+    @Override public int resolveReviewBarriers(String projectId, int chapterIndex) {
+        int n = 0;
+        for (var b : stubBarriers) {
+            if (b.getProjectId().equals(projectId) && b.getChapterIndex() == chapterIndex
+                    && b.getStatus() == com.writing.novel.domain.ReviewBarrier.Status.ACTIVE) {
+                b.resolve(); n++;
+            }
+        }
+        return n;
+    }
     @Override public void saveSummary(Summary s) {}
     @Override public List<Summary> findSummariesByProject(String p) { return List.of(); }
     @Override public void deleteSummary(String summaryId) {}

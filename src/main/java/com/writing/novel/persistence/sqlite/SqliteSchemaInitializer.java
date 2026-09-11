@@ -82,6 +82,12 @@ public class SqliteSchemaInitializer {
             "id TEXT PRIMARY KEY, project_id TEXT, overall_score INTEGER, " +
             "report_json TEXT, created_at TEXT)",
 
+        // p33-01: 人审屏障——标记时立即落盘，写作调度查全部 ACTIVE 屏障
+        "CREATE TABLE IF NOT EXISTS review_barriers (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, chapter_index INTEGER, chapter_version INTEGER, " +
+            "reason TEXT, status TEXT, created_at TEXT, resolved_at TEXT)",
+        "CREATE INDEX IF NOT EXISTS idx_review_barriers_project ON review_barriers(project_id, status)",
+
         // 图数据库：实体表
         "CREATE TABLE IF NOT EXISTS entities (" +
             "id TEXT PRIMARY KEY, project_id TEXT, name TEXT, type TEXT, " +

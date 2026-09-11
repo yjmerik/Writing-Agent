@@ -89,6 +89,14 @@ public interface NovelRepository {
     boolean updateChapterStatusIfVersion(String projectId, int chapterIndex,
                                          Chapter.Status status, int expectedVersion);
 
+    // --- p33-01: 人审屏障（阻止依赖它的后续章节生成） ---
+    /** 落盘一条屏障（标记 NEEDS_MANUAL_REVIEW 时立即调用）。 */
+    void saveReviewBarrier(com.writing.novel.domain.ReviewBarrier barrier);
+    /** 项目全部 ACTIVE 屏障；对处于 NEEDS_MANUAL_REVIEW 但无屏障行的遗留章节惰性补建。 */
+    java.util.List<com.writing.novel.domain.ReviewBarrier> findActiveReviewBarriers(String projectId);
+    /** 解决指定章节的全部 ACTIVE 屏障（作者放行时调用），返回解决条数。 */
+    int resolveReviewBarriers(String projectId, int chapterIndex);
+
     // --- Summary ---
     void saveSummary(Summary summary);
     List<Summary> findSummariesByProject(String projectId);

@@ -1,25 +1,25 @@
-# Phase32 完成交接 — 2026-09-09
+# Phase33 P0-A 交接 — 2026-09-11
 
-Last Updated: 2026-09-09
+Last Updated: 2026-09-11
 
 ## Current（当前）
 
-Phase32 全部 14 个 feature 完成，242/242 completed，active_feature=null。main HEAD=本轮 docs 提交（此前 9311301 fix p32-15）。全部经独立分支+TDD+ff 合并+verified 证据登记。
+p33-01~04（P0-A 切片）完成合入 main（85a58d4/86c7554/94d2b91/34364b7 + docs）。246/250 completed；active_feature=null。注：p33-02 提交时曾误 rename main，已恢复（main=86c7554 与提交树一致）。
 
 ## Files（文件与证据）
 
-docs/harness/evidence/p32-*-author-trust.json（14 份）；spec docs/specs/2026-09-08-author-trust-closed-loop.md；语料 data/e2e-fixtures/canary-mystery-20260908（40 fixtures，与当前代码匹配）。
+docs/harness/evidence/p33-0*-p33.json；spec docs/specs/2026-09-11-review-barrier-workspace.md；设计原文 /Users/erik/.codex/visualizations/2026/09/11/01a0908c-e2f5-7393-9dae-173a1870fc34/novel-collaboration-design.md。
 
 ## Verification（验证）
 
-干净 main：mvn test 710/0失败/1跳过；e2e replay×2 一致且与 record 一致；compare-baseline PASS（bless 后 golden：minChapters=2/minTotalWords=6238/minAvgWordCount=2729）；check-harness --check-git PASS。
+干净 main：716 tests/0失败/1跳过；e2e PAUSED + 基线 PASS；前端构建通过；check-harness PASS；18102 浏览器冒烟三栏+API 正确。
 
 ## Blockers（阻塞与限制）
 
-未推送远端。e2e 冒烟为 2 章口径（一致性门禁人审停点，record/replay 一致）；需要 3 章自动过审可另立 feature。无 BROKEN。
+无 BROKEN。未推送远端。backlog p33-05~08。设计 P4（文学质量实验）未登记 feature——需要时按 spec 补拆。
 
 ## Next Steps（下一步）
 
-1. ./init.sh 恢复；mvn 测试需 bash -c 'source scripts/load-env.sh && mvn ...'。
-2. 记住新 DoD 条款：改 .st/注入逻辑后必须 record 重建语料 + 双次 replay + 人工 bless。
-3. 候选后续：3 章自动过审冒烟、真典 UNVERIFIED 的作者确认 UI（p32-06 的确认闭环）、截图 CDP 超时排查。
+1. ./init.sh 恢复；mvn 需 bash -c 'source scripts/load-env.sh && mvn ...'。
+2. p33-05（P0-B 统一修订入口/幂等/批准绑定稿号）优先——修复体验 #9/#12。
+3. 改 .st/注入逻辑后按 AGENTS.md DoD 重建 e2e 语料。

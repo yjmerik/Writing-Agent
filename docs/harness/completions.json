@@ -569,6 +569,50 @@
       "implementation_commit": "943c4c6685d8cd890110dbcf9f9b9b0ae811f1f6",
       "main_commit": "943c4c6685d8cd890110dbcf9f9b9b0ae811f1f6",
       "evidence": "docs/harness/evidence/p32-09-author-trust.json"
+    },
+    {
+      "id": "p33-01-p33",
+      "kind": "verified",
+      "feature_ids": [
+        "p33-01"
+      ],
+      "branch": "codex/p33-01-review-barrier-gate",
+      "implementation_commit": "85a58d4fe4856b9c25988c2678d7b7cdebb9c616",
+      "main_commit": "85a58d4fe4856b9c25988c2678d7b7cdebb9c616",
+      "evidence": "docs/harness/evidence/p33-01-p33.json"
+    },
+    {
+      "id": "p33-02-p33",
+      "kind": "verified",
+      "feature_ids": [
+        "p33-02"
+      ],
+      "branch": "codex/p33-02-workspace-api",
+      "implementation_commit": "86c7554e5f9f8c5be9645b18b35df1a1a4b8b52f",
+      "main_commit": "86c7554e5f9f8c5be9645b18b35df1a1a4b8b52f",
+      "evidence": "docs/harness/evidence/p33-02-p33.json"
+    },
+    {
+      "id": "p33-03-p33",
+      "kind": "verified",
+      "feature_ids": [
+        "p33-03"
+      ],
+      "branch": "codex/p33-03-workspace-status-bar",
+      "implementation_commit": "94d2b915df19de9adcf3855cb8dbc81912f698ec",
+      "main_commit": "94d2b915df19de9adcf3855cb8dbc81912f698ec",
+      "evidence": "docs/harness/evidence/p33-03-p33.json"
+    },
+    {
+      "id": "p33-04-p33",
+      "kind": "verified",
+      "feature_ids": [
+        "p33-04"
+      ],
+      "branch": "codex/p33-04-three-pane-review",
+      "implementation_commit": "34364b74727723980c60e3fb424ebb649adcee32",
+      "main_commit": "34364b74727723980c60e3fb424ebb649adcee32",
+      "evidence": "docs/harness/evidence/p33-04-p33.json"
     }
   ]
 }

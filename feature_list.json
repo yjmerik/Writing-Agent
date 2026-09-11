@@ -4652,7 +4652,7 @@
       "phase": 33,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
@@ -4661,7 +4661,8 @@
       "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
       "acceptance": "mvn test -Dtest=ReviewBarrierGateTest：标记人审即落盘屏障；write-all/write-chapter 调度前检查项目全部有效屏障，存在则不启动新章；屏障解决后恢复写作；并发/重启后屏障仍有效。",
       "verify_cmd": "mvn test -Dtest=ReviewBarrierGateTest",
-      "evidence": ""
+      "evidence": "2026-09-11：分支codex/p33-01-review-barrier-gate 实现提交85a58d4 ff合入main。ReviewBarrierGateTest 3项RED（复现体验#18：屏障章标记后索引推进，write-all仍写新章且终态误报FAILED）→GREEN（立即PAUSED+不写新章/解除恢复写下一章/重启读回）。全量713/0失败/1跳过；e2e PAUSED通过+基线PASS（屏障消除绕过但不改变既有停点行为）。",
+      "completion_record": "p33-01-p33"
     },
     {
       "id": "p33-02",
@@ -4672,14 +4673,15 @@
       "dependencies": [
         "p33-01"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/web/CollaborationController.java"
       ],
       "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
       "acceptance": "mvn test -Dtest=WorkspaceStatusApiTest：GET /api/projects/{id}/workspace 返回 stage/collabState/todoList（含章节、稿号、原因）/allowedActions+blockedReason；写作中/待人审/已解决三情形字段正确。",
       "verify_cmd": "mvn test -Dtest=WorkspaceStatusApiTest",
-      "evidence": ""
+      "evidence": "2026-09-11：分支codex/p33-02-workspace-api 实现提交86c7554合入main（注：提交时误将main重命名为feature分支，已恢复main=86c7554，提交内容不变、验证在合并树执行）。WorkspaceStatusApiTest 3项RED→GREEN（写作中WRITE_NEXT/待人审AWAITING_REVIEW带章号稿号/放行恢复）；全量716/0失败/1跳过。",
+      "completion_record": "p33-02-p33"
     },
     {
       "id": "p33-03",
@@ -4690,7 +4692,7 @@
       "dependencies": [
         "p33-02"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/components/CollaborationBar.tsx",
         "frontend/src/api/client.ts"
@@ -4698,7 +4700,8 @@
       "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
       "acceptance": "cd frontend && npm run build 通过；CollaborationBar 按协作状态矩阵显示状态与主行动；待审章点击直达（选中章节目录与正文）。",
       "verify_cmd": "cd frontend && npm run build",
-      "evidence": ""
+      "evidence": "2026-09-11：分支codex/p33-03-workspace-status-bar 实现提交94d2b91 ff合入main。CollaborationBar 增读 /workspace：待人审显示'第N章第V稿待你审查'（稿号来自屏障），todoList 待办直达按钮；TS 严格构建通过。",
+      "completion_record": "p33-03-p33"
     },
     {
       "id": "p33-04",
@@ -4709,7 +4712,7 @@
       "dependencies": [
         "p33-03"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/components/InteractiveReview.tsx",
         "frontend/src/pages/ProjectWorkspace.tsx"
@@ -4717,7 +4720,8 @@
       "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
       "acceptance": "cd frontend && npm run build 通过；正文与审查视图呈左目录（章+状态）/中正文（阅读·编辑·比较）/右审查面板（本章待办页签）三栏；窄屏右侧改抽屉。",
       "verify_cmd": "cd frontend && npm run build",
-      "evidence": ""
+      "evidence": "2026-09-11：分支codex/p33-04-three-pane-review 实现提交34364b7 ff合入main。三栏布局（左目录待人审/生成中标识/中正文/右审查面板含质量报告迁移）+窄屏抽屉+focusChapter待办直达。npm build通过；18102实例浏览器冒烟：三栏渲染确认（目录20章/正文/审查面板），workspace API真实项目输出正确；全量716/0失败。",
+      "completion_record": "p33-04-p33"
     },
     {
       "id": "p33-05",
@@ -4792,5 +4796,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-11",
-  "active_feature": "p33-01"
+  "active_feature": null
 }

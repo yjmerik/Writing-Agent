@@ -1,0 +1,13 @@
+{
+  "commit": "94d2b915df19de9adcf3855cb8dbc81912f698ec",
+  "cleanCheckout": true,
+  "checkoutNote": "验证在 ff 合并后的干净主分支检出树（与该提交相同或其后）执行。",
+  "feature": "p33-03",
+  "checks": [
+    {
+      "command": "cd frontend && npm run build",
+      "result": "构建通过（TS strict）",
+      "exitCode": 0
+    }
+  ]
+}

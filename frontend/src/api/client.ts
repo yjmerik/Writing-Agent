@@ -78,6 +78,26 @@ export interface AgentRevisionApplyResult {
   derivedRefreshPending?: boolean;
 }
 
+export interface WorkspaceTodo {
+  chapterIndex: number;
+  chapterVersion: number;
+  kind: string;
+  reason: string;
+  raisedAt: string;
+}
+
+export interface WorkspaceStatus {
+  projectId: string;
+  stage: string;
+  busy: boolean;
+  collabState: 'WRITING' | 'HANDING_OVER' | 'AWAITING_REVIEW' | 'FINISHED' | 'BLOCKED';
+  primaryAction: 'REVIEW_CHAPTER' | 'WRITE_NEXT' | 'TAKE_OVER' | 'EXPORT' | 'WAIT_HANDOVER' | 'RESOLVE_BLOCKED';
+  canContinue: boolean;
+  blockedReason: string | null;
+  todoList: WorkspaceTodo[];
+  currentChapter: number;
+}
+
 export interface QualityEvaluationResult {
   scores: Record<string, number>;
   overallScore: number;
@@ -426,6 +446,10 @@ export const api = {
   /** 质量评价（慢操作，调 LLM 分析） */
   evaluate: (id: string) =>
     request<QualityEvaluationResult>(`/projects/${id}/evaluate`, { method: 'POST' }, 300000),
+
+  /** p33-02: 统一工作区状态——按钮可用性的单一来源 */
+  getWorkspace: (id: string) =>
+    request<WorkspaceStatus>(`/projects/${id}/workspace`),
 
   /** p32-11: 读回最近一次全书评价（未评价时 evaluation=null） */
   getQualityEvaluation: (id: string) =>

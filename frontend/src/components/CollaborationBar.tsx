@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Card, Input, Select, Space, Tag, Typography } from 'antd';
 import { api } from '../api/client';
+import type { WorkspaceStatus } from '../api/client';
 import type { CollaborationStatus, ReviewPolicy } from '../types';
 
 const STAGES: Record<string, string> = {
@@ -9,10 +10,12 @@ const STAGES: Record<string, string> = {
   FINAL: '全书已完成', NEEDS_REVISION: '终审待修订', PAUSED_AT_CHECKPOINT: '等待作者审阅',
 };
 
-export default function CollaborationBar({ projectId, onChanged, onReview }: {
+export default function CollaborationBar({ projectId, onChanged, onReview, onSelectChapter }: {
   projectId: string; onChanged: () => void; onReview: () => void;
+  onSelectChapter?: (chapterIndex: number) => void;
 }) {
   const [status, setStatus] = useState<CollaborationStatus | null>(null);
+  const [workspace, setWorkspace] = useState<WorkspaceStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [acting, setActing] = useState(false);
   const [instruction, setInstruction] = useState('');
@@ -35,6 +38,11 @@ export default function CollaborationBar({ projectId, onChanged, onReview }: {
         const next = await api.collaboration(projectId);
         if (!active || sequence !== refreshRef.current) return;
         setStatus(next); setError(null);
+        // p33-02: 单一状态来源——按钮可用性由后端判定
+        try {
+          const ws = await api.getWorkspace(projectId);
+          if (active && sequence === refreshRef.current) setWorkspace(ws);
+        } catch { /* workspace 读取失败不阻塞协作状态 */ }
         const signature = `${next.state}:${next.currentChapter}:${next.busy}:${next.pendingReviews}`;
         if (previous && previous !== signature) changedRef.current();
         previous = signature;
@@ -72,8 +80,12 @@ export default function CollaborationBar({ projectId, onChanged, onReview }: {
   const busy = status?.busy ?? false;
   const stopped = !busy && status?.state !== 'FINAL' && status?.task?.status === 'PAUSED';
   const failed = !busy && status?.state !== 'FINAL' && status?.task?.status === 'FAILED';
+  const firstTodo = workspace?.todoList?.[0];
   const label = busy ? !status?.task ? '正在处理内容' : status.stopRequested ? '正在停下' : 'Agent 正在创作'
     : status?.state === 'FINAL' ? '全书已完成'
+    // p33-03: 屏障待审——指向具体章节与稿号（设计 4.2）
+    : workspace?.collabState === 'AWAITING_REVIEW' && firstTodo
+      ? `第 ${firstTodo.chapterIndex} 章第 ${firstTodo.chapterVersion} 稿待你审查`
     : status?.pendingReviews ? '等待你审阅'
     : failed ? '创作遇到问题' : stopped ? '已交给作者' : '准备协作';
 
@@ -83,7 +95,15 @@ export default function CollaborationBar({ projectId, onChanged, onReview }: {
         <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div aria-live="polite">
             <Typography.Text strong style={{ fontSize: 17 }}>一起完成这本书</Typography.Text>
-            <Tag style={{ marginLeft: 12 }} color={failed ? 'error' : busy ? 'processing' : 'green'}>{label}</Tag>
+            <Tag style={{ marginLeft: 12 }} color={failed ? 'error' : busy ? 'processing'
+              : workspace?.collabState === 'AWAITING_REVIEW' ? 'warning' : 'green'}>{label}</Tag>
+            {/* p33-03: 待办直达——后端 todoList 指向具体章节与稿号 */}
+            {(workspace?.todoList ?? []).map((todo, i) => (
+              <Button key={i} size="small" type="link"
+                onClick={() => onSelectChapter?.(todo.chapterIndex)}>
+                第 {todo.chapterIndex} 章第 {todo.chapterVersion} 稿待审 →
+              </Button>
+            ))}
             <div style={{ marginTop: 6, color: '#666' }}>
               {status ? `${STAGES[status.state]} · 已写 ${status.currentChapter} / 目标 ${status.targetChapters} 章 · ${status.totalWords.toLocaleString()} 字` : '正在读取创作进度…'}
             </div>

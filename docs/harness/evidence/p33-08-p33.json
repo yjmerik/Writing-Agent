@@ -1,0 +1,18 @@
+{
+  "commit": "bcdae8ff2aa6d479fadb29e968414bb1f362e432",
+  "cleanCheckout": true,
+  "checkoutNote": "验证在 ff 合并后的干净主分支检出树执行；未改 prompt/注入，无语料影响。",
+  "feature": "p33-08",
+  "checks": [
+    {
+      "command": "mvn test -Dtest=PlanEditionTest",
+      "result": "3 tests / 0 failures",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test",
+      "result": "727 tests / 0 failures / 1 skipped",
+      "exitCode": 0
+    }
+  ]
+}

@@ -4751,14 +4751,17 @@
       "dependencies": [
         "p33-05"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
-        "src/main/java/com/writing/novel/service/"
+        "src/main/java/com/writing/novel/domain/AuthorDirective.java",
+        "src/main/java/com/writing/novel/web/DirectiveController.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java"
       ],
       "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
       "acceptance": "backlog（设计 5.3）：要求账本、范围与生效区间、候选落实清单、系统/作者确认分离。",
       "verify_cmd": "mvn test -Dtest=DirectiveLoopTest",
-      "evidence": ""
+      "evidence": "2026-09-11：分支codex/p33-06-directive-loop 实现提交7471cae ff合入main。DirectiveLoopTest 3项RED→GREEN：意见登记OPEN→系统落实证据APPLIED_SYSTEM（分开记录）→作者确认CONFIRMED；APPLIED_SYSTEM 仍是待办；HARD 不可 dismiss；撤销留痕。author_directives 表 + AuthorDirective 领域 + DirectiveController（登记/列表/落实/确认/撤销）。不改 prompt——无语料影响；全量721/0失败/1跳过。",
+      "completion_record": "p33-06-p33"
     },
     {
       "id": "p33-07",
@@ -4785,17 +4788,18 @@
       "dependencies": [
         "p33-04"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
       ],
       "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
       "acceptance": "backlog（设计 5.6/5.7）：篇幅一致、删章影响预览、承诺分层、成书版本清单与导出。",
       "verify_cmd": "mvn test -Dtest=PlanEditionTest",
-      "evidence": ""
+      "evidence": "2026-09-11：分支codex/p33-08-plan-edition 实现提交bcdae8f ff合入main。PlanEditionTest 3项RED→GREEN：缩减篇幅先预览（裁剪章/超出目标未回收承诺/已写数）不落盘；confirm 生效（目标更新+大纲裁剪+已写梗概保留+承诺期望不静默改写）；低于已写拒绝。PlanEditionService + POST /plan/target-chapters。不改 prompt；全量727/0失败/1跳过。",
+      "completion_record": "p33-08-p33"
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-09-11",
-  "active_feature": null
+  "active_feature": "p33-07"
 }

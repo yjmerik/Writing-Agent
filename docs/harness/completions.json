@@ -624,6 +624,28 @@
       "implementation_commit": "ecd4f670cf15b5b78f9d632dbecabb3aef13d379",
       "main_commit": "ecd4f670cf15b5b78f9d632dbecabb3aef13d379",
       "evidence": "docs/harness/evidence/p33-05-p33.json"
+    },
+    {
+      "id": "p33-06-p33",
+      "kind": "verified",
+      "feature_ids": [
+        "p33-06"
+      ],
+      "branch": "codex/p33-06-directive-loop",
+      "implementation_commit": "7471caedc48d19f9fdf4e0a077fd123ca8ed4f3f",
+      "main_commit": "7471caedc48d19f9fdf4e0a077fd123ca8ed4f3f",
+      "evidence": "docs/harness/evidence/p33-06-p33.json"
+    },
+    {
+      "id": "p33-08-p33",
+      "kind": "verified",
+      "feature_ids": [
+        "p33-08"
+      ],
+      "branch": "codex/p33-08-plan-edition",
+      "implementation_commit": "bcdae8ff2aa6d479fadb29e968414bb1f362e432",
+      "main_commit": "bcdae8ff2aa6d479fadb29e968414bb1f362e432",
+      "evidence": "docs/harness/evidence/p33-08-p33.json"
     }
   ]
 }

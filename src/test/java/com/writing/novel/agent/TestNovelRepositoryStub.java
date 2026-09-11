@@ -83,6 +83,19 @@ public class TestNovelRepositoryStub implements NovelRepository {
                                                           Chapter.Status status, int expectedVersion) {
         return false;
     }
+    // p33-06: 内存意见（基类为空实现，子类按需覆写）
+    private final java.util.List<com.writing.novel.domain.AuthorDirective> stubDirectives = new java.util.ArrayList<>();
+    @Override public void saveAuthorDirective(com.writing.novel.domain.AuthorDirective d) {
+        stubDirectives.removeIf(x -> x.getId().equals(d.getId()));
+        stubDirectives.add(d);
+    }
+    @Override public java.util.List<com.writing.novel.domain.AuthorDirective> findAuthorDirectives(String projectId) {
+        return stubDirectives.stream().filter(d -> d.getProjectId().equals(projectId)).toList();
+    }
+    @Override public java.util.Optional<com.writing.novel.domain.AuthorDirective> findAuthorDirective(
+            String projectId, String id) {
+        return stubDirectives.stream().filter(d -> d.getId().equals(id)).findFirst();
+    }
     // p33-01: 内存屏障（基类为空实现，子类按需覆写）
     private final java.util.List<com.writing.novel.domain.ReviewBarrier> stubBarriers = new java.util.ArrayList<>();
     @Override public void saveReviewBarrier(com.writing.novel.domain.ReviewBarrier barrier) {

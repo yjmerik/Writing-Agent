@@ -97,6 +97,12 @@ public interface NovelRepository {
     /** 解决指定章节的全部 ACTIVE 屏障（作者放行时调用），返回解决条数。 */
     int resolveReviewBarriers(String projectId, int chapterIndex);
 
+    // --- p33-06: 作者意见闭环 ---
+    void saveAuthorDirective(com.writing.novel.domain.AuthorDirective directive);
+    /** 全部意见（含各状态），按创建时间倒序。 */
+    java.util.List<com.writing.novel.domain.AuthorDirective> findAuthorDirectives(String projectId);
+    java.util.Optional<com.writing.novel.domain.AuthorDirective> findAuthorDirective(String projectId, String id);
+
     // --- Summary ---
     void saveSummary(Summary summary);
     List<Summary> findSummariesByProject(String projectId);

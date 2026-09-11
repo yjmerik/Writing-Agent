@@ -82,6 +82,12 @@ public class SqliteSchemaInitializer {
             "id TEXT PRIMARY KEY, project_id TEXT, overall_score INTEGER, " +
             "report_json TEXT, created_at TEXT)",
 
+        // p33-06: 作者意见/要求——意见闭环持久化（系统落实与作者确认分开）
+        "CREATE TABLE IF NOT EXISTS author_directives (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, kind TEXT, chapter_index INTEGER, " +
+            "content TEXT, status TEXT, system_evidence TEXT, system_evidence_version INTEGER, " +
+            "created_at TEXT, confirmed_at TEXT, updated_at TEXT)",
+
         // p33-01: 人审屏障——标记时立即落盘，写作调度查全部 ACTIVE 屏障
         "CREATE TABLE IF NOT EXISTS review_barriers (" +
             "id TEXT PRIMARY KEY, project_id TEXT, chapter_index INTEGER, chapter_version INTEGER, " +

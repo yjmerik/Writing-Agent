@@ -615,6 +615,72 @@ public class SqliteNovelRepository implements NovelRepository {
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
+    // --- p33-06: 作者意见闭环 ---
+
+    @Override
+    public void saveAuthorDirective(com.writing.novel.domain.AuthorDirective d) {
+        String sql = "INSERT INTO author_directives (id,project_id,kind,chapter_index,content,status," +
+                "system_evidence,system_evidence_version,created_at,confirmed_at,updated_at) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?) " +
+                "ON CONFLICT(id) DO UPDATE SET status=excluded.status, system_evidence=excluded.system_evidence, " +
+                "system_evidence_version=excluded.system_evidence_version, confirmed_at=excluded.confirmed_at, " +
+                "updated_at=excluded.updated_at";
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, d.getId()); ps.setString(2, d.getProjectId());
+            ps.setString(3, d.getKind().name());
+            if (d.getChapterIndex() != null) ps.setInt(4, d.getChapterIndex());
+            else ps.setNull(4, Types.NULL);
+            ps.setString(5, d.getContent()); ps.setString(6, d.getStatus().name());
+            ps.setString(7, d.getSystemEvidence());
+            if (d.getSystemEvidenceVersion() != null) ps.setInt(8, d.getSystemEvidenceVersion());
+            else ps.setNull(8, Types.NULL);
+            ps.setString(9, d.getCreatedAt().toString());
+            if (d.getConfirmedAt() != null) ps.setString(10, d.getConfirmedAt().toString());
+            else ps.setNull(10, Types.NULL);
+            ps.setString(11, d.getUpdatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public List<com.writing.novel.domain.AuthorDirective> findAuthorDirectives(String projectId) {
+        List<com.writing.novel.domain.AuthorDirective> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM author_directives WHERE project_id=? ORDER BY created_at DESC")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapDirective(rs));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    @Override
+    public java.util.Optional<com.writing.novel.domain.AuthorDirective> findAuthorDirective(
+            String projectId, String id) {
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM author_directives WHERE project_id=? AND id=?")) {
+            ps.setString(1, projectId); ps.setString(2, id);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? java.util.Optional.of(mapDirective(rs)) : java.util.Optional.empty();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    private com.writing.novel.domain.AuthorDirective mapDirective(ResultSet rs) throws SQLException {
+        Integer chapterIndex = rs.getObject("chapter_index") == null ? null : rs.getInt("chapter_index");
+        Integer evidenceVersion = rs.getObject("system_evidence_version") == null ? null
+                : rs.getInt("system_evidence_version");
+        String confirmedAt = rs.getString("confirmed_at");
+        return new com.writing.novel.domain.AuthorDirective(
+                rs.getString("id"), rs.getString("project_id"),
+                com.writing.novel.domain.AuthorDirective.Kind.valueOf(rs.getString("kind")),
+                chapterIndex, rs.getString("content"),
+                com.writing.novel.domain.AuthorDirective.Status.valueOf(rs.getString("status")),
+                rs.getString("system_evidence"), evidenceVersion,
+                java.time.Instant.parse(rs.getString("created_at")),
+                confirmedAt == null ? null : java.time.Instant.parse(confirmedAt),
+                java.time.Instant.parse(rs.getString("updated_at")));
+    }
+
     private com.writing.novel.domain.ReviewBarrier mapBarrier(ResultSet rs) throws SQLException {
         java.time.Instant resolvedAt = rs.getString("resolved_at") == null ? null
                 : java.time.Instant.parse(rs.getString("resolved_at"));

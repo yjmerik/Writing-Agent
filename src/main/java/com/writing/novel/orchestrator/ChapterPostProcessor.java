@@ -222,7 +222,9 @@ public class ChapterPostProcessor {
                 if (newContent != null && newContent.length() >= originalLength * 0.7) {
                     if (orch.autoRewriteIfCurrent(projectId, chapterIndex, revisionBase,
                             chapter.getTitle(), newContent, "REWRITE")) {
-                        chapter.setContent(newContent); // 与库内版本自增保持同步
+                        // p33-05: 以 DB 权威状态回填（修订边界可能幂等跳过版本自增）
+                        repository.findChapterByIndex(projectId, chapterIndex)
+                                .ifPresent(chapter::adoptStateFrom);
                         log.info("章节重写完成(章{}): {}字→{}字", chapterIndex, originalLength, newContent.length());
                         var reReview = readerReviewAgent.review(chapterIndex, chapter.getContent());
                         log.info("重写后检验(章{}): {}/10", chapterIndex, reReview.getScore());

@@ -370,7 +370,10 @@ public class ChapterProduction {
             if (newContent != null && newContent.length() >= 2000) {
                 if (orch.autoRewriteIfCurrent(projectId, chapterIndex, revisionBase,
                         chapter.getTitle(), newContent, "REWRITE")) {
-                    chapter.setContent(newContent); // 与库内版本自增保持同步
+                    // p33-05: 修订边界可能幂等跳过（相同内容不推版本）——以 DB 权威状态回填，
+                    // 不得在内存对象上自行 setContent 假设版本自增（会破坏后续 CAS）
+                    repository.findChapterByIndex(projectId, chapterIndex)
+                            .ifPresent(chapter::adoptStateFrom);
                 } else {
                     repository.findChapterByIndex(projectId, chapterIndex)
                             .ifPresent(chapter::adoptStateFrom);

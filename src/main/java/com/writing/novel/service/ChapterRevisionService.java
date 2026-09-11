@@ -84,6 +84,12 @@ public class ChapterRevisionService {
             throw new IllegalArgumentException("已完成章节正文不能少于500字");
         }
 
+        // p33-05（体验 #9）：相同内容+标题的保存是幂等空操作——不推进版本、不留快照。
+        // 作者界面重复点击或断线重试不再产生垃圾版本；语义上"这次保存"已经生效。
+        if (current.getTitle().equals(safeTitle) && current.getContent().equals(safeContent)) {
+            refreshIsolated(projectId, current);
+            return current;
+        }
         ChapterVersion snapshot = new ChapterVersion(
                 UUID.randomUUID().toString(), projectId, chapterIndex, current.getVersion(),
                 current.getTitle(), current.getContent(), safeSource, Instant.now());

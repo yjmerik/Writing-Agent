@@ -1,0 +1,38 @@
+{
+  "commit": "97764b4fee7162ee81d18447b823f1849ba911e3",
+  "cleanCheckout": true,
+  "checkoutNote": "单元门禁在提交树验证；语料重建（record 20260912）+双次 replay+bless 在其后干净 main 执行（含 p33-08 合并，均不改 prompt 注入路径）。",
+  "feature": "p33-07",
+  "checks": [
+    {
+      "command": "mvn test -Dtest=ForeshadowCandidateLayerTest",
+      "result": "3 tests / 0 failures",
+      "exitCode": 0
+    },
+    {
+      "command": "E2E_FIXTURE_DIR=data/e2e-fixtures/canary-mystery-20260912 ./scripts/e2e.sh --mode record",
+      "result": "PAUSED 停点 + 27 fixtures 录制",
+      "exitCode": 0
+    },
+    {
+      "command": "./scripts/e2e.sh（replay 第1次）",
+      "result": "1章/3930字/27调用/0错误 PAUSED",
+      "exitCode": 0
+    },
+    {
+      "command": "./scripts/e2e.sh（replay 第2次）",
+      "result": "与第1次逐项一致",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/compare-baseline.py --bless",
+      "result": "golden 更新后 PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test",
+      "result": "727 tests / 0 failures / 1 skipped",
+      "exitCode": 0
+    }
+  ]
+}

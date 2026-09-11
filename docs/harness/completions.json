@@ -646,6 +646,17 @@
       "implementation_commit": "bcdae8ff2aa6d479fadb29e968414bb1f362e432",
       "main_commit": "bcdae8ff2aa6d479fadb29e968414bb1f362e432",
       "evidence": "docs/harness/evidence/p33-08-p33.json"
+    },
+    {
+      "id": "p33-07-p33",
+      "kind": "verified",
+      "feature_ids": [
+        "p33-07"
+      ],
+      "branch": "codex/p33-07-fact-evidence-model",
+      "implementation_commit": "97764b4fee7162ee81d18447b823f1849ba911e3",
+      "main_commit": "97764b4fee7162ee81d18447b823f1849ba911e3",
+      "evidence": "docs/harness/evidence/p33-07-p33.json"
     }
   ]
 }

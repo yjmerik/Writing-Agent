@@ -36,6 +36,8 @@ export default function ProjectWorkspace() {
   const [activeTab, setActiveTab] = useState('review');
   const [prefs, setPrefs] = useState<Record<string, unknown> | null>(null);
   const [refreshSignal, setRefreshSignal] = useState(0);
+  // p33-04: 待办直达——状态栏待审按钮聚焦到指定章节
+  const [focusChapter, setFocusChapter] = useState<number | undefined>(undefined);
   const [chatMsg, setChatMsg] = useState('');
   const [chatReply, setChatReply] = useState('');
   const [chatting, setChatting] = useState(false);
@@ -248,7 +250,8 @@ export default function ProjectWorkspace() {
       </Sider>
 
       <Content style={{ padding: narrowLayout ? '52px 0 0' : '0 16px', minWidth: 0, width: '100%' }}>
-        <CollaborationBar projectId={project.id} onChanged={load} onReview={() => setActiveTab('review')} />
+        <CollaborationBar projectId={project.id} onChanged={load} onReview={() => setActiveTab('review')}
+          onSelectChapter={(chapterIndex) => { setActiveTab('review'); setFocusChapter(chapterIndex); }} />
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
@@ -257,7 +260,7 @@ export default function ProjectWorkspace() {
             { key: 'run', label: '创作工具', children: <RunConsole projectId={project.id} projectState={project.state} onChanged={load} /> },
             { key: 'world', label: '🌍 世界观与人物', children: <WorldbuildingView key={`world-${project.id}`} projectId={project.id} /> },
             { key: 'outline', label: '📋 大纲', children: <OutlineView key={`outline-${project.id}`} projectId={project.id} currentChapter={project.currentChapterIndex} /> },
-            { key: 'review', label: '📖 章节管理', children: <InteractiveReview key={`review-${project.id}`} refreshSignal={refreshSignal} projectId={project.id} onChanged={load} onNavigateTab={setActiveTab} /> },
+            { key: 'review', label: '📖 章节管理', children: <InteractiveReview key={`review-${project.id}`} refreshSignal={refreshSignal} projectId={project.id} onChanged={load} onNavigateTab={setActiveTab} focusChapter={focusChapter} /> },
             { key: 'quality', label: '🔍 质量评价', children: <QualityView projectId={project.id} /> },
           ]}
         />

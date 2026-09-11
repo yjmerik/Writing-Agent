@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin, Progress, Collapse } from 'antd';
+import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin, Progress, Collapse, Drawer, Grid } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, HistoryOutlined, PlusOutlined, ReloadOutlined, TrophyOutlined } from '@ant-design/icons';
 import { ApiError, api } from '../api/client';
 import type { AgentRevisionTarget, CheckpointRevision } from '../api/client';
@@ -14,6 +14,8 @@ interface Props {
   refreshSignal?: number;
   onChanged: () => void;
   onNavigateTab: (target: 'world' | 'outline') => void;
+  /** p33-04: 待办直达——切到指定章节（来自状态栏待审按钮） */
+  focusChapter?: number;
 }
 
 type RewriteTarget =
@@ -70,7 +72,7 @@ export const normalizeCheckpointPayload = (value: unknown): CheckpointPayload | 
   };
 };
 
-export default function InteractiveReview({ projectId, onChanged, onNavigateTab, refreshSignal }: Props) {
+export default function InteractiveReview({ projectId, onChanged, onNavigateTab, refreshSignal, focusChapter }: Props) {
   // p21-05: 元数据一次加载；正文按选中章节懒加载缓存
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [bodies, setBodies] = useState<Record<number, Chapter>>({});
@@ -85,6 +87,14 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
   const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const [status, setStatus] = useState<ProjectStatus | null>(null);
   const [selectedIdx, setSelectedIdx] = useState(0);
+  const [reviewPanelOpen, setReviewPanelOpen] = useState(false);
+  const screens = Grid.useBreakpoint();
+  // p33-04: 外部聚焦请求（状态栏待办直达）
+  useEffect(() => {
+    if (focusChapter == null) return;
+    const idx = chapters.findIndex(c => c.chapterIndex === focusChapter);
+    if (idx >= 0) { setSelectedIdx(idx); window.scrollTo({ top: 0 }); }
+  }, [focusChapter, chapters]);
   const selectedIdxRef = useRef(0);
   const [loading, setLoading] = useState(false);
   const [rewriteModalOpen, setRewriteModalOpen] = useState(false);
@@ -713,7 +723,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
 
         <Row gutter={16}>
           {/* 章节列表（p21-06: 小屏堆叠） */}
-          <Col xs={24} md={6}>
+          <Col xs={24} md={5}>
             <Card title={`📖 章节 (${chapters.length})`} size="small" style={{ maxHeight: '70vh', overflow: 'auto' }}>
               <List
                 size="small"
@@ -739,6 +749,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                         <Space size={4}>
                           <Tag>{ch.wordCount} 字</Tag>
                           {ch.status === 'NEEDS_MANUAL_REVIEW' && <Tag color="red">待人审</Tag>}
+                          {(ch.status === 'POST_PROCESSING' || ch.status === 'DRAFTING') && <Tag color="processing">生成中</Tag>}
                         </Space>
                       }
                     />
@@ -748,8 +759,8 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
             </Card>
           </Col>
 
-          {/* 章节正文（p21-06: 小屏堆叠） */}
-          <Col xs={24} md={18}>
+          {/* 章节正文（p33-04 三栏：中栏） */}
+          <Col xs={24} md={13}>
             {currentChapter ? (
               <Card
                 title={`第${currentChapter.chapterIndex}章 ${currentChapter.title.replace(/\*\*/g, '')}`}
@@ -757,6 +768,9 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                   <Space wrap>
                     <Tag color="blue">{currentChapter.wordCount} 字</Tag>
                     <Tag color="purple">v{currentChapter.version}</Tag>
+                    {!screens.md && (
+                      <Button size="small" onClick={() => setReviewPanelOpen(true)}>审查</Button>
+                    )}
                     {currentChapter.status === 'NEEDS_MANUAL_REVIEW' && (
                       <Button size="small" type="primary" onClick={async () => {
                         try {
@@ -880,92 +894,109 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                     </div>
                   </Card>
                 )}
-                {qualityReport && (
-                  <div style={{ marginTop: 24, borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
-                    <Typography.Title level={5}>
-                      <TrophyOutlined /> 章节质量报告
-                      <Tag color={qualityReport.grade === 'A' ? 'green' : qualityReport.grade === 'B' ? 'gold' : 'red'} style={{ marginLeft: 8 }}>
-                        {qualityReport.grade} 级
-                      </Tag>
-                    </Typography.Title>
-
-                    {/* 读者评分 */}
-                    {qualityReport.review && (
-                      <Row gutter={16} style={{ marginBottom: 16 }}>
-                        <Col span={4}>
-                          <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: 28, fontWeight: 700, color: qualityReport.review.overallScore >= 7 ? '#52c41a' : '#faad14' }}>
-                              {qualityReport.review.overallScore}
-                            </div>
-                            <Text type="secondary">综合评分</Text>
-                          </div>
-                        </Col>
-                        {[
-                          { label: '吸引力', val: qualityReport.review.engagement },
-                          { label: '连贯性', val: qualityReport.review.coherence },
-                          { label: '角色塑造', val: qualityReport.review.character },
-                          { label: '章末钩子', val: qualityReport.review.hook },
-                        ].map(d => (
-                          <Col span={5} key={d.label}>
-                            <Text type="secondary">{d.label}</Text>
-                            <Progress percent={d.val * 10} size="small" format={() => `${d.val}/10`} />
-                          </Col>
-                        ))}
-                      </Row>
-                    )}
-
-                    {/* 读者简评 */}
-                    {qualityReport.review?.summary && (
-                      <Alert type="info" message={qualityReport.review.summary} style={{ marginBottom: 8 }} />
-                    )}
-
-                    {/* 改进建议 */}
-                    {qualityReport.review?.improvement && (
-                      <Alert type="warning" message="改进建议" description={qualityReport.review.improvement} style={{ marginBottom: 8 }} />
-                    )}
-
-                    {/* 问题列表 */}
-                    {qualityReport.issues.length > 0 && (
-                      <Collapse
-                        size="small"
-                        style={{ marginBottom: 8 }}
-                        items={[{
-                          key: 'issues',
-                          label: `检测问题（${qualityReport.issues.length} 项）`,
-                          children: (
-                            <List
-                              size="small"
-                              dataSource={qualityReport.issues}
-                              renderItem={item => (
-                                <List.Item>
-                                  <Tag color={item.severity === 'HIGH' ? 'red' : item.severity === 'MEDIUM' ? 'orange' : 'default'}>
-                                    {item.severity}
-                                  </Tag>
-                                  <Tag>{item.type}</Tag>
-                                  <Text style={{ fontSize: 12 }}>{item.description}</Text>
-                                </List.Item>
-                              )}
-                            />
-                          ),
-                        }]}
-                      />
-                    )}
-
-                    {/* 套路词统计 */}
-                    {qualityReport.clicheCount > 0 && (
-                      <div style={{ fontSize: 12, color: '#999' }}>
-                        套路词出现 {qualityReport.clicheCount} 次
-                        {qualityReport.topCliches.length > 0 && `：${qualityReport.topCliches.join('、')}`}
-                      </div>
-                    )}
-                  </div>
-                )}
               </Card>
             ) : (
               <Card><Text type="secondary">暂无章节。点击"写一章"开始创作。</Text></Card>
             )}
           </Col>
+
+          {/* p33-04: 审查面板（右栏；窄屏抽屉） */}
+          <Col xs={24} md={6}>
+            <Card title="🔍 审查面板" size="small" style={{ maxHeight: '76vh', overflow: 'auto' }}>
+              {currentChapter?.status === 'NEEDS_MANUAL_REVIEW' && (
+                <Alert type="warning" showIcon style={{ marginBottom: 12 }}
+                  message={`第 ${currentChapter.chapterIndex} 章第 v${currentChapter.version} 稿待你审查`}
+                  description="处理完成后再继续写作。正文头部的「已处理」按钮可放行本稿。" />
+              )}
+              {!currentChapter && <Text type="secondary">选择左侧章节查看审查信息。</Text>}
+              {qualityReport ? (
+                <div>
+                  <Typography.Title level={5} style={{ marginTop: 0 }}>
+                    <TrophyOutlined /> 本章质量
+                    <Tag color={qualityReport.grade === 'A' ? 'green' : qualityReport.grade === 'B' ? 'gold' : 'red'} style={{ marginLeft: 8 }}>
+                      {qualityReport.grade} 级
+                    </Tag>
+                  </Typography.Title>
+                  {qualityReport.review && (
+                    <Row gutter={8} style={{ marginBottom: 12 }}>
+                      <Col span={8}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: 24, fontWeight: 700, color: qualityReport.review.overallScore >= 7 ? '#52c41a' : '#faad14' }}>
+                            {qualityReport.review.overallScore}
+                          </div>
+                          <Text type="secondary" style={{ fontSize: 12 }}>综合评分</Text>
+                        </div>
+                      </Col>
+                      {[
+                        { label: '吸引力', val: qualityReport.review.engagement },
+                        { label: '连贯性', val: qualityReport.review.coherence },
+                        { label: '角色塑造', val: qualityReport.review.character },
+                        { label: '章末钩子', val: qualityReport.review.hook },
+                      ].map(d => (
+                        <Col span={4} key={d.label}>
+                          <Text type="secondary" style={{ fontSize: 12 }}>{d.label}</Text>
+                          <Progress percent={d.val * 10} size="small" format={() => `${d.val}/10`} />
+                        </Col>
+                      ))}
+                    </Row>
+                  )}
+                  {qualityReport.review?.summary && (
+                    <Alert type="info" message={qualityReport.review.summary} style={{ marginBottom: 8 }} />
+                  )}
+                  {qualityReport.review?.improvement && (
+                    <Alert type="warning" message="改进建议" description={qualityReport.review.improvement} style={{ marginBottom: 8 }} />
+                  )}
+                  {qualityReport.issues.length > 0 && (
+                    <Collapse
+                      size="small"
+                      items={[{
+                        key: 'issues',
+                        label: `检测问题（${qualityReport.issues.length} 项）`,
+                        children: (
+                          <List
+                            size="small"
+                            dataSource={qualityReport.issues}
+                            renderItem={item => (
+                              <List.Item>
+                                <Tag color={item.severity === 'HIGH' ? 'red' : item.severity === 'MEDIUM' ? 'orange' : 'default'}>
+                                  {item.severity}
+                                </Tag>
+                                <Tag>{item.type}</Tag>
+                                <Text style={{ fontSize: 12 }}>{item.description}</Text>
+                              </List.Item>
+                            )}
+                          />
+                        ),
+                      }]}
+                    />
+                  )}
+                  {qualityReport.clicheCount > 0 && (
+                    <div style={{ fontSize: 12, color: '#999' }}>
+                      套路词出现 {qualityReport.clicheCount} 次
+                      {qualityReport.topCliches.length > 0 && `：${qualityReport.topCliches.join('、')}`}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                currentChapter && <Text type="secondary">本章暂无质量报告。</Text>
+              )}
+            </Card>
+          </Col>
         </Row>
+
+        {/* p33-04: 窄屏审查面板抽屉 */}
+        <Drawer title="🔍 审查面板" placement="right" width="85%" open={reviewPanelOpen}
+          onClose={() => setReviewPanelOpen(false)}>
+          {currentChapter?.status === 'NEEDS_MANUAL_REVIEW' && (
+            <Alert type="warning" showIcon style={{ marginBottom: 12 }}
+              message={`第 ${currentChapter.chapterIndex} 章第 v${currentChapter.version} 稿待你审查`} />
+          )}
+          {qualityReport && (
+            <Alert type="info" message={`本章质量 ${qualityReport.grade} 级 · ${qualityReport.issues.length} 项问题`}
+              description={qualityReport.review?.summary ?? ''} />
+          )}
+          {!qualityReport && currentChapter && <Text type="secondary">本章暂无质量报告。</Text>}
+        </Drawer>
 
         {/* 刷新按钮 */}
         <Button icon={<ReloadOutlined />} onClick={() => void refresh()} style={{ marginTop: 16 }} loading={loading}>

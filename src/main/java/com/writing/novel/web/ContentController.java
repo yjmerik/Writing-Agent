@@ -333,6 +333,63 @@ public class ContentController {
         return java.util.Map.of("upgraded", upgraded);
     }
 
+    /**
+     * p33-02（设计 7）：统一工作区状态——前端按钮可用性的单一来源。
+     * collabState 由屏障/任务/项目状态推导；todoList 含章节稿号与原因；
+     * allowedActions 由后端判定，前端不再自行猜测。
+     */
+    @GetMapping("/workspace")
+    public Map<String, Object> workspace(@PathVariable String id) {
+        Project project = repository.findProject(id)
+                .orElseThrow(() -> new IllegalArgumentException("项目不存在: " + id));
+        boolean busy = writingTaskExecutor.hasActiveTask(id);
+        var barriers = repository.findActiveReviewBarriers(id);
+        String blockedReason = busy ? "正在处理内容" : writingTaskExecutor.collaborationBlocker(id);
+
+        String collabState;
+        if (busy && repository.findActiveWritingTask(id)
+                .map(t -> t.isStopRequested()).orElse(false)) {
+            collabState = "HANDING_OVER";
+        } else if (busy) {
+            collabState = "WRITING";
+        } else if (!barriers.isEmpty()) {
+            collabState = "AWAITING_REVIEW";
+        } else if (project.getState() == com.writing.novel.domain.NovelState.FINAL) {
+            collabState = "FINISHED";
+        } else if (blockedReason != null) {
+            collabState = "BLOCKED";
+        } else {
+            collabState = "WRITING";
+        }
+
+        String primaryAction = switch (collabState) {
+            case "AWAITING_REVIEW" -> "REVIEW_CHAPTER";
+            case "FINISHED" -> "EXPORT";
+            case "HANDING_OVER" -> "WAIT_HANDOVER";
+            case "WRITING" -> busy ? "TAKE_OVER" : "WRITE_NEXT";
+            default -> "RESOLVE_BLOCKED";
+        };
+
+        var todoList = barriers.stream().<Map<String, Object>>map(b -> Map.of(
+                "chapterIndex", b.getChapterIndex(),
+                "chapterVersion", b.getChapterVersion(),
+                "kind", "MANUAL_REVIEW",
+                "reason", b.getReason() == null ? "" : b.getReason(),
+                "raisedAt", b.getCreatedAt().toString())).toList();
+
+        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("projectId", id);
+        result.put("stage", project.getState().name());
+        result.put("busy", busy);
+        result.put("collabState", collabState);
+        result.put("primaryAction", primaryAction);
+        result.put("canContinue", !busy && blockedReason == null);
+        result.put("blockedReason", blockedReason);
+        result.put("todoList", todoList);
+        result.put("currentChapter", project.getCurrentChapterIndex());
+        return result;
+    }
+
     /** p11-I2: 获取章节聚合质量报告 */
     @GetMapping("/chapters/{chapterIndex}/quality")
     public ChapterQualityReport chapterQuality(@PathVariable String id,

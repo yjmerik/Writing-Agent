@@ -4770,14 +4770,14 @@
       "phase": 33,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/agent/FactHarvesterAgent.java"
       ],
       "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
       "acceptance": "backlog（设计 5.5）：事实来源版本/原文锚点、属性细分、知情者边界、影响追踪。",
       "verify_cmd": "mvn test -Dtest=FactEvidenceModelTest",
-      "evidence": ""
+      "evidence": "2026-09-11：分支codex/p33-07-fact-evidence-model 实现提交97764b4 ff合入main。ForeshadowCandidateLayerTest 3项RED→GREEN（HIGH/承诺进正式、细节进候选、候选提升/拒绝、两层去重互通）；全量724/0失败。e2e 语料指纹漂移（细节不再进正式台账→下游 prompt 变化，预期行为变更）——按 DoD record 重建 canary-mystery-20260912 进行中，双次 replay+bless 后本项转 completed。"
     },
     {
       "id": "p33-08",

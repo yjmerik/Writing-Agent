@@ -83,6 +83,23 @@ public class TestNovelRepositoryStub implements NovelRepository {
                                                           Chapter.Status status, int expectedVersion) {
         return false;
     }
+    // p33-07: 内存候选线索
+    private final java.util.List<com.writing.novel.domain.ForeshadowCandidate> stubCandidates = new java.util.ArrayList<>();
+    @Override public void saveForeshadowCandidate(com.writing.novel.domain.ForeshadowCandidate c) {
+        stubCandidates.removeIf(x -> x.getId().equals(c.getId()));
+        stubCandidates.add(c);
+    }
+    @Override public java.util.List<com.writing.novel.domain.ForeshadowCandidate> findForeshadowCandidates(String projectId) {
+        return stubCandidates.stream().filter(c -> c.getProjectId().equals(projectId)).toList();
+    }
+    @Override public void promoteForeshadowCandidate(String projectId, String candidateId) {
+        stubCandidates.stream().filter(c -> c.getId().equals(candidateId)).findFirst()
+                .ifPresent(com.writing.novel.domain.ForeshadowCandidate::promote);
+    }
+    @Override public void rejectForeshadowCandidate(String projectId, String candidateId) {
+        stubCandidates.stream().filter(c -> c.getId().equals(candidateId)).findFirst()
+                .ifPresent(com.writing.novel.domain.ForeshadowCandidate::reject);
+    }
     // p33-06: 内存意见（基类为空实现，子类按需覆写）
     private final java.util.List<com.writing.novel.domain.AuthorDirective> stubDirectives = new java.util.ArrayList<>();
     @Override public void saveAuthorDirective(com.writing.novel.domain.AuthorDirective d) {

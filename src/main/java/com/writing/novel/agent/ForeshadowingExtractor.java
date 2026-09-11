@@ -105,19 +105,34 @@ public class ForeshadowingExtractor {
                                 || desc.contains(ed.substring(0, Math.min(6, ed.length()))));
                 if (isDuplicate) continue;
 
-                Foreshadowing f = new Foreshadowing(projectId, desc, context, chapterIndex);
-
                 // p10-c1: 读取 LLM 标注的重要性和必须回收标记
                 String priorityStr = node.path("priority").asText("MEDIUM").toUpperCase();
+                Foreshadowing.Priority priority;
                 try {
-                    f.setPriority(Foreshadowing.Priority.valueOf(priorityStr));
+                    priority = Foreshadowing.Priority.valueOf(priorityStr);
                 } catch (IllegalArgumentException ignored) {
-                    f.setPriority(Foreshadowing.Priority.MEDIUM);
+                    priority = Foreshadowing.Priority.MEDIUM;
                 }
                 boolean mustResolve = node.path("mustResolve").asBoolean(false);
-                f.setMustResolve(mustResolve || f.getPriority() == Foreshadowing.Priority.HIGH);
+                boolean hasResolveWindow = node.hasNonNull("expectedResolveChapter")
+                        && !node.path("expectedResolveChapter").isNull();
 
-                repository.saveForeshadowing(f);
+                // p33-07（体验 #15）：叙事承诺进正式台账；细节线索进候选层。
+                // HIGH/mustResolve/带预计回收章 = 有承诺属性；其余为 PENDING 候选。
+                if (priority == Foreshadowing.Priority.HIGH || mustResolve || hasResolveWindow) {
+                    Foreshadowing f = new Foreshadowing(projectId, desc, context, chapterIndex);
+                    f.setPriority(priority);
+                    f.setMustResolve(mustResolve || priority == Foreshadowing.Priority.HIGH);
+                    if (hasResolveWindow) {
+                        try { f.setExpectedResolveChapter(node.path("expectedResolveChapter").asInt()); }
+                        catch (Exception ignored) {}
+                    }
+                    repository.saveForeshadowing(f);
+                } else {
+                    com.writing.novel.domain.ForeshadowCandidate candidate =
+                            new com.writing.novel.domain.ForeshadowCandidate(projectId, desc, context, chapterIndex);
+                    repository.saveForeshadowCandidate(candidate);
+                }
                 existingDescs.add(desc);
                 count++;
             }

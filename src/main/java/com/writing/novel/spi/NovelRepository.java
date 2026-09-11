@@ -103,6 +103,14 @@ public interface NovelRepository {
     java.util.List<com.writing.novel.domain.AuthorDirective> findAuthorDirectives(String projectId);
     java.util.Optional<com.writing.novel.domain.AuthorDirective> findAuthorDirective(String projectId, String id);
 
+    // --- p33-07: 候选线索层 ---
+    void saveForeshadowCandidate(com.writing.novel.domain.ForeshadowCandidate candidate);
+    /** 全部候选（含各状态）。 */
+    java.util.List<com.writing.novel.domain.ForeshadowCandidate> findForeshadowCandidates(String projectId);
+    /** 提升：候选转正式伏笔（HIGH）并标记 PROMOTED。 */
+    void promoteForeshadowCandidate(String projectId, String candidateId);
+    void rejectForeshadowCandidate(String projectId, String candidateId);
+
     // --- Summary ---
     void saveSummary(Summary summary);
     List<Summary> findSummariesByProject(String projectId);

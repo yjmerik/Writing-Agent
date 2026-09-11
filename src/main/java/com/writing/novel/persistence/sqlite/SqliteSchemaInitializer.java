@@ -82,6 +82,11 @@ public class SqliteSchemaInitializer {
             "id TEXT PRIMARY KEY, project_id TEXT, overall_score INTEGER, " +
             "report_json TEXT, created_at TEXT)",
 
+        // p33-07: 候选线索——细节线索前置层，作者提升/拒绝
+        "CREATE TABLE IF NOT EXISTS foreshadow_candidates (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, description TEXT, planted_context TEXT, " +
+            "planted_at_chapter INTEGER, status TEXT, created_at TEXT, updated_at TEXT)",
+
         // p33-06: 作者意见/要求——意见闭环持久化（系统落实与作者确认分开）
         "CREATE TABLE IF NOT EXISTS author_directives (" +
             "id TEXT PRIMARY KEY, project_id TEXT, kind TEXT, chapter_index INTEGER, " +

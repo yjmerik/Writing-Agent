@@ -681,6 +681,65 @@ public class SqliteNovelRepository implements NovelRepository {
                 java.time.Instant.parse(rs.getString("updated_at")));
     }
 
+    // --- p33-07: 候选线索层 ---
+
+    @Override
+    public void saveForeshadowCandidate(com.writing.novel.domain.ForeshadowCandidate c) {
+        String sql = "INSERT INTO foreshadow_candidates (id,project_id,description,planted_context," +
+                "planted_at_chapter,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?) " +
+                "ON CONFLICT(id) DO UPDATE SET status=excluded.status, updated_at=excluded.updated_at";
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, c.getId()); ps.setString(2, c.getProjectId());
+            ps.setString(3, c.getDescription()); ps.setString(4, c.getPlantedContext());
+            ps.setInt(5, c.getPlantedAtChapter()); ps.setString(6, c.getStatus().name());
+            ps.setString(7, c.getCreatedAt().toString()); ps.setString(8, c.getUpdatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public List<com.writing.novel.domain.ForeshadowCandidate> findForeshadowCandidates(String projectId) {
+        List<com.writing.novel.domain.ForeshadowCandidate> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM foreshadow_candidates WHERE project_id=? ORDER BY created_at DESC")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(new com.writing.novel.domain.ForeshadowCandidate(
+                        rs.getString("id"), rs.getString("project_id"),
+                        rs.getString("description"), rs.getString("planted_context"),
+                        rs.getInt("planted_at_chapter"),
+                        com.writing.novel.domain.ForeshadowCandidate.Status.valueOf(rs.getString("status")),
+                        java.time.Instant.parse(rs.getString("created_at")),
+                        java.time.Instant.parse(rs.getString("updated_at"))));
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    @Override
+    public void promoteForeshadowCandidate(String projectId, String candidateId) {
+        var candidate = findForeshadowCandidates(projectId).stream()
+                .filter(c -> c.getId().equals(candidateId)).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("候选线索不存在: " + candidateId));
+        if (candidate.getStatus() == com.writing.novel.domain.ForeshadowCandidate.Status.PROMOTED) return;
+        Foreshadowing f = new Foreshadowing(projectId, candidate.getDescription(),
+                candidate.getPlantedContext(), candidate.getPlantedAtChapter());
+        f.setPriority(Foreshadowing.Priority.HIGH);
+        saveForeshadowing(f);
+        candidate.promote();
+        saveForeshadowCandidate(candidate);
+    }
+
+    @Override
+    public void rejectForeshadowCandidate(String projectId, String candidateId) {
+        var candidate = findForeshadowCandidates(projectId).stream()
+                .filter(c -> c.getId().equals(candidateId)).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("候选线索不存在: " + candidateId));
+        candidate.reject();
+        saveForeshadowCandidate(candidate);
+    }
+
     private com.writing.novel.domain.ReviewBarrier mapBarrier(ResultSet rs) throws SQLException {
         java.time.Instant resolvedAt = rs.getString("resolved_at") == null ? null
                 : java.time.Instant.parse(rs.getString("resolved_at"));

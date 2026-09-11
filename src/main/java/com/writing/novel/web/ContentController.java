@@ -24,6 +24,7 @@ public class ContentController {
     private final NovelOrchestrator orchestrator;
     private final CanonPatchService canonPatch;
     private final OutlineStructureService outlineStructure;
+    private final com.writing.novel.service.PlanEditionService planEdition;
     private final WritingTaskExecutor writingTaskExecutor;
     private final ChapterRevisionService chapterRevision;
     private final ProjectActionPolicy actionPolicy = new ProjectActionPolicy();
@@ -31,12 +32,14 @@ public class ContentController {
     @Autowired
     public ContentController(NovelRepository repository, NovelOrchestrator orchestrator,
                              CanonPatchService canonPatch, WritingTaskExecutor writingTaskExecutor,
-                             OutlineStructureService outlineStructure) {
+                             OutlineStructureService outlineStructure,
+                             com.writing.novel.service.PlanEditionService planEdition) {
         this.repository = repository;
         this.orchestrator = orchestrator;
         this.canonPatch = canonPatch;
         this.writingTaskExecutor = writingTaskExecutor;
         this.outlineStructure = outlineStructure;
+        this.planEdition = planEdition;
         this.chapterRevision = new ChapterRevisionService(repository, writingTaskExecutor,
                 orchestrator == null ? null : orchestrator::refreshChapterAfterRevisionAsync);
     }
@@ -46,7 +49,8 @@ public class ContentController {
                              CanonPatchService canonPatch, WritingTaskExecutor writingTaskExecutor) {
         this(repository, orchestrator, canonPatch, writingTaskExecutor,
                 canonPatch == null ? null : new OutlineStructureService(
-                        repository, canonPatch, writingTaskExecutor));
+                        repository, canonPatch, writingTaskExecutor),
+                new com.writing.novel.service.PlanEditionService(repository));
     }
 
     @GetMapping("/worldbuilding")
@@ -331,6 +335,15 @@ public class ContentController {
     public java.util.Map<String, Object> auditForeshadowings(@PathVariable String id) {
         int upgraded = orchestrator.auditForeshadowingImportance(id);
         return java.util.Map.of("upgraded", upgraded);
+    }
+
+    /** p33-08（设计 5.6）：篇幅变更——先预览影响，confirm 才生效。 */
+    @PostMapping("/plan/target-chapters")
+    public Map<String, Object> changeTargetChapters(@PathVariable String id,
+                                                    @RequestBody Map<String, Object> body) {
+        int newTarget = Integer.parseInt(String.valueOf(body.get("targetChapters")));
+        boolean confirm = Boolean.parseBoolean(String.valueOf(body.getOrDefault("confirm", "false")));
+        return planEdition.changeTargetChapters(id, newTarget, confirm);
     }
 
     /**

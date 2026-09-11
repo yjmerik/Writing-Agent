@@ -220,7 +220,8 @@ class OutlineStructureEditTest {
                 .thenAnswer(invocation -> new CanonPatchService.PatchResult(
                         invocation.getArgument(1), List.of(), true));
         OutlineStructureService service = new OutlineStructureService(localRepository, localCanonPatch, executor);
-        ContentController controller = new ContentController(localRepository, null, null, executor, service);
+        ContentController controller = new ContentController(localRepository, null, null, executor, service,
+                new com.writing.novel.service.PlanEditionService(localRepository));
         Outline incoming = outline(projectId, "总纲",
                 volume(projectId, 1, "卷一", "摘要", synopsis(projectId, 1, "第一章", "内容")));
 

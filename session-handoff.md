@@ -4,6 +4,8 @@ Last Updated: 2026-09-11
 
 ## Current（当前）
 
+**2026-09-11 追加**：p33-05 完成合入 main（ecd4f67）：#9 幂等门 + #12 竞态覆盖修复（adoptStateFrom 以 DB 权威回填，修订边界幂等跳过时不再失配）。247/251 completed。
+
 p33-01~04（P0-A 切片）完成合入 main（85a58d4/86c7554/94d2b91/34364b7 + docs）。246/250 completed；active_feature=null。注：p33-02 提交时曾误 rename main，已恢复（main=86c7554 与提交树一致）。
 
 ## Files（文件与证据）

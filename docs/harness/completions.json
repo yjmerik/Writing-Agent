@@ -613,6 +613,17 @@
       "implementation_commit": "34364b74727723980c60e3fb424ebb649adcee32",
       "main_commit": "34364b74727723980c60e3fb424ebb649adcee32",
       "evidence": "docs/harness/evidence/p33-04-p33.json"
+    },
+    {
+      "id": "p33-05-p33",
+      "kind": "verified",
+      "feature_ids": [
+        "p33-05"
+      ],
+      "branch": "codex/p33-05-unified-commit",
+      "implementation_commit": "ecd4f670cf15b5b78f9d632dbecabb3aef13d379",
+      "main_commit": "ecd4f670cf15b5b78f9d632dbecabb3aef13d379",
+      "evidence": "docs/harness/evidence/p33-05-p33.json"
     }
   ]
 }

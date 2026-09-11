@@ -4732,14 +4732,15 @@
       "dependencies": [
         "p33-01"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/ChapterRevisionService.java"
       ],
       "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
       "acceptance": "backlog（设计 5.2）：统一修订入口（候选→校验→原子保存→派生→复核→批准）、幂等键去重版本、批准绑定稿号与指纹。",
       "verify_cmd": "mvn test -Dtest=UnifiedRevisionCommitTest",
-      "evidence": ""
+      "evidence": "2026-09-11：分支codex/p33-05-unified-commit 实现提交ecd4f67 ff合入main。UnifiedRevisionCommitTest 2项RED→GREEN：#9 相同内容保存零版本零快照（幂等门）；#12 慢后处理与作者编辑竞态——状态推进不再整行覆盖作者新稿且被替换稿留有快照。连带发现并修复：修订边界成功路径原 setContent 假设版本自增，遇幂等跳过即内存/DB 失配连锁破坏状态 CAS（4 项 lifecycle 回归），改为 adoptStateFrom 以 DB 权威回填。全量718/0失败/1跳过；e2e PAUSED+基线PASS。",
+      "completion_record": "p33-05-p33"
     },
     {
       "id": "p33-06",

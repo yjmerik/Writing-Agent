@@ -4,6 +4,8 @@ Last Updated: 2026-09-11
 
 ## Current（当前）
 
+**2026-09-11 追加**：p33-05（P0-B 统一提交切片）完成合入 main（ecd4f67）：#9 幂等门（相同内容零版本零快照）+ #12 竞态修复（状态推进以 DB 权威回填，不再覆盖作者新稿；连带修复修订边界幂等跳过导致的内存/DB 失配连锁）。247/251 completed，active_feature=null。
+
 按设计文档（docs/specs/2026-09-11-review-barrier-workspace.md，源自 novel-collaboration-design）完成 P0-A 前四个 feature 并合入 main：p33-01 持久化审查屏障与调度闸门（85a58d4，体验 #18 根治——runWritingLoop 每章前查全部 ACTIVE 屏障，标记即落盘，终态误报 FAILED 修复）、p33-02 统一工作区状态 API（86c7554）、p33-03 状态栏与待办直达（94d2b91）、p33-04 三栏正文审查布局（34364b7，按草图）。feature_list 250 项：246 completed / 4 not-started（p33-05~08 backlog）；active_feature=null，main=本轮 docs 提交。
 
 ## Files（文件与证据）

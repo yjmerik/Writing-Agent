@@ -1,24 +1,27 @@
-# Phase35 完成交接 — 2026-09-12
+# 协作修复方案交接 — 2026-09-13
 
-Last Updated: 2026-09-12
+Last Updated: 2026-09-13
 
-## Current（当前）
+## Current
 
-Phase35 全部 5 个 feature 完成，261/261 completed，active_feature=null。main HEAD=本轮 docs 提交。
+计划与backlog已编写，业务尚未实施。319 features = 261 completed + 58 not-started，active_feature=null。历史完成记录没有回写或扩展解释。文档分支codex/docs-collaboration-repair-plan-20260912；提交和合并回执见证据文件。
 
-## Files（文件与证据）
+## Files
 
-docs/harness/evidence/p35-0*-p35.json（5 份）；spec docs/specs/2026-09-12-collab-ui-closure.md；验收报告 docs/reports/2026-09-12-collaboration-ui-acceptance.md。
+从docs/superpowers/plans/2026-09-12-collaboration-repair-entry.md开始；总spec为docs/specs/2026-09-12-collaboration-repair-program.md；p36–p40分计划和feature_list.execution_plan可精确跳到单项。
 
-## Verification（验证）
+复验事实已进入docs/reports/2026-09-12-collaboration-ui-reverification.md，不依赖Codex会话、原项目ID或小说正文。旧进度/交接已归档docs/harness/archive/2026-09-12-before-repair-plan-*。
 
-干净 main：736 tests/0失败/1跳过；npm build 通过；check-harness PASS。p35-01/04/05 存在提交直接落 main 的分支管理偏差（历史线性、验证完整、证据如实记录）。
+## Verification
 
-## Blockers（阻塞与限制）
+当前设计基点b1c8289全量init通过，736/0失败/0错误/1跳过；新feature专项未执行。文档结构检查、最终全量与合并后结果写入docs/harness/evidence/2026-09-12-collaboration-repair-plan.md。
 
-无 BROKEN。未推送远端。BookEdition 不可变快照持久化、P4 文学实验未实施。
+## Blockers
 
-## Next Steps（下一步）
+旧窗口正文v2可放行另一窗口v3是已复现漏洞，不要将p35-04测试名称当作覆盖证据。临时测试服务已关闭，原稿/原服务保留。P4真实评分不能用scenario/自动编造替代。
 
-1. ./init.sh 恢复；mvn 需 bash -c 'source scripts/load-env.sh && mvn ...'。
-2. 候选：成书快照持久化与版本化导出；Directives/候选面板 e2e 交互冒烟；390px 真机复验。
+## Next Steps
+
+1. 获得实现授权后先选p36-02，或p36-01测试设施；按依赖只推进一个feature。
+2. 新建独立codex/<feature-id>-<slug>，bug先RED，再实现；main合并后全量/专项验证通过再completed。
+3. 作者质量确认/模型预算属于执行时前置条件，本轮设计不授权自动bless、真实生成或推送。

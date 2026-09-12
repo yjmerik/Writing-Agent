@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": 35,
+  "current_phase": 40,
   "features": [
     {
       "id": "p1-01",
@@ -5003,9 +5003,1387 @@
       "verify_cmd": "mvn test -Dtest=BookReviewAggregateTest",
       "evidence": "2026-09-12：实现提交ce5d07f（提交直接落 main，偏差记录）。BookReviewAggregateTest 2项RED→GREEN：GET /book-review 覆盖清单（各章稿号/状态/评级/旧稿标记）+未回收承诺+汇总；GET /book-export 全书 Markdown（标注基于当前稿非成书快照）。前端'📕 成书审查'页签。全量736/0失败；npm build 通过。",
       "completion_record": "p35-05-p35"
+    },
+    {
+      "id": "p36-01",
+      "name": "建立真实浏览器回归入口",
+      "description": "独立 QA 包使用 @playwright/test；测试读取 QA_BASE_URL，仅允许 localhost/127.0.0.1，未设置即失败；npm test 转发 playwright test --workers=1。",
+      "phase": 36,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "qa/collaboration/package.json",
+        "qa/collaboration/package-lock.json",
+        "qa/collaboration/smoke.spec.ts"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p36.md#p36-01",
+      "problem_ref": "所有 UI 验证不能只 grep 源码",
+      "acceptance": "npm --prefix qa/collaboration test -- smoke.spec.ts 退出0；正常本地服务通过；错误端口、空白页、页面运行异常均让命令非零退出；保存测试结果、截图和 trace 到 QA_ARTIFACT_DIR，不放小说正文进 Git。",
+      "verify_cmd": "npm --prefix qa/collaboration test -- smoke.spec.ts",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p36-02",
+      "name": "定义不可变审阅身份与批准审计表",
+      "description": "新增 ChapterApproval，内嵌 Identity(projectId,chapterIndex,version,contentHash)、Request(identity,reviewSetHash,idempotencyKey,reason)、Result(approvalId,identity,replayed)。contentHash=SHA256 UTF-8 标题长度前缀+标题+正文长度前缀+正文，64位hex；不含状态/updatedAt。 内嵌ReviewContext(identity,reviewSetHash,pendingCheckpointIds,barrierIds,reportCurrent,approval,issues,dispositions,directives)，预留集合默认空但不默认已通过。",
+      "phase": 36,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/domain/ChapterApproval.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
+        "src/test/java/com/writing/novel/persistence/ApprovalSchemaTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p36.md#p36-02",
+      "problem_ref": "A4；DONE不等于作者批准",
+      "acceptance": "mvn test -Dtest=ApprovalSchemaTest 退出0；旧库连续初始化两次无丢行；标题/正文任一变化改变hash，状态变化不改变；批准记录不能被普通章保存覆盖；相同幂等键唯一。",
+      "verify_cmd": "mvn test -Dtest=ApprovalSchemaTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p36-03",
+      "name": "实现章节批准与屏障的原子比较提交",
+      "description": "NovelRepository 增 readReviewContext(projectId,index)、approveChapter(ChapterApproval.Request)。ReviewContext 作为 ChapterApproval 内嵌记录已由 p36-02 定义：identity、reviewSetHash、pendingCheckpointIds、barrierIds、reportCurrent、approval。",
+      "phase": 36,
+      "type": "bug",
+      "dependencies": [
+        "p36-02"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/spi/NovelRepository.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/test/java/com/writing/novel/persistence/VersionedApprovalRepositoryTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p36.md#p36-03",
+      "problem_ref": "A4",
+      "acceptance": "mvn test -Dtest=VersionedApprovalRepositoryTest 退出0；两连接同时用不同key批准同一待办，仅一方成功；同key同请求重试返回相同approvalId；同key不同内容冲突；旧version/hash/reviewSetHash均拒绝；在批准行写入后注入SQL错误，正文状态/屏障/checkpoint/审计全部不变。",
+      "verify_cmd": "mvn test -Dtest=VersionedApprovalRepositoryTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p36-04",
+      "name": "暴露携带版本的审阅上下文与批准接口",
+      "description": "GET /api/projects/{id}/chapters/{n}/review-context；POST 同路径 /review-decisions 接收 identity + reviewSetHash + idempotencyKey + reason，返回 ChapterApproval.Result。",
+      "phase": 36,
+      "type": "bug",
+      "dependencies": [
+        "p36-03"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/web/ReviewDecisionController.java",
+        "src/test/java/com/writing/novel/web/VersionedReviewDecisionTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p36.md#p36-04",
+      "problem_ref": "A4",
+      "acceptance": "mvn test -Dtest=VersionedReviewDecisionTest 退出0；MockMvc 实际 POST：v2读取→正式PUT产生v3→提交v2必须409且v3待审；缺版本400；其他项目不能批准；相同请求重试幂等。",
+      "verify_cmd": "mvn test -Dtest=VersionedReviewDecisionTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p36-05",
+      "name": "所有章节审阅按钮使用同一已读版本",
+      "description": "api.getReviewContext 与 api.approveChapterRevision；审批 token 只能与已加载正文 identity 一致时启用；AFTER_CHAPTER/ON_CONTINUITY_FIX 卡与正文、抽屉调用同一handler，主按钮统一命名“批准当前稿”。",
+      "phase": 36,
+      "type": "bug",
+      "dependencies": [
+        "p36-01",
+        "p36-04"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/api/client.ts",
+        "frontend/src/components/InteractiveReview.tsx",
+        "qa/collaboration/review-version.spec.ts"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p36.md#p36-05",
+      "problem_ref": "A4",
+      "acceptance": "npm --prefix qa/collaboration test -- review-version.spec.ts 退出0；两个真实窗口：A显示v2，B保存v3，A批准必须409并仍不能续写；A显式刷新审阅后才可批准v3；两套旧按钮不会一个成功另一个仍卡住；390px同样验证。",
+      "verify_cmd": "npm --prefix qa/collaboration test -- review-version.spec.ts",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p36-06",
+      "name": "关闭无版本批准的兼容旁路",
+      "description": "旧 POST /chapters/{n}/resolve-review 及章节类 checkpoint approve/modify 不再接受无版本放行；返回409并提示刷新客户端，初始设定/卷计划审批保留独立流程。",
+      "phase": 36,
+      "type": "bug",
+      "dependencies": [
+        "p36-05",
+        "p36-12",
+        "p36-13"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/web/ContentController.java",
+        "src/main/java/com/writing/novel/web/CheckpointController.java",
+        "src/test/java/com/writing/novel/web/LegacyApprovalGateTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p36.md#p36-06",
+      "problem_ref": "A4旧入口绕过",
+      "acceptance": "mvn test -Dtest=LegacyApprovalGateTest 退出0；逐一向所有旧入口真实POST，无token不改变章/屏障/checkpoint；初始设定仍可批准后继续；新的版本审批全量通过。",
+      "verify_cmd": "mvn test -Dtest=LegacyApprovalGateTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p36-07",
+      "name": "正式修订原子失效批准并记录屏障历史",
+      "description": "saveChapterRevision 在其原事务中增加屏障旧身份审计、重绑及当前批准有效性失效；历史批准保留原identity，只读查询按identity判有效。",
+      "phase": 36,
+      "type": "bug",
+      "dependencies": [
+        "p36-03"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/main/java/com/writing/novel/service/ChapterRevisionService.java",
+        "src/test/java/com/writing/novel/service/RevisionBarrierAtomicityTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p36.md#p36-07",
+      "problem_ref": "A4与历史不可变",
+      "acceptance": "mvn test -Dtest=RevisionBarrierAtomicityTest 退出0；修订事务中屏障更新失败则整个正文/历史回滚；v2批准后编辑v3，v2批准仍可查询但不算v3批准；回退也生成新稿待审；无变更保存不新增历史。",
+      "verify_cmd": "mvn test -Dtest=RevisionBarrierAtomicityTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p36-08",
+      "name": "同步目录、深链接、页签与浏览器历史",
+      "description": "保留 #/project/:id/chapter/:n；查询参数 tab=review|world|outline|book|quality|run。ProjectWorkspace 路由是所选章与页签权威来源，子组件 onSelectChapter(n)。 另支持?version=V&anchor=HASH用于打开对应历史正文；缺历史版明确提示，不能退回当前稿冒充。",
+      "phase": 36,
+      "type": "bug",
+      "dependencies": [
+        "p36-01"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/pages/ProjectWorkspace.tsx",
+        "frontend/src/components/InteractiveReview.tsx",
+        "qa/collaboration/workspace-navigation.spec.ts"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p36.md#p36-08",
+      "problem_ref": "A2",
+      "acceptance": "npm --prefix qa/collaboration test -- workspace-navigation.spec.ts 退出0；手动创建7章→点击第7章→刷新仍第7章；切outline刷新仍outline；后退/前进同步；后台新增章不抢焦点；跨项目不能串章。",
+      "verify_cmd": "npm --prefix qa/collaboration test -- workspace-navigation.spec.ts",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p36-09",
+      "name": "标题与正文草稿恢复、冲突保留及存储失败提示",
+      "description": "loadDraft 返回 {kind:\"missing\"|\"matching\"|\"conflict\"|\"unavailable\",draft?,error?}；草稿带baseVersion、baseHash、title、content、savedAt。按项目+章节保留当前草稿与冲突副本。",
+      "phase": 36,
+      "type": "bug",
+      "dependencies": [
+        "p36-01"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/lib/draftStore.ts",
+        "frontend/src/components/InteractiveReview.tsx",
+        "qa/collaboration/draft-recovery.spec.ts"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p36.md#p36-09",
+      "problem_ref": "A2",
+      "acceptance": "npm --prefix qa/collaboration test -- draft-recovery.spec.ts 退出0；标题单独改、正文单独改、两者同改刷新恢复；B保存新稿后A刷新显示冲突且旧内容可复制；模拟quota异常有警示；保存失败/409草稿仍在；同内容保存历史数量不变。",
+      "verify_cmd": "npm --prefix qa/collaboration test -- draft-recovery.spec.ts",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p36-10",
+      "name": "目标章数改变失效旧预览并刷新大纲",
+      "description": "本地记录 previewTargetNumber；只有 newTarget===previewTargetNumber 且未生效才启用确认。",
+      "phase": 36,
+      "type": "bug",
+      "dependencies": [
+        "p36-01"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/OutlineView.tsx",
+        "qa/collaboration/plan-preview.spec.ts"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p36.md#p36-10",
+      "problem_ref": "篇幅预览绑定",
+      "acceptance": "npm --prefix qa/collaboration test -- plan-preview.spec.ts 退出0；22预览→改20必须禁用；旧请求迟到不能恢复22预览；确认20后大纲树已裁剪，再保存总纲不会复活21+章。",
+      "verify_cmd": "npm --prefix qa/collaboration test -- plan-preview.spec.ts",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p36-11",
+      "name": "成书清单区分流程完成与作者批准",
+      "description": "DONE仅显示“正文流程完成”；没有当前身份匹配的批准记录时显示“尚未作者批准”，不推断批准。",
+      "phase": 36,
+      "type": "bug",
+      "dependencies": [
+        "p36-01"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/BookReviewView.tsx",
+        "qa/collaboration/book-state.spec.ts"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p36.md#p36-11",
+      "problem_ref": "成书批准标识",
+      "acceptance": "npm --prefix qa/collaboration test -- book-state.spec.ts 退出0；自动DONE、手工DONE、旧报告、缺报告四种响应分别渲染正确；页面不出现伪造“已批准流程完成”。",
+      "verify_cmd": "npm --prefix qa/collaboration test -- book-state.spec.ts",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p37-01",
+      "name": "持久修订候选模型与迁移",
+      "description": "RevisionProposal: id/projectId/targetType/targetId/chapterIndex/passageIndex/baseVersion/sourceHash/instructions/beforeJson/afterJson/summary/status/requestKey/resultJson/createdAt/updatedAt；status=READY|APPLIED|STALE|CANCELLED。",
+      "phase": 37,
+      "type": "feature",
+      "dependencies": [
+        "p36-02"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/domain/RevisionProposal.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
+        "src/test/java/com/writing/novel/persistence/ProposalSchemaTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p37.md#p37-01",
+      "problem_ref": "A5候选持久化",
+      "acceptance": "mvn test -Dtest=ProposalSchemaTest 退出0；重复迁移无损；嵌套JSON/换行能恢复；跨项目key隔离；APPLIED不回到READY。",
+      "verify_cmd": "mvn test -Dtest=ProposalSchemaTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p37-02",
+      "name": "候选持久存取与章节原子应用协议",
+      "description": "新增 saveProposal/findProposal/listProposals/cancelProposal；新增 commitProposalChapter(proposalId,ChapterVersion,Chapter,expectedIdentity) 返回持久result；事务包含proposal消费、saveChapterRevision语义及审批失效。",
+      "phase": 37,
+      "type": "bug",
+      "dependencies": [
+        "p37-01",
+        "p36-07"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/spi/NovelRepository.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/test/java/com/writing/novel/persistence/ProposalRepositoryTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p37.md#p37-02",
+      "problem_ref": "A5与重复应用",
+      "acceptance": "mvn test -Dtest=ProposalRepositoryTest 退出0；重建repository/连接后候选仍可读；断在正文写入与候选消费之间重试不重复；跨项目/双apply/过期候选均核实最终正文版本。",
+      "verify_cmd": "mvn test -Dtest=ProposalRepositoryTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p37-03",
+      "name": "修订服务使用持久候选和恢复查询",
+      "description": "新增 GET /revisions?targetId=&status=READY、GET /revisions/{id}、POST /revisions/{id}/cancel；preview支持requestKey，返回持久proposal及source身份。 API既有sourceVersion是字符串hash，迁移期保留别名；新sourceIdentity显式含version与contentHash，域模型baseVersion为数值，禁止混用。",
+      "phase": 37,
+      "type": "bug",
+      "dependencies": [
+        "p37-02",
+        "p37-14"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/AgentRevisionService.java",
+        "src/main/java/com/writing/novel/web/RevisionController.java",
+        "src/test/java/com/writing/novel/web/PersistentRevisionApiTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p37.md#p37-03",
+      "problem_ref": "A5",
+      "acceptance": "mvn test -Dtest=PersistentRevisionApiTest 退出0；预览→重启服务→GET→应用同候选成功；模型延迟时编辑来源，返回STALE；取消后应用409；响应丢失重试章节apply仅一版。",
+      "verify_cmd": "mvn test -Dtest=PersistentRevisionApiTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p37-04",
+      "name": "候选恢复入口与未提交意见草稿",
+      "description": "修订弹窗进入目标时查询未处理候选并显示恢复列表；instructions本地按项目+target身份暂存；正文候选内容从后端读取。",
+      "phase": 37,
+      "type": "bug",
+      "dependencies": [
+        "p36-01",
+        "p37-03",
+        "p36-09"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/api/client.ts",
+        "frontend/src/components/AgentRevisionDialog.tsx",
+        "qa/collaboration/candidate-recovery.spec.ts"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p37.md#p37-04",
+      "problem_ref": "A5",
+      "acceptance": "npm --prefix qa/collaboration test -- candidate-recovery.spec.ts 退出0；三条意见生成→刷新→恢复内容与意见；服务重启仍恢复；多个目标不串候选；已应用再次打开不会重新应用；版本冲突保留原意见。",
+      "verify_cmd": "npm --prefix qa/collaboration test -- candidate-recovery.spec.ts",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p37-05",
+      "name": "作者可读的正文与字段差异对比",
+      "description": "RevisionDiff接收targetType、before、after；章/段展示标题和正文，人物/世界/卷展示改变字段的中文名与旧新值。",
+      "phase": 37,
+      "type": "feature",
+      "dependencies": [
+        "p37-04"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/RevisionDiff.tsx",
+        "frontend/src/components/AgentRevisionDialog.tsx",
+        "qa/collaboration/revision-diff.spec.ts"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p37.md#p37-05",
+      "problem_ref": "A5内部术语",
+      "acceptance": "npm --prefix qa/collaboration test -- revision-diff.spec.ts 退出0；中文换行、引号、超长段落、空字段、只改标题均可读；DOM正文不含转义JSON；键盘可切换比较；390px无横向遮挡。",
+      "verify_cmd": "npm --prefix qa/collaboration test -- revision-diff.spec.ts",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p37-06",
+      "name": "意见范围与逐章证据模型迁移",
+      "description": "AuthorDirective新增revision、fromChapter/toChapter、enabled；内嵌Evidence(id,directiveId,directiveRevision,chapterIndex,chapterVersion,contentHash,proposalId,quote,anchor,status,reason)。status=APPLIED_SYSTEM|UNMET|CONFIRMED|STALE。",
+      "phase": 37,
+      "type": "feature",
+      "dependencies": [
+        "p37-01"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/domain/AuthorDirective.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
+        "src/test/java/com/writing/novel/persistence/DirectiveScopeMigrationTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p37.md#p37-06",
+      "problem_ref": "作者要求持续性",
+      "acceptance": "mvn test -Dtest=DirectiveScopeMigrationTest 退出0；迁移兼容旧构造/旧行；同意见多章证据不会互相覆盖；空范围、to<from、非正章号拒绝；HARD确认与enabled独立。",
+      "verify_cmd": "mvn test -Dtest=DirectiveScopeMigrationTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p37-07",
+      "name": "意见与证据版本化仓储",
+      "description": "新增 updateDirective(expectedRevision)、findApplicableDirectives(project,index)、saveDirectiveEvidence、confirmDirectiveEvidence(id,expectedIdentity,directiveRevision)。",
+      "phase": 37,
+      "type": "bug",
+      "dependencies": [
+        "p37-06"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/spi/NovelRepository.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/test/java/com/writing/novel/persistence/DirectiveEvidenceRepositoryTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p37.md#p37-07",
+      "problem_ref": "意见确认不能直接置状态",
+      "acceptance": "mvn test -Dtest=DirectiveEvidenceRepositoryTest 退出0；旧稿证据不能确认；更改意见revision后旧证据无效；跨章/项目伪证据拒绝；相同证据幂等；HARD某章确认后下一章仍适用。",
+      "verify_cmd": "mvn test -Dtest=DirectiveEvidenceRepositoryTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p37-08",
+      "name": "意见接口呈现范围、证据与显式撤销",
+      "description": "POST/PATCH directives 使用kind/fromChapter/toChapter/expectedRevision；GET 返回enabled、revision、evidence[]；POST /directives/{id}/evidence/{evidenceId}/confirm接收identity；POST /revoke必须reason。",
+      "phase": 37,
+      "type": "bug",
+      "dependencies": [
+        "p37-07"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/web/DirectiveController.java",
+        "frontend/src/api/client.ts",
+        "src/test/java/com/writing/novel/web/DirectiveVersionApiTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p37.md#p37-08",
+      "problem_ref": "意见API语义",
+      "acceptance": "mvn test -Dtest=DirectiveVersionApiTest 退出0；原POST confirm不能凭空确认OPEN；缺version/hash不被默补；范围/硬性撤销/当前证据确认和跨项目均有HTTP断言。",
+      "verify_cmd": "mvn test -Dtest=DirectiveVersionApiTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p37-09",
+      "name": "写作上下文容纳不可静默裁剪的作者要求",
+      "description": "WritingContext新增authorDirectiveSection getter/setter；toSystemPrompt在原旨后输出【作者要求】，空值保持原prompt字节不变。",
+      "phase": 37,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/memory/WritingContext.java",
+        "src/test/java/com/writing/novel/memory/DirectiveContextSectionTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p37.md#p37-09",
+      "problem_ref": "意见注入前置",
+      "acceptance": "mvn test -Dtest=DirectiveContextSectionTest 退出0；无要求时与原prompt逐字相同；有要求稳定排序且正文只出现一次；原旨不丢失。",
+      "verify_cmd": "mvn test -Dtest=DirectiveContextSectionTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p37-10",
+      "name": "生成上下文实际消费有效作者要求",
+      "description": "DirectiveContextService.select(projectId,index)使用findApplicableDirectives；render稳定按kind优先级+createdAt+id；ContextAssembler为authorDirectiveSection计入TokenBudget。",
+      "phase": 37,
+      "type": "bug",
+      "dependencies": [
+        "p37-07",
+        "p37-09"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/DirectiveContextService.java",
+        "src/main/java/com/writing/novel/memory/ContextAssembler.java",
+        "src/test/java/com/writing/novel/memory/DirectiveContextInjectionTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p37.md#p37-10",
+      "problem_ref": "意见账本未接生成",
+      "acceptance": "mvn test -Dtest=DirectiveContextInjectionTest 退出0；捕获实际LlmRequest：本章/全书/未来范围/撤销分别出现或不出现；HARD超预算请求不发送；无意见旧回放不变。",
+      "verify_cmd": "mvn test -Dtest=DirectiveContextInjectionTest",
+      "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p37-11",
+      "name": "候选模型返回逐项落实与未落实原因",
+      "description": "RevisionCandidate新增directiveResults[]，每项directiveId、directiveRevision、status=APPLIED_SYSTEM|UNMET、quote、anchor、reason；旧五字段保留；模板变量targetType/currentJson/instructions不改名。",
+      "phase": 37,
+      "type": "feature",
+      "dependencies": [
+        "p37-06"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/agent/ContentRevisionAgent.java",
+        "src/main/resources/prompts/content-revision.st",
+        "src/test/java/com/writing/novel/agent/RevisionEvidenceContractTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p37.md#p37-11",
+      "problem_ref": "A5逐项落实",
+      "acceptance": "mvn test -Dtest=RevisionEvidenceContractTest 退出0；三意见只实现两项必须第三项UNMET+原因；重复/未知ID/无证据不能APPLIED_SYSTEM；现有ContentRevisionAgent对应测试仍通过。",
+      "verify_cmd": "mvn test -Dtest=RevisionEvidenceContractTest",
+      "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p37-12",
+      "name": "候选生成与应用落实证据联动",
+      "description": "preview选取适用directive并固定revision；directiveResults嵌入proposal持久JSON；commitProposalChapter将验证通过的证据与新章、候选消费同事务保存。",
+      "phase": 37,
+      "type": "feature",
+      "dependencies": [
+        "p37-03",
+        "p37-07",
+        "p37-10",
+        "p37-11"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/AgentRevisionService.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/test/java/com/writing/novel/service/DirectiveProposalIntegrationTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p37.md#p37-12",
+      "problem_ref": "意见生成-应用-确认",
+      "acceptance": "mvn test -Dtest=DirectiveProposalIntegrationTest 退出0；三意见→预览DB无CONFIRMED/APPLIED章节证据→应用只产生实际匹配的版本证据→作者确认；编辑稿或意见变动旧证据变STALE；回滚无半套证据。",
+      "verify_cmd": "mvn test -Dtest=DirectiveProposalIntegrationTest",
+      "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p37-13",
+      "name": "意见范围编辑与证据逐项作者确认",
+      "description": "抽出DirectivePanel(projectId,currentIdentity,onChanged)，登记多条意见分别持久化；显示范围、启用状态、证据版本和逐条确认。",
+      "phase": 37,
+      "type": "feature",
+      "dependencies": [
+        "p37-08",
+        "p37-12",
+        "p36-05",
+        "p37-16"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/DirectivePanel.tsx",
+        "frontend/src/components/InteractiveReview.tsx",
+        "qa/collaboration/directive-loop.spec.ts"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p37.md#p37-13",
+      "problem_ref": "A5闭环UI",
+      "acceptance": "npm --prefix qa/collaboration test -- directive-loop.spec.ts 退出0；登记三意见→生成→应用→两个有效证据确认+一个UNMET保留；刷新不丢；旧稿确认禁用；HARD撤销留历史；390px同样可操作。",
+      "verify_cmd": "npm --prefix qa/collaboration test -- directive-loop.spec.ts",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p37-14",
+      "name": "统一修订边界接入候选原子提交",
+      "description": "ChapterRevisionService新增applyProposalInOwnedWork(projectId,proposalId)；校验/全文重组/快照创建沿用doEdit，提交切换commitProposalChapter。",
+      "phase": 37,
+      "type": "feature",
+      "dependencies": [
+        "p37-02"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/ChapterRevisionService.java",
+        "src/main/java/com/writing/novel/service/AgentRevisionService.java",
+        "src/test/java/com/writing/novel/service/ProposalRevisionBoundaryTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p37.md#p37-14",
+      "problem_ref": "候选不绕过统一修订边界",
+      "acceptance": "mvn test -Dtest=ProposalRevisionBoundaryTest 退出0；候选与手编同等500字门槛、版本快照、批准失效；派生失败网络重试不增版；段落候选任何全文变动都冲突。",
+      "verify_cmd": "mvn test -Dtest=ProposalRevisionBoundaryTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p37-15",
+      "name": "生成后作者要求核对器契约",
+      "description": "DirectiveEvidenceAgent.evaluate(chapterJson,directivesJson)返回 List<AuthorDirective.Evidence> 的候选值；经GENERAL任务类型、promptService.render(\"directive-evidence\",vars)。",
+      "phase": 37,
+      "type": "feature",
+      "dependencies": [
+        "p37-06"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/agent/DirectiveEvidenceAgent.java",
+        "src/main/resources/prompts/directive-evidence.st",
+        "src/test/java/com/writing/novel/agent/DirectiveEvidenceAgentTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p37.md#p37-15",
+      "problem_ref": "持续要求逐章落实",
+      "acceptance": "mvn test -Dtest=DirectiveEvidenceAgentTest 退出0；固定Stub响应覆盖全三项/遗漏/伪造引文/空返回；核对器失败让要求保持未验证而非已落实；禁止Agent直接调用其他Agent。",
+      "verify_cmd": "mvn test -Dtest=DirectiveEvidenceAgentTest",
+      "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p37-16",
+      "name": "章节生成完成后落库意见落实证据",
+      "description": "NovelOrchestrator在当前稿产出并完成检查后调用DirectiveEvidenceAgent；DirectiveEvidenceService只做quote/identity/revision验证及仓储证据写入。",
+      "phase": 37,
+      "type": "feature",
+      "dependencies": [
+        "p37-10",
+        "p37-15",
+        "p36-07"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+        "src/main/java/com/writing/novel/service/DirectiveEvidenceService.java",
+        "src/test/java/com/writing/novel/orchestrator/GeneratedDirectiveEvidenceTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p37.md#p37-16",
+      "problem_ref": "持续要求运行闭环",
+      "acceptance": "mvn test -Dtest=GeneratedDirectiveEvidenceTest 退出0；连写两章HARD仍注入且各自证据独立；慢核对期间作者修改，旧结果不能落实新稿；失败可重试而不重复证据；捕获额外调用成本。",
+      "verify_cmd": "mvn test -Dtest=GeneratedDirectiveEvidenceTest",
+      "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p38-01",
+      "name": "计划变更凭证与承诺处置模型",
+      "description": "PlanChange保存previewId/projectId/sourcePlanHash/target/writtenBoundary/affectedPromises[]/prunedChapters[]/createdAt/status；PromiseDecision={id,action:MIGRATE|OPEN_END,targetChapter?,reason}。",
+      "phase": 38,
+      "type": "feature",
+      "dependencies": [
+        "p36-02"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/domain/PlanChange.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
+        "src/test/java/com/writing/novel/persistence/PlanChangeSchemaTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p38.md#p38-01",
+      "problem_ref": "24→20承诺处理",
+      "acceptance": "mvn test -Dtest=PlanChangeSchemaTest 退出0；迁移幂等；预览内容持久且不可被目标输入改写；承诺用ID不靠描述匹配；跨项目不能引用。",
+      "verify_cmd": "mvn test -Dtest=PlanChangeSchemaTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p38-02",
+      "name": "篇幅与承诺处置的原子提交",
+      "description": "新增 savePlanChange/findPlanChange/commitPlanChange(previewId,sourcePlanHash,decisions,key)；结果返回target、planHash、decisionIds。",
+      "phase": 38,
+      "type": "bug",
+      "dependencies": [
+        "p38-01"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/spi/NovelRepository.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/test/java/com/writing/novel/persistence/PlanChangeRepositoryTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p38.md#p38-02",
+      "problem_ref": "篇幅确认与持久一致",
+      "acceptance": "mvn test -Dtest=PlanChangeRepositoryTest 退出0；预览22后改计划/新增章再确认旧token409；故障全部回滚；同key重试不重复审计；MIGRATE和OPEN_END落库口径不同。",
+      "verify_cmd": "mvn test -Dtest=PlanChangeRepositoryTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p38-03",
+      "name": "计划变更服务使用持久预览凭证",
+      "description": "POST /plan/target-chapters confirm=false返回previewId/sourcePlanHash/目标/影响；confirm=true必须previewId/sourcePlanHash/decisions/idempotencyKey，不接受只有target的确认。",
+      "phase": 38,
+      "type": "bug",
+      "dependencies": [
+        "p38-02"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/PlanEditionService.java",
+        "src/main/java/com/writing/novel/web/ContentController.java",
+        "src/test/java/com/writing/novel/web/PlanPreviewCommitApiTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p38.md#p38-03",
+      "problem_ref": "计划预览服务端校验",
+      "acceptance": "mvn test -Dtest=PlanPreviewCommitApiTest 退出0；HTTP复现预览22→提交20被400/409；正文边界改变409；没有处理承诺不能成功；纯预览不更改DB。",
+      "verify_cmd": "mvn test -Dtest=PlanPreviewCommitApiTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p38-04",
+      "name": "篇幅收尾的承诺逐项处置界面",
+      "description": "界面接收previewId与完整影响清单，逐个选择迁移或开放结局、输入理由；存在不可豁免mustResolve时禁用不合法选项。",
+      "phase": 38,
+      "type": "feature",
+      "dependencies": [
+        "p38-03",
+        "p36-10"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/api/client.ts",
+        "frontend/src/components/OutlineView.tsx",
+        "qa/collaboration/plan-resolution.spec.ts"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p38.md#p38-04",
+      "problem_ref": "24→20完整工作流",
+      "acceptance": "npm --prefix qa/collaboration test -- plan-resolution.spec.ts 退出0；合成24章计划写20章，22-24有未回收承诺：迁移一条+接受开放一条→确认20→刷新仍20；没有新增21章；处置审计可重读。",
+      "verify_cmd": "npm --prefix qa/collaboration test -- plan-resolution.spec.ts",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p38-05",
+      "name": "不可变成书版本模型与存储结构",
+      "description": "BookEdition含editionId/projectId/manifestHash/state=DRAFT|APPROVED/createdAt/approvedAt；manifest逐章保存identity、title、正文副本、报告身份、作者批准ID、计划版本、承诺决定。",
+      "phase": 38,
+      "type": "feature",
+      "dependencies": [
+        "p36-02"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/domain/BookEdition.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
+        "src/test/java/com/writing/novel/persistence/BookEditionSchemaTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p38.md#p38-05",
+      "problem_ref": "成书固定版本",
+      "acceptance": "mvn test -Dtest=BookEditionSchemaTest 退出0；多章快照顺序确定；正文换行保持；同标题不同版本hash不同；两次schema初始化不损坏既有edition。",
+      "verify_cmd": "mvn test -Dtest=BookEditionSchemaTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p38-06",
+      "name": "成书快照创建与批准原子性",
+      "description": "新增 createBookEdition(projectId,key)、findBookEdition、listBookEditions、approveBookEdition(editionId,manifestHash,key)。",
+      "phase": 38,
+      "type": "feature",
+      "dependencies": [
+        "p38-05",
+        "p36-03",
+        "p38-02",
+        "p38-10"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/spi/NovelRepository.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/test/java/com/writing/novel/persistence/BookEditionRepositoryTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p38.md#p38-06",
+      "problem_ref": "成书批准版本一致",
+      "acceptance": "mvn test -Dtest=BookEditionRepositoryTest 退出0；并发编辑创建不得混合两代正文；批准前改一章拒绝；崩溃回滚不产生半本书；批准后再改正文，历史edition字节不变。",
+      "verify_cmd": "mvn test -Dtest=BookEditionRepositoryTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p38-07",
+      "name": "成书覆盖、批准与指定版本导出接口",
+      "description": "POST/GET /book-editions；GET /book-editions/{editionId}；POST /{editionId}/approve {manifestHash,idempotencyKey}；GET /{editionId}/export?format=markdown。",
+      "phase": 38,
+      "type": "feature",
+      "dependencies": [
+        "p38-06",
+        "p38-10",
+        "p38-13"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/BookEditionService.java",
+        "src/main/java/com/writing/novel/web/BookEditionController.java",
+        "src/test/java/com/writing/novel/web/BookEditionExportTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p38.md#p38-07",
+      "problem_ref": "成书导出",
+      "acceptance": "mvn test -Dtest=BookEditionExportTest 退出0；批准版导出章节号、版本、正文hash与manifest逐项相等；后来编辑不改变导出；跨项目404/400；未批准不能冒用成书导出；下载响应头正确。",
+      "verify_cmd": "mvn test -Dtest=BookEditionExportTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p38-08",
+      "name": "成书版本选择、覆盖阻塞与下载界面",
+      "description": "页面区分当前稿检查与成书版本列表，显示editionId简短标识/创建时间/状态/章节版本；批准操作发送manifestHash。",
+      "phase": 38,
+      "type": "feature",
+      "dependencies": [
+        "p38-07",
+        "p36-11"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/api/client.ts",
+        "frontend/src/components/BookReviewView.tsx",
+        "qa/collaboration/edition-export.spec.ts"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p38.md#p38-08",
+      "problem_ref": "成书批准UI",
+      "acceptance": "npm --prefix qa/collaboration test -- edition-export.spec.ts 退出0；补齐各章批准→创建edition→批准→下载→修改一章→下载旧edition逐字相同；当前稿缺批准明显标注；390px可操作。",
+      "verify_cmd": "npm --prefix qa/collaboration test -- edition-export.spec.ts",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p38-09",
+      "name": "版本绑定的问题裁决与豁免模型",
+      "description": "ReviewDisposition含id/projectId/issueId/issueFingerprint/identity/action=FALSE_POSITIVE|EXCEPTION|DEFER/理由/deferUntilChapter/createdAt；原问题不删除。",
+      "phase": 38,
+      "type": "feature",
+      "dependencies": [
+        "p36-02",
+        "p37-06"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/domain/ReviewDisposition.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
+        "src/test/java/com/writing/novel/persistence/DispositionSchemaTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p38.md#p38-09",
+      "problem_ref": "误报/例外/延期",
+      "acceptance": "mvn test -Dtest=DispositionSchemaTest 退出0；缺理由拒绝，DEFER缺期限拒绝；同一句描述两个问题不混淆；旧稿裁决不自动有效；迁移幂等。",
+      "verify_cmd": "mvn test -Dtest=DispositionSchemaTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p38-10",
+      "name": "问题裁决存取与批准门禁统一计算",
+      "description": "新增 saveDisposition(expectedReviewSetHash)/listDispositions；readReviewContext提供问题证据及裁决、未落实HARD；approveChapter/approveBookEdition共同采用这些资格约束。",
+      "phase": 38,
+      "type": "feature",
+      "dependencies": [
+        "p38-09",
+        "p37-07",
+        "p36-03"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/spi/NovelRepository.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/test/java/com/writing/novel/persistence/DispositionApprovalGateTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p38.md#p38-10",
+      "problem_ref": "审查裁决与门禁",
+      "acceptance": "mvn test -Dtest=DispositionApprovalGateTest 退出0；旧裁决、过期DEFER、无当前报告、未落实HARD分别阻断；新裁决后旧审阅token409；人工例外留痕且能按明确规则放行；成书仍拒绝延期未清。",
+      "verify_cmd": "mvn test -Dtest=DispositionApprovalGateTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p38-11",
+      "name": "问题裁决接口与按当前稿重新检查",
+      "description": "POST /chapters/{n}/review-dispositions携identity/reviewSetHash/issueId/action/reason/deferUntilChapter；POST /chapters/{n}/recheck携identity，返回任务状态。",
+      "phase": 38,
+      "type": "feature",
+      "dependencies": [
+        "p38-10",
+        "p36-04"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/web/ReviewDecisionController.java",
+        "frontend/src/api/client.ts",
+        "src/test/java/com/writing/novel/web/ReviewDispositionApiTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p38.md#p38-11",
+      "problem_ref": "A3裁决闭环",
+      "acceptance": "mvn test -Dtest=ReviewDispositionApiTest 退出0；HTTP逐种裁决成功/缺字段/旧稿409；检查期间新稿产生后报告不冒充新稿；网络重试不创建多份裁决。",
+      "verify_cmd": "mvn test -Dtest=ReviewDispositionApiTest",
+      "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p38-12",
+      "name": "桌面与窄屏共享完整审查操作",
+      "description": "ReviewPanel(projectId,chapterIdentity,onChanged)同时用于桌面栏与Drawer，包含报告有效性、问题证据、裁决、重检、DirectivePanel、批准。",
+      "phase": 38,
+      "type": "feature",
+      "dependencies": [
+        "p38-11",
+        "p37-13",
+        "p36-05"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/ReviewPanel.tsx",
+        "frontend/src/components/InteractiveReview.tsx",
+        "qa/collaboration/review-dispositions.spec.ts"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p38.md#p38-12",
+      "problem_ref": "A6完整闭环",
+      "acceptance": "npm --prefix qa/collaboration test -- review-dispositions.spec.ts 退出0；相同数据桌面与390px问题数/动作一致；Tab/Enter完成误报、例外、延期及确认；旧稿不能裁决当前；抽屉内可看到意见落实和错误重试；截图无截断遮挡。",
+      "verify_cmd": "npm --prefix qa/collaboration test -- review-dispositions.spec.ts",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p38-13",
+      "name": "成书门禁与承诺处置采用同一规则",
+      "description": "EndingDecisionPolicy.evaluate(projectId,targetChapter)返回blockingPromises、acceptedOpenEndings、deferredItems；NovelOrchestrator.finalAudit和自动尾声补写采用它。",
+      "phase": 38,
+      "type": "feature",
+      "dependencies": [
+        "p38-02",
+        "p38-10"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/EndingDecisionPolicy.java",
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+        "src/test/java/com/writing/novel/orchestrator/EndingDecisionIntegrationTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p38.md#p38-13",
+      "problem_ref": "计划收尾与最终审查一致",
+      "acceptance": "mvn test -Dtest=EndingDecisionIntegrationTest 退出0；24→20后open-end不追加尾声，未处置mustResolve仍阻塞；迁移到20但原文未兑现不能PASS；延期问题未清成书阻塞。",
+      "verify_cmd": "mvn test -Dtest=EndingDecisionIntegrationTest",
+      "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p39-01",
+      "name": "事实来源锚点与知情区间模型",
+      "description": "FactEvidence含factId/sourceIdentity/quote/paragraphIndex/anchorHash/validFromChapter/validToChapter/observers[]，observer={characterId,learnedAtChapter,sourceIdentity,quote}；缺证据记UNKNOWN。",
+      "phase": 39,
+      "type": "feature",
+      "dependencies": [
+        "p36-02"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/domain/FactEvidence.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
+        "src/test/java/com/writing/novel/persistence/FactEvidenceSchemaTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-01",
+      "problem_ref": "事实来源/时间线/知识边界",
+      "acceptance": "mvn test -Dtest=FactEvidenceSchemaTest 退出0；旧事实迁移不产生伪造来源；多人在不同章知情分别记录；区间边界合理；历史版正文不存在时保留缺失状态。",
+      "verify_cmd": "mvn test -Dtest=FactEvidenceSchemaTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p39-02",
+      "name": "事实证据仓储与历史时点查询",
+      "description": "StoryCanon新增saveEvidence/findEvidence/findFactsAsOf(projectId,chapterIndex,characterId可空)。SqliteStoryCanon经现有连接设施访问fact_evidence，业务层不碰SQL。",
+      "phase": 39,
+      "type": "feature",
+      "dependencies": [
+        "p39-01",
+        "p39-10"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/spi/StoryCanon.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteStoryCanon.java",
+        "src/test/java/com/writing/novel/persistence/FactEvidenceRepositoryTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-02",
+      "problem_ref": "知识时点查询",
+      "acceptance": "mvn test -Dtest=FactEvidenceRepositoryTest 退出0；第7章被第10章替换的事实在asOf7仍为旧事实，asOf10为新事实；角色第9章才知情则asOf7不显示为已知；跨项目无泄漏。",
+      "verify_cmd": "mvn test -Dtest=FactEvidenceRepositoryTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p39-03",
+      "name": "收割实际来源与人审补证据接口",
+      "description": "GET /facts/evidence?asOfChapter=N&characterId=；POST /facts/{factId}/evidence携sourceIdentity、quote、observers。",
+      "phase": 39,
+      "type": "feature",
+      "dependencies": [
+        "p39-02"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/agent/FactHarvesterAgent.java",
+        "src/main/java/com/writing/novel/web/FactEvidenceController.java",
+        "src/test/java/com/writing/novel/web/FactEvidenceCaptureTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-03",
+      "problem_ref": "来源可验证",
+      "acceptance": "mvn test -Dtest=FactEvidenceCaptureTest 退出0；收割v3事实来源不是默认v0；非法quote/项目/稿号拒绝；已替换稿保留原来源；无锚点如实展示UNKNOWN。",
+      "verify_cmd": "mvn test -Dtest=FactEvidenceCaptureTest",
+      "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p39-04",
+      "name": "人物与设定修改影响预览及安全提交",
+      "description": "修改前构建影响结果{sourceHash,affectedChapterIdentities,affectedFacts,affectedPromises,confidence,limitations}；手改与Agent候选同一影响计算，确认提交绑定sourceHash。",
+      "phase": 39,
+      "type": "feature",
+      "dependencies": [
+        "p37-03",
+        "p39-02",
+        "p39-07",
+        "p39-08"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/CanonPatchService.java",
+        "src/main/java/com/writing/novel/service/AgentRevisionService.java",
+        "src/test/java/com/writing/novel/service/CharacterImpactPreviewTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-04",
+      "problem_ref": "人物修改影响预览",
+      "acceptance": "mvn test -Dtest=CharacterImpactPreviewTest 退出0；人物动机修改可列已引用章并区分已写/未写；预览不改真典；确认时来源变化409；应用后原章正文hash不变；重复候选不会重复审计。",
+      "verify_cmd": "mvn test -Dtest=CharacterImpactPreviewTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p39-05",
+      "name": "来源跳转、时间线与人物知识界面",
+      "description": "api.getFactEvidence返回来源身份与时点信息；世界人物页提供截至第N章、人物知情筛选、事实原文跳转到章节历史稿。",
+      "phase": 39,
+      "type": "feature",
+      "dependencies": [
+        "p39-03",
+        "p36-08"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/api/client.ts",
+        "frontend/src/components/WorldbuildingView.tsx",
+        "qa/collaboration/fact-evidence.spec.ts"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-05",
+      "problem_ref": "事实界面入口",
+      "acceptance": "npm --prefix qa/collaboration test -- fact-evidence.spec.ts 退出0；asOf7/10切换事实替换正确；角色9章知情不提前泄露；来源指向v2时不得显示v6冒用；键盘完成筛选/返回。",
+      "verify_cmd": "npm --prefix qa/collaboration test -- fact-evidence.spec.ts",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p39-06",
+      "name": "人物修改影响确认界面",
+      "description": "使用p39-09的previewCanonPatch/confirmCanonPatch；世界人物手改与Agent候选显示相同影响清单，确认必须携sourceHash。",
+      "phase": 39,
+      "type": "feature",
+      "dependencies": [
+        "p39-04",
+        "p37-05",
+        "p39-09"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/WorldbuildingView.tsx",
+        "frontend/src/components/AgentRevisionDialog.tsx",
+        "qa/collaboration/character-impact.spec.ts"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-06",
+      "problem_ref": "人物修改完整界面",
+      "acceptance": "npm --prefix qa/collaboration test -- character-impact.spec.ts 退出0；修改动机→影响预览→取消无DB变化→确认只更新设定不改正文；两个窗口来源变动409保留表单；无可追踪引用时明确覆盖不足。",
+      "verify_cmd": "npm --prefix qa/collaboration test -- character-impact.spec.ts",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p39-07",
+      "name": "世界人物候选与真典原子幂等提交",
+      "description": "StoryCanon新增commitCanonProposal(projectId,proposalId,sourceHash)；同DB事务写人物/世界对象、HUMAN_PATCH真典/审计与proposal结果，返回持久result。",
+      "phase": 39,
+      "type": "feature",
+      "dependencies": [
+        "p37-02",
+        "p39-02"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/spi/StoryCanon.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteStoryCanon.java",
+        "src/test/java/com/writing/novel/persistence/CanonProposalCommitTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-07",
+      "problem_ref": "非章节候选重启与一致性",
+      "acceptance": "mvn test -Dtest=CanonProposalCommitTest 退出0；写角色后写真典前故障全回滚；双apply只有一份修改/审计；重启后APPLIED返回原结果；旧事实保护期及原有StoryCanon契约仍通过。",
+      "verify_cmd": "mvn test -Dtest=CanonProposalCommitTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p39-08",
+      "name": "卷候选与结构来源比较提交",
+      "description": "commitVolumeProposal(projectId,proposalId,sourceHash)同事务更新未写卷允许字段与候选消费；sourceHash覆盖卷身份、章纲身份及已写边界。",
+      "phase": 39,
+      "type": "feature",
+      "dependencies": [
+        "p37-02"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/spi/NovelRepository.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/test/java/com/writing/novel/persistence/VolumeProposalCommitTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-08",
+      "problem_ref": "卷候选与计划一致",
+      "acceptance": "mvn test -Dtest=VolumeProposalCommitTest 退出0；候选生成后裁剪目标/新增已写章再apply409；并发应用及重启不会重复修改；不得改chapterIndex/id结构。",
+      "verify_cmd": "mvn test -Dtest=VolumeProposalCommitTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p39-09",
+      "name": "设定影响预览接口与前端请求契约",
+      "dependencies": [
+        "p39-04"
+      ],
+      "files": [
+        "src/main/java/com/writing/novel/web/ContentController.java",
+        "frontend/src/api/client.ts",
+        "src/test/java/com/writing/novel/web/CanonImpactApiTest.java"
+      ],
+      "description": "人物/世界更新API新增confirm=false影响预览与confirm=true来源校验；client增加previewCanonPatch/confirmCanonPatch并提供typed response。",
+      "acceptance": "mvn test -Dtest=CanonImpactApiTest 退出0；预览不写入；确认缺sourceHash拒绝；来源改变409；跨项目拒绝；确认返回持久proposal结果及影响清单。",
+      "verify_cmd": "mvn test -Dtest=CanonImpactApiTest",
+      "problem_ref": "人物影响API与UI衔接",
+      "phase": 39,
+      "type": "feature",
+      "status": "not-started",
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-09",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现或执行专项。"
+    },
+    {
+      "id": "p39-10",
+      "name": "真典持久层暴露同连接事务辅助方法",
+      "dependencies": [
+        "p39-01"
+      ],
+      "files": [
+        "src/main/java/com/writing/novel/persistence/sqlite/StoryFactRepository.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteStoryCanon.java",
+        "src/test/java/com/writing/novel/persistence/StoryCanonConnectionTest.java"
+      ],
+      "description": "StoryFactRepository新增包内read(Function<Connection,T>)/runInTransaction(Function<Connection,T>)/save(Connection,StoryFact)/supersede(Connection,old,new)，现有public构造与方法保留兼容。",
+      "acceptance": "mvn test -Dtest=StoryCanonConnectionTest 退出0；同一事务组合save/supersede异常时全回滚；连接数断言为1；原单参SqliteStoryCanon构造及StoryCanon契约通过。",
+      "verify_cmd": "mvn test -Dtest=StoryCanonConnectionTest",
+      "problem_ref": "事实证据与原子真典提交前置",
+      "phase": 39,
+      "type": "feature",
+      "status": "not-started",
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-10",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现或执行专项。"
+    },
+    {
+      "id": "p40-01",
+      "name": "不可取消慢模型与接手晚写入专项",
+      "description": "使用CountDownLatch控制本地StubLlmGateway返回，不sleep赌时序；模拟stop请求、旧worker、作者保存、旧结果晚到、服务重启候选恢复。",
+      "phase": 40,
+      "type": "feature",
+      "dependencies": [
+        "p36-07",
+        "p37-03"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/test/java/com/writing/novel/service/TakeoverLateCommitTest.java",
+        "src/test/java/com/writing/novel/service/ProposalRestartRecoveryTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-01",
+      "problem_ref": "原报告未测慢任务/重启",
+      "acceptance": "mvn test -Dtest=TakeoverLateCommitTest,ProposalRestartRecoveryTest 退出0；旧结果绝不覆盖作者新稿；旧任务释放不能释放新owner；重启后READY可恢复，APPLIED不重复；报告各断点期望数据库最终状态。",
+      "verify_cmd": "mvn test -Dtest=TakeoverLateCommitTest,ProposalRestartRecoveryTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p40-02",
+      "name": "运行详情端点说明实际步骤与失败位置",
+      "description": "GET /api/projects/{id}/run-details?taskId= 返回taskId/status/currentStep/startedAt/elapsedMs/steps[]/lastError/eventCoverage；仅提供已存在事件证据。",
+      "phase": 40,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/web/RunDetailsController.java",
+        "src/main/java/com/writing/novel/service/RunDetailsService.java",
+        "src/test/java/com/writing/novel/web/RunDetailsApiTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-02",
+      "problem_ref": "运行详情与失败定位",
+      "acceptance": "mvn test -Dtest=RunDetailsApiTest 退出0；构思模型调用前NPE也能从任务失败状态显示；阶段运行/重试/失败/成功区别；无事件覆盖UNKNOWN；错误脱敏断言。",
+      "verify_cmd": "mvn test -Dtest=RunDetailsApiTest",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p40-03",
+      "name": "运行进度、重试与作者术语界面",
+      "description": "状态栏展开运行详情显示真实步骤/耗时/错误原因/可用动作；失败重试是明确用户操作，不能后台反复消耗模型。",
+      "phase": 40,
+      "type": "feature",
+      "dependencies": [
+        "p40-02",
+        "p36-01"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/api/client.ts",
+        "frontend/src/components/CollaborationBar.tsx",
+        "qa/collaboration/run-details.spec.ts"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-03",
+      "problem_ref": "运行状态与错误恢复",
+      "acceptance": "npm --prefix qa/collaboration test -- run-details.spec.ts 退出0；断网/恢复、失败重试、不可取消任务等待、无事件四场景可操作；没有状态无依据地跳成功；390px及键盘可读。",
+      "verify_cmd": "npm --prefix qa/collaboration test -- run-details.spec.ts",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p40-04",
+      "name": "两题材盲评与作者负担实验协议",
+      "description": "实验CSV固定字段pairId/chapterIndex/genre/conditionBlind/reviewerId/dimension/score/reviewSeconds/actions/issuePrecision/seriousContinuityErrors；模型配置与baselineCommit另存脱敏manifest，映射揭盲前冻结。",
+      "phase": 40,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "docs/experiments/collaboration-quality-protocol.md",
+        "scripts/evaluate-collaboration-study.py",
+        "scripts/test_evaluate_collaboration_study.py"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-04",
+      "problem_ref": "P4文学实验未验证",
+      "acceptance": "python3 scripts/test_evaluate_collaboration_study.py 退出0；脚本对缺章/少题材/重复评委/越界分数拒绝给PASS；合成CSV只验证计算，不能当文学结论。预注册目标：质量均差不低于-0.2、审阅时间中位数下降≥20%、严重连续性错误不增加，另展示CI不隐去不确定性。",
+      "verify_cmd": "python3 scripts/test_evaluate_collaboration_study.py",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p40-05",
+      "name": "全链路独立验收与覆盖报告",
+      "description": "验收状态逐项PASS|FAIL|NOT_RUN；输出所验commit/环境/viewport/fixture/每用例动作结果/下载hash/限制；程序通过不自动把文学实验设PASS。",
+      "phase": 40,
+      "type": "feature",
+      "dependencies": [
+        "p36-06",
+        "p36-07",
+        "p36-08",
+        "p36-09",
+        "p37-13",
+        "p38-04",
+        "p38-08",
+        "p38-12",
+        "p39-05",
+        "p39-06",
+        "p40-01",
+        "p40-03",
+        "p40-04",
+        "p40-06"
+      ],
+      "status": "not-started",
+      "files": [
+        "qa/collaboration/collaboration-acceptance.spec.ts",
+        "scripts/verify-collaboration-acceptance.sh",
+        "docs/reports/collaboration-acceptance-checklist.md"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-05",
+      "problem_ref": "原报告完整验收",
+      "acceptance": "bash scripts/verify-collaboration-acceptance.sh 退出0；任一关键功能未跑或失败退出非零；两窗口旧稿批准必需409；导出每章hash完全匹配manifest；所有原报告缺口映射到具体结果；文学缺证据单列INCOMPLETE。",
+      "verify_cmd": "bash scripts/verify-collaboration-acceptance.sh",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p40-06",
+      "name": "实际执行两题材20章盲评和审阅负担实验",
+      "description": "按p40-04冻结协议后运行真实基线/修复版本，匿名成对样本给3位独立读者；manifest记录两个commit、模型配置摘要、样本hash、随机种子与揭盲时间。",
+      "phase": 40,
+      "type": "feature",
+      "dependencies": [
+        "p40-04",
+        "p37-16",
+        "p38-08",
+        "p39-06",
+        "p40-03"
+      ],
+      "status": "not-started",
+      "files": [
+        "docs/experiments/collaboration-study-manifest.json",
+        "docs/experiments/collaboration-study-ratings.csv",
+        "docs/reports/collaboration-study-results.md"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-06",
+      "problem_ref": "P4实际实验",
+      "acceptance": "python3 scripts/evaluate-collaboration-study.py --manifest docs/experiments/collaboration-study-manifest.json --ratings docs/experiments/collaboration-study-ratings.csv --require-complete 退出0；每题材两条件各20章与每章至少3份独立有效评分完整；分析脚本质量不劣阈值、耗时改善和严重错误约束均通过才PASS；失败登记新问题，不能bless覆盖。",
+      "verify_cmd": "python3 scripts/evaluate-collaboration-study.py --manifest docs/experiments/collaboration-study-manifest.json --ratings docs/experiments/collaboration-study-ratings.csv --require-complete",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p36-12",
+      "name": "迁移批准守卫和真实并发回归",
+      "description": "成功批准、写作中冲突、非待审状态冲突改用GET review-context和POST review-decisions；并发请求使用同一identity但不同idempotencyKey，严格断言恰好一个200、一个409，异常或500必须失败；相同key重试另测200且replayed=true。旧的仅重绑屏障测试改名如实描述，并补上A读v2→正式PUT生成v3→A真实POST旧identity得到409的用例，不使用反射伪造版本。ChapterDirectEditTest保留旧modify拒绝测试，同时用新版批准验证工作权冲突，避免旧入口永久409后该测试空转。",
+      "phase": 36,
+      "type": "feature",
+      "dependencies": [
+        "p36-04",
+        "p36-07"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/test/java/com/writing/novel/web/ManualReviewResolutionTest.java",
+        "src/test/java/com/writing/novel/web/ResolveReviewConcurrencyTest.java",
+        "src/test/java/com/writing/novel/web/ChapterDirectEditTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p36.md#p36-12",
+      "problem_ref": "A4旧测试覆盖缺口与接口迁移",
+      "acceptance": "mvn test -Dtest=ManualReviewResolutionTest,ResolveReviewConcurrencyTest,ChapterDirectEditTest 退出0；原业务断言保持，新版批准实际HTTP请求覆盖通过；无忽略、删除或放宽断言。并发状态严格200/409，旧身份409且新稿仍待审。",
+      "verify_cmd": "mvn test -Dtest=ManualReviewResolutionTest,ResolveReviewConcurrencyTest,ChapterDirectEditTest",
+      "quality_gate": "测试迁移；全量编译测试，不修改业务或质量基线",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+    },
+    {
+      "id": "p36-13",
+      "name": "迁移屏障恢复与工作台批准回归",
+      "description": "将成功章节批准准备步骤改成读取review-context后提交明确identity、reviewSetHash和每次新的idempotencyKey；保留原有真典/伏笔、人审阻止下一章、批准后恢复写作、持久屏障与工作台状态断言。初始设定/卷计划checkpoint继续原流程。不得直接在仓储写DONE或删除屏障来绕过批准接口；每个成功批准后验证批准记录identity与被读章节一致。",
+      "phase": 36,
+      "type": "feature",
+      "dependencies": [
+        "p36-04",
+        "p36-07"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/test/java/com/writing/novel/web/HitlCanonForeshadowReviewTest.java",
+        "src/test/java/com/writing/novel/web/ReviewBarrierGateTest.java",
+        "src/test/java/com/writing/novel/web/WorkspaceStatusApiTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p36.md#p36-13",
+      "problem_ref": "A4旧测试覆盖缺口与接口迁移",
+      "acceptance": "mvn test -Dtest=HitlCanonForeshadowReviewTest,ReviewBarrierGateTest,WorkspaceStatusApiTest 退出0；原业务断言保持，新版批准实际HTTP请求覆盖通过；无忽略、删除或放宽断言。批准前不能续写，批准后屏障和工作台一致并恢复写作。",
+      "verify_cmd": "mvn test -Dtest=HitlCanonForeshadowReviewTest,ReviewBarrierGateTest,WorkspaceStatusApiTest",
+      "quality_gate": "测试迁移；全量编译测试，不修改业务或质量基线",
+      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
     }
   ],
   "schema_version": 2,
-  "updated_at": "2026-09-12",
+  "updated_at": "2026-09-13",
   "active_feature": null
 }

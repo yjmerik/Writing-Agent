@@ -1,25 +1,29 @@
-# Phase35 协作 UI 闭环与并发专项完成（5/5） — 2026-09-12
+# 协作修复方案已登记（未实施） — 2026-09-13
 
-Last Updated: 2026-09-12
+Last Updated: 2026-09-13
 
-## Current（当前）
+## Current
 
-按《2026-09-12 界面验收报告》交付缺口完成 Phase35 全部 5 个 feature 并合入 main：p35-01 意见面板接入三栏（e6b5723）、p35-02 候选线索管理界面（730f6d3）、p35-03 篇幅调整影响预览 UI（8a49e84）、p35-04 并发放行 CAS 专项（becfd16）、p35-05 成书审查页与 Markdown 导出（ce5d07f）。feature_list 261 项全部 completed；active_feature=null；main=本轮 docs 提交。工作区干净。
+复验main b1c8289发现旧窗口可放行新稿等遗留问题；新增Phase36–40共58个not-started feature，261个历史completed保留，合计319项。active_feature=null。current_phase=40表示最高已登记阶段，不表示已实施。
 
-## Files（文件与证据）
+本轮只做设计、脱敏复验记录、backlog与交接维护，不修改业务代码。文档分支codex/docs-collaboration-repair-plan-20260912。
 
-状态源 [feature_list.json](feature_list.json)；完成索引 [docs/harness/completions.json](docs/harness/completions.json)（p35 系 5 条 verified）；证据 docs/harness/evidence/p35-0*-p35.json；spec [docs/specs/2026-09-12-collab-ui-closure.md](docs/specs/2026-09-12-collab-ui-closure.md)。
+## Files
 
-## Verification（验证）
+- docs/specs/2026-09-12-collaboration-repair-program.md：总契约、迁移、API与验收矩阵。
+- docs/superpowers/plans/2026-09-12-collaboration-repair-entry.md：外部工具唯一执行入口。
+- docs/superpowers/plans/2026-09-12-collaboration-repair-p36.md 至 p40.md：逐项实现/验证步骤。
+- docs/reports/2026-09-12-collaboration-ui-reverification.md：不依赖个人目录的复验事实。
+- feature_list.json：每项files/dependencies/acceptance/verify_cmd/execution_plan/quality_gate。
 
-- p35-04 先 RED（rebind 返回 0 归因惰性补建时序）→ GREEN；并发放行恰好一方成功。
-- p35-05 先 RED（totalWords 口径误设）→ GREEN；覆盖清单含各章稿号/状态/评级/旧稿标记与未回收承诺。
-- 三个 UI verify 脚本静态校验 PASS；npm build 通过；干净 main mvn test 736/0失败/1跳过；check-harness --check-git PASS。
+## Verification
 
-## Blockers（阻塞与限制）
+本轮设计基线./init.sh通过：736 tests / 0 failures / 0 errors / 1 skipped，前端构建通过。新规划专项尚未实现或执行，不能引用此全量结果为58项完成证据。文档最终验证与提交信息见docs/harness/evidence/2026-09-12-collaboration-repair-plan.md。
 
-未推送远端。p35-01/04/05 存在提交直接落 main 的分支管理偏差（历史线性、全量验证通过、证据如实记录）。不可变成书快照（BookEdition 持久化）与 P4 文学实验留后续 spec。
+## Blockers
 
-## Next Steps（下一步）
+无新增业务实现。当前产品仍有高优先级旧稿批准漏洞，详见复验；测试绿不代表完整验收通过。真实文学实验、真实模型录制与质量bless需在执行会话按授权和人工评审完成。
 
-./init.sh 恢复（mvn 需 bash -c 'source scripts/load-env.sh && mvn ...'）。候选：成书快照持久化与版本化导出；意见/候选面板的 e2e 交互冒烟；真机 390px 复验。
+## Next Steps
+
+获得实现授权后优先p36-02→03→04→07，再p36-01→05，p36-12/13迁移测试后→06关闭旧入口；其余按dependencies逐个闭环。外部工具先读执行入口、AGENTS.md和feature_list；保留原有未跟踪内容，不推送远端。

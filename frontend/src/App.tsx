@@ -19,6 +19,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<ProjectListPage />} />
             <Route path="/project/:id" element={<ProjectWorkspace />} />
+            <Route path="/project/:id/chapter/:chapterIndex" element={<ProjectWorkspace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Content>

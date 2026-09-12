@@ -30,6 +30,9 @@ const STATE_COLOR: Record<string, string> = {
 
 export default function ProjectWorkspace() {
   const { id } = useParams<{ id: string }>();
+  // p34-05: 深链接恢复章节定位（#/project/:id/chapter/:n）
+  const params = useParams<{ id: string; chapterIndex?: string }>();
+  const routeChapter = params.chapterIndex ? Number(params.chapterIndex) : undefined;
   const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,7 +40,7 @@ export default function ProjectWorkspace() {
   const [prefs, setPrefs] = useState<Record<string, unknown> | null>(null);
   const [refreshSignal, setRefreshSignal] = useState(0);
   // p33-04: 待办直达——状态栏待审按钮聚焦到指定章节
-  const [focusChapter, setFocusChapter] = useState<number | undefined>(undefined);
+  const [focusChapter, setFocusChapter] = useState<number | undefined>(routeChapter);
   const [chatMsg, setChatMsg] = useState('');
   const [chatReply, setChatReply] = useState('');
   const [chatting, setChatting] = useState(false);
@@ -251,7 +254,8 @@ export default function ProjectWorkspace() {
 
       <Content style={{ padding: narrowLayout ? '52px 0 0' : '0 16px', minWidth: 0, width: '100%' }}>
         <CollaborationBar projectId={project.id} onChanged={load} onReview={() => setActiveTab('review')}
-          onSelectChapter={(chapterIndex) => { setActiveTab('review'); setFocusChapter(chapterIndex); }} />
+          onSelectChapter={(chapterIndex) => { setActiveTab('review'); setFocusChapter(chapterIndex);
+            navigate(`/project/${id}/chapter/${chapterIndex}`, { replace: true }); }} />
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}

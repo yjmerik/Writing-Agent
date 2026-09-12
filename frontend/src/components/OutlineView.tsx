@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Tree, Spin, Empty, Card, Typography, Button, Space, Input, message } from 'antd';
+import { Tree, Spin, Empty, Card, Typography, Button, Space, Input, InputNumber, Alert, message } from 'antd';
 import {
   DeleteOutlined,
   DownOutlined,
@@ -8,6 +8,7 @@ import {
   SaveOutlined,
   UpOutlined,
 } from '@ant-design/icons';
+import type { PlanTargetPreview } from '../api/client';
 import type { DataNode } from 'antd/es/tree';
 import { api } from '../api/client';
 import type { AgentRevisionTarget } from '../api/client';
@@ -30,6 +31,27 @@ const cloneOutline = (outline: Outline): Outline => ({
 });
 
 export default function OutlineView({ projectId, currentChapter = 0 }: { projectId: string; currentChapter?: number }) {
+  // p35-03: 篇幅调整与影响预览
+  const [newTarget, setNewTarget] = useState<number | ''>('');
+  const [targetPreview, setTargetPreview] = useState<PlanTargetPreview | null>(null);
+  const [targetBusy, setTargetBusy] = useState(false);
+  const previewTarget = async () => {
+    if (newTarget === '' || Number(newTarget) < 1) return;
+    setTargetBusy(true);
+    try { setTargetPreview(await api.getPlanTargetPreview(projectId, Number(newTarget))); }
+    catch (err) { message.error((err as Error).message); }
+    finally { setTargetBusy(false); }
+  };
+  const applyTarget = async () => {
+    if (newTarget === '' || Number(newTarget) < 1) return;
+    setTargetBusy(true);
+    try {
+      const result = await api.applyPlanTarget(projectId, Number(newTarget));
+      setTargetPreview(result);
+      message.success('目标章数已更新为 ' + result.targetChapters + '，大纲已裁剪');
+    } catch (err) { message.error((err as Error).message); }
+    finally { setTargetBusy(false); }
+  };
   const [persistedOutline, setPersistedOutline] = useState<Outline | null>(null);
   const [draft, setDraft] = useState<Outline | null>(null);
   const [loading, setLoading] = useState(true);
@@ -202,6 +224,37 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
 
   return (
     <Card>
+      <Card size="small" style={{ marginBottom: 16 }} title="📐 篇幅与计划">
+        <Space wrap style={{ marginBottom: 8 }}>
+          <InputNumber min={1} placeholder="目标章数" value={newTarget}
+            onChange={v => setNewTarget(v ?? '')} style={{ width: 140 }} />
+          <Button onClick={() => void previewTarget()} loading={targetBusy}>影响预览</Button>
+          <Button type="primary" disabled={!targetPreview || targetPreview.applied}
+            loading={targetBusy} onClick={() => void applyTarget()}>确认生效</Button>
+        </Space>
+        {targetPreview && (
+          <Alert
+            type={targetPreview.applied ? 'success' : 'warning'}
+            showIcon
+            message={targetPreview.applied
+              ? '已生效：目标 ' + targetPreview.targetChapters + ' 章（原 ' + targetPreview.preview.oldTarget + '），已裁剪 ' + targetPreview.preview.prunedChapters.length + ' 章'
+              : '影响预览：将裁剪 ' + targetPreview.preview.prunedChapters.length + ' 章（已写 ' + targetPreview.preview.writtenChapters + ' 章保留）'}
+            description={(
+              <div>
+                {targetPreview.preview.prunedChapters.length > 0 && (
+                  <div>裁剪章节：第 {targetPreview.preview.prunedChapters.join('、')} 章</div>
+                )}
+                {targetPreview.preview.affectedPromises.map(p => (
+                  <div key={p.description}>
+                    ⚠ 「{p.description}」原定第 {p.expectedResolveChapter} 章回收，超出新目标——
+                    该承诺将失去承载位置——请迁移到保留章节、调整目标或接受开放结局。
+                  </div>
+                ))}
+              </div>
+            )}
+          />
+        )}
+      </Card>
       <Space wrap style={{ marginBottom: 16 }}>
         <Button size="small" icon={<ReloadOutlined />} disabled={saving} onClick={() => void load()}>刷新</Button>
         <Button size="small" loading={replanning} disabled={saving} onClick={async () => {

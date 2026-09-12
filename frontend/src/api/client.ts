@@ -78,6 +78,21 @@ export interface AgentRevisionApplyResult {
   derivedRefreshPending?: boolean;
 }
 
+export interface PlanTargetPreview {
+  applied: boolean;
+  targetChapters: number;
+  preview: {
+    prunedChapters: number[];
+    affectedPromises: Array<{
+      description: string;
+      expectedResolveChapter: number;
+      plantedAtChapter: number;
+    }>;
+    writtenChapters: number;
+    oldTarget: number;
+  };
+}
+
 export interface ForeshadowCandidateView {
   id: string;
   description: string;
@@ -476,6 +491,14 @@ export const api = {
     request<AuthorDirectiveView[]>(`/projects/${id}/directives${pendingOnly ? '?pendingOnly=true' : ''}`),
   createDirective: (id: string, body: { kind: string; chapterIndex?: number; content: string }) =>
     request<AuthorDirectiveView>(`/projects/${id}/directives`, { method: 'POST', body: JSON.stringify(body) }),
+  // --- p35-03: 篇幅变更 UI API ---
+  getPlanTargetPreview: (id: string, newTarget: number) =>
+    request<PlanTargetPreview>(`/projects/${id}/plan/target-chapters`,
+      { method: 'POST', body: JSON.stringify({ targetChapters: newTarget, confirm: false }) }),
+  applyPlanTarget: (id: string, newTarget: number) =>
+    request<PlanTargetPreview>(`/projects/${id}/plan/target-chapters`,
+      { method: 'POST', body: JSON.stringify({ targetChapters: newTarget, confirm: true }) }),
+
   // --- p35-02: 候选线索层 UI API ---
   getForeshadowCandidates: (id: string) =>
     request<ForeshadowCandidateView[]>(`/projects/${id}/foreshadow-candidates`),

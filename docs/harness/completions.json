@@ -723,6 +723,61 @@
       "implementation_commit": "83e36bc17a08baca52af8d9dac4696e91a73da61",
       "main_commit": "83e36bc17a08baca52af8d9dac4696e91a73da61",
       "evidence": "docs/harness/evidence/p34-06-p34.json"
+    },
+    {
+      "id": "p35-01-p35",
+      "kind": "verified",
+      "feature_ids": [
+        "p35-01"
+      ],
+      "branch": "codex/p35-01-directives-panel",
+      "implementation_commit": "e6b5723c78b2f20e033df681220980d575ff828d",
+      "main_commit": "e6b5723c78b2f20e033df681220980d575ff828d",
+      "evidence": "docs/harness/evidence/p35-01-p35.json"
+    },
+    {
+      "id": "p35-02-p35",
+      "kind": "verified",
+      "feature_ids": [
+        "p35-02"
+      ],
+      "branch": "codex/p35-02-candidates-panel",
+      "implementation_commit": "730f6d361bc81a314ea7118c8b5a64e0aead0045",
+      "main_commit": "730f6d361bc81a314ea7118c8b5a64e0aead0045",
+      "evidence": "docs/harness/evidence/p35-02-p35.json"
+    },
+    {
+      "id": "p35-03-p35",
+      "kind": "verified",
+      "feature_ids": [
+        "p35-03"
+      ],
+      "branch": "codex/p35-03-target-chapters-ui",
+      "implementation_commit": "8a49e8433bc357e904acf52149dc7e4ce6364a27",
+      "main_commit": "8a49e8433bc357e904acf52149dc7e4ce6364a27",
+      "evidence": "docs/harness/evidence/p35-03-p35.json"
+    },
+    {
+      "id": "p35-04-p35",
+      "kind": "verified",
+      "feature_ids": [
+        "p35-04"
+      ],
+      "branch": "codex/p35-04-resolve-cas",
+      "implementation_commit": "becfd1653a03600c37d540c4b1d41ae67ddf86a6",
+      "main_commit": "becfd1653a03600c37d540c4b1d41ae67ddf86a6",
+      "evidence": "docs/harness/evidence/p35-04-p35.json"
+    },
+    {
+      "id": "p35-05-p35",
+      "kind": "verified",
+      "feature_ids": [
+        "p35-05"
+      ],
+      "branch": "codex/p35-05-book-review",
+      "implementation_commit": "ce5d07f03887b5698092e62b892297a035a97206",
+      "main_commit": "ce5d07f03887b5698092e62b892297a035a97206",
+      "evidence": "docs/harness/evidence/p35-05-p35.json"
     }
   ]
 }

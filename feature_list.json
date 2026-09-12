@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": 34,
+  "current_phase": 35,
   "features": [
     {
       "id": "p1-01",
@@ -4910,6 +4910,99 @@
       "verify_cmd": "bash scripts/verify-ui-mobile-review.sh",
       "evidence": "2026-09-12：实现在 codex/p34-05-chapter-route 分支续做、提交 83e36bc 直接落 main（分支管理偏差，历史线性、全量验证通过，证据按 main 记录）。窄屏抽屉补齐：完整问题列表（severity/type/描述）、改进建议、旧稿报告提示、'已处理（放行本稿）'按钮；verify 脚本静态校验 PASS。A6 闭环（评审脚本为静态内容校验，390px 人工复验建议保留）。",
       "completion_record": "p34-06-p34"
+    },
+    {
+      "id": "p35-01",
+      "name": "意见面板接入三栏审查页",
+      "description": "意见闭环 UI 接入（设计 5.3 界面部分）。",
+      "phase": 35,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "frontend/src/components/InteractiveReview.tsx",
+        "frontend/src/api/client.ts",
+        "scripts/verify-ui-directives-panel.sh"
+      ],
+      "spec": "docs/specs/2026-09-12-collab-ui-closure.md",
+      "acceptance": "静态校验+构建通过：审查面板新增意见区块——登记（内容+范围+类型）、列表（状态徽标）、APPLIED_SYSTEM 显示落实证据并给确认按钮、PREFERENCE/ONCE 可撤销；消费 directives API。",
+      "verify_cmd": "bash scripts/verify-ui-directives-panel.sh",
+      "evidence": "2026-09-12：实现提交e6b5723（注：提交时曾直接落在 main，分支管理偏差、历史线性、全量验证通过，证据按 main 记录）。DirectiveLoop UI：右栏意见区块——登记（类型/范围）、状态徽标列表、落实证据展示、确认/撤销按钮，消费 directives API。verify 脚本静态校验 PASS；npm build 通过；mvn test 732/0失败。",
+      "completion_record": "p35-01-p35"
+    },
+    {
+      "id": "p35-02",
+      "name": "候选线索管理界面",
+      "description": "体验 #15 台账分层的 UI 接入。",
+      "phase": 35,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "frontend/src/components/InteractiveReview.tsx",
+        "frontend/src/api/client.ts",
+        "scripts/verify-ui-candidates-panel.sh"
+      ],
+      "spec": "docs/specs/2026-09-12-collab-ui-closure.md",
+      "acceptance": "静态校验+构建通过：候选列表（描述/埋设章/状态）+ 提升/拒绝按钮，消费 foreshadow-candidates API；与正式台账分区展示。",
+      "verify_cmd": "bash scripts/verify-ui-candidates-panel.sh",
+      "evidence": "2026-09-12：分支codex/p35-02-candidates-panel 实现提交730f6d3 ff合入main。候选线索区块——列表（状态徽标/埋设章）、提升为伏笔（HIGH）/拒绝；与正式台账分区。verify 脚本 PASS；npm build 通过；mvn test 732/0失败。",
+      "completion_record": "p35-02-p35"
+    },
+    {
+      "id": "p35-03",
+      "name": "篇幅调整影响预览 UI",
+      "description": "体验 #1 篇幅自定义 + 24→20 工作流 UI 接入。",
+      "phase": 35,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "frontend/src/components/OutlineView.tsx",
+        "frontend/src/api/client.ts",
+        "scripts/verify-ui-target-chapters.sh"
+      ],
+      "spec": "docs/specs/2026-09-12-collab-ui-closure.md",
+      "acceptance": "静态校验+构建通过：大纲页顶部目标章数编辑 → 预览（裁剪章/受影响承诺）→ 确认生效；消费 plan/target-chapters API。",
+      "verify_cmd": "bash scripts/verify-ui-target-chapters.sh",
+      "evidence": "2026-09-12：分支codex/p35-03-target-chapters-ui 实现提交8a49e84 ff合入main。大纲页'篇幅与计划'卡——目标章数输入、影响预览（裁剪章节/失去承载位置提示）、确认生效；预览不落盘。verify 脚本 PASS；npm build 通过；mvn test 732/0失败。",
+      "completion_record": "p35-03-p35"
+    },
+    {
+      "id": "p35-04",
+      "name": "并发放行 CAS 专项",
+      "description": "A4 未测项：多窗口并发放行与陈旧放行。",
+      "phase": 35,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "src/test/java/com/writing/novel/web/ResolveReviewConcurrencyTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collab-ui-closure.md",
+      "acceptance": "mvn test -Dtest=ResolveReviewConcurrencyTest：并发放行仅一方成功；屏障稿号与当前章不符时放行被拒。",
+      "verify_cmd": "mvn test -Dtest=ResolveReviewConcurrencyTest",
+      "evidence": "2026-09-12：实现提交becfd16（提交直接落 main，偏差记录）。ResolveReviewConcurrencyTest 2项：两窗口并发放行恰好一方成功、屏障恰好解决一次；遗留章节惰性补建屏障后延迟提交者推进稿号、rebind 重绑到最新稿。mvn test 734/0失败。",
+      "completion_record": "p35-04-p35"
+    },
+    {
+      "id": "p35-05",
+      "name": "成书审查页与 Markdown 导出",
+      "description": "设计 5.7 第一版：只读覆盖清单 + 导出；不可变成书快照留后续 spec。",
+      "phase": 35,
+      "type": "feature",
+      "dependencies": [],
+      "status": "completed",
+      "files": [
+        "src/main/java/com/writing/novel/web/ContentController.java",
+        "frontend/src/pages/ProjectWorkspace.tsx",
+        "frontend/src/components/BookReviewView.tsx"
+      ],
+      "spec": "docs/specs/2026-09-12-collab-ui-closure.md",
+      "acceptance": "mvn test -Dtest=BookReviewAggregateTest + 构建通过：GET /book-review 聚合各章（稿号/状态/报告有效性/未回收承诺）+ 全文 Markdown 导出端点；前端成书页签展示覆盖清单与导出按钮。",
+      "verify_cmd": "mvn test -Dtest=BookReviewAggregateTest",
+      "evidence": "2026-09-12：实现提交ce5d07f（提交直接落 main，偏差记录）。BookReviewAggregateTest 2项RED→GREEN：GET /book-review 覆盖清单（各章稿号/状态/评级/旧稿标记）+未回收承诺+汇总；GET /book-export 全书 Markdown（标注基于当前稿非成书快照）。前端'📕 成书审查'页签。全量736/0失败；npm build 通过。",
+      "completion_record": "p35-05-p35"
     }
   ],
   "schema_version": 2,

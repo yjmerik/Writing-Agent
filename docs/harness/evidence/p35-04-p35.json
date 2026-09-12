@@ -1,0 +1,18 @@
+{
+  "commit": "becfd1653a03600c37d540c4b1d41ae67ddf86a6",
+  "cleanCheckout": true,
+  "checkoutNote": "验证在合并后干净主分支检出树执行。p35-01/04/05 存在提交直接落 main 的分支管理偏差（历史线性、全量验证通过），已在证据中如实记录。",
+  "feature": "p35-04",
+  "checks": [
+    {
+      "command": "mvn test -Dtest=ResolveReviewConcurrencyTest",
+      "result": "2 tests / 0 failures",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test",
+      "result": "734 tests / 0 failures / 1 skipped",
+      "exitCode": 0
+    }
+  ]
+}

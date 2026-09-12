@@ -30,6 +30,10 @@ public class ChapterQualityReport {
     private int chapterVersion;
     private long staleIssueCount;
     private boolean reviewStale;
+    /** p34-02（UI 验收 A3）：报告产出时绑定的章节版本（review.chapterVersion）；
+     *  与当前稿不同即"旧稿报告"——前端据此显式提示，不得冒充当前审查。 */
+    private Integer reportForVersion;
+    private boolean reportCurrent = true;
 
     public ChapterQualityReport(int chapterIndex, String chapterTitle, int wordCount) {
         this.chapterIndex = chapterIndex;
@@ -84,4 +88,8 @@ public class ChapterQualityReport {
     public void setStaleIssueCount(long v) { this.staleIssueCount = v; }
     public boolean isReviewStale() { return reviewStale; }
     public void setReviewStale(boolean v) { this.reviewStale = v; }
+    public Integer getReportForVersion() { return reportForVersion; }
+    public void setReportForVersion(Integer v) { this.reportForVersion = v; }
+    public boolean isReportCurrent() { return reportCurrent; }
+    public void setReportCurrent(boolean v) { this.reportCurrent = v; }
 }

@@ -2806,6 +2806,10 @@ public class NovelOrchestrator {
                             && r.getChapterVersion() != chapter.getVersion());
                     report.setReview(r);
                     report.setReviewStale(r.isStale());
+                    // p34-02（UI 验收 A3）：显式暴露报告有效性——旧稿报告不得冒充当前审查
+                    report.setReportForVersion(r.getChapterVersion());
+                    report.setReportCurrent(!r.isStale()
+                            && r.getChapterVersion() != null);
                 });
 
         // 该章的 ContinuityIssue

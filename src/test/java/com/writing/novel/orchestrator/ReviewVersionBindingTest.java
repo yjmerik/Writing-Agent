@@ -110,6 +110,11 @@ class ReviewVersionBindingTest {
         assertEquals(1, report.getStaleIssueCount());
         assertTrue(report.isReviewStale(), "指向旧正文的评语必须标记过期");
         assertTrue(report.getReview().isStale());
+        // p34-02（UI 验收 A3）：报告显式暴露绑定版本与有效性
+        assertEquals(Integer.valueOf(2), report.getReportForVersion(),
+                "reportForVersion 应为报告产出时绑定的章节版本（升版前 = 2）");
+        assertEquals(false, report.isReportCurrent(),
+                "章节升版后旧报告不得标记为当前有效");
     }
 
     @Test
@@ -120,6 +125,8 @@ class ReviewVersionBindingTest {
         ChapterQualityReport report = orchestrator.buildChapterQualityReport(projectId, 1);
         assertFalse(report.getIssues().get(0).isStale());
         assertEquals(0, report.getStaleIssueCount());
+        // p34-02: 当前稿的报告 reportCurrent=true
+        assertTrue(report.isReportCurrent(), "当前版本报告应标记为有效");
 
         // 无对应章节的版本未知条目（如规划期 quality_risk，detectedAtChapter=0 不进本章报告）
         repo.saveContinuityIssue(new ContinuityIssue(projectId, 0,

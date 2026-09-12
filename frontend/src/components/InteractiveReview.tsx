@@ -917,6 +917,12 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                       {qualityReport.grade} 级
                     </Tag>
                   </Typography.Title>
+                  {/* p34-02（UI 验收 A3）：旧稿报告显式提示，不得冒充当前审查 */}
+                  {qualityReport.reportCurrent === false && qualityReport.reportForVersion != null && (
+                    <Alert type="warning" showIcon style={{ marginBottom: 8 }}
+                      message={`旧稿报告：以下内容针对第 v${qualityReport.reportForVersion} 稿`}
+                      description="当前稿已更新且尚未重新检查。该报告不代表当前稿的审查结论，保存/应用修改后会自动触发重新检查。" />
+                  )}
                   {qualityReport.review && (
                     <Row gutter={8} style={{ marginBottom: 12 }}>
                       <Col span={8}>

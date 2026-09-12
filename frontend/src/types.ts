@@ -167,6 +167,12 @@ export interface ChapterQualityReport {
   topCliches: string[];
   needsManualReview?: boolean;
   qualityRisk?: boolean;
+  /** p34-02: 报告绑定版本与有效性——旧稿报告不得冒充当前审查 */
+  chapterVersion?: number;
+  reportForVersion?: number | null;
+  reportCurrent?: boolean;
+  staleIssueCount?: number;
+  reviewStale?: boolean;
 }
 
 export interface Summary {

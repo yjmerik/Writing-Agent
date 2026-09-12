@@ -8,4 +8,10 @@
 - `git diff --check` PASS。文档开始于09-12，跨日完成；三个状态入口日期已更新09-13，设计文档文件名保留起始日期。
 - 本文件是文档维护证据，不是新feature的verified完成记录。各项新专项测试为待实现产物，未执行，不能引用本轮736项结果声称新功能通过。
 
-本地合并后的提交归属与再次验证结果在后续回执登记；不推送远端。
+## 本地合并后回执
+
+- 文档实现提交：`600918081e19dd74f3e51ea070356061ad30f9f1`；文档分支已快进合入本地main，合并后验证检出同一提交。仅14个本轮文档/状态文件，无业务代码变更。
+- 合并后执行：`bash -c 'source scripts/load-env.sh && mvn compile -q && mvn test'` PASS；2026-09-13 00:03:21 +08:00结束，736 tests / 0 failures / 0 errors / 1 skipped。测试在本机Java26.0.1运行；项目编译目标保持Java17。
+- 合并后`python3 scripts/check-harness.py --check-git` PASS；文档依赖/链接/专项对应结构检查再次PASS；`git merge-base --is-ancestor 600918081e19dd74f3e51ea070356061ad30f9f1 main`退出0。
+- 主分支验证时已跟踪文件干净；两项原有未跟踪内容保留，未纳入提交。没有推送远端、真实模型实验或golden变更。
+- 新业务feature仍全部not-started；首选实施入口p36-02，不能将文档提交作为业务verified证据。

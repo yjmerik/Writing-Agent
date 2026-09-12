@@ -4,7 +4,7 @@ Last Updated: 2026-09-13
 
 ## Current
 
-计划与backlog已编写，业务尚未实施。319 features = 261 completed + 58 not-started，active_feature=null。历史完成记录没有回写或扩展解释。文档分支codex/docs-collaboration-repair-plan-20260912；提交和合并回执见证据文件。
+计划与backlog已编写，业务尚未实施。319 features = 261 completed + 58 not-started，active_feature=null。历史完成记录没有回写或扩展解释。文档分支codex/docs-collaboration-repair-plan-20260912已以6009180合入本地main；验证回执见证据文件。
 
 ## Files
 
@@ -14,7 +14,7 @@ Last Updated: 2026-09-13
 
 ## Verification
 
-当前设计基点b1c8289全量init通过，736/0失败/0错误/1跳过；新feature专项未执行。文档结构检查、最终全量与合并后结果写入docs/harness/evidence/2026-09-12-collaboration-repair-plan.md。
+设计基点全量init与main 6009180合并后编译/测试通过，736/0失败/0错误/1跳过；新feature专项未执行。文档结构检查、最终全量与合并后结果写入docs/harness/evidence/2026-09-12-collaboration-repair-plan.md。
 
 ## Blockers
 

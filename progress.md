@@ -6,7 +6,7 @@ Last Updated: 2026-09-13
 
 复验main b1c8289发现旧窗口可放行新稿等遗留问题；新增Phase36–40共58个not-started feature，261个历史completed保留，合计319项。active_feature=null。current_phase=40表示最高已登记阶段，不表示已实施。
 
-本轮只做设计、脱敏复验记录、backlog与交接维护，不修改业务代码。文档分支codex/docs-collaboration-repair-plan-20260912。
+本轮只做设计、脱敏复验记录、backlog与交接维护，不修改业务代码。文档分支codex/docs-collaboration-repair-plan-20260912已以6009180快进合入本地main。
 
 ## Files
 
@@ -18,7 +18,7 @@ Last Updated: 2026-09-13
 
 ## Verification
 
-本轮设计基线./init.sh通过：736 tests / 0 failures / 0 errors / 1 skipped，前端构建通过。新规划专项尚未实现或执行，不能引用此全量结果为58项完成证据。文档最终验证与提交信息见docs/harness/evidence/2026-09-12-collaboration-repair-plan.md。
+本轮设计基线./init.sh及main 6009180合并后编译/测试通过：736 tests / 0 failures / 0 errors / 1 skipped，前端构建通过。新规划专项尚未实现或执行，不能引用此全量结果为58项完成证据。文档最终验证与提交信息见docs/harness/evidence/2026-09-12-collaboration-repair-plan.md。
 
 ## Blockers
 

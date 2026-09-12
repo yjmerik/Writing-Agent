@@ -104,3 +104,10 @@
 ## 下一步
 
 先修复空标签、草稿丢失、旧报告误展示和稿号/审查一致性，再补意见、人物影响、24→20 与成书版本的界面闭环。每项按 failing test→独立实现→合并验证推进；本报告不将任何待修项标为完成。
+
+## 本地合并与验证回执
+
+- 文档分支 `codex/docs-collaboration-ui-acceptance-20260912`，提交 `facd33d` 已快进合入本地 main。
+- 合并后的 main `facd33d` 再次运行 `mvn compile -q && mvn test`：PASS，727 tests / 0 failures / 0 errors / 1 skipped；2026-09-12 21:32:12 完成。
+- `python3 scripts/check-harness.py --check-git` PASS：256 features，250 completed、6 not-started；没有把新缺陷标为 completed。
+- 仅本轮文档与状态文件进入提交；用户原有两项未跟踪内容保留，未推送。

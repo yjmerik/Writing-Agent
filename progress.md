@@ -11,7 +11,7 @@ Phase33 的 8 个实现切片保留原完成记录，不能视为原设计 P0–
 - 验收报告：docs/reports/2026-09-12-collaboration-ui-acceptance.md。
 - 回流 spec：docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md。
 - 当前状态源：feature_list.json；原 Phase33 当前入口归档至 docs/harness/archive/2026-09-12-before-ui-acceptance-*。
-- 本轮文档分支：codex/docs-collaboration-ui-acceptance-20260912；验收实现基准 main 4437b5a。
+- 本轮文档分支：codex/docs-collaboration-ui-acceptance-20260912；验收实现基准 main 4437b5a；文档提交 facd33d 已快进合入 main，合并后 compile/test 再次通过（727/0失败/0错误/1跳过）。
 
 ## Verification
 

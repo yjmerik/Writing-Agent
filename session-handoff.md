@@ -1,25 +1,26 @@
-# Phase33 完成交接 — 2026-09-12
+# 界面验收交接 — 2026-09-12
 
 Last Updated: 2026-09-12
 
-## Current（当前）
+## Current
 
-Phase33 全部 8 个 feature 完成，250/250 completed，active_feature=null。main HEAD=本轮 docs 提交。全部独立分支+TDD+ff 合并+verified 证据。
+本轮目标为启动服务并核验原共创方案，结论：未全部实现，完整界面验收不通过。未改业务代码。验收基准 4437b5a；文档分支 codex/docs-collaboration-ui-acceptance-20260912，提交及主分支验证回执见报告尾部。Phase34 已登记 p34-01～06，均 not-started，无 active feature。
 
-## Files（文件与证据）
+## Files
 
-docs/harness/evidence/p33-0*-p33.json（8 份）；spec docs/specs/2026-09-11-review-barrier-workspace.md；语料 data/e2e-fixtures/canary-mystery-20260912（27 fixtures，匹配当前代码）。
+- docs/reports/2026-09-12-collaboration-ui-acceptance.md：验收矩阵、复现、边界与服务说明。
+- docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md：小范围 bug 回流。
+- 原始证据：/Users/erik/.codex/visualizations/2026/09/12/01a095b5-2f1b-70a1-ab25-851e835510b8/novel-ui-acceptance/。
+- 数据：data/ui-acceptance-20260912/novel.db（8081）、scenario.db（8082，本地替身）。保留原 data/novel20-0909.db。
 
-## Verification（验证）
+## Verification
 
-干净 main：727 tests/0失败/1跳过；replay×2 与 record 一致；基线 PASS（bless 后）；check-harness PASS。
+./init.sh 通过（727/0 failures/0 errors/1 skipped，compile 与前端构建通过）。原稿与8081副本20章逐项相等。8082用界面验证停点、编辑、候选应用、版本历史、人物保存、刷新及窄屏；关键失败见报告。没有真实文学质量、服务重启、多窗口延迟竞态或最终导出的通过证据。
 
-## Blockers（阻塞与限制）
+## Blockers
 
-无 BROKEN。未推送远端。P1/P2/P4 的 UI 层与文学质量实验未实施（后端骨干已就绪）。e2e 冒烟 1 章口径（屏障停点）。
+产品验收不通过，非新代码引入的编译/测试 BROKEN。作者草稿丢失、旧稿报告、新稿与屏障/批准不一致须优先修复。真实第7章正文外发百炼的权限问题已提交用户，未确认前不得执行。截图 CDP 不可用。旧完成标记只能按实际切片解释。
 
-## Next Steps（下一步）
+## Next Steps
 
-1. ./init.sh 恢复；mvn 需 bash -c 'source scripts/load-env.sh && mvn ...'。
-2. 候选：Directives/候选线索 UI 面板；用 /plan/target-chapters 把 20 章项目收尾至 FINAL 做全流程验证。
-3. 改注入路径后按 DoD record 重建语料。
+先读报告与回流 spec，再按协议从 main 单 feature 开发，修 bug 先 RED。未推送。用户原有 .zcode/plans/plan-sess_8dbf5c3f-54dd-45b9-88b9-e02cd5e0b153.md 和 docs/reports/2026-09-05-ui-experience/ 未改。

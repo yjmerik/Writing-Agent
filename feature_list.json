@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": 33,
+  "current_phase": 34,
   "features": [
     {
       "id": "p1-01",
@@ -4798,6 +4798,110 @@
       "verify_cmd": "mvn test -Dtest=PlanEditionTest",
       "evidence": "2026-09-11：分支codex/p33-08-plan-edition 实现提交bcdae8f ff合入main。PlanEditionTest 3项RED→GREEN：缩减篇幅先预览（裁剪章/超出目标未回收承诺/已写数）不落盘；confirm 生效（目标更新+大纲裁剪+已写梗概保留+承诺期望不静默改写）；低于已写拒绝。PlanEditionService + POST /plan/target-chapters。不改 prompt；全量727/0失败/1跳过。",
       "completion_record": "p33-08-p33"
+    },
+    {
+      "id": "p34-01",
+      "name": "空类型标签的新项目可开始构思",
+      "description": "2026-09-12 ego-browser 界面验收 A1 回流；仅登记，尚未修复。",
+      "phase": 34,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/agent/WorldBuilderAgent.java",
+        "src/test/java/com/writing/novel/agent/WorldBuilderOptionalTagsTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
+      "acceptance": "null/空 tags 的构思先失败复现，修复后正常生成世界观；无模型调用前 NPE。",
+      "verify_cmd": "mvn test -Dtest=WorldBuilderOptionalTagsTest",
+      "evidence": "待实现；复现与证据见 docs/reports/2026-09-12-collaboration-ui-acceptance.md #A1。本地验收日志和只读数据路径见报告。"
+    },
+    {
+      "id": "p34-02",
+      "name": "当前章质量报告拒绝冒用旧稿评价",
+      "description": "2026-09-12 ego-browser 界面验收 A3 回流；仅登记，尚未修复。",
+      "phase": 34,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+        "src/test/java/com/writing/novel/orchestrator/ChapterQualityVersionValidityTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
+      "acceptance": "当前章 v6 只有 v2 报告时，不返回它作为当前有效评价；历史报告仍保留。",
+      "verify_cmd": "mvn test -Dtest=ChapterQualityVersionValidityTest",
+      "evidence": "待实现；复现与证据见 docs/reports/2026-09-12-collaboration-ui-acceptance.md #A3。本地验收日志和只读数据路径见报告。"
+    },
+    {
+      "id": "p34-03",
+      "name": "正文未保存草稿刷新可恢复",
+      "description": "2026-09-12 ego-browser 界面验收 A2 回流；仅登记，尚未修复。",
+      "phase": 34,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/InteractiveReview.tsx",
+        "scripts/verify-ui-draft-recovery.sh"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
+      "acceptance": "通过 ego-browser 在本地场景编辑第7章、刷新、恢复同项目同目标草稿；版本已变时明确冲突，不覆盖正式稿。",
+      "verify_cmd": "bash scripts/verify-ui-draft-recovery.sh",
+      "evidence": "待实现；复现与证据见 docs/reports/2026-09-12-collaboration-ui-acceptance.md #A2。本地验收日志和只读数据路径见报告。"
+    },
+    {
+      "id": "p34-04",
+      "name": "正式修订同步当前人审屏障稿号",
+      "description": "2026-09-12 ego-browser 界面验收 A4 回流；仅登记，尚未修复。",
+      "phase": 34,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/ChapterRevisionService.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/test/java/com/writing/novel/service/ReviewBarrierRevisionBindingTest.java"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
+      "acceptance": "待审 v2 保存 v3 后，当前有效待办与权威正文稿号一致；历史屏障不丢失，未复核不得默认为已批准。",
+      "verify_cmd": "mvn test -Dtest=ReviewBarrierRevisionBindingTest",
+      "evidence": "待实现；复现与证据见 docs/reports/2026-09-12-collaboration-ui-acceptance.md #A4。本地验收日志和只读数据路径见报告。"
+    },
+    {
+      "id": "p34-05",
+      "name": "章节和工作区视图可通过刷新恢复",
+      "description": "2026-09-12 ego-browser 界面验收 A2 回流；仅登记，尚未修复。",
+      "phase": 34,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "frontend/src/pages/ProjectWorkspace.tsx",
+        "frontend/src/components/InteractiveReview.tsx",
+        "scripts/verify-ui-chapter-route.sh"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
+      "acceptance": "选择第7章并刷新仍定位第7章；章节和视图可深链接恢复，后台新增章节不抢走选择。",
+      "verify_cmd": "bash scripts/verify-ui-chapter-route.sh",
+      "evidence": "待实现；复现与证据见 docs/reports/2026-09-12-collaboration-ui-acceptance.md #A2。本地验收日志和只读数据路径见报告。"
+    },
+    {
+      "id": "p34-06",
+      "name": "窄屏审查抽屉保留问题明细",
+      "description": "2026-09-12 ego-browser 界面验收 A6 回流；仅登记，尚未修复。",
+      "phase": 34,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/InteractiveReview.tsx",
+        "scripts/verify-ui-mobile-review.sh"
+      ],
+      "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
+      "acceptance": "ego-browser 390px 场景抽屉展示与桌面相同的问题明细和已有操作，键盘可访问，不只显示问题数量。",
+      "verify_cmd": "bash scripts/verify-ui-mobile-review.sh",
+      "evidence": "待实现；复现与证据见 docs/reports/2026-09-12-collaboration-ui-acceptance.md #A6。本地验收日志和只读数据路径见报告。"
     }
   ],
   "schema_version": 2,

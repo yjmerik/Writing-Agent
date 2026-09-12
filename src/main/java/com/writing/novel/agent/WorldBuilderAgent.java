@@ -53,8 +53,12 @@ public class WorldBuilderAgent {
      */
     public Worldbuilding propose(String projectId, String concept, String tags, String diversityGuide,
                                  String instructions) {
+        // p34-01（UI 验收 A1）：tags 可空（新建表单允许留空）——Map.of 禁止 null 值，
+        // 空白归一化为空串，模板中渲染为无标签而非 NPE
+        String safeTags = tags == null ? "" : tags.trim();
+        String safeConcept = concept == null ? "" : concept;
         String systemPrompt = promptService.render("worldbuilding", Map.of(
-                "concept", concept, "tags", tags,
+                "concept", safeConcept, "tags", safeTags,
                 "styleGuide", "",
                 "diversityGuide", diversityGuide != null ? diversityGuide : ""));
 

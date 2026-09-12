@@ -105,6 +105,13 @@ public class ChapterRevisionService {
         if (!repository.saveChapterRevision(snapshot, current, expectedVersion)) {
             throw new IllegalStateException("章节版本已变化");
         }
+        // p34-04（UI 验收 A4）：正式修订推进版本后，把该章 ACTIVE 屏障重绑到新稿号——
+        // 消除"v2 待审/v3 当前"并存与两套批准动作；屏障仍阻止续写（新稿未经检查）
+        try {
+            repository.rebindReviewBarriers(projectId, chapterIndex, current.getVersion());
+        } catch (Exception ignored) {
+            // 重绑失败不回滚正文（屏障仍绑旧稿号仅造成显示不一致），由事件跟踪
+        }
         refreshIsolated(projectId, current);
         return current;
     }

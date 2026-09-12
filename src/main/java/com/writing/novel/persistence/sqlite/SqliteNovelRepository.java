@@ -740,6 +740,18 @@ public class SqliteNovelRepository implements NovelRepository {
         saveForeshadowCandidate(candidate);
     }
 
+    @Override
+    public int rebindReviewBarriers(String projectId, int chapterIndex, int newVersion) {
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "UPDATE review_barriers SET chapter_version=?, " +
+                        "reason='内容已修订，需重新审查（原：' || reason || '）' " +
+                        "WHERE project_id=? AND chapter_index=? AND status='ACTIVE'")) {
+            ps.setInt(1, newVersion);
+            ps.setString(2, projectId); ps.setInt(3, chapterIndex);
+            return ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
     private com.writing.novel.domain.ReviewBarrier mapBarrier(ResultSet rs) throws SQLException {
         java.time.Instant resolvedAt = rs.getString("resolved_at") == null ? null
                 : java.time.Instant.parse(rs.getString("resolved_at"));

@@ -124,6 +124,19 @@ public class TestNovelRepositoryStub implements NovelRepository {
                 .filter(b -> b.getStatus() == com.writing.novel.domain.ReviewBarrier.Status.ACTIVE)
                 .toList();
     }
+    @Override public int rebindReviewBarriers(String projectId, int chapterIndex, int newVersion) {
+        int n = 0;
+        for (var b : stubBarriers) {
+            if (b.getProjectId().equals(projectId) && b.getChapterIndex() == chapterIndex
+                    && b.getStatus() == com.writing.novel.domain.ReviewBarrier.Status.ACTIVE) {
+                stubBarriers.set(stubBarriers.indexOf(b), new com.writing.novel.domain.ReviewBarrier(
+                        b.getId(), b.getProjectId(), b.getChapterIndex(), newVersion,
+                        "内容已修订，需重新审查", b.getStatus(), b.getCreatedAt(), b.getResolvedAt()));
+                n++;
+            }
+        }
+        return n;
+    }
     @Override public int resolveReviewBarriers(String projectId, int chapterIndex) {
         int n = 0;
         for (var b : stubBarriers) {

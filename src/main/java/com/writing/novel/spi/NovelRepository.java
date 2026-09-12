@@ -96,6 +96,8 @@ public interface NovelRepository {
     java.util.List<com.writing.novel.domain.ReviewBarrier> findActiveReviewBarriers(String projectId);
     /** 解决指定章节的全部 ACTIVE 屏障（作者放行时调用），返回解决条数。 */
     int resolveReviewBarriers(String projectId, int chapterIndex);
+    /** p34-04: 版本推进的正式修订把该章 ACTIVE 屏障重绑到新稿号（原因注明内容已修订）。 */
+    int rebindReviewBarriers(String projectId, int chapterIndex, int newVersion);
 
     // --- p33-06: 作者意见闭环 ---
     void saveAuthorDirective(com.writing.novel.domain.AuthorDirective directive);

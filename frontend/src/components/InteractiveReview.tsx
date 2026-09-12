@@ -1009,9 +1009,57 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
             <Alert type="warning" showIcon style={{ marginBottom: 12 }}
               message={`第 ${currentChapter.chapterIndex} 章第 v${currentChapter.version} 稿待你审查`} />
           )}
+          {qualityReport?.reportCurrent === false && qualityReport.reportForVersion != null && (
+            <Alert type="warning" showIcon style={{ marginBottom: 12 }}
+              message={`旧稿报告：针对第 v${qualityReport.reportForVersion} 稿`} />
+          )}
           {qualityReport && (
-            <Alert type="info" message={`本章质量 ${qualityReport.grade} 级 · ${qualityReport.issues.length} 项问题`}
-              description={qualityReport.review?.summary ?? ''} />
+            <>
+              <Alert type="info" style={{ marginBottom: 12 }}
+                message={`本章质量 ${qualityReport.grade} 级 · ${qualityReport.issues.length} 项问题`}
+                description={qualityReport.review?.summary ?? ''} />
+              {qualityReport.review?.improvement && (
+                <Alert type="warning" message="改进建议" description={qualityReport.review.improvement}
+                  style={{ marginBottom: 12 }} />
+              )}
+              {qualityReport.issues.length > 0 && (
+                <List
+                  size="small"
+                  header="检测问题"
+                  dataSource={qualityReport.issues}
+                  renderItem={item => (
+                    <List.Item>
+                      <Tag color={item.severity === 'HIGH' ? 'red' : item.severity === 'MEDIUM' ? 'orange' : 'default'}>
+                        {item.severity}
+                      </Tag>
+                      <Tag>{item.type}</Tag>
+                      <Text style={{ fontSize: 12 }}>{item.description}</Text>
+                    </List.Item>
+                  )}
+                />
+              )}
+              {screens.md && <Text type="secondary" style={{ fontSize: 12 }}>当前为桌面布局，右侧面板含完整证据。</Text>}
+              {!screens.md && currentChapter?.status === 'NEEDS_MANUAL_REVIEW' && (
+                <Button type="primary" block style={{ marginTop: 12 }}
+                  onClick={async () => {
+                    try {
+                      await api.resolveManualReview(projectId, currentChapter.chapterIndex);
+                      message.success('已标为处理完毕');
+                      void refresh();
+                      onChanged();
+                    } catch (err) {
+                      message.error((err as Error).message);
+                    }
+                  }}>
+                    已处理（放行本稿）
+                  </Button>
+              )}
+              {!screens.md && (
+                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
+                  完整问题证据与逐条裁决已在桌面版查看完整问题明细与裁决后同步；窄屏保留评分、明细与放行动作。
+                </Text>
+              )}
+            </>
           )}
           {!qualityReport && currentChapter && <Text type="secondary">本章暂无质量报告。</Text>}
         </Drawer>

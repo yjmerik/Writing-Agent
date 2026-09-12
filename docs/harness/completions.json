@@ -778,6 +778,17 @@
       "implementation_commit": "ce5d07f03887b5698092e62b892297a035a97206",
       "main_commit": "ce5d07f03887b5698092e62b892297a035a97206",
       "evidence": "docs/harness/evidence/p35-05-p35.json"
+    },
+    {
+      "id": "p36-02-p36",
+      "kind": "verified",
+      "feature_ids": [
+        "p36-02"
+      ],
+      "branch": "codex/p36-02-approval-schema",
+      "implementation_commit": "51d417a6029c95de0e55a1b6f711f16d2224ba63",
+      "main_commit": "51d417a6029c95de0e55a1b6f711f16d2224ba63",
+      "evidence": "docs/harness/evidence/p36-02-p36.json"
     }
   ]
 }

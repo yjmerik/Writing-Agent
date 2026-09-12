@@ -1,29 +1,33 @@
-# 协作修复方案已登记（未实施） — 2026-09-13
+# p36-02 不可变审阅身份与批准审计表已完成 — 2026-09-13
 
 Last Updated: 2026-09-13
 
 ## Current
 
-复验main b1c8289发现旧窗口可放行新稿等遗留问题；新增Phase36–40共58个not-started feature，261个历史completed保留，合计319项。active_feature=null。current_phase=40表示最高已登记阶段，不表示已实施。
+协作修复程序进入实施阶段：p36-02（定义不可变审阅身份与批准审计表）已按分支协议完成并合入本地 main（51d417a），feature_list 319 项 = 262 completed + 57 not-started，active_feature=null。
 
-本轮只做设计、脱敏复验记录、backlog与交接维护，不修改业务代码。文档分支codex/docs-collaboration-repair-plan-20260912已以6009180快进合入本地main。
+新增 `ChapterApproval`（Identity/Request/Result/ReviewContext 内嵌记录 + contentHash：SHA-256/UTF-8 标题与正文的字节长度前缀哈希，64位小写hex，不含状态/updatedAt）；SQLite 新增 `chapter_approvals`（UNIQUE(project_id, idempotency_key)，DONE 不回填）与 `review_barrier_history`（追加式屏障身份历史）两表及索引。
 
 ## Files
 
-- docs/specs/2026-09-12-collaboration-repair-program.md：总契约、迁移、API与验收矩阵。
-- docs/superpowers/plans/2026-09-12-collaboration-repair-entry.md：外部工具唯一执行入口。
-- docs/superpowers/plans/2026-09-12-collaboration-repair-p36.md 至 p40.md：逐项实现/验证步骤。
-- docs/reports/2026-09-12-collaboration-ui-reverification.md：不依赖个人目录的复验事实。
-- feature_list.json：每项files/dependencies/acceptance/verify_cmd/execution_plan/quality_gate。
+- src/main/java/com/writing/novel/domain/ChapterApproval.java：不可变审阅身份与批准审计模型（新增）。
+- src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java：两新表 DDL 与索引。
+- src/test/java/com/writing/novel/persistence/ApprovalSchemaTest.java：4 项契约测试（新增）。
+- docs/harness/evidence/p36-02-p36.json：RED/GREEN/合并后验证证据。
 
 ## Verification
 
-本轮设计基线./init.sh及main 6009180合并后编译/测试通过：736 tests / 0 failures / 0 errors / 1 skipped，前端构建通过。新规划专项尚未实现或执行，不能引用此全量结果为58项完成证据。文档最终验证与提交信息见docs/harness/evidence/2026-09-12-collaboration-repair-plan.md。
+- RED（main 8e1e715 起，契约提交 f7b36c2）：`mvn test -Dtest=ApprovalSchemaTest` 3 errors（no such table: chapter_approvals），行为性失败非编译失败。
+- GREEN：同命令 4/4 通过；`mvn compile && mvn test` 740 tests / 0 failures / 0 errors / 1 skipped。
+- 合并（ff-only）后在干净 main 51d417a 复跑全量与专项均通过；`git merge-base --is-ancestor` 通过。
+- 无 prompt/上下文/前端改动，按 quality_gate 未跑 e2e/baseline；未 bless。
 
 ## Blockers
 
-无新增业务实现。当前产品仍有高优先级旧稿批准漏洞，详见复验；测试绿不代表完整验收通过。真实文学实验、真实模型录制与质量bless需在执行会话按授权和人工评审完成。
+无。旧窗口批准新稿的漏洞在产品上仍未修复——批准的消费路径（readReviewContext/approveChapter）属 p36-03，安全闭环需 p36-03→04→05→06 完成，勿将本项测试当作漏洞修复证据。
 
 ## Next Steps
 
-获得实现授权后优先p36-02→03→04→07，再p36-01→05，p36-12/13迁移测试后→06关闭旧入口；其余按dependencies逐个闭环。外部工具先读执行入口、AGENTS.md和feature_list；保留原有未跟踪内容，不推送远端。
+1. 下一特性按入口计划优先级选 p36-03（实现章节批准与屏障的原子比较提交，依赖 p36-02 已完成），从 main 新建 codex/p36-03-* 分支。
+2. 若转做 p36-01（浏览器 QA 设施）无业务依赖冲突；两者仍须逐个闭环。
+3. 桌面 QA / 真实模型录制 / bless 等仍需执行时单独授权。

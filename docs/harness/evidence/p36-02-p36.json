@@ -1,0 +1,51 @@
+{
+  "commit": "51d417a6029c95de0e55a1b6f711f16d2224ba63",
+  "cleanCheckout": true,
+  "checkoutNote": "验证在合并后干净 main（fast-forward 至 51d417a）执行；工作区仅存合并前已有的未跟踪文件（.zcode/plans、docs/reports/2026-09-05-ui-experience），未参与验证。",
+  "feature": "p36-02",
+  "branch": "codex/p36-02-approval-schema",
+  "base_commit": "8e1e715",
+  "red": {
+    "commit": "f7b36c2a043d3893d04cb53a99c36398eb6346bb",
+    "command": "mvn test -Dtest=ApprovalSchemaTest",
+    "exitCode": 1,
+    "result": "Tests run: 4, Errors: 3 —— 旧库两次初始化无丢行 / 批准记录不被普通章保存覆盖 / 相同幂等键唯一 三项均报 [SQLITE_ERROR] no such table: chapter_approvals（行为性失败，非编译失败）；hash 敏感性为纯领域断言，RED 阶段即通过。"
+  },
+  "implementation": {
+    "commit": "51d417a6029c95de0e55a1b6f711f16d2224ba63",
+    "files": [
+      "src/main/java/com/writing/novel/domain/ChapterApproval.java",
+      "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
+      "src/test/java/com/writing/novel/persistence/ApprovalSchemaTest.java"
+    ],
+    "notes": "chapter_approvals 以 UNIQUE(project_id, idempotency_key) 约束幂等键；review_barrier_history 追加旧屏障身份与修订前后版本；已存在 DONE 不回填批准；旧 12 位 ReviewFingerprint 用途未动。"
+  },
+  "checks": [
+    {
+      "command": "mvn test -Dtest=ApprovalSchemaTest",
+      "result": "4 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（合并后干净 main）",
+      "result": "740 tests / 0 failures / 0 errors / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=ApprovalSchemaTest（合并后干净 main 复跑）",
+      "result": "4 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor 51d417a main",
+      "result": "实现提交为 main 祖先",
+      "exitCode": 0
+    }
+  ],
+  "acceptance_detail": "旧库（仅 projects/chapters/review_barriers 旧结构含数据行）连续两次 initialize 后项目/章节/屏障/批准行均保留且旧正文原样；标题或正文任一变化改变 contentHash（64位小写hex），状态变化不改变身份（Identity.of 相等）；批准行在后续多次 saveChapter（含内容修订升版）后逐字段不变且无重复行；同项目同幂等键第二次 INSERT 抛唯一约束异常，跨项目同键允许。",
+  "limits": [
+    "未实现 approveChapter/readReviewContext 等消费接口（p36-03 范围）",
+    "未跑 e2e/compare-baseline：本项无 prompt、上下文组装或前端改动，quality_gate 为无生成输入变更",
+    "不声称旧稿批准漏洞已修复——安全闭环待 p36-03/04/05/06 完成"
+  ]
+}

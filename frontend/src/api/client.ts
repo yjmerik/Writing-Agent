@@ -78,6 +78,14 @@ export interface AgentRevisionApplyResult {
   derivedRefreshPending?: boolean;
 }
 
+export interface ForeshadowCandidateView {
+  id: string;
+  description: string;
+  plantedContext: string;
+  plantedAtChapter: number;
+  status: 'PENDING' | 'PROMOTED' | 'REJECTED';
+}
+
 export interface AuthorDirectiveView {
   id: string;
   kind: 'HARD' | 'ONCE' | 'PREFERENCE';
@@ -468,6 +476,14 @@ export const api = {
     request<AuthorDirectiveView[]>(`/projects/${id}/directives${pendingOnly ? '?pendingOnly=true' : ''}`),
   createDirective: (id: string, body: { kind: string; chapterIndex?: number; content: string }) =>
     request<AuthorDirectiveView>(`/projects/${id}/directives`, { method: 'POST', body: JSON.stringify(body) }),
+  // --- p35-02: 候选线索层 UI API ---
+  getForeshadowCandidates: (id: string) =>
+    request<ForeshadowCandidateView[]>(`/projects/${id}/foreshadow-candidates`),
+  promoteForeshadowCandidate: (id: string, candidateId: string) =>
+    request<{ promoted: boolean }>(`/projects/${id}/foreshadow-candidates/${candidateId}/promote`, { method: 'POST' }),
+  rejectForeshadowCandidate: (id: string, candidateId: string) =>
+    request<{ rejected: boolean }>(`/projects/${id}/foreshadow-candidates/${candidateId}/reject`, { method: 'POST' }),
+
   confirmDirective: (id: string, directiveId: string) =>
     request<AuthorDirectiveView>(`/projects/${id}/directives/${directiveId}/confirm`, { method: 'POST' }),
   dismissDirective: (id: string, directiveId: string) =>

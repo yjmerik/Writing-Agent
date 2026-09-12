@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin, Progress, Collapse, Drawer, Grid, Select } from 'antd';
 import { saveDraft, loadDraft, clearDraft, localStorageAdapter } from '../lib/draftStore';
-import type { AuthorDirectiveView } from '../api/client';
+import type { AuthorDirectiveView, ForeshadowCandidateView } from '../api/client';
 import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, HistoryOutlined, PlusOutlined, ReloadOutlined, TrophyOutlined } from '@ant-design/icons';
 import { ApiError, api } from '../api/client';
 import type { AgentRevisionTarget, CheckpointRevision } from '../api/client';
@@ -96,6 +96,8 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
   const [directiveKind, setDirectiveKind] = useState<'ONCE' | 'HARD' | 'PREFERENCE'>('ONCE');
   const [directiveChapterAll, setDirectiveChapterAll] = useState(false);
   const [directiveBusy, setDirectiveBusy] = useState(false);
+  // p35-02: 候选线索状态
+  const [candidates, setCandidates] = useState<ForeshadowCandidateView[]>([]);
   const screens = Grid.useBreakpoint();
   // p33-04: 外部聚焦请求（状态栏待办直达）
   useEffect(() => {
@@ -339,6 +341,23 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
     try { setDirectives(await api.getDirectives(projectId)); } catch { /* 面板不影响主流程 */ }
   };
   useEffect(() => { void loadDirectives(); }, [projectId]);
+  const loadCandidates = async () => {
+    try { setCandidates(await api.getForeshadowCandidates(projectId)); } catch { /* 面板不影响主流程 */ }
+  };
+  useEffect(() => { void loadCandidates(); }, [projectId]);
+  const promoteCandidate = async (id: string) => {
+    try {
+      await api.promoteForeshadowCandidate(projectId, id);
+      await Promise.all([loadCandidates(), refresh()]);
+      message.success('已提升为正式伏笔（HIGH）');
+    } catch (err) { message.error((err as Error).message); }
+  };
+  const rejectCandidate = async (id: string) => {
+    try {
+      await api.rejectForeshadowCandidate(projectId, id);
+      await loadCandidates();
+    } catch (err) { message.error((err as Error).message); }
+  };
   const submitDirective = async () => {
     if (!directiveContent.trim()) return;
     setDirectiveBusy(true);
@@ -1028,6 +1047,51 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                                   )}
                                 </div>
                               }
+                            />
+                          </List.Item>
+                        )}
+                      />
+                    </div>
+                  ),
+                }]}
+              />
+              {/* p35-02: 候选线索面板 */}
+              <Collapse
+                size="small"
+                style={{ marginBottom: 12 }}
+                items={[{
+                  key: 'candidates',
+                  label: `🧵 候选线索（${candidates.filter(c => c.status === 'PENDING').length} 项待裁决）`,
+                  children: (
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 8 }}>
+                        细节线索先入候选层；提升后成为正式伏笔（HIGH），拒绝则留痕不再提示。
+                      </Text>
+                      {candidates.length === 0 && <Text type="secondary">暂无候选线索。</Text>}
+                      <List
+                        size="small"
+                        dataSource={candidates}
+                        renderItem={c => (
+                          <List.Item
+                            actions={
+                              c.status === 'PENDING' ? [
+                                <Button key="p" size="small" type="primary"
+                                  onClick={() => void promoteCandidate(c.id)}>提升为伏笔</Button>,
+                                <Button key="r" size="small" onClick={() => void rejectCandidate(c.id)}>拒绝</Button>,
+                              ] : []
+                            }
+                          >
+                            <List.Item.Meta
+                              title={
+                                <Space size={4}>
+                                  <Tag color={c.status === 'PROMOTED' ? 'green'
+                                    : c.status === 'REJECTED' ? 'default' : 'gold'}>
+                                    {c.status === 'PROMOTED' ? '已提升' : c.status === 'REJECTED' ? '已拒绝' : '待裁决'}
+                                  </Tag>
+                                  <Tag>第 {c.plantedAtChapter} 章</Tag>
+                                </Space>
+                              }
+                              description={<div style={{ fontSize: 12 }}>{c.description}</div>}
                             />
                           </List.Item>
                         )}

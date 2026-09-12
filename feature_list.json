@@ -5044,7 +5044,8 @@
       "acceptance": "mvn test -Dtest=ApprovalSchemaTest 退出0；旧库连续初始化两次无丢行；标题/正文任一变化改变hash，状态变化不改变；批准记录不能被普通章保存覆盖；相同幂等键唯一。",
       "verify_cmd": "mvn test -Dtest=ApprovalSchemaTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-13：verified，branch codex/p36-02-approval-schema，实现/主分支提交 51d417a；RED 见 evidence（f7b36c2：3 errors no such table）。合并后干净 main mvn compile&&mvn test 740/0/0/1skip、专项 4/4 通过。完成记录 p36-02-p36。安全闭环未完成，待 p36-03 起。"
+      "evidence": "2026-09-13：verified，branch codex/p36-02-approval-schema，实现/主分支提交 51d417a；RED 见 evidence（f7b36c2：3 errors no such table）。合并后干净 main mvn compile&&mvn test 740/0/0/1skip、专项 4/4 通过。完成记录 p36-02-p36。安全闭环未完成，待 p36-03 起。",
+      "completion_record": "p36-02-p36"
     },
     {
       "id": "p36-03",

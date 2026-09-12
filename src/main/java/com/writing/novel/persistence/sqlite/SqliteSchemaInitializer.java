@@ -183,7 +183,24 @@ public class SqliteSchemaInitializer {
         "CREATE TABLE IF NOT EXISTS post_process_ledger (" +
             "project_id TEXT, chapter_index INTEGER, stage TEXT, " +
             "status TEXT DEFAULT 'PENDING', updated_at TEXT, " +
-            "PRIMARY KEY (project_id, chapter_index, stage))"
+            "PRIMARY KEY (project_id, chapter_index, stage))",
+
+        // p36-02: 不可变章节批准审计——DONE 不等于作者批准。
+        // 批准绑定稿件身份 (project_id, chapter_index, chapter_version, content_hash)；
+        // 正文/屏障修订只失效其有效性，永不改写历史批准行。已存在 DONE 不回填。
+        "CREATE TABLE IF NOT EXISTS chapter_approvals (" +
+            "id TEXT PRIMARY KEY, project_id TEXT NOT NULL, chapter_index INTEGER NOT NULL, " +
+            "chapter_version INTEGER NOT NULL, content_hash TEXT NOT NULL, " +
+            "review_set_hash TEXT NOT NULL, idempotency_key TEXT NOT NULL, " +
+            "reason TEXT, created_at TEXT NOT NULL, " +
+            "UNIQUE(project_id, idempotency_key))",
+
+        // p36-02: 屏障身份历史——修订/放行等变迁追加旧屏障身份与修订前后版本，只增不改
+        "CREATE TABLE IF NOT EXISTS review_barrier_history (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, barrier_id TEXT NOT NULL, " +
+            "project_id TEXT NOT NULL, chapter_index INTEGER NOT NULL, " +
+            "old_chapter_version INTEGER, new_chapter_version INTEGER, " +
+            "event TEXT NOT NULL, created_at TEXT NOT NULL)"
     };
 
     private final ConnectionProvider cp;
@@ -261,7 +278,11 @@ public class SqliteSchemaInitializer {
             "CREATE INDEX IF NOT EXISTS idx_prefs_project ON writing_preferences(project_id)",
             // p19-02: story_facts 按 project_id + status 过滤——findActive/findActiveBySubject 每章高频调用，
             // 千行级事实无索引时全表扫（400 章 × 5+ 次/章劣化）
-            "CREATE INDEX IF NOT EXISTS idx_story_facts_project_status ON story_facts(project_id, status)"
+            "CREATE INDEX IF NOT EXISTS idx_story_facts_project_status ON story_facts(project_id, status)",
+            // p36-02: 批准审计按稿件身份查询（审阅上下文读取当前稿批准）
+            "CREATE INDEX IF NOT EXISTS idx_chapter_approvals_chapter ON chapter_approvals(project_id, chapter_index, chapter_version)",
+            // p36-02: 屏障历史按项目+章节追溯
+            "CREATE INDEX IF NOT EXISTS idx_barrier_history_project ON review_barrier_history(project_id, chapter_index)"
         };
         for (String idx : indexes) {
             try {

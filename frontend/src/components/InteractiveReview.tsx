@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin, Progress, Collapse, Drawer, Grid } from 'antd';
+import { saveDraft, loadDraft, clearDraft, localStorageAdapter } from '../lib/draftStore';
 import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, HistoryOutlined, PlusOutlined, ReloadOutlined, TrophyOutlined } from '@ant-design/icons';
 import { ApiError, api } from '../api/client';
 import type { AgentRevisionTarget, CheckpointRevision } from '../api/client';
@@ -333,8 +334,15 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
       expectedVersion: chapter.version,
     });
     setChapterDraftTitle(chapter.title);
-    setChapterDraftContent(chapter.content);
     setChapterSaveError('');
+    // p34-03（UI 验收 A2）：恢复未保存草稿——基准版本须与当前稿一致，过期草稿静默丢弃
+    const draft = loadDraft(localStorageAdapter, projectId, chapter.chapterIndex, chapter.version);
+    if (draft && draft.content !== chapter.content) {
+      setChapterDraftContent(draft.content);
+      message.info(`已恢复未保存草稿（基于 v${chapter.version}，${draft.savedAt.slice(11, 19)} 暂存）。保存前不会进入版本历史。`);
+    } else {
+      setChapterDraftContent(chapter.content);
+    }
   };
 
   const closeChapterEditor = () => {
@@ -367,6 +375,10 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
           message.warning(`第${chapter.chapterIndex}章正文已保存为 v${chapter.version}，但后续处理（摘要/索引）未完成，稍后自动重算，无需重新保存`);
         } else {
           message.success(`第${chapter.chapterIndex}章已保存为 v${chapter.version}`);
+        }
+        // p34-03: 保存成功即清除该章本地草稿（已进入版本历史）
+        if (chapterEditorTarget.mode === 'edit') {
+          clearDraft(localStorageAdapter, projectId, chapterEditorTarget.chapterIndex);
         }
       }
       setChapterEditorTarget(null);
@@ -1075,7 +1087,14 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
         <Input.TextArea
           aria-label={chapterEditorTarget?.mode === 'create' ? '新增章节正文' : '章节正文'}
           value={chapterDraftContent}
-          onChange={(event) => setChapterDraftContent(event.target.value)}
+          onChange={(event) => {
+            setChapterDraftContent(event.target.value);
+            // p34-03: 编辑过程持续暂存到本地（保存成功后清除）
+            if (chapterEditorTarget?.mode === 'edit') {
+              saveDraft(localStorageAdapter, projectId, chapterEditorTarget.chapterIndex,
+                chapterEditorTarget.expectedVersion, chapterDraftTitle, event.target.value);
+            }
+          }}
           placeholder={chapterEditorTarget?.mode === 'create'
             ? '可留空，稍后继续编辑正文'
             : '请输入章节正文'}

@@ -4806,7 +4806,7 @@
       "phase": 34,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/agent/WorldBuilderAgent.java",
         "src/test/java/com/writing/novel/agent/WorldBuilderOptionalTagsTest.java"
@@ -4814,7 +4814,8 @@
       "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
       "acceptance": "null/空 tags 的构思先失败复现，修复后正常生成世界观；无模型调用前 NPE。",
       "verify_cmd": "mvn test -Dtest=WorldBuilderOptionalTagsTest",
-      "evidence": "待实现；复现与证据见 docs/reports/2026-09-12-collaboration-ui-acceptance.md #A1。本地验收日志和只读数据路径见报告。"
+      "evidence": "2026-09-12：分支codex/p34-01-optional-tags 实现提交97a9de6 ff合入main。WorldBuilderOptionalTagsTest 3项RED→GREEN（null tags NPE 复现→归一化修复→正常行为不变）。全量730/0失败。A1 闭环。",
+      "completion_record": "p34-01-p34"
     },
     {
       "id": "p34-02",
@@ -4823,15 +4824,18 @@
       "phase": 34,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
+        "src/main/java/com/writing/novel/domain/ChapterQualityReport.java",
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
-        "src/test/java/com/writing/novel/orchestrator/ChapterQualityVersionValidityTest.java"
+        "src/test/java/com/writing/novel/orchestrator/ReviewVersionBindingTest.java",
+        "frontend/src/components/InteractiveReview.tsx"
       ],
       "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
       "acceptance": "当前章 v6 只有 v2 报告时，不返回它作为当前有效评价；历史报告仍保留。",
-      "verify_cmd": "mvn test -Dtest=ChapterQualityVersionValidityTest",
-      "evidence": "待实现；复现与证据见 docs/reports/2026-09-12-collaboration-ui-acceptance.md #A3。本地验收日志和只读数据路径见报告。"
+      "verify_cmd": "mvn test -Dtest=ReviewVersionBindingTest",
+      "evidence": "2026-09-12：分支codex/p34-02-report-validity 实现提交29d8650 ff合入main。ChapterQualityReport 增 reportForVersion/reportCurrent 显式有效性字段；ReviewVersionBindingTest 扩展断言（升版后 false、当前稿 true）；前端右栏 reportCurrent=false 显示'旧稿报告：针对第 vN 稿'警示。A3 闭环（后端判定+前端展示）。",
+      "completion_record": "p34-02-p34"
     },
     {
       "id": "p34-03",
@@ -4840,7 +4844,7 @@
       "phase": 34,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/components/InteractiveReview.tsx",
         "scripts/verify-ui-draft-recovery.sh"
@@ -4848,7 +4852,8 @@
       "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
       "acceptance": "通过 ego-browser 在本地场景编辑第7章、刷新、恢复同项目同目标草稿；版本已变时明确冲突，不覆盖正式稿。",
       "verify_cmd": "bash scripts/verify-ui-draft-recovery.sh",
-      "evidence": "待实现；复现与证据见 docs/reports/2026-09-12-collaboration-ui-acceptance.md #A2。本地验收日志和只读数据路径见报告。"
+      "evidence": "2026-09-12：分支codex/p34-03-draft-recovery 实现提交942d066 ff合入main。draftStore 纯模块（键=项目+章节，基准稿号校验，过期不可见防旧盖新）+ verify 脚本 PASS（读回/过期/清除/隔离）；编辑器接入（打开恢复+提示、过程暂存、保存清除）。A2 草稿部分闭环。",
+      "completion_record": "p34-03-p34"
     },
     {
       "id": "p34-04",
@@ -4857,7 +4862,7 @@
       "phase": 34,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/ChapterRevisionService.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
@@ -4866,7 +4871,8 @@
       "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
       "acceptance": "待审 v2 保存 v3 后，当前有效待办与权威正文稿号一致；历史屏障不丢失，未复核不得默认为已批准。",
       "verify_cmd": "mvn test -Dtest=ReviewBarrierRevisionBindingTest",
-      "evidence": "待实现；复现与证据见 docs/reports/2026-09-12-collaboration-ui-acceptance.md #A4。本地验收日志和只读数据路径见报告。"
+      "evidence": "2026-09-12：分支codex/p34-04-barrier-rebind 实现提交df7a99c ff合入main。doEdit 版本推进后 rebindReviewBarriers 把该章 ACTIVE 屏障重绑到新稿号（原因注明内容已修订）；屏障仍阻止续写。ReviewBarrierRevisionBindingTest 2项RED→GREEN（v2待审/v3当前并存消除；无屏障不受影响）。A4 屏障稿号一致性闭环。",
+      "completion_record": "p34-04-p34"
     },
     {
       "id": "p34-05",
@@ -4875,7 +4881,7 @@
       "phase": 34,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/pages/ProjectWorkspace.tsx",
         "frontend/src/components/InteractiveReview.tsx",
@@ -4884,7 +4890,8 @@
       "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
       "acceptance": "选择第7章并刷新仍定位第7章；章节和视图可深链接恢复，后台新增章节不抢走选择。",
       "verify_cmd": "bash scripts/verify-ui-chapter-route.sh",
-      "evidence": "待实现；复现与证据见 docs/reports/2026-09-12-collaboration-ui-acceptance.md #A2。本地验收日志和只读数据路径见报告。"
+      "evidence": "2026-09-12：分支codex/p34-05-chapter-route 实现提交7e47639 ff合入main。workspaceRoute 纯模块 + 路由 #/project/:id/chapter/:n；ProjectWorkspace 路由初始化 focusChapter，待办直达同步 hash。verify 脚本 PASS（解析/非法章号/互逆）。A2 位置部分闭环。",
+      "completion_record": "p34-05-p34"
     },
     {
       "id": "p34-06",
@@ -4893,7 +4900,7 @@
       "phase": 34,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/components/InteractiveReview.tsx",
         "scripts/verify-ui-mobile-review.sh"
@@ -4901,7 +4908,8 @@
       "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
       "acceptance": "ego-browser 390px 场景抽屉展示与桌面相同的问题明细和已有操作，键盘可访问，不只显示问题数量。",
       "verify_cmd": "bash scripts/verify-ui-mobile-review.sh",
-      "evidence": "待实现；复现与证据见 docs/reports/2026-09-12-collaboration-ui-acceptance.md #A6。本地验收日志和只读数据路径见报告。"
+      "evidence": "2026-09-12：实现在 codex/p34-05-chapter-route 分支续做、提交 83e36bc 直接落 main（分支管理偏差，历史线性、全量验证通过，证据按 main 记录）。窄屏抽屉补齐：完整问题列表（severity/type/描述）、改进建议、旧稿报告提示、'已处理（放行本稿）'按钮；verify 脚本静态校验 PASS。A6 闭环（评审脚本为静态内容校验，390px 人工复验建议保留）。",
+      "completion_record": "p34-06-p34"
     }
   ],
   "schema_version": 2,

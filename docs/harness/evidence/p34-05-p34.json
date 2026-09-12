@@ -1,0 +1,18 @@
+{
+  "commit": "7e47639512bc0239a5a1bbafcc9374d22b431dd8",
+  "cleanCheckout": true,
+  "checkoutNote": "验证在 ff 合并后的干净主分支检出树执行。",
+  "feature": "p34-05",
+  "checks": [
+    {
+      "command": "bash scripts/verify-ui-chapter-route.sh",
+      "result": "PASS: workspace chapter route",
+      "exitCode": 0
+    },
+    {
+      "command": "cd frontend && npm run build",
+      "result": "构建通过",
+      "exitCode": 0
+    }
+  ]
+}

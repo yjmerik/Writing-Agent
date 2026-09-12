@@ -1,0 +1,18 @@
+{
+  "commit": "97a9de664c20333ca6d9b69edf108ef5030a3680",
+  "cleanCheckout": true,
+  "checkoutNote": "验证在 ff 合并后的干净主分支检出树执行。",
+  "feature": "p34-01",
+  "checks": [
+    {
+      "command": "mvn test -Dtest=WorldBuilderOptionalTagsTest",
+      "result": "3 tests / 0 failures",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test",
+      "result": "730 tests / 0 failures / 1 skipped",
+      "exitCode": 0
+    }
+  ]
+}

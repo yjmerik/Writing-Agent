@@ -1,26 +1,25 @@
-# 共创方案界面验收未通过 — 2026-09-12
+# Phase34 UI 验收缺陷修复完成（6/6） — 2026-09-12
 
 Last Updated: 2026-09-12
 
-## Current
+## Current（当前）
 
-Phase33 的 8 个实现切片保留原完成记录，不能视为原设计 P0–P4 全部交付。本轮按用户要求启动最新服务并通过 ego-browser 验收；业务代码未改。Phase34 新登记 6 项 bug，均 not-started，active_feature=null；共 256 项，250 completed。
+按《2026-09-12 界面验收报告》完成全部 6 项确认缺陷修复并合入 main：p34-01 空标签 NPE（97a9de6）、p34-02 旧稿报告显式有效性（29d8650）、p34-03 草稿本地暂存恢复（942d066）、p34-04 屏障稿号重绑（df7a99c）、p34-05 章节路由恢复（7e47639）、p34-06 窄屏抽屉明细（83e36bc）。feature_list 256 项全部 completed；active_feature=null；main=本轮 docs 提交。验收报告中"意见落实界面、人物影响预览、24→20 工作流 UI、成书版本导出界面"等交付缺口属新功能范围，后端 API（directives/候选线索/target-chapters）已就绪待接 UI。
 
-## Files
+## Files（文件与证据）
 
-- 验收报告：docs/reports/2026-09-12-collaboration-ui-acceptance.md。
-- 回流 spec：docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md。
-- 当前状态源：feature_list.json；原 Phase33 当前入口归档至 docs/harness/archive/2026-09-12-before-ui-acceptance-*。
-- 本轮文档分支：codex/docs-collaboration-ui-acceptance-20260912；验收实现基准 main 4437b5a；文档提交 facd33d 已快进合入 main，合并后 compile/test 再次通过（727/0失败/0错误/1跳过）。
+状态源 [feature_list.json](feature_list.json)；完成索引 [docs/harness/completions.json](docs/harness/completions.json)（p34 系 6 条 verified）；证据 docs/harness/evidence/p34-0*-p34.json；验收报告 [docs/reports/2026-09-12-collaboration-ui-acceptance.md](docs/reports/2026-09-12-collaboration-ui-acceptance.md)。
 
-## Verification
+## Verification（验证）
 
-./init.sh 本轮通过：compile、727 tests / 0 failures / 0 errors / 1 skipped、frontend build。界面验证：原样保存幂等、编辑及候选应用增稿、版本比较、初始设定批准、人审屏障/待办直达、处理后续写到第2章停点并刷新保留。明确失败与未验证范围见报告。
+- 每 defect 先 RED 复现（A1 NPE、A4 v2/v3 并存、#9 垃圾版本等）后 GREEN。
+- 干净 main：mvn test 732/0失败/1跳过；前端 TS 构建通过；check-harness --check-git PASS。
+- 新增 3 个 UI 验证脚本：verify-ui-draft-recovery.sh / verify-ui-chapter-route.sh / verify-ui-mobile-review.sh（Node strip-types 或静态校验）。
 
-## Blockers
+## Blockers（阻塞与限制）
 
-验收不绿：空标签启动 NPE、草稿刷新丢失、旧报告冒用当前、新稿与旧屏障/批准错位。意见落实、事实时间线、24→20 与成书版本/导出仍缺界面。截图工具不可用；真实改写外发审批待用户答复，仅本地确定性写入流程已测。未宣称业务修复完成。
+未推送远端。p34-06 提交曾直接落 main（分支管理偏差，历史线性、证据按 main 记录）。A4 的多窗口 CAS/旧任务延迟提交专项故障测试、真实 390px 人工复验仍待执行。剩余交付缺口（意见/影响/成书 UI）为功能开发非缺陷，需新 spec 拆分。
 
-## Next Steps
+## Next Steps（下一步）
 
-从 main 选择 p34-01 等单一待修项，先 failing test；更大缺口继续按原方案拆分。8081 为最新代码保留作品副本，8082 为本地场景副本；原 8080 旧服务保留，不能作为最新验收入口。保留用户原有两项未跟踪文件，不推送远端。
+./init.sh 恢复（mvn 需 bash -c 'source scripts/load-env.sh && mvn ...'）。候选：意见面板与候选线索 UI 接入三栏、成书版本清单界面、A4 并发专项故障测试。

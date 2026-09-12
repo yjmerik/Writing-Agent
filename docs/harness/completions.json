@@ -657,6 +657,72 @@
       "implementation_commit": "97764b4fee7162ee81d18447b823f1849ba911e3",
       "main_commit": "97764b4fee7162ee81d18447b823f1849ba911e3",
       "evidence": "docs/harness/evidence/p33-07-p33.json"
+    },
+    {
+      "id": "p34-01-p34",
+      "kind": "verified",
+      "feature_ids": [
+        "p34-01"
+      ],
+      "branch": "codex/p34-01-optional-tags",
+      "implementation_commit": "97a9de664c20333ca6d9b69edf108ef5030a3680",
+      "main_commit": "97a9de664c20333ca6d9b69edf108ef5030a3680",
+      "evidence": "docs/harness/evidence/p34-01-p34.json"
+    },
+    {
+      "id": "p34-02-p34",
+      "kind": "verified",
+      "feature_ids": [
+        "p34-02"
+      ],
+      "branch": "codex/p34-02-report-validity",
+      "implementation_commit": "29d865028948a9b1ee6b32e797dcd24737b7d62f",
+      "main_commit": "29d865028948a9b1ee6b32e797dcd24737b7d62f",
+      "evidence": "docs/harness/evidence/p34-02-p34.json"
+    },
+    {
+      "id": "p34-03-p34",
+      "kind": "verified",
+      "feature_ids": [
+        "p34-03"
+      ],
+      "branch": "codex/p34-03-draft-recovery",
+      "implementation_commit": "942d066fc274143a143224609e894ab59e5d0362",
+      "main_commit": "942d066fc274143a143224609e894ab59e5d0362",
+      "evidence": "docs/harness/evidence/p34-03-p34.json"
+    },
+    {
+      "id": "p34-04-p34",
+      "kind": "verified",
+      "feature_ids": [
+        "p34-04"
+      ],
+      "branch": "codex/p34-04-barrier-rebind",
+      "implementation_commit": "df7a99c127097ef7dfaf8077489a3fdea56ec96f",
+      "main_commit": "df7a99c127097ef7dfaf8077489a3fdea56ec96f",
+      "evidence": "docs/harness/evidence/p34-04-p34.json"
+    },
+    {
+      "id": "p34-05-p34",
+      "kind": "verified",
+      "feature_ids": [
+        "p34-05"
+      ],
+      "branch": "codex/p34-05-chapter-route",
+      "implementation_commit": "7e47639512bc0239a5a1bbafcc9374d22b431dd8",
+      "main_commit": "7e47639512bc0239a5a1bbafcc9374d22b431dd8",
+      "evidence": "docs/harness/evidence/p34-05-p34.json"
+    },
+    {
+      "id": "p34-06-p34",
+      "kind": "verified",
+      "feature_ids": [
+        "p34-06"
+      ],
+      "branch": "codex/p34-06-mobile-drawer",
+      "implementation_commit": "83e36bc17a08baca52af8d9dac4696e91a73da61",
+      "main_commit": "83e36bc17a08baca52af8d9dac4696e91a73da61",
+      "evidence": "docs/harness/evidence/p34-06-p34.json"
     }
   ]
 }

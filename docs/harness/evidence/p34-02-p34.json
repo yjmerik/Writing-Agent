@@ -1,0 +1,23 @@
+{
+  "commit": "29d865028948a9b1ee6b32e797dcd24737b7d62f",
+  "cleanCheckout": true,
+  "checkoutNote": "验证在 ff 合并后的干净主分支检出树执行。",
+  "feature": "p34-02",
+  "checks": [
+    {
+      "command": "mvn test -Dtest=ReviewVersionBindingTest",
+      "result": "3 tests / 0 failures（含新有效性断言）",
+      "exitCode": 0
+    },
+    {
+      "command": "cd frontend && npm run build",
+      "result": "构建通过",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test",
+      "result": "730 tests / 0 failures / 1 skipped",
+      "exitCode": 0
+    }
+  ]
+}

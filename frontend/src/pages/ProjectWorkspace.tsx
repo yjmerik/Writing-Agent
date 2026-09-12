@@ -10,6 +10,7 @@ import OutlineView from '../components/OutlineView';
 import InteractiveReview from '../components/InteractiveReview';
 import QualityView from '../components/QualityView';
 import CollaborationBar from '../components/CollaborationBar';
+import BookReviewView from '../components/BookReviewView';
 
 const { Sider, Content } = Layout;
 
@@ -266,6 +267,7 @@ export default function ProjectWorkspace() {
             { key: 'outline', label: '📋 大纲', children: <OutlineView key={`outline-${project.id}`} projectId={project.id} currentChapter={project.currentChapterIndex} /> },
             { key: 'review', label: '📖 章节管理', children: <InteractiveReview key={`review-${project.id}`} refreshSignal={refreshSignal} projectId={project.id} onChanged={load} onNavigateTab={setActiveTab} focusChapter={focusChapter} /> },
             { key: 'quality', label: '🔍 质量评价', children: <QualityView projectId={project.id} /> },
+            { key: 'book', label: '📕 成书审查', children: <BookReviewView projectId={project.id} /> },
           ]}
         />
       </Content>

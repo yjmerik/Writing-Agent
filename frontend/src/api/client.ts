@@ -101,6 +101,31 @@ export interface ForeshadowCandidateView {
   status: 'PENDING' | 'PROMOTED' | 'REJECTED';
 }
 
+export interface BookReviewData {
+  projectId: string;
+  title: string;
+  state: string;
+  targetChapters: number;
+  chapters: Array<{
+    chapterIndex: number;
+    title: string;
+    version: number;
+    status: string;
+    wordCount: number;
+    grade: string;
+    reportCurrent: boolean;
+    planRef?: string | null;
+  }>;
+  summary: { doneChapters: number; totalChapters: number; totalWords: number };
+  unresolvedPromises: Array<{
+    description: string;
+    priority: string;
+    plantedAtChapter: number;
+    expectedResolveChapter: number;
+    mustResolve: boolean;
+  }>;
+}
+
 export interface AuthorDirectiveView {
   id: string;
   kind: 'HARD' | 'ONCE' | 'PREFERENCE';
@@ -509,6 +534,11 @@ export const api = {
 
   confirmDirective: (id: string, directiveId: string) =>
     request<AuthorDirectiveView>(`/projects/${id}/directives/${directiveId}/confirm`, { method: 'POST' }),
+  // --- p35-05: 成书审查 UI API ---
+  getBookReview: (id: string) =>
+    request<BookReviewData>(`/projects/${id}/book-review`),
+  getBookExportUrl: (id: string) => `${BASE}/projects/${id}/book-export`,
+
   dismissDirective: (id: string, directiveId: string) =>
     request<AuthorDirectiveView>(`/projects/${id}/directives/${directiveId}/dismiss`, { method: 'POST' }),
 

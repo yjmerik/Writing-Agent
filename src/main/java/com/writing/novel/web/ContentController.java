@@ -337,6 +337,75 @@ public class ContentController {
         return java.util.Map.of("upgraded", upgraded);
     }
 
+    /** p35-05（设计 5.7 第一版）：成书审查覆盖清单——各章稿号/状态/评分与未回收承诺。 */
+    @GetMapping("/book-review")
+    public Map<String, Object> bookReview(@PathVariable String id) {
+        Project project = repository.findProject(id)
+                .orElseThrow(() -> new IllegalArgumentException("项目不存在: " + id));
+        var prefs = repository.findWritingPreferences(id)
+                .orElseGet(() -> new com.writing.novel.domain.WritingPreferences(id));
+        var chapters = repository.findChaptersByProject(id).stream()
+                .sorted(java.util.Comparator.comparingInt(com.writing.novel.domain.Chapter::getChapterIndex))
+                .<Map<String, Object>>map(ch -> {
+                    var report = orchestrator.buildChapterQualityReport(id, ch.getChapterIndex());
+                    Map<String, Object> m = new java.util.LinkedHashMap<>();
+                    m.put("chapterIndex", ch.getChapterIndex());
+                    m.put("title", ch.getTitle());
+                    m.put("version", ch.getVersion());
+                    m.put("status", ch.getStatus().name());
+                    m.put("wordCount", ch.getWordCount());
+                    m.put("grade", report.getGrade());
+                    m.put("reportCurrent", report.isReportCurrent());
+                    m.put("planRef", ch.getPlanRef());
+                    return m;
+                }).toList();
+        long done = chapters.stream().filter(m -> "DONE".equals(m.get("status"))).count();
+        int totalWords = repository.getTotalWordCount(id);
+        var promises = repository.findUnresolvedForeshadowings(id).stream()
+                .sorted(java.util.Comparator
+                        .comparing(com.writing.novel.domain.Foreshadowing::isMustResolve).reversed()
+                        .thenComparing(f -> f.getPriority() == com.writing.novel.domain.Foreshadowing.Priority.HIGH ? 0 : 1))
+                .<Map<String, Object>>map(f -> Map.of(
+                        "description", f.getDescription(),
+                        "priority", f.getPriority().name(),
+                        "plantedAtChapter", f.getPlantedAtChapter(),
+                        "expectedResolveChapter", f.getExpectedResolveChapter() == null ? -1
+                                : f.getExpectedResolveChapter(),
+                        "mustResolve", f.isMustResolve()))
+                .toList();
+
+        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("projectId", id);
+        result.put("title", project.getTitle());
+        result.put("state", project.getState().name());
+        result.put("targetChapters", prefs.getTargetChapters());
+        result.put("chapters", chapters);
+        result.put("summary", Map.of(
+                "doneChapters", done,
+                "totalChapters", chapters.size(),
+                "totalWords", totalWords));
+        result.put("unresolvedPromises", promises);
+        return result;
+    }
+
+    /** p35-05：全书 Markdown 导出（正文 + 稿号；导出基于当前稿）。 */
+    @GetMapping(value = "/book-export", produces = "text/markdown;charset=UTF-8")
+    public String bookExport(@PathVariable String id) {
+        Project project = repository.findProject(id)
+                .orElseThrow(() -> new IllegalArgumentException("项目不存在: " + id));
+        StringBuilder sb = new StringBuilder();
+        sb.append("# 成书审查：").append(project.getTitle()).append("\n\n");
+        sb.append("> 导出基于当前稿（未定稿标识）。各章标题行标注稿号。\n\n");
+        repository.findChaptersByProject(id).stream()
+                .sorted(java.util.Comparator.comparingInt(com.writing.novel.domain.Chapter::getChapterIndex))
+                .forEach(ch -> {
+                    sb.append("## 第").append(ch.getChapterIndex()).append("章 ")
+                            .append(ch.getTitle()).append("（v").append(ch.getVersion()).append("）\n\n");
+                    sb.append(ch.getContent() == null ? "" : ch.getContent()).append("\n\n");
+                });
+        return sb.toString();
+    }
+
     /** p33-08（设计 5.6）：篇幅变更——先预览影响，confirm 才生效。 */
     @PostMapping("/plan/target-chapters")
     public Map<String, Object> changeTargetChapters(@PathVariable String id,

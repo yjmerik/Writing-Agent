@@ -78,6 +78,18 @@ export interface AgentRevisionApplyResult {
   derivedRefreshPending?: boolean;
 }
 
+export interface AuthorDirectiveView {
+  id: string;
+  kind: 'HARD' | 'ONCE' | 'PREFERENCE';
+  chapterIndex: number | null;
+  content: string;
+  status: 'OPEN' | 'APPLIED_SYSTEM' | 'CONFIRMED' | 'DISMISSED';
+  systemEvidence: string | null;
+  systemEvidenceVersion: number | null;
+  createdAt: string;
+  confirmedAt?: string;
+}
+
 export interface WorkspaceTodo {
   chapterIndex: number;
   chapterVersion: number;
@@ -450,6 +462,16 @@ export const api = {
   /** p33-02: 统一工作区状态——按钮可用性的单一来源 */
   getWorkspace: (id: string) =>
     request<WorkspaceStatus>(`/projects/${id}/workspace`),
+
+  // --- p35-01: 作者意见闭环 UI API ---
+  getDirectives: (id: string, pendingOnly?: boolean) =>
+    request<AuthorDirectiveView[]>(`/projects/${id}/directives${pendingOnly ? '?pendingOnly=true' : ''}`),
+  createDirective: (id: string, body: { kind: string; chapterIndex?: number; content: string }) =>
+    request<AuthorDirectiveView>(`/projects/${id}/directives`, { method: 'POST', body: JSON.stringify(body) }),
+  confirmDirective: (id: string, directiveId: string) =>
+    request<AuthorDirectiveView>(`/projects/${id}/directives/${directiveId}/confirm`, { method: 'POST' }),
+  dismissDirective: (id: string, directiveId: string) =>
+    request<AuthorDirectiveView>(`/projects/${id}/directives/${directiveId}/dismiss`, { method: 'POST' }),
 
   /** p32-11: 读回最近一次全书评价（未评价时 evaluation=null） */
   getQualityEvaluation: (id: string) =>

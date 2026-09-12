@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin, Progress, Collapse, Drawer, Grid } from 'antd';
+import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin, Progress, Collapse, Drawer, Grid, Select } from 'antd';
 import { saveDraft, loadDraft, clearDraft, localStorageAdapter } from '../lib/draftStore';
+import type { AuthorDirectiveView } from '../api/client';
 import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, HistoryOutlined, PlusOutlined, ReloadOutlined, TrophyOutlined } from '@ant-design/icons';
 import { ApiError, api } from '../api/client';
 import type { AgentRevisionTarget, CheckpointRevision } from '../api/client';
@@ -89,6 +90,12 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
   const [status, setStatus] = useState<ProjectStatus | null>(null);
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [reviewPanelOpen, setReviewPanelOpen] = useState(false);
+  // p35-01: 意见面板状态
+  const [directives, setDirectives] = useState<AuthorDirectiveView[]>([]);
+  const [directiveContent, setDirectiveContent] = useState('');
+  const [directiveKind, setDirectiveKind] = useState<'ONCE' | 'HARD' | 'PREFERENCE'>('ONCE');
+  const [directiveChapterAll, setDirectiveChapterAll] = useState(false);
+  const [directiveBusy, setDirectiveBusy] = useState(false);
   const screens = Grid.useBreakpoint();
   // p33-04: 外部聚焦请求（状态栏待办直达）
   useEffect(() => {
@@ -325,6 +332,36 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
     setChapterDraftTitle('');
     setChapterDraftContent('');
     setChapterSaveError('');
+  };
+
+  // p35-01: 意见列表加载与动作
+  const loadDirectives = async () => {
+    try { setDirectives(await api.getDirectives(projectId)); } catch { /* 面板不影响主流程 */ }
+  };
+  useEffect(() => { void loadDirectives(); }, [projectId]);
+  const submitDirective = async () => {
+    if (!directiveContent.trim()) return;
+    setDirectiveBusy(true);
+    try {
+      await api.createDirective(projectId, {
+        kind: directiveKind,
+        chapterIndex: directiveChapterAll ? undefined
+          : (chapterEditorTarget?.mode === 'edit' ? chapterEditorTarget.chapterIndex : currentChapter?.chapterIndex),
+        content: directiveContent.trim(),
+      });
+      setDirectiveContent('');
+      await loadDirectives();
+      message.success('意见已登记');
+    } catch (err) { message.error((err as Error).message); }
+    finally { setDirectiveBusy(false); }
+  };
+  const confirmDirective = async (id: string) => {
+    try { await api.confirmDirective(projectId, id); await loadDirectives(); }
+    catch (err) { message.error((err as Error).message); }
+  };
+  const dismissDirective = async (id: string) => {
+    try { await api.dismissDirective(projectId, id); await loadDirectives(); }
+    catch (err) { message.error((err as Error).message); }
   };
 
   const openEditChapter = (chapter: Chapter) => {
@@ -915,6 +952,90 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
           {/* p33-04: 审查面板（右栏；窄屏抽屉） */}
           <Col xs={24} md={6}>
             <Card title="🔍 审查面板" size="small" style={{ maxHeight: '76vh', overflow: 'auto' }}>
+              {/* p35-01: 意见面板 */}
+              <Collapse
+                size="small"
+                style={{ marginBottom: 12 }}
+                items={[{
+                  key: 'directives',
+                  label: `📝 意见（${directives.filter(d => d.status === 'OPEN' || d.status === 'APPLIED_SYSTEM').length} 项待办）`,
+                  children: (
+                    <div>
+                      <Input.TextArea
+                        aria-label="登记意见"
+                        placeholder="对当前章节提出修改意见（如：为旧发夹提前加铺垫）"
+                        value={directiveContent}
+                        onChange={e => setDirectiveContent(e.target.value)}
+                        autoSize={{ minRows: 2, maxRows: 4 }}
+                        style={{ marginBottom: 8 }}
+                      />
+                      <Space wrap style={{ marginBottom: 8 }}>
+                        <Select<'ONCE' | 'HARD' | 'PREFERENCE'> value={directiveKind}
+                          onChange={setDirectiveKind} style={{ width: 120 }}
+                          options={[
+                            { value: 'ONCE', label: '单次意见' },
+                            { value: 'HARD', label: '硬性要求' },
+                            { value: 'PREFERENCE', label: '偏好' },
+                          ]} />
+                        {!directiveChapterAll && currentChapter && (
+                          <Tag>范围：第 {currentChapter.chapterIndex} 章</Tag>
+                        )}
+                        <Button size="small" onClick={() => setDirectiveChapterAll(v => !v)}>
+                          {directiveChapterAll ? '改为本章' : '改为全书'}
+                        </Button>
+                        <Button size="small" type="primary" loading={directiveBusy}
+                          disabled={!directiveContent.trim()} onClick={() => void submitDirective()}>
+                          登记意见
+                        </Button>
+                      </Space>
+                      {directives.length === 0 && <Text type="secondary">暂无意见。</Text>}
+                      <List
+                        size="small"
+                        dataSource={directives}
+                        renderItem={d => (
+                          <List.Item
+                            actions={[
+                              d.status === 'APPLIED_SYSTEM' ? (
+                                <Button key="c" size="small" type="primary"
+                                  onClick={() => void confirmDirective(d.id)}>确认已落实</Button>
+                              ) : null,
+                              d.status !== 'CONFIRMED' && d.kind !== 'HARD' ? (
+                                <Button key="d" size="small" onClick={() => void dismissDirective(d.id)}>撤销</Button>
+                              ) : null,
+                            ].filter(Boolean) as JSX.Element[]}
+                          >
+                            <List.Item.Meta
+                              title={
+                                <Space size={4}>
+                                  <Tag color={d.kind === 'HARD' ? 'red' : d.kind === 'ONCE' ? 'blue' : 'default'}>
+                                    {d.kind === 'HARD' ? '硬性' : d.kind === 'ONCE' ? '单次' : '偏好'}
+                                  </Tag>
+                                  {d.chapterIndex != null && <Tag>第 {d.chapterIndex} 章</Tag>}
+                                  <Tag color={d.status === 'CONFIRMED' ? 'green'
+                                    : d.status === 'APPLIED_SYSTEM' ? 'gold'
+                                    : d.status === 'DISMISSED' ? 'default' : 'processing'}>
+                                    {d.status === 'OPEN' ? '待处理'
+                                      : d.status === 'APPLIED_SYSTEM' ? '系统已落实，待你确认'
+                                      : d.status === 'CONFIRMED' ? '已确认' : '已撤销'}
+                                  </Tag>
+                                </Space>
+                              }
+                              description={
+                                <div>
+                                  <div style={{ fontSize: 12 }}>{d.content}</div>
+                                  {d.systemEvidence && (
+                                    <div style={{ fontSize: 12, color: '#999' }}>落实证据：{d.systemEvidence}</div>
+                                  )}
+                                </div>
+                              }
+                            />
+                          </List.Item>
+                        )}
+                      />
+                    </div>
+                  ),
+                }]}
+              />
               {currentChapter?.status === 'NEEDS_MANUAL_REVIEW' && (
                 <Alert type="warning" showIcon style={{ marginBottom: 12 }}
                   message={`第 ${currentChapter.chapterIndex} 章第 v${currentChapter.version} 稿待你审查`}

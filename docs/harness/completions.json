@@ -800,6 +800,17 @@
       "implementation_commit": "28d1de929cac77384e405afcbc2d49cf848d8bbf",
       "main_commit": "28d1de929cac77384e405afcbc2d49cf848d8bbf",
       "evidence": "docs/harness/evidence/p36-03-p36.json"
+    },
+    {
+      "id": "p36-04-p36",
+      "kind": "verified",
+      "feature_ids": [
+        "p36-04"
+      ],
+      "branch": "codex/p36-04-versioned-review-api",
+      "implementation_commit": "76dcfd055bdb6da3ad5565fd31da04f982bdfd75",
+      "main_commit": "76dcfd055bdb6da3ad5565fd31da04f982bdfd75",
+      "evidence": "docs/harness/evidence/p36-04-p36.json"
     }
   ]
 }

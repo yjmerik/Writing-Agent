@@ -1,32 +1,30 @@
-# 协作修复实施交接（p36-02/03 已完成） — 2026-09-13
+# 协作修复实施交接（p36-02/03/04 已完成） — 2026-09-13
 
 Last Updated: 2026-09-13
 
 ## Current
 
-p36-02（不可变审阅身份与批准审计表，主分支提交 51d417a）与 p36-03（章节批准与屏障的原子比较提交，主分支提交 28d1de9）均已实现、验证并合入本地 main。feature_list 319 项 = 263 completed + 56 not-started，active_feature=null。
+p36-02（不可变审阅身份与批准审计表，51d417a）、p36-03（章节批准与屏障的原子比较提交，28d1de9）、p36-04（携带版本的审阅上下文与批准接口，76dcfd0）均已实现、验证并合入本地 main。feature_list 319 项 = 264 completed + 55 not-started，active_feature=null。
 
-仓储层现在具备：`ChapterApproval` 身份/请求/结果/审阅上下文模型、`chapter_approvals`（UNIQUE(project_id, idempotency_key)）与 `review_barrier_history` 表、单连接事务的 `approveChapter` 原子比较提交（幂等重放/双重批准守卫/身份与 reviewSetHash 比较/屏障按稿号解决并记历史/同章检查点处理/停点退出）与 `readReviewContext` 一致快照读。
+后端版本化批准链路已就绪：ChapterApproval 身份模型 + chapter_approvals/review_barrier_history 表 + 单连接事务 approveChapter（幂等重放/双重批准守卫/身份与 reviewSetHash 比较/屏障按稿号解决并记历史/同章检查点/停点退出）+ GET review-context / POST review-decisions 接口（缺字段 400、跨项目 400、冲突 409 带当前权威状态、工作权沿用 WORK_OWNERSHIP_CONFLICT）。
 
 ## Files
 
-- 分支 codex/p36-02-approval-schema：f7b36c2 → 51d417a（已合入）。
-- 分支 codex/p36-03-atomic-approval：1fc90b7（SPI 契约+RED）→ 28d1de9（实现，已合入）。
-- 证据：docs/harness/evidence/p36-02-p36.json、p36-03-p36.json；完成记录 completions.json → p36-02-p36 / p36-03-p36（verified）。
+- 分支 codex/p36-02-approval-schema（f7b36c2→51d417a）、codex/p36-03-atomic-approval（1fc90b7→28d1de9）、codex/p36-04-versioned-review-api（11bc122→76dcfd0），均已 ff 合入 main。
+- 证据：docs/harness/evidence/p36-02/03/04-p36.json；完成记录 completions.json → p36-0{2,3,4}-p36（verified）。
 - 执行入口 docs/superpowers/plans/2026-09-12-collaboration-repair-entry.md；总 spec 与 p36–p40 分计划不变。
 
 ## Verification
 
-- p36-02：RED 3 errors（no such table）→ 专项 4/4；合并后全量 740/0/0/1skip。
-- p36-03：RED 8 errors（UnsupportedOperation）→ 专项 8/8（真并发单赢家、注入失败全回滚、连跑 4 次稳定）；合并后干净 main 全量 748/0/0/1skip。
-- 两项均无 prompt/上下文/前端改动，未跑 e2e/baseline，未 bless（quality_gate：无生成输入变更）。
+- 三项均 RED→GREEN→合并后干净 main 复跑：全量 752 tests / 0 failures / 0 errors / 1 skipped；专项 p36-02 4/4、p36-03 8/8（真并发单赢家、注入失败全回滚）、p36-04 4/4。
+- 三项均无 prompt/上下文/前端改动，未跑 e2e/baseline，未 bless（quality_gate：无生成输入变更）。
 
 ## Blockers
 
-旧窗口正文v2可放行另一窗口v3的产品漏洞仍未闭环：HTTP 接口在 p36-04、前端统一版本按钮在 p36-05、旧入口关闭在 p36-06；reviewSetHash 的 issues/directives/dispositions 集合待 p37/p38 接入（当前空集合）。不得把仓储层契约测试当作端到端修复证据。临时测试服务已关闭；真实评分/模型预算/bless 属执行时授权事项。
+旧窗口误批漏洞的前端侧仍未闭环：p36-05 前端统一已读版本按钮（依赖 p36-01 QA 设施 + p36-04）；旧入口关闭在 p36-06（依赖 p36-05/12/13）；p36-07 修订原子失效批准（依赖 p36-03，已满足）。reviewSetHash 的 issues/directives/dispositions 集合待 p37/p38。不得把后端接口测试当作端到端修复证据。真实评分/模型预算/bless 属执行时授权事项。
 
 ## Next Steps
 
-1. 从 main 新建 codex/p36-04-versioned-review-api 分支实现 p36-04：新增 web/ReviewDecisionController，GET /api/projects/{id}/chapters/{n}/review-context、POST 同路径 /review-decisions（identity+reviewSetHash+idempotencyKey+reason → ChapterApproval.Result）。
-2. 控制器注入 NovelRepository 与 WritingTaskExecutor：先 acquire 项目工作权再调原子仓储、finally 释放；路径与 identity 所有者不符 400，缺字段 400，版本/待办冲突 409 且返回当前身份，WORK_OWNERSHIP_CONFLICT 沿用现有码。
-3. 先写 VersionedReviewDecisionTest RED（MockMvc 真实 POST：v2读取→PUT 产生v3→提交v2 409 且v3待审；缺版本400；跨项目拒绝；同请求重试幂等）。保留工作区原有未跟踪文件，不推送远端。
+1. 建议下一特性 p36-07（正式修订原子失效批准并记录屏障历史，依赖已满足）：先写 RevisionBarrierAtomicityTest RED——修订事务中屏障更新失败全回滚；v2 批准后编辑 v3，v2 批准仍可查询但不算 v3 批准；回退也生成新稿待审；无变更保存不新增历史；再改 SqliteNovelRepository.saveChapterRevision 与 ChapterRevisionService.doEdit（删除事务后吞异常的 rebind）。
+2. 或转 p36-01（浏览器 QA 设施，独立），为 p36-05/08/09/10/11 做准备。
+3. 保留工作区原有未跟踪文件（.zcode/plans、docs/reports/2026-09-05-ui-experience），不推送远端。

@@ -504,26 +504,35 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
   };
 
   const openEditChapter = async (chapter: Chapter) => {
+    // p36-09: 冲突判定以服务器当前稿为准——前端缓存可能落后于其他窗口的保存
+    let latest = chapter;
+    try {
+      const remote = await api.getChapter(projectId, chapter.chapterIndex);
+      if (remote) {
+        latest = remote;
+        if (remote.version !== chapter.version) replaceChapterInView(remote);
+      }
+    } catch { /* 网络失败时退回缓存版本 */ }
     setChapterEditorTarget({
       mode: 'edit',
-      chapterIndex: chapter.chapterIndex,
-      expectedVersion: chapter.version,
+      chapterIndex: latest.chapterIndex,
+      expectedVersion: latest.version,
     });
-    setChapterDraftTitle(chapter.title);
-    setChapterDraftContent(chapter.content);
+    setChapterDraftTitle(latest.title);
+    setChapterDraftContent(latest.content);
     setChapterSaveError('');
     setDraftStorageWarning(null);
     setConflictDraftInfo(null);
     // p36-09: 恢复两字段草稿；基准变化保留冲突副本并排呈现；旧格式仅提示核对
-    const currentHash = await contentHashHex(chapter.title, chapter.content);
-    const result = loadDraft(localStorageAdapter, projectId, chapter.chapterIndex,
-      chapter.version, currentHash);
+    const currentHash = await contentHashHex(latest.title, latest.content);
+    const result = loadDraft(localStorageAdapter, projectId, latest.chapterIndex,
+      latest.version, currentHash);
     if (result.kind === 'matching') {
       const draft = result.draft;
       if (draft.legacy) {
         setDraftNotice(`发现旧格式草稿（${draft.savedAt.slice(11, 19)} 暂存，无基准指纹）——请核对内容后再保存，系统未自动覆盖。`);
       } else {
-        setDraftNotice(`已恢复未保存草稿（基于 v${chapter.version}，${draft.savedAt.slice(11, 19)} 暂存）。保存前不会进入版本历史。`);
+        setDraftNotice(`已恢复未保存草稿（基于 v${latest.version}，${draft.savedAt.slice(11, 19)} 暂存）。保存前不会进入版本历史。`);
       }
       setChapterDraftTitle(draft.title);
       setChapterDraftContent(draft.content);
@@ -531,8 +540,8 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
       // 基准已变化：编辑器展示当前稿，冲突副本并排可复制/放弃，不静默隐藏或覆盖
       setConflictDraftInfo({
         draft: result.draft,
-        conflictCopy: result.conflictCopy ?? loadConflictDraft(localStorageAdapter, projectId, chapter.chapterIndex),
-        currentVersion: chapter.version,
+        conflictCopy: result.conflictCopy ?? loadConflictDraft(localStorageAdapter, projectId, latest.chapterIndex),
+        currentVersion: latest.version,
       });
     } else if (result.kind === 'unavailable') {
       setDraftStorageWarning(`本地草稿读取失败：${result.error}。本次编辑不会被暂存，请勿依赖刷新恢复。`);
@@ -1569,9 +1578,19 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                     </pre>
                     <Space style={{ marginTop: 8 }}>
                       <Button size="small" onClick={() => {
-                        void navigator.clipboard?.writeText(
-                          `${conflictDraftInfo.conflictCopy!.title}\n\n${conflictDraftInfo.conflictCopy!.content}`);
-                        message.success('冲突草稿已复制到剪贴板');
+                        const copy = conflictDraftInfo.conflictCopy;
+                        if (!copy) return;
+                        const text = `${copy.title}\n\n${copy.content}`;
+                        const notifyFallback = () =>
+                          message.info('已尝试复制冲突草稿；若剪贴板不可用，请在下方文本框手动全选复制');
+                        // 剪贴板权限被拒（如 headless）时 promise 异步 reject——必须接住，避免未处理异常
+                        if (navigator.clipboard?.writeText) {
+                          navigator.clipboard.writeText(text)
+                            .then(() => message.success('冲突草稿已复制到剪贴板'))
+                            .catch(() => notifyFallback());
+                        } else {
+                          notifyFallback();
+                        }
                       }}>复制草稿内容</Button>
                       <Button size="small" danger onClick={() => {
                         if (chapterEditorTarget?.mode !== 'edit') return;

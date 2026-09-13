@@ -5250,7 +5250,7 @@
       "dependencies": [
         "p36-01"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "frontend/src/components/BookReviewView.tsx",
         "qa/collaboration/book-state.spec.ts"
@@ -6397,5 +6397,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-13",
-  "active_feature": null
+  "active_feature": "p36-11"
 }

@@ -122,6 +122,11 @@ public interface NovelRepository {
         throw new UnsupportedOperationException("approveChapter 未实现：仓储不支持版本化批准");
     }
 
+    /** p36-11: 该稿件身份是否有作者批准记录（缺省 false——不默认已批准）。 */
+    default boolean isChapterApproved(String projectId, int chapterIndex, int version, String contentHash) {
+        return false;
+    }
+
     /** 版本化批准冲突：身份/待审集合过期、重复批准或幂等键语义冲突。携带当前权威状态供客户端刷新。 */
     final class ReviewConflictException extends RuntimeException {
 

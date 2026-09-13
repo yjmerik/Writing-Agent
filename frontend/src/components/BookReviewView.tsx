@@ -50,21 +50,30 @@ export default function BookReviewView({ projectId }: { projectId: string }) {
           size="small"
           header="章节覆盖"
           dataSource={data.chapters}
-          renderItem={ch => (
+          renderItem={ch => {
+            // p36-11: DONE 只描述生成流程；批准按当前稿件身份精确匹配，缺记录即"尚未作者批准"
+            const approved = ch.approved === true;
+            const statusLabel = ch.status === 'DONE' ? '正文流程完成'
+              : ch.status === 'NEEDS_MANUAL_REVIEW' ? '待人审' : '处理中';
+            return (
             <List.Item>
               <Space size={6} wrap>
                 <Tag>第 {ch.chapterIndex} 章</Tag>
                 <Tag color="purple">v{ch.version}</Tag>
                 <Tag color={ch.status === 'DONE' ? 'green'
                   : ch.status === 'NEEDS_MANUAL_REVIEW' ? 'red' : 'processing'}>
-                  {ch.status === 'DONE' ? '已批准流程完成' : ch.status === 'NEEDS_MANUAL_REVIEW' ? '待人审' : '处理中'}
+                  {statusLabel}
                 </Tag>
+                {approved
+                  ? <Tag color="geekblue" data-approval="approved">作者已批准</Tag>
+                  : <Tag data-approval="none">尚未作者批准</Tag>}
                 <Tag color={ch.grade === 'A' ? 'green' : ch.grade === 'B' ? 'gold' : 'default'}>{ch.grade} 级</Tag>
                 {ch.reportCurrent === false && <Tag color="orange">旧稿报告</Tag>}
                 <Text type="secondary">{ch.wordCount.toLocaleString()} 字</Text>
               </Space>
             </List.Item>
-          )}
+            );
+          }}
         />
 
         <List

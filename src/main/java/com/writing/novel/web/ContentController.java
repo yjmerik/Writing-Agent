@@ -349,6 +349,10 @@ public class ContentController {
                     m.put("grade", report.getGrade());
                     m.put("reportCurrent", report.isReportCurrent());
                     m.put("planRef", ch.getPlanRef());
+                    // p36-11: DONE 不等于作者批准——批准按当前稿件身份精确匹配
+                    m.put("approved", repository.isChapterApproved(id, ch.getChapterIndex(),
+                            ch.getVersion(), com.writing.novel.domain.ChapterApproval.contentHash(
+                                    ch.getTitle(), ch.getContent())));
                     return m;
                 }).toList();
         long done = chapters.stream().filter(m -> "DONE".equals(m.get("status"))).count();

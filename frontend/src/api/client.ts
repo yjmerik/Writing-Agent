@@ -149,6 +149,8 @@ export interface BookReviewData {
     grade: string;
     reportCurrent: boolean;
     planRef?: string | null;
+    /** p36-11: 当前稿件身份是否有作者批准记录——DONE 不等于批准 */
+    approved?: boolean;
   }>;
   summary: { doneChapters: number; totalChapters: number; totalWords: number };
   unresolvedPromises: Array<{

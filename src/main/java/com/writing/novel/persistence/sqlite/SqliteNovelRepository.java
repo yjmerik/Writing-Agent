@@ -1042,6 +1042,16 @@ public class SqliteNovelRepository implements NovelRepository {
         });
     }
 
+    /** p36-11: 只读查询——该稿件身份是否有作者批准记录（成书覆盖清单诚实状态用）。 */
+    @Override
+    public boolean isChapterApproved(String projectId, int chapterIndex, int version, String contentHash) {
+        try (Connection conn = cp.getConnection()) {
+            return findApprovalForIdentity(conn, projectId, chapterIndex, version, contentHash) != null;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private Chapter selectChapterByIndex(Connection conn, String projectId, int chapterIndex) {
         try (PreparedStatement ps = conn.prepareStatement(
                 "SELECT * FROM chapters WHERE project_id=? AND chapter_index=?")) {
@@ -1184,8 +1194,7 @@ public class SqliteNovelRepository implements NovelRepository {
     }
 
     private ChapterApproval selectApprovalByIdempotencyKey(Connection conn, String projectId,
-                                                           String idempotencyKey) {
-        try (PreparedStatement ps = conn.prepareStatement(
+                                                           String idempotencyKey) {        try (PreparedStatement ps = conn.prepareStatement(
                 "SELECT * FROM chapter_approvals WHERE project_id=? AND idempotency_key=?")) {
             ps.setString(1, projectId);
             ps.setString(2, idempotencyKey);

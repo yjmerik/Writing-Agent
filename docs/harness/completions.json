@@ -789,6 +789,17 @@
       "implementation_commit": "51d417a6029c95de0e55a1b6f711f16d2224ba63",
       "main_commit": "51d417a6029c95de0e55a1b6f711f16d2224ba63",
       "evidence": "docs/harness/evidence/p36-02-p36.json"
+    },
+    {
+      "id": "p36-03-p36",
+      "kind": "verified",
+      "feature_ids": [
+        "p36-03"
+      ],
+      "branch": "codex/p36-03-atomic-approval",
+      "implementation_commit": "28d1de929cac77384e405afcbc2d49cf848d8bbf",
+      "main_commit": "28d1de929cac77384e405afcbc2d49cf848d8bbf",
+      "evidence": "docs/harness/evidence/p36-03-p36.json"
     }
   ]
 }

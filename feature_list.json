@@ -5056,7 +5056,7 @@
       "dependencies": [
         "p36-02"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/spi/NovelRepository.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
@@ -5068,7 +5068,8 @@
       "acceptance": "mvn test -Dtest=VersionedApprovalRepositoryTest 退出0；两连接同时用不同key批准同一待办，仅一方成功；同key同请求重试返回相同approvalId；同key不同内容冲突；旧version/hash/reviewSetHash均拒绝；在批准行写入后注入SQL错误，正文状态/屏障/checkpoint/审计全部不变。",
       "verify_cmd": "mvn test -Dtest=VersionedApprovalRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-13：verified，branch codex/p36-03-atomic-approval，实现/主分支提交 28d1de9；RED 见 evidence（1fc90b7：8 errors UnsupportedOperation）。合并后干净 main mvn compile&&mvn test 748/0/0/1skip、专项 8/8 通过（含两连接并发单赢家与注入失败全回滚）。完成记录 p36-03-p36。",
+      "completion_record": "p36-03-p36"
     },
     {
       "id": "p36-04",
@@ -6386,5 +6387,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-13",
-  "active_feature": "p36-03"
+  "active_feature": null
 }

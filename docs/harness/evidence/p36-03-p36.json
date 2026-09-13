@@ -1,0 +1,52 @@
+{
+  "commit": "28d1de929cac77384e405afcbc2d49cf848d8bbf",
+  "cleanCheckout": true,
+  "checkoutNote": "验证在合并后干净 main（fast-forward 至 28d1de9）执行；工作区仅存合并前已有的未跟踪文件，未参与验证。",
+  "feature": "p36-03",
+  "branch": "codex/p36-03-atomic-approval",
+  "base_commit": "2914374",
+  "red": {
+    "commit": "1fc90b7552bb00f21316995e31a1599f2cb20902",
+    "command": "mvn test -Dtest=VersionedApprovalRepositoryTest",
+    "exitCode": 1,
+    "result": "Tests run: 8, Errors: 8 —— 全部报 UnsupportedOperation 'readReviewContext 未实现：仓储不支持版本化审阅'（SPI 缺省实现显式抛出，非默认成功；行为性失败非编译失败）。"
+  },
+  "implementation": {
+    "commit": "28d1de929cac77384e405afcbc2d49cf848d8bbf",
+    "files": [
+      "src/main/java/com/writing/novel/spi/NovelRepository.java",
+      "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+      "src/test/java/com/writing/novel/persistence/VersionedApprovalRepositoryTest.java"
+    ],
+    "notes": "approveChapter 单连接事务：幂等重放→双重批准守卫→身份比较→reviewSetHash 比较→写批准审计→精确版本 DONE→只解决匹配稿号屏障（含 RESOLVED 历史）→处理同章章节类检查点→按剩余待审项退出停点；任一步失败全回滚。reviewSetHash=报告/屏障/章节类检查点身份有序集合 JSON 键排序后 SHA-256。事务内全部使用传入连接，未调用新开连接的公共仓储方法。"
+  },
+  "checks": [
+    {
+      "command": "mvn test -Dtest=VersionedApprovalRepositoryTest",
+      "result": "8 tests / 0 failures / 0 errors（另复跑 3 次含并发用例均稳定）",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（合并后干净 main）",
+      "result": "748 tests / 0 failures / 0 errors / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=VersionedApprovalRepositoryTest（合并后干净 main 复跑）",
+      "result": "8 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor 28d1de9 main",
+      "result": "实现提交为 main 祖先",
+      "exitCode": 0
+    }
+  ],
+  "acceptance_detail": "两连接以不同幂等键并发批准同一待办恰好一方成功（CyclicBarrier 真并发，SQLite WAL 写锁序列化，败者 BUSY_SNAPSHOT/冲突异常回滚）；同 key 同请求重试返回相同 approvalId 且 replayed=true 不新增行；同 key 不同语义报 IDEMPOTENCY_CONFLICT 且原批准保持；不同 key 重复批准同一身份报 ALREADY_APPROVED；旧 version/旧 contentHash/旧 reviewSetHash（含读取后新增屏障的动态过期）均拒绝且无任何写入；批准行写入后以 BEFORE UPDATE 触发器注入 SQL 错误，正文状态/屏障/检查点/批准审计/屏障历史/项目停点状态全部回滚。成功路径：屏障解决、同章 AFTER_CHAPTER 检查点 APPROVED、屏障历史追加 RESOLVED、无剩余待审项时项目退出 PAUSED_AT_CHECKPOINT 进入 WRITING。",
+  "limits": [
+    "HTTP 接口与 WORK_OWNERSHIP 集成属 p36-04",
+    "issues/directives/dispositions 尚未参与 reviewSetHash（p37/p38 接入前为空集合）",
+    "未跑 e2e/compare-baseline：无 prompt、上下文组装或前端改动",
+    "不声称旧稿批准漏洞已修复——需 p36-04/05/06 完成前后端闭环"
+  ]
+}

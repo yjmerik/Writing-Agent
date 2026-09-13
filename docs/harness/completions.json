@@ -822,6 +822,17 @@
       "implementation_commit": "222d8879173a4047fa482de60309b41f1c69a5bf",
       "main_commit": "222d8879173a4047fa482de60309b41f1c69a5bf",
       "evidence": "docs/harness/evidence/p36-07-p36.json"
+    },
+    {
+      "id": "p36-01-p36",
+      "kind": "verified",
+      "feature_ids": [
+        "p36-01"
+      ],
+      "branch": "codex/p36-01-browser-qa",
+      "implementation_commit": "57e6d5a38b901b951e1c1eaee080740ea4ba64bf",
+      "main_commit": "57e6d5a38b901b951e1c1eaee080740ea4ba64bf",
+      "evidence": "docs/harness/evidence/p36-01-p36.json"
     }
   ]
 }

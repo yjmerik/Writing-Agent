@@ -5011,7 +5011,7 @@
       "phase": 36,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "qa/collaboration/package.json",
         "qa/collaboration/package-lock.json",
@@ -5023,7 +5023,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- smoke.spec.ts 退出0；正常本地服务通过；错误端口、空白页、页面运行异常均让命令非零退出；保存测试结果、截图和 trace 到 QA_ARTIFACT_DIR，不放小说正文进 Git。",
       "verify_cmd": "npm --prefix qa/collaboration test -- smoke.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-13：verified，branch codex/p36-01-browser-qa，实现/主分支提交 57e6d5a；qa/collaboration 独立包，@playwright/test 锁定 1.63.0。happy path（场景模式服务 18083）3 passed exit 0；未设URL/错误端口/空白页均非零退出；合并后全量 757/0/0/1skip、前端构建通过。完成记录 p36-01-p36。",
+      "completion_record": "p36-01-p36"
     },
     {
       "id": "p36-02",
@@ -6389,5 +6390,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-13",
-  "active_feature": "p36-01"
+  "active_feature": null
 }

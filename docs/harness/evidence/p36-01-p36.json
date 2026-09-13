@@ -1,0 +1,69 @@
+{
+  "commit": "57e6d5a38b901b951e1c1eaee080740ea4ba64bf",
+  "cleanCheckout": true,
+  "checkoutNote": "合并后验证在 ff 后的本地 main（57e6d5a，树与特性分支一致）执行：全量 mvn compile&&mvn test、verify_cmd happy path（独立临时库场景服务）与失败路径抽检均在合并后重跑。",
+  "feature": "p36-01",
+  "branch": "codex/p36-01-browser-qa",
+  "base_commit": "e4bda1c",
+  "implementation": {
+    "commit": "57e6d5a38b901b951e1c1eaee080740ea4ba64bf",
+    "files": [
+      "qa/collaboration/package.json",
+      "qa/collaboration/package-lock.json",
+      "qa/collaboration/playwright.config.ts",
+      "qa/collaboration/smoke.spec.ts",
+      "qa/collaboration/.gitignore"
+    ],
+    "notes": "独立 QA 包 @writingagent/collaboration-qa，@playwright/test 锁定精确版本 1.63.0（--save-exact + package-lock 提交），chromium（headless shell 153.0.8010.12 / v1243）仅在本特性安装；npm test 转发 playwright test --workers=1；浏览器驱动不进入生产 bundle。smoke 双 BrowserContext（1280x900 / 390x844）访问项目列表：断言标题「长篇小说写作系统」、#root 非空挂载、无框架错误遮罩；pageerror 与未解释 console.error 集中断言必须失败；QA_BASE_URL 未设置或非 localhost 在模块加载即抛错。截图/trace/JSON report 与错误日志写入 QA_ARTIFACT_DIR（/tmp/writingagent-collaboration-qa），小说正文不入 Git。"
+  },
+  "failure_path_evidence": [
+    {
+      "scenario": "QA_BASE_URL 未设置",
+      "result": "模块加载抛 'QA_BASE_URL 未设置'，No tests found",
+      "exitCode": 1
+    },
+    {
+      "scenario": "错误端口 http://127.0.0.1:59999（无服务）",
+      "result": "2 failed（goto 连接拒绝）/ 1 passed",
+      "exitCode": 1
+    },
+    {
+      "scenario": "空白页（python http.server 静态空 index.html）",
+      "result": "2 failed（标题与非空主界面断言）/ 1 passed",
+      "exitCode": 1
+    }
+  ],
+  "checks": [
+    {
+      "command": "QA_BASE_URL=http://127.0.0.1:18083 QA_ARTIFACT_DIR=/tmp/writingagent-collaboration-qa npm --prefix qa/collaboration test -- smoke.spec.ts",
+      "result": "3 passed（场景模式服务：--llm.scenario.enabled=true --persistence.embedding=stub，临时独立库）",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（合并后 main）",
+      "result": "757 tests / 0 failures / 0 errors / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "npm --prefix frontend run build",
+      "result": "构建通过（生产 bundle 未受 QA 包影响）",
+      "exitCode": 0
+    },
+    {
+      "command": "QA_BASE_URL=http://127.0.0.1:59999 npm --prefix qa/collaboration test -- smoke.spec.ts（合并后失败路径抽检）",
+      "result": "非零退出",
+      "exitCode": 1
+    },
+    {
+      "command": "git merge-base --is-ancestor 57e6d5a main",
+      "result": "实现提交为 main 祖先",
+      "exitCode": 0
+    }
+  ],
+  "acceptance_detail": "verify_cmd 对正常本地场景服务退出 0（3 passed，928ms/759ms 两次运行）；错误端口、空白页、QA_BASE_URL 未设置均使命令非零退出（分别 1/1/1）；测试结果、截图、trace、report.json 与 smoke-errors-*.log 写入 QA_ARTIFACT_DIR；仓库内无小说正文。页面运行异常场景由 pageerror/console.error 断言结构覆盖（正常页面无错误事件；一旦出现即非零退出）。",
+  "limits": [
+    "未运行真实模型：服务以 scenario 模式 + stub embedding 启动",
+    "p36-01 只交付 smoke 入口；review-version/workspace-navigation 等专项 spec 属各自特性",
+    "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
+  ]
+}

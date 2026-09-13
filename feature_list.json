@@ -5227,7 +5227,7 @@
       "dependencies": [
         "p36-01"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "frontend/src/components/OutlineView.tsx",
         "qa/collaboration/plan-preview.spec.ts"
@@ -6396,5 +6396,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-13",
-  "active_feature": null
+  "active_feature": "p36-10"
 }

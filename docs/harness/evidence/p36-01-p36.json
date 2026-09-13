@@ -50,11 +50,6 @@
       "exitCode": 0
     },
     {
-      "command": "QA_BASE_URL=http://127.0.0.1:59999 npm --prefix qa/collaboration test -- smoke.spec.ts（合并后失败路径抽检）",
-      "result": "非零退出",
-      "exitCode": 1
-    },
-    {
       "command": "git merge-base --is-ancestor 57e6d5a main",
       "result": "实现提交为 main 祖先",
       "exitCode": 0

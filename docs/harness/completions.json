@@ -899,6 +899,17 @@
       "implementation_commit": "39c9d0f7eb05fc0d51910f62844d4f50571ecb69",
       "main_commit": "39c9d0f7eb05fc0d51910f62844d4f50571ecb69",
       "evidence": "docs/harness/evidence/p36-09-p36.json"
+    },
+    {
+      "id": "p36-10-p36",
+      "kind": "verified",
+      "feature_ids": [
+        "p36-10"
+      ],
+      "branch": "codex/p36-10-plan-preview",
+      "implementation_commit": "5f96ad6dd55bb299f95e4337e9be901526d83fd2",
+      "main_commit": "5f96ad6dd55bb299f95e4337e9be901526d83fd2",
+      "evidence": "docs/harness/evidence/p36-10-p36.json"
     }
   ]
 }

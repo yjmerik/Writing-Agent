@@ -4,14 +4,14 @@ Last Updated: 2026-09-13
 
 ## Current
 
-Phase36 已完成十一项（安全闭环九项 + p36-08 导航 + p36-09 草稿恢复），均合入本地 main（最新 39c9d0f）。feature_list 319 项 = 272 completed + 47 not-started，active_feature=null。
+Phase36 已完成十二项（安全闭环九项 + p36-08/09/10 UI 项），均合入本地 main（最新 5f96ad6）。feature_list 319 项 = 273 completed + 46 not-started，active_feature=null。
 
 后端版本化批准与修订失效链路完整：身份模型/审计表 → 单连接事务 approveChapter（幂等/守卫/比较提交）→ HTTP review-context/review-decisions → 修订事务内屏障重绑+批准失效+历史（doEdit 事务后吞异常 rebind 已删除）。
 
 ## Files
 
 - 分支各自独立并 ff 合入 main。
-- 证据：docs/harness/evidence/p36-0{1..9}-p36.json 与 p36-1{2,3}-p36.json；完成记录 completions.json 对应 verified 记录。
+- 证据：docs/harness/evidence/p36-0{1..10}-p36.json 与 p36-1{2,3}-p36.json；完成记录 completions.json 对应 verified 记录。
 - 执行入口 docs/superpowers/plans/2026-09-12-collaboration-repair-entry.md；总 spec 与 p36–p40 分计划不变。
 
 ## Verification
@@ -23,7 +23,8 @@ Phase36 已完成十一项（安全闭环九项 + p36-08 导航 + p36-09 草稿�
 - p36-13：基线 9/0 → 专项 9/9；屏障恢复/工作台批准走版本化接口。
 - p36-06：RED 4 failures → 专项 6/6；旁路关闭，modify 保留重写回到待审。
 - p36-08：RED 6 failed → GREEN 6 passed；tab 入 URL、章路由权威、非法章号提示回退、历史深链接指纹校验。
-- p36-09：RED 2 failed → GREEN draft-recovery.spec 4 passed；双字段草稿暂存/恢复、冲突副本并排+复制+放弃、409 保留输入、暂存失败警示+离开保护；openEditChapter 以服务器当前稿判定冲突（修缓存滞后误判）；剪贴板异步 reject 已接住。
+- p36-09：RED 2 failed → GREEN 4 passed；冲突副本并排+复制+放弃、409 保留输入、离开保护。
+- p36-10：RED（确认未绑定目标）→ GREEN plan-preview.spec 2 passed；预览绑定目标数字、序号丢弃乱序、确认后清 draft 重读大纲（保存总纲不复活裁剪章）、aria-label 补齐；fixture 走真实构思流程（协作start→批准初始设定→大纲落库→PUT 裁 24 章）。
 - 各项均无 prompt/上下文/生成输入改动，未跑 e2e/baseline，未 bless。
 
 ## Blockers
@@ -32,6 +33,6 @@ Phase36 已完成十一项（安全闭环九项 + p36-08 导航 + p36-09 草稿�
 
 ## Next Steps
 
-1. 下一批特性：p36-10（目标章数改变失效旧预览并刷新大纲；改 frontend/src/components/OutlineView.tsx + 新增 plan-preview.spec.ts；本地记录 previewTargetNumber，只有 newTarget===previewTargetNumber 且未生效才启用确认；预览请求序号丢弃乱序返回；confirm 成功重读大纲清 draft/persistedOutline）→ p36-11（BookReviewView DONE 仅显示正文流程完成，无批准记录显示尚未作者批准）。
+1. 最后一项：p36-11（成书清单区分流程完成与作者批准；改 frontend/src/components/BookReviewView.tsx + 新增 book-state.spec.ts；DONE 仅显示'正文流程完成'；无当前身份匹配批准记录时显示'尚未作者批准'；自动DONE/手工DONE/旧报告/缺报告四种响应分别渲染正确；不以 doneChapters===totalChapters 宣称覆盖完成；完整成书批准在 p38 接入）。
 2. 其后 p37 持久候选与意见证据按 dependencies 拓扑推进。
 3. 保留工作区原有未跟踪文件，不推送远端。

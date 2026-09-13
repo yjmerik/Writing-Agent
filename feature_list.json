@@ -5227,7 +5227,7 @@
       "dependencies": [
         "p36-01"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "frontend/src/components/OutlineView.tsx",
         "qa/collaboration/plan-preview.spec.ts"
@@ -5238,7 +5238,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- plan-preview.spec.ts 退出0；22预览→改20必须禁用；旧请求迟到不能恢复22预览；确认20后大纲树已裁剪，再保存总纲不会复活21+章。",
       "verify_cmd": "npm --prefix qa/collaboration test -- plan-preview.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-13：verified，branch codex/p36-10-plan-preview，实现/主分支提交 5f96ad6dd55bb299f95e4337e9be901526d83fd2；RED（改目标后确认仍 enabled）。合并后 main：全量 766/0/0/1skip、前端构建、plan-preview.spec 2 passed（预览绑定/乱序丢弃/确认后裁剪且不复活）。完成记录 p36-10-p36。",
+      "completion_record": "p36-10-p36"
     },
     {
       "id": "p36-11",
@@ -6396,5 +6397,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-13",
-  "active_feature": "p36-10"
+  "active_feature": null
 }

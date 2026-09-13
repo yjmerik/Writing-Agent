@@ -4,7 +4,7 @@ Last Updated: 2026-09-13
 
 ## Current
 
-协作修复程序推进中：Phase36 已完成十一项（安全闭环九项 + p36-08 导航同步 + p36-09 草稿恢复，p36-09 主分支提交 39c9d0f）。feature_list 319 项 = 272 completed + 47 not-started，active_feature=null。
+协作修复程序推进中：Phase36 已完成十二项（+ p36-10 篇幅预览绑定，p36-10 主分支提交 5f96ad6）。feature_list 319 项 = 273 completed + 46 not-started，active_feature=null。
 
 p36-07 交付：saveChapterRevision 同一事务内完成正文更新、快照插入、屏障旧身份审计（REVISED 历史）、ACTIVE 屏障重绑到新稿号；被替换稿已有作者批准时创建绑定新稿号的新屏障并把正文标记 NEEDS_MANUAL_REVIEW（批准失效按 identity 判定，历史批准行永不改写）。doEdit 事务后吞异常的 rebind 已删除；编辑/回退（RESTORE）统一经此边界。
 
@@ -24,7 +24,8 @@ p36-07 交付：saveChapterRevision 同一事务内完成正文更新、快照�
 - p36-13：基线 9/0 → 迁移专项 9/9（屏障恢复/工作台批准走版本化接口，批准记录 identity 与被读章节一致）。
 - p36-06：RED 4 failures → GREEN 专项 6/6 → 全量 766/0/0/1skip；两个既有测试按'现有测试适配'条款适配并记录。
 - p36-08：RED 6 failed → GREEN workspace-navigation.spec 6 passed；合并后复跑通过。
-- p36-09：RED 2 failed（冲突保留与 409 保留输入行为性失败）→ GREEN draft-recovery.spec 4 passed（标题/正文恢复、B 保存后冲突警示+副本并排+复制/放弃、409 保留作者输入）；实现含服务器当前稿冲突判定（修缓存滞后误判）与剪贴板异步拒绝降级；合并后 main 全量 766/0/0/1skip、前端构建、verify_cmd 复跑通过。
+- p36-09：RED 2 failed → GREEN draft-recovery.spec 4 passed；合并后复跑通过。
+- p36-10：RED（改目标后确认仍 enabled、目标输入无 aria-label）→ GREEN plan-preview.spec 2 passed（22→20 立即禁用→22 恢复→确认 20 裁剪且保存总纲不复活；独立项目乱序 22→21 展示 21 的预览）；fixture 经真实构思流程建大纲。合并后 main 全量 766/0/0/1skip、前端构建、verify_cmd 复跑通过。
 - 各项均无 prompt/上下文/生成输入改动，按 quality_gate 未跑 e2e/baseline；未 bless。
 
 ## Blockers

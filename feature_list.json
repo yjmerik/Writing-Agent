@@ -5080,7 +5080,7 @@
       "dependencies": [
         "p36-03"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/web/ReviewDecisionController.java",
         "src/test/java/com/writing/novel/web/VersionedReviewDecisionTest.java"
@@ -6387,5 +6387,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-13",
-  "active_feature": null
+  "active_feature": "p36-04"
 }

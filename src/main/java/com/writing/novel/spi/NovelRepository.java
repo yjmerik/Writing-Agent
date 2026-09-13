@@ -99,6 +99,52 @@ public interface NovelRepository {
     /** p34-04: 版本推进的正式修订把该章 ACTIVE 屏障重绑到新稿号（原因注明内容已修订）。 */
     int rebindReviewBarriers(String projectId, int chapterIndex, int newVersion);
 
+    // --- p36-03: 版本化审阅上下文与原子批准 ---
+
+    /**
+     * 读取章节审阅上下文：当前稿件身份、待审集合指纹（reviewSetHash）、
+     * 待审屏障/章节类检查点、当前报告身份及既有批准。只读，不补建屏障。
+     * 缺省实现禁止默认成功——未实现版本化批准的仓储必须显式抛出。
+     */
+    default com.writing.novel.domain.ChapterApproval.ReviewContext readReviewContext(
+            String projectId, int chapterIndex) {
+        throw new UnsupportedOperationException("readReviewContext 未实现：仓储不支持版本化审阅");
+    }
+
+    /**
+     * p36-03（C2）：原子比较提交作者批准。单连接事务内完成：
+     * 幂等重放 → 双重批准守卫 → 身份比较 → 待审集合比较 →
+     * 写批准审计 → 标记精确版本 DONE → 解决匹配稿号屏障（含历史）→
+     * 处理同章章节类检查点 → 按剩余待审项退出停点。任一步失败全部回滚。
+     */
+    default com.writing.novel.domain.ChapterApproval.Result approveChapter(
+            com.writing.novel.domain.ChapterApproval.Request request) {
+        throw new UnsupportedOperationException("approveChapter 未实现：仓储不支持版本化批准");
+    }
+
+    /** 版本化批准冲突：身份/待审集合过期、重复批准或幂等键语义冲突。携带当前权威状态供客户端刷新。 */
+    final class ReviewConflictException extends RuntimeException {
+
+        public enum Reason { IDENTITY_STALE, REVIEW_SET_STALE, ALREADY_APPROVED, IDEMPOTENCY_CONFLICT }
+
+        private final Reason reason;
+        private final transient com.writing.novel.domain.ChapterApproval.Identity currentIdentity;
+        private final String currentReviewSetHash;
+
+        public ReviewConflictException(Reason reason, String message,
+                                       com.writing.novel.domain.ChapterApproval.Identity currentIdentity,
+                                       String currentReviewSetHash) {
+            super(message);
+            this.reason = reason;
+            this.currentIdentity = currentIdentity;
+            this.currentReviewSetHash = currentReviewSetHash;
+        }
+
+        public Reason getReason() { return reason; }
+        public com.writing.novel.domain.ChapterApproval.Identity getCurrentIdentity() { return currentIdentity; }
+        public String getCurrentReviewSetHash() { return currentReviewSetHash; }
+    }
+
     // --- p33-06: 作者意见闭环 ---
     void saveAuthorDirective(com.writing.novel.domain.AuthorDirective directive);
     /** 全部意见（含各状态），按创建时间倒序。 */

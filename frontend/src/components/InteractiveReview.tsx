@@ -18,6 +18,10 @@ interface Props {
   onNavigateTab: (target: 'world' | 'outline') => void;
   /** p33-04: 待办直达——切到指定章节（来自状态栏待审按钮） */
   focusChapter?: number;
+  /** p36-08: 目录选中章经路由权威同步（点击/Enter/Space/待办跳转都更新路由） */
+  onSelectChapter?: (chapterIndex: number) => void;
+  /** p36-08: ?version=V&anchor=HASH 深链接——打开对应历史正文；缺失/指纹不符明确提示 */
+  historyView?: { version: number; anchor?: string };
 }
 
 type RewriteTarget =
@@ -41,6 +45,25 @@ type ChapterEditorTarget =
 
 const isReviewNavigationTarget = (target: unknown): target is ReviewNavigationTarget =>
   target === 'world' || target === 'outline';
+
+/** p36-08: 与后端 contentHash 同构（8字节大端长度前缀 + 标题 + 长度前缀 + 正文，SHA-256）。 */
+async function contentHashHex(title: string, content: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const titleBytes = encoder.encode(title);
+  const contentBytes = encoder.encode(content);
+  const buffer = new Uint8Array(16 + titleBytes.length + contentBytes.length);
+  const view = new DataView(buffer.buffer);
+  view.setUint32(0, Math.floor(titleBytes.length / 2 ** 32));
+  view.setUint32(4, titleBytes.length >>> 0);
+  buffer.set(titleBytes, 8);
+  view.setUint32(8 + titleBytes.length, Math.floor(contentBytes.length / 2 ** 32));
+  view.setUint32(12 + titleBytes.length, contentBytes.length >>> 0);
+  buffer.set(contentBytes, 16 + titleBytes.length);
+  const digest = await crypto.subtle.digest('SHA-256', buffer);
+  return Array.from(new Uint8Array(digest))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
 
 export const normalizeCheckpointPayload = (value: unknown): CheckpointPayload | null => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
@@ -74,7 +97,7 @@ export const normalizeCheckpointPayload = (value: unknown): CheckpointPayload | 
   };
 };
 
-export default function InteractiveReview({ projectId, onChanged, onNavigateTab, refreshSignal, focusChapter }: Props) {
+export default function InteractiveReview({ projectId, onChanged, onNavigateTab, refreshSignal, focusChapter, onSelectChapter, historyView }: Props) {
   // p21-05: 元数据一次加载；正文按选中章节懒加载缓存
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [bodies, setBodies] = useState<Record<number, Chapter>>({});
@@ -106,12 +129,6 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
   // p35-02: 候选线索状态
   const [candidates, setCandidates] = useState<ForeshadowCandidateView[]>([]);
   const screens = Grid.useBreakpoint();
-  // p33-04: 外部聚焦请求（状态栏待办直达）
-  useEffect(() => {
-    if (focusChapter == null) return;
-    const idx = chapters.findIndex(c => c.chapterIndex === focusChapter);
-    if (idx >= 0) { setSelectedIdx(idx); window.scrollTo({ top: 0 }); }
-  }, [focusChapter, chapters]);
   const selectedIdxRef = useRef(0);
   const [loading, setLoading] = useState(false);
   const [rewriteModalOpen, setRewriteModalOpen] = useState(false);
@@ -310,6 +327,56 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
   useEffect(() => {
     selectedIdxRef.current = selectedIdx;
   }, [selectedIdx]);
+
+  // p36-08: 路由是选中章的权威——非法章号明确提示并回退存在章，轮询不抢选中
+  const [routeNotice, setRouteNotice] = useState<string | null>(null);
+  const [historyNotice, setHistoryNotice] = useState<string | null>(null);
+  const historyViewKeyRef = useRef('');
+  useEffect(() => {
+    if (focusChapter == null) { setRouteNotice(null); return; }
+    if (chapters.length === 0) return;
+    const idx = chapters.findIndex(c => c.chapterIndex === focusChapter);
+    if (idx >= 0) {
+      setRouteNotice(null);
+      if (selectedIdxRef.current !== idx) { setSelectedIdx(idx); window.scrollTo({ top: 0 }); }
+    } else {
+      setRouteNotice(`路由指向的第 ${focusChapter} 章不存在，已选择第 ${chapters[0].chapterIndex} 章`);
+      if (selectedIdxRef.current !== 0) setSelectedIdx(0);
+    }
+  }, [focusChapter, chapters]);
+
+  // p36-08: ?version=V&anchor=HASH 深链接——打开对应历史正文；缺失或指纹不符明确提示，
+  // 绝不退回当前稿冒充历史版。
+  useEffect(() => {
+    if (!historyView) { setHistoryNotice(null); historyViewKeyRef.current = ''; return; }
+    if (!currentBody || !currentMeta) return;
+    const key = `${currentMeta.chapterIndex}:${historyView.version}:${historyView.anchor ?? ''}`;
+    if (historyViewKeyRef.current === key) return;
+    historyViewKeyRef.current = key;
+    void (async () => {
+      try {
+        const versions = await api.getChapterVersions(projectId, currentMeta.chapterIndex);
+        const target = versions.find(v => v.version === historyView.version);
+        if (!target) {
+          setHistoryNotice(`第 ${historyView.version} 版历史不存在：该章尚未保存此版本。未显示当前稿冒充。`);
+          return;
+        }
+        if (historyView.anchor) {
+          const actual = await contentHashHex(target.title, target.content);
+          if (actual !== historyView.anchor.toLowerCase()) {
+            setHistoryNotice(`第 ${historyView.version} 版内容指纹与 anchor 不符，已拒绝展示。`);
+            return;
+          }
+        }
+        setHistoryNotice(null);
+        setChapterVersions(versions);
+        setHistoryChapter(currentBody);
+        setCompareVersion(target);
+      } catch (e) {
+        setHistoryNotice(`历史版本加载失败: ${(e as Error).message}`);
+      }
+    })();
+  }, [historyView, currentBody, currentMeta, projectId]);
 
   // p21-05: 选中章节正文懒加载（不重取 checkpoints/status，更不全量取章节正文）
   useEffect(() => {
@@ -930,6 +997,14 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
             description={`${reviewConflict} 正文与审阅上下文已重新读取；确认新稿后请再次点击「批准当前稿」。系统不会自动重试批准。`} />
         )}
 
+        {/* p36-08: 路由/历史深链接的明确提示——不静默回退、不用当前稿冒充 */}
+        {routeNotice && (
+          <Alert type="warning" showIcon style={{ marginBottom: 16 }} message={routeNotice} />
+        )}
+        {historyNotice && (
+          <Alert type="warning" showIcon style={{ marginBottom: 16 }} message={historyNotice} />
+        )}
+
         <Row gutter={16}>
           {/* 章节列表（p21-06: 小屏堆叠） */}
           <Col xs={24} md={5}>
@@ -943,11 +1018,15 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                     role="button"
                     tabIndex={0}
                     aria-label={`第${ch.chapterIndex}章 ${ch.title}`}
-                    onClick={() => setSelectedIdx(idx)}
+                    onClick={() => onSelectChapter
+                      ? onSelectChapter(ch.chapterIndex)
+                      : setSelectedIdx(idx)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        setSelectedIdx(idx);
+                        onSelectChapter
+                          ? onSelectChapter(ch.chapterIndex)
+                          : setSelectedIdx(idx);
                       }
                     }}
                     style={{ cursor: 'pointer', background: idx === selectedIdx ? '#e6f7ff' : undefined }}

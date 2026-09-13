@@ -123,23 +123,24 @@ test.describe('workspace-navigation：目录/深链接/页签/历史同步', () 
 
   test('version 深链接打开对应历史正文，缺失版本明确提示', async ({ page }) => {
     observeRuntimeErrors(page, runtimeErrors);
-    // 为第 1 章制造 v2（正式编辑端点）
+    // 为第 1 章制造新稿（正式编辑端点）：编辑前版本 V 会留下不可变快照
     const chapterResp = await fetch(`${BASE}/api/projects/${projectId}/chapters/1`);
     const chapter = (await chapterResp.json()) as { version: number; title: string };
+    const versionBeforeEdit = chapter.version;
     const putResp = await fetch(`${BASE}/api/projects/${projectId}/chapters/1`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        expectedVersion: chapter.version,
+        expectedVersion: versionBeforeEdit,
         title: chapter.title,
-        content: CHAPTER_BODY + '作者修订一次，产生第二版。',
+        content: CHAPTER_BODY + '作者修订一次，产生新的版本。',
       }),
     });
-    if (!putResp.ok) throw new Error(`制造 v2 失败: ${putResp.status}`);
+    if (!putResp.ok) throw new Error(`制造新稿失败: ${putResp.status}`);
 
-    await page.goto(`${BASE}/#/project/${projectId}/chapter/1?version=1`);
+    await page.goto(`${BASE}/#/project/${projectId}/chapter/1?version=${versionBeforeEdit}`);
     await expect(page.getByText(/版本记录/)).toBeVisible({ timeout: 30000 });
-    await expect(page.getByText(/^v1 · /)).toBeVisible({ timeout: 30000 });
+    await expect(page.getByText(new RegExp(`^v${versionBeforeEdit} · `))).toBeVisible({ timeout: 30000 });
 
     await page.goto(`${BASE}/#/project/${projectId}/chapter/1?version=99`);
     await expect(page.getByText(/第 99 版历史不存在/)).toBeVisible({ timeout: 30000 });

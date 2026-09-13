@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Layout, Tabs, Button, Descriptions, Tag, Space, message, Spin, Collapse, Input, Slider, Switch } from 'antd';
 import { ArrowLeftOutlined, CloseOutlined, MenuUnfoldOutlined, PlusOutlined, SettingOutlined, SendOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
@@ -29,15 +29,29 @@ const STATE_COLOR: Record<string, string> = {
   VOLUME_DONE: 'gold', FINAL: 'green', NEEDS_REVISION: 'red', PAUSED_AT_CHECKPOINT: 'orange',
 };
 
+/** p36-08: 页签是路由权威的一部分——合法页签写入查询参数，非法/缺省回退 review */
+const VALID_TABS = ['review', 'world', 'outline', 'book', 'quality', 'run'] as const;
+type WorkspaceTab = (typeof VALID_TABS)[number];
+
+const isWorkspaceTab = (value: string | null): value is WorkspaceTab =>
+  value != null && (VALID_TABS as readonly string[]).includes(value);
+
 export default function ProjectWorkspace() {
   const { id } = useParams<{ id: string }>();
   // p34-05: 深链接恢复章节定位（#/project/:id/chapter/:n）
   const params = useParams<{ id: string; chapterIndex?: string }>();
   const routeChapter = params.chapterIndex ? Number(params.chapterIndex) : undefined;
   const navigate = useNavigate();
+  // p36-08: 页签与历史版本都是路由权威——后退/前进与刷新必须还原
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const activeTab: WorkspaceTab = isWorkspaceTab(tabParam) ? tabParam : 'review';
+  const versionParam = searchParams.get('version');
+  const historyView = versionParam != null && Number.isFinite(Number(versionParam))
+    ? { version: Number(versionParam), anchor: searchParams.get('anchor') ?? undefined }
+    : undefined;
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('review');
   const [prefs, setPrefs] = useState<Record<string, unknown> | null>(null);
   const [refreshSignal, setRefreshSignal] = useState(0);
   // p33-04: 待办直达——状态栏待审按钮聚焦到指定章节
@@ -47,6 +61,22 @@ export default function ProjectWorkspace() {
   const [chatting, setChatting] = useState(false);
   const [narrowLayout, setNarrowLayout] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // p36-08: 路由参数变化（后退/前进/深链接）必须响应，不能只在初次渲染读取
+  useEffect(() => { setFocusChapter(routeChapter); }, [routeChapter]);
+
+  /** p36-08: 目录点击/待办跳转统一更新路由（页签保留在查询参数中）。 */
+  const handleSelectChapter = useCallback((chapterIndex: number) => {
+    if (!id) return;
+    const search = activeTab !== 'review' ? `?tab=${activeTab}` : '';
+    navigate(`/project/${id}/chapter/${chapterIndex}${search}`);
+  }, [activeTab, id, navigate]);
+
+  const handleTabChange = useCallback((tab: string) => {
+    const params = new URLSearchParams();
+    if (tab !== 'review') params.set('tab', tab);
+    setSearchParams(params, { replace: false });
+  }, [setSearchParams]);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -254,18 +284,17 @@ export default function ProjectWorkspace() {
       </Sider>
 
       <Content style={{ padding: narrowLayout ? '52px 0 0' : '0 16px', minWidth: 0, width: '100%' }}>
-        <CollaborationBar projectId={project.id} onChanged={load} onReview={() => setActiveTab('review')}
-          onSelectChapter={(chapterIndex) => { setActiveTab('review'); setFocusChapter(chapterIndex);
-            navigate(`/project/${id}/chapter/${chapterIndex}`, { replace: true }); }} />
+        <CollaborationBar projectId={project.id} onChanged={load} onReview={() => handleTabChange('review')}
+          onSelectChapter={(chapterIndex) => { handleTabChange('review'); handleSelectChapter(chapterIndex); }} />
         <Tabs
           activeKey={activeTab}
-          onChange={setActiveTab}
+          onChange={handleTabChange}
           destroyInactiveTabPane
           items={[
             { key: 'run', label: '创作工具', children: <RunConsole projectId={project.id} projectState={project.state} onChanged={load} /> },
             { key: 'world', label: '🌍 世界观与人物', children: <WorldbuildingView key={`world-${project.id}`} projectId={project.id} /> },
             { key: 'outline', label: '📋 大纲', children: <OutlineView key={`outline-${project.id}`} projectId={project.id} currentChapter={project.currentChapterIndex} /> },
-            { key: 'review', label: '📖 章节管理', children: <InteractiveReview key={`review-${project.id}`} refreshSignal={refreshSignal} projectId={project.id} onChanged={load} onNavigateTab={setActiveTab} focusChapter={focusChapter} /> },
+            { key: 'review', label: '📖 章节管理', children: <InteractiveReview key={`review-${project.id}`} refreshSignal={refreshSignal} projectId={project.id} onChanged={load} onNavigateTab={handleTabChange} focusChapter={focusChapter} onSelectChapter={handleSelectChapter} historyView={historyView} /> },
             { key: 'quality', label: '🔍 质量评价', children: <QualityView projectId={project.id} /> },
             { key: 'book', label: '📕 成书审查', children: <BookReviewView projectId={project.id} /> },
           ]}

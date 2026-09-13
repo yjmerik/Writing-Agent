@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Tree, Spin, Empty, Card, Typography, Button, Space, Input, InputNumber, Alert, message } from 'antd';
 import {
   DeleteOutlined,
@@ -32,25 +32,52 @@ const cloneOutline = (outline: Outline): Outline => ({
 
 export default function OutlineView({ projectId, currentChapter = 0 }: { projectId: string; currentChapter?: number }) {
   // p35-03: 篇幅调整与影响预览
+  // p36-10: 预览绑定其目标数字——输入变化立即禁用确认；序号丢弃乱序返回
   const [newTarget, setNewTarget] = useState<number | ''>('');
   const [targetPreview, setTargetPreview] = useState<PlanTargetPreview | null>(null);
+  const [previewTargetNumber, setPreviewTargetNumber] = useState<number | null>(null);
+  const [appliedTargetNumber, setAppliedTargetNumber] = useState<number | null>(null);
   const [targetBusy, setTargetBusy] = useState(false);
+  const previewRequestSeqRef = useRef(0);
   const previewTarget = async () => {
     if (newTarget === '' || Number(newTarget) < 1) return;
+    const requested = Number(newTarget);
+    const sequence = ++previewRequestSeqRef.current;
     setTargetBusy(true);
-    try { setTargetPreview(await api.getPlanTargetPreview(projectId, Number(newTarget))); }
-    catch (err) { message.error((err as Error).message); }
-    finally { setTargetBusy(false); }
+    try {
+      const result = await api.getPlanTargetPreview(projectId, requested);
+      // 迟到的旧请求不得覆盖当前输入对应的预览
+      if (sequence !== previewRequestSeqRef.current) return;
+      setTargetPreview(result);
+      setPreviewTargetNumber(requested);
+      setAppliedTargetNumber(null);
+    } catch (err) {
+      if (sequence === previewRequestSeqRef.current) message.error((err as Error).message);
+    } finally {
+      if (sequence === previewRequestSeqRef.current) setTargetBusy(false);
+    }
   };
   const applyTarget = async () => {
+    // 只有确认按钮（绑定当前输入且未生效）能进入这里
     if (newTarget === '' || Number(newTarget) < 1) return;
+    if (targetPreview == null || targetPreview.applied || previewTargetNumber !== Number(newTarget)) return;
     setTargetBusy(true);
     try {
       const result = await api.applyPlanTarget(projectId, Number(newTarget));
       setTargetPreview(result);
+      setPreviewTargetNumber(Number(newTarget));
+      setAppliedTargetNumber(Number(newTarget));
       message.success('目标章数已更新为 ' + result.targetChapters + '，大纲已裁剪');
-    } catch (err) { message.error((err as Error).message); }
-    finally { setTargetBusy(false); }
+      // p36-10: 确认成功后重读权威大纲，清掉裁剪前的 draft/persistedOutline，
+      // 防止「保存总纲/保存未写大纲」把旧章纲写回
+      setPersistedOutline(null);
+      setDraft(null);
+      await load();
+    } catch (err) {
+      message.error((err as Error).message);
+    } finally {
+      setTargetBusy(false);
+    }
   };
   const [persistedOutline, setPersistedOutline] = useState<Outline | null>(null);
   const [draft, setDraft] = useState<Outline | null>(null);
@@ -226,10 +253,16 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
     <Card>
       <Card size="small" style={{ marginBottom: 16 }} title="📐 篇幅与计划">
         <Space wrap style={{ marginBottom: 8 }}>
-          <InputNumber min={1} placeholder="目标章数" value={newTarget}
-            onChange={v => setNewTarget(v ?? '')} style={{ width: 140 }} />
-          <Button onClick={() => void previewTarget()} loading={targetBusy}>影响预览</Button>
-          <Button type="primary" disabled={!targetPreview || targetPreview.applied}
+          <InputNumber min={1} placeholder="目标章数" aria-label="目标章数" value={newTarget}
+            disabled={targetBusy && appliedTargetNumber == null}
+            onChange={v => {
+              // p36-10: 输入变化即失效旧预览——确认只在 newTarget 与预览目标一致且未生效时可用
+              setNewTarget(v ?? '');
+            }} style={{ width: 140 }} />
+          <Button onClick={() => void previewTarget()} loading={targetBusy && appliedTargetNumber == null}>影响预览</Button>
+          <Button type="primary"
+            disabled={targetPreview == null || targetPreview.applied
+              || newTarget === '' || previewTargetNumber !== Number(newTarget)}
             loading={targetBusy} onClick={() => void applyTarget()}>确认生效</Button>
         </Space>
         {targetPreview && (

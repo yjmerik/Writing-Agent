@@ -118,8 +118,9 @@ test.describe('plan-preview：目标章数预览绑定与确认', () => {
     await page.getByRole('tab', { name: /大纲/ }).click();
 
     const targetInput = page.getByRole('spinbutton', { name: '目标章数' });
-    const confirmButton = page.getByRole('button', { name: '确认生效', exact: true });
-    const previewButton = page.getByRole('button', { name: '影响预览', exact: true });
+    // AntD loading 态会给 accessible name 加前缀——非精确匹配
+    const confirmButton = page.getByRole('button', { name: '确认生效' });
+    const previewButton = page.getByRole('button', { name: '影响预览' });
 
     // 22 章预览：确认按钮就绪
     await targetInput.fill('22');
@@ -166,11 +167,39 @@ test.describe('plan-preview：目标章数预览绑定与确认', () => {
 
   test('乱序返回的旧预览不能覆盖新输入的预览', async ({ page }) => {
     observeRuntimeErrors(page, runtimeErrors);
-    await page.goto(`${BASE}/#/project/${projectId}`);
+    // 独立项目（主用例已把共享项目裁到 20 章）：走真实构思流程建大纲
+    const projectId2 = await createProjectViaApi('篇幅预览验证-乱序');
+    const startResp = await fetch(`${BASE}/api/projects/${projectId2}/collaboration/start`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+    });
+    if (!startResp.ok) throw new Error(`协作启动失败: ${startResp.status}`);
+    const cpDeadline = Date.now() + 180000;
+    let checkpointId: string | null = null;
+    while (Date.now() < cpDeadline && !checkpointId) {
+      const cpsResp = await fetch(`${BASE}/api/projects/${projectId2}/checkpoints`);
+      if (cpsResp.ok) {
+        const cps = (await cpsResp.json()) as Array<{ id: string; type: string; status: string }>;
+        checkpointId = cps.find(c => c.status === 'PENDING' && c.type === 'AFTER_INITIAL_SETUP')?.id ?? null;
+      }
+      if (!checkpointId) await new Promise(r => setTimeout(r, 1000));
+    }
+    if (!checkpointId) throw new Error('乱序项目初始设定 checkpoint 未出现');
+    const approveResp = await fetch(`${BASE}/api/projects/${projectId2}/checkpoints/${checkpointId}/approve`, { method: 'POST' });
+    if (!approveResp.ok) throw new Error(`乱序项目批准失败: ${approveResp.status}`);
+    const outlineDeadline = Date.now() + 180000;
+    let outlineReady = false;
+    while (Date.now() < outlineDeadline && !outlineReady) {
+      const oResp = await fetch(`${BASE}/api/projects/${projectId2}/outline`);
+      outlineReady = oResp.ok && (await oResp.text()).length > 10;
+      if (!outlineReady) await new Promise(r => setTimeout(r, 1000));
+    }
+    if (!outlineReady) throw new Error('乱序项目大纲未出现');
+
+    await page.goto(`${BASE}/#/project/${projectId2}`);
     await page.getByRole('tab', { name: /大纲/ }).click();
 
     const targetInput = page.getByRole('spinbutton', { name: '目标章数' });
-    const previewButton = page.getByRole('button', { name: '影响预览', exact: true });
+    const previewButton = page.getByRole('button', { name: '影响预览' });
 
     // 快速连续预览 22 → 21：以最后一次输入为准（序号丢弃乱序返回）
     await targetInput.fill('22');

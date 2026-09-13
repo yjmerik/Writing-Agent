@@ -1,7 +1,9 @@
 package com.writing.novel.web;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.writing.novel.domain.Chapter;
+import com.writing.novel.domain.ReviewBarrier;
 import com.writing.novel.domain.ChapterSynopsis;
 import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
@@ -13,13 +15,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -65,6 +73,10 @@ class WorkspaceStatusApiTest {
         ch.setContent("正文内容。".repeat(150));
         ch.setStatus(status);
         repository.saveChapter(ch);
+        // p33-01/p36-13: 人审章节屏障立即落盘，批准按稿号解决
+        if (status == Chapter.Status.NEEDS_MANUAL_REVIEW) {
+            repository.saveReviewBarrier(new ReviewBarrier(pid, index, ch.getVersion(), "根源矛盾待人工复核"));
+        }
     }
 
     @Test
@@ -109,8 +121,32 @@ class WorkspaceStatusApiTest {
         writeChapter(pid, 2, Chapter.Status.NEEDS_MANUAL_REVIEW);
         repository.findProject(pid).ifPresent(p -> { p.setCurrentChapterIndex(2); repository.saveProject(p); });
 
-        mvc.perform(post("/api/projects/" + pid + "/chapters/2/resolve-review"))
-                .andExpect(status().isOk());
+        // p36-13: 放行改走版本化批准——读 review-context 后提交明确身份（新幂等键）
+        MvcResult contextResult = mvc.perform(get("/api/projects/" + pid + "/chapters/2/review-context"))
+                .andExpect(status().isOk()).andReturn();
+        JsonNode context = om.readTree(contextResult.getResponse().getContentAsString(StandardCharsets.UTF_8));
+        int version = context.path("identity").path("version").asInt();
+        mvc.perform(post("/api/projects/" + pid + "/chapters/2/review-decisions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(Map.of(
+                                "identity", Map.of(
+                                        "projectId", pid,
+                                        "chapterIndex", 2,
+                                        "version", version,
+                                        "contentHash", context.path("identity").path("contentHash").asText()),
+                                "reviewSetHash", context.path("reviewSetHash").asText(),
+                                "idempotencyKey", "workspace-" + UUID.randomUUID()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.replayed").value(false))
+                .andExpect(jsonPath("$.identity.version").value(version));
+
+        // 批准记录 identity 与被读章节一致
+        JsonNode after = om.readTree(mvc.perform(get("/api/projects/" + pid + "/chapters/2/review-context"))
+                .andExpect(status().isOk()).andReturn().getResponse()
+                .getContentAsString(StandardCharsets.UTF_8));
+        org.junit.jupiter.api.Assertions.assertEquals(version,
+                after.path("approval").path("identity").path("version").asInt(),
+                "批准记录 identity 必须与被读章节版本一致");
 
         mvc.perform(get("/api/projects/" + pid + "/workspace"))
                 .andExpect(status().isOk())

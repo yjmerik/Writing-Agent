@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -28,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -77,6 +79,9 @@ class ReviewBarrierGateTest {
         pending.setContent("待审正文。".repeat(120));
         pending.setStatus(Chapter.Status.NEEDS_MANUAL_REVIEW);
         repository.saveChapter(pending);
+        // p33-01: 标记人审时屏障立即落盘（原依赖读时惰性补建，迁移后批准按稿号解决）
+        repository.saveReviewBarrier(new com.writing.novel.domain.ReviewBarrier(
+                pid, 5, pending.getVersion(), "第5章根源矛盾待人工复核"));
         // 体验 #18 现场：标记后索引已推进（下一章即将启动）
         project.setCurrentChapterIndex(6);
         repository.saveProject(project);
@@ -122,11 +127,11 @@ class ReviewBarrierGateTest {
     @Test
     void 屏障解决后写作恢复() throws Exception {
         String pid = seedProjectWithStaleBarrier();
-        // 作者放行第 5 章
-        mvc.perform(post("/api/projects/" + pid + "/chapters/5/resolve-review"))
-                .andExpect(status().isOk());
+        // p36-13: 作者放行第 5 章——读 review-context 后版本化批准（每次新幂等键）
+        approveChapter(pid, 5);
         assertEquals(Chapter.Status.DONE,
                 repository.findChapterByIndex(pid, 5).orElseThrow().getStatus());
+        assertTrue(repository.findActiveReviewBarriers(pid).isEmpty(), "批准后屏障解除");
 
         MvcResult res = mvc.perform(post("/api/projects/" + pid + "/write-all"))
                 .andExpect(status().isOk()).andReturn();
@@ -150,9 +155,37 @@ class ReviewBarrierGateTest {
         assertTrue(barrier.getChapterVersion() > 0, "屏障应绑定稿号");
         assertEquals(com.writing.novel.domain.ReviewBarrier.Status.ACTIVE, barrier.getStatus());
 
-        mvc.perform(post("/api/projects/" + pid + "/chapters/5/resolve-review"))
-                .andExpect(status().isOk());
+        // p36-13: 放行改走版本化批准
+        approveChapter(pid, 5);
         assertTrue(repository.findActiveReviewBarriers(pid).isEmpty(), "放行后屏障应解决");
+    }
+
+    /** p36-13: 读 review-context 后提交明确 identity/reviewSetHash/新幂等键；验证批准记录与被读章节一致。 */
+    private void approveChapter(String pid, int chapterIndex) throws Exception {
+        MvcResult contextResult = mvc.perform(get("/api/projects/" + pid + "/chapters/" + chapterIndex + "/review-context"))
+                .andExpect(status().isOk()).andReturn();
+        var context = om.readTree(contextResult.getResponse().getContentAsString(StandardCharsets.UTF_8));
+        int version = context.path("identity").path("version").asInt();
+        mvc.perform(post("/api/projects/" + pid + "/chapters/" + chapterIndex + "/review-decisions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(java.util.Map.of(
+                                "identity", java.util.Map.of(
+                                        "projectId", pid,
+                                        "chapterIndex", chapterIndex,
+                                        "version", version,
+                                        "contentHash", context.path("identity").path("contentHash").asText()),
+                                "reviewSetHash", context.path("reviewSetHash").asText(),
+                                "idempotencyKey", "barrier-gate-" + java.util.UUID.randomUUID()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.replayed").value(false))
+                .andExpect(jsonPath("$.identity.version").value(version));
+        var approval = om.readTree(mvc.perform(get(
+                        "/api/projects/" + pid + "/chapters/" + chapterIndex + "/review-context"))
+                .andExpect(status().isOk()).andReturn().getResponse()
+                .getContentAsString(StandardCharsets.UTF_8));
+        org.junit.jupiter.api.Assertions.assertEquals(version,
+                approval.path("approval").path("identity").path("version").asInt(),
+                "批准记录 identity 必须与被读章节版本一致");
     }
 
     private int countWords(String pid, int idx) {

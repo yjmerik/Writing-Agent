@@ -1,7 +1,9 @@
 package com.writing.novel.web;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.writing.novel.domain.Chapter;
+import com.writing.novel.domain.ReviewBarrier;
 import com.writing.novel.spi.NovelRepository;
 import com.writing.novel.web.dto.CreateProjectRequest;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,10 +15,15 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -95,21 +102,54 @@ class HitlCanonForeshadowReviewTest {
                 .andExpect(jsonPath("$.resolved").value(true));
     }
 
+    /** p36-13: 成功批准迁移到版本化接口——读 review-context 后提交明确身份，批准记录与被读章节一致。 */
     @Test
-    void resolveManualReview_setsChapterDone() throws Exception {
+    void versionedApproval_setsChapterDone() throws Exception {
         String id = createProject();
         Chapter chapter = new Chapter(id, 1, "雨夜账");
-        chapter.setContent("正文");
+        chapter.setContent("待作者复核的正文。".repeat(30));
         chapter.setStatus(Chapter.Status.NEEDS_MANUAL_REVIEW);
         repository.saveChapter(chapter);
+        repository.saveReviewBarrier(new ReviewBarrier(id, 1, chapter.getVersion(), "根源矛盾待复核"));
 
-        mvc.perform(post("/api/projects/" + id + "/chapters/1/resolve-review"))
+        JsonNode context = readReviewContext(id);
+        mvc.perform(post("/api/projects/" + id + "/chapters/1/review-decisions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(approvalRequest(id, context, "hitl-key-" + UUID.randomUUID())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("DONE"));
+                .andExpect(jsonPath("$.replayed").value(false))
+                .andExpect(jsonPath("$.identity.version").value(chapter.getVersion()))
+                .andExpect(jsonPath("$.identity.contentHash")
+                        .value(context.path("identity").path("contentHash").asText()));
 
         mvc.perform(get("/api/projects/" + id + "/chapters/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("DONE"));
+        assertTrue(repository.findActiveReviewBarriers(id).isEmpty(), "批准后屏障解除");
+
+        // 批准记录 identity 与被读章节一致
+        JsonNode after = readReviewContext(id);
+        assertEquals(chapter.getVersion(), after.path("approval").path("identity").path("version").asInt());
+        assertEquals(context.path("identity").path("contentHash").asText(),
+                after.path("approval").path("identity").path("contentHash").asText());
+    }
+
+    private JsonNode readReviewContext(String projectId) throws Exception {
+        MvcResult result = mvc.perform(get("/api/projects/" + projectId + "/chapters/1/review-context"))
+                .andExpect(status().isOk())
+                .andReturn();
+        return om.readTree(result.getResponse().getContentAsString(StandardCharsets.UTF_8));
+    }
+
+    private String approvalRequest(String projectId, JsonNode context, String idempotencyKey) throws Exception {
+        return om.writeValueAsString(Map.of(
+                "identity", Map.of(
+                        "projectId", projectId,
+                        "chapterIndex", 1,
+                        "version", context.path("identity").path("version").asInt(),
+                        "contentHash", context.path("identity").path("contentHash").asText()),
+                "reviewSetHash", context.path("reviewSetHash").asText(),
+                "idempotencyKey", idempotencyKey));
     }
 
     private String createProject() throws Exception {

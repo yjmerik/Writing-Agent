@@ -6375,7 +6375,7 @@
         "p36-04",
         "p36-07"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/test/java/com/writing/novel/web/HitlCanonForeshadowReviewTest.java",
         "src/test/java/com/writing/novel/web/ReviewBarrierGateTest.java",
@@ -6392,5 +6392,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-13",
-  "active_feature": null
+  "active_feature": "p36-13"
 }

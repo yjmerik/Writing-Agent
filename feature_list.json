@@ -5203,7 +5203,7 @@
       "dependencies": [
         "p36-01"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "frontend/src/lib/draftStore.ts",
         "frontend/src/components/InteractiveReview.tsx",
@@ -6395,5 +6395,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-13",
-  "active_feature": null
+  "active_feature": "p36-09"
 }

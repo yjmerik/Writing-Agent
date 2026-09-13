@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin, Progress, Collapse, Drawer, Grid, Select } from 'antd';
-import { saveDraft, loadDraft, clearDraft, localStorageAdapter } from '../lib/draftStore';
+import {
+  saveDraft, loadDraft, loadConflictDraft, clearDraft, clearConflictDraft,
+  contentHashHex, localStorageAdapter,
+} from '../lib/draftStore';
+import type { StoredDraft } from '../lib/draftStore';
 import type { AuthorDirectiveView, ForeshadowCandidateView, ReviewContext } from '../api/client';
 import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, HistoryOutlined, PlusOutlined, ReloadOutlined, TrophyOutlined } from '@ant-design/icons';
 import { ApiError, api } from '../api/client';
@@ -45,25 +49,6 @@ type ChapterEditorTarget =
 
 const isReviewNavigationTarget = (target: unknown): target is ReviewNavigationTarget =>
   target === 'world' || target === 'outline';
-
-/** p36-08: 与后端 contentHash 同构（8字节大端长度前缀 + 标题 + 长度前缀 + 正文，SHA-256）。 */
-async function contentHashHex(title: string, content: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const titleBytes = encoder.encode(title);
-  const contentBytes = encoder.encode(content);
-  const buffer = new Uint8Array(16 + titleBytes.length + contentBytes.length);
-  const view = new DataView(buffer.buffer);
-  view.setUint32(0, Math.floor(titleBytes.length / 2 ** 32));
-  view.setUint32(4, titleBytes.length >>> 0);
-  buffer.set(titleBytes, 8);
-  view.setUint32(8 + titleBytes.length, Math.floor(contentBytes.length / 2 ** 32));
-  view.setUint32(12 + titleBytes.length, contentBytes.length >>> 0);
-  buffer.set(contentBytes, 16 + titleBytes.length);
-  const digest = await crypto.subtle.digest('SHA-256', buffer);
-  return Array.from(new Uint8Array(digest))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-}
 
 export const normalizeCheckpointPayload = (value: unknown): CheckpointPayload | null => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
@@ -148,6 +133,15 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
   const [chapterDraftContent, setChapterDraftContent] = useState('');
   const [chapterSaveError, setChapterSaveError] = useState('');
   const [chapterSaving, setChapterSaving] = useState(false);
+  // p36-09: 草稿恢复/冲突/存储失败提示与未保存离开保护
+  const [draftNotice, setDraftNotice] = useState<string | null>(null);
+  const [draftStorageWarning, setDraftStorageWarning] = useState<string | null>(null);
+  const [conflictDraftInfo, setConflictDraftInfo] = useState<{
+    draft: StoredDraft;
+    conflictCopy: StoredDraft | null;
+    currentVersion: number;
+  } | null>(null);
+  const [draftPersisted, setDraftPersisted] = useState(true);
   const [historyChapter, setHistoryChapter] = useState<Chapter | null>(null);
   const [chapterVersions, setChapterVersions] = useState<ChapterVersion[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -328,6 +322,19 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
     selectedIdxRef.current = selectedIdx;
   }, [selectedIdx]);
 
+  // p36-09: 暂存失败或冲突未处理时启用离开保护——刷新/关闭前浏览器先确认
+  useEffect(() => {
+    if (chapterEditorTarget == null) return;
+    const guard = (event: BeforeUnloadEvent) => {
+      if (!draftPersisted || conflictDraftInfo) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', guard);
+    return () => window.removeEventListener('beforeunload', guard);
+  }, [chapterEditorTarget, draftPersisted, conflictDraftInfo]);
+
   // p36-08: 路由是选中章的权威——非法章号明确提示并回退存在章，轮询不抢选中
   const [routeNotice, setRouteNotice] = useState<string | null>(null);
   const [historyNotice, setHistoryNotice] = useState<string | null>(null);
@@ -496,21 +503,41 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
     catch (err) { message.error((err as Error).message); }
   };
 
-  const openEditChapter = (chapter: Chapter) => {
+  const openEditChapter = async (chapter: Chapter) => {
     setChapterEditorTarget({
       mode: 'edit',
       chapterIndex: chapter.chapterIndex,
       expectedVersion: chapter.version,
     });
     setChapterDraftTitle(chapter.title);
+    setChapterDraftContent(chapter.content);
     setChapterSaveError('');
-    // p34-03（UI 验收 A2）：恢复未保存草稿——基准版本须与当前稿一致，过期草稿静默丢弃
-    const draft = loadDraft(localStorageAdapter, projectId, chapter.chapterIndex, chapter.version);
-    if (draft && draft.content !== chapter.content) {
+    setDraftStorageWarning(null);
+    setConflictDraftInfo(null);
+    // p36-09: 恢复两字段草稿；基准变化保留冲突副本并排呈现；旧格式仅提示核对
+    const currentHash = await contentHashHex(chapter.title, chapter.content);
+    const result = loadDraft(localStorageAdapter, projectId, chapter.chapterIndex,
+      chapter.version, currentHash);
+    if (result.kind === 'matching') {
+      const draft = result.draft;
+      if (draft.legacy) {
+        setDraftNotice(`发现旧格式草稿（${draft.savedAt.slice(11, 19)} 暂存，无基准指纹）——请核对内容后再保存，系统未自动覆盖。`);
+      } else {
+        setDraftNotice(`已恢复未保存草稿（基于 v${chapter.version}，${draft.savedAt.slice(11, 19)} 暂存）。保存前不会进入版本历史。`);
+      }
+      setChapterDraftTitle(draft.title);
       setChapterDraftContent(draft.content);
-      message.info(`已恢复未保存草稿（基于 v${chapter.version}，${draft.savedAt.slice(11, 19)} 暂存）。保存前不会进入版本历史。`);
+    } else if (result.kind === 'conflict') {
+      // 基准已变化：编辑器展示当前稿，冲突副本并排可复制/放弃，不静默隐藏或覆盖
+      setConflictDraftInfo({
+        draft: result.draft,
+        conflictCopy: result.conflictCopy ?? loadConflictDraft(localStorageAdapter, projectId, chapter.chapterIndex),
+        currentVersion: chapter.version,
+      });
+    } else if (result.kind === 'unavailable') {
+      setDraftStorageWarning(`本地草稿读取失败：${result.error}。本次编辑不会被暂存，请勿依赖刷新恢复。`);
     } else {
-      setChapterDraftContent(chapter.content);
+      setDraftNotice(null);
     }
   };
 
@@ -545,12 +572,15 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
         } else {
           message.success(`第${chapter.chapterIndex}章已保存为 v${chapter.version}`);
         }
-        // p34-03: 保存成功即清除该章本地草稿（已进入版本历史）
+        // p36-09: 正式保存成功后才清除该章本地草稿（已进入版本历史）
         if (chapterEditorTarget.mode === 'edit') {
           clearDraft(localStorageAdapter, projectId, chapterEditorTarget.chapterIndex);
         }
       }
       setChapterEditorTarget(null);
+      setDraftNotice(null);
+      setDraftStorageWarning(null);
+      setDraftPersisted(true);
       onChanged();
     } catch (error) {
       if (chapterEditorTarget.mode === 'edit' && error instanceof ApiError && error.status === 409
@@ -559,6 +589,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
         setChapterSaveError('Agent 正在处理本项目，请等待当前步骤完成或先接手编辑');
         message.warning('Agent 正在处理本项目，请等待当前步骤完成或先接手编辑');
       } else if (chapterEditorTarget.mode === 'edit' && error instanceof ApiError && error.status === 409) {
+        // p36-09: 409 保留作者输入——不把本地内容替换成新稿；刷新基准后重试
         const latest = await api.getChapter(projectId, chapterEditorTarget.chapterIndex);
         if (latest) {
           replaceChapterInView(latest);
@@ -567,11 +598,9 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
             chapterIndex: latest.chapterIndex,
             expectedVersion: latest.version,
           });
-          setChapterDraftTitle(latest.title);
-          setChapterDraftContent(latest.content);
         }
-        setChapterSaveError('章节已被更新，请重新确认');
-        message.warning('章节已被更新，请重新确认');
+        setChapterSaveError('章节已被更新，请重新确认；你输入的标题与正文已保留，请核对后再保存');
+        message.warning('章节已被更新，请重新确认；你输入的内容已保留');
       } else {
         setChapterSaveError((error as Error).message);
       }
@@ -1516,10 +1545,61 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
         {chapterSaveError && (
           <Alert type="warning" showIcon message={chapterSaveError} style={{ marginBottom: 12 }} />
         )}
+        {draftNotice && (
+          <Alert type="info" showIcon message={draftNotice} style={{ marginBottom: 12 }} />
+        )}
+        {draftStorageWarning && (
+          <Alert type="error" showIcon message="草稿未暂存" description={draftStorageWarning}
+            style={{ marginBottom: 12 }} />
+        )}
+        {conflictDraftInfo && (
+          <Alert
+            type="warning" showIcon
+            message="发现未保存草稿与当前稿基准不一致"
+            description={
+              <div>
+                <div style={{ marginBottom: 8 }}>
+                  草稿基于 v{conflictDraftInfo.draft.baseVersion}（{conflictDraftInfo.draft.savedAt.slice(11, 19)} 暂存），
+                  当前稿为 v{conflictDraftInfo.currentVersion}。草稿已保留为冲突副本，不会被覆盖或静默丢弃。
+                </div>
+                {conflictDraftInfo.conflictCopy && (
+                  <div>
+                    <pre data-conflict-side="draft" style={{ whiteSpace: 'pre-wrap', maxHeight: 140, overflow: 'auto', padding: 8, background: '#f5f5f5', fontSize: 12 }}>
+                      {conflictDraftInfo.conflictCopy.title}{'\n\n'}{conflictDraftInfo.conflictCopy.content}
+                    </pre>
+                    <Space style={{ marginTop: 8 }}>
+                      <Button size="small" onClick={() => {
+                        void navigator.clipboard?.writeText(
+                          `${conflictDraftInfo.conflictCopy!.title}\n\n${conflictDraftInfo.conflictCopy!.content}`);
+                        message.success('冲突草稿已复制到剪贴板');
+                      }}>复制草稿内容</Button>
+                      <Button size="small" danger onClick={() => {
+                        if (chapterEditorTarget?.mode !== 'edit') return;
+                        clearConflictDraft(localStorageAdapter, projectId,
+                          chapterEditorTarget.chapterIndex);
+                        setConflictDraftInfo(null);
+                        message.info('已放弃冲突草稿副本');
+                      }}>放弃冲突副本</Button>
+                    </Space>
+                  </div>
+                )}
+              </div>
+            }
+            style={{ marginBottom: 12 }}
+          />
+        )}
         <Input
           aria-label={chapterEditorTarget?.mode === 'create' ? '新增章节标题' : '章节标题'}
           value={chapterDraftTitle}
-          onChange={(event) => setChapterDraftTitle(event.target.value)}
+          onChange={(event) => {
+            setChapterDraftTitle(event.target.value);
+            // p36-09: 标题与正文同样持续暂存；失败即提示未暂存
+            if (chapterEditorTarget?.mode === 'edit') {
+              setDraftPersisted(saveDraft(localStorageAdapter, projectId,
+                chapterEditorTarget.chapterIndex, chapterEditorTarget.expectedVersion,
+                undefined, event.target.value, chapterDraftContent));
+            }
+          }}
           placeholder="章节标题"
           disabled={chapterSaving}
           style={{ marginBottom: 12 }}
@@ -1529,10 +1609,11 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
           value={chapterDraftContent}
           onChange={(event) => {
             setChapterDraftContent(event.target.value);
-            // p34-03: 编辑过程持续暂存到本地（保存成功后清除）
+            // p36-09: 编辑过程持续暂存两字段（保存成功后清除）；存储失败提示未暂存
             if (chapterEditorTarget?.mode === 'edit') {
-              saveDraft(localStorageAdapter, projectId, chapterEditorTarget.chapterIndex,
-                chapterEditorTarget.expectedVersion, chapterDraftTitle, event.target.value);
+              setDraftPersisted(saveDraft(localStorageAdapter, projectId,
+                chapterEditorTarget.chapterIndex, chapterEditorTarget.expectedVersion,
+                undefined, chapterDraftTitle, event.target.value));
             }
           }}
           placeholder={chapterEditorTarget?.mode === 'create'

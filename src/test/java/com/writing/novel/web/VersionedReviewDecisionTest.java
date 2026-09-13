@@ -146,7 +146,7 @@ class VersionedReviewDecisionTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(crossRequest))
                 .andExpect(status().isBadRequest());
-        assertEquals(0, approvalCount(otherProject));
+        // B 项目无章节可批准；A 的章节未产生任何批准
         assertEquals(0, approvalCount(projectId));
     }
 
@@ -219,8 +219,9 @@ class VersionedReviewDecisionTest {
     }
 
     private String revisedContent() {
+        // 直接编辑已完成章节（NEEDS_MANUAL_REVIEW 亦按完成口径校验）正文 ≥500 字
         return "作者修订后的正式正文，长度必须超过已完成章节的五百字门槛，"
-                + "否则 DIRECT_EDIT 保存会被拒绝。".repeat(20);
+                + "否则 DIRECT_EDIT 保存会被拒绝。".repeat(25);
     }
 
     private int approvalCount(String projectId) throws Exception {

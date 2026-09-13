@@ -844,6 +844,17 @@
       "implementation_commit": "587b613982fa9604aa482e4ee9318db473970820",
       "main_commit": "587b613982fa9604aa482e4ee9318db473970820",
       "evidence": "docs/harness/evidence/p36-05-p36.json"
+    },
+    {
+      "id": "p36-12-p36",
+      "kind": "verified",
+      "feature_ids": [
+        "p36-12"
+      ],
+      "branch": "codex/p36-12-approval-test-migration",
+      "implementation_commit": "df4e60d",
+      "main_commit": "df4e60d",
+      "evidence": "docs/harness/evidence/p36-12-p36.json"
     }
   ]
 }

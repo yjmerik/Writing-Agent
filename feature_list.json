@@ -6350,7 +6350,7 @@
         "p36-04",
         "p36-07"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/test/java/com/writing/novel/web/ManualReviewResolutionTest.java",
         "src/test/java/com/writing/novel/web/ResolveReviewConcurrencyTest.java",
@@ -6362,7 +6362,8 @@
       "acceptance": "mvn test -Dtest=ManualReviewResolutionTest,ResolveReviewConcurrencyTest,ChapterDirectEditTest 退出0；原业务断言保持，新版批准实际HTTP请求覆盖通过；无忽略、删除或放宽断言。并发状态严格200/409，旧身份409且新稿仍待审。",
       "verify_cmd": "mvn test -Dtest=ManualReviewResolutionTest,ResolveReviewConcurrencyTest,ChapterDirectEditTest",
       "quality_gate": "测试迁移；全量编译测试，不修改业务或质量基线",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-13：verified，branch codex/p36-12-approval-test-migration，实现/主分支提交 df4e60d2b38a41ec7465129439ba92261cd55174；基线 14/0（旧契约）。迁移后专项 17/17、合并后 main 全量 760/0/0/1skip。完成记录 p36-12-p36。",
+      "completion_record": "p36-12-p36"
     },
     {
       "id": "p36-13",
@@ -6391,5 +6392,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-13",
-  "active_feature": "p36-12"
+  "active_feature": null
 }

@@ -4,7 +4,7 @@ Last Updated: 2026-09-13
 
 ## Current
 
-协作修复程序推进中：p36-02/03/04/07/01/05 共六项按分支协议合入本地 main（p36-05 主分支提交 587b613）。feature_list 319 项 = 267 completed + 52 not-started，active_feature=null。入口计划优先链 p36-02→03→04→07、p36-01→05 均完成。
+协作修复程序推进中：p36-02/03/04/07/01/05/12 共七项按分支协议合入本地 main（p36-12 主分支提交 df4e60d）。feature_list 319 项 = 268 completed + 51 not-started，active_feature=null。
 
 p36-07 交付：saveChapterRevision 同一事务内完成正文更新、快照插入、屏障旧身份审计（REVISED 历史）、ACTIVE 屏障重绑到新稿号；被替换稿已有作者批准时创建绑定新稿号的新屏障并把正文标记 NEEDS_MANUAL_REVIEW（批准失效按 identity 判定，历史批准行永不改写）。doEdit 事务后吞异常的 rebind 已删除；编辑/回退（RESTORE）统一经此边界。
 
@@ -20,7 +20,8 @@ p36-07 交付：saveChapterRevision 同一事务内完成正文更新、快照�
 - p36-07 RED 4 failures + 1 基线守卫；GREEN 5/5，全量 757/0/0/1skip。
 - p36-01：失败路径非零退出 + happy path 3 passed exit 0。
 - p36-05：RED（改动前 bundle）2 failed 无统一批准按钮；GREEN review-version.spec 2 passed——双真实窗口 v2/v3 竞态（A 批准409→不能续写→强制重读→重新批准200→续写解锁）在 1280x900 与 390x844 均通过，fixture 走真实作者路径。
-- 三项均无 prompt/上下文/生成输入改动，按 quality_gate 未跑 e2e/baseline；未 bless。
+- p36-12：基线 14/0（旧契约记录）→ 迁移专项 17/17（严格并发 200/409、同键重试 replayed、旧身份 409 新稿待审、重绑留痕）→ 全量 760/0/0/1skip。
+- 各项均无 prompt/上下文/生成输入改动，按 quality_gate 未跑 e2e/baseline；未 bless。
 
 ## Blockers
 
@@ -28,5 +29,5 @@ p36-07 交付：saveChapterRevision 同一事务内完成正文更新、快照�
 
 ## Next Steps
 
-1. 下一特性按依赖拓扑：p36-12/p36-13（迁移既有测试到新批准接口，依赖 p36-04+07 均已完成）→ p36-06 关闭旧入口，完成安全闭环。其余 UI 项（p36-08/09/10/11 依赖 p36-01 已满足）可按序推进。
+1. 下一特性 p36-13（迁移屏障恢复与工作台批准回归，依赖 p36-04+07 已满足）→ p36-06 关闭旧入口，安全闭环成型。其余 UI 项（p36-08/09/10/11）依赖已满足可按序推进。
 2. 桌面 QA / 真实模型录制 / bless 等仍需执行时单独授权。

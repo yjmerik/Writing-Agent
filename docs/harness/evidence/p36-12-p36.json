@@ -1,0 +1,50 @@
+{
+  "commit": "df4e60d2b38a41ec7465129439ba92261cd55174",
+  "cleanCheckout": true,
+  "checkoutNote": "合并后验证在 ff 后的本地 main（df4e60d）重跑全量与专项。",
+  "feature": "p36-12",
+  "branch": "codex/p36-12-approval-test-migration",
+  "base_commit": "aed31dc",
+  "baseline": {
+    "command": "mvn test -Dtest=ManualReviewResolutionTest,ResolveReviewConcurrencyTest,ChapterDirectEditTest",
+    "exitCode": 0,
+    "result": "基线 14 tests / 0 failures——记录旧契约（resolve-review 无版本放行）通过；本项为测试迁移 feature，按计划不声称发现新 RED 业务缺陷。"
+  },
+  "implementation": {
+    "commit": "df4e60d2b38a41ec7465129439ba92261cd55174",
+    "files": [
+      "src/test/java/com/writing/novel/web/ManualReviewResolutionTest.java",
+      "src/test/java/com/writing/novel/web/ResolveReviewConcurrencyTest.java",
+      "src/test/java/com/writing/novel/web/ChapterDirectEditTest.java"
+    ],
+    "notes": "只改三个既有测试文件。原业务断言逐一映射：成功批准→DONE+屏障解除+批准留痕；写作中冲突→409+code=WORK_OWNERSHIP_CONFLICT+章节屏障不变；非待审状态→已批准后不同键重复批准409且批准记录保持首条。并发用同一identity不同idempotencyKey，严格断言恰好一200一409（异常/500计入other必须为0）；同key重试另测200且replayed=true同approvalId；屏障解决按项目留痕恰好一条。旧仅重绑测试更名如实描述p36-07事务内重绑行为，并补A读v2→正式PUT产生v3→旧身份POST 409且v3待审（无反射）。ChapterDirectEditTest保留旧modify拒绝测试，新增版本化批准工权冲突+释放后同键成功，避免旧入口409后空转。"
+  },
+  "checks": [
+    {
+      "command": "mvn test -Dtest=ManualReviewResolutionTest,ResolveReviewConcurrencyTest,ChapterDirectEditTest",
+      "result": "17 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（合并后 main）",
+      "result": "760 tests / 0 failures / 0 errors / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=ManualReviewResolutionTest,ResolveReviewConcurrencyTest,ChapterDirectEditTest（合并后 main 复跑）",
+      "result": "17 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor df4e60d main",
+      "result": "实现提交为 main 祖先",
+      "exitCode": 0
+    }
+  ],
+  "acceptance_detail": "专项退出0；原业务断言保持（DONE/屏障解除/状态不变/单条批准记录）；新版批准以真实 HTTP 请求覆盖（无忽略、无删除、无放宽断言）；并发严格 200/409 且 other=0；旧身份 409 后新稿仍 NEEDS_MANUAL_REVIEW 且屏障绑新稿号。",
+  "limits": [
+    "旧 resolve-review 端点仍存在（p36-06 关闭，依赖本项与 p36-13 完成）",
+    "checkpoint modify 旧拒绝测试保留原样（其覆盖由新增版本化批准工权用例补强）"
+  ],
+  "main_commit": "df4e60d2b38a41ec7465129439ba92261cd55174"
+}

@@ -5105,7 +5105,7 @@
         "p36-01",
         "p36-04"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/InteractiveReview.tsx",
@@ -5117,7 +5117,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- review-version.spec.ts 退出0；两个真实窗口：A显示v2，B保存v3，A批准必须409并仍不能续写；A显式刷新审阅后才可批准v3；两套旧按钮不会一个成功另一个仍卡住；390px同样验证。",
       "verify_cmd": "npm --prefix qa/collaboration test -- review-version.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-13：verified，branch codex/p36-05-review-version-frontend，实现/主分支提交 587b613；RED（改动前 bundle）2 failed 无统一批准按钮。合并后 main：mvn compile&&mvn test 757/0/0/1skip、前端构建通过、review-version.spec 2 passed（双窗口竞态 1280x900 与 390x844，真实作者路径 fixture）。完成记录 p36-05-p36。",
+      "completion_record": "p36-05-p36"
     },
     {
       "id": "p36-06",
@@ -6390,5 +6391,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-13",
-  "active_feature": "p36-05"
+  "active_feature": null
 }

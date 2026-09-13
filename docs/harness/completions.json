@@ -833,6 +833,17 @@
       "implementation_commit": "57e6d5a38b901b951e1c1eaee080740ea4ba64bf",
       "main_commit": "57e6d5a38b901b951e1c1eaee080740ea4ba64bf",
       "evidence": "docs/harness/evidence/p36-01-p36.json"
+    },
+    {
+      "id": "p36-05-p36",
+      "kind": "verified",
+      "feature_ids": [
+        "p36-05"
+      ],
+      "branch": "codex/p36-05-review-version-frontend",
+      "implementation_commit": "587b613982fa9604aa482e4ee9318db473970820",
+      "main_commit": "587b613982fa9604aa482e4ee9318db473970820",
+      "evidence": "docs/harness/evidence/p36-05-p36.json"
     }
   ]
 }

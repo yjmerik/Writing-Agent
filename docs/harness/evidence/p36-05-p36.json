@@ -1,0 +1,50 @@
+{
+  "commit": "587b613982fa9604aa482e4ee9318db473970820",
+  "cleanCheckout": true,
+  "checkoutNote": "合并后验证在 ff 后的本地 main（587b613）执行：mvn compile&&mvn test、前端构建、verify_cmd（独立临时库场景服务）全部重跑通过。",
+  "feature": "p36-05",
+  "branch": "codex/p36-05-review-version-frontend",
+  "base_commit": "78fc3a9",
+  "red": {
+    "command": "QA_BASE_URL=http://127.0.0.1:18083 npm --prefix qa/collaboration test -- review-version.spec.ts",
+    "exitCode": 1,
+    "result": "对改动前 bundle（git stash 前端源码后构建）运行：2 failed——旧 UI 无「批准当前稿」按钮（openChapter 等待超时），fixture 全链路（空 tags 互动项目→协作start→批准初始设定→协作start→scenario 首章人审）在 RED 阶段即验证成功。行为性失败，非编译/环境失败。"
+  },
+  "implementation": {
+    "commit": "587b613982fa9604aa482e4ee9318db473970820",
+    "files": [
+      "frontend/src/api/client.ts",
+      "frontend/src/components/InteractiveReview.tsx",
+      "qa/collaboration/review-version.spec.ts"
+    ],
+    "notes": "client.ts 新增 getReviewContext/approveChapterRevision 与 ReviewIdentity/ReviewContext/ReviewApprovalResult 类型。InteractiveReview：审阅上下文与正文同代次纪律按章加载（迟到结果按请求代次抛弃，版本变化立即失配旧 token）；章节卡、章节类检查点卡（AFTER_CHAPTER/ON_CONTINUITY_FIX 且 payload 含章号，附 aria-label）与窄屏抽屉共用同一 approveChapterDraft handler；token 仅在已加载正文版本与 context identity 一致时启用；检查点卡展示本章当前稿号。409：保留编辑草稿、强制重读正文与审阅上下文、持久冲突 Alert、绝不自动重试；idempotencyKey 同一意图网络重试复用，成功/换稿/409 后重新生成。初始设定/卷计划 checkpoint 仍走独立 checkpoint 批准。"
+  },
+  "checks": [
+    {
+      "command": "mvn compile && mvn test（合并后 main）",
+      "result": "757 tests / 0 failures / 0 errors / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "npm --prefix frontend run build（tsc + vite）",
+      "result": "构建通过",
+      "exitCode": 0
+    },
+    {
+      "command": "QA_BASE_URL=http://127.0.0.1:18083 QA_ARTIFACT_DIR=/tmp/writingagent-collaboration-qa npm --prefix qa/collaboration test -- review-version.spec.ts（合并后 main，独立临时库场景服务）",
+      "result": "2 passed（1280x900 与 390x844 双窗口竞态）",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor 587b613 main",
+      "result": "实现提交为 main 祖先",
+      "exitCode": 0
+    }
+  ],
+  "acceptance_detail": "真实双窗口：A 打开第1章显示 v{N}（token 就绪）→ B 经编辑器真实保存 v{N+1} → A 不刷新直接点「批准当前稿」→ /review-decisions 返回 409 →「继续协作」保持禁用（新稿屏障未解除）→ A 被强制重读正文与上下文（稿号标签更新为 v{N+1}）→ 系统不自动重试（仅作者再次点击才发出第二次请求）→ 重新批准 200 → 屏障/同章检查点解除、「继续协作」解锁。1280x900 与 390x844 各自独立 fixture（真实作者路径，非改库伪造）全程通过；契约性 409 触发的浏览器网络 console 日志按已解释过滤，pageerror 与其余 console.error 仍必须失败。",
+  "limits": [
+    "旧无版本端点（resolve-review、章节类 checkpoint approve）后端仍在——UI 已全部改走版本化批准，关闭端点属 p36-06（依赖 p36-12/13 测试迁移）",
+    "scenario gateway 的 harsh 注入按调用序只覆盖服务生命周期前 2 次检查，fixture 已兼容屏障与章节检查点两种待审形态",
+    "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
+  ]
+}

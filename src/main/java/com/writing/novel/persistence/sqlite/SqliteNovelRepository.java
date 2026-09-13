@@ -753,13 +753,419 @@ public class SqliteNovelRepository implements NovelRepository {
     }
 
     private com.writing.novel.domain.ReviewBarrier mapBarrier(ResultSet rs) throws SQLException {
-        java.time.Instant resolvedAt = rs.getString("resolved_at") == null ? null
-                : java.time.Instant.parse(rs.getString("resolved_at"));
+        java.time.Instant resolvedAt = rs.getString("resolved_at") == null
+                ? null : java.time.Instant.parse(rs.getString("resolved_at"));
         return new com.writing.novel.domain.ReviewBarrier(
                 rs.getString("id"), rs.getString("project_id"), rs.getInt("chapter_index"),
                 rs.getInt("chapter_version"), rs.getString("reason"),
                 com.writing.novel.domain.ReviewBarrier.Status.valueOf(rs.getString("status")),
                 java.time.Instant.parse(rs.getString("created_at")), resolvedAt);
+    }
+
+    // --- p36-03: 版本化审阅上下文与原子比较批准（单连接事务，禁止混用新开连接的公共方法） ---
+
+    @Override
+    public ChapterApproval.ReviewContext readReviewContext(String projectId, int chapterIndex) {
+        return runInTransaction(conn -> {
+            Chapter chapter = selectChapterByIndex(conn, projectId, chapterIndex);
+            if (chapter == null) throw new IllegalArgumentException("章节不存在: " + chapterIndex);
+            ChapterApproval.Identity identity = ChapterApproval.Identity.of(chapter);
+            String reviewSetHash = computeReviewSetHash(conn, projectId, chapterIndex);
+            List<String> barrierIds = selectActiveBarrierIds(conn, projectId);
+            List<String> checkpointIds = selectPendingChapterClassCheckpointIds(conn, projectId);
+            String reportCurrent = selectReportCurrent(conn, projectId, chapterIndex);
+            ChapterApproval approval = findApprovalForIdentity(conn, projectId, chapterIndex,
+                    identity.version(), identity.contentHash());
+            // issues/dispositions/directives 为 p37/p38 预留：默认空，绝不默认已通过
+            return new ChapterApproval.ReviewContext(identity, reviewSetHash, checkpointIds, barrierIds,
+                    reportCurrent, approval, List.of(), List.of(), List.of());
+        });
+    }
+
+    @Override
+    public ChapterApproval.Result approveChapter(ChapterApproval.Request request) {
+        if (request == null || request.identity() == null || request.identity().projectId() == null
+                || request.reviewSetHash() == null || request.reviewSetHash().isBlank()
+                || request.idempotencyKey() == null || request.idempotencyKey().isBlank()) {
+            throw new IllegalArgumentException("批准请求缺少 identity/reviewSetHash/idempotencyKey，服务端不补填");
+        }
+        ChapterApproval.Identity requested = request.identity();
+        return runInTransaction(conn -> {
+            Chapter chapter = selectChapterByIndex(conn, requested.projectId(), requested.chapterIndex());
+            if (chapter == null) {
+                throw new IllegalArgumentException(
+                        "章节不存在: " + requested.projectId() + "#" + requested.chapterIndex());
+            }
+            ChapterApproval.Identity currentIdentity = ChapterApproval.Identity.of(chapter);
+            String currentReviewSetHash = computeReviewSetHash(conn, requested.projectId(), requested.chapterIndex());
+
+            // 1. 幂等：同 key 同语义恢复原结果；同 key 不同语义为冲突（不借机批准新稿）
+            ChapterApproval existing = selectApprovalByIdempotencyKey(
+                    conn, requested.projectId(), request.idempotencyKey());
+            if (existing != null) {
+                boolean sameSemantics = existing.identity().equals(requested)
+                        && existing.reviewSetHash().equals(request.reviewSetHash());
+                if (sameSemantics) {
+                    return new ChapterApproval.Result(existing.approvalId(), existing.identity(), true);
+                }
+                throw new ReviewConflictException(ReviewConflictException.Reason.IDEMPOTENCY_CONFLICT,
+                        "幂等键已绑定不同的批准语义", currentIdentity, currentReviewSetHash);
+            }
+
+            // 2. 双重批准守卫：不同 key 双击不算两次有效批准
+            if (findApprovalForIdentity(conn, requested.projectId(), requested.chapterIndex(),
+                    currentIdentity.version(), currentIdentity.contentHash()) != null) {
+                throw new ReviewConflictException(ReviewConflictException.Reason.ALREADY_APPROVED,
+                        "该稿件身份已被批准", currentIdentity, currentReviewSetHash);
+            }
+
+            // 3. 身份比较：请求必须精确匹配当前稿（version + contentHash）
+            if (!currentIdentity.equals(requested)) {
+                throw new ReviewConflictException(ReviewConflictException.Reason.IDENTITY_STALE,
+                        "章节身份已变化，请刷新后重新审阅", currentIdentity, currentReviewSetHash);
+            }
+            // 4. 待审集合比较：报告/屏障/章节类检查点任一变化即失效
+            if (!currentReviewSetHash.equals(request.reviewSetHash())) {
+                throw new ReviewConflictException(ReviewConflictException.Reason.REVIEW_SET_STALE,
+                        "待审集合已变化，请刷新后重新审阅", currentIdentity, currentReviewSetHash);
+            }
+
+            // 5. 写批准审计（不可变行）
+            String approvalId = UUID.randomUUID().toString();
+            Instant now = Instant.now();
+            insertChapterApproval(conn, approvalId, request, currentReviewSetHash, now);
+
+            // 6. 标记精确版本 DONE——版本不匹配（并发已变）即整体回滚
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE chapters SET status='DONE', updated_at=? " +
+                            "WHERE project_id=? AND chapter_index=? AND version=?")) {
+                ps.setString(1, now.toString());
+                ps.setString(2, requested.projectId());
+                ps.setInt(3, requested.chapterIndex());
+                ps.setInt(4, currentIdentity.version());
+                if (ps.executeUpdate() != 1) {
+                    throw new ReviewConflictException(ReviewConflictException.Reason.IDENTITY_STALE,
+                            "章节版本并发变化，批准已回滚", currentIdentity, currentReviewSetHash);
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+
+            // 7. 只解决绑定该稿号（章号+版本）的 ACTIVE 屏障，并追加放行历史
+            List<String> barrierIds = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT id FROM review_barriers WHERE project_id=? AND chapter_index=? " +
+                            "AND chapter_version=? AND status='ACTIVE'")) {
+                ps.setString(1, requested.projectId());
+                ps.setInt(2, requested.chapterIndex());
+                ps.setInt(3, currentIdentity.version());
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) barrierIds.add(rs.getString(1));
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            for (String barrierId : barrierIds) {
+                try (PreparedStatement resolve = conn.prepareStatement(
+                        "UPDATE review_barriers SET status='RESOLVED', resolved_at=? WHERE id=? AND status='ACTIVE'");
+                     PreparedStatement history = conn.prepareStatement(
+                        "INSERT INTO review_barrier_history (barrier_id, project_id, chapter_index, " +
+                                "old_chapter_version, new_chapter_version, event, created_at) " +
+                                "VALUES (?,?,?,?,?, 'RESOLVED', ?)")) {
+                    resolve.setString(1, now.toString());
+                    resolve.setString(2, barrierId);
+                    resolve.executeUpdate();
+                    history.setString(1, barrierId);
+                    history.setString(2, requested.projectId());
+                    history.setInt(3, requested.chapterIndex());
+                    history.setInt(4, currentIdentity.version());
+                    history.setInt(5, currentIdentity.version());
+                    history.setString(6, now.toString());
+                    history.executeUpdate();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            // 8. 处理同章章节类检查点（payload/description 定位章号）
+            for (Checkpoint cp : selectPendingChapterClassCheckpoints(conn, requested.projectId())) {
+                Integer cpChapter = checkpointChapterIndex(cp);
+                if (cpChapter != null && cpChapter == requested.chapterIndex()) {
+                    try (PreparedStatement ps = conn.prepareStatement(
+                            "UPDATE checkpoints SET status='APPROVED' WHERE id=? AND status='PENDING'")) {
+                        ps.setString(1, cp.getId());
+                        ps.executeUpdate();
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+
+            // 9. 按剩余待审项决定项目是否退出停点：任何类型待审 checkpoint 或 ACTIVE 屏障存在则保持
+            int remaining = countPendingCheckpoints(conn, requested.projectId())
+                    + countActiveBarriers(conn, requested.projectId());
+            if (remaining == 0 && isProjectPausedAtCheckpoint(conn, requested.projectId())) {
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE projects SET state='WRITING', updated_at=? WHERE id=?")) {
+                    ps.setString(1, now.toString());
+                    ps.setString(2, requested.projectId());
+                    ps.executeUpdate();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            return new ChapterApproval.Result(approvalId, currentIdentity, false);
+        });
+    }
+
+    private Chapter selectChapterByIndex(Connection conn, String projectId, int chapterIndex) {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM chapters WHERE project_id=? AND chapter_index=?")) {
+            ps.setString(1, projectId);
+            ps.setInt(2, chapterIndex);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? mapChapter(rs) : null;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** C1：reviewSetHash=同事务读取的有序待审集合（报告/屏障/章节类检查点），JSON 键排序后 SHA-256。 */
+    private String computeReviewSetHash(Connection conn, String projectId, int chapterIndex) {
+        try {
+            String report = selectReportCurrent(conn, projectId, chapterIndex);
+            List<String> barriers = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT id, chapter_index, chapter_version FROM review_barriers " +
+                            "WHERE project_id=? AND status='ACTIVE'")) {
+                ps.setString(1, projectId);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    barriers.add("barrier:" + rs.getString("id") + "@ch" + rs.getInt("chapter_index")
+                            + "v" + rs.getInt("chapter_version"));
+                }
+            }
+            List<String> checkpoints = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT id, type FROM checkpoints WHERE project_id=? AND status='PENDING' " +
+                            "AND type IN ('AFTER_CHAPTER','ON_CONTINUITY_FIX')")) {
+                ps.setString(1, projectId);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) checkpoints.add("checkpoint:" + rs.getString("id") + "@" + rs.getString("type"));
+            }
+            Collections.sort(barriers);
+            Collections.sort(checkpoints);
+            StringBuilder canonical = new StringBuilder();
+            canonical.append("{\"barriers\":").append(jsonStringArray(barriers))
+                    .append(",\"checkpoints\":").append(jsonStringArray(checkpoints))
+                    // p37/p38 接入前为空集合：意见/裁决/处置身份不参与指纹
+                    .append(",\"directives\":[],\"dispositions\":[],\"issues\":[],\"report\":")
+                    .append(report == null ? "null" : "\"" + report + "\"")
+                    .append("}");
+            return sha256Hex(canonical.toString());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String jsonStringArray(List<String> values) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < values.size(); i++) {
+            if (i > 0) sb.append(',');
+            sb.append('"').append(values.get(i)).append('"');
+        }
+        return sb.append(']').toString();
+    }
+
+    private String selectReportCurrent(Connection conn, String projectId, int chapterIndex) {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT id, chapter_version, content_hash FROM chapter_reviews " +
+                        "WHERE project_id=? AND chapter_index=? ORDER BY created_at DESC, rowid DESC LIMIT 1")) {
+            ps.setString(1, projectId);
+            ps.setInt(2, chapterIndex);
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) return null;
+            Integer version = rs.getObject("chapter_version") == null ? null : rs.getInt("chapter_version");
+            String hash = rs.getString("content_hash");
+            return "report:" + rs.getString("id") + "@v" + (version == null ? 0 : version)
+                    + ":" + (hash == null ? "-" : hash);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private List<String> selectActiveBarrierIds(Connection conn, String projectId) {
+        List<String> ids = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT id FROM review_barriers WHERE project_id=? AND status='ACTIVE' ORDER BY chapter_index")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) ids.add(rs.getString(1));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return ids;
+    }
+
+    private List<String> selectPendingChapterClassCheckpointIds(Connection conn, String projectId) {
+        List<String> ids = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT id FROM checkpoints WHERE project_id=? AND status='PENDING' " +
+                        "AND type IN ('AFTER_CHAPTER','ON_CONTINUITY_FIX') ORDER BY created_at")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) ids.add(rs.getString(1));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return ids;
+    }
+
+    private List<Checkpoint> selectPendingChapterClassCheckpoints(Connection conn, String projectId) {
+        List<Checkpoint> list = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM checkpoints WHERE project_id=? AND status='PENDING' " +
+                        "AND type IN ('AFTER_CHAPTER','ON_CONTINUITY_FIX') ORDER BY created_at")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Checkpoint cp = new Checkpoint(rs.getString("project_id"),
+                        Checkpoint.Type.valueOf(rs.getString("type")), rs.getString("description"));
+                setField(cp, "id", rs.getString("id"));
+                setField(cp, "status", Checkpoint.Status.valueOf(rs.getString("status")));
+                cp.setPayload(rs.getString("payload"));
+                list.add(cp);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return list;
+    }
+
+    /** 从 checkpoint payload 的 chapterIndex 定位所属章，无 payload 时回退"第N章"描述前缀。 */
+    private Integer checkpointChapterIndex(Checkpoint cp) {
+        try {
+            if (cp.getPayload() != null && !cp.getPayload().isBlank()) {
+                var node = JSON_MAPPER.readTree(cp.getPayload());
+                if (node.hasNonNull("chapterIndex")) return node.get("chapterIndex").asInt();
+            }
+        } catch (Exception ignored) {
+            // payload 非法时回退描述解析
+        }
+        if (cp.getDescription() != null) {
+            var matcher = java.util.regex.Pattern.compile("^第(\\d+)章").matcher(cp.getDescription());
+            if (matcher.find()) return Integer.parseInt(matcher.group(1));
+        }
+        return null;
+    }
+
+    private ChapterApproval selectApprovalByIdempotencyKey(Connection conn, String projectId,
+                                                           String idempotencyKey) {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM chapter_approvals WHERE project_id=? AND idempotency_key=?")) {
+            ps.setString(1, projectId);
+            ps.setString(2, idempotencyKey);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? mapApproval(rs) : null;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private ChapterApproval findApprovalForIdentity(Connection conn, String projectId, int chapterIndex,
+                                                    int version, String contentHash) {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM chapter_approvals WHERE project_id=? AND chapter_index=? " +
+                        "AND chapter_version=? AND content_hash=? ORDER BY created_at DESC LIMIT 1")) {
+            ps.setString(1, projectId);
+            ps.setInt(2, chapterIndex);
+            ps.setInt(3, version);
+            ps.setString(4, contentHash);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? mapApproval(rs) : null;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void insertChapterApproval(Connection conn, String approvalId, ChapterApproval.Request request,
+                                       String reviewSetHash, Instant createdAt) {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "INSERT INTO chapter_approvals (id, project_id, chapter_index, chapter_version, " +
+                        "content_hash, review_set_hash, idempotency_key, reason, created_at) " +
+                        "VALUES (?,?,?,?,?,?,?,?,?)")) {
+            ChapterApproval.Identity id = request.identity();
+            ps.setString(1, approvalId);
+            ps.setString(2, id.projectId());
+            ps.setInt(3, id.chapterIndex());
+            ps.setInt(4, id.version());
+            ps.setString(5, id.contentHash());
+            ps.setString(6, reviewSetHash);
+            ps.setString(7, request.idempotencyKey());
+            ps.setString(8, request.reason());
+            ps.setString(9, createdAt.toString());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private ChapterApproval mapApproval(ResultSet rs) throws SQLException {
+        ChapterApproval.Identity identity = new ChapterApproval.Identity(
+                rs.getString("project_id"), rs.getInt("chapter_index"),
+                rs.getInt("chapter_version"), rs.getString("content_hash"));
+        return new ChapterApproval(rs.getString("id"), identity, rs.getString("review_set_hash"),
+                rs.getString("idempotency_key"), rs.getString("reason"),
+                Instant.parse(rs.getString("created_at")));
+    }
+
+    private int countPendingCheckpoints(Connection conn, String projectId) {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT COUNT(*) FROM checkpoints WHERE project_id=? AND status='PENDING'")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            rs.next();
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private int countActiveBarriers(Connection conn, String projectId) {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT COUNT(*) FROM review_barriers WHERE project_id=? AND status='ACTIVE'")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            rs.next();
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private boolean isProjectPausedAtCheckpoint(Connection conn, String projectId) {
+        try (PreparedStatement ps = conn.prepareStatement("SELECT state FROM projects WHERE id=?")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() && "PAUSED_AT_CHECKPOINT".equals(rs.getString("state"));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static String sha256Hex(String input) {
+        try {
+            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            final String hexDigits = "0123456789abcdef";
+            StringBuilder hex = new StringBuilder(digest.length * 2);
+            for (byte b : digest) {
+                hex.append(hexDigits.charAt((b >> 4) & 0xF));
+                hex.append(hexDigits.charAt(b & 0xF));
+            }
+            return hex.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override

@@ -5131,7 +5131,7 @@
         "p36-12",
         "p36-13"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/web/ContentController.java",
         "src/main/java/com/writing/novel/web/CheckpointController.java",
@@ -5143,7 +5143,8 @@
       "acceptance": "mvn test -Dtest=LegacyApprovalGateTest 退出0；逐一向所有旧入口真实POST，无token不改变章/屏障/checkpoint；初始设定仍可批准后继续；新的版本审批全量通过。",
       "verify_cmd": "mvn test -Dtest=LegacyApprovalGateTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-13：verified，branch codex/p36-06-legacy-approval-gate，实现/主分支提交 c247ec2921c8b64c7b4cf7afc962bd742039144c；RED 见 evidence（32f58a1：4 failures 三类旁路实证）。合并后 main mvn compile&&mvn test 766/0/0/1skip、专项 6/6 通过；两个既有测试按计划'现有测试适配'条款适配并记录。完成记录 p36-06-p36。安全闭环（p36-02→06）成立。",
+      "completion_record": "p36-06-p36"
     },
     {
       "id": "p36-07",
@@ -6393,5 +6394,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-13",
-  "active_feature": "p36-06"
+  "active_feature": null
 }

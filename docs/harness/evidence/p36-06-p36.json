@@ -1,0 +1,53 @@
+{
+  "commit": "c247ec2921c8b64c7b4cf7afc962bd742039144c",
+  "cleanCheckout": true,
+  "checkoutNote": "合并后验证在 ff 后的本地 main（c247ec2）重跑全量与专项。",
+  "feature": "p36-06",
+  "branch": "codex/p36-06-legacy-approval-gate",
+  "base_commit": "1a7ddef",
+  "red": {
+    "commit": "32f58a192a96cb5b6e195a5b8322372f89da535d",
+    "command": "mvn test -Dtest=LegacyApprovalGateTest",
+    "exitCode": 1,
+    "result": "Tests run: 6, Failures: 4 —— resolve-review 实测 200（应409）、章节类 approve 实测 200（应409）、章节类 modify 实测默认批准（status=modified，应回到待审）、CONTINUITY modify 实测 200（应409）；两个保留流程断言（初始设定独立批准、版本化新入口）RED 阶段即通过。行为性失败非编译失败。"
+  },
+  "implementation": {
+    "commit": "c247ec2921c8b64c7b4cf7afc962bd742039144c",
+    "files": [
+      "src/main/java/com/writing/novel/web/ContentController.java",
+      "src/main/java/com/writing/novel/web/CheckpointController.java",
+      "src/test/java/com/writing/novel/web/LegacyApprovalGateTest.java",
+      "src/test/java/com/writing/novel/web/CheckpointRevisionControllerTest.java",
+      "src/test/java/com/writing/novel/web/CollaborationEditOwnershipTest.java"
+    ],
+    "notes": "ContentController.resolveManualReview 直接 409（IllegalState→全局409，提示刷新并用版本化批准），零状态变更。CheckpointController.approve 对 AFTER_CHAPTER/ON_CONTINUITY_FIX 抛 409；modify 对 AFTER_CHAPTER 保留重写（reviseContentIfSupported）但不再 resumeAfterCheckpointRevision/cp.modify——返回 modified_pending_review、checkpoint 保持 PENDING、新稿经 p36-07 回到待审；ON_CONTINUITY_FIX modify 409（不可改写且不得放行）；初始设定/卷计划 approve/modify 原流程保留。范围说明：闸门导致两个既有测试适配（计划'现有测试适配'条款，超出3文件部分如实记录）——CheckpointRevisionControllerTest 的 CONTINUITY modify 用例改为断言 409 零变化契约；CollaborationEditOwnershipTest 的批准工权用例改用独立流程 checkpoint（章节类批准工权覆盖已由 ChapterDirectEditTest 版本化批准用例承载）。"
+  },
+  "checks": [
+    {
+      "command": "mvn test -Dtest=LegacyApprovalGateTest",
+      "result": "6 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（合并后 main）",
+      "result": "766 tests / 0 failures / 0 errors / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=LegacyApprovalGateTest（合并后 main 复跑）",
+      "result": "6 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor c247ec2921c8b64c7b4cf7afc962bd742039144c main",
+      "result": "实现提交为 main 祖先",
+      "exitCode": 0
+    }
+  ],
+  "acceptance_detail": "逐一向旧入口真实 POST：resolve-review 409 且章节/屏障不变；AFTER_CHAPTER 与 ON_CONTINUITY_FIX approve 409 且 checkpoint 保持 PENDING；AFTER_CHAPTER modify 重写保存新稿（版本+1、NEEDS_MANUAL_REVIEW）但 checkpoint 回到待审、屏障不放行；CONTINUITY modify 409 且章节版本不变；初始设定 approve 200 独立流程保留；版本化 review-decisions 全量可用（批准后 DONE、屏障解除、同章检查点 APPROVED）。",
+  "limits": [
+    "OrchestratorController 的 /resume（resumeFromCheckpoint 直接批准最新 pending checkpoint）不在本项文件范围与契约清单内，未改动",
+    "前端「拒绝并重写/修改意见重写」仍走 reject/modify（重写路径保留）",
+    "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
+  ]
+}

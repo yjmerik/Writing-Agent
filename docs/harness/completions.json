@@ -852,8 +852,8 @@
         "p36-12"
       ],
       "branch": "codex/p36-12-approval-test-migration",
-      "implementation_commit": "df4e60d",
-      "main_commit": "df4e60d",
+      "implementation_commit": "df4e60d2b38a41ec7465129439ba92261cd55174",
+      "main_commit": "df4e60d2b38a41ec7465129439ba92261cd55174",
       "evidence": "docs/harness/evidence/p36-12-p36.json"
     }
   ]

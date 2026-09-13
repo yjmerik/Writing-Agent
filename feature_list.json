@@ -5179,7 +5179,7 @@
       "dependencies": [
         "p36-01"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/pages/ProjectWorkspace.tsx",
         "frontend/src/components/InteractiveReview.tsx",
@@ -5191,7 +5191,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- workspace-navigation.spec.ts 退出0；手动创建7章→点击第7章→刷新仍第7章；切outline刷新仍outline；后退/前进同步；后台新增章不抢焦点；跨项目不能串章。",
       "verify_cmd": "npm --prefix qa/collaboration test -- workspace-navigation.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-13：verified，branch codex/p36-08-workspace-navigation，实现/主分支提交 9d42f77caaef1d872be7abaf6b5e937289109ce9；RED（旧 bundle）6 failed。合并后 main：全量 766/0/0/1skip、前端构建通过、workspace-navigation.spec 6 passed（路由同步/页签参数/后退前进/不抢焦点/非法章号/历史深链接）。完成记录 p36-08-p36。",
+      "completion_record": "p36-08-p36"
     },
     {
       "id": "p36-09",

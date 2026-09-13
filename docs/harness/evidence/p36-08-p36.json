@@ -1,0 +1,51 @@
+{
+  "commit": "9d42f77caaef1d872be7abaf6b5e937289109ce9",
+  "cleanCheckout": true,
+  "checkoutNote": "合并后验证在 ff 后的本地 main（9d42f77caaef1d872be7abaf6b5e937289109ce9）重跑：mvn compile&&mvn test 766/0、前端构建、verify_cmd（场景服务+临时库）全部通过。",
+  "feature": "p36-08",
+  "branch": "codex/p36-08-workspace-navigation",
+  "base_commit": "5b2b271",
+  "red": {
+    "commit": "1d8c0526e7248a17f69f595e08ebe56721e2964a",
+    "command": "QA_BASE_URL=http://127.0.0.1:18083 npm --prefix qa/collaboration test -- workspace-navigation.spec.ts",
+    "exitCode": 1,
+    "result": "对改动前 bundle：6 failed——目录点击不入路由、页签无 tab 参数、无 version/anchor 深链接。行为性失败。"
+  },
+  "implementation": {
+    "commit": "9d42f77caaef1d872be7abaf6b5e937289109ce9",
+    "files": [
+      "frontend/src/pages/ProjectWorkspace.tsx",
+      "frontend/src/components/InteractiveReview.tsx",
+      "qa/collaboration/workspace-navigation.spec.ts"
+    ],
+    "notes": "ProjectWorkspace：tab 查询参数（review|world|outline|book|quality|run）成为路由权威，页签切换写入 URL（后退/前进可还原）；handleSelectChapter 统一目录点击/待办跳转的入路由（保留 tab）；routeChapter 变化响应式同步（非仅初次读取）；?version=V&anchor=HASH 解析为 historyView 下传。InteractiveReview：目录点击与 Enter/Space 经 onSelectChapter 更新路由（章号标识而非数组下标）；非法章号持久提示并回退存在章；historyView 打开对应版本记录前用与后端同构的 8 字节长度前缀 SHA-256 校验 anchor，缺失/指纹不符持久提示且绝不以当前稿冒充；轮询刷新不抢路由选中章。"
+  },
+  "checks": [
+    {
+      "command": "mvn compile && mvn test（合并后 main）",
+      "result": "766 tests / 0 failures / 0 errors / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "npm --prefix frontend run build",
+      "result": "构建通过",
+      "exitCode": 0
+    },
+    {
+      "command": "QA_BASE_URL=http://127.0.0.1:18083 npm --prefix qa/collaboration test -- workspace-navigation.spec.ts（合并后 main，场景服务+临时库）",
+      "result": "6 passed",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor 9d42f77caaef1d872be7abaf6b5e937289109ce9 main",
+      "result": "实现提交为 main 祖先",
+      "exitCode": 0
+    }
+  ],
+  "acceptance_detail": "真实浏览器：点击第7章→URL /chapter/7→reload 仍第7章（让 Agent 修改第7章 可见）；切大纲→tab=outline→reload 仍选中；第7章↔第3章跳转后退/前进同步；API 后台新增第8章+手动刷新列表后选中章与路由不被抢占；他项目 /chapter/99 显示'第 99 章不存在'并回退存在章（跨项目不串章）；?version=编辑前版本 打开版本记录弹窗显示对应版本，?version=99 显示'历史不存在'明确提示。",
+  "limits": [
+    "anchor 校验依赖 crypto.subtle（localhost 安全上下文可用）",
+    "历史弹窗打开时轮询刷新会以 currentBody 填充'当前'侧——被链接版本的正文以 compare 侧为准",
+    "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
+  ]
+}

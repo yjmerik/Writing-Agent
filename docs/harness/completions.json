@@ -877,6 +877,17 @@
       "implementation_commit": "c247ec2921c8b64c7b4cf7afc962bd742039144c",
       "main_commit": "c247ec2921c8b64c7b4cf7afc962bd742039144c",
       "evidence": "docs/harness/evidence/p36-06-p36.json"
+    },
+    {
+      "id": "p36-08-p36",
+      "kind": "verified",
+      "feature_ids": [
+        "p36-08"
+      ],
+      "branch": "codex/p36-08-workspace-navigation",
+      "implementation_commit": "9d42f77caaef1d872be7abaf6b5e937289109ce9",
+      "main_commit": "9d42f77caaef1d872be7abaf6b5e937289109ce9",
+      "evidence": "docs/harness/evidence/p36-08-p36.json"
     }
   ]
 }

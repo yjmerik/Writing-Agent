@@ -4,7 +4,7 @@ Last Updated: 2026-09-13
 
 ## Current
 
-协作修复程序推进中：Phase36 安全闭环九项（p36-01/02/03/04/05/06/07/12/13）全部按分支协议合入本地 main（p36-06 主分支提交 c247ec2）。feature_list 319 项 = 270 completed + 49 not-started，active_feature=null。
+协作修复程序推进中：Phase36 已完成十项（安全闭环九项 + p36-08 导航同步，p36-08 主分支提交 9d42f77）。feature_list 319 项 = 271 completed + 48 not-started，active_feature=null。
 
 p36-07 交付：saveChapterRevision 同一事务内完成正文更新、快照插入、屏障旧身份审计（REVISED 历史）、ACTIVE 屏障重绑到新稿号；被替换稿已有作者批准时创建绑定新稿号的新屏障并把正文标记 NEEDS_MANUAL_REVIEW（批准失效按 identity 判定，历史批准行永不改写）。doEdit 事务后吞异常的 rebind 已删除；编辑/回退（RESTORE）统一经此边界。
 
@@ -22,7 +22,8 @@ p36-07 交付：saveChapterRevision 同一事务内完成正文更新、快照�
 - p36-05：RED（改动前 bundle）2 failed 无统一批准按钮；GREEN review-version.spec 2 passed——双真实窗口 v2/v3 竞态（A 批准409→不能续写→强制重读→重新批准200→续写解锁）在 1280x900 与 390x844 均通过，fixture 走真实作者路径。
 - p36-12：基线 14/0 → 迁移专项 17/17 → 全量 760/0/0/1skip。
 - p36-13：基线 9/0 → 迁移专项 9/9（屏障恢复/工作台批准走版本化接口，批准记录 identity 与被读章节一致）。
-- p36-06：RED 4 failures（resolve-review/approve 实测200、modify 默认批准、CONTINUITY modify 200）→ GREEN 专项 6/6（旧入口409零变更、modify保留重写回到待审、初始设定独立流程保留、版本化入口全量可用）→ 全量 766/0/0/1skip；两个既有测试按'现有测试适配'条款适配并记录。
+- p36-06：RED 4 failures → GREEN 专项 6/6 → 全量 766/0/0/1skip；两个既有测试按'现有测试适配'条款适配并记录。
+- p36-08：RED 6 failed（旧 bundle 无路由同步/无 tab 参数/无历史深链接）→ GREEN workspace-navigation.spec 6 passed（章路由+刷新、tab=outline+刷新、后退前进、后台新增章不抢焦点、非法章号提示回退、?version 深链接+缺失提示）；合并后 main 全量 766/0/0/1skip、前端构建、verify_cmd 复跑通过。
 - 各项均无 prompt/上下文/生成输入改动，按 quality_gate 未跑 e2e/baseline；未 bless。
 
 ## Blockers

@@ -8,6 +8,7 @@ import com.writing.novel.domain.ChapterVersion;
 import com.writing.novel.domain.Checkpoint;
 import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
+import com.writing.novel.domain.ReviewBarrier;
 import com.writing.novel.domain.Volume;
 import com.writing.novel.memory.MemoryRevision;
 import com.writing.novel.persistence.sqlite.ConnectionProvider;
@@ -273,6 +274,48 @@ class ChapterDirectEditTest {
         assertTrue(repository.findChapterVersions(projectId, 1).isEmpty());
     }
 
+    /**
+     * p36-12: 版本化批准（p36-04）与章节编辑共用同一工作所有权边界——
+     * 旧入口永久 409 后（p36-06），本用例保证工权冲突覆盖仍由新接口真实承载：
+     * 占用期间批准 409 WORK_OWNERSHIP_CONFLICT 且章节屏障不变；释放后同键批准成功（重试语义）。
+     */
+    @Test
+    void 版本化批准与直接编辑共用同一工作所有权边界() throws Exception {
+        String projectId = project("批准工权");
+        Chapter chapter = new Chapter(projectId, 1, "第一章");
+        chapter.setContent(LONG_BODY);
+        chapter.setStatus(Chapter.Status.NEEDS_MANUAL_REVIEW);
+        repository.saveChapter(chapter);
+        repository.saveReviewBarrier(new ReviewBarrier(projectId, 1, chapter.getVersion(), "根源矛盾待复核"));
+
+        JsonNode context = readReviewContext(projectId);
+        String request = approvalRequest(projectId, context, "cde-key-busy");
+
+        writingTaskExecutor.beginWork(projectId, "active-approver");
+        try {
+            mvc.perform(post("/api/projects/{id}/chapters/{index}/review-decisions", projectId, 1)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(request))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.code").value("WORK_OWNERSHIP_CONFLICT"));
+        } finally {
+            writingTaskExecutor.endWork(projectId, "active-approver");
+        }
+
+        assertEquals(Chapter.Status.NEEDS_MANUAL_REVIEW,
+                repository.findChapterByIndex(projectId, 1).orElseThrow().getStatus());
+        assertEquals(1, repository.findActiveReviewBarriers(projectId).size());
+
+        // 释放后同一请求（同幂等键重试语义）批准成功
+        mvc.perform(post("/api/projects/{id}/chapters/{index}/review-decisions", projectId, 1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.replayed").value(false));
+        assertEquals(Chapter.Status.DONE, repository.findChapterByIndex(projectId, 1).orElseThrow().getStatus());
+        assertTrue(repository.findActiveReviewBarriers(projectId).isEmpty(), "批准后屏障解除");
+    }
+
     @Test
     void 当前章节与快照必须同事务失败时不能留下半份历史() throws Exception {
         String projectId = project("事务回滚");
@@ -293,6 +336,24 @@ class ChapterDirectEditTest {
         assertEquals(original.getVersion(), after.getVersion());
         assertEquals("原始标题", after.getTitle());
         assertTrue(repository.findChapterVersions(projectId, 1).isEmpty());
+    }
+
+    private JsonNode readReviewContext(String projectId) throws Exception {
+        MvcResult result = mvc.perform(get("/api/projects/{id}/chapters/{index}/review-context", projectId, 1))
+                .andExpect(status().isOk())
+                .andReturn();
+        return objectMapper.readTree(result.getResponse().getContentAsString(StandardCharsets.UTF_8));
+    }
+
+    private String approvalRequest(String projectId, JsonNode context, String idempotencyKey) throws Exception {
+        return objectMapper.writeValueAsString(Map.of(
+                "identity", Map.of(
+                        "projectId", projectId,
+                        "chapterIndex", 1,
+                        "version", context.path("identity").path("version").asInt(),
+                        "contentHash", context.path("identity").path("contentHash").asText()),
+                "reviewSetHash", context.path("reviewSetHash").asText(),
+                "idempotencyKey", idempotencyKey));
     }
 
     private String project(String title) {

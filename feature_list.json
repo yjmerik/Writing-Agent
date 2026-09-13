@@ -5152,7 +5152,7 @@
       "dependencies": [
         "p36-03"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
         "src/main/java/com/writing/novel/service/ChapterRevisionService.java",
@@ -5164,7 +5164,8 @@
       "acceptance": "mvn test -Dtest=RevisionBarrierAtomicityTest 退出0；修订事务中屏障更新失败则整个正文/历史回滚；v2批准后编辑v3，v2批准仍可查询但不算v3批准；回退也生成新稿待审；无变更保存不新增历史。",
       "verify_cmd": "mvn test -Dtest=RevisionBarrierAtomicityTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-13：verified，branch codex/p36-07-revision-barrier-atomicity，实现/主分支提交 222d887；RED 见 evidence（f60ce4b：4 failures + 1 基线守卫通过）。合并后干净 main mvn compile&&mvn test 757/0/0/1skip、专项 5/5 通过。完成记录 p36-07-p36。",
+      "completion_record": "p36-07-p36"
     },
     {
       "id": "p36-08",
@@ -6388,5 +6389,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-13",
-  "active_feature": "p36-07"
+  "active_feature": null
 }

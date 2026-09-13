@@ -811,6 +811,17 @@
       "implementation_commit": "76dcfd055bdb6da3ad5565fd31da04f982bdfd75",
       "main_commit": "76dcfd055bdb6da3ad5565fd31da04f982bdfd75",
       "evidence": "docs/harness/evidence/p36-04-p36.json"
+    },
+    {
+      "id": "p36-07-p36",
+      "kind": "verified",
+      "feature_ids": [
+        "p36-07"
+      ],
+      "branch": "codex/p36-07-revision-barrier-atomicity",
+      "implementation_commit": "222d8879173a4047fa482de60309b41f1c69a5bf",
+      "main_commit": "222d8879173a4047fa482de60309b41f1c69a5bf",
+      "evidence": "docs/harness/evidence/p36-07-p36.json"
     }
   ]
 }

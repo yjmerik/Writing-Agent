@@ -1,0 +1,51 @@
+{
+  "commit": "222d8879173a4047fa482de60309b41f1c69a5bf",
+  "cleanCheckout": true,
+  "checkoutNote": "验证在合并后干净 main（fast-forward 至 222d887）执行；工作区仅存合并前已有的未跟踪文件，未参与验证。",
+  "feature": "p36-07",
+  "branch": "codex/p36-07-revision-barrier-atomicity",
+  "base_commit": "4815b68",
+  "red": {
+    "commit": "f60ce4bd0258f3d5405b92964f3e5524b9dbdc03",
+    "command": "mvn test -Dtest=RevisionBarrierAtomicityTest",
+    "exitCode": 1,
+    "result": "Tests run: 5, Failures: 4 —— 批准后修订无新屏障（须重新人审缺失）、注入失败不回滚（事务后吞异常 rebind）、重绑无历史、回退不生成待审新稿；1 项基线守卫（幂等空操作保存）实现前即通过。行为性失败非编译失败。"
+  },
+  "implementation": {
+    "commit": "222d8879173a4047fa482de60309b41f1c69a5bf",
+    "files": [
+      "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+      "src/main/java/com/writing/novel/service/ChapterRevisionService.java",
+      "src/test/java/com/writing/novel/service/RevisionBarrierAtomicityTest.java"
+    ],
+    "notes": "saveChapterRevision 同一事务：先读被替换稿旧身份并检查其是否已有作者批准（chapter_approvals 按 version+contentHash）；正文更新+快照插入后，重绑该章全部 ACTIVE 屏障到新稿号并追加 REVISED 历史；被替换稿已获批准时创建绑定新稿号的新屏障、正文标记 NEEDS_MANUAL_REVIEW 并留痕。任一步失败全回滚。doEdit 事务后吞异常的 rebind 已删除；编辑/回退统一经此边界。历史批准行永不改写，有效性按 identity 判定。"
+  },
+  "checks": [
+    {
+      "command": "mvn test -Dtest=RevisionBarrierAtomicityTest",
+      "result": "5 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（合并后干净 main）",
+      "result": "757 tests / 0 failures / 0 errors / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=RevisionBarrierAtomicityTest（合并后干净 main 复跑）",
+      "result": "5 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor 222d887 main",
+      "result": "实现提交为 main 祖先",
+      "exitCode": 0
+    }
+  ],
+  "acceptance_detail": "修订事务中以 BEFORE UPDATE 触发器注入屏障更新失败：版本不推进、正文保持原稿、屏障原因未改写、屏障历史与版本快照计数均为 0；v2 批准后编辑 v3：v2 批准行原样可查（chapter_version+content_hash 匹配）、readReviewContext 对 v3 的 approval 为 null、出现绑定 v3 的 ACTIVE 屏障、章节 NEEDS_MANUAL_REVIEW、REVISED 历史（old=2→new=3）恰一条；有 ACTIVE 屏障时修订：屏障重绑到新稿号且历史入同一事务；RESTORE 回退产生 v3 新稿、不继承批准、须重新人审且保持待审；相同内容保存不推进版本、不新增历史、批准保持有效。",
+  "limits": [
+    "候选（proposal）路径接入同一修订边界属 p37-02/p37-14",
+    "rebindReviewBarriers 旧公共方法保留（SPI 兼容），生产路径不再从事务后调用",
+    "未跑 e2e/compare-baseline：无 prompt、上下文组装或前端改动（修订边界变化不改生成输入）"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "commit": "39c9d0f7eb05fc0d51910f62844d4f50571ecb69",
+  "cleanCheckout": true,
+  "checkoutNote": "合并后验证在 ff 后的本地 main（39c9d0f7eb05fc0d51910f62844d4f50571ecb69）重跑：mvn compile&&mvn test 766/0、前端构建、verify_cmd（场景服务+临时库）4 passed。",
+  "feature": "p36-09",
+  "branch": "codex/p36-09-draft-recovery",
+  "base_commit": "f6ae42f",
+  "red": {
+    "commit": "1e301372c8a2ec3367195176203f12072994e999",
+    "command": "QA_BASE_URL=http://127.0.0.1:18083 npm --prefix qa/collaboration test -- draft-recovery.spec.ts",
+    "exitCode": 1,
+    "result": "对改动前 bundle：2 failed——冲突保留用例（无冲突警示，30s 超时）与 409 保留输入用例行为性失败；标题/正文恢复两用例旧实现已满足（基线）。"
+  },
+  "implementation": {
+    "commit": "39c9d0f7eb05fc0d51910f62844d4f50571ecb69",
+    "files": [
+      "frontend/src/lib/draftStore.ts",
+      "frontend/src/components/InteractiveReview.tsx",
+      "qa/collaboration/draft-recovery.spec.ts"
+    ],
+    "notes": "draftStore：活跃/冲突双槽位；loadDraft 返回 missing|matching|conflict|unavailable；过期草稿先到先得移入冲突槽（新草稿绝不覆盖未处理副本）；saveDraft 返回持久化成败；legacy（无 baseHash）草稿 matching+legacy=true 仅提示核对；clearConflictDraft 仅作者显式放弃。组件：标题+正文两字段持续暂存与恢复；冲突面板并排展示副本+复制+放弃；409 保留作者输入不替换为新稿；暂存失败显示'未暂存'警示并启用 beforeunload 离开保护；正式保存成功后才清草稿。openEditChapter 先取服务器当前稿再分类（修复前端缓存滞后把真冲突误判 legacy-matching）；剪贴板复制接住异步 reject（headless 权限拒绝）降级为手动复制提示。"
+  },
+  "checks": [
+    {
+      "command": "mvn compile && mvn test（合并后 main）",
+      "result": "766 tests / 0 failures / 0 errors / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "npm --prefix frontend run build",
+      "result": "构建通过",
+      "exitCode": 0
+    },
+    {
+      "command": "QA_BASE_URL=http://127.0.0.1:18083 npm --prefix qa/collaboration test -- draft-recovery.spec.ts（合并后 main，场景服务+临时库）",
+      "result": "4 passed",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor 39c9d0f7eb05fc0d51910f62844d4f50571ecb69 main",
+      "result": "实现提交为 main 祖先",
+      "exitCode": 0
+    }
+  ],
+  "acceptance_detail": "真实浏览器：只改标题/只改正文/刷新后均恢复（另一字段不丢）；B 窗口正式保存新稿后 A 重开编辑器显示'发现未保存草稿与当前稿基准不一致'+副本并排（pre[data-conflict-side=draft] 含草稿段落）+复制按钮响应+放弃后警示消失且编辑器正文为当前稿不冒充；409（编辑器持旧版本、后台已出新稿）后提示'章节已被更新'且标题/正文输入保留；全流程无未解释 console.error（契约性 409 与 headless 剪贴板降级提示除外）。",
+  "limits": [
+    "暂存失败（quota）用例由 saveDraft 返回值+警示 UI 结构承载，未在 headless 注入真实 quota 异常",
+    "旧格式 legacy 草稿核对提示为 UI 结构覆盖，未做独立端到端用例",
+    "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
+  ]
+}

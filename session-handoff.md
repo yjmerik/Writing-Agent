@@ -4,14 +4,14 @@ Last Updated: 2026-09-13
 
 ## Current
 
-Phase36 已完成十项（安全闭环九项 + p36-08 导航同步），均合入本地 main（最新 9d42f77）。feature_list 319 项 = 271 completed + 48 not-started，active_feature=null。
+Phase36 已完成十一项（安全闭环九项 + p36-08 导航 + p36-09 草稿恢复），均合入本地 main（最新 39c9d0f）。feature_list 319 项 = 272 completed + 47 not-started，active_feature=null。
 
 后端版本化批准与修订失效链路完整：身份模型/审计表 → 单连接事务 approveChapter（幂等/守卫/比较提交）→ HTTP review-context/review-decisions → 修订事务内屏障重绑+批准失效+历史（doEdit 事务后吞异常 rebind 已删除）。
 
 ## Files
 
 - 分支各自独立并 ff 合入 main。
-- 证据：docs/harness/evidence/p36-0{1,2,3,4,5,6,7,8}-p36.json 与 p36-1{2,3}-p36.json；完成记录 completions.json 对应 verified 记录。
+- 证据：docs/harness/evidence/p36-0{1..9}-p36.json 与 p36-1{2,3}-p36.json；完成记录 completions.json 对应 verified 记录。
 - 执行入口 docs/superpowers/plans/2026-09-12-collaboration-repair-entry.md；总 spec 与 p36–p40 分计划不变。
 
 ## Verification
@@ -22,7 +22,8 @@ Phase36 已完成十项（安全闭环九项 + p36-08 导航同步），均合�
 - p36-12：基线 14/0 → 专项 17/17；并发严格 200/409、旧身份 409 新稿待审。
 - p36-13：基线 9/0 → 专项 9/9；屏障恢复/工作台批准走版本化接口。
 - p36-06：RED 4 failures → 专项 6/6；旁路关闭，modify 保留重写回到待审。
-- p36-08：RED 6 failed → GREEN workspace-navigation.spec 6 passed；tab 入 URL、章路由权威（点击/键盘/待办跳转/后退前进/刷新）、非法章号提示回退、?version&anchor 深链接（客户端同构指纹校验，缺失明确提示不冒充）。
+- p36-08：RED 6 failed → GREEN 6 passed；tab 入 URL、章路由权威、非法章号提示回退、历史深链接指纹校验。
+- p36-09：RED 2 failed → GREEN draft-recovery.spec 4 passed；双字段草稿暂存/恢复、冲突副本并排+复制+放弃、409 保留输入、暂存失败警示+离开保护；openEditChapter 以服务器当前稿判定冲突（修缓存滞后误判）；剪贴板异步 reject 已接住。
 - 各项均无 prompt/上下文/生成输入改动，未跑 e2e/baseline，未 bless。
 
 ## Blockers
@@ -31,6 +32,6 @@ Phase36 已完成十项（安全闭环九项 + p36-08 导航同步），均合�
 
 ## Next Steps
 
-1. 下一批特性：p36-09（标题与正文草稿恢复/冲突保留/存储失败提示；改 frontend/src/lib/draftStore.ts + InteractiveReview.tsx + 新增 draft-recovery.spec.ts；loadDraft 返回 missing|matching|conflict|unavailable，基准变化保留冲突副本并排比较，409 不覆盖本地内容）→ p36-10（OutlineView 预览绑定目标章数）→ p36-11（BookReviewView 诚实状态）。
+1. 下一批特性：p36-10（目标章数改变失效旧预览并刷新大纲；改 frontend/src/components/OutlineView.tsx + 新增 plan-preview.spec.ts；本地记录 previewTargetNumber，只有 newTarget===previewTargetNumber 且未生效才启用确认；预览请求序号丢弃乱序返回；confirm 成功重读大纲清 draft/persistedOutline）→ p36-11（BookReviewView DONE 仅显示正文流程完成，无批准记录显示尚未作者批准）。
 2. 其后 p37 持久候选与意见证据按 dependencies 拓扑推进。
 3. 保留工作区原有未跟踪文件，不推送远端。

@@ -888,6 +888,17 @@
       "implementation_commit": "9d42f77caaef1d872be7abaf6b5e937289109ce9",
       "main_commit": "9d42f77caaef1d872be7abaf6b5e937289109ce9",
       "evidence": "docs/harness/evidence/p36-08-p36.json"
+    },
+    {
+      "id": "p36-09-p36",
+      "kind": "verified",
+      "feature_ids": [
+        "p36-09"
+      ],
+      "branch": "codex/p36-09-draft-recovery",
+      "implementation_commit": "39c9d0f7eb05fc0d51910f62844d4f50571ecb69",
+      "main_commit": "39c9d0f7eb05fc0d51910f62844d4f50571ecb69",
+      "evidence": "docs/harness/evidence/p36-09-p36.json"
     }
   ]
 }

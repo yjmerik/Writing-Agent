@@ -5131,7 +5131,7 @@
         "p36-12",
         "p36-13"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/web/ContentController.java",
         "src/main/java/com/writing/novel/web/CheckpointController.java",
@@ -6393,5 +6393,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-13",
-  "active_feature": null
+  "active_feature": "p36-06"
 }

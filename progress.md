@@ -4,7 +4,7 @@ Last Updated: 2026-09-13
 
 ## Current
 
-协作修复程序推进中：Phase36 已完成十二项（+ p36-10 篇幅预览绑定，p36-10 主分支提交 5f96ad6）。feature_list 319 项 = 273 completed + 46 not-started，active_feature=null。
+Phase36 全部 13 项完成（安全闭环九项 + 导航/草稿/预览/成书状态四项 UI 修复），均按分支协议合入本地 main（p36-11 主分支提交 b3135fb）。feature_list 319 项 = 274 completed + 45 not-started，active_feature=null。
 
 p36-07 交付：saveChapterRevision 同一事务内完成正文更新、快照插入、屏障旧身份审计（REVISED 历史）、ACTIVE 屏障重绑到新稿号；被替换稿已有作者批准时创建绑定新稿号的新屏障并把正文标记 NEEDS_MANUAL_REVIEW（批准失效按 identity 判定，历史批准行永不改写）。doEdit 事务后吞异常的 rebind 已删除；编辑/回退（RESTORE）统一经此边界。
 
@@ -25,12 +25,13 @@ p36-07 交付：saveChapterRevision 同一事务内完成正文更新、快照�
 - p36-06：RED 4 failures → GREEN 专项 6/6 → 全量 766/0/0/1skip；两个既有测试按'现有测试适配'条款适配并记录。
 - p36-08：RED 6 failed → GREEN workspace-navigation.spec 6 passed；合并后复跑通过。
 - p36-09：RED 2 failed → GREEN draft-recovery.spec 4 passed；合并后复跑通过。
-- p36-10：RED（改目标后确认仍 enabled、目标输入无 aria-label）→ GREEN plan-preview.spec 2 passed（22→20 立即禁用→22 恢复→确认 20 裁剪且保存总纲不复活；独立项目乱序 22→21 展示 21 的预览）；fixture 经真实构思流程建大纲。合并后 main 全量 766/0/0/1skip、前端构建、verify_cmd 复跑通过。
+- p36-10：RED → GREEN plan-preview.spec 2 passed（预览绑定/乱序丢弃/确认后裁剪不复活）；fixture 经真实构思流程。
+- p36-11：RED 2 failed（伪造'已批准流程完成'在场）→ GREEN book-state.spec 2 passed（DONE='正文流程完成'+'作者已批准/尚未作者批准'独立标识、缺报告不冒充旧稿）；后端 book-review 逐章填 approved（SPI isChapterApproved，身份精确匹配）。合并后 main 全量 766/0/0/1skip、前端构建、verify_cmd 复跑通过。
 - 各项均无 prompt/上下文/生成输入改动，按 quality_gate 未跑 e2e/baseline；未 bless。
 
 ## Blockers
 
-旧窗口/旧端点误批准新稿的漏洞已闭环：版本化批准为唯一章节放行路径（resolve-review 与章节类 checkpoint approve/modify 旁路已关闭）。OrchestratorController /resume 直接批准最新 pending checkpoint 不在本项契约清单内，如需收敛另立项。p36-07 的候选路径接入属 p37-02/14。
+Phase36 收官：版本化批准为唯一章节放行路径，UI 导航/草稿/预览/成书状态诚实化完成。遗留观察项：OrchestratorController /resume 不在 p36-06 契约清单内。真实评分/模型预算/bless 属执行时授权事项。
 
 ## Next Steps
 

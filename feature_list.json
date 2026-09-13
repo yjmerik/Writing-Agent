@@ -5250,7 +5250,7 @@
       "dependencies": [
         "p36-01"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "frontend/src/components/BookReviewView.tsx",
         "qa/collaboration/book-state.spec.ts"
@@ -5261,7 +5261,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- book-state.spec.ts 退出0；自动DONE、手工DONE、旧报告、缺报告四种响应分别渲染正确；页面不出现伪造“已批准流程完成”。",
       "verify_cmd": "npm --prefix qa/collaboration test -- book-state.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-13：verified，branch codex/p36-11-book-state，实现/主分支提交 b3135fb0373e32c9eb5aed1e8374bbbb02c4de6f；RED 2 failed（伪造'已批准流程完成'在场）。合并后 main：全量 766/0/0/1skip、前端构建、book-state.spec 2 passed。完成记录 p36-11-p36。Phase36 全部 13 项完成。",
+      "completion_record": "p36-11-p36"
     },
     {
       "id": "p37-01",
@@ -6397,5 +6398,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-13",
-  "active_feature": "p36-11"
+  "active_feature": null
 }

@@ -910,6 +910,17 @@
       "implementation_commit": "5f96ad6dd55bb299f95e4337e9be901526d83fd2",
       "main_commit": "5f96ad6dd55bb299f95e4337e9be901526d83fd2",
       "evidence": "docs/harness/evidence/p36-10-p36.json"
+    },
+    {
+      "id": "p36-11-p36",
+      "kind": "verified",
+      "feature_ids": [
+        "p36-11"
+      ],
+      "branch": "codex/p36-11-book-state",
+      "implementation_commit": "b3135fb0373e32c9eb5aed1e8374bbbb02c4de6f",
+      "main_commit": "b3135fb0373e32c9eb5aed1e8374bbbb02c4de6f",
+      "evidence": "docs/harness/evidence/p36-11-p36.json"
     }
   ]
 }

@@ -1,0 +1,53 @@
+{
+  "commit": "b3135fb0373e32c9eb5aed1e8374bbbb02c4de6f",
+  "cleanCheckout": true,
+  "checkoutNote": "合并后验证在 ff 后的本地 main（b3135fb0373e32c9eb5aed1e8374bbbb02c4de6f）重跑：mvn compile&&mvn test 766/0、前端构建、verify_cmd（场景服务+临时库）2 passed。",
+  "feature": "p36-11",
+  "branch": "codex/p36-11-book-state",
+  "base_commit": "0f12b97",
+  "red": {
+    "commit": "5c3e40745779093251f4ca586930416f274157e6",
+    "command": "QA_BASE_URL=http://127.0.0.1:18083 npm --prefix qa/collaboration test -- book-state.spec.ts",
+    "exitCode": 1,
+    "result": "对改动前 bundle：2 failed——DONE 章显示伪造'已批准流程完成'（应'正文流程完成'+'尚未作者批准'），版本化批准后无'作者已批准'标识。行为性失败。"
+  },
+  "implementation": {
+    "commit": "b3135fb0373e32c9eb5aed1e8374bbbb02c4de6f",
+    "files": [
+      "src/main/java/com/writing/novel/spi/NovelRepository.java",
+      "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+      "src/main/java/com/writing/novel/web/ContentController.java",
+      "frontend/src/api/client.ts",
+      "frontend/src/components/BookReviewView.tsx"
+    ],
+    "notes": "SPI 新增 isChapterApproved（缺省 false，不默认已批准）；Sqlite 实现按 (project, chapter, version, contentHash) 精确匹配 chapter_approvals；book-review 端点逐章填 approved 字段；BookReviewView：DONE→'正文流程完成'，批准状态独立 Tag（'作者已批准'/'尚未作者批准'），伪造文案删除；旧稿报告 Tag 仅在 reportCurrent===false 时出现（缺报告不冒充旧稿）。"
+  },
+  "checks": [
+    {
+      "command": "mvn compile && mvn test（合并后 main）",
+      "result": "766 tests / 0 failures / 0 errors / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "npm --prefix frontend run build",
+      "result": "构建通过",
+      "exitCode": 0
+    },
+    {
+      "command": "QA_BASE_URL=http://127.0.0.1:18083 npm --prefix qa/collaboration test -- book-state.spec.ts（合并后 main，场景服务+临时库）",
+      "result": "2 passed",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor b3135fb0373e32c9eb5aed1e8374bbbb02c4de6f main",
+      "result": "实现提交为 main 祖先",
+      "exitCode": 0
+    }
+  ],
+  "acceptance_detail": "真实浏览器：自动 DONE 章节显示'正文流程完成'+'尚未作者批准'，伪造'已批准流程完成'全页 0 次；版本化批准后的当前稿显示'作者已批准'；无报告项目不显示'旧稿报告' Tag（缺报告与旧稿报告区分）；页面不出现'已批准流程完成'。",
+  "limits": [
+    "完整成书批准（manifest 绑定/导出固定 edition）属 p38-05..08",
+    "旧稿报告渲染分支保留既有实现（reportCurrent===false），未在本项做独立端到端用例",
+    "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
+  ]
+}

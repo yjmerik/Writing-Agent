@@ -855,6 +855,17 @@
       "implementation_commit": "df4e60d2b38a41ec7465129439ba92261cd55174",
       "main_commit": "df4e60d2b38a41ec7465129439ba92261cd55174",
       "evidence": "docs/harness/evidence/p36-12-p36.json"
+    },
+    {
+      "id": "p36-13-p36",
+      "kind": "verified",
+      "feature_ids": [
+        "p36-13"
+      ],
+      "branch": "codex/p36-13-workspace-approval-migration",
+      "implementation_commit": "0f67a318475a7394bd2754f72d8ea4fc3b43b664",
+      "main_commit": "0f67a318475a7394bd2754f72d8ea4fc3b43b664",
+      "evidence": "docs/harness/evidence/p36-13-p36.json"
     }
   ]
 }

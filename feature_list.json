@@ -6375,7 +6375,7 @@
         "p36-04",
         "p36-07"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/test/java/com/writing/novel/web/HitlCanonForeshadowReviewTest.java",
         "src/test/java/com/writing/novel/web/ReviewBarrierGateTest.java",
@@ -6387,10 +6387,11 @@
       "acceptance": "mvn test -Dtest=HitlCanonForeshadowReviewTest,ReviewBarrierGateTest,WorkspaceStatusApiTest 退出0；原业务断言保持，新版批准实际HTTP请求覆盖通过；无忽略、删除或放宽断言。批准前不能续写，批准后屏障和工作台一致并恢复写作。",
       "verify_cmd": "mvn test -Dtest=HitlCanonForeshadowReviewTest,ReviewBarrierGateTest,WorkspaceStatusApiTest",
       "quality_gate": "测试迁移；全量编译测试，不修改业务或质量基线",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-13：verified，branch codex/p36-13-workspace-approval-migration，实现/主分支提交 0f67a318475a7394bd2754f72d8ea4fc3b43b664；基线 9/0（旧契约）。迁移后专项 9/9、合并后 main 全量 760/0/0/1skip。完成记录 p36-13-p36。",
+      "completion_record": "p36-13-p36"
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-09-13",
-  "active_feature": "p36-13"
+  "active_feature": null
 }

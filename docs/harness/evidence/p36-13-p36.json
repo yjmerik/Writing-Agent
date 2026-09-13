@@ -1,0 +1,49 @@
+{
+  "commit": "0f67a318475a7394bd2754f72d8ea4fc3b43b664",
+  "cleanCheckout": true,
+  "checkoutNote": "合并后验证在 ff 后的本地 main（0f67a31）重跑全量与专项。",
+  "feature": "p36-13",
+  "branch": "codex/p36-13-workspace-approval-migration",
+  "base_commit": "0a246b2",
+  "baseline": {
+    "command": "mvn test -Dtest=HitlCanonForeshadowReviewTest,ReviewBarrierGateTest,WorkspaceStatusApiTest",
+    "exitCode": 0,
+    "result": "基线 9 tests / 0 failures——记录旧契约（resolve-review 无版本放行）通过；测试迁移项按计划不声称发现新 RED 业务缺陷。"
+  },
+  "implementation": {
+    "commit": "0f67a318475a7394bd2754f72d8ea4fc3b43b664",
+    "files": [
+      "src/test/java/com/writing/novel/web/HitlCanonForeshadowReviewTest.java",
+      "src/test/java/com/writing/novel/web/ReviewBarrierGateTest.java",
+      "src/test/java/com/writing/novel/web/WorkspaceStatusApiTest.java"
+    ],
+    "notes": "只改三个既有测试文件。成功章节批准全部改为 GET review-context + POST review-decisions（明确 identity/reviewSetHash、每次新幂等键）；每个成功批准后验证批准记录 identity.version 与被读章节一致；真典/伏笔、人审阻止下一章（write-all PAUSED）、批准后恢复写作（第7章生成）、持久屏障与工作台状态断言全部保留；初始设定/卷计划 checkpoint 流程未动；NEEDS_MANUAL_REVIEW 夹具显式落屏障（p33-01 标记即落盘语义）；无任何测试直接写 DONE 或删屏障绕过批准接口。"
+  },
+  "checks": [
+    {
+      "command": "mvn test -Dtest=HitlCanonForeshadowReviewTest,ReviewBarrierGateTest,WorkspaceStatusApiTest",
+      "result": "9 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（合并后 main）",
+      "result": "760 tests / 0 failures / 0 errors / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=HitlCanonForeshadowReviewTest,ReviewBarrierGateTest,WorkspaceStatusApiTest（合并后 main 复跑）",
+      "result": "9 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor 0f67a318475a7394bd2754f72d8ea4fc3b43b6648475a7394bd2754f72d8ea4fc3b43b664 main",
+      "result": "实现提交为 main 祖先",
+      "exitCode": 0
+    }
+  ],
+  "acceptance_detail": "专项退出0；原业务断言保持（屏障持久读回、write-all 暂停于人工复核、批准后屏障清空并恢复写作、工作台 AWAITING_REVIEW→WRITING/canContinue/todoList 清空）；新批准以真实 HTTP 覆盖且批准记录 identity 与被读章节一致；屏障夹具由惰性补建改为标记时显式落盘。",
+  "limits": [
+    "旧 resolve-review 端点仍存在；关闭属 p36-06（其依赖 p36-05/12/13 至此全部完成）"
+  ],
+  "main_commit": "0f67a318475a7394bd2754f72d8ea4fc3b43b664"
+}

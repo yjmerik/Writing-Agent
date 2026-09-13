@@ -5011,7 +5011,7 @@
       "phase": 36,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "qa/collaboration/package.json",
         "qa/collaboration/package-lock.json",
@@ -6389,5 +6389,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-13",
-  "active_feature": null
+  "active_feature": "p36-01"
 }

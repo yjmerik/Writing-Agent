@@ -1,0 +1,11 @@
+{
+  "name": "@writingagent/collaboration-qa",
+  "private": true,
+  "description": "p36-01: 真实浏览器回归入口——协作系统 UI 验收专用，不进入生产构建",
+  "scripts": {
+    "test": "playwright test --workers=1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}

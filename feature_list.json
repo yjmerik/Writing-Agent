@@ -5105,7 +5105,7 @@
         "p36-01",
         "p36-04"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/InteractiveReview.tsx",
@@ -6390,5 +6390,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-13",
-  "active_feature": null
+  "active_feature": "p36-05"
 }

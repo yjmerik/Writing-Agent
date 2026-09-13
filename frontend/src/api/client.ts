@@ -46,6 +46,40 @@ export interface CheckpointOperationResponse {
   revision?: CheckpointRevision;
 }
 
+/** p36-05: 不可变稿件身份——批准只能绑定作者已读的具体版本与正文指纹 */
+export interface ReviewIdentity {
+  projectId: string;
+  chapterIndex: number;
+  version: number;
+  contentHash: string;
+}
+
+/** p36-04: 审阅上下文快照——待审集合指纹与既有批准；空集合不表示已通过 */
+export interface ReviewContext {
+  identity: ReviewIdentity;
+  reviewSetHash: string;
+  pendingCheckpointIds: string[];
+  barrierIds: string[];
+  reportCurrent: string | null;
+  approval: {
+    approvalId: string;
+    identity: ReviewIdentity;
+    reviewSetHash: string;
+    idempotencyKey: string;
+    reason: string | null;
+    createdAt: string;
+  } | null;
+  issues: string[];
+  dispositions: string[];
+  directives: string[];
+}
+
+export interface ReviewApprovalResult {
+  approvalId: string;
+  identity: ReviewIdentity;
+  replayed: boolean;
+}
+
 export type AgentRevisionTargetType = 'WORLD' | 'CHARACTER' | 'VOLUME' | 'CHAPTER' | 'PASSAGE';
 
 export interface AgentRevisionTarget {
@@ -354,6 +388,21 @@ export const api = {
 
   resolveManualReview: (id: string, chapterIndex: number) =>
     request<Chapter>(`/projects/${id}/chapters/${chapterIndex}/resolve-review`, { method: 'POST' }),
+
+  /** p36-05: 已读正文身份、待审集合指纹与既有批准的一致快照 */
+  getReviewContext: (id: string, chapterIndex: number) =>
+    request<ReviewContext>(`/projects/${id}/chapters/${chapterIndex}/review-context`),
+
+  /** p36-05: 版本化批准——identity/reviewSetHash 必须与作者已读内容一致，服务端不补填 */
+  approveChapterRevision: (id: string, chapterIndex: number, body: {
+    identity: ReviewIdentity;
+    reviewSetHash: string;
+    idempotencyKey: string;
+    reason?: string;
+  }) => request<ReviewApprovalResult>(`/projects/${id}/chapters/${chapterIndex}/review-decisions`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  }),
 
   pause: (id: string) =>
     request<ProjectStatus>(`/projects/${id}/pause`, { method: 'POST' }),

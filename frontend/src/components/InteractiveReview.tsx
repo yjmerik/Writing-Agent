@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin, Progress, Collapse, Drawer, Grid, Select } from 'antd';
 import { saveDraft, loadDraft, clearDraft, localStorageAdapter } from '../lib/draftStore';
-import type { AuthorDirectiveView, ForeshadowCandidateView } from '../api/client';
+import type { AuthorDirectiveView, ForeshadowCandidateView, ReviewContext } from '../api/client';
 import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, HistoryOutlined, PlusOutlined, ReloadOutlined, TrophyOutlined } from '@ant-design/icons';
 import { ApiError, api } from '../api/client';
 import type { AgentRevisionTarget, CheckpointRevision } from '../api/client';
@@ -82,6 +82,13 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
   const [bodyLoadStates, setBodyLoadStates] = useState<Record<number, BodyLoadState>>({});
   const bodyLoadStatesRef = useRef<Record<number, BodyLoadState>>({});
   const bodyRequestGenerationsRef = useRef<Record<number, number>>({});
+  // p36-05: 审阅上下文按章缓存——批准 token 只与已加载正文 identity 一致时启用
+  const [reviewContexts, setReviewContexts] = useState<Record<number, ReviewContext>>({});
+  const reviewContextGenerationsRef = useRef<Record<number, number>>({});
+  // p36-05: 批准意图的幂等键——同一稿件的网络重试复用，成功/换稿/409 后重新生成
+  const approvalIntentRef = useRef<{ chapterIndex: number; version: number; idempotencyKey: string } | null>(null);
+  const [approving, setApproving] = useState(false);
+  const [reviewConflict, setReviewConflict] = useState<string | null>(null);
   const refreshGenerationRef = useRef(0);
   const projectGenerationRef = useRef(0);
   const activeProjectIdRef = useRef(projectId);
@@ -189,6 +196,31 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
     if (isLatestRequest()) setBodyLoadState(chapterIndex, { loading: false, error: '' });
   }, [cacheBody, projectId, setBodyLoadState]);
 
+  // p36-05: 审阅上下文与正文同代次纪律加载——按请求代次抛弃迟到结果
+  const loadReviewContext = useCallback(async (chapterIndex: number) => {
+    const requestProjectId = projectId;
+    const requestProjectGeneration = projectGenerationRef.current;
+    const requestGeneration = (reviewContextGenerationsRef.current[chapterIndex] ?? 0) + 1;
+    reviewContextGenerationsRef.current[chapterIndex] = requestGeneration;
+    const isLatestRequest = () => mountedRef.current
+      && activeProjectIdRef.current === requestProjectId
+      && projectGenerationRef.current === requestProjectGeneration
+      && reviewContextGenerationsRef.current[chapterIndex] === requestGeneration;
+    try {
+      const context = await api.getReviewContext(projectId, chapterIndex);
+      if (!isLatestRequest()) return;
+      setReviewContexts((previous) => ({ ...previous, [chapterIndex]: context }));
+    } catch {
+      if (!isLatestRequest()) return;
+      // 上下文不可用时不展示旧 token：清除后批准按钮禁用
+      setReviewContexts((previous) => {
+        const next = { ...previous };
+        delete next[chapterIndex];
+        return next;
+      });
+    }
+  }, [projectId]);
+
   // p21-05 修复: refresh 只依赖 projectId——selectedIdx 变化（点选章节）不得触发
   // 元数据/checkpoints/status 重取（此前 useCallback 依赖 selectedIdx，点章即全量重取）
   const refresh = useCallback(async (forceSelectedBody = false, preferredChapterIndex?: number) => {
@@ -249,6 +281,9 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
   useEffect(() => {
     setBodies({});
     setBodyLoadStates({});
+    setReviewContexts({});
+    approvalIntentRef.current = null;
+    setReviewConflict(null);
     setSelectedIdx(0);
     setChapterEditorTarget(null);
     setHistoryChapter(null);
@@ -284,9 +319,20 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
     void loadBody(currentMeta.chapterIndex, Boolean(cached));
   }, [currentMeta?.chapterIndex, currentMeta?.version, loadBody]);
 
+  // p36-05: 选中章/稿变化即重取审阅上下文——旧 token 在版本变化后立即失配（按钮禁用）
+  useEffect(() => {
+    if (!currentMeta) return;
+    void loadReviewContext(currentMeta.chapterIndex);
+  }, [currentMeta?.chapterIndex, currentMeta?.version, loadReviewContext]);
+
   const currentChapter = currentMeta
     ? (currentBody ?? currentMeta)
     : undefined;
+
+  // p36-05: 批准就绪 = 已加载正文且其版本与审阅上下文 identity 一致
+  const currentReviewContext = currentMeta ? reviewContexts[currentMeta.chapterIndex] : undefined;
+  const currentApproveReady = Boolean(currentBody && currentReviewContext
+    && currentReviewContext.identity.version === currentBody.version);
 
   // p11-I3: 选中章节时获取质量报告
   useEffect(() => {
@@ -535,6 +581,62 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
     } finally { setLoading(false); }
   };
 
+  // p36-05: 统一「批准当前稿」——章节卡、章节类检查点卡与窄屏抽屉共用同一 handler；
+  // 服务端做原子比较提交（身份 + 待审集合指纹 + 幂等键），409 时保留草稿强制重读。
+  const approveChapterDraft = async (chapterIndex: number) => {
+    if (approving) return;
+    const meta = chapters.find(c => c.chapterIndex === chapterIndex);
+    const cachedBody = bodies[chapterIndex];
+    const body = meta && cachedBody?.version === meta.version ? cachedBody : undefined;
+    const context = reviewContexts[chapterIndex];
+    if (!meta || !body || !context) return;
+    if (context.identity.version !== body.version) {
+      // token 与已加载正文不一致：不批准，先重读再由作者确认
+      message.warning('审阅上下文与当前正文版本不一致，已重新读取，请确认后再批准');
+      await refresh(true, chapterIndex);
+      void loadReviewContext(chapterIndex);
+      return;
+    }
+    setApproving(true);
+    setReviewConflict(null);
+    const intent = approvalIntentRef.current
+      && approvalIntentRef.current.chapterIndex === chapterIndex
+      && approvalIntentRef.current.version === body.version
+      ? approvalIntentRef.current
+      : { chapterIndex, version: body.version, idempotencyKey: crypto.randomUUID() };
+    approvalIntentRef.current = intent;
+    try {
+      const result = await api.approveChapterRevision(projectId, chapterIndex, {
+        identity: context.identity,
+        reviewSetHash: context.reviewSetHash,
+        idempotencyKey: intent.idempotencyKey,
+        reason: '作者确认当前稿',
+      });
+      approvalIntentRef.current = null;
+      setReviewConflict(null);
+      message.success(result.replayed
+        ? '批准已生效（同一请求重试返回原结果）'
+        : `已批准第${chapterIndex}章 v${body.version}`);
+      await refresh(true, chapterIndex);
+      void loadReviewContext(chapterIndex);
+      onChanged();
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
+        // 409：保留草稿并强制重读正文与审阅上下文，不自动重试批准
+        approvalIntentRef.current = null;
+        setReviewConflict(error.message);
+        message.warning(`批准未生效：${error.message}（已重新读取，请确认新稿后再批准）`);
+        await refresh(true, chapterIndex);
+        void loadReviewContext(chapterIndex);
+        onChanged();
+      } else {
+        message.error(`批准失败: ${(error as Error).message}`);
+      }
+    } finally {
+      setApproving(false);
+    }
+  };
+
   const openCheckpointRewrite = (
     checkpoint: Checkpoint,
     action: Extract<RewriteTarget, { kind: 'checkpoint' }>['action'],
@@ -657,6 +759,22 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
           let payload: CheckpointPayload | null = null;
           try { payload = cp.payload ? normalizeCheckpointPayload(JSON.parse(cp.payload)) : null; } catch { payload = null; }
           const navigationLinks = payload?.links ?? [];
+          // p36-05: 章节类检查点与正文/抽屉共用「批准当前稿」；token 只与已加载正文一致时启用
+          const checkpointChapterIndex = payload?.chapterIndex;
+          const isChapterClassCheckpoint = checkpointChapterIndex != null
+            && (cp.type === 'AFTER_CHAPTER' || cp.type === 'ON_CONTINUITY_FIX');
+          const checkpointMeta = isChapterClassCheckpoint
+            ? chapters.find(c => c.chapterIndex === checkpointChapterIndex)
+            : undefined;
+          const checkpointBody = checkpointMeta
+            && bodies[checkpointMeta.chapterIndex]?.version === checkpointMeta.version
+            ? bodies[checkpointMeta.chapterIndex]
+            : undefined;
+          const checkpointContext = isChapterClassCheckpoint && checkpointChapterIndex != null
+            ? reviewContexts[checkpointChapterIndex]
+            : undefined;
+          const checkpointApproveReady = Boolean(checkpointBody && checkpointContext
+            && checkpointContext.identity.version === checkpointBody.version);
           return (
           <Alert
             key={cp.id}
@@ -667,6 +785,12 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
               <div style={{ marginBottom: 8, fontSize: 13 }}>
                 审核目标：{cp.type}
               </div>
+              {isChapterClassCheckpoint && checkpointMeta && (
+                <div style={{ marginBottom: 8, fontSize: 13 }}>
+                  当前稿：第 {checkpointMeta.chapterIndex} 章 <b>v{checkpointMeta.version}</b>
+                  {!checkpointBody && '（正文未加载——打开本章审阅后才能批准）'}
+                </div>
+              )}
               {payload && (
                 <div style={{ marginBottom: 8, fontSize: 13 }}>
                   {payload.score != null && (
@@ -718,9 +842,19 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                 </div>
               )}
               <Space>
-                <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => handleApprove(cp)} loading={loading}>
-                  ✅ 批准
-                </Button>
+                {isChapterClassCheckpoint ? (
+                  <Button type="primary" icon={<CheckCircleOutlined />} loading={approving}
+                    disabled={!checkpointApproveReady}
+                    aria-label="批准当前稿"
+                    title={checkpointApproveReady ? '批准当前加载的稿件' : '请先打开本章正文，审阅上下文就绪后才能批准'}
+                    onClick={() => checkpointChapterIndex != null && void approveChapterDraft(checkpointChapterIndex)}>
+                    批准当前稿
+                  </Button>
+                ) : (
+                  <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => handleApprove(cp)} loading={loading}>
+                    ✅ 批准
+                  </Button>
+                )}
                 <Button danger icon={<CloseCircleOutlined />} onClick={() => openCheckpointRewrite(cp, 'reject')} loading={loading}>
                   ❌ 拒绝并重写
                 </Button>
@@ -789,6 +923,13 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
           </Button>
         </Space>
 
+        {/* p36-05: 版本/待审集合冲突提示——保留草稿，强制重读后由作者显式重新批准 */}
+        {reviewConflict && (
+          <Alert type="warning" showIcon style={{ marginBottom: 16 }}
+            message="批准未生效：审阅对象已变化"
+            description={`${reviewConflict} 正文与审阅上下文已重新读取；确认新稿后请再次点击「批准当前稿」。系统不会自动重试批准。`} />
+        )}
+
         <Row gutter={16}>
           {/* 章节列表（p21-06: 小屏堆叠） */}
           <Col xs={24} md={5}>
@@ -840,16 +981,10 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                       <Button size="small" onClick={() => setReviewPanelOpen(true)}>审查</Button>
                     )}
                     {currentChapter.status === 'NEEDS_MANUAL_REVIEW' && (
-                      <Button size="small" type="primary" onClick={async () => {
-                        try {
-                          await api.resolveManualReview(projectId, currentChapter.chapterIndex);
-                          message.success('已标为处理完毕');
-                          void refresh();
-                          onChanged();
-                        } catch (err) {
-                          message.error((err as Error).message);
-                        }
-                      }}>已处理</Button>
+                      <Button size="small" type="primary" loading={approving}
+                        disabled={!currentApproveReady}
+                        title={currentApproveReady ? '批准当前加载的稿件' : '正文或审阅上下文尚未就绪'}
+                        onClick={() => void approveChapterDraft(currentChapter.chapterIndex)}>批准当前稿</Button>
                     )}
                     <Button
                       size="small"
@@ -1103,7 +1238,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
               {currentChapter?.status === 'NEEDS_MANUAL_REVIEW' && (
                 <Alert type="warning" showIcon style={{ marginBottom: 12 }}
                   message={`第 ${currentChapter.chapterIndex} 章第 v${currentChapter.version} 稿待你审查`}
-                  description="处理完成后再继续写作。正文头部的「已处理」按钮可放行本稿。" />
+                  description="处理完成后再继续写作。正文头部的「批准当前稿」按钮核验已读稿件后放行本稿。" />
               )}
               {!currentChapter && <Text type="secondary">选择左侧章节查看审查信息。</Text>}
               {qualityReport ? (
@@ -1225,18 +1360,11 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
               )}
               {screens.md && <Text type="secondary" style={{ fontSize: 12 }}>当前为桌面布局，右侧面板含完整证据。</Text>}
               {!screens.md && currentChapter?.status === 'NEEDS_MANUAL_REVIEW' && (
-                <Button type="primary" block style={{ marginTop: 12 }}
-                  onClick={async () => {
-                    try {
-                      await api.resolveManualReview(projectId, currentChapter.chapterIndex);
-                      message.success('已标为处理完毕');
-                      void refresh();
-                      onChanged();
-                    } catch (err) {
-                      message.error((err as Error).message);
-                    }
-                  }}>
-                    已处理（放行本稿）
+                <Button type="primary" block style={{ marginTop: 12 }} loading={approving}
+                  disabled={!currentApproveReady}
+                  title={currentApproveReady ? '批准当前加载的稿件' : '正文或审阅上下文尚未就绪'}
+                  onClick={() => currentChapter && void approveChapterDraft(currentChapter.chapterIndex)}>
+                    批准当前稿
                   </Button>
               )}
               {!screens.md && (

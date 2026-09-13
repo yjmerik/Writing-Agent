@@ -186,18 +186,10 @@ public class ContentController {
 
     @PostMapping("/chapters/{chapterIndex}/resolve-review")
     public Chapter resolveManualReview(@PathVariable String id, @PathVariable int chapterIndex) {
-        return withChapterWork(id, () -> {
-            Chapter chapter = repository.findChapterByIndex(id, chapterIndex)
-                    .orElseThrow(() -> new IllegalArgumentException("章节不存在: " + chapterIndex));
-            if (chapter.getStatus() != Chapter.Status.NEEDS_MANUAL_REVIEW) {
-                throw new IllegalStateException("仅 NEEDS_MANUAL_REVIEW 状态的章节可处理人工复核");
-            }
-            chapter.setStatus(Chapter.Status.DONE);
-            repository.saveChapter(chapter);
-            // p33-01: 放行即解决该章全部人审屏障，写作调度恢复
-            repository.resolveReviewBarriers(id, chapterIndex);
-            return chapter;
-        });
+        // p36-06: 无版本放行旁路关闭——批准必须携带已读稿件身份走版本化 review-decisions，
+        // 旧窗口/旧端点不再能放行未读新稿。
+        throw new IllegalStateException(
+                "该入口已关闭：请刷新审阅，并使用版本化「批准当前稿」（review-decisions）放行");
     }
 
     @PostMapping("/replan")

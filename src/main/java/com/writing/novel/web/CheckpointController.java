@@ -38,11 +38,12 @@ public class CheckpointController {
         return repository.findPendingCheckpoints(id);
     }
 
-    /** 批准 checkpoint — 推进项目状态 */
+    /** 批准 checkpoint — 推进项目状态（p36-06: 章节类审核点不得无版本放行） */
     @PostMapping("/{checkpointId}/approve")
     public Map<String, Object> approve(@PathVariable String id, @PathVariable String checkpointId) {
         return withRevisionWork(id, () -> {
-            checkpointTargetService.requirePending(id, checkpointId);
+            var cp = checkpointTargetService.requirePending(id, checkpointId);
+            rejectChapterClassApproval(cp);
             orchestrator.approveCheckpoint(id, checkpointId);
             return Map.of("status", "approved", "checkpointId", checkpointId);
         });
@@ -78,6 +79,8 @@ public class CheckpointController {
     /**
      * 修改 checkpoint — 带修改意见，但批准并继续。
      * body: { "instructions": "修改意见（记录但不阻塞）" }
+     * p36-06: 章节类审核点保留重写动作但不再默认批准——checkpoint 回到待审，
+     * 由作者通过版本化「批准当前稿」放行；ON_CONTINUITY_FIX 无法改写且不得放行，直接 409。
      */
     @PostMapping("/{checkpointId}/modify")
     public Map<String, Object> modify(@PathVariable String id, @PathVariable String checkpointId,
@@ -86,7 +89,22 @@ public class CheckpointController {
             var cp = checkpointTargetService.requirePending(id, checkpointId);
             String instructions = body.getOrDefault("instructions", "");
 
-            // 连续性修复 checkpoint 只推进状态；其余类型先完成真实内容改写。
+            if (cp.getType() == Checkpoint.Type.AFTER_CHAPTER) {
+                NovelOrchestrator.CheckpointRevisionResult revision =
+                        reviseContentIfSupported(id, cp, instructions);
+                if (revision == null) {
+                    return Map.of("status", "modified_pending_review", "checkpointId", checkpointId,
+                            "instructions", instructions);
+                }
+                return Map.of("status", "modified_pending_review", "checkpointId", checkpointId,
+                        "instructions", instructions, "revision", revision);
+            }
+            if (cp.getType() == Checkpoint.Type.ON_CONTINUITY_FIX) {
+                throw new IllegalStateException(
+                        "连续性修复审核点已改用版本化批准：请修订正文后通过「批准当前稿」放行");
+            }
+
+            // 非章节类（初始设定/卷计划）保持原流程：重写 + 批准推进
             NovelOrchestrator.CheckpointRevisionResult revision = reviseContentIfSupported(id, cp, instructions);
 
             // 项目推进成功后才处理 checkpoint；推进异常仍保留 PENDING，便于用户重试。
@@ -101,6 +119,15 @@ public class CheckpointController {
             return Map.of("status", "modified", "checkpointId", checkpointId,
                     "instructions", instructions, "revision", revision);
         });
+    }
+
+    /** p36-06: 章节类审核点的批准必须走版本化 review-decisions（绑定已读稿件身份）。 */
+    private void rejectChapterClassApproval(Checkpoint checkpoint) {
+        if (checkpoint.getType() == Checkpoint.Type.AFTER_CHAPTER
+                || checkpoint.getType() == Checkpoint.Type.ON_CONTINUITY_FIX) {
+            throw new IllegalStateException(
+                    "章节类审核点已改用版本化批准：请刷新审阅，并通过「批准当前稿」（review-decisions）放行");
+        }
     }
 
     private NovelOrchestrator.CheckpointRevisionResult reviseContentIfSupported(

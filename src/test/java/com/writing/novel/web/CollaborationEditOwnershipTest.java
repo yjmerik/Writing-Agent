@@ -23,7 +23,10 @@ class CollaborationEditOwnershipTest {
   assertFalse(executor.hasActiveTask("p"));
  }
  @Test void checkpointApprovalOwnsProjectThroughStateChange(){
-  var cp=new Checkpoint("p",Checkpoint.Type.AFTER_CHAPTER,"审阅");
+  // p36-06: 章节类审核点批准已迁移到版本化接口（其工权覆盖见
+  // ChapterDirectEditTest.版本化批准与直接编辑共用同一工作所有权边界）；
+  // 独立流程（初始设定/卷计划）的批准仍必须持续持有工作权直到状态推进完成。
+  var cp=new Checkpoint("p",Checkpoint.Type.AFTER_INITIAL_SETUP,"审阅");
   var targets=mock(CheckpointTargetService.class);when(targets.requirePending("p",cp.getId())).thenReturn(cp);
   doAnswer(call->{assertTrue(executor.hasActiveTask("p"));assertThrows(IllegalStateException.class,()->executor.startWriteChapter("p"));return null;}).when(orchestrator).approveCheckpoint("p",cp.getId());
   new CheckpointController(repo,orchestrator,targets,executor).approve("p",cp.getId());

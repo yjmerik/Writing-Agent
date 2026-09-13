@@ -23,10 +23,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -138,25 +140,15 @@ class CheckpointRevisionControllerTest {
     }
 
     @Test
-    void continuityModifyAdvancesWhilePendingThenRecordsModifiedWithoutContentRevision() {
+    void continuityModifyRejectedByLegacyGateAndChangesNothing() {
+        // p36-06: CONTINUITY 类型不得经 legacy modify 绕过版本化批准——409 语义（IllegalState）且零变化
         Checkpoint checkpoint = pending(Checkpoint.Type.ON_CONTINUITY_FIX);
-        when(orchestrator.reviseCheckpoint(eq(project.getId()),
-                argThat(cp -> cp.getType() == Checkpoint.Type.ON_CONTINUITY_FIX), eq("记录意见")))
-                .thenThrow(new AssertionError("continuity modify must not revise content"));
-        AtomicBoolean advancedWhilePending = new AtomicBoolean(false);
-        doAnswer(invocation -> {
-            advancedWhilePending.set(repository.findCheckpoint(checkpoint.getId()).orElseThrow().getStatus()
-                    == Checkpoint.Status.PENDING);
-            return null;
-        }).when(orchestrator).resumeAfterCheckpointRevision(eq(project.getId()), any(Checkpoint.class));
 
-        Map<String, Object> response = controller.modify(
-                project.getId(), checkpoint.getId(), Map.of("instructions", "记录意见"));
+        assertThrows(IllegalStateException.class, () -> controller.modify(
+                project.getId(), checkpoint.getId(), Map.of("instructions", "记录意见")));
 
-        assertEquals("modified", response.get("status"));
-        assertFalse(response.containsKey("revision"));
-        assertTrue(advancedWhilePending.get());
-        assertEquals(Checkpoint.Status.MODIFIED,
+        verify(orchestrator, never()).resumeAfterCheckpointRevision(anyString(), any(Checkpoint.class));
+        assertEquals(Checkpoint.Status.PENDING,
                 repository.findCheckpoint(checkpoint.getId()).orElseThrow().getStatus());
     }
 

@@ -200,7 +200,19 @@ public class SqliteSchemaInitializer {
             "id INTEGER PRIMARY KEY AUTOINCREMENT, barrier_id TEXT NOT NULL, " +
             "project_id TEXT NOT NULL, chapter_index INTEGER NOT NULL, " +
             "old_chapter_version INTEGER, new_chapter_version INTEGER, " +
-            "event TEXT NOT NULL, created_at TEXT NOT NULL)"
+            "event TEXT NOT NULL, created_at TEXT NOT NULL)",
+
+        // p37-01: 持久修订候选——候选是 DB 资源而非弹窗内存；刷新/重启后可恢复。
+        // UNIQUE(project_id, request_key) 幂等；APPLIED/STALE/CANCELLED 均留记录，无 TTL 自动删除。
+        "CREATE TABLE IF NOT EXISTS revision_proposals (" +
+            "id TEXT PRIMARY KEY, project_id TEXT NOT NULL, target_type TEXT NOT NULL, " +
+            "target_id TEXT NOT NULL, chapter_index INTEGER, passage_index INTEGER, " +
+            "base_version INTEGER NOT NULL, source_hash TEXT NOT NULL, " +
+            "instructions TEXT, before_json TEXT, after_json TEXT, summary TEXT, " +
+            "status TEXT NOT NULL, request_key TEXT NOT NULL, result_json TEXT, " +
+            "created_at TEXT NOT NULL, updated_at TEXT NOT NULL, " +
+            "UNIQUE(project_id, request_key))",
+        "CREATE INDEX IF NOT EXISTS idx_revision_proposals_project ON revision_proposals(project_id, status)"
     };
 
     private final ConnectionProvider cp;

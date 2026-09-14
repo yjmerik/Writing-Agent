@@ -40,3 +40,21 @@ p40-06 需真实模型预算+真人评分（Agent 不可代填）；p40-05 验�
 
 - 已完成：p37-16（d2a2a04，811/0/0/1skip）。
 - 下一项：p37-03（修订服务使用持久候选和恢复查询，PersistentRevisionApiTest，依赖已满足），随后 p37-12 → p38 系列（01→02→03→09→10→13→05→06→07→11）→ p39 系列（01→10→02→03→07→08→04→09）→ QA 系列（p37-04/05/13、p38-04/08/12、p39-05/06、p40-03）→ p40-01/02/04 → p40-05/06（真实实验依赖，如实标注）。
+
+
+## 已完成清单（更新至 p37-08）
+
+Phase36: 01-13 全部13项。
+Phase37: 01,02,03,06,07,08,09,10,11,14,15,16 = 12/16。剩 p37-04(QA), p37-05(QA), p37-12(integration), p37-13(QA)。
+Phase38: 0/13 — p38-01,02,03,05,09 ✓deps可先行。
+Phase39: 0/10 — p39-01 ✓deps可先行。
+Phase40: 0/6 — p40-02, p40-04 ✓deps可先行。
+
+main 最新 5477a04，全量 822/0/0/1skip。
+
+## 实施要点（新增）
+
+- 意见 API (p37-08)：PATCH expectedRevision CAS；/evidence/{id}/confirm 需 identity+directiveRevision；/revoke 需 reason+CAS；/confirm 对 OPEN 返回 409。SPI findDirectiveEvidence。
+- AgentRevisionService：preview 持久化 RevisionProposal；post-generation re-read 检测 STALE；apply CHAPTER/PASSAGE 路由 applyProposalInOwnedWork；RevisionPreview/ApplyResult 增 sourceIdentity+status。
+- 测试网关：不要在共享 StubLlmGatewayTestConfig 上加 NovelRepository（会导致 @Primary 冲突）；在测试内 TestConfiguration 加专属 gateway。
+- NovelOrchestrator 测试构造：反射 getDeclaredConstructors 选最后一个参数为 OrchestratorPolicies 的构造器，null 填充。

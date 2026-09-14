@@ -750,11 +750,12 @@ public class SqliteNovelRepository implements NovelRepository {
     @Override
     public void saveAuthorDirective(com.writing.novel.domain.AuthorDirective d) {
         String sql = "INSERT INTO author_directives (id,project_id,kind,chapter_index,content,status," +
-                "system_evidence,system_evidence_version,created_at,confirmed_at,updated_at) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?) " +
+                "system_evidence,system_evidence_version,created_at,confirmed_at,updated_at," +
+                "revision,from_chapter,to_chapter,enabled) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) " +
                 "ON CONFLICT(id) DO UPDATE SET status=excluded.status, system_evidence=excluded.system_evidence, " +
                 "system_evidence_version=excluded.system_evidence_version, confirmed_at=excluded.confirmed_at, " +
-                "updated_at=excluded.updated_at";
+                "updated_at=excluded.updated_at, revision=excluded.revision, from_chapter=excluded.from_chapter, " +
+                "to_chapter=excluded.to_chapter, enabled=excluded.enabled";
         try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, d.getId()); ps.setString(2, d.getProjectId());
             ps.setString(3, d.getKind().name());
@@ -768,6 +769,12 @@ public class SqliteNovelRepository implements NovelRepository {
             if (d.getConfirmedAt() != null) ps.setString(10, d.getConfirmedAt().toString());
             else ps.setNull(10, Types.NULL);
             ps.setString(11, d.getUpdatedAt().toString());
+            ps.setInt(12, d.getRevision() == null ? 1 : d.getRevision());
+            if (d.getFromChapter() != null) ps.setInt(13, d.getFromChapter());
+            else ps.setNull(13, Types.NULL);
+            if (d.getToChapter() != null) ps.setInt(14, d.getToChapter());
+            else ps.setNull(14, Types.NULL);
+            ps.setInt(15, d.isEnabled() ? 1 : 0);
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
@@ -800,7 +807,7 @@ public class SqliteNovelRepository implements NovelRepository {
         Integer evidenceVersion = rs.getObject("system_evidence_version") == null ? null
                 : rs.getInt("system_evidence_version");
         String confirmedAt = rs.getString("confirmed_at");
-        return new com.writing.novel.domain.AuthorDirective(
+        com.writing.novel.domain.AuthorDirective directive = new com.writing.novel.domain.AuthorDirective(
                 rs.getString("id"), rs.getString("project_id"),
                 com.writing.novel.domain.AuthorDirective.Kind.valueOf(rs.getString("kind")),
                 chapterIndex, rs.getString("content"),
@@ -809,6 +816,15 @@ public class SqliteNovelRepository implements NovelRepository {
                 java.time.Instant.parse(rs.getString("created_at")),
                 confirmedAt == null ? null : java.time.Instant.parse(confirmedAt),
                 java.time.Instant.parse(rs.getString("updated_at")));
+        try {
+            directive.setRevision(rs.getObject("revision") == null ? 1 : rs.getInt("revision"));
+            directive.setScope(rs.getObject("from_chapter") == null ? null : rs.getInt("from_chapter"),
+                    rs.getObject("to_chapter") == null ? null : rs.getInt("to_chapter"));
+            directive.setEnabled(rs.getObject("enabled") == null || rs.getInt("enabled") == 1);
+        } catch (Exception ignored) {
+            // 旧 schema 列缺失时保持缺省
+        }
+        return directive;
     }
 
     // --- p33-07: 候选线索层 ---
@@ -1166,6 +1182,190 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setString(2, projectId);
             ps.setString(3, proposalId);
             return ps.executeUpdate() == 1;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // --- p37-07: 意见与证据版本化仓储 ---
+
+    @Override
+    public void updateDirective(com.writing.novel.domain.AuthorDirective directive, int expectedRevision) {
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "UPDATE author_directives SET content=?, status=?, updated_at=?, revision=revision+1, " +
+                        "from_chapter=?, to_chapter=?, enabled=? " +
+                        "WHERE project_id=? AND id=? AND revision=?")) {
+            ps.setString(1, directive.getContent());
+            ps.setString(2, directive.getStatus().name());
+            ps.setString(3, Instant.now().toString());
+            if (directive.getFromChapter() != null) ps.setInt(4, directive.getFromChapter());
+            else ps.setNull(4, Types.NULL);
+            if (directive.getToChapter() != null) ps.setInt(5, directive.getToChapter());
+            else ps.setNull(5, Types.NULL);
+            ps.setInt(6, directive.isEnabled() ? 1 : 0);
+            ps.setString(7, directive.getProjectId());
+            ps.setString(8, directive.getId());
+            ps.setInt(9, expectedRevision);
+            if (ps.executeUpdate() != 1) {
+                throw new IllegalStateException("意见已变化，请刷新后重试（revision 过期）");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public List<com.writing.novel.domain.AuthorDirective> findApplicableDirectives(
+            String projectId, int chapterIndex) {
+        List<com.writing.novel.domain.AuthorDirective> list = new ArrayList<>();
+        String sql = "SELECT * FROM author_directives WHERE project_id=? AND enabled=1 " +
+                "AND status != 'DISMISSED' " +
+                "AND (from_chapter IS NULL OR from_chapter <= ?) " +
+                "AND (to_chapter IS NULL OR to_chapter >= ?) " +
+                "AND NOT (kind = 'ONCE' AND EXISTS (SELECT 1 FROM directive_evidence e " +
+                "WHERE e.directive_id = author_directives.id AND e.status = 'CONFIRMED')) " +
+                "ORDER BY created_at";
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            ps.setInt(2, chapterIndex);
+            ps.setInt(3, chapterIndex);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapDirective(rs));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return list;
+    }
+
+    @Override
+    public com.writing.novel.domain.AuthorDirective.Evidence saveDirectiveEvidence(
+            String projectId, com.writing.novel.domain.AuthorDirective.Evidence evidence) {
+        // 幂等：相同（意见×revision×章×稿×指纹×引用×状态）返回原行
+        String find = "SELECT * FROM directive_evidence WHERE directive_id=? AND directive_revision=? " +
+                "AND chapter_index=? AND chapter_version=? AND COALESCE(content_hash,'')=? " +
+                "AND COALESCE(quote,'')=? AND status=?";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement findPs = conn.prepareStatement(find)) {
+            findPs.setString(1, evidence.directiveId());
+            findPs.setInt(2, evidence.directiveRevision());
+            findPs.setInt(3, evidence.chapterIndex());
+            findPs.setInt(4, evidence.chapterVersion());
+            findPs.setString(5, evidence.contentHash() == null ? "" : evidence.contentHash());
+            findPs.setString(6, evidence.quote() == null ? "" : evidence.quote());
+            findPs.setString(7, evidence.status().name());
+            ResultSet rs = findPs.executeQuery();
+            if (rs.next()) return mapEvidence(rs);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        String insert = "INSERT INTO directive_evidence (id, directive_id, project_id, directive_revision, " +
+                "chapter_index, chapter_version, content_hash, proposal_id, quote, anchor, status, reason, " +
+                "created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(insert)) {
+            ps.setString(1, evidence.id());
+            ps.setString(2, evidence.directiveId());
+            ps.setString(3, projectId);
+            ps.setInt(4, evidence.directiveRevision());
+            ps.setInt(5, evidence.chapterIndex());
+            ps.setInt(6, evidence.chapterVersion());
+            ps.setString(7, evidence.contentHash());
+            ps.setString(8, evidence.proposalId());
+            ps.setString(9, evidence.quote());
+            ps.setString(10, evidence.anchor());
+            ps.setString(11, evidence.status().name());
+            ps.setString(12, evidence.reason());
+            ps.setString(13, Instant.now().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return evidence;
+    }
+
+    private com.writing.novel.domain.AuthorDirective.Evidence mapEvidence(ResultSet rs) throws SQLException {
+        return new com.writing.novel.domain.AuthorDirective.Evidence(
+                rs.getString("id"), rs.getString("directive_id"), rs.getInt("directive_revision"),
+                rs.getInt("chapter_index"), rs.getInt("chapter_version"), rs.getString("content_hash"),
+                rs.getString("proposal_id"), rs.getString("quote"), rs.getString("anchor"),
+                com.writing.novel.domain.AuthorDirective.EvidenceStatus.valueOf(rs.getString("status")),
+                rs.getString("reason"));
+    }
+
+    @Override
+    public com.writing.novel.domain.AuthorDirective.Evidence confirmDirectiveEvidence(
+            String projectId, String evidenceId,
+            ChapterApproval.Identity expectedIdentity, int directiveRevision) {
+        return runInTransaction(conn -> {
+            com.writing.novel.domain.AuthorDirective.Evidence evidence;
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT * FROM directive_evidence WHERE project_id=? AND id=?")) {
+                ps.setString(1, projectId);
+                ps.setString(2, evidenceId);
+                ResultSet rs = ps.executeQuery();
+                if (!rs.next()) throw new IllegalArgumentException("证据不存在: " + evidenceId);
+                evidence = mapEvidence(rs);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            com.writing.novel.domain.AuthorDirective directive;
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT * FROM author_directives WHERE project_id=? AND id=?")) {
+                ps.setString(1, projectId);
+                ps.setString(2, evidence.directiveId());
+                ResultSet rs = ps.executeQuery();
+                if (!rs.next()) throw new IllegalArgumentException("意见不存在");
+                directive = mapDirective(rs);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            // 事务内重读当前章身份：作者必须确认的是当前稿
+            Chapter current = selectChapterByIndex(conn, projectId, evidence.chapterIndex());
+            if (current == null) throw new IllegalStateException("证据指向的章节不存在");
+            ChapterApproval.Identity currentIdentity = ChapterApproval.Identity.of(current);
+            if (!currentIdentity.equals(expectedIdentity)) {
+                throw new IllegalStateException("请刷新后确认当前稿（章节身份已变化）");
+            }
+            if (evidence.chapterVersion() != currentIdentity.version()
+                    || !currentIdentity.contentHash().equals(evidence.contentHash())) {
+                throw new IllegalStateException("旧稿证据不能确认");
+            }
+            if (directive.getRevision() == null || directive.getRevision() != directiveRevision) {
+                throw new IllegalStateException("意见已修订，旧证据不能确认");
+            }
+            if (evidence.status() != com.writing.novel.domain.AuthorDirective.EvidenceStatus.APPLIED_SYSTEM) {
+                throw new IllegalStateException("仅系统已落实（APPLIED_SYSTEM）的证据可确认: "
+                        + evidence.status());
+            }
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE directive_evidence SET status='CONFIRMED' WHERE id=? AND status='APPLIED_SYSTEM'")) {
+                ps.setString(1, evidenceId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            return new com.writing.novel.domain.AuthorDirective.Evidence(
+                    evidence.id(), evidence.directiveId(), evidence.directiveRevision(),
+                    evidence.chapterIndex(), evidence.chapterVersion(), evidence.contentHash(),
+                    evidence.proposalId(), evidence.quote(), evidence.anchor(),
+                    com.writing.novel.domain.AuthorDirective.EvidenceStatus.CONFIRMED, evidence.reason());
+        });
+    }
+
+    @Override
+    public void revokeDirective(String projectId, String directiveId, String reason, int expectedRevision) {
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("撤销必须说明理由");
+        }
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "UPDATE author_directives SET status='DISMISSED', enabled=0, updated_at=?, " +
+                        "revision=revision+1 WHERE project_id=? AND id=? AND revision=?")) {
+            ps.setString(1, Instant.now().toString());
+            ps.setString(2, projectId);
+            ps.setString(3, directiveId);
+            ps.setInt(4, expectedRevision);
+            if (ps.executeUpdate() != 1) {
+                throw new IllegalStateException("意见已变化，撤销未生效（revision 过期）");
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

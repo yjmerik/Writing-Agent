@@ -943,6 +943,17 @@
       "implementation_commit": "c3b06d22a34780f14dfc2ae046c4aa06ebd8841d",
       "main_commit": "c3b06d22a34780f14dfc2ae046c4aa06ebd8841d",
       "evidence": "docs/harness/evidence/p37-02-p37.json"
+    },
+    {
+      "id": "p37-14-p37",
+      "kind": "verified",
+      "feature_ids": [
+        "p37-14"
+      ],
+      "branch": "codex/p37-14-proposal-boundary",
+      "implementation_commit": "a4778cfeb8a9a1588e94bf28acbe828435e6462b",
+      "main_commit": "a4778cfeb8a9a1588e94bf28acbe828435e6462b",
+      "evidence": "docs/harness/evidence/p37-14-p37.json"
     }
   ]
 }

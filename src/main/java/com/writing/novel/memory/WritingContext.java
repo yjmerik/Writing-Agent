@@ -39,6 +39,11 @@ public class WritingContext {
             sb.append("【故事原旨（全书最高纲领，所有章节必须服务于这个核心）】\n")
               .append(premiseSection).append("\n\n");
         }
+        // p37-09: 作者要求——不可静默裁剪；空值保持原 prompt 字节不变
+        if (authorDirectiveSection != null && !authorDirectiveSection.isBlank()) {
+            sb.append("【作者要求】\n")
+              .append(authorDirectiveSection).append("\n\n");
+        }
         if (styleSection != null && !styleSection.isBlank()) {
             sb.append("【文风要求】\n").append(styleSection).append("\n\n");
         }

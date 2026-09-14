@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -72,16 +73,117 @@ public class AgentRevisionService {
 
         String previewId = UUID.randomUUID().toString();
         String sourceVersion = fingerprint(before.value());
+
+        // p37-03: 模型延迟重读——生成期间来源被修改则候选过期（STALE）
+        TargetSnapshot afterGen = resolve(projectId, valid.targetType(), valid.targetId(),
+                valid.chapterIndex(), valid.passageIndex());
+        boolean stale = !sourceVersion.equals(fingerprint(afterGen.value()));
+
         StoredPreview stored = new StoredPreview(previewId, projectId, before.address(),
                 sourceVersion, before.value().deepCopy(), after.deepCopy(), candidate.summary());
+        stored.stale = stale;
         previews.put(previewId, stored);
-        return stored.view();
+
+        // p37-03: 持久候选——重启/恢复查询的权威存储
+        ChapterApproval.Identity sourceIdentity = buildSourceIdentity(stored.address);
+        persistProposal(stored, valid, stale, sourceIdentity);
+
+        return stored.view(stale ? "STALE" : "READY", sourceIdentity);
+    }
+
+    /** p37-03: 章节类候选绑定 ChapterApproval.Identity；其他类型无结构化身份（sourceVersion 兼容别名）。 */
+    private ChapterApproval.Identity buildSourceIdentity(TargetAddress address) {
+        if ((address.targetType == TargetType.CHAPTER || address.targetType == TargetType.PASSAGE)
+                && address.chapterIndex != null) {
+            return repository.findChapterByIndex(address.projectId, address.chapterIndex)
+                    .map(ChapterApproval.Identity::of).orElse(null);
+        }
+        return null;
+    }
+
+    private void persistProposal(StoredPreview stored, RevisionRequest request,
+                                 boolean stale, ChapterApproval.Identity sourceIdentity) {
+        if (repository.findProposal(stored.projectId, stored.previewId).isPresent()) return;
+        Chapter chapter = (stored.address.targetType == TargetType.CHAPTER
+                || stored.address.targetType == TargetType.PASSAGE)
+                && stored.address.chapterIndex != null
+                ? repository.findChapterByIndex(stored.projectId, stored.address.chapterIndex).orElse(null)
+                : null;
+        int baseVersion = chapter != null ? chapter.getVersion() : 0;
+        String sourceHash = sourceIdentity != null ? sourceIdentity.contentHash() : stored.sourceVersion;
+        RevisionProposal proposal = new RevisionProposal(
+                stored.previewId, stored.projectId,
+                RevisionProposal.TargetType.valueOf(stored.address.targetType.name()),
+                stored.address.targetId,
+                stored.address.chapterIndex,
+                stored.address.passageIndex,
+                baseVersion, sourceHash,
+                null, stored.before.toString(), stored.after.toString(), stored.summary,
+                stale ? RevisionProposal.Status.STALE : RevisionProposal.Status.READY,
+                request.requestKey() != null && !request.requestKey().isBlank()
+                        ? request.requestKey() : stored.previewId,
+                null,
+                java.time.Instant.now(), java.time.Instant.now());
+        repository.saveProposal(proposal);
+    }
+
+    /** p37-03: 持久候选列表（按 targetId 与 status 过滤）。 */
+    public List<RevisionProposal> listProposals(String projectId, String targetId, String status) {
+        return repository.listProposals(projectId).stream()
+                .filter(p -> targetId == null || targetId.isBlank() || p.getTargetId().equals(targetId))
+                .filter(p -> status == null || status.isBlank() || p.getStatus().name().equals(status))
+                .toList();
+    }
+
+    /** p37-03: 持久候选详情。 */
+    public java.util.Optional<RevisionProposal> findProposal(String projectId, String proposalId) {
+        return repository.findProposal(projectId, proposalId);
+    }
+
+    /** p37-03: 取消持久候选（CAS READY→CANCELLED）。 */
+    public RevisionProposal cancel(String projectId, String proposalId) {
+        boolean cancelled = repository.cancelProposal(projectId, proposalId);
+        if (!cancelled) {
+            var proposal = repository.findProposal(projectId, proposalId)
+                    .orElseThrow(() -> new IllegalArgumentException("修订候选不存在"));
+            if (proposal.getStatus() == RevisionProposal.Status.CANCELLED) return proposal;
+            throw new IllegalStateException("仅 READY 候选可取消: " + proposal.getStatus());
+        }
+        StoredPreview stored = previews.get(proposalId);
+        if (stored != null) stored.consumed = true;
+        return repository.findProposal(projectId, proposalId).orElseThrow();
     }
 
     public ApplyResult apply(String projectId, String previewId) {
         if (previewId == null || previewId.isBlank()) {
             throw new IllegalArgumentException("previewId 不能为空");
         }
+
+        // p37-03: 持久候选路径（CHAPTER/PASSAGE 走统一修订边界，权威来自 DB）
+        var proposalOpt = repository.findProposal(projectId, previewId);
+        if (proposalOpt.isPresent()) {
+            RevisionProposal proposal = proposalOpt.get();
+            if (proposal.getStatus() == RevisionProposal.Status.CANCELLED) {
+                throw new IllegalStateException("修订候选已取消");
+            }
+            if (proposal.getStatus() == RevisionProposal.Status.STALE) {
+                throw new IllegalStateException("来源已变化，候选已过期（STALE）");
+            }
+            if (proposal.getTargetType() == RevisionProposal.TargetType.CHAPTER
+                    || proposal.getTargetType() == RevisionProposal.TargetType.PASSAGE) {
+                ChapterRevisionService.ProposalApplyResult result =
+                        chapterRevision.applyProposalInOwnedWork(projectId, previewId);
+                StoredPreview mem = previews.get(previewId);
+                if (mem != null) mem.consumed = true;
+                Chapter applied = result.chapter();
+                ChapterApproval.Identity identity = ChapterApproval.Identity.of(applied);
+                return new ApplyResult(previewId, TargetType.valueOf(proposal.getTargetType().name()),
+                        proposal.getTargetId(), identity.contentHash(), true, applied,
+                        applied.isDerivedRefreshPending(), result.commit().replayed(), identity);
+            }
+        }
+
+        // 非章节类（WORLD/CHARACTER/VOLUME）：保持现有语义
         StoredPreview stored = previews.get(previewId);
         if (stored == null) throw new IllegalArgumentException("修订预览不存在");
 
@@ -104,7 +206,8 @@ public class AgentRevisionService {
             stored.consumed = true;
             boolean refreshPending = result instanceof Chapter chapter && chapter.isDerivedRefreshPending();
             return new ApplyResult(stored.previewId, stored.address.targetType,
-                    stored.address.targetId, stored.sourceVersion, true, result, refreshPending);
+                    stored.address.targetId, stored.sourceVersion, true, result, refreshPending,
+                    false, null);
         }
     }
 
@@ -419,16 +522,19 @@ public class AgentRevisionService {
 
     public record RevisionRequest(TargetType targetType, String targetId,
                                   Integer chapterIndex, Integer passageIndex,
-                                  String instructions) {}
+                                  String instructions, String requestKey) {}
 
+    /** p37-03: sourceVersion 为兼容别名（哈希字符串），sourceIdentity 为结构化身份。 */
     public record RevisionPreview(String previewId, TargetType targetType, String targetId,
                                   String sourceVersion, JsonNode before, JsonNode after,
-                                  String summary) {}
+                                  String summary, String status,
+                                  ChapterApproval.Identity sourceIdentity) {}
 
     /** p32-01: derivedRefreshPending=true 表示修改已保存，但派生数据（摘要/索引/收割）刷新未完成。 */
     public record ApplyResult(String previewId, TargetType targetType, String targetId,
                               String sourceVersion, boolean applied, Object result,
-                              boolean derivedRefreshPending) {}
+                              boolean derivedRefreshPending, boolean replayed,
+                              ChapterApproval.Identity sourceIdentity) {}
 
     private record TargetAddress(String projectId, TargetType targetType, String targetId,
                                  Integer chapterIndex, Integer passageIndex) {}
@@ -444,6 +550,7 @@ public class AgentRevisionService {
         private final ObjectNode after;
         private final String summary;
         private boolean consumed;
+        private boolean stale;
 
         private StoredPreview(String previewId, String projectId, TargetAddress address,
                               String sourceVersion, ObjectNode before, ObjectNode after,
@@ -458,8 +565,12 @@ public class AgentRevisionService {
         }
 
         private RevisionPreview view() {
+            return view(stale ? "STALE" : "READY", null);
+        }
+
+        private RevisionPreview view(String status, ChapterApproval.Identity sourceIdentity) {
             return new RevisionPreview(previewId, address.targetType, address.targetId,
-                    sourceVersion, before.deepCopy(), after.deepCopy(), summary);
+                    sourceVersion, before.deepCopy(), after.deepCopy(), summary, status, sourceIdentity);
         }
     }
 }

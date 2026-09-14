@@ -55,7 +55,7 @@ class PlanChangeSchemaTest {
             assertTrue(rs.next());
             assertEquals("hash-2", rs.getString("source_plan_hash"), "预览内容持久");
             assertEquals(20, rs.getInt("target_chapters"));
-            assertEquals("[21,22,23]", rs.getString("pruned_chapters"));
+            assertEquals("[21,22,23]", rs.getString("pruned_chapters_json"));
         }
         // PromiseDecision 用 promiseId 而非描述
         try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
@@ -76,9 +76,11 @@ class PlanChangeSchemaTest {
         new SqliteSchemaInitializer(cp).initialize();
         insertPlanChange(cp, "pc-a", "p-a", "h", 20, 0, "[]", "[]");
         assertDoesNotThrow(() -> insertPlanChange(cp, "pc-b", "p-b", "h", 20, 0, "[]", "[]"));
-        // 同 previewId 不同项目：唯一约束是 (project_id, preview_id) → 允许
-        assertThrows(SQLException.class, () -> insertPlanChange(cp, "pc-dup", "p-a", "h", 20, 0, "[]", "[]"),
+        // 同项目同 previewId → UNIQUE 拒绝
+        assertThrows(SQLException.class, () -> insertPlanChange(cp, "pc-a", "p-a", "h", 20, 0, "[]", "[]"),
                 "同项目重复 previewId 拒绝");
+        // 同 previewId 不同项目 → 允许
+        assertDoesNotThrow(() -> insertPlanChange(cp, "pc-a", "p-b", "h", 20, 0, "[]", "[]"));
     }
 
     private void insertPlanChange(ConnectionProvider cp, String previewId, String projectId,

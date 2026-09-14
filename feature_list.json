@@ -5637,7 +5637,7 @@
         "p37-15",
         "p36-07"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
         "src/main/java/com/writing/novel/service/DirectiveEvidenceService.java",
@@ -5649,7 +5649,8 @@
       "acceptance": "mvn test -Dtest=GeneratedDirectiveEvidenceTest 退出0；连写两章HARD仍注入且各自证据独立；慢核对期间作者修改，旧结果不能落实新稿；失败可重试而不重复证据；捕获额外调用成本。",
       "verify_cmd": "mvn test -Dtest=GeneratedDirectiveEvidenceTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-14 verified: d2a2a04; merged main 811/0/0/1skip, spec 4/4. record p37-16-p37",
+      "completion_record": "p37-16-p37"
     },
     {
       "id": "p38-01",

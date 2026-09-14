@@ -1,0 +1,36 @@
+{
+  "commit": "d2a2a041dbe2eb5242b3e4e9617320cdfbb9307e",
+  "cleanCheckout": true,
+  "feature": "p37-16",
+  "branch": "codex/p37-16-generated-evidence",
+  "base_commit": "50d4968",
+  "red": {
+    "command": "mvn test -Dtest=GeneratedDirectiveEvidenceTest",
+    "exitCode": 1,
+    "result": "实现过程中行为失败驱动：无适用要求仍读章节报错（先查要求后读章修正）、范围用例设计错误（全书 HARD 在任意章适用）、构造器参数手工数错——均以失败暴露后修正。"
+  },
+  "implementation": {
+    "commit": "d2a2a041dbe2eb5242b3e4e9617320cdfbb9307e",
+    "notes": "DirectiveEvidenceService.captureEvidence：先查适用要求（空则不读章不调模型）→ pin 章身份与各意见 revision → agent.evaluate（GENERAL）→ 重读当前稿，来源变化则全部降级 STALE 只作历史（绑定被核对版本，绝不落新稿）→ 经幂等 saveDirectiveEvidence 写入（重试不重复）。NovelOrchestrator.captureDirectiveEvidenceAfterGeneration：doWriteOneChapter 最终 DONE 后与修订异步派生刷新后调用；异常发 DIRECTIVE_EVIDENCE_FAILED 事件、要求保持未验证；服务未注入或无适用要求跳过。OrchestratorConfig 装配（注入 DirectiveEvidenceAgent）。"
+  },
+  "checks": [
+    {
+      "command": "mvn test -Dtest=GeneratedDirectiveEvidenceTest",
+      "result": "4/0/0（两章独立+GENERAL成本口径/STALE历史/失败重试不重复/无适用不调模型）",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（合并后 main）",
+      "result": "811/0/0/1skip",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor d2a2a041dbe2eb5242b3e4e9617320cdfbb9307e main",
+      "result": "ancestor OK",
+      "exitCode": 0
+    }
+  ],
+  "limits": [
+    "QG：核对调用为新增 GENERAL 后处理调用，不改变既有生成输入；现有回放语料不分叉。额外调用成本已按 GENERAL 计入事件流。意见候选联动属 p37-12"
+  ]
+}

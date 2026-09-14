@@ -1020,6 +1020,17 @@
       "implementation_commit": "600fa6e830dd5d17e8a07a5bb02ca07a526b9073",
       "main_commit": "600fa6e830dd5d17e8a07a5bb02ca07a526b9073",
       "evidence": "docs/harness/evidence/p37-10-p37.json"
+    },
+    {
+      "id": "p37-16-p37",
+      "kind": "verified",
+      "feature_ids": [
+        "p37-16"
+      ],
+      "branch": "codex/p37-16-generated-evidence",
+      "implementation_commit": "d2a2a041dbe2eb5242b3e4e9617320cdfbb9307e",
+      "main_commit": "d2a2a041dbe2eb5242b3e4e9617320cdfbb9307e",
+      "evidence": "docs/harness/evidence/p37-16-p37.json"
     }
   ]
 }

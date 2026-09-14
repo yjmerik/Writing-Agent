@@ -932,6 +932,17 @@
       "implementation_commit": "bfdabf79f50773933a65b1244499c14626658f03",
       "main_commit": "bfdabf79f50773933a65b1244499c14626658f03",
       "evidence": "docs/harness/evidence/p37-01-p37.json"
+    },
+    {
+      "id": "p37-02-p37",
+      "kind": "verified",
+      "feature_ids": [
+        "p37-02"
+      ],
+      "branch": "codex/p37-02-proposal-repository",
+      "implementation_commit": "c3b06d22a34780f14dfc2ae046c4aa06ebd8841d",
+      "main_commit": "c3b06d22a34780f14dfc2ae046c4aa06ebd8841d",
+      "evidence": "docs/harness/evidence/p37-02-p37.json"
     }
   ]
 }

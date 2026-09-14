@@ -1,0 +1,51 @@
+{
+  "commit": "c3b06d22a34780f14dfc2ae046c4aa06ebd8841d",
+  "cleanCheckout": true,
+  "checkoutNote": "合并后验证在 ff 后的本地 main（c3b06d22a34780f14dfc2ae046c4aa06ebd8841d）重跑：mvn compile&&mvn test 777/0、专项 6/6。",
+  "feature": "p37-02",
+  "branch": "codex/p37-02-proposal-repository",
+  "base_commit": "e01da77",
+  "red": {
+    "commit": "2cde2a7a4b4a576926a709512f96a4f43507fca2",
+    "command": "mvn test -Dtest=ProposalRepositoryTest",
+    "exitCode": 1,
+    "result": "Tests run: 6, Errors: 6 —— 全部 UnsupportedOperation 'saveProposal 未实现'（SPI 缺省实现显式抛出，非默认成功；行为性失败非编译失败）。"
+  },
+  "implementation": {
+    "commit": "c3b06d22a34780f14dfc2ae046c4aa06ebd8841d",
+    "files": [
+      "src/main/java/com/writing/novel/spi/NovelRepository.java",
+      "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+      "src/test/java/com/writing/novel/persistence/ProposalRepositoryTest.java"
+    ],
+    "notes": "SPI 缺省抛 UnsupportedOperation（stub 保持可编译）；ProposalCommitResult/ProposalSourceConflictException。Sqlite：saveProposal/findProposal（项目域内读取）/listProposals/cancelProposal（仅 READY CAS 取消，留记录）；commitProposalChapter 单连接事务——APPLIED 直接重放持久 result 不另增版本；来源比较（候选 baseVersion+sourceHash 与当前稿身份一致，且调用方 expectedIdentity 相同）复用 p36-07 修订语义（抽取连接内 doSaveChapterRevision：正文 CAS+快照+屏障重绑+批准失效）后候选标 APPLIED 并以新稿身份为 resultJson；任一步失败整体回滚候选保持 READY；来源冲突抛 ProposalSourceConflictException 并在独立短事务标 STALE，绝不改正文。saveChapterRevision 与候选应用共享同一路径。"
+  },
+  "checks": [
+    {
+      "command": "mvn test -Dtest=ProposalRepositoryTest",
+      "result": "6 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（合并后 main）",
+      "result": "777 tests / 0 failures / 0 errors / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=ProposalRepositoryTest（合并后 main 复跑）",
+      "result": "6 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor c3b06d22a34780f14dfc2ae046c4aa06ebd8841d main",
+      "result": "实现提交为 main 祖先",
+      "exitCode": 0
+    }
+  ],
+  "acceptance_detail": "重建 repository/连接后候选仍可读且跨项目不可读；应用成功一事务内推进正文一版+快照+屏障重绑留痕（新稿号）+候选 APPLIED 含 resultJson；双 apply 重放 resultJson 不另增版本/快照；注入故障回滚后候选 READY、正文未变、快照为 0，移除故障后同一候选重试成功只推进一版；来源变化后陈旧身份应用抛冲突（携带当前身份）、候选独立标 STALE、正文版本与内容零变化且不新增快照；跨项目应用拒绝（候选不存在）；READY CAS 取消成功、二次取消 false、取消留记录、CANCELLED 不可应用。开发中修正：测试助手曾为 revised 使用全新随机 id，违反 saveChapterRevision 的行内 CAS 语义（SELECT 旧行落空静默失败）——已改为复用现有章节行 id 并在来源变化用例中断言修订成功。",
+  "limits": [
+    "修订服务接入持久候选与恢复查询属 p37-03",
+    "意见消费证据联动属 p37-12",
+    "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
+  ]
+}

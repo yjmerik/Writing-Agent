@@ -4,7 +4,7 @@ Last Updated: 2026-09-14
 
 ## Current
 
-Phase36 全部 13 项完成；Phase37 已启动：p37-01（持久修订候选模型与迁移）合入本地 main（bfdabf7）。feature_list 319 项 = 275 completed + 44 not-started，active_feature=null。
+Phase36 全部 13 项完成；Phase37 推进中：p37-01/02（候选模型+迁移、候选存取与章节原子应用协议）均合入本地 main（p37-02 主分支提交 c3b06d2）。feature_list 319 项 = 276 completed + 43 not-started，active_feature=null。
 
 p36-07 交付：saveChapterRevision 同一事务内完成正文更新、快照插入、屏障旧身份审计（REVISED 历史）、ACTIVE 屏障重绑到新稿号；被替换稿已有作者批准时创建绑定新稿号的新屏障并把正文标记 NEEDS_MANUAL_REVIEW（批准失效按 identity 判定，历史批准行永不改写）。doEdit 事务后吞异常的 rebind 已删除；编辑/回退（RESTORE）统一经此边界。
 
@@ -27,7 +27,8 @@ p36-07 交付：saveChapterRevision 同一事务内完成正文更新、快照�
 - p36-09：RED 2 failed → GREEN draft-recovery.spec 4 passed；合并后复跑通过。
 - p36-10：RED → GREEN plan-preview.spec 2 passed（预览绑定/乱序丢弃/确认后裁剪不复活）；fixture 经真实构思流程。
 - p36-11：RED 2 failed → GREEN book-state.spec 2 passed；合并后复跑通过。
-- p37-01：RED 3 errors（no such table: revision_proposals）→ GREEN 专项 5/5（重复迁移无损、嵌套JSON/换行逐字节恢复、跨项目 requestKey 隔离、APPLIED 终态守卫）；RevisionProposal 领域模型 + revision_proposals 表（UNIQUE(project_id, request_key)，无 TTL）。合并后 main 全量 771/0/0/1skip。
+- p37-01：RED 3 errors → GREEN 专项 5/5；RevisionProposal + revision_proposals 表（UNIQUE(project_id, request_key)，无 TTL）。
+- p37-02：RED 6 errors（UnsupportedOperation）→ GREEN 专项 6/6（重连可读、一事务应用含屏障重绑、双 apply 重放、故障回滚 READY 后重试单次推进、来源冲突 STALE 不改正文、跨项目拒绝+CAS 取消）；saveChapterRevision 与候选应用共享 doSaveChapterRevision 路径。合并后 main 全量 777/0/0/1skip。
 - 各项均无 prompt/上下文/生成输入改动，按 quality_gate 未跑 e2e/baseline；未 bless。
 
 ## Blockers

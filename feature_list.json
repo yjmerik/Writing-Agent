@@ -5298,7 +5298,7 @@
         "p37-01",
         "p36-07"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/spi/NovelRepository.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
@@ -5310,7 +5310,8 @@
       "acceptance": "mvn test -Dtest=ProposalRepositoryTest 退出0；重建repository/连接后候选仍可读；断在正文写入与候选消费之间重试不重复；跨项目/双apply/过期候选均核实最终正文版本。",
       "verify_cmd": "mvn test -Dtest=ProposalRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-14：verified，branch codex/p37-02-proposal-repository，实现/主分支提交 c3b06d22a34780f14dfc2ae046c4aa06ebd8841d；RED（2cde2a7：6 errors UnsupportedOperation）。合并后 main：全量 777/0/0/1skip、专项 6/6（重连可读/一事务应用/双apply重放/故障回滚READY重试/来源冲突STALE不改正文/跨项目+CAS取消）。完成记录 p37-02-p37。",
+      "completion_record": "p37-02-p37"
     },
     {
       "id": "p37-03",

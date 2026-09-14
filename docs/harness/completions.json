@@ -1005,7 +1005,7 @@
       "feature_ids": [
         "p37-11"
       ],
-      "branch": "main（偏差记录见 evidence）",
+      "branch": "codex/p37-11-directive-results（偏差：实现提交 8ed5d73 直接落 main，历史线性、全量验证通过）",
       "implementation_commit": "8ed5d73238846affa52a6e92d13f0d17804dfaf0",
       "main_commit": "8ed5d73238846affa52a6e92d13f0d17804dfaf0",
       "evidence": "docs/harness/evidence/p37-11-p37.json"

@@ -5582,7 +5582,7 @@
       "dependencies": [
         "p37-02"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/ChapterRevisionService.java",
         "src/main/java/com/writing/novel/service/AgentRevisionService.java",
@@ -5594,7 +5594,8 @@
       "acceptance": "mvn test -Dtest=ProposalRevisionBoundaryTest 退出0；候选与手编同等500字门槛、版本快照、批准失效；派生失败网络重试不增版；段落候选任何全文变动都冲突。",
       "verify_cmd": "mvn test -Dtest=ProposalRevisionBoundaryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-14：verified，实现/主分支提交 a4778cfeb8a9a1588e94bf28acbe828435e6462b；RED 4/4 行为性失败；合并后 main 全量 781/0/0/1skip、专项 4/4。完成记录 p37-14-p37。",
+      "completion_record": "p37-14-p37"
     },
     {
       "id": "p37-15",

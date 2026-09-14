@@ -1157,14 +1157,15 @@ public class SqliteNovelRepository implements NovelRepository {
     }
 
     /** 冲突后的独立短事务标 STALE——绝不触碰正文。 */
-    private void markProposalStale(String projectId, String proposalId) {
+    @Override
+    public boolean markProposalStale(String projectId, String proposalId) {
         try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
                 "UPDATE revision_proposals SET status='STALE', updated_at=? " +
                         "WHERE project_id=? AND id=? AND status='READY'")) {
             ps.setString(1, Instant.now().toString());
             ps.setString(2, projectId);
             ps.setString(3, proposalId);
-            ps.executeUpdate();
+            return ps.executeUpdate() == 1;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

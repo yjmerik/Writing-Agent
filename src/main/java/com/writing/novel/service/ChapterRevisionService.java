@@ -209,22 +209,83 @@ public class ChapterRevisionService {
         return withProjectWork(projectId, () -> applyProposalInOwnedWork(projectId, proposalId));
     }
 
-    /** Used by an already-owned workflow. Minimal contract: delegates to repository. */
+    /** Used by an already-owned workflow. */
     public ProposalApplyResult applyProposalInOwnedWork(String projectId, String proposalId) {
         RevisionProposal proposal = repository.findProposal(projectId, proposalId)
                 .orElseThrow(() -> new IllegalArgumentException("修订候选不存在"));
+        if (proposal.getTargetType() != RevisionProposal.TargetType.CHAPTER
+                && proposal.getTargetType() != RevisionProposal.TargetType.PASSAGE) {
+            throw new IllegalArgumentException("非章节候选请使用对应对象边界");
+        }
+        return withChapterRevisionLock(projectId, proposal.getChapterIndex(),
+                () -> doApplyProposal(projectId, proposal));
+    }
+
+    private ProposalApplyResult doApplyProposal(String projectId, RevisionProposal proposal) {
         Chapter current = requireChapter(projectId, proposal.getChapterIndex());
+        // 网络重试：候选已 APPLIED——重试派生刷新并重放持久 result，绝不再次写正文
+        if (proposal.getStatus() == RevisionProposal.Status.APPLIED) {
+            Chapter applied = requireChapter(projectId, proposal.getChapterIndex());
+            refreshIsolated(projectId, applied);
+            return new ProposalApplyResult(new NovelRepository.ProposalCommitResult(
+                    true, proposal.getId(), proposal.getResultJson(), applied.getVersion()), applied);
+        }
+        if (proposal.getStatus() != RevisionProposal.Status.READY) {
+            throw new IllegalStateException("候选不可应用: " + proposal.getStatus());
+        }
+        // p37-14: 来源身份比较先于一切候选校验——任何全文变动后段落候选都必须冲突，
+        // 而不是撞上针对旧全文的校验。冲突在独立短事务标 STALE，绝不改正文。
+        ChapterApproval.Identity currentIdentity = ChapterApproval.Identity.of(current);
+        boolean sourceMatches = currentIdentity.version() == proposal.getBaseVersion()
+                && currentIdentity.contentHash().equals(proposal.getSourceHash());
+        if (!sourceMatches) {
+            repository.markProposalStale(projectId, proposal.getId());
+            throw new NovelRepository.ProposalSourceConflictException(proposal.getId(), currentIdentity);
+        }
+        com.fasterxml.jackson.databind.node.ObjectNode after = parseProposalAfter(proposal);
+        String newTitle;
+        String newContent;
+        if (proposal.getTargetType() == RevisionProposal.TargetType.CHAPTER) {
+            newTitle = requiredCandidateText(after, "title");
+            newContent = requiredCandidateText(after, "content");
+        } else {
+            String[] passages = current.getContent().split("\n", -1);
+            int passageIdx = proposal.getPassageIndex() == null ? -1 : proposal.getPassageIndex();
+            if (passageIdx < 0 || passageIdx >= passages.length) {
+                repository.markProposalStale(projectId, proposal.getId());
+                throw new NovelRepository.ProposalSourceConflictException(proposal.getId(), currentIdentity);
+            }
+            passages[passageIdx] = requiredCandidateText(after, "content");
+            newTitle = current.getTitle();
+            newContent = String.join("\n", passages);
+        }
+        // 与 doEdit 同等校验：标题/正文必填、已完成章节 ≥500 字门槛
+        String safeTitle = requireTitle(newTitle);
+        String safeContent = requireBody(newContent);
+        if (current.getStatus() != Chapter.Status.DRAFTING
+                && safeContent.length() < COMPLETED_CONTENT_MIN) {
+            throw new IllegalArgumentException("已完成章节正文不能少于500字");
+        }
+        if (current.getTitle().equals(safeTitle) && current.getContent().equals(safeContent)) {
+            throw new IllegalStateException("候选内容与当前稿一致，无需应用");
+        }
+        // 来源身份先于变更捕获；快照沿用 doEdit（变更前不可变快照）
         ChapterVersion snapshot = new ChapterVersion(UUID.randomUUID().toString(), projectId,
                 current.getChapterIndex(), current.getVersion(), current.getTitle(), current.getContent(),
                 "PROPOSAL", Instant.now());
         Chapter revised = current;
-        revised.setTitle(requiredCandidateText(parseProposalAfter(proposal), "title"));
-        revised.setContent(requiredCandidateText(parseProposalAfter(proposal), "content"));
+        revised.setTitle(safeTitle);
+        revised.setContent(safeContent);
+        if (revised.getStatus() == Chapter.Status.DRAFTING
+                && safeContent.length() >= COMPLETED_CONTENT_MIN) {
+            revised.setStatus(Chapter.Status.DONE);
+        }
         NovelRepository.ProposalCommitResult commit = repository.commitProposalChapter(
-                projectId, proposal.getId(), snapshot, revised,
-                ChapterApproval.Identity.of(current));
+                projectId, proposal.getId(), snapshot, revised, currentIdentity);
         Chapter applied = repository.findChapterByIndex(projectId, proposal.getChapterIndex())
                 .orElseThrow(() -> new IllegalStateException("候选应用后章节不存在"));
+        // 派生刷新在提交后执行：失败标 pending，不得再次写一版正文
+        refreshIsolated(projectId, applied);
         return new ProposalApplyResult(commit, applied);
     }
 

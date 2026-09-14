@@ -150,6 +150,11 @@ public interface NovelRepository {
         throw new UnsupportedOperationException("cancelProposal 未实现：仓储不支持持久候选");
     }
 
+    /** p37-14: 来源冲突时独立短事务标 STALE（仅 READY→STALE）；绝不触碰正文。 */
+    default boolean markProposalStale(String projectId, String proposalId) {
+        throw new UnsupportedOperationException("markProposalStale 未实现：仓储不支持持久候选");
+    }
+
     /**
      * 章节候选原子应用：单连接事务内完成候选消费 + saveChapterRevision 语义
      * （快照/正文/屏障重绑/批准失效）+ 候选 APPLIED 结果。重复应用返回已持久

@@ -9,6 +9,8 @@ import com.writing.novel.agent.ContentRevisionAgent;
 import com.writing.novel.agent.ContentRevisionAgent.RevisionCandidate;
 import com.writing.novel.agent.ContentRevisionAgent.TargetType;
 import com.writing.novel.domain.Chapter;
+import com.writing.novel.domain.ChapterApproval;
+import com.writing.novel.domain.RevisionProposal;
 import com.writing.novel.domain.ChapterSynopsis;
 import com.writing.novel.domain.Character;
 import com.writing.novel.domain.KnowledgeEntry;
@@ -111,9 +113,31 @@ public class AgentRevisionService {
             case WORLD -> applyWorld(current, candidate);
             case CHARACTER -> applyCharacter(current, candidate);
             case VOLUME -> applyVolume(current, candidate);
-            case CHAPTER -> applyChapter(current, candidate);
-            case PASSAGE -> applyPassage(current, candidate);
+            // p37-14: 章节类候选走统一修订边界（持久候选 + 原子提交），不直接写正文
+            case CHAPTER, PASSAGE -> applyChapterViaProposal(current, candidate);
         };
+    }
+
+    /** p37-14: 把已核验的候选落盘为持久修订候选，经 ChapterRevision 边界原子应用。 */
+    private Object applyChapterViaProposal(TargetSnapshot current, ObjectNode candidate) {
+        Chapter chapter = repository.findChapterByIndex(current.address.projectId,
+                        current.address.chapterIndex)
+                .orElseThrow(() -> new IllegalArgumentException("章节不存在: " + current.address.chapterIndex));
+        ChapterApproval.Identity sourceIdentity = ChapterApproval.Identity.of(chapter);
+        boolean isChapter = current.address.targetType == TargetType.CHAPTER;
+        RevisionProposal proposal = new RevisionProposal(UUID.randomUUID().toString(),
+                current.address.projectId,
+                isChapter ? RevisionProposal.TargetType.CHAPTER : RevisionProposal.TargetType.PASSAGE,
+                chapter.getId(), chapter.getChapterIndex(),
+                isChapter ? null : current.address.passageIndex,
+                sourceIdentity.version(), sourceIdentity.contentHash(),
+                null, current.value().toString(), candidate.deepCopy().toString(), null,
+                RevisionProposal.Status.READY, "preview-" + UUID.randomUUID(), null,
+                java.time.Instant.now(), java.time.Instant.now());
+        repository.saveProposal(proposal);
+        ChapterRevisionService.ProposalApplyResult result =
+                chapterRevision.applyProposalInOwnedWork(current.address.projectId, proposal.getId());
+        return result.chapter();
     }
 
     private Object applyWorld(TargetSnapshot current, ObjectNode candidate) {
@@ -152,30 +176,6 @@ public class AgentRevisionService {
         patch.addVolume(new Volume(current.address.projectId, selected.getVolumeIndex(),
                 requiredText(candidate, "title"), requiredText(candidate, "summary")));
         return canonPatch.patchOutline(current.address.projectId, patch, writtenBoundary).entity();
-    }
-
-    private Object applyChapter(TargetSnapshot current, ObjectNode candidate) {
-        Chapter chapter = repository.findChapterByIndex(current.address.projectId,
-                        current.address.chapterIndex)
-                .orElseThrow(() -> new IllegalArgumentException("章节不存在: " + current.address.chapterIndex));
-        return chapterRevision.edit(current.address.projectId, current.address.chapterIndex,
-                chapter.getVersion(), requiredText(candidate, "title"),
-                requiredText(candidate, "content"), "AGENT_REVISION");
-    }
-
-    private Object applyPassage(TargetSnapshot current, ObjectNode candidate) {
-        Chapter chapter = repository.findChapterByIndex(current.address.projectId,
-                        current.address.chapterIndex)
-                .orElseThrow(() -> new IllegalArgumentException("章节不存在: " + current.address.chapterIndex));
-        String[] passages = chapter.getContent().split("\\n", -1);
-        int passageIndex = current.address.passageIndex;
-        if (passageIndex < 0 || passageIndex >= passages.length) {
-            throw new IllegalStateException("来源段落已变化，请重新生成预览");
-        }
-        passages[passageIndex] = requiredText(candidate, "content");
-        return chapterRevision.edit(current.address.projectId, current.address.chapterIndex,
-                chapter.getVersion(), chapter.getTitle(), String.join("\n", passages),
-                "AGENT_REVISION");
     }
 
     private TargetSnapshot resolve(String projectId, TargetType targetType, String targetId,

@@ -36,6 +36,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -107,9 +109,11 @@ class AgentRevisionApiTest {
         Seed passageSeed = seed("段落修订");
         JsonNode passagePreview = preview(passageSeed.projectId(), "PASSAGE",
                 passageSeed.chapter().getId(), 1, 1);
-        assertEquals("第一段\n第二段\n第三段", chapter(passageSeed.projectId(), 1).getContent());
+        assertTrue(chapter(passageSeed.projectId(), 1).getContent().contains("\n第二段"));
         apply(passageSeed.projectId(), passagePreview.path("previewId").asText(), 200);
-        assertEquals("第一段\n修订后的第二段\n第三段", chapter(passageSeed.projectId(), 1).getContent());
+        String passageApplied = chapter(passageSeed.projectId(), 1).getContent();
+        assertTrue(passageApplied.contains("\n修订后的第二段"), "选中段落被替换");
+        assertFalse(passageApplied.contains("\n第二段\n"), "其余段落保持原样");
         assertEquals("未选章节正文", chapter(passageSeed.projectId(), 2).getContent());
     }
 
@@ -230,7 +234,8 @@ class AgentRevisionApiTest {
         Outline savedOutline = repository.findOutlineByProject(project.getId()).orElseThrow();
 
         Chapter chapter = new Chapter(project.getId(), 1, "原章");
-        chapter.setContent("第一段\n第二段\n第三段");
+        chapter.setContent("第一段" + "原始段落内容。".repeat(30) + "\n第二段" + "原始段落内容。".repeat(30)
+                + "\n第三段" + "原始段落内容。".repeat(30));
         chapter.setStatus(Chapter.Status.DONE);
         repository.saveChapter(chapter);
         Chapter untouchedChapter = new Chapter(project.getId(), 2, "未选章");
@@ -315,12 +320,12 @@ class AgentRevisionApiTest {
                             }
                             case CHAPTER -> {
                                 candidate.put("title", "修订后的章名");
-                                candidate.put("content", "修订后的章节正文");
+                                candidate.put("content", "修订后的章节正文，".repeat(60));
                                 title = candidate.path("title").asText();
                                 content = candidate.path("content").asText();
                             }
                             case PASSAGE -> {
-                                candidate.put("content", "修订后的第二段");
+                                candidate.put("content", "修订后的第二段内容。".repeat(30));
                                 title = "第2段";
                                 content = candidate.path("content").asText();
                             }

@@ -48,6 +48,11 @@ public class AuthorDirective {
         this.kind = kind;
         this.chapterIndex = chapterIndex;
         this.content = content;
+        // p37-06: 旧构造默认——revision=1，章节→同起止，null→全书从1起，enabled=true
+        this.revision = 1;
+        this.fromChapter = chapterIndex == null ? 1 : chapterIndex;
+        this.toChapter = chapterIndex;
+        this.enabled = true;
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
     }

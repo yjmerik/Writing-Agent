@@ -212,7 +212,15 @@ public class SqliteSchemaInitializer {
             "status TEXT NOT NULL, request_key TEXT NOT NULL, result_json TEXT, " +
             "created_at TEXT NOT NULL, updated_at TEXT NOT NULL, " +
             "UNIQUE(project_id, request_key))",
-        "CREATE INDEX IF NOT EXISTS idx_revision_proposals_project ON revision_proposals(project_id, status)"
+        "CREATE INDEX IF NOT EXISTS idx_revision_proposals_project ON revision_proposals(project_id, status)",
+
+        // p37-06: 逐章证据——同意见可有多章多稿证据，互不覆盖
+        "CREATE TABLE IF NOT EXISTS directive_evidence (" +
+            "id TEXT PRIMARY KEY, directive_id TEXT NOT NULL, project_id TEXT NOT NULL, " +
+            "directive_revision INTEGER NOT NULL, chapter_index INTEGER NOT NULL, " +
+            "chapter_version INTEGER NOT NULL, content_hash TEXT, proposal_id TEXT, " +
+            "quote TEXT, anchor TEXT, status TEXT NOT NULL, reason TEXT, created_at TEXT NOT NULL)",
+        "CREATE INDEX IF NOT EXISTS idx_directive_evidence ON directive_evidence(project_id, directive_id)"
     };
 
     private final ConnectionProvider cp;
@@ -365,5 +373,17 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE chapter_reviews ADD COLUMN content_hash TEXT");
         // p32-08: 伏笔回收证据（detector reason/人工确认），旧行 NULL
         safeAddColumn(st, "ALTER TABLE foreshadowings ADD COLUMN resolve_evidence TEXT");
+        // p37-06: 意见范围与逐章证据迁移——旧行 chapterIndex→同起止、null→全书从1起、revision=1、enabled=1
+        safeAddColumn(st, "ALTER TABLE author_directives ADD COLUMN revision INTEGER");
+        safeAddColumn(st, "ALTER TABLE author_directives ADD COLUMN from_chapter INTEGER");
+        safeAddColumn(st, "ALTER TABLE author_directives ADD COLUMN to_chapter INTEGER");
+        safeAddColumn(st, "ALTER TABLE author_directives ADD COLUMN enabled INTEGER DEFAULT 1");
+        try {
+            st.execute("UPDATE author_directives SET revision=1, enabled=1, " +
+                    "from_chapter=COALESCE(chapter_index, 1), to_chapter=chapter_index " +
+                    "WHERE revision IS NULL");
+        } catch (SQLException e) {
+            if (!e.getMessage().contains("no such column")) throw new RuntimeException(e);
+        }
     }
 }

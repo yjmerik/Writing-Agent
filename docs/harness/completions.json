@@ -1031,6 +1031,17 @@
       "implementation_commit": "d2a2a041dbe2eb5242b3e4e9617320cdfbb9307e",
       "main_commit": "d2a2a041dbe2eb5242b3e4e9617320cdfbb9307e",
       "evidence": "docs/harness/evidence/p37-16-p37.json"
+    },
+    {
+      "id": "p37-03-p37",
+      "kind": "verified",
+      "feature_ids": [
+        "p37-03"
+      ],
+      "branch": "codex/p37-03-persistent-revision-api",
+      "implementation_commit": "1f8c4a9feb67bde3c8eeac06ee1347e876230789",
+      "main_commit": "1f8c4a9feb67bde3c8eeac06ee1347e876230789",
+      "evidence": "docs/harness/evidence/p37-03-p37.json"
     }
   ]
 }

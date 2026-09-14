@@ -5323,7 +5323,7 @@
         "p37-02",
         "p37-14"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/AgentRevisionService.java",
         "src/main/java/com/writing/novel/web/RevisionController.java",
@@ -5335,7 +5335,8 @@
       "acceptance": "mvn test -Dtest=PersistentRevisionApiTest 退出0；预览→重启服务→GET→应用同候选成功；模型延迟时编辑来源，返回STALE；取消后应用409；响应丢失重试章节apply仅一版。",
       "verify_cmd": "mvn test -Dtest=PersistentRevisionApiTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "verified 1f8c4a9feb67bde3c8eeac06ee1347e876230789",
+      "completion_record": "p37-03-p37"
     },
     {
       "id": "p37-04",

@@ -522,87 +522,92 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public boolean saveChapterRevision(ChapterVersion snapshot, Chapter revised, int expectedVersion) {
-        return runInTransaction(conn -> {
-            // p36-07: 先读被替换稿的旧身份——其是否已获作者批准决定新稿是否须重新人审
-            String oldTitle = null;
-            String oldContent = null;
-            String selectOld = "SELECT title, content FROM chapters " +
-                    "WHERE id=? AND project_id=? AND chapter_index=? AND version=?";
-            try (PreparedStatement ps = conn.prepareStatement(selectOld)) {
+        return runInTransaction(conn ->
+                doSaveChapterRevision(conn, snapshot, revised, expectedVersion));
+    }
+
+    /** p36-07 语义的连接内实现：正文 CAS + 快照 + 屏障重绑/批准失效，供事务内复用（p37-02 候选应用）。 */
+    private boolean doSaveChapterRevision(Connection conn, ChapterVersion snapshot, Chapter revised,
+                                          int expectedVersion) {
+        // 先读被替换稿的旧身份——其是否已获作者批准决定新稿是否须重新人审
+        String oldTitle = null;
+        String oldContent = null;
+        String selectOld = "SELECT title, content FROM chapters " +
+                "WHERE id=? AND project_id=? AND chapter_index=? AND version=?";
+        try (PreparedStatement ps = conn.prepareStatement(selectOld)) {
+            ps.setString(1, revised.getId());
+            ps.setString(2, revised.getProjectId());
+            ps.setInt(3, revised.getChapterIndex());
+            ps.setInt(4, expectedVersion);
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) return false;
+            oldTitle = rs.getString("title");
+            oldContent = rs.getString("content");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        String oldContentHash = ChapterApproval.contentHash(oldTitle, oldContent);
+        boolean hadApproval = approvalExistsForVersion(
+                conn, revised.getProjectId(), revised.getChapterIndex(), expectedVersion, oldContentHash);
+
+        String update = "UPDATE chapters SET title=?,content=?,word_count=?,version=?,status=?,updated_at=? " +
+                "WHERE id=? AND project_id=? AND chapter_index=? AND version=?";
+        try (PreparedStatement ps = conn.prepareStatement(update)) {
+            ps.setString(1, revised.getTitle());
+            ps.setString(2, revised.getContent());
+            ps.setInt(3, revised.getWordCount());
+            ps.setInt(4, revised.getVersion());
+            ps.setString(5, revised.getStatus().name());
+            ps.setString(6, revised.getUpdatedAt().toString());
+            ps.setString(7, revised.getId());
+            ps.setString(8, revised.getProjectId());
+            ps.setInt(9, revised.getChapterIndex());
+            ps.setInt(10, expectedVersion);
+            if (ps.executeUpdate() != 1) return false;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        String insert = "INSERT INTO chapter_versions " +
+                "(id,project_id,chapter_index,version,title,content,source,created_at) " +
+                "VALUES (?,?,?,?,?,?,?,?)";
+        try (PreparedStatement ps = conn.prepareStatement(insert)) {
+            ps.setString(1, snapshot.getId());
+            ps.setString(2, snapshot.getProjectId());
+            ps.setInt(3, snapshot.getChapterIndex());
+            ps.setInt(4, snapshot.getVersion());
+            ps.setString(5, snapshot.getTitle());
+            ps.setString(6, snapshot.getContent());
+            ps.setString(7, snapshot.getSource());
+            ps.setString(8, snapshot.getCreatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        // 屏障旧身份审计 + 重绑在同一事务内——重绑失败则正文/快照一并回滚
+        rebindActiveBarriersInTransaction(conn, revised.getProjectId(), revised.getChapterIndex(),
+                expectedVersion, revised.getVersion());
+
+        // 当前批准有效性失效——被替换稿已获作者批准时，新稿必须重新人审
+        if (hadApproval) {
+            ReviewBarrier reReview = new ReviewBarrier(revised.getProjectId(), revised.getChapterIndex(),
+                    revised.getVersion(), "作者已批准的稿件已修订，需重新审查");
+            insertReviewBarrier(conn, reReview);
+            insertBarrierHistory(conn, reReview.getId(), revised.getProjectId(),
+                    revised.getChapterIndex(), expectedVersion, revised.getVersion(), "REVISED");
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE chapters SET status='NEEDS_MANUAL_REVIEW' " +
+                            "WHERE id=? AND project_id=? AND chapter_index=?")) {
                 ps.setString(1, revised.getId());
                 ps.setString(2, revised.getProjectId());
                 ps.setInt(3, revised.getChapterIndex());
-                ps.setInt(4, expectedVersion);
-                ResultSet rs = ps.executeQuery();
-                if (!rs.next()) return false;
-                oldTitle = rs.getString("title");
-                oldContent = rs.getString("content");
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-            String oldContentHash = ChapterApproval.contentHash(oldTitle, oldContent);
-            boolean hadApproval = approvalExistsForVersion(
-                    conn, revised.getProjectId(), revised.getChapterIndex(), expectedVersion, oldContentHash);
-
-            String update = "UPDATE chapters SET title=?,content=?,word_count=?,version=?,status=?,updated_at=? " +
-                    "WHERE id=? AND project_id=? AND chapter_index=? AND version=?";
-            try (PreparedStatement ps = conn.prepareStatement(update)) {
-                ps.setString(1, revised.getTitle());
-                ps.setString(2, revised.getContent());
-                ps.setInt(3, revised.getWordCount());
-                ps.setInt(4, revised.getVersion());
-                ps.setString(5, revised.getStatus().name());
-                ps.setString(6, revised.getUpdatedAt().toString());
-                ps.setString(7, revised.getId());
-                ps.setString(8, revised.getProjectId());
-                ps.setInt(9, revised.getChapterIndex());
-                ps.setInt(10, expectedVersion);
-                if (ps.executeUpdate() != 1) return false;
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-
-            String insert = "INSERT INTO chapter_versions " +
-                    "(id,project_id,chapter_index,version,title,content,source,created_at) " +
-                    "VALUES (?,?,?,?,?,?,?,?)";
-            try (PreparedStatement ps = conn.prepareStatement(insert)) {
-                ps.setString(1, snapshot.getId());
-                ps.setString(2, snapshot.getProjectId());
-                ps.setInt(3, snapshot.getChapterIndex());
-                ps.setInt(4, snapshot.getVersion());
-                ps.setString(5, snapshot.getTitle());
-                ps.setString(6, snapshot.getContent());
-                ps.setString(7, snapshot.getSource());
-                ps.setString(8, snapshot.getCreatedAt().toString());
                 ps.executeUpdate();
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-
-            // p36-07: 屏障旧身份审计 + 重绑在同一事务内——重绑失败则正文/快照一并回滚
-            rebindActiveBarriersInTransaction(conn, revised.getProjectId(), revised.getChapterIndex(),
-                    expectedVersion, revised.getVersion());
-
-            // p36-07: 当前批准有效性失效——被替换稿已获作者批准时，新稿必须重新人审
-            if (hadApproval) {
-                ReviewBarrier reReview = new ReviewBarrier(revised.getProjectId(), revised.getChapterIndex(),
-                        revised.getVersion(), "作者已批准的稿件已修订，需重新审查");
-                insertReviewBarrier(conn, reReview);
-                insertBarrierHistory(conn, reReview.getId(), revised.getProjectId(),
-                        revised.getChapterIndex(), expectedVersion, revised.getVersion(), "REVISED");
-                try (PreparedStatement ps = conn.prepareStatement(
-                        "UPDATE chapters SET status='NEEDS_MANUAL_REVIEW' " +
-                                "WHERE id=? AND project_id=? AND chapter_index=?")) {
-                    ps.setString(1, revised.getId());
-                    ps.setString(2, revised.getProjectId());
-                    ps.setInt(3, revised.getChapterIndex());
-                    ps.executeUpdate();
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            return true;
-        });
+        }
+        return true;
     }
 
     private boolean approvalExistsForVersion(Connection conn, String projectId, int chapterIndex,
@@ -1050,6 +1055,201 @@ public class SqliteNovelRepository implements NovelRepository {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    // --- p37-02: 持久修订候选存取与原子应用 ---
+
+    @Override
+    public void saveProposal(RevisionProposal proposal) {
+        if (proposal == null || proposal.getProjectId() == null
+                || proposal.getRequestKey() == null || proposal.getRequestKey().isBlank()) {
+            throw new IllegalArgumentException("候选缺少 projectId/requestKey");
+        }
+        String sql = "INSERT INTO revision_proposals (id, project_id, target_type, target_id, " +
+                "chapter_index, passage_index, base_version, source_hash, instructions, " +
+                "before_json, after_json, summary, status, request_key, result_json, " +
+                "created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            fillProposal(ps, proposal);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void fillProposal(PreparedStatement ps, RevisionProposal p) throws SQLException {
+        ps.setString(1, p.getId());
+        ps.setString(2, p.getProjectId());
+        ps.setString(3, p.getTargetType().name());
+        ps.setString(4, p.getTargetId());
+        if (p.getChapterIndex() != null) ps.setInt(5, p.getChapterIndex());
+        else ps.setNull(5, Types.NULL);
+        if (p.getPassageIndex() != null) ps.setInt(6, p.getPassageIndex());
+        else ps.setNull(6, Types.NULL);
+        ps.setInt(7, p.getBaseVersion());
+        ps.setString(8, p.getSourceHash());
+        ps.setString(9, p.getInstructions());
+        ps.setString(10, p.getBeforeJson());
+        ps.setString(11, p.getAfterJson());
+        ps.setString(12, p.getSummary());
+        ps.setString(13, p.getStatus().name());
+        ps.setString(14, p.getRequestKey());
+        ps.setString(15, p.getResultJson());
+        ps.setString(16, p.getCreatedAt().toString());
+        ps.setString(17, p.getUpdatedAt().toString());
+    }
+
+    @Override
+    public java.util.Optional<RevisionProposal> findProposal(String projectId, String proposalId) {
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM revision_proposals WHERE project_id=? AND id=?")) {
+            ps.setString(1, projectId);
+            ps.setString(2, proposalId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? java.util.Optional.of(mapProposal(rs)) : java.util.Optional.empty();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public java.util.List<RevisionProposal> listProposals(String projectId) {
+        List<RevisionProposal> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM revision_proposals WHERE project_id=? ORDER BY created_at DESC")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapProposal(rs));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return list;
+    }
+
+    private RevisionProposal mapProposal(ResultSet rs) throws SQLException {
+        return new RevisionProposal(rs.getString("id"), rs.getString("project_id"),
+                RevisionProposal.TargetType.valueOf(rs.getString("target_type")),
+                rs.getString("target_id"),
+                rs.getObject("chapter_index") == null ? null : rs.getInt("chapter_index"),
+                rs.getObject("passage_index") == null ? null : rs.getInt("passage_index"),
+                rs.getInt("base_version"), rs.getString("source_hash"),
+                rs.getString("instructions"), rs.getString("before_json"),
+                rs.getString("after_json"), rs.getString("summary"),
+                RevisionProposal.Status.valueOf(rs.getString("status")),
+                rs.getString("request_key"), rs.getString("result_json"),
+                Instant.parse(rs.getString("created_at")),
+                Instant.parse(rs.getString("updated_at")));
+    }
+
+    @Override
+    public boolean cancelProposal(String projectId, String proposalId) {
+        // CAS：仅 READY 可取消；取消留记录不删除
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "UPDATE revision_proposals SET status='CANCELLED', updated_at=? " +
+                        "WHERE project_id=? AND id=? AND status='READY'")) {
+            ps.setString(1, Instant.now().toString());
+            ps.setString(2, projectId);
+            ps.setString(3, proposalId);
+            return ps.executeUpdate() == 1;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** 冲突后的独立短事务标 STALE——绝不触碰正文。 */
+    private void markProposalStale(String projectId, String proposalId) {
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "UPDATE revision_proposals SET status='STALE', updated_at=? " +
+                        "WHERE project_id=? AND id=? AND status='READY'")) {
+            ps.setString(1, Instant.now().toString());
+            ps.setString(2, projectId);
+            ps.setString(3, proposalId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private RevisionProposal selectProposal(Connection conn, String projectId,
+                                            String proposalId) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM revision_proposals WHERE project_id=? AND id=?")) {
+            ps.setString(1, projectId);
+            ps.setString(2, proposalId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? mapProposal(rs) : null;
+        }
+    }
+
+    @Override
+    public ProposalCommitResult commitProposalChapter(String projectId, String proposalId,
+                                                      ChapterVersion snapshot, Chapter revised,
+                                                      ChapterApproval.Identity expectedIdentity) {
+        if (projectId == null || proposalId == null || expectedIdentity == null
+                || revised == null || snapshot == null
+                || !projectId.equals(expectedIdentity.projectId())) {
+            throw new IllegalArgumentException("候选应用请求缺少项目身份或与路径不符");
+        }
+        try {
+            ProposalCommitResult result = runInTransaction(conn -> {
+                try {
+                    return doCommitProposalChapter(conn, projectId, proposalId, snapshot, revised, expectedIdentity);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            return result;
+        } catch (ProposalSourceConflictException conflict) {
+            // 冲突：正文事务已回滚；独立短事务标 STALE，绝不改正文
+            markProposalStale(projectId, proposalId);
+            throw conflict;
+        }
+    }
+
+    private ProposalCommitResult doCommitProposalChapter(Connection conn, String projectId,
+                                                         String proposalId, ChapterVersion snapshot,
+                                                         Chapter revised,
+                                                         ChapterApproval.Identity expectedIdentity) throws SQLException {
+        RevisionProposal proposal = selectProposal(conn, projectId, proposalId);
+        if (proposal == null) throw new IllegalArgumentException("候选不存在: " + proposalId);
+        // 双重应用守卫：APPLIED 返回已持久 result，不另增版本
+        if (proposal.getStatus() == RevisionProposal.Status.APPLIED) {
+            Chapter current = selectChapterByIndex(conn, projectId, proposal.getChapterIndex());
+            int version = current != null ? current.getVersion() : proposal.getBaseVersion() + 1;
+            return new ProposalCommitResult(true, proposalId, proposal.getResultJson(), version);
+        }
+        if (proposal.getStatus() != RevisionProposal.Status.READY) {
+            throw new IllegalStateException("候选不可应用: " + proposal.getStatus());
+        }
+        // 应用前先比 source：候选来源指纹与当前稿身份必须一致
+        Chapter current = selectChapterByIndex(conn, projectId, proposal.getChapterIndex());
+        if (current == null) throw new IllegalArgumentException("章节不存在: " + proposal.getChapterIndex());
+        ChapterApproval.Identity currentIdentity = ChapterApproval.Identity.of(current);
+        boolean sourceMatches = currentIdentity.version() == proposal.getBaseVersion()
+                && currentIdentity.contentHash().equals(proposal.getSourceHash());
+        if (!sourceMatches || !currentIdentity.equals(expectedIdentity)) {
+            throw new ProposalSourceConflictException(proposalId, currentIdentity);
+        }
+        // 正文 CAS + 快照 + 屏障重绑/批准失效（p36-07 语义），任一失败整体回滚（候选保持 READY）
+        if (!doSaveChapterRevision(conn, snapshot, revised, current.getVersion())) {
+            throw new ProposalSourceConflictException(proposalId, currentIdentity);
+        }
+        String resultJson = "{\"chapterIndex\":" + revised.getChapterIndex()
+                + ",\"version\":" + revised.getVersion()
+                + ",\"contentHash\":\"" + ChapterApproval.contentHash(revised.getTitle(), revised.getContent())
+                + "\"}";
+        try (PreparedStatement ps = conn.prepareStatement(
+                "UPDATE revision_proposals SET status='APPLIED', result_json=?, updated_at=? " +
+                        "WHERE project_id=? AND id=? AND status='READY'")) {
+            ps.setString(1, resultJson);
+            ps.setString(2, Instant.now().toString());
+            ps.setString(3, projectId);
+            ps.setString(4, proposalId);
+            if (ps.executeUpdate() != 1) {
+                throw new IllegalStateException("候选并发变化，应用已回滚");
+            }
+        }
+        return new ProposalCommitResult(false, proposalId, resultJson, revised.getVersion());
     }
 
     private Chapter selectChapterByIndex(Connection conn, String projectId, int chapterIndex) {

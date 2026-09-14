@@ -80,7 +80,19 @@ class ProposalRepositoryTest {
     }
 
     private Chapter revisedFrom(RevisionProposal proposal) {
+        // saveChapterRevision 语义：revised.id 必须是现有章节行 id（原地 CAS 更新）
+        Chapter current = chapterFromDb();
         Chapter revised = new Chapter(projectId, 1, "第一章");
+        try {
+            java.lang.reflect.Field fId = Chapter.class.getDeclaredField("id");
+            fId.setAccessible(true);
+            fId.set(revised, current.getId());
+            java.lang.reflect.Field fCreated = Chapter.class.getDeclaredField("createdAt");
+            fCreated.setAccessible(true);
+            fCreated.set(revised, current.getCreatedAt());
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
         revised.setContent(C3);
         revised.setStatus(Chapter.Status.NEEDS_MANUAL_REVIEW);
         try {
@@ -214,12 +226,23 @@ class ProposalRepositoryTest {
     void 来源变化时冲突_STALE独立留痕且绝不改正文() throws SQLException {
         RevisionProposal proposal = readyProposal("key-stale");
         repo.saveProposal(proposal);
-        // 来源变化：正式修订推进正文（p36-07 边界）
+        // 来源变化：正式修订推进正文（p36-07 边界；revised 复用现有行 id）
         Chapter current = chapterFromDb();
         Chapter revised = new Chapter(projectId, 1, "第一章");
+        try {
+            java.lang.reflect.Field fId = Chapter.class.getDeclaredField("id");
+            fId.setAccessible(true);
+            fId.set(revised, current.getId());
+            java.lang.reflect.Field fCreated = Chapter.class.getDeclaredField("createdAt");
+            fCreated.setAccessible(true);
+            fCreated.set(revised, current.getCreatedAt());
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
         revised.setContent(C3);
         revised.setStatus(Chapter.Status.NEEDS_MANUAL_REVIEW);
-        repo.saveChapterRevision(snapshotFor(current, "DIRECT_EDIT"), revised, current.getVersion());
+        assertTrue(repo.saveChapterRevision(snapshotFor(current, "DIRECT_EDIT"), revised, current.getVersion()),
+                "来源变化修订必须成功");
         int latestVersion = chapterFromDb().getVersion();
 
         // 陈旧身份应用：冲突且候选被标 STALE（独立短事务）
@@ -232,9 +255,8 @@ class ProposalRepositoryTest {
                                 snapshotFor(chapterFromDb(), "PROPOSAL"), revisedFrom(proposal), staleIdentity));
         assertEquals(latestVersion, conflict.getCurrentIdentity().version());
 
-        assertEquals(latestVersion, chapterFromDb().getVersion(), "冲突绝不改正文");
-        assertEquals(latestVersion, chapterFromDb().getContent().length() > 0
-                && chapterFromDb().getContent().equals(C3) ? latestVersion : latestVersion);
+        assertEquals(latestVersion, chapterFromDb().getVersion(), "冲突绝不改正文版本");
+        assertEquals(C3, chapterFromDb().getContent(), "冲突绝不改正文内容");
         assertEquals(RevisionProposal.Status.STALE,
                 repo.findProposal(projectId, proposal.getId()).orElseThrow().getStatus(),
                 "来源冲突候选标 STALE");

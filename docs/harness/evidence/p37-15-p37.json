@@ -1,0 +1,37 @@
+{
+  "commit": "07b5fb3c3ea69b1a5eeccc30c64b769c86e974cc",
+  "cleanCheckout": true,
+  "feature": "p37-15",
+  "branch": "codex/p37-15-directive-evidence-agent",
+  "base_commit": "52e383c",
+  "red": {
+    "command": "mvn test -Dtest=DirectiveEvidenceAgentTest",
+    "exitCode": 1,
+    "result": "新组件——按契约先行：初版实现存在缺失（无严格化过滤/遗漏补UNMET/模板未加载）时以行为失败驱动（模板缺失 IAE、伪造quote未降级、非数组输入静默返回），修复后转绿。"
+  },
+  "implementation": {
+    "commit": "07b5fb3c3ea69b1a5eeccc30c64b769c86e974cc",
+    "notes": "DirectiveEvidenceAgent.evaluate 经 GENERAL + promptService.render(directive-evidence, {chapterJson,directivesJson})；输出严格化：每已知 directiveId 恰一条；未知/重复 ID 不采信；APPLIED_SYSTEM 需逐字 quote 在正文中否则降级 UNMET；遗漏意见补 UNMET（核对器漏项≠已落实）；空/非JSON返回抛 ISE（保持未验证）；只读不写正文不确认意见。新模板 directive-evidence.st（p37-16 才接入生成流，现有回放 fixture 不受影响）。"
+  },
+  "checks": [
+    {
+      "command": "mvn test -Dtest=DirectiveEvidenceAgentTest",
+      "result": "4/0/0",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（合并后 main，复跑两次稳定）",
+      "result": "799/0/0/1skip",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor 07b5fb3c3ea69b1a5eeccc30c64b769c86e974cc main",
+      "result": "ancestor OK",
+      "exitCode": 0
+    }
+  ],
+  "limits": [
+    "QG：新模板未接入现有生成流，现有语料不分叉；p37-16 接入时按入口协议重建语料并对比质量"
+  ],
+  "evidence_line": "2026-09-14 verified: RED 行为性失败驱动; merged main 799/0/0/1skip, spec 4/4. record p37-15-p37 commit 07b5fb3c3ea69b1a5eeccc30c64b769c86e974cc"
+}

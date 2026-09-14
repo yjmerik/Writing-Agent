@@ -987,6 +987,17 @@
       "implementation_commit": "217d203510f901653121cd9b71fe37f9f6d13bcb",
       "main_commit": "217d203510f901653121cd9b71fe37f9f6d13bcb",
       "evidence": "docs/harness/evidence/p37-07-p37.json"
+    },
+    {
+      "id": "p37-15-p37",
+      "kind": "verified",
+      "feature_ids": [
+        "p37-15"
+      ],
+      "branch": "codex/p37-15-directive-evidence-agent",
+      "implementation_commit": "07b5fb3c3ea69b1a5eeccc30c64b769c86e974cc",
+      "main_commit": "07b5fb3c3ea69b1a5eeccc30c64b769c86e974cc",
+      "evidence": "docs/harness/evidence/p37-15-p37.json"
     }
   ]
 }

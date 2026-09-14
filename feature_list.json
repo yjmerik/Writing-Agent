@@ -5609,7 +5609,7 @@
       "dependencies": [
         "p37-06"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/agent/DirectiveEvidenceAgent.java",
         "src/main/resources/prompts/directive-evidence.st",
@@ -5621,7 +5621,8 @@
       "acceptance": "mvn test -Dtest=DirectiveEvidenceAgentTest 退出0；固定Stub响应覆盖全三项/遗漏/伪造引文/空返回；核对器失败让要求保持未验证而非已落实；禁止Agent直接调用其他Agent。",
       "verify_cmd": "mvn test -Dtest=DirectiveEvidenceAgentTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-14 verified: RED 行为性失败驱动; merged main 799/0/0/1skip, spec 4/4. record p37-15-p37 commit 07b5fb3c3ea69b1a5eeccc30c64b769c86e974cc",
+      "completion_record": "p37-15-p37"
     },
     {
       "id": "p37-16",
@@ -6404,5 +6405,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-14",
-  "active_feature": "p37-15"
+  "active_feature": null
 }

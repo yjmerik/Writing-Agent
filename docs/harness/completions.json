@@ -965,6 +965,17 @@
       "implementation_commit": "39e411f13b65c887c64f46a00afdd5331f524d8e",
       "main_commit": "39e411f13b65c887c64f46a00afdd5331f524d8e",
       "evidence": "docs/harness/evidence/p37-09-p37.json"
+    },
+    {
+      "id": "p37-06-p37",
+      "kind": "verified",
+      "feature_ids": [
+        "p37-06"
+      ],
+      "branch": "codex/p37-06-directive-scope",
+      "implementation_commit": "b474b25e97c85b568578e6709d8af8fe65b9f4f0",
+      "main_commit": "b474b25e97c85b568578e6709d8af8fe65b9f4f0",
+      "evidence": "docs/harness/evidence/p37-06-p37.json"
     }
   ]
 }

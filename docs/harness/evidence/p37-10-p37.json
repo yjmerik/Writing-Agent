@@ -1,0 +1,41 @@
+{
+  "commit": "600fa6e830dd5d17e8a07a5bb02ca07a526b9073",
+  "cleanCheckout": true,
+  "feature": "p37-10",
+  "branch": "codex/p37-10-directive-injection",
+  "base_commit": "c50a302",
+  "red": {
+    "command": "mvn test -Dtest=DirectiveContextInjectionTest",
+    "exitCode": 1,
+    "result": "实现过程中行为失败驱动：HARD 阻塞检查嵌在非空分支内（全部 HARD 被阻塞时静默跳过——经探针定位）、预算传 0（永不阻塞）、测试装配缺真实依赖 NPE 均以失败暴露后修复。"
+  },
+  "implementation": {
+    "commit": "600fa6e830dd5d17e8a07a5bb02ca07a526b9073",
+    "notes": "DirectiveContextService.select 使用 findApplicableDirectives，稳定排序 kind 优先级(HARD>ONCE>PREFERENCE)+createdAt+id；HARD 超预算列入 blocked（绝不截断），软意见可截断并返回遗漏 ID。ContextAssembler 注入该节并计入 TokenBudget（经 prompt 全文统计）；HARD 无法完整注入时抛 ISE 阻塞生成（请求不发送）；无意见时节为空、prompt 逐字不变。MemoryConfig 装配。"
+  },
+  "checks": [
+    {
+      "command": "mvn test -Dtest=DirectiveContextInjectionTest",
+      "result": "4/0/0",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（合并后 main）",
+      "result": "807/0/0/1skip",
+      "exitCode": 0
+    },
+    {
+      "command": "./scripts/e2e.sh --mode replay --preset mystery（QG）",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/compare-baseline.py（QG）",
+      "result": "PASS — 质量未退化（e2e 项目无意见，语料不分叉，未 bless）",
+      "exitCode": 0
+    }
+  ],
+  "limits": [
+    "意见逐项证据落库属 p37-16；候选联动属 p37-12"
+  ]
+}

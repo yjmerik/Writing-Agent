@@ -1009,6 +1009,17 @@
       "implementation_commit": "8ed5d73238846affa52a6e92d13f0d17804dfaf0",
       "main_commit": "8ed5d73238846affa52a6e92d13f0d17804dfaf0",
       "evidence": "docs/harness/evidence/p37-11-p37.json"
+    },
+    {
+      "id": "p37-10-p37",
+      "kind": "verified",
+      "feature_ids": [
+        "p37-10"
+      ],
+      "branch": "codex/p37-10-directive-injection",
+      "implementation_commit": "600fa6e830dd5d17e8a07a5bb02ca07a526b9073",
+      "main_commit": "600fa6e830dd5d17e8a07a5bb02ca07a526b9073",
+      "evidence": "docs/harness/evidence/p37-10-p37.json"
     }
   ]
 }

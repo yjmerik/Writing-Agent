@@ -5487,7 +5487,7 @@
         "p37-07",
         "p37-09"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/DirectiveContextService.java",
         "src/main/java/com/writing/novel/memory/ContextAssembler.java",
@@ -5499,7 +5499,8 @@
       "acceptance": "mvn test -Dtest=DirectiveContextInjectionTest 退出0；捕获实际LlmRequest：本章/全书/未来范围/撤销分别出现或不出现；HARD超预算请求不发送；无意见旧回放不变。",
       "verify_cmd": "mvn test -Dtest=DirectiveContextInjectionTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-14 verified: 600fa6e; RED 行为失败驱动（阻塞序/预算0/NPE）; merged main 807/0/0/1skip + QG replay PASS + baseline PASS. record p37-10-p37",
+      "completion_record": "p37-10-p37"
     },
     {
       "id": "p37-11",

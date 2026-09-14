@@ -954,6 +954,17 @@
       "implementation_commit": "a4778cfeb8a9a1588e94bf28acbe828435e6462b",
       "main_commit": "a4778cfeb8a9a1588e94bf28acbe828435e6462b",
       "evidence": "docs/harness/evidence/p37-14-p37.json"
+    },
+    {
+      "id": "p37-09-p37",
+      "kind": "verified",
+      "feature_ids": [
+        "p37-09"
+      ],
+      "branch": "codex/p37-09-directive-context",
+      "implementation_commit": "39e411f13b65c887c64f46a00afdd5331f524d8e",
+      "main_commit": "39e411f13b65c887c64f46a00afdd5331f524d8e",
+      "evidence": "docs/harness/evidence/p37-09-p37.json"
     }
   ]
 }

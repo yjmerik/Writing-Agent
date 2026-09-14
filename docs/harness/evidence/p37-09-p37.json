@@ -1,0 +1,36 @@
+{
+  "commit": "39e411f13b65c887c64f46a00afdd5331f524d8e",
+  "cleanCheckout": true,
+  "feature": "p37-09",
+  "branch": "codex/p37-09-directive-context",
+  "base_commit": "e05f695",
+  "red": {
+    "command": "mvn test -Dtest=DirectiveContextSectionTest",
+    "exitCode": 1,
+    "result": "1 failure - minimal contract state, section not rendered"
+  },
+  "implementation": {
+    "commit": "39e411f13b65c887c64f46a00afdd5331f524d8e",
+    "notes": "WritingContext.authorDirectiveSection; toSystemPrompt renders section after premise; null/blank keeps prompt byte-identical; section content assembled by p37-10."
+  },
+  "checks": [
+    {
+      "command": "mvn test -Dtest=DirectiveContextSectionTest",
+      "result": "3/0/0",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test (merged main)",
+      "result": "784/0/0/1skip",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor 39e411f13b65c887c64f46a00afdd5331f524d8e main",
+      "result": "ancestor OK",
+      "exitCode": 0
+    }
+  ],
+  "limits": [
+    "context-assembly quality gate deferred to p37-10 integration"
+  ]
+}

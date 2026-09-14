@@ -5461,7 +5461,7 @@
       "phase": 37,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/memory/WritingContext.java",
         "src/test/java/com/writing/novel/memory/DirectiveContextSectionTest.java"
@@ -5472,7 +5472,8 @@
       "acceptance": "mvn test -Dtest=DirectiveContextSectionTest 退出0；无要求时与原prompt逐字相同；有要求稳定排序且正文只出现一次；原旨不丢失。",
       "verify_cmd": "mvn test -Dtest=DirectiveContextSectionTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-14 verified: 39e411f13b65c887c64f46a00afdd5331f524d8e RED 1 failure; merged main 784/0/0/1skip, spec 3/3. record p37-09-p37",
+      "completion_record": "p37-09-p37"
     },
     {
       "id": "p37-10",
@@ -6401,5 +6402,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-14",
-  "active_feature": "p37-09"
+  "active_feature": null
 }

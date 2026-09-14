@@ -92,6 +92,30 @@ public class NovelOrchestrator {
     /** p26-12: all chapter content replacements persist the pre-change immutable version first. */
     private final ChapterRevisionService chapterRevisionService;
 
+    // p37-16: 章节完成后作者要求证据服务（可选注入；未注入不调用额外模型）
+    private volatile com.writing.novel.service.DirectiveEvidenceService directiveEvidenceService;
+
+    /** p37-16: 注入意见证据服务（生产装配用）。 */
+    public void setDirectiveEvidenceService(com.writing.novel.service.DirectiveEvidenceService s) {
+        this.directiveEvidenceService = s;
+    }
+
+    /** p37-16: 当前稿产出并完成检查后核对作者要求；失败仅留事件，要求保持未验证。 */
+    public void captureDirectiveEvidenceAfterGeneration(String projectId, int chapterIndex) {
+        if (directiveEvidenceService == null) return;
+        try {
+            directiveEvidenceService.captureEvidence(projectId, chapterIndex);
+        } catch (Exception e) {
+            log.warn("意见证据核对失败（要求保持未验证）: projectId={}, ch={}, err={}",
+                    projectId, chapterIndex, e.getMessage());
+            com.writing.novel.telemetry.EventLog.emit("DIRECTIVE_EVIDENCE_FAILED", java.util.Map.of(
+                    "projectId", projectId,
+                    "chapterIndex", chapterIndex,
+                    "errorClass", e.getClass().getSimpleName(),
+                    "message", String.valueOf(e.getMessage())));
+        }
+    }
+
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
                               WorldBuilderAgent worldBuilder,
@@ -1223,6 +1247,8 @@ public class NovelOrchestrator {
             chapter.setStatus(com.writing.novel.domain.Chapter.Status.DONE);
             repository.saveChapter(chapter);
         }
+        // p37-16: 当前稿产出并完成检查后核对作者要求（无适用要求不调用额外模型）
+        captureDirectiveEvidenceAfterGeneration(projectId, chapterIndex);
         return chapter;
     }
 
@@ -2699,6 +2725,8 @@ public class NovelOrchestrator {
             try {
                 recomputeSummariesForChapter(projectId, chapterIndex, boundary);
                 refreshChapterEntitiesAndFacts(projectId, chapter, boundary);
+                // p37-16: 收割/风格改写使版本提升后，对最终稿重新核对作者要求
+                captureDirectiveEvidenceAfterGeneration(projectId, chapterIndex);
             } catch (Exception e) {
                 log.warn("异步派生刷新失败(项目{}, 章{}): {}", projectId, chapterIndex, e.getMessage());
                 EventLog.emit("CHAPTER_REFRESH_FAILED", java.util.Map.of(

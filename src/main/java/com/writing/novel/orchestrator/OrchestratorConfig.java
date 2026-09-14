@@ -69,7 +69,8 @@ public class OrchestratorConfig {
                                                  com.writing.novel.service.PlanGate planGate,
                                                   com.writing.novel.service.QualityCouncil qualityCouncil,
                                                   com.writing.novel.service.Arbiter arbiter,
-                                                  com.writing.novel.persistence.sqlite.PostProcessLedgerRepository postProcessLedger) {
+                                                  com.writing.novel.persistence.sqlite.PostProcessLedgerRepository postProcessLedger,
+                                                  com.writing.novel.agent.DirectiveEvidenceAgent directiveEvidenceAgent) {
         NovelOrchestrator orchestrator = new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
@@ -92,6 +93,8 @@ public class OrchestratorConfig {
                         requirePolicy(archiveCompactor, "ArchiveCompactor"),
                         requirePolicy(costBudgetMonitor, "CostBudgetMonitor"),
                         requirePolicy(postProcessLedger, "PostProcessLedgerRepository")));
+        // p37-16: 章节完成后作者要求逐章核对
+        orchestrator.setDirectiveEvidenceService(new com.writing.novel.service.DirectiveEvidenceService(repo, directiveEvidenceAgent));
         return orchestrator;
     }
 

@@ -220,7 +220,20 @@ public class SqliteSchemaInitializer {
             "directive_revision INTEGER NOT NULL, chapter_index INTEGER NOT NULL, " +
             "chapter_version INTEGER NOT NULL, content_hash TEXT, proposal_id TEXT, " +
             "quote TEXT, anchor TEXT, status TEXT NOT NULL, reason TEXT, created_at TEXT NOT NULL)",
-        "CREATE INDEX IF NOT EXISTS idx_directive_evidence ON directive_evidence(project_id, directive_id)"
+        "CREATE INDEX IF NOT EXISTS idx_directive_evidence ON directive_evidence(project_id, directive_id)",
+
+        // p38-01: 计划变更凭证——预览→确认持久化，预览内容不可被后续目标改写
+        "CREATE TABLE IF NOT EXISTS plan_changes (" +
+            "preview_id TEXT NOT NULL, project_id TEXT NOT NULL, source_plan_hash TEXT NOT NULL, " +
+            "target_chapters INTEGER NOT NULL, written_boundary INTEGER NOT NULL, " +
+            "affected_promises_json TEXT, pruned_chapters_json TEXT, " +
+            "status TEXT NOT NULL DEFAULT 'PENDING', created_at TEXT NOT NULL, " +
+            "UNIQUE(project_id, preview_id))",
+
+        // p38-01: 承诺处置审计——用 promiseId 而非描述匹配
+        "CREATE TABLE IF NOT EXISTS promise_decisions (" +
+            "id TEXT PRIMARY KEY, plan_change_id TEXT NOT NULL, promise_id TEXT NOT NULL, " +
+            "action TEXT NOT NULL, target_chapter INTEGER, reason TEXT, created_at TEXT NOT NULL)"
     };
 
     private final ConnectionProvider cp;

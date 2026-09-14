@@ -214,6 +214,37 @@ public interface NovelRepository {
 
     // --- p33-06: 作者意见闭环 ---
     void saveAuthorDirective(com.writing.novel.domain.AuthorDirective directive);
+
+    // --- p37-07: 意见与证据版本化仓储（缺省禁止默认成功） ---
+
+    /** CAS 更新意见内容/范围/启用：expectedRevision 匹配才生效，成功后 revision+1。 */
+    default void updateDirective(com.writing.novel.domain.AuthorDirective directive, int expectedRevision) {
+        throw new UnsupportedOperationException("updateDirective 未实现");
+    }
+
+    /** 适用意见：enabled 且范围含该章且未撤销；HARD/PREFERENCE 持续，ONCE 有确认证据后不再适用。 */
+    default java.util.List<com.writing.novel.domain.AuthorDirective> findApplicableDirectives(
+            String projectId, int chapterIndex) {
+        throw new UnsupportedOperationException("findApplicableDirectives 未实现");
+    }
+
+    /** 保存逐章证据：相同（意见×稿×指纹×引用）幂等，返回持久化证据。 */
+    default com.writing.novel.domain.AuthorDirective.Evidence saveDirectiveEvidence(
+            String projectId, com.writing.novel.domain.AuthorDirective.Evidence evidence) {
+        throw new UnsupportedOperationException("saveDirectiveEvidence 未实现");
+    }
+
+    /** 作者确认证据：事务内重读章与意见版本；旧稿/UNMET/意见修订过期一律拒绝。 */
+    default com.writing.novel.domain.AuthorDirective.Evidence confirmDirectiveEvidence(
+            String projectId, String evidenceId,
+            com.writing.novel.domain.ChapterApproval.Identity expectedIdentity, int directiveRevision) {
+        throw new UnsupportedOperationException("confirmDirectiveEvidence 未实现");
+    }
+
+    /** 显式撤销（HARD 必须携带理由）：CAS expectedRevision，留 revision 审计。 */
+    default void revokeDirective(String projectId, String directiveId, String reason, int expectedRevision) {
+        throw new UnsupportedOperationException("revokeDirective 未实现");
+    }
     /** 全部意见（含各状态），按创建时间倒序。 */
     java.util.List<com.writing.novel.domain.AuthorDirective> findAuthorDirectives(String projectId);
     java.util.Optional<com.writing.novel.domain.AuthorDirective> findAuthorDirective(String projectId, String id);

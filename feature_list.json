@@ -5394,7 +5394,7 @@
       "dependencies": [
         "p37-01"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/domain/AuthorDirective.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
@@ -5406,7 +5406,8 @@
       "acceptance": "mvn test -Dtest=DirectiveScopeMigrationTest 退出0；迁移兼容旧构造/旧行；同意见多章证据不会互相覆盖；空范围、to<from、非正章号拒绝；HARD确认与enabled独立。",
       "verify_cmd": "mvn test -Dtest=DirectiveScopeMigrationTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "verified b474b25e97c85b568578e6709d8af8fe65b9f4f0",
+      "completion_record": "p37-06-p37"
     },
     {
       "id": "p37-07",
@@ -5417,7 +5418,7 @@
       "dependencies": [
         "p37-06"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/spi/NovelRepository.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
@@ -6402,5 +6403,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-14",
-  "active_feature": "p37-06"
+  "active_feature": "p37-07"
 }

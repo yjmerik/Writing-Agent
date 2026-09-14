@@ -86,6 +86,13 @@ public class ContextAssembler {
         CacheEntry(String value, long revision) { this.value = value; this.revision = revision; }
     }
     private final java.util.Map<String, CacheEntry> stableSectionCache = new java.util.concurrent.ConcurrentHashMap<>();
+    // p37-10: 作者要求选取服务（可选注入；未注入时不注入该节，行为与旧版一致）
+    private com.writing.novel.service.DirectiveContextService directiveContextService;
+
+    /** p37-10: 注入作者要求选取服务（生产装配用）。 */
+    public void setDirectiveContextService(com.writing.novel.service.DirectiveContextService s) {
+        this.directiveContextService = s;
+    }
 
     public WritingContext assemble(String projectId, int chapterIndex,
                                    String chapterTitle, String chapterSynopsis,
@@ -121,6 +128,20 @@ public class ContextAssembler {
         ChapterSynopsis fullSynopsis = findFullSynopsis(projectId, chapterIndex);
         ctx.setBibleSection(buildBibleSection(projectId, chapterIndex, fullSynopsis));
         ctx.setTaskSection(buildTaskSection(chapterTitle, chapterSynopsis, writingNotes, fullSynopsis));
+
+        // p37-10: 有效作者要求注入生成上下文（不可静默裁剪）——HARD 超预算明确阻塞。
+        // 作者要求预算以字符计，取组装预算同量级。
+        if (directiveContextService != null) {
+            var selected = directiveContextService.select(projectId, chapterIndex, maxContextTokens);
+            if (!selected.blockedHardIds().isEmpty()) {
+                // HARD 截不掉：明确阻塞生成（请求不发送），需作者缩减要求
+                throw new IllegalStateException("作者硬性要求超出上下文预算，无法完整注入（需缩减要求）: "
+                        + selected.blockedHardIds());
+            }
+            if (!selected.isEmpty()) {
+                ctx.setAuthorDirectiveSection(selected.section());
+            }
+        }
 
         // 实体一致性注入
         ctx.setEntityConsistencySection(buildEntityConsistencySection(projectId, chapterIndex));

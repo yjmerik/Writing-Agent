@@ -81,6 +81,8 @@ public class MemoryConfig {
         ContextAssembler assembler = new ContextAssembler(repository, knowledgeBase, summaryService,
                 vectorRetrieval, entityGraphService, climaxDiversityTracker,
                 narrativeThreadTracker, diversityTracker, clicheDetector, memoryRevision);
+        // p37-10: 有效作者要求注入生成上下文
+        assembler.setDirectiveContextService(new com.writing.novel.service.DirectiveContextService(repository));
         assembler.setStoryCanon(storyCanon);
         assembler.setRelevanceGateway(relevanceGateway);
         return assembler;

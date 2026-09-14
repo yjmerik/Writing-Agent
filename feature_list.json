@@ -5663,7 +5663,7 @@
       "dependencies": [
         "p36-02"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/domain/PlanChange.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
@@ -5675,7 +5675,8 @@
       "acceptance": "mvn test -Dtest=PlanChangeSchemaTest 退出0；迁移幂等；预览内容持久且不可被目标输入改写；承诺用ID不靠描述匹配；跨项目不能引用。",
       "verify_cmd": "mvn test -Dtest=PlanChangeSchemaTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-14 verified: 7e717805fd5f9bcbf59c6d4ed81c96b33b7a5b53; 825/0/0/1skip, spec 3/3. record p38-01-p38",
+      "completion_record": "p38-01-p38"
     },
     {
       "id": "p38-02",
@@ -6410,5 +6411,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-14",
-  "active_feature": "p38-01"
+  "active_feature": null
 }

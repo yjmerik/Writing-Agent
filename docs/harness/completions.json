@@ -1053,6 +1053,17 @@
       "implementation_commit": "5477a0411e66c64428fb43032734882ce99706b7",
       "main_commit": "5477a0411e66c64428fb43032734882ce99706b7",
       "evidence": "docs/harness/evidence/p37-08-p37.json"
+    },
+    {
+      "id": "p38-01-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-01"
+      ],
+      "branch": "codex/p38-01-plan-change-schema",
+      "implementation_commit": "7e717805fd5f9bcbf59c6d4ed81c96b33b7a5b53",
+      "main_commit": "7e717805fd5f9bcbf59c6d4ed81c96b33b7a5b53",
+      "evidence": "docs/harness/evidence/p38-01-p38.json"
     }
   ]
 }

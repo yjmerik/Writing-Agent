@@ -1172,6 +1172,37 @@ public class SqliteNovelRepository implements NovelRepository {
         }
     }
 
+    @Override
+    public java.util.List<java.util.Map<String, Object>> findDirectiveEvidence(
+            String projectId, String directiveId) {
+        List<java.util.Map<String, Object>> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT id, directive_revision, chapter_index, chapter_version, content_hash, " +
+                        "proposal_id, quote, anchor, status, reason FROM directive_evidence " +
+                        "WHERE project_id=? AND directive_id=? ORDER BY created_at")) {
+            ps.setString(1, projectId);
+            ps.setString(2, directiveId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("id", rs.getString("id"));
+                m.put("directiveRevision", rs.getInt("directive_revision"));
+                m.put("chapterIndex", rs.getInt("chapter_index"));
+                m.put("chapterVersion", rs.getInt("chapter_version"));
+                m.put("contentHash", rs.getString("content_hash"));
+                m.put("proposalId", rs.getString("proposal_id"));
+                m.put("quote", rs.getString("quote"));
+                m.put("anchor", rs.getString("anchor"));
+                m.put("status", rs.getString("status"));
+                m.put("reason", rs.getString("reason"));
+                list.add(m);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return list;
+    }
+
     /** 冲突后的独立短事务标 STALE——绝不触碰正文。 */
     @Override
     public boolean markProposalStale(String projectId, String proposalId) {

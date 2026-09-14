@@ -150,6 +150,12 @@ public interface NovelRepository {
         throw new UnsupportedOperationException("cancelProposal 未实现：仓储不支持持久候选");
     }
 
+    /** p37-08: 项目内指定意见的全部证据（视图渲染用）。 */
+    default java.util.List<java.util.Map<String, Object>> findDirectiveEvidence(
+            String projectId, String directiveId) {
+        throw new UnsupportedOperationException("findDirectiveEvidence 未实现");
+    }
+
     /** p37-14: 来源冲突时独立短事务标 STALE（仅 READY→STALE）；绝不触碰正文。 */
     default boolean markProposalStale(String projectId, String proposalId) {
         throw new UnsupportedOperationException("markProposalStale 未实现：仓储不支持持久候选");

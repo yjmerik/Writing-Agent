@@ -115,6 +115,7 @@ public class AuthorDirective {
     public Integer getToChapter() { return toChapter; }
     public boolean isEnabled() { return enabled; }
     public void setRevision(Integer r) { this.revision = r; }
+    public void setPrivateContent(String c) { this.content = c; this.updatedAt = Instant.now(); }
     public void setEnabled(boolean e) { this.enabled = e; }
     public void setScope(Integer from, Integer to) { this.fromChapter = from; this.toChapter = to; }
     /** p37-06: 范围校验——(null,null)=全书；否则 from≥1 且 to 缺省或 ≥from。 */

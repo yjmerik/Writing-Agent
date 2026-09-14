@@ -16,6 +16,15 @@ public class AuthorDirective {
     public enum Kind { HARD, ONCE, PREFERENCE }
     public enum Status { OPEN, APPLIED_SYSTEM, CONFIRMED, DISMISSED }
 
+    /** p37-06: 逐章证据状态。 */
+    public enum EvidenceStatus { APPLIED_SYSTEM, UNMET, CONFIRMED, STALE }
+
+    /** p37-06: 逐章证据——意见落实按 章×稿×证据 独立留痕，互不覆盖。 */
+    public record Evidence(String id, String directiveId, int directiveRevision, int chapterIndex,
+                           int chapterVersion, String contentHash, String proposalId,
+                           String quote, String anchor, EvidenceStatus status, String reason) {
+    }
+
     private String id;
     private String projectId;
     private Kind kind;
@@ -28,6 +37,10 @@ public class AuthorDirective {
     private Instant createdAt;
     private Instant confirmedAt;
     private Instant updatedAt;
+    private Integer revision;
+    private Integer fromChapter;
+    private Integer toChapter;
+    private boolean enabled = true;
 
     public AuthorDirective(String projectId, Kind kind, Integer chapterIndex, String content) {
         this.id = UUID.randomUUID().toString();
@@ -92,4 +105,19 @@ public class AuthorDirective {
     public Instant getCreatedAt() { return createdAt; }
     public Instant getConfirmedAt() { return confirmedAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+    public Integer getRevision() { return revision; }
+    public Integer getFromChapter() { return fromChapter; }
+    public Integer getToChapter() { return toChapter; }
+    public boolean isEnabled() { return enabled; }
+    public void setRevision(Integer r) { this.revision = r; }
+    public void setEnabled(boolean e) { this.enabled = e; }
+    public void setScope(Integer from, Integer to) { this.fromChapter = from; this.toChapter = to; }
+    /** p37-06: 范围校验——(null,null)=全书；否则 from≥1 且 to 缺省或 ≥from。 */
+    public void validateScope(Integer from, Integer to) {
+        if (from == null && to == null) return;
+        if (from == null) throw new IllegalArgumentException("范围起止必须成对（to 单独出现非法）");
+        if (from < 1) throw new IllegalArgumentException("范围起始章号必须为正");
+        if (to != null && to < 1) throw new IllegalArgumentException("范围结束章号必须为正");
+        if (to != null && to < from) throw new IllegalArgumentException("范围结束章号不得小于起始章号");
+    }
 }

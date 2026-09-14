@@ -29,6 +29,7 @@ public class WritingContext {
     private String narrativeThreadSection;    // 叙事线索追踪
     private String feedbackSection;           // 历史反馈（ContinuityIssue 注入）
     private String bibleSection;              // p10-w2-07: 故事真典（ACTIVE 事实，长程记忆，替代级联摘要）
+    private String authorDirectiveSection;    // p37-09: 作者要求（不可静默裁剪；空=输出与原 prompt 逐字一致）
 
     /** system prompt：故事原旨 + 风格 + 世界观 + 相关设定 + 出场人物 */
     public String toSystemPrompt() {
@@ -173,6 +174,8 @@ public class WritingContext {
     public void setNarrativeThreadSection(String s) { this.narrativeThreadSection = s; }
     public String getFeedbackSection() { return feedbackSection; }
     public void setFeedbackSection(String s) { this.feedbackSection = s; }
+    public String getAuthorDirectiveSection() { return authorDirectiveSection; }
+    public void setAuthorDirectiveSection(String s) { this.authorDirectiveSection = s; }
     public String getBibleSection() { return bibleSection; }
     public void setBibleSection(String s) { this.bibleSection = s; }
 }

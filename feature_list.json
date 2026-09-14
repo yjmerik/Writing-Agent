@@ -5461,7 +5461,7 @@
       "phase": 37,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/memory/WritingContext.java",
         "src/test/java/com/writing/novel/memory/DirectiveContextSectionTest.java"
@@ -6401,5 +6401,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-14",
-  "active_feature": null
+  "active_feature": "p37-09"
 }

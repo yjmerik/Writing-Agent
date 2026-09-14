@@ -1,0 +1,50 @@
+{
+  "commit": "bfdabf79f50773933a65b1244499c14626658f03",
+  "cleanCheckout": true,
+  "checkoutNote": "合并后验证在 ff 后的本地 main（bfdabf79f50773933a65b1244499c14626658f03）重跑：mvn compile&&mvn test 771/0、专项 5/5。",
+  "feature": "p37-01",
+  "branch": "codex/p37-01-proposal-schema",
+  "base_commit": "7b03bc4",
+  "red": {
+    "commit": "75228018d5ba6720a5c096c69a5a201821ea80a9",
+    "command": "mvn test -Dtest=ProposalSchemaTest",
+    "exitCode": 1,
+    "result": "Tests run: 5, Errors: 3 —— no such table: revision_proposals（重复迁移/JSON恢复/跨项目隔离三项行为性失败）；状态守卫与指纹同构为纯领域断言，RED 阶段即通过。一次前置编译失败（测试引用了暂被移除的守卫方法）未计 RED，恢复守卫方法后重新锁定行为性 RED。"
+  },
+  "implementation": {
+    "commit": "bfdabf79f50773933a65b1244499c14626658f03",
+    "files": [
+      "src/main/java/com/writing/novel/domain/RevisionProposal.java",
+      "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
+      "src/test/java/com/writing/novel/persistence/ProposalSchemaTest.java"
+    ],
+    "notes": "RevisionProposal 全字段模型；READY|APPLIED|STALE|CANCELLED，APPLIED 终态守卫（markReady/markStale/cancel 抛 IllegalStateException）；chapterSourceHash 与 p36 ChapterApproval.contentHash 同构；canonicalJsonSha256 供非章节对象。revision_proposals 表 UNIQUE(project_id, request_key)，(project_id,status) 索引；无 TTL 自动删除；before/after/instructions/resultJson 仅存 DB。"
+  },
+  "checks": [
+    {
+      "command": "mvn test -Dtest=ProposalSchemaTest",
+      "result": "5 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（合并后 main）",
+      "result": "771 tests / 0 failures / 0 errors / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=ProposalSchemaTest（合并后 main 复跑）",
+      "result": "5 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor bfdabf79f50773933a65b1244499c14626658f03 main",
+      "result": "实现提交为 main 祖先",
+      "exitCode": 0
+    }
+  ],
+  "acceptance_detail": "旧库（仅 projects 表含数据行）两次 initialize 后项目行与候选行均保留；嵌套 JSON/换行/转义/制表 before/after/instructions 逐字节恢复；同项目同 requestKey 第二次 INSERT 抛唯一约束、跨项目同键允许；APPLIED 后 markReady/markStale/cancel 均 IllegalStateException 且 resultJson 保留；CANCELLED 候选保留 before 记录；章节指纹与 p36 批准身份同构、规范 JSON 哈希字节敏感。",
+  "limits": [
+    "候选存取与章节原子应用协议属 p37-02",
+    "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
+  ]
+}

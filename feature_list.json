@@ -5273,7 +5273,7 @@
       "dependencies": [
         "p36-02"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/domain/RevisionProposal.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
@@ -5285,7 +5285,8 @@
       "acceptance": "mvn test -Dtest=ProposalSchemaTest 退出0；重复迁移无损；嵌套JSON/换行能恢复；跨项目key隔离；APPLIED不回到READY。",
       "verify_cmd": "mvn test -Dtest=ProposalSchemaTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-14：verified，branch codex/p37-01-proposal-schema，实现/主分支提交 bfdabf79f50773933a65b1244499c14626658f03；RED（7522801：3 errors no such table）。合并后 main：全量 771/0/0/1skip、专项 5/5（重复迁移无损/嵌套JSON恢复/跨项目隔离/APPLIED终态）。完成记录 p37-01-p37。",
+      "completion_record": "p37-01-p37"
     },
     {
       "id": "p37-02",
@@ -6398,5 +6399,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-14",
-  "active_feature": "p37-01"
+  "active_feature": null
 }

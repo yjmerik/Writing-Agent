@@ -1,43 +1,37 @@
-# 协作修复实施交接（Phase36 完成，Phase37 已启动） — 2026-09-14
+# 协作修复实施交接（连续实施中） — 2026-09-14
 
 Last Updated: 2026-09-14
 
-## Current
+## Current（工作台账，随实施滚动更新）
 
-Phase36 全部 13 项完成；Phase37 推进中（p37-01/02 合入 main，最新 c3b06d2）。feature_list 319 项 = 276 completed + 43 not-started，active_feature=null。
+用户已授权连续实施剩余全部 feature（"一次把剩余的feature都实现，不用询问"）。按依赖拓扑逐项闭环，每项：分支→RED（最小编译契约后行为失败）→实现→专项+全量→ff 合并→干净 main 复跑→register.py 登记。
 
-后端版本化批准与修订失效链路完整：身份模型/审计表 → 单连接事务 approveChapter（幂等/守卫/比较提交）→ HTTP review-context/review-decisions → 修订事务内屏障重绑+批准失效+历史（doEdit 事务后吞异常 rebind 已删除）。
+已完成（本次连续实施）：p36-02,03,04,05,06,07,01,12,13（Phase36 全部13项）；p37-01,02,14,09,06,07,15,11,10。main 最新 600fa6e。计数 283 completed / 36 not-started。check-harness PASS。
 
-## Files
+## Verification 基线
 
-- 分支各自独立并 ff 合入 main。
-- 证据：docs/harness/evidence/p36-*.json 与 p37-0{1,2}-p37.json；完成记录 completions.json 对应 verified 记录。
-- 执行入口 docs/superpowers/plans/2026-09-12-collaboration-repair-entry.md；总 spec 与 p36–p40 分计划不变。
+main 全量 807/0/0/1skip；QG：e2e replay mystery PASS + compare-baseline PASS（意见注入对无意见项目逐字不变，未 bless，无需重建语料）。
 
-## Verification
+## 实施模式（务必复用）
 
-- 后端四项 RED→GREEN→合并后复跑：全量 757/0/0/1skip；专项 4/4、8/8、4/4、5/5。
-- p36-01：失败路径（未设URL/错误端口/空白页）非零退出；happy path 3 passed exit 0（场景模式服务 + 临时独立库）；前端构建通过。
-- p36-05：RED 2 failed → GREEN review-version.spec 2 passed（双窗口竞态 + 390px 等价）。
-- p36-12：基线 14/0 → 专项 17/17；并发严格 200/409、旧身份 409 新稿待审。
-- p36-13：基线 9/0 → 专项 9/9；屏障恢复/工作台批准走版本化接口。
-- p36-06：RED 4 failures → 专项 6/6；旁路关闭，modify 保留重写回到待审。
-- p36-08：RED 6 failed → GREEN 6 passed；tab 入 URL、章路由权威、非法章号提示回退、历史深链接指纹校验。
-- p36-09：RED 2 failed → GREEN 4 passed；冲突副本并排+复制+放弃、409 保留输入、离开保护。
-- p36-10：RED → GREEN plan-preview.spec 2 passed；预览绑定目标数字、序号丢弃乱序、确认后不复活裁剪章。
-- p36-11：RED 2 failed → GREEN 2 passed；成书清单诚实状态。
-- p37-01：RED 3 errors → GREEN 5/5；RevisionProposal + revision_proposals 表。
-- p37-02：RED 6 errors → GREEN 6/6；saveProposal/findProposal/listProposals/cancelProposal（CAS）+ commitProposalChapter（单事务：双重应用守卫重放、来源比较、p36-07 修订语义、APPLIED resultJson；冲突独立短事务标 STALE 不改正文；故障回滚 READY）；doSaveChapterRevision 为两者共享路径。开发中修正：测试助手 revised 需复用现有章节行 id（saveChapterRevision 行内 CAS 语义）。
-- 各项均无 prompt/上下文/生成输入改动，未跑 e2e/baseline，未 bless。
+- 分支：git checkout -b codex/<id>-<slug>；feature_list 标 in-progress + active_feature。
+- RED：新接口先加 SPI/域最小编译契约（缺省抛 UnsupportedOperationException），测试跑行为性失败后先提交 RED，再实现。
+- 登记：python3 /tmp/register.py <feature_id> <branch> <full_commit> /tmp/ev-<id>.json（evidence JSON 需含 evidence_line 字段）；然后 git add 三个文件提交 docs(<id>)。
+- QA spec：放 qa/collaboration/<name>.spec.ts；QA_BASE_URL 只允许 localhost；场景服务：mvn spring-boot:run -Dspring-boot.run.arguments="--server.address=127.0.0.1 --server.port=18083 --llm.scenario.enabled=true --llm.scenario.harsh=true --persistence.embedding=stub --persistence.sqlite.db-path=$QA_RUN_DIR/novel.db --persistence.vector-store.index-path=$QA_RUN_DIR/vectors.idx"；环境变量必须 bash -c 'source scripts/load-env.sh && ...'（zsh 不兼容）。
+- 已知坑：AntD 两字按钮 accessible name 有空格（"取 消"）；stub 网关 harsh 注入按调用序只覆盖前2次检查；POST /chapters 创建 ≥500 字草稿版本号从1跳2；带图标按钮 aria-label；契约性 409/剪贴板降级的 console.error 需过滤；saveChapterRevision 要求 revised 复用现有行 id；测试直连 PromptTemplateService 需手动 loadTemplates()；结构化编号行 [D-x revN] 提取 ID 含连字符需与结果 ID 一致。
+
+## 剩余 36 项清单（按拓扑序）
+
+后端（先行）：p37-16(10,15,07✓) → p37-03(02,14✓) → p37-12(03,07,10,11) → p38-01(✓deps) → p38-02 → p38-03 → p38-09 → p39-01 → p39-10 → p39-02 → p38-10 → p38-13 → p38-05 → p38-06 → p38-07 → p38-11 → p39-03 → p39-07 → p39-08 → p39-04 → p39-09 → p40-01 → p40-02 → p40-04（协议+脚本可完成）。
+QA（服务起来后逐个）：p37-04, p37-05, p37-13(需p37-16), p38-04, p38-08, p38-12, p39-05, p39-06, p40-03。
+无法由代码代填：p40-06（真实两题材20章盲评+人工负担实验，需真实模型预算与真人评分）→ 保持 in-progress 如实标注；p40-05（依赖 p40-06）→ 脚本可写，验收依赖 p40-06。
+
+## Files / Next Steps
+
+- 下一项：p37-16（章节生成完成后落库意见落实证据；mvn test -Dtest=GeneratedDirectiveEvidenceTest；接 NovelOrchestrator 章节完成后调用 DirectiveEvidenceAgent.evaluate 并经 saveDirectiveEvidence 落库，核对失败=UNMET 不假造；引用 p36-07 修订边界）。
+- 计划细节：docs/superpowers/plans/2026-09-12-collaboration-repair-p3{7,8,9}.md 与 p40.md。
+- 每项 verify_cmd 见 feature_list.json。
 
 ## Blockers
 
-安全闭环成立：版本化批准是唯一章节放行路径。遗留观察项：OrchestratorController /resume 不在 p36-06 契约清单内（resumeFromCheckpoint 直接批准最新 pending checkpoint），如需收敛应另立 feature。真实评分/模型预算/bless 属执行时授权事项。reviewSetHash 的 issues/directives/dispositions 集合待 p37/p38。不得把后端测试当作端到端修复证据。真实评分/模型预算/bless 属执行时授权事项。
-
-## Next Steps
-
-1. 下一项 p37-14（统一修订边界接入候选原子提交，依赖 p37-02 已完成）：AgentRevisionService/ChapterRevisionService 的生成与重写路径接入 commitProposalChapter——候选生成落盘（生成中非 READY）、来源指纹记录、应用走候选协议。verify_cmd mvn test -Dtest=ProposalRevisionBoundaryTest。
-2. 其后 p37-03（修订服务使用持久候选和恢复查询）依赖 p37-14。p37-09 无依赖可穿插。
-2. 复用既有模式：RED 用 git stash 旧 bundle 或纯后端契约测试；QA 走 npm --prefix qa/collaboration ci。
-2. 其后 p37 持久候选与意见证据按 dependencies 拓扑推进。
-3. 保留工作区原有未跟踪文件，不推送远端。
+p40-06 需真实模型预算+真人评分（Agent 不可代填）；p40-05 验收依赖 p40-06。其余无阻塞。

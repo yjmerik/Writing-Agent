@@ -5443,7 +5443,7 @@
       "dependencies": [
         "p37-07"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/web/DirectiveController.java",
         "frontend/src/api/client.ts",
@@ -5455,7 +5455,8 @@
       "acceptance": "mvn test -Dtest=DirectiveVersionApiTest 退出0；原POST confirm不能凭空确认OPEN；缺version/hash不被默补；范围/硬性撤销/当前证据确认和跨项目均有HTTP断言。",
       "verify_cmd": "mvn test -Dtest=DirectiveVersionApiTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "verified 5477a0411e66c64428fb43032734882ce99706b7",
+      "completion_record": "p37-08-p37"
     },
     {
       "id": "p37-09",

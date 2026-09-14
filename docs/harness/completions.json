@@ -1042,6 +1042,17 @@
       "implementation_commit": "1f8c4a9feb67bde3c8eeac06ee1347e876230789",
       "main_commit": "1f8c4a9feb67bde3c8eeac06ee1347e876230789",
       "evidence": "docs/harness/evidence/p37-03-p37.json"
+    },
+    {
+      "id": "p37-08-p37",
+      "kind": "verified",
+      "feature_ids": [
+        "p37-08"
+      ],
+      "branch": "codex/p37-08-directive-api",
+      "implementation_commit": "5477a0411e66c64428fb43032734882ce99706b7",
+      "main_commit": "5477a0411e66c64428fb43032734882ce99706b7",
+      "evidence": "docs/harness/evidence/p37-08-p37.json"
     }
   ]
 }

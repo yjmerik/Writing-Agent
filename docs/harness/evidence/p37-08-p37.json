@@ -1,0 +1,36 @@
+{
+  "commit": "5477a0411e66c64428fb43032734882ce99706b7",
+  "cleanCheckout": true,
+  "feature": "p37-08",
+  "branch": "codex/p37-08-directive-api",
+  "base_commit": "50d4968",
+  "red": {
+    "command": "mvn test -Dtest=DirectiveVersionApiTest",
+    "exitCode": 1,
+    "result": "实现过程中行为失败驱动：缺 identity 裸 POST 被 HttpMessageNotReadableException 500 而非 400（改为发空 JSON 到达 controller 后 IAE→400）；evidence 视图/confirm 端点/cancel/revoke/PATCH 原不存在全部以缺失暴露。"
+  },
+  "implementation": {
+    "commit": "5477a0411e66c64428fb43032734882ce99706b7",
+    "notes": "DirectiveController 重写：create 含 fromChapter/toChapter（validateScope）；PATCH expectedRevision CAS revision+1；GET 返回 enabled/revision/fromChapter/toChapter/evidence[]（SPI findDirectiveEvidence）；/evidence/{id}/confirm 接收 identity+directiveRevision（服务端不补填）；/revoke 必须携带 reason+CAS；/confirm 对 OPEN 返回 409（须先 APPLIED_SYSTEM 证据）。SPI 新增 findDirectiveEvidence（Sqlite 实现查 directive_evidence）。"
+  },
+  "checks": [
+    {
+      "command": "mvn test -Dtest=DirectiveVersionApiTest",
+      "result": "6/0/0",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（合并后 main）",
+      "result": "822/0/0/1skip",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor 5477a0411e66c64428fb43032734882ce99706b7 main",
+      "result": "ancestor OK",
+      "exitCode": 0
+    }
+  ],
+  "limits": [
+    "frontend/src/api/client.ts 更新在 QA 特性 p37-04/13 中同步；无 prompt 改动未跑 e2e"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "commit": "217d203510f901653121cd9b71fe37f9f6d13bcb",
+  "cleanCheckout": true,
+  "feature": "p37-07",
+  "branch": "codex/p37-07-directive-repository",
+  "base_commit": "b95e586",
+  "red": {
+    "command": "mvn test -Dtest=DirectiveEvidenceRepositoryTest",
+    "exitCode": 1,
+    "result": "7 behavioral failures (UnsupportedOperation defaults)。"
+  },
+  "implementation": {
+    "commit": "217d203510f901653121cd9b71fe37f9f6d13bcb",
+    "notes": "updateDirective CAS revision+1；findApplicableDirectives（enabled+范围+未撤销+HARD/PREference持续+ONCE确认后排除）；saveDirectiveEvidence 幂等；confirmDirectiveEvidence 单事务重读证据/意见/当前章身份，拒绝旧稿/修订过期/UNMET/跨项目/跨章；revokeDirective CAS+必填理由+revision 审计。saveAuthorDirective/mapDirective 持久化新列。"
+  },
+  "checks": [
+    {
+      "command": "mvn test -Dtest=DirectiveEvidenceRepositoryTest",
+      "result": "7/0/0",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（合并后 main）",
+      "result": "795/0/0/1skip",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor 217d203510f901653121cd9b71fe37f9f6d13bcb main",
+      "result": "ancestor OK",
+      "exitCode": 0
+    }
+  ],
+  "limits": [
+    "HTTP 层属 p37-08；无 prompt 改动未跑 e2e"
+  ]
+}

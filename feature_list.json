@@ -5418,7 +5418,7 @@
       "dependencies": [
         "p37-06"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/spi/NovelRepository.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
@@ -5430,7 +5430,8 @@
       "acceptance": "mvn test -Dtest=DirectiveEvidenceRepositoryTest 退出0；旧稿证据不能确认；更改意见revision后旧证据无效；跨章/项目伪证据拒绝；相同证据幂等；HARD某章确认后下一章仍适用。",
       "verify_cmd": "mvn test -Dtest=DirectiveEvidenceRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-14 verified: RED 7 UnsupportedOperation; merged main 795/0/0/1skip, spec 7/7. record p37-07-p37 commit 217d203",
+      "completion_record": "p37-07-p37"
     },
     {
       "id": "p37-08",
@@ -6403,5 +6404,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-14",
-  "active_feature": "p37-07"
+  "active_feature": null
 }

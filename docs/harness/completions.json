@@ -976,6 +976,17 @@
       "implementation_commit": "b474b25e97c85b568578e6709d8af8fe65b9f4f0",
       "main_commit": "b474b25e97c85b568578e6709d8af8fe65b9f4f0",
       "evidence": "docs/harness/evidence/p37-06-p37.json"
+    },
+    {
+      "id": "p37-07-p37",
+      "kind": "verified",
+      "feature_ids": [
+        "p37-07"
+      ],
+      "branch": "codex/p37-07-directive-repository",
+      "implementation_commit": "217d203510f901653121cd9b71fe37f9f6d13bcb",
+      "main_commit": "217d203510f901653121cd9b71fe37f9f6d13bcb",
+      "evidence": "docs/harness/evidence/p37-07-p37.json"
     }
   ]
 }

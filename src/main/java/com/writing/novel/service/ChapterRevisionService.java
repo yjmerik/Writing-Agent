@@ -1,7 +1,9 @@
 package com.writing.novel.service;
 
 import com.writing.novel.domain.Chapter;
+import com.writing.novel.domain.ChapterApproval;
 import com.writing.novel.domain.ChapterVersion;
+import com.writing.novel.domain.RevisionProposal;
 import com.writing.novel.spi.NovelRepository;
 import com.writing.novel.telemetry.EventLog;
 
@@ -196,6 +198,57 @@ public class ChapterRevisionService {
             return editInOwnedWork(projectId, chapterIndex, expectedVersion,
                     target.getTitle(), target.getContent(), "RESTORE");
         });
+    }
+
+    /** p37-14: 候选应用结果——仓储持久 commit result + 应用后的当前章（含派生刷新标记）。 */
+    public record ProposalApplyResult(NovelRepository.ProposalCommitResult commit, Chapter chapter) {
+    }
+
+    /** 统一修订边界：候选应用入口（获取项目工作权）。 */
+    public ProposalApplyResult applyProposal(String projectId, String proposalId) {
+        return withProjectWork(projectId, () -> applyProposalInOwnedWork(projectId, proposalId));
+    }
+
+    /** Used by an already-owned workflow. Minimal contract: delegates to repository. */
+    public ProposalApplyResult applyProposalInOwnedWork(String projectId, String proposalId) {
+        RevisionProposal proposal = repository.findProposal(projectId, proposalId)
+                .orElseThrow(() -> new IllegalArgumentException("修订候选不存在"));
+        Chapter current = requireChapter(projectId, proposal.getChapterIndex());
+        ChapterVersion snapshot = new ChapterVersion(UUID.randomUUID().toString(), projectId,
+                current.getChapterIndex(), current.getVersion(), current.getTitle(), current.getContent(),
+                "PROPOSAL", Instant.now());
+        Chapter revised = current;
+        revised.setTitle(requiredCandidateText(parseProposalAfter(proposal), "title"));
+        revised.setContent(requiredCandidateText(parseProposalAfter(proposal), "content"));
+        NovelRepository.ProposalCommitResult commit = repository.commitProposalChapter(
+                projectId, proposal.getId(), snapshot, revised,
+                ChapterApproval.Identity.of(current));
+        Chapter applied = repository.findChapterByIndex(projectId, proposal.getChapterIndex())
+                .orElseThrow(() -> new IllegalStateException("候选应用后章节不存在"));
+        return new ProposalApplyResult(commit, applied);
+    }
+
+    private com.fasterxml.jackson.databind.node.ObjectNode parseProposalAfter(RevisionProposal proposal) {
+        try {
+            com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper()
+                    .readTree(proposal.getAfterJson());
+            if (node == null || !node.isObject()) {
+                throw new IllegalStateException("候选 after 内容无效");
+            }
+            return (com.fasterxml.jackson.databind.node.ObjectNode) node;
+        } catch (IllegalStateException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalStateException("候选 after 内容无效", e);
+        }
+    }
+
+    private String requiredCandidateText(com.fasterxml.jackson.databind.JsonNode node, String field) {
+        com.fasterxml.jackson.databind.JsonNode value = node.get(field);
+        if (value == null || !value.isTextual() || value.asText().isBlank()) {
+            throw new IllegalArgumentException("候选缺少字段: " + field);
+        }
+        return value.asText();
     }
 
     public List<ChapterVersion> history(String projectId, int chapterIndex) {

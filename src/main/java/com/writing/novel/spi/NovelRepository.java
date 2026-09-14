@@ -127,6 +127,63 @@ public interface NovelRepository {
         return false;
     }
 
+    // --- p37-02: 持久修订候选存取与原子应用 ---
+
+    /** 保存修订候选（持久 DB 资源，刷新/重启后可恢复）。缺省实现禁止默认成功。 */
+    default void saveProposal(com.writing.novel.domain.RevisionProposal proposal) {
+        throw new UnsupportedOperationException("saveProposal 未实现：仓储不支持持久候选");
+    }
+
+    /** 候选仅可在所属项目内读取。 */
+    default java.util.Optional<com.writing.novel.domain.RevisionProposal> findProposal(
+            String projectId, String proposalId) {
+        throw new UnsupportedOperationException("findProposal 未实现：仓储不支持持久候选");
+    }
+
+    /** 项目全部候选（含各状态），按创建时间倒序。 */
+    default java.util.List<com.writing.novel.domain.RevisionProposal> listProposals(String projectId) {
+        throw new UnsupportedOperationException("listProposals 未实现：仓储不支持持久候选");
+    }
+
+    /** READY 候选用 CAS 取消（留记录）；非 READY 返回 false。 */
+    default boolean cancelProposal(String projectId, String proposalId) {
+        throw new UnsupportedOperationException("cancelProposal 未实现：仓储不支持持久候选");
+    }
+
+    /**
+     * 章节候选原子应用：单连接事务内完成候选消费 + saveChapterRevision 语义
+     * （快照/正文/屏障重绑/批准失效）+ 候选 APPLIED 结果。重复应用返回已持久
+     * result 不另增版本；来源冲突抛 ProposalSourceConflictException 并在独立短事务
+     * 标 STALE，绝不改正文；故障回滚后候选保持 READY。
+     */
+    default ProposalCommitResult commitProposalChapter(String projectId, String proposalId,
+                                                       ChapterVersion snapshot, Chapter revised,
+                                                       com.writing.novel.domain.ChapterApproval.Identity expectedIdentity) {
+        throw new UnsupportedOperationException("commitProposalChapter 未实现：仓储不支持持久候选");
+    }
+
+    /** 候选应用结果：replayed=true 表示同候选重复应用返回已持久结果。 */
+    record ProposalCommitResult(boolean replayed, String proposalId,
+                                String resultJson, int chapterVersion) {
+    }
+
+    /** 候选来源冲突：当前稿身份与候选/请求身份不一致。携带当前权威身份供刷新。 */
+    final class ProposalSourceConflictException extends RuntimeException {
+
+        private final String proposalId;
+        private final com.writing.novel.domain.ChapterApproval.Identity currentIdentity;
+
+        public ProposalSourceConflictException(String proposalId,
+                                               com.writing.novel.domain.ChapterApproval.Identity currentIdentity) {
+            super("候选来源已变化，请刷新后重新生成");
+            this.proposalId = proposalId;
+            this.currentIdentity = currentIdentity;
+        }
+
+        public String getProposalId() { return proposalId; }
+        public com.writing.novel.domain.ChapterApproval.Identity getCurrentIdentity() { return currentIdentity; }
+    }
+
     /** 版本化批准冲突：身份/待审集合过期、重复批准或幂等键语义冲突。携带当前权威状态供客户端刷新。 */
     final class ReviewConflictException extends RuntimeException {
 

@@ -6227,7 +6227,7 @@
         "p36-07",
         "p37-03"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/test/java/com/writing/novel/service/TakeoverLateCommitTest.java",
         "src/test/java/com/writing/novel/service/ProposalRestartRecoveryTest.java"
@@ -6293,7 +6293,7 @@
       "phase": 40,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "docs/experiments/collaboration-quality-protocol.md",
         "scripts/evaluate-collaboration-study.py",
@@ -6423,5 +6423,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-16",
-  "active_feature": "p39-04"
+  "active_feature": "p40-01"
 }

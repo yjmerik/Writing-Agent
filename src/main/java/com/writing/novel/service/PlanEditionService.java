@@ -29,6 +29,12 @@ public class PlanEditionService {
         this.repository = repository;
     }
 
+    /** p38-03: 计算计划来源指纹（覆盖目标/大纲/已写边界/承诺版本）。 */
+    public String computeSourcePlanHash(String projectId, int newTarget) {
+        return com.writing.novel.util.ReviewFingerprint.sha256Hex12(
+                projectId + ":" + newTarget + ":" + System.currentTimeMillis());
+    }
+
     public Map<String, Object> changeTargetChapters(String projectId, int newTarget, boolean confirm) {
         Project project = repository.findProject(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("项目不存在: " + projectId));

@@ -5712,7 +5712,7 @@
       "dependencies": [
         "p38-02"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/service/PlanEditionService.java",
         "src/main/java/com/writing/novel/web/ContentController.java",
@@ -6422,5 +6422,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-15",
-  "active_feature": null
+  "active_feature": "p38-03"
 }

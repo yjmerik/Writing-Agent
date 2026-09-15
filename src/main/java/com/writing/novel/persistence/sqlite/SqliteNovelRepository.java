@@ -1218,6 +1218,84 @@ public class SqliteNovelRepository implements NovelRepository {
         }
     }
 
+    // --- p38-06: 成书版本存取 ---
+
+    @Override
+    public void saveBookEdition(com.writing.novel.domain.BookEdition edition,
+            List<com.writing.novel.domain.BookEdition.EditionChapter> chapters) {
+        runInTransaction(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO book_editions (edition_id, project_id, manifest_hash, state, created_at) " +
+                            "VALUES (?,?,?,?,?)")) {
+                ps.setString(1, edition.getEditionId()); ps.setString(2, edition.getProjectId());
+                ps.setString(3, edition.getManifestHash()); ps.setString(4, edition.getState().name());
+                ps.setString(5, edition.getCreatedAt().toString());
+                ps.executeUpdate();
+            } catch (SQLException e) { throw new RuntimeException(e); }
+            for (var ch : chapters) {
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "INSERT INTO book_edition_chapters (edition_id, chapter_index, version, title, " +
+                                "content, content_hash, approval_id, plan_ref) VALUES (?,?,?,?,?,?,?,?)")) {
+                    ps.setString(1, edition.getEditionId()); ps.setInt(2, ch.chapterIndex());
+                    ps.setInt(3, ch.version()); ps.setString(4, ch.title());
+                    ps.setString(5, ch.content()); ps.setString(6, ch.contentHash());
+                    ps.setString(7, ch.approvalId()); ps.setString(8, ch.planRef());
+                    ps.executeUpdate();
+                } catch (SQLException e) { throw new RuntimeException(e); }
+            }
+            return null;
+        });
+    }
+
+    @Override
+    public java.util.Optional<com.writing.novel.domain.BookEdition> findBookEdition(
+            String projectId, String editionId) {
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM book_editions WHERE project_id=? AND edition_id=?")) {
+            ps.setString(1, projectId); ps.setString(2, editionId);
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) return java.util.Optional.empty();
+            return java.util.Optional.of(new com.writing.novel.domain.BookEdition(
+                    rs.getString("edition_id"), rs.getString("project_id"),
+                    rs.getString("manifest_hash"),
+                    com.writing.novel.domain.BookEdition.State.valueOf(rs.getString("state")),
+                    Instant.parse(rs.getString("created_at")),
+                    rs.getString("approved_at") == null ? null : Instant.parse(rs.getString("approved_at"))));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public List<com.writing.novel.domain.BookEdition.EditionChapter> findBookEditionChapters(
+            String editionId) {
+        List<com.writing.novel.domain.BookEdition.EditionChapter> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM book_edition_chapters WHERE edition_id=? ORDER BY chapter_index")) {
+            ps.setString(1, editionId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(new com.writing.novel.domain.BookEdition.EditionChapter(
+                        rs.getInt("chapter_index"), rs.getInt("version"),
+                        rs.getString("title"), rs.getString("content"),
+                        rs.getString("content_hash"), rs.getString("approval_id"),
+                        rs.getString("plan_ref")));
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    @Override
+    public void approveBookEdition(String projectId, String editionId, String manifestHash) {
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "UPDATE book_editions SET state='APPROVED', approved_at=? " +
+                        "WHERE project_id=? AND edition_id=? AND manifest_hash=? AND state='DRAFT'")) {
+            ps.setString(1, Instant.now().toString()); ps.setString(2, projectId);
+            ps.setString(3, editionId); ps.setString(4, manifestHash);
+            if (ps.executeUpdate() != 1) {
+                throw new IllegalStateException("成书版本不存在、已批准或 manifestHash 不匹配");
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
     // --- p38-10: 问题裁决存取 ---
 
     @Override

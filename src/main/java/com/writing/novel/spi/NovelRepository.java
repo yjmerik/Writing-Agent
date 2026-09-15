@@ -221,6 +221,27 @@ public interface NovelRepository {
     // --- p33-06: 作者意见闭环 ---
     void saveAuthorDirective(com.writing.novel.domain.AuthorDirective directive);
 
+    // --- p38-06: 成书版本存取（缺省禁止默认成功） ---
+
+    default void saveBookEdition(com.writing.novel.domain.BookEdition edition,
+            List<com.writing.novel.domain.BookEdition.EditionChapter> chapters) {
+        throw new UnsupportedOperationException("saveBookEdition 未实现");
+    }
+
+    default java.util.Optional<com.writing.novel.domain.BookEdition> findBookEdition(
+            String projectId, String editionId) {
+        throw new UnsupportedOperationException("findBookEdition 未实现");
+    }
+
+    default List<com.writing.novel.domain.BookEdition.EditionChapter> findBookEditionChapters(
+            String editionId) {
+        throw new UnsupportedOperationException("findBookEditionChapters 未实现");
+    }
+
+    default void approveBookEdition(String projectId, String editionId, String manifestHash) {
+        throw new UnsupportedOperationException("approveBookEdition 未实现");
+    }
+
     // --- p38-10: 问题裁决存取与批准门禁（缺省禁止默认成功） ---
 
     default void saveDisposition(com.writing.novel.domain.ReviewDisposition disposition) {

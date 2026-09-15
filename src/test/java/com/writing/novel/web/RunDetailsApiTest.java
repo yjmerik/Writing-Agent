@@ -41,12 +41,9 @@ class RunDetailsApiTest {
         String pid = "p-rd-" + System.currentTimeMillis();
         com.writing.novel.domain.Project project = new com.writing.novel.domain.Project(pid, "c", "t");
         repository.saveProject(project);
-        WritingTask task = new WritingTask();
-        task.setId("task-rd-1");
-        task.setProjectId(pid);
+        WritingTask task = new WritingTask(pid, 20);
         task.setStatus(WritingTask.Status.RUNNING);
         task.setCurrentChapter(3);
-        task.setTotalChapters(20);
         task.setChaptersWritten(2);
         repository.saveWritingTask(task);
 

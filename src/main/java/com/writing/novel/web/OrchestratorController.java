@@ -148,33 +148,6 @@ public class OrchestratorController {
     }
 
     /** 取消写作任务 */
-    /** p40-02: 运行详情——当前步骤、耗时、失败位置（脱敏）。 */
-    @GetMapping("/run-details")
-    public java.util.Map<String, Object> runDetails(@PathVariable String id) {
-        var task = repository.findActiveWritingTask(id)
-                .orElseGet(() -> repository.findWritingTasksByProject(id).stream()
-                        .reduce((first, second) -> second).orElse(null));
-        java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
-        result.put("projectId", id);
-        if (task == null) {
-            result.put("status", "NO_TASK");
-            return result;
-        }
-        result.put("taskId", task.getId());
-        result.put("status", task.getStatus().name());
-        result.put("currentChapter", task.getCurrentChapter());
-        result.put("totalChapters", task.getTotalChapters());
-        result.put("chaptersWritten", task.getChaptersWritten());
-        if (task.getErrorMessage() != null && !task.getErrorMessage().isBlank()) {
-            result.put("failureReason", task.getErrorMessage());
-        }
-        result.put("createdAt", task.getCreatedAt() != null ? task.getCreatedAt().toString() : null);
-        result.put("updatedAt", task.getUpdatedAt() != null ? task.getUpdatedAt().toString() : null);
-        var activeBarriers = repository.findActiveReviewBarriers(id);
-        result.put("pendingReviewCount", activeBarriers.size());
-        return result;
-    }
-
     @PostMapping("/writing-tasks/{taskId}/cancel")
     public Map<String, Object> cancelWritingTask(@PathVariable String id, @PathVariable String taskId) {
         writingTaskExecutor.cancel(taskId);

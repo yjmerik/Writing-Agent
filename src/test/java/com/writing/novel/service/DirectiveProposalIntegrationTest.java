@@ -3,7 +3,6 @@ package com.writing.novel.service;
 import com.writing.novel.domain.AuthorDirective;
 import com.writing.novel.domain.Chapter;
 import com.writing.novel.spi.NovelRepository;
-import com.writing.novel.web.AgentRevisionApiTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.*;
 /** p37-12：候选生成与应用落实证据联动——集成契约。 */
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(AgentRevisionApiTest.RevisionGatewayConfig.class)
 @TestPropertySource(properties = {
         "persistence.embedding=stub",
         "persistence.sqlite.db-path=./data/test-directive-proposal.db",

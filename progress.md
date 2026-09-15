@@ -6,6 +6,12 @@ Last Updated: 2026-09-15
 
 用户授权连续实施全部剩余 feature + 批准真实 LLM 调用。已完成 29 项（Phase36 全部 13 项 + Phase37 12/16 + Phase38 2/13 + Phase39 1/10），main 最新 7bbfc22。计数 290/29。
 
+## Files
+
+- feature_list.json, session-handoff.md, docs/harness/completions.json: 状态三入口。
+- docs/harness/evidence/p36-*.json, p37-*.json, p38-*.json, p39-*.json: 逐项 verified 证据。
+- plans/2026-09-12-collaboration-repair-p3{7,8,9}.md 与 p40.md: 逐项实施计划。
+
 ## Verification
 
 main 全量 831/0/0/1skip。QG：e2e replay mystery PASS + baseline PASS。

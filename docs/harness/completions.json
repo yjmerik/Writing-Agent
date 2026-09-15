@@ -1075,6 +1075,17 @@
       "implementation_commit": "0ef46b43f54c8523265dbf90f75a1a6b508cfef7",
       "main_commit": "0ef46b43f54c8523265dbf90f75a1a6b508cfef7",
       "evidence": "docs/harness/evidence/p38-05-p38.json"
+    },
+    {
+      "id": "p38-09-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-09"
+      ],
+      "branch": "codex/p38-09-disposition-schema",
+      "implementation_commit": "100b220f06de932d4792f3db16e7c29f669f0219",
+      "main_commit": "100b220f06de932d4792f3db16e7c29f669f0219",
+      "evidence": "docs/harness/evidence/p38-09-p38.json"
     }
   ]
 }

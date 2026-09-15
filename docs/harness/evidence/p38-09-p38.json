@@ -1,0 +1,32 @@
+{
+  "commit": "100b220f06de932d4792f3db16e7c29f669f0219",
+  "cleanCheckout": true,
+  "feature": "p38-09",
+  "branch": "codex/p38-09-disposition-schema",
+  "base_commit": "3bc3049",
+  "red": {
+    "command": "mvn test -Dtest=DispositionSchemaTest",
+    "exitCode": 1,
+    "result": "schema feature"
+  },
+  "implementation": {
+    "commit": "100b220f06de932d4792f3db16e7c29f669f0219",
+    "notes": "ReviewDisposition + review_dispositions schema."
+  },
+  "checks": [
+    {
+      "command": "mvn test -Dtest=DispositionSchemaTest",
+      "result": "4/0/0",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test",
+      "result": "831/0/0/1skip",
+      "exitCode": 0
+    }
+  ],
+  "limits": [
+    "p38-10 repository/API"
+  ],
+  "evidence_line": "2026-09-15 verified: 100b220f06de932d4792f3db16e7c29f669f0219; 831/0/0/1skip, spec 4/4. record p38-09-p38"
+}

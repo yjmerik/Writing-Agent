@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -101,6 +102,81 @@ public class StoryFactRepository {
         oldFact.supersedeBy(newFact);
         save(oldFact);
         save(newFact);
+    }
+
+    // --- p39-10: 同连接事务辅助方法（包内使用，不向业务层暴露 SQL 或 ConnectionProvider） ---
+
+    /** 同连接只读回调。 */
+    public <T> T read(java.util.function.Function<Connection, T> work) {
+        try (Connection conn = cp.getConnection()) {
+            return work.apply(conn);
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** 同连接事务：save/supersede 组合操作，异常全回滚。 */
+    public <T> T runInTransaction(java.util.function.Function<Connection, T> work) {
+        Connection conn = null;
+        try {
+            conn = cp.getConnection();
+            conn.setAutoCommit(false);
+            T result = work.apply(conn);
+            conn.commit();
+            return result;
+        } catch (Exception e) {
+            if (conn != null) try { conn.rollback(); } catch (SQLException ignored) {}
+            throw e instanceof RuntimeException re ? re : new RuntimeException(e);
+        } finally {
+            if (conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
+        }
+    }
+
+    /** 连接内 save（事务回调使用）。 */
+    public void save(Connection conn, StoryFact f) {
+        String sql = "INSERT INTO story_facts (id,project_id,fact_type,subject,assertion," +
+                "chapter_established,source_chapter_version,importance,status,superseded_by," +
+                "last_validated_chapter,created_at,updated_at,evidence_grade) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) " +
+                "ON CONFLICT(id) DO UPDATE SET subject=excluded.subject, assertion=excluded.assertion, " +
+                "importance=excluded.importance, status=excluded.status, superseded_by=excluded.superseded_by, " +
+                "last_validated_chapter=excluded.last_validated_chapter, updated_at=excluded.updated_at, " +
+                "evidence_grade=excluded.evidence_grade";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, f.getId()); ps.setString(2, f.getProjectId());
+            ps.setString(3, f.getFactType().name()); ps.setString(4, f.getSubject());
+            ps.setString(5, f.getAssertion()); ps.setInt(6, f.getChapterEstablished());
+            ps.setInt(7, f.getSourceChapterVersion()); ps.setInt(8, f.getImportance());
+            ps.setString(9, f.getStatus().name());
+            ps.setString(10, f.getSupersededBy()); ps.setInt(11, f.getLastValidatedChapter());
+            ps.setString(12, f.getCreatedAt().toString()); ps.setString(13, f.getUpdatedAt().toString());
+            ps.setString(14, f.getEvidenceGrade().name());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** 连接内 supersede（事务回调使用）。 */
+    public void supersede(Connection conn, StoryFact oldFact, StoryFact newFact) {
+        oldFact.supersedeBy(newFact);
+        save(conn, oldFact);
+        save(conn, newFact);
+    }
+
+    /** p39-10: 事实证据写入（连接内，供事务组合）。 */
+    public void saveFactEvidence(Connection conn, String id, String factId, String projectId,
+                                 int chapterIndex, int chapterVersion, String contentHash,
+                                 String quote, int paragraphIndex, String anchorHash,
+                                 int validFrom, Integer validTo) {
+        String sql = "INSERT INTO fact_evidence (id, fact_id, project_id, chapter_index, chapter_version, " +
+                "content_hash, quote, paragraph_index, anchor_hash, valid_from_chapter, " +
+                "valid_to_chapter, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, id); ps.setString(2, factId); ps.setString(3, projectId);
+            ps.setInt(4, chapterIndex); ps.setInt(5, chapterVersion); ps.setString(6, contentHash);
+            ps.setString(7, quote); ps.setInt(8, paragraphIndex); ps.setString(9, anchorHash);
+            ps.setInt(10, validFrom);
+            if (validTo != null) ps.setInt(11, validTo); else ps.setNull(11, Types.NULL);
+            ps.setString(12, java.time.Instant.now().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
     private List<StoryFact> queryList(String projectId, String suffix) {

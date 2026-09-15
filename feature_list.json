@@ -6203,7 +6203,7 @@
       "problem_ref": "事实证据与原子真典提交前置",
       "phase": 39,
       "type": "feature",
-      "status": "not-started",
+      "status": "in-progress",
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-10",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
@@ -6414,5 +6414,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-15",
-  "active_feature": null
+  "active_feature": "p39-10"
 }

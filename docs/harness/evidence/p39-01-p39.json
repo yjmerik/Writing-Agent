@@ -1,5 +1,5 @@
 {
-  "commit": "7bbfc22",
+  "commit": "401f127046ddeae9cfd8154fd034d6ceacea148c",
   "cleanCheckout": true,
   "feature": "p39-01",
   "branch": "codex/p39-01-fact-evidence-schema",
@@ -10,7 +10,7 @@
     "result": "schema feature"
   },
   "implementation": {
-    "commit": "7bbfc22",
+    "commit": "401f127046ddeae9cfd8154fd034d6ceacea148c",
     "notes": "FactEvidence + schema"
   },
   "checks": [

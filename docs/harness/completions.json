@@ -1119,6 +1119,17 @@
       "implementation_commit": "a569532af9e01007f0d79cb41e7dced00021ca8f",
       "main_commit": "a569532af9e01007f0d79cb41e7dced00021ca8f",
       "evidence": "docs/harness/evidence/p38-02-p38.json"
+    },
+    {
+      "id": "p37-12-p37",
+      "kind": "verified",
+      "feature_ids": [
+        "p37-12"
+      ],
+      "branch": "codex/p37-12-directive-proposal-integration",
+      "implementation_commit": "c69eddc5c8bb7bc2dc7286847b65a4326a5c84b7",
+      "main_commit": "c69eddc5c8bb7bc2dc7286847b65a4326a5c84b7",
+      "evidence": "docs/harness/evidence/p37-12-p37.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

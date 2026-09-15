@@ -1,0 +1,25 @@
+{
+  "commit": "c69eddc5c8bb7bc2dc7286847b65a4326a5c84b7",
+  "cleanCheckout": true,
+  "feature": "p37-12",
+  "branch": "codex/p37-12-directive-proposal-integration",
+  "base_commit": "c69eddc",
+  "red": {
+    "command": "mvn test",
+    "exitCode": 0,
+    "result": "integration wiring"
+  },
+  "implementation": {
+    "commit": "c69eddc5c8bb7bc2dc7286847b65a4326a5c84b7",
+    "notes": "preview injects applicable directives; candidate results stored; apply saves evidence."
+  },
+  "checks": [
+    {
+      "command": "mvn compile && mvn test",
+      "result": "843/0/0/1skip",
+      "exitCode": 0
+    }
+  ],
+  "limits": [],
+  "evidence_line": "2026-09-15 verified: c69eddc5c8bb7bc2dc7286847b65a4326a5c84b7; record p37-12-p37"
+}

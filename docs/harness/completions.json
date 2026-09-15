@@ -1109,5 +1109,7 @@
       "main_commit": "401f127046ddeae9cfd8154fd034d6ceacea148c",
       "evidence": "docs/harness/evidence/p39-10-p39.json"
     }
-  ]
+  ],
+  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
+  "main_commit": "2b4116199d7fd9ca954f32e4da5e119723828404"
 }

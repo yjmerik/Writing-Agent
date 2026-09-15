@@ -1130,6 +1130,17 @@
       "implementation_commit": "c69eddc5c8bb7bc2dc7286847b65a4326a5c84b7",
       "main_commit": "c69eddc5c8bb7bc2dc7286847b65a4326a5c84b7",
       "evidence": "docs/harness/evidence/p37-12-p37.json"
+    },
+    {
+      "id": "p38-10-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-10"
+      ],
+      "branch": "codex/p38-10-disposition-gate",
+      "implementation_commit": "4dc674449772e5b7918963ad3df00c30b2b6978a",
+      "main_commit": "4dc674449772e5b7918963ad3df00c30b2b6978a",
+      "evidence": "docs/harness/evidence/p38-10-p38.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

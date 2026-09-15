@@ -19,3 +19,8 @@ main 全量 831/0/0/1skip。QG：e2e replay mystery PASS + baseline PASS。
 - 不可代填：p40-06（真实盲评，需真人评分）；p40-05（依赖 p40-06）
 
 台账含全部实施模式/已知坑/拓扑序/verify_cmd。
+
+
+## Blockers
+
+p40-06 需真实模型预算与真人评分。p40-05 依赖 p40-06。

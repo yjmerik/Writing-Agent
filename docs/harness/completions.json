@@ -1141,6 +1141,17 @@
       "implementation_commit": "4dc674449772e5b7918963ad3df00c30b2b6978a",
       "main_commit": "4dc674449772e5b7918963ad3df00c30b2b6978a",
       "evidence": "docs/harness/evidence/p38-10-p38.json"
+    },
+    {
+      "id": "p40-02-p40",
+      "kind": "verified",
+      "feature_ids": [
+        "p40-02"
+      ],
+      "branch": "codex/p40-02-run-details",
+      "implementation_commit": "421264f25f8c90538c8e219b75dd6356f793ffde",
+      "main_commit": "421264f25f8c90538c8e219b75dd6356f793ffde",
+      "evidence": "docs/harness/evidence/p40-02-p40.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

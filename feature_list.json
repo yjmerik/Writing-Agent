@@ -6243,7 +6243,7 @@
       "phase": 40,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/web/RunDetailsController.java",
         "src/main/java/com/writing/novel/service/RunDetailsService.java",
@@ -6255,7 +6255,8 @@
       "acceptance": "mvn test -Dtest=RunDetailsApiTest 退出0；构思模型调用前NPE也能从任务失败状态显示；阶段运行/重试/失败/成功区别；无事件覆盖UNKNOWN；错误脱敏断言。",
       "verify_cmd": "mvn test -Dtest=RunDetailsApiTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-15 verified: 421264f25f8c90538c8e219b75dd6356f793ffde; 845+/0/0/1skip, spec 2/2. record p40-02-p40",
+      "completion_record": "p40-02-p40"
     },
     {
       "id": "p40-03",
@@ -6418,5 +6419,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-15",
-  "active_feature": "p40-02"
+  "active_feature": null
 }

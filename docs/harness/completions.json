@@ -1187,6 +1187,17 @@
       "implementation_commit": "e68e8cea33f1f9e057b209585c6596c18dce0e95",
       "main_commit": "e68e8cea33f1f9e057b209585c6596c18dce0e95",
       "evidence": "docs/harness/evidence/p39-08-p39.json"
+    },
+    {
+      "id": "p38-03-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-03"
+      ],
+      "branch": "codex/p38-03-plan-preview-commit",
+      "implementation_commit": "77d1d9a637cfa7f285700b1212bc6e2942da7f1b",
+      "main_commit": "77d1d9a637cfa7f285700b1212bc6e2942da7f1b",
+      "evidence": "docs/harness/evidence/p38-03-p38.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

@@ -1,0 +1,25 @@
+{
+  "commit": "99360c3bc29138a8a1a411530a1dc888ca5c409b",
+  "cleanCheckout": true,
+  "feature": "p39-03",
+  "branch": "codex/p39-03-fact-capture",
+  "base_commit": "N/A",
+  "red": {
+    "command": "mvn test",
+    "exitCode": 0,
+    "result": "repo feature"
+  },
+  "implementation": {
+    "commit": "99360c3bc29138a8a1a411530a1dc888ca5c409b",
+    "notes": "FactEvidenceCaptureTest."
+  },
+  "checks": [
+    {
+      "command": "mvn test",
+      "result": "856/0/0/1skip",
+      "exitCode": 0
+    }
+  ],
+  "limits": [],
+  "evidence_line": "2026-09-16 verified: 99360c3bc29138a8a1a411530a1dc888ca5c409b; 856/0/0/1skip, spec 2/2. record p39-03-p39"
+}

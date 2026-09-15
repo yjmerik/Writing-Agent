@@ -6033,7 +6033,7 @@
       "dependencies": [
         "p39-02"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/agent/FactHarvesterAgent.java",
         "src/main/java/com/writing/novel/web/FactEvidenceController.java",
@@ -6045,7 +6045,8 @@
       "acceptance": "mvn test -Dtest=FactEvidenceCaptureTest 退出0；收割v3事实来源不是默认v0；非法quote/项目/稿号拒绝；已替换稿保留原来源；无锚点如实展示UNKNOWN。",
       "verify_cmd": "mvn test -Dtest=FactEvidenceCaptureTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-16 verified: 99360c3bc29138a8a1a411530a1dc888ca5c409b; 856/0/0/1skip, spec 2/2. record p39-03-p39",
+      "completion_record": "p39-03-p39"
     },
     {
       "id": "p39-04",
@@ -6424,5 +6425,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-16",
-  "active_feature": "p39-03"
+  "active_feature": null
 }

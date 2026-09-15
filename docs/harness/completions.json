@@ -1209,6 +1209,17 @@
       "implementation_commit": "1a72ffd19a62a86978491a4b00fffa8537324f94",
       "main_commit": "1a72ffd19a62a86978491a4b00fffa8537324f94",
       "evidence": "docs/harness/evidence/p38-11-p38.json"
+    },
+    {
+      "id": "p39-03-p39",
+      "kind": "verified",
+      "feature_ids": [
+        "p39-03"
+      ],
+      "branch": "codex/p39-03-fact-capture",
+      "implementation_commit": "99360c3bc29138a8a1a411530a1dc888ca5c409b",
+      "main_commit": "99360c3bc29138a8a1a411530a1dc888ca5c409b",
+      "evidence": "docs/harness/evidence/p39-03-p39.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

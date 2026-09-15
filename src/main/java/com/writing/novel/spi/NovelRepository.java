@@ -221,6 +221,23 @@ public interface NovelRepository {
     // --- p33-06: 作者意见闭环 ---
     void saveAuthorDirective(com.writing.novel.domain.AuthorDirective directive);
 
+    // --- p38-02: 计划变更持久存取（缺省禁止默认成功） ---
+
+    default void savePlanChange(com.writing.novel.domain.PlanChange planChange) {
+        throw new UnsupportedOperationException("savePlanChange 未实现");
+    }
+
+    default java.util.Optional<com.writing.novel.domain.PlanChange> findPlanChange(
+            String projectId, String previewId) {
+        throw new UnsupportedOperationException("findPlanChange 未实现");
+    }
+
+    default com.writing.novel.domain.PlanChange commitPlanChange(
+            String projectId, String previewId, String sourcePlanHash,
+            List<com.writing.novel.domain.PlanChange.PromiseDecision> decisions, String key) {
+        throw new UnsupportedOperationException("commitPlanChange 未实现");
+    }
+
     // --- p37-07: 意见与证据版本化仓储（缺省禁止默认成功） ---
 
     /** CAS 更新意见内容/范围/启用：expectedRevision 匹配才生效，成功后 revision+1。 */

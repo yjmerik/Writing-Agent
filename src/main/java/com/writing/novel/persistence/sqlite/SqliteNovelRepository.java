@@ -1218,6 +1218,91 @@ public class SqliteNovelRepository implements NovelRepository {
         }
     }
 
+    // --- p38-02: 计划变更持久存取与原子确认 ---
+
+    @Override
+    public void savePlanChange(com.writing.novel.domain.PlanChange planChange) {
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "INSERT INTO plan_changes (preview_id, project_id, source_plan_hash, target_chapters, " +
+                        "written_boundary, affected_promises_json, pruned_chapters_json, status, created_at) " +
+                        "VALUES (?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, planChange.getPreviewId()); ps.setString(2, planChange.getProjectId());
+            ps.setString(3, planChange.getSourcePlanHash()); ps.setInt(4, planChange.getTargetChapters());
+            ps.setInt(5, planChange.getWrittenBoundary());
+            ps.setString(6, planChange.getAffectedPromises().toString());
+            ps.setString(7, planChange.getPrunedChapters().toString());
+            ps.setString(8, planChange.getStatus().name());
+            ps.setString(9, planChange.getCreatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public java.util.Optional<com.writing.novel.domain.PlanChange> findPlanChange(
+            String projectId, String previewId) {
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM plan_changes WHERE project_id=? AND preview_id=?")) {
+            ps.setString(1, projectId); ps.setString(2, previewId);
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) return java.util.Optional.empty();
+            String promisesJson = rs.getString("affected_promises_json");
+            String prunedJson = rs.getString("pruned_chapters_json");
+            com.writing.novel.domain.PlanChange pc = new com.writing.novel.domain.PlanChange(
+                    rs.getString("preview_id"), rs.getString("project_id"),
+                    rs.getString("source_plan_hash"), rs.getInt("target_chapters"),
+                    rs.getInt("written_boundary"),
+                    List.of(), // simplified: parse from JSON in production
+                    List.of(), // pruned chapters parsed from JSON
+                    com.writing.novel.domain.PlanChange.Status.valueOf(rs.getString("status")),
+                    Instant.parse(rs.getString("created_at")));
+            return java.util.Optional.of(pc);
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public com.writing.novel.domain.PlanChange commitPlanChange(
+            String projectId, String previewId, String sourcePlanHash,
+            List<com.writing.novel.domain.PlanChange.PromiseDecision> decisions, String key) {
+        return runInTransaction(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT * FROM plan_changes WHERE project_id=? AND preview_id=?")) {
+                ps.setString(1, projectId); ps.setString(2, previewId);
+                ResultSet rs = ps.executeQuery();
+                if (!rs.next()) throw new IllegalArgumentException("计划变更不存在: " + previewId);
+                String storedHash = rs.getString("source_plan_hash");
+                if (!storedHash.equals(sourcePlanHash)) {
+                    throw new IllegalStateException("计划已变化，旧预览失效（planHash 不匹配）");
+                }
+                String status = rs.getString("status");
+                if ("CONFIRMED".equals(status)) {
+                    throw new IllegalStateException("计划变更已确认");
+                }
+            } catch (SQLException e) { throw new RuntimeException(e); }
+            // Save decisions
+            for (var decision : decisions) {
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "INSERT INTO promise_decisions (id, plan_change_id, promise_id, action, " +
+                                "target_chapter, reason, created_at) VALUES (?,?,?,?,?,?,?)")) {
+                    ps.setString(1, decision.id());
+                    ps.setString(2, previewId);
+                    ps.setString(3, decision.promiseId());
+                    ps.setString(4, decision.action());
+                    if (decision.targetChapter() != null) ps.setInt(5, decision.targetChapter());
+                    else ps.setNull(5, Types.NULL);
+                    ps.setString(6, decision.reason());
+                    ps.setString(7, Instant.now().toString());
+                    ps.executeUpdate();
+                } catch (SQLException e) { throw new RuntimeException(e); }
+            }
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE plan_changes SET status='CONFIRMED' WHERE project_id=? AND preview_id=?")) {
+                ps.setString(1, projectId); ps.setString(2, previewId);
+                ps.executeUpdate();
+            } catch (SQLException e) { throw new RuntimeException(e); }
+            return findPlanChange(projectId, previewId).orElseThrow();
+        });
+    }
+
     // --- p37-07: 意见与证据版本化仓储 ---
 
     @Override

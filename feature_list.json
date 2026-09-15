@@ -6130,7 +6130,7 @@
         "p37-02",
         "p39-02"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/spi/StoryCanon.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteStoryCanon.java",
@@ -6142,7 +6142,8 @@
       "acceptance": "mvn test -Dtest=CanonProposalCommitTest 退出0；写角色后写真典前故障全回滚；双apply只有一份修改/审计；重启后APPLIED返回原结果；旧事实保护期及原有StoryCanon契约仍通过。",
       "verify_cmd": "mvn test -Dtest=CanonProposalCommitTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-15 verified; 851/0/0/1skip. record p39-07-p39",
+      "completion_record": "p39-07-p39"
     },
     {
       "id": "p39-08",
@@ -6153,7 +6154,7 @@
       "dependencies": [
         "p37-02"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/spi/NovelRepository.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
@@ -6165,7 +6166,8 @@
       "acceptance": "mvn test -Dtest=VolumeProposalCommitTest 退出0；候选生成后裁剪目标/新增已写章再apply409；并发应用及重启不会重复修改；不得改chapterIndex/id结构。",
       "verify_cmd": "mvn test -Dtest=VolumeProposalCommitTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-15 verified; 851/0/0/1skip. record p39-08-p39",
+      "completion_record": "p39-08-p39"
     },
     {
       "id": "p39-09",
@@ -6420,5 +6422,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-15",
-  "active_feature": "p39-07"
+  "active_feature": null
 }

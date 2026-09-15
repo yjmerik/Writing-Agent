@@ -1173,8 +1173,8 @@
         "p39-07"
       ],
       "branch": "codex/p39-07-08-canon-volume-proposals",
-      "implementation_commit": "e68e8ce",
-      "main_commit": "e68e8ce",
+      "implementation_commit": "1cb84d22e3def2b7d0c38c1a2b260d20d3bb6d01",
+      "main_commit": "1cb84d22e3def2b7d0c38c1a2b260d20d3bb6d01",
       "evidence": "docs/harness/evidence/p39-07-p39.json"
     },
     {
@@ -1184,8 +1184,8 @@
         "p39-08"
       ],
       "branch": "codex/p39-07-08-canon-volume-proposals",
-      "implementation_commit": "e68e8ce",
-      "main_commit": "e68e8ce",
+      "implementation_commit": "1cb84d22e3def2b7d0c38c1a2b260d20d3bb6d01",
+      "main_commit": "1cb84d22e3def2b7d0c38c1a2b260d20d3bb6d01",
       "evidence": "docs/harness/evidence/p39-08-p39.json"
     }
   ],

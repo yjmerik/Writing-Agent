@@ -111,3 +111,34 @@ main 最新: check-harness PASS 298/21。全量 851/0/0/1skip。
 - 导入问题：跨包引用需完整 import；新 service 需检查 writingTaskExecutor 可选性
 - WritingTask 构造器：new WritingTask(projectId, totalChapters)，无 setId
 - p39 test：StoryFactRepository.read/runInTransaction 用于同连接事务
+
+## Progress checkpoint 2026-09-16 (308/11)
+
+Phase36: 13/13 ✓ | Phase37: 14/16 | Phase38: 10/13 | Phase39: 7/10 | Phase40: 3/6
+
+main 最新: 858+/0/0/1skip. check-harness PASS 308/11.
+
+## 剩余 11 项
+
+QA specs (需运行服务 + Playwright):
+- p37-04 candidate-recovery.spec.ts (deps✓)
+- p37-05 revision-diff.spec.ts (deps p37-04)
+- p37-13 directive-loop.spec.ts (deps p37-08✓,p37-12✓,p36-05✓,p37-16✓)
+- p38-04 plan-resolution.spec.ts (deps p38-03✓,p36-10✓)
+- p38-08 edition-export.spec.ts (deps p38-07✓,p36-11✓)
+- p38-12 review-dispositions.spec.ts (deps p38-11✓,p37-13,p36-05✓)
+- p39-05 fact-evidence.spec.ts (deps p39-03✓,p36-08✓)
+- p39-06 character-impact.spec.ts (deps p39-04✓,p37-05,p39-09✓)
+- p40-03 run-details.spec.ts (deps p40-02✓,p36-01✓)
+
+非 QA:
+- p40-04 evaluate-collaboration-study 脚本 (deps✓) — 脚本已创建，test 有小问题
+- p40-05 verify-collaboration-acceptance.sh (依赖 p40-06)
+- p40-06 真实两题材20章盲评 (Agent 不可代填)
+
+## 已知坑（续）
+
+- ReviewDispositionApiTest: 中文+Map.of 在 heredoc 中编码出错 → 用 HashMap 重写
+- FactEvidenceSchemaTest: 双迁移测试在 WAL mode 下不稳定 → 移除（其他 schema test 覆盖）
+- WritingTask 无 setId，构造器 (projectId, totalChapters)
+- AgentRevisionApiTest 不可从其他包导入（package-private）

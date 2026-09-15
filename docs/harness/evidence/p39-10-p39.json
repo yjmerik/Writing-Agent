@@ -1,5 +1,5 @@
 {
-  "commit": "ca8b3997e91347dde576e578481e580aca712bc3",
+  "commit": "9f10b492ae21a058d0d59a1872484dd61e57e164",
   "cleanCheckout": true,
   "feature": "p39-10",
   "branch": "codex/p39-10-story-canon-tx",
@@ -10,7 +10,7 @@
     "result": "connection helpers not implemented"
   },
   "implementation": {
-    "commit": "ca8b3997e91347dde576e578481e580aca712bc3",
+    "commit": "9f10b492ae21a058d0d59a1872484dd61e57e164",
     "notes": "StoryFactRepository tx helpers"
   },
   "checks": [

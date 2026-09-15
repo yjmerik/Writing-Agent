@@ -233,7 +233,18 @@ public class SqliteSchemaInitializer {
         // p38-01: 承诺处置审计——用 promiseId 而非描述匹配
         "CREATE TABLE IF NOT EXISTS promise_decisions (" +
             "id TEXT PRIMARY KEY, plan_change_id TEXT NOT NULL, promise_id TEXT NOT NULL, " +
-            "action TEXT NOT NULL, target_chapter INTEGER, reason TEXT, created_at TEXT NOT NULL)"
+            "action TEXT NOT NULL, target_chapter INTEGER, reason TEXT, created_at TEXT NOT NULL)",
+
+        // p38-05: 不可变成书版本——正文快照物化，批准绑定 manifestHash
+        "CREATE TABLE IF NOT EXISTS book_editions (" +
+            "edition_id TEXT PRIMARY KEY, project_id TEXT NOT NULL, manifest_hash TEXT NOT NULL, " +
+            "state TEXT NOT NULL DEFAULT 'DRAFT', created_at TEXT NOT NULL, approved_at TEXT)",
+
+        "CREATE TABLE IF NOT EXISTS book_edition_chapters (" +
+            "edition_id TEXT NOT NULL, chapter_index INTEGER NOT NULL, version INTEGER NOT NULL, " +
+            "title TEXT NOT NULL, content TEXT NOT NULL, content_hash TEXT NOT NULL, " +
+            "approval_id TEXT, plan_ref TEXT, " +
+            "PRIMARY KEY (edition_id, chapter_index))"
     };
 
     private final ConnectionProvider cp;

@@ -5757,7 +5757,7 @@
       "dependencies": [
         "p36-02"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/domain/BookEdition.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
@@ -6410,6 +6410,6 @@
     }
   ],
   "schema_version": 2,
-  "updated_at": "2026-09-14",
-  "active_feature": null
+  "updated_at": "2026-09-15",
+  "active_feature": "p38-05"
 }

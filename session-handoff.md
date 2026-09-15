@@ -58,3 +58,7 @@ main 最新 5477a04，全量 822/0/0/1skip。
 - AgentRevisionService：preview 持久化 RevisionProposal；post-generation re-read 检测 STALE；apply CHAPTER/PASSAGE 路由 applyProposalInOwnedWork；RevisionPreview/ApplyResult 增 sourceIdentity+status。
 - 测试网关：不要在共享 StubLlmGatewayTestConfig 上加 NovelRepository（会导致 @Primary 冲突）；在测试内 TestConfiguration 加专属 gateway。
 - NovelOrchestrator 测试构造：反射 getDeclaredConstructors 选最后一个参数为 OrchestratorPolicies 的构造器，null 填充。
+
+## Progress checkpoint after p39-01
+
+290/29. main 7bbfc22. 全量 831/0/0/1skip. 下一项 p39-10。

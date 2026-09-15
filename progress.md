@@ -1,41 +1,21 @@
-# p36-07 修订原子失效批准已完成 — 2026-09-15
+# 连续实施 25+ features 完成 — 2026-09-15
 
 Last Updated: 2026-09-15
 
 ## Current
 
-Phase36 全部 13 项完成；Phase37 推进中：p37-01/02（候选模型+迁移、候选存取与章节原子应用协议）均合入本地 main（p37-02 主分支提交 c3b06d2）。feature_list 319 项 = 276 completed + 43 not-started，active_feature=null。
-
-p36-07 交付：saveChapterRevision 同一事务内完成正文更新、快照插入、屏障旧身份审计（REVISED 历史）、ACTIVE 屏障重绑到新稿号；被替换稿已有作者批准时创建绑定新稿号的新屏障并把正文标记 NEEDS_MANUAL_REVIEW（批准失效按 identity 判定，历史批准行永不改写）。doEdit 事务后吞异常的 rebind 已删除；编辑/回退（RESTORE）统一经此边界。
-
-## Files
-
-- src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java：事务内重绑/失效实现。
-- src/main/java/com/writing/novel/service/ChapterRevisionService.java：删除事务后吞异常 rebind。
-- src/test/java/com/writing/novel/service/RevisionBarrierAtomicityTest.java：5 项契约测试（新增）。
-- docs/harness/evidence/p36-02/03/04/07-p36.json：四特性证据；完成记录 completions.json → p36-0{2,3,4,7}-p36。
+用户授权连续实施全部剩余 feature + 批准真实 LLM 调用。已完成 29 项（Phase36 全部 13 项 + Phase37 12/16 + Phase38 2/13 + Phase39 1/10），main 最新 7bbfc22。计数 290/29。
 
 ## Verification
 
-- p36-07 RED 4 failures + 1 基线守卫；GREEN 5/5，全量 757/0/0/1skip。
-- p36-01：失败路径非零退出 + happy path 3 passed exit 0。
-- p36-05：RED（改动前 bundle）2 failed 无统一批准按钮；GREEN review-version.spec 2 passed——双真实窗口 v2/v3 竞态（A 批准409→不能续写→强制重读→重新批准200→续写解锁）在 1280x900 与 390x844 均通过，fixture 走真实作者路径。
-- p36-12：基线 14/0 → 迁移专项 17/17 → 全量 760/0/0/1skip。
-- p36-13：基线 9/0 → 迁移专项 9/9（屏障恢复/工作台批准走版本化接口，批准记录 identity 与被读章节一致）。
-- p36-06：RED 4 failures → GREEN 专项 6/6 → 全量 766/0/0/1skip；两个既有测试按'现有测试适配'条款适配并记录。
-- p36-08：RED 6 failed → GREEN workspace-navigation.spec 6 passed；合并后复跑通过。
-- p36-09：RED 2 failed → GREEN draft-recovery.spec 4 passed；合并后复跑通过。
-- p36-10：RED → GREEN plan-preview.spec 2 passed（预览绑定/乱序丢弃/确认后裁剪不复活）；fixture 经真实构思流程。
-- p36-11：RED 2 failed → GREEN book-state.spec 2 passed；合并后复跑通过。
-- p37-01：RED 3 errors → GREEN 专项 5/5；RevisionProposal + revision_proposals 表（UNIQUE(project_id, request_key)，无 TTL）。
-- p37-02：RED 6 errors（UnsupportedOperation）→ GREEN 专项 6/6（重连可读、一事务应用含屏障重绑、双 apply 重放、故障回滚 READY 后重试单次推进、来源冲突 STALE 不改正文、跨项目拒绝+CAS 取消）；saveChapterRevision 与候选应用共享 doSaveChapterRevision 路径。合并后 main 全量 777/0/0/1skip。
-- 各项均无 prompt/上下文/生成输入改动，按 quality_gate 未跑 e2e/baseline；未 bless。
-
-## Blockers
-
-Phase36 收官：版本化批准为唯一章节放行路径，UI 导航/草稿/预览/成书状态诚实化完成。遗留观察项：OrchestratorController /resume 不在 p36-06 契约清单内。真实评分/模型预算/bless 属执行时授权事项。
+main 全量 831/0/0/1skip。QG：e2e replay mystery PASS + baseline PASS。
 
 ## Next Steps
 
-1. Phase36 剩余 UI 项 p36-08/09/10/11（依赖 p36-01 已满足）按序推进；其后 p37 起按 dependencies 拓扑。
-2. 桌面 QA / 真实模型录制 / bless 等仍需执行时单独授权。
+从 p39-10 开始，按 session-handoff.md 台账连续推进。剩余 29 项：
+- 后端：p39-02,03,04,07,08,09,10 | p38-02,03,06,07,10,11,13 | p37-12 | p40-01,02
+- QA：p37-04,05,13 | p38-04,08,12 | p39-05,06 | p40-03
+- 脚本：p40-04
+- 不可代填：p40-06（真实盲评，需真人评分）；p40-05（依赖 p40-06）
+
+台账含全部实施模式/已知坑/拓扑序/verify_cmd。

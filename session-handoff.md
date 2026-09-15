@@ -78,3 +78,36 @@ main 最新 4dc6744。全量 845/0/0/1skip。
 6. p39-02 (deps: p39-01✓, p39-10✓) → 解锁 p39-03/07
 7. p40-02 (no deps) → 解锁 p40-03
 8. p40-04 (no deps) → 可直接做
+
+## Progress checkpoint 2026-09-15 (298/21)
+
+Phase36: 13/13 ✓ | Phase37: 13/16 (剩04,05,13) | Phase38: 5/13 (done:01,02,05,09,10) | Phase39: 5/10 (done:01,02,07,08,10) | Phase40: 1/6 (done:02)
+
+main 最新: check-harness PASS 298/21。全量 851/0/0/1skip。
+
+## 剩余 21 项（按拓扑序）
+
+1. p38-03 (deps✓) — PlanPreviewCommitApiTest
+2. p38-11 (deps✓) — ReviewDispositionApiTest  
+3. p38-13 (deps✓) — EndingDecisionIntegrationTest
+4. p39-03 (deps✓) — FactEvidenceCaptureTest
+5. p38-06 (deps p38-02✓,p38-05✓,p38-10✓,p36-03✓) — BookEditionRepositoryTest
+6. p40-01 (deps✓) — TakeoverLateCommitTest/ProposalRestartRecoveryTest
+7. p40-04 (deps✓) — evaluate script + test
+8. p38-07 (deps p38-06+13) — BookEditionExportTest
+9. p39-04 (deps p37-03✓,p39-02✓,p39-07✓,p39-08✓) — CharacterImpactPreviewTest
+10. p39-09 (deps p39-04) — CanonImpactApiTest
+11-13. p37-04→05→13 (QA specs，需运行服务)
+14-16. p38-04→08→12 (QA specs)
+17-18. p39-05→06 (QA specs)
+19. p40-03 (QA spec)
+20. p40-05 (script，依赖 p40-06)
+21. p40-06 (真实盲评，Agent 不可代填)
+
+## 关键模式
+
+- 注册：/tmp/register.py <fid> <branch> <impl_full_hash> <ev_json_path>
+- 证据 JSON 必须用实现提交的完整哈希（不是回执提交），否则 check-harness --check-git FAIL
+- 导入问题：跨包引用需完整 import；新 service 需检查 writingTaskExecutor 可选性
+- WritingTask 构造器：new WritingTask(projectId, totalChapters)，无 setId
+- p39 test：StoryFactRepository.read/runInTransaction 用于同连接事务

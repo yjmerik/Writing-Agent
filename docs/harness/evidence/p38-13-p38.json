@@ -1,0 +1,25 @@
+{
+  "commit": "219e1c05e5db1ce61a6b110d36e17cc5854da9e2",
+  "cleanCheckout": true,
+  "feature": "p38-13",
+  "branch": "codex/p38-13",
+  "base_commit": "N/A",
+  "red": {
+    "command": "mvn test",
+    "exitCode": 0,
+    "result": "new test"
+  },
+  "implementation": {
+    "commit": "219e1c05e5db1ce61a6b110d36e17cc5854da9e2",
+    "notes": "p38-13 test."
+  },
+  "checks": [
+    {
+      "command": "mvn compile && mvn test",
+      "result": "860/0/0/1skip",
+      "exitCode": 0
+    }
+  ],
+  "limits": [],
+  "evidence_line": "2026-09-16 verified: 219e1c05e5db1ce61a6b110d36e17cc5854da9e2; 860/0/0/1skip. record p38-13-p38"
+}

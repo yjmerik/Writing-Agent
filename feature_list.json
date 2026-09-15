@@ -5813,7 +5813,7 @@
         "p38-10",
         "p38-13"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/BookEditionService.java",
         "src/main/java/com/writing/novel/web/BookEditionController.java",
@@ -5825,7 +5825,8 @@
       "acceptance": "mvn test -Dtest=BookEditionExportTest 退出0；批准版导出章节号、版本、正文hash与manifest逐项相等；后来编辑不改变导出；跨项目404/400；未批准不能冒用成书导出；下载响应头正确。",
       "verify_cmd": "mvn test -Dtest=BookEditionExportTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-16 verified: e2b825f3b8f88c98f7e2a0e859bee3322b09e6b8; 860/0/0/1skip. record p38-07-p38",
+      "completion_record": "p38-07-p38"
     },
     {
       "id": "p38-08",
@@ -5962,7 +5963,7 @@
         "p38-02",
         "p38-10"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/EndingDecisionPolicy.java",
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
@@ -5974,7 +5975,8 @@
       "acceptance": "mvn test -Dtest=EndingDecisionIntegrationTest 退出0；24→20后open-end不追加尾声，未处置mustResolve仍阻塞；迁移到20但原文未兑现不能PASS；延期问题未清成书阻塞。",
       "verify_cmd": "mvn test -Dtest=EndingDecisionIntegrationTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-16 verified: 219e1c05e5db1ce61a6b110d36e17cc5854da9e2; 860/0/0/1skip. record p38-13-p38",
+      "completion_record": "p38-13-p38"
     },
     {
       "id": "p39-01",

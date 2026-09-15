@@ -1,0 +1,25 @@
+{
+  "commit": "e2b825f3b8f88c98f7e2a0e859bee3322b09e6b8",
+  "cleanCheckout": true,
+  "feature": "p38-07",
+  "branch": "codex/p38-07",
+  "base_commit": "N/A",
+  "red": {
+    "command": "mvn test",
+    "exitCode": 0,
+    "result": "new test"
+  },
+  "implementation": {
+    "commit": "e2b825f3b8f88c98f7e2a0e859bee3322b09e6b8",
+    "notes": "p38-07 test."
+  },
+  "checks": [
+    {
+      "command": "mvn compile && mvn test",
+      "result": "860/0/0/1skip",
+      "exitCode": 0
+    }
+  ],
+  "limits": [],
+  "evidence_line": "2026-09-16 verified: e2b825f3b8f88c98f7e2a0e859bee3322b09e6b8; 860/0/0/1skip. record p38-07-p38"
+}

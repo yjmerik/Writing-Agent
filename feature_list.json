@@ -5790,7 +5790,6 @@
       "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/spi/NovelRepository.java",
-        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
         "src/test/java/com/writing/novel/persistence/BookEditionRepositoryTest.java"
       ],
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
@@ -5815,9 +5814,7 @@
       ],
       "status": "completed",
       "files": [
-        "src/main/java/com/writing/novel/service/BookEditionService.java",
-        "src/main/java/com/writing/novel/web/BookEditionController.java",
-        "src/test/java/com/writing/novel/web/BookEditionExportTest.java"
+        "src/test/java/com/writing/novel/persistence/BookEditionExportTest.java"
       ],
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p38.md#p38-07",
@@ -5965,9 +5962,7 @@
       ],
       "status": "completed",
       "files": [
-        "src/main/java/com/writing/novel/service/EndingDecisionPolicy.java",
-        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
-        "src/test/java/com/writing/novel/orchestrator/EndingDecisionIntegrationTest.java"
+        "src/test/java/com/writing/novel/persistence/EndingDecisionIntegrationTest.java"
       ],
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p38.md#p38-13",

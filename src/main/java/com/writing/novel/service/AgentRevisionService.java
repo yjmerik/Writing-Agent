@@ -66,8 +66,22 @@ public class AgentRevisionService {
         RevisionRequest valid = requireRequest(request);
         TargetSnapshot before = resolve(projectId, valid.targetType(), valid.targetId(),
                 valid.chapterIndex(), valid.passageIndex());
+        // p37-12: 注入适用作者要求（结构化编号行 [D-x revN]）
+        var applicable = repository.findApplicableDirectives(projectId,
+                valid.chapterIndex() != null ? valid.chapterIndex() : 0);
+        String enrichedInstructions = valid.instructions().trim();
+        if (!applicable.isEmpty()) {
+            StringBuilder sb = new StringBuilder(enrichedInstructions).append("\n");
+            for (int i = 0; i < applicable.size(); i++) {
+                var d = applicable.get(i);
+                int rev = d.getRevision() == null ? 1 : d.getRevision();
+                sb.append("【作者要求-").append(i + 1).append("】[").append(d.getId())
+                  .append(" rev").append(rev).append("] ").append(d.getContent()).append("\n");
+            }
+            enrichedInstructions = sb.toString();
+        }
         RevisionCandidate candidate = revisionAgent.preview(
-                valid.targetType(), json(before.value()), valid.instructions().trim());
+                valid.targetType(), json(before.value()), enrichedInstructions);
         ObjectNode after = candidateObject(candidate);
         validateCandidate(before, after);
 
@@ -82,6 +96,7 @@ public class AgentRevisionService {
         StoredPreview stored = new StoredPreview(previewId, projectId, before.address(),
                 sourceVersion, before.value().deepCopy(), after.deepCopy(), candidate.summary());
         stored.stale = stale;
+        stored.directiveResults = candidate.directiveResults();
         previews.put(previewId, stored);
 
         // p37-03: 持久候选——重启/恢复查询的权威存储
@@ -177,6 +192,26 @@ public class AgentRevisionService {
                 if (mem != null) mem.consumed = true;
                 Chapter applied = result.chapter();
                 ChapterApproval.Identity identity = ChapterApproval.Identity.of(applied);
+                // p37-12: 应用后落库意见落实证据
+                if (repository.findApplicableDirectives(projectId,
+                        applied.getChapterIndex()).size() > 0) {
+                    // Save evidence from candidate's directiveResults
+                    var storedPreview = previews.get(previewId);
+                    if (storedPreview != null && storedPreview.directiveResults != null) {
+                        for (var dr : storedPreview.directiveResults) {
+                            var evidence = new com.writing.novel.domain.AuthorDirective.Evidence(
+                                    java.util.UUID.randomUUID().toString(),
+                                    dr.directiveId(), dr.directiveRevision(),
+                                    applied.getChapterIndex(), identity.version(), identity.contentHash(),
+                                    null, dr.quote(), dr.anchor(),
+                                    "APPLIED_SYSTEM".equals(dr.status())
+                                            ? com.writing.novel.domain.AuthorDirective.EvidenceStatus.APPLIED_SYSTEM
+                                            : com.writing.novel.domain.AuthorDirective.EvidenceStatus.UNMET,
+                                    dr.reason());
+                            repository.saveDirectiveEvidence(projectId, evidence);
+                        }
+                    }
+                }
                 return new ApplyResult(previewId, TargetType.valueOf(proposal.getTargetType().name()),
                         proposal.getTargetId(), identity.contentHash(), true, applied,
                         applied.isDerivedRefreshPending(), result.commit().replayed(), identity);
@@ -551,6 +586,7 @@ public class AgentRevisionService {
         private final String summary;
         private boolean consumed;
         private boolean stale;
+        private List<ContentRevisionAgent.DirectiveResult> directiveResults;
 
         private StoredPreview(String previewId, String projectId, TargetAddress address,
                               String sourceVersion, ObjectNode before, ObjectNode after,

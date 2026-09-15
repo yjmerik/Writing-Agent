@@ -6058,7 +6058,7 @@
         "p39-07",
         "p39-08"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/service/CanonPatchService.java",
         "src/main/java/com/writing/novel/service/AgentRevisionService.java",
@@ -6187,7 +6187,7 @@
       "problem_ref": "人物影响API与UI衔接",
       "phase": 39,
       "type": "feature",
-      "status": "not-started",
+      "status": "in-progress",
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-09",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
@@ -6423,5 +6423,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-16",
-  "active_feature": null
+  "active_feature": "p39-04"
 }

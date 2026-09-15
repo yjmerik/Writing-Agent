@@ -1,1 +1,14 @@
-{"commit":"87d15a00d7b0c999a8b6c9f9defcecca9e0c7920","cleanCheckout":true,"feature":"p40-01","branch":"codex/p40-01-04-takeover-evaluate","checks":[],"evidence_line":"verified"}
+{
+  "commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
+  "cleanCheckout": true,
+  "feature": "p40-01",
+  "branch": "codex/p40-01-04-takeover-evaluate",
+  "checks": [
+    {
+      "command": "mvn compile && mvn test",
+      "result": "865/0/0/1skip",
+      "exitCode": 0
+    }
+  ],
+  "evidence_line": "verified"
+}

@@ -5787,7 +5787,7 @@
         "p38-02",
         "p38-10"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/spi/NovelRepository.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
@@ -5799,7 +5799,8 @@
       "acceptance": "mvn test -Dtest=BookEditionRepositoryTest 退出0；并发编辑创建不得混合两代正文；批准前改一章拒绝；崩溃回滚不产生半本书；批准后再改正文，历史edition字节不变。",
       "verify_cmd": "mvn test -Dtest=BookEditionRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-15 verified: b589b7a00c28566fdb40574c6a8fc465191f9452; 858/0/0/1skip, spec 2/2. record p38-06-p38",
+      "completion_record": "p38-06-p38"
     },
     {
       "id": "p38-07",

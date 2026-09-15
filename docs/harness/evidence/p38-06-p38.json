@@ -1,0 +1,25 @@
+{
+  "commit": "b589b7a00c28566fdb40574c6a8fc465191f9452",
+  "cleanCheckout": true,
+  "feature": "p38-06",
+  "branch": "codex/p38-13-06-book-edition",
+  "base_commit": "N/A",
+  "red": {
+    "command": "mvn test",
+    "exitCode": 0,
+    "result": "SPI defaults"
+  },
+  "implementation": {
+    "commit": "b589b7a00c28566fdb40574c6a8fc465191f9452",
+    "notes": "saveBookEdition/findBookEdition/findBookEditionChapters/approveBookEdition"
+  },
+  "checks": [
+    {
+      "command": "mvn test",
+      "result": "858/0/0/1skip",
+      "exitCode": 0
+    }
+  ],
+  "limits": [],
+  "evidence_line": "2026-09-15 verified: b589b7a00c28566fdb40574c6a8fc465191f9452; 858/0/0/1skip, spec 2/2. record p38-06-p38"
+}

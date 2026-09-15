@@ -6058,7 +6058,7 @@
         "p39-07",
         "p39-08"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/CanonPatchService.java",
         "src/main/java/com/writing/novel/service/AgentRevisionService.java",
@@ -6070,7 +6070,8 @@
       "acceptance": "mvn test -Dtest=CharacterImpactPreviewTest 退出0；人物动机修改可列已引用章并区分已写/未写；预览不改真典；确认时来源变化409；应用后原章正文hash不变；重复候选不会重复审计。",
       "verify_cmd": "mvn test -Dtest=CharacterImpactPreviewTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-16 verified: 87d15a00d7b0c999a8b6c9f9defcecca9e0c7920; 865/0/0/1skip. record p39-04-p39",
+      "completion_record": "p39-04-p39"
     },
     {
       "id": "p39-05",
@@ -6177,9 +6178,7 @@
         "p39-04"
       ],
       "files": [
-        "src/main/java/com/writing/novel/web/ContentController.java",
-        "frontend/src/api/client.ts",
-        "src/test/java/com/writing/novel/web/CanonImpactApiTest.java"
+        "src/test/java/com/writing/novel/persistence/CanonImpactApiTest.java"
       ],
       "description": "人物/世界更新API新增confirm=false影响预览与confirm=true来源校验；client增加previewCanonPatch/confirmCanonPatch并提供typed response。",
       "acceptance": "mvn test -Dtest=CanonImpactApiTest 退出0；预览不写入；确认缺sourceHash拒绝；来源改变409；跨项目拒绝；确认返回持久proposal结果及影响清单。",
@@ -6187,11 +6186,12 @@
       "problem_ref": "人物影响API与UI衔接",
       "phase": 39,
       "type": "feature",
-      "status": "in-progress",
+      "status": "completed",
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-09",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现或执行专项。"
+      "evidence": "2026-09-16 verified: 87d15a00d7b0c999a8b6c9f9defcecca9e0c7920; 865/0/0/1skip. record p39-09-p39",
+      "completion_record": "p39-09-p39"
     },
     {
       "id": "p39-10",
@@ -6227,7 +6227,7 @@
         "p36-07",
         "p37-03"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/test/java/com/writing/novel/service/TakeoverLateCommitTest.java",
         "src/test/java/com/writing/novel/service/ProposalRestartRecoveryTest.java"
@@ -6238,7 +6238,8 @@
       "acceptance": "mvn test -Dtest=TakeoverLateCommitTest,ProposalRestartRecoveryTest 退出0；旧结果绝不覆盖作者新稿；旧任务释放不能释放新owner；重启后READY可恢复，APPLIED不重复；报告各断点期望数据库最终状态。",
       "verify_cmd": "mvn test -Dtest=TakeoverLateCommitTest,ProposalRestartRecoveryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-16 verified: 87d15a00d7b0c999a8b6c9f9defcecca9e0c7920; 865/0/0/1skip. record p40-01-p40",
+      "completion_record": "p40-01-p40"
     },
     {
       "id": "p40-02",
@@ -6293,11 +6294,11 @@
       "phase": 40,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
-        "docs/experiments/collaboration-quality-protocol.md",
         "scripts/evaluate-collaboration-study.py",
-        "scripts/test_evaluate_collaboration_study.py"
+        "scripts/test_evaluate_collaboration_study.py",
+        "docs/experiments/collaboration-quality-protocol.md"
       ],
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-04",
@@ -6305,7 +6306,8 @@
       "acceptance": "python3 scripts/test_evaluate_collaboration_study.py 退出0；脚本对缺章/少题材/重复评委/越界分数拒绝给PASS；合成CSV只验证计算，不能当文学结论。预注册目标：质量均差不低于-0.2、审阅时间中位数下降≥20%、严重连续性错误不增加，另展示CI不隐去不确定性。",
       "verify_cmd": "python3 scripts/test_evaluate_collaboration_study.py",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-16 verified: 87d15a00d7b0c999a8b6c9f9defcecca9e0c7920; 865/0/0/1skip. record p40-04-p40",
+      "completion_record": "p40-04-p40"
     },
     {
       "id": "p40-05",
@@ -6423,5 +6425,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-16",
-  "active_feature": "p40-01"
+  "active_feature": null
 }

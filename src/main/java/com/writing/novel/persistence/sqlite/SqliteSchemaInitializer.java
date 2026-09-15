@@ -252,7 +252,23 @@ public class SqliteSchemaInitializer {
             "issue_fingerprint TEXT NOT NULL, chapter_index INTEGER NOT NULL, " +
             "chapter_version INTEGER NOT NULL, content_hash TEXT NOT NULL, " +
             "action TEXT NOT NULL, reason TEXT NOT NULL, defer_until_chapter INTEGER, " +
-            "created_at TEXT NOT NULL)"
+            "created_at TEXT NOT NULL)",
+
+        // p39-01: 事实来源锚点与知情区间
+        "CREATE TABLE IF NOT EXISTS fact_evidence (" +
+            "id TEXT PRIMARY KEY, fact_id TEXT NOT NULL, project_id TEXT NOT NULL, " +
+            "chapter_index INTEGER NOT NULL, chapter_version INTEGER NOT NULL, " +
+            "content_hash TEXT NOT NULL, quote TEXT, paragraph_index INTEGER, anchor_hash TEXT, " +
+            "valid_from_chapter INTEGER NOT NULL, valid_to_chapter INTEGER, " +
+            "created_at TEXT NOT NULL)",
+        "CREATE INDEX IF NOT EXISTS idx_fact_evidence ON fact_evidence(project_id, fact_id)",
+
+        // p39-01: 知情者——按人在不同章分别记录
+        "CREATE TABLE IF NOT EXISTS fact_evidence_observers (" +
+            "id TEXT PRIMARY KEY, evidence_id TEXT NOT NULL, character_id TEXT NOT NULL, " +
+            "learned_at_chapter INTEGER NOT NULL, chapter_version INTEGER NOT NULL, " +
+            "quote TEXT)",
+        "CREATE INDEX IF NOT EXISTS idx_fact_observers ON fact_evidence_observers(evidence_id)"
     };
 
     private final ConnectionProvider cp;

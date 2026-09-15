@@ -1,5 +1,5 @@
 {
-  "commit": "39c9d0f7eb05fc0d51910f62844d4f50571ecb69",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "checkoutNote": "合并后验证在 ff 后的本地 main（39c9d0f7eb05fc0d51910f62844d4f50571ecb69）重跑：mvn compile&&mvn test 766/0、前端构建、verify_cmd（场景服务+临时库）4 passed。",
   "feature": "p36-09",
@@ -12,7 +12,7 @@
     "result": "对改动前 bundle：2 failed——冲突保留用例（无冲突警示，30s 超时）与 409 保留输入用例行为性失败；标题/正文恢复两用例旧实现已满足（基线）。"
   },
   "implementation": {
-    "commit": "39c9d0f7eb05fc0d51910f62844d4f50571ecb69",
+    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
     "files": [
       "frontend/src/lib/draftStore.ts",
       "frontend/src/components/InteractiveReview.tsx",
@@ -47,5 +47,6 @@
     "暂存失败（quota）用例由 saveDraft 返回值+警示 UI 结构承载，未在 headless 注入真实 quota 异常",
     "旧格式 legacy 草稿核对提示为 UI 结构覆盖，未做独立端到端用例",
     "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
-  ]
+  ],
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

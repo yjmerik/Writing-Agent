@@ -1,5 +1,5 @@
 {
-  "commit": "5f96ad6dd55bb299f95e4337e9be901526d83fd2",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "checkoutNote": "合并后验证在 ff 后的本地 main（5f96ad6dd55bb299f95e4337e9be901526d83fd2）重跑：mvn compile&&mvn test 766/0、前端构建、verify_cmd（场景服务+临时库）2 passed。",
   "feature": "p36-10",
@@ -12,7 +12,7 @@
     "result": "对改动前 bundle：目标输入变化后「确认生效」保持 enabled（预览未绑定目标数字），且目标输入无 aria-label（spinbutton 定位失败）。行为性失败。fixture 经真实构思流程（协作start→批准初始设定→scenario 落大纲→正式 PUT 裁 24 章→POST 3 章正文）建立。"
   },
   "implementation": {
-    "commit": "5f96ad6dd55bb299f95e4337e9be901526d83fd2",
+    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
     "files": [
       "frontend/src/components/OutlineView.tsx",
       "qa/collaboration/plan-preview.spec.ts"
@@ -45,5 +45,6 @@
   "limits": [
     "后端 confirm 仍接受裸数字（previewId/sourcePlanHash 持久凭证属 p38-03）",
     "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
-  ]
+  ],
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

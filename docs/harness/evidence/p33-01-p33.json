@@ -1,5 +1,5 @@
 {
-  "commit": "85a58d4fe4856b9c25988c2678d7b7cdebb9c616",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "checkoutNote": "验证在 ff 合并后的干净主分支检出树（与该提交相同或其后）执行。",
   "feature": "p33-01",
@@ -24,5 +24,6 @@
       "result": "PASS 质量未退化",
       "exitCode": 0
     }
-  ]
+  ],
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

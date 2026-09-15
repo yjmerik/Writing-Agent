@@ -1,6 +1,6 @@
 {
   "verifiedAt": "2026-09-08T00:12:08.548198",
-  "commit": "1d6422ce28b3253ef8015230b26a08f2811374ea",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "branch": "codex/p27-01-task-persistence",
   "checks": [
@@ -35,5 +35,6 @@
       "log": "data/verification/reconcile-14/p27-01-branch.log"
     }
   ],
-  "inputEvidenceNote": "本轮较早的此项验证记录使用干净Git提交和运行日志，尚未启用逐文件输入指纹；不补造运行时指纹。后续最终回归覆盖该实现。"
+  "inputEvidenceNote": "本轮较早的此项验证记录使用干净Git提交和运行日志，尚未启用逐文件输入指纹；不补造运行时指纹。后续最终回归覆盖该实现。",
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

@@ -1,5 +1,5 @@
 {
-  "commit": "eee3940b4743e2c43b27e87dd93d3acdb4817a0b",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "feature": "p40-02",
   "branch": "codex/p40-02-run-details",
@@ -10,7 +10,7 @@
     "result": "new endpoint"
   },
   "implementation": {
-    "commit": "eee3940b4743e2c43b27e87dd93d3acdb4817a0b",
+    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
     "notes": "RunDetailsService + RunDetailsController."
   },
   "checks": [
@@ -22,5 +22,5 @@
   ],
   "limits": [],
   "evidence_line": "2026-09-15 verified: eee3940b4743e2c43b27e87dd93d3acdb4817a0b; record p40-02-p40",
-  "main_commit": "eee3940b4743e2c43b27e87dd93d3acdb4817a0b"
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

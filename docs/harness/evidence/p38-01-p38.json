@@ -1,5 +1,5 @@
 {
-  "commit": "7e717805fd5f9bcbf59c6d4ed81c96b33b7a5b53",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "feature": "p38-01",
   "branch": "codex/p38-01-plan-change-schema (fix on main, deviation recorded)",
@@ -10,7 +10,7 @@
     "result": "3 errors no such table: plan_changes"
   },
   "implementation": {
-    "commit": "7e717805fd5f9bcbf59c6d4ed81c96b33b7a5b53",
+    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
     "notes": "PlanChange + plan_changes (UNIQUE project_id+preview_id) + promise_decisions (ID-matched)."
   },
   "checks": [
@@ -33,5 +33,6 @@
   "limits": [
     "preview/confirm API p38-03"
   ],
-  "evidence_line": "2026-09-14 verified: 7e717805fd5f9bcbf59c6d4ed81c96b33b7a5b53; 825/0/0/1skip, spec 3/3. record p38-01-p38"
+  "evidence_line": "2026-09-14 verified: 7e717805fd5f9bcbf59c6d4ed81c96b33b7a5b53; 825/0/0/1skip, spec 3/3. record p38-01-p38",
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

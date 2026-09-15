@@ -1,5 +1,5 @@
 {
-  "commit": "0ef46b43f54c8523265dbf90f75a1a6b508cfef7",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "feature": "p38-05",
   "branch": "codex/p38-05-book-edition-schema",
@@ -10,7 +10,7 @@
     "result": "3 errors no such table"
   },
   "implementation": {
-    "commit": "0ef46b43f54c8523265dbf90f75a1a6b508cfef7",
+    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
     "notes": "BookEdition + book_editions/book_edition_chapters schema."
   },
   "checks": [
@@ -28,5 +28,6 @@
   "limits": [
     "create/approve/export API p38-06/07"
   ],
-  "evidence_line": "2026-09-15 verified: 0ef46b43f54c8523265dbf90f75a1a6b508cfef7; 828/0/0/1skip, spec 3/3. record p38-05-p38"
+  "evidence_line": "2026-09-15 verified: 0ef46b43f54c8523265dbf90f75a1a6b508cfef7; 828/0/0/1skip, spec 3/3. record p38-05-p38",
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

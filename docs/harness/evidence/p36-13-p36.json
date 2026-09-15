@@ -1,5 +1,5 @@
 {
-  "commit": "0f67a318475a7394bd2754f72d8ea4fc3b43b664",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "checkoutNote": "合并后验证在 ff 后的本地 main（0f67a31）重跑全量与专项。",
   "feature": "p36-13",
@@ -11,7 +11,7 @@
     "result": "基线 9 tests / 0 failures——记录旧契约（resolve-review 无版本放行）通过；测试迁移项按计划不声称发现新 RED 业务缺陷。"
   },
   "implementation": {
-    "commit": "0f67a318475a7394bd2754f72d8ea4fc3b43b664",
+    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
     "files": [
       "src/test/java/com/writing/novel/web/HitlCanonForeshadowReviewTest.java",
       "src/test/java/com/writing/novel/web/ReviewBarrierGateTest.java",
@@ -45,5 +45,5 @@
   "limits": [
     "旧 resolve-review 端点仍存在；关闭属 p36-06（其依赖 p36-05/12/13 至此全部完成）"
   ],
-  "main_commit": "0f67a318475a7394bd2754f72d8ea4fc3b43b664"
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

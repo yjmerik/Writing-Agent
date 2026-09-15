@@ -1,6 +1,6 @@
 {
   "verifiedAt": "2026-09-08T00:43:51.653699",
-  "commit": "02b46afcd798cde979738ebe410bd28475cbc05d",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "branch": "codex/p27-06-unified-workspace",
   "checks": [
@@ -52,5 +52,6 @@
       },
       "explanation": "修改前基线出现一次JUnit临时目录清理NoSuchFileException（p16.db-wal已删除），0断言失败/1清理错误；未修改代码，定向和完整基线重跑通过，后续分支及主分支通过。保留失败证据，不声称修复了生产代码。"
     }
-  ]
+  ],
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

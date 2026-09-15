@@ -1,5 +1,5 @@
 {
-  "commit": "73da06f86b0cb362c8e4d022e2d77370947dbac9",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "checkoutNote": "验证在 ff 合并后的干净主分支检出树（与该提交完全相同）执行；合并后另跑 e2e+基线+harness 全绿（73da06f 树）。",
   "feature": "p32-14",
@@ -19,5 +19,6 @@
       "result": "构建通过",
       "exitCode": 0
     }
-  ]
+  ],
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

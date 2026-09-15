@@ -1,7 +1,7 @@
 {
   "verifiedAt": "2026-09-07T23:30:52.032241",
   "branch": "main",
-  "commit": "c81bbcb6e499f0af43454cf5efa108551402d938",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "tree": "a87e90c97a1629e7c240622e8d56d2087565d7e1",
   "cleanCheckout": true,
   "checks": [
@@ -26,5 +26,6 @@
   "unrelatedWorkingFilesPreserved": true,
   "source_path": "data/verification/llm-provider-fallback/merge-verification.json",
   "source_sha256": "71dc6d3ea7f4df4b235697a489e6a10280e50c729dbf475519a355537912eb78",
-  "evidence_scope": "既有验证报告的持久摘要；完整日志仅保存在原工作区，不声称已提交日志。"
+  "evidence_scope": "既有验证报告的持久摘要；完整日志仅保存在原工作区，不声称已提交日志。",
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

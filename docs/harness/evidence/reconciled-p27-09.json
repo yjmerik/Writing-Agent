@@ -1,6 +1,6 @@
 {
   "verifiedAt": "2026-09-08T00:56:37.137112",
-  "commit": "74b5932173bb94de93b75db6bcd4869b080f5b39",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "branch": "codex/p27-09-author-chapter-preservation",
   "checks": [
@@ -39,5 +39,6 @@
       "inputDigest": "3ffca3deb9a57e884df5bb7712a21168eb42611f7ef2f6d7debcce7fad4da7d4"
     }
   ],
-  "inputManifest": "data/verification/reconcile-14/p27-09-main.inputs.json"
+  "inputManifest": "data/verification/reconcile-14/p27-09-main.inputs.json",
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

@@ -1,6 +1,6 @@
 {
   "verifiedAt": "2026-09-08T00:53:10.238316",
-  "commit": "17517f8f7671043ec7b5a4741db428c21eeea459",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "branch": "codex/p27-08-preserve-author-drafts",
   "checks": [
@@ -39,5 +39,6 @@
       "inputDigest": "1296eb26adadcf28450a1225c1ee106bf56309e9e20d6bc76d54e94ed01ef8ac"
     }
   ],
-  "inputManifest": "data/verification/reconcile-14/p27-08-main.inputs.json"
+  "inputManifest": "data/verification/reconcile-14/p27-08-main.inputs.json",
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

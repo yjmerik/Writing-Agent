@@ -1,5 +1,5 @@
 {
-  "commit": "a32832c9bca3d54bd2348b17e0380905811ab11e",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "checkoutNote": "验证在 ff 合并后的干净检出执行；语料长期分叉问题另见 p32-15。",
   "feature": "p32-10",
@@ -19,5 +19,6 @@
       "result": "702 tests / 0 failures / 1 skipped",
       "exitCode": 0
     }
-  ]
+  ],
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

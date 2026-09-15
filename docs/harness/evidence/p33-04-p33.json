@@ -1,5 +1,5 @@
 {
-  "commit": "34364b74727723980c60e3fb424ebb649adcee32",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "checkoutNote": "验证在 ff 合并后的干净主分支检出树（与该提交相同或其后）执行。",
   "feature": "p33-04",
@@ -19,5 +19,6 @@
       "result": "716 tests / 0 failures / 1 skipped",
       "exitCode": 0
     }
-  ]
+  ],
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

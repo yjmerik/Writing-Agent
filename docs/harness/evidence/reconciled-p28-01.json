@@ -1,6 +1,6 @@
 {
   "verifiedAt": "2026-09-08T01:26:12.394894",
-  "commit": "5e8e1786ba77714eb3acadef90f77fecd2e63716",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "branch": "codex/p28-01-embedding-configuration",
   "checks": [
@@ -61,5 +61,6 @@
     "path": "data/verification/reconcile-14/probe-embedding.py",
     "sha256": "da495142fee3427069ca56e52e12392e497e5b5a7e0b4b8b2a42205c3634025b"
   },
-  "historicalUiScope": "原项目UI恢复/第21章续写为2026-09-05/07历史证据；本次检验配置、隔离加载、协议和短文本真实连接，不重启或续写原小说。"
+  "historicalUiScope": "原项目UI恢复/第21章续写为2026-09-05/07历史证据；本次检验配置、隔离加载、协议和短文本真实连接，不重启或续写原小说。",
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

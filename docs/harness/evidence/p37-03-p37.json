@@ -1,5 +1,5 @@
 {
-  "commit": "1f8c4a9feb67bde3c8eeac06ee1347e876230789",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "feature": "p37-03",
   "branch": "codex/p37-03-persistent-revision-api",
@@ -10,7 +10,7 @@
     "result": "实现过程中行为失败驱动：ApplicationContext 双 @Primary 冲突（修为测试内唯一 @Primary gateway）、候选缺失校验/模型延迟编辑未触发（修 findAllProjects→forEach 全项目覆盖）均以失败暴露。"
   },
   "implementation": {
-    "commit": "1f8c4a9feb67bde3c8eeac06ee1347e876230789",
+    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
     "notes": "AgentRevisionService：preview 持久化 RevisionProposal（READY/STALE，post-generation re-read 检测模型延迟编辑），apply CHAPTER/PASSAGE 路由 applyProposalInOwnedWork（p37-02/14 事务，重放持久 result），WORLD/CHARACTER/VOLUME 保持现有语义。RevisionPreview/ApplyResult 增 sourceIdentity（ChapterApproval.Identity），sourceVersion 保留兼容。RevisionController 新增 GET 列表/详情/cancel。"
   },
   "checks": [
@@ -32,5 +32,6 @@
   ],
   "limits": [
     "QG：AgentRevisionService 的生成路径未变（ContentRevisionAgent 调用方式/模板/变量均未改），现有回放语料不分叉"
-  ]
+  ],
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

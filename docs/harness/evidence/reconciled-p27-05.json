@@ -1,6 +1,6 @@
 {
   "verifiedAt": "2026-09-08T00:31:04.113654",
-  "commit": "54c1dfab45e74d8b5fb2289a850bedbceb7ba1fe",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "branch": "codex/p27-05-collaboration-bar",
   "checks": [
@@ -29,5 +29,6 @@
       "inputDigest": "df481d476a1f8dc92adc2dba6a3b362b74b71edbca153816b33f8e78581f2698"
     }
   ],
-  "inputManifest": "data/verification/reconcile-14/p27-05-main.inputs.json"
+  "inputManifest": "data/verification/reconcile-14/p27-05-main.inputs.json",
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

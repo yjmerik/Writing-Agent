@@ -1,6 +1,6 @@
 {
   "verifiedAt": "2026-09-08T01:02:48.425763",
-  "commit": "bd9872232ab3e31e98b1d99a135aac3de27ad5a2",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "branch": "codex/p27-10-browser-compatibility",
   "checks": [
@@ -29,5 +29,6 @@
       "inputDigest": "eb150868ff5707f559cc623c6e6dbb966f7d7c4bd4e772bcc8887fc06ac8f613"
     }
   ],
-  "inputManifest": "data/verification/reconcile-14/p27-10-main.inputs.json"
+  "inputManifest": "data/verification/reconcile-14/p27-10-main.inputs.json",
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

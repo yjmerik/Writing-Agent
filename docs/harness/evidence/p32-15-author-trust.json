@@ -1,5 +1,5 @@
 {
-  "commit": "7407268348c3e202a079635436ab8b9c014bb4c9",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "checkoutNote": "record/replay/bless 在当前干净 main 检出执行；本轮代码改动（e2e.sh PAUSED 终态、AGENTS.md 条款）与 golden 更新同属本 feature 提交。",
   "feature": "p32-15",
@@ -34,5 +34,6 @@
       "result": "PASS 242 features",
       "exitCode": 0
     }
-  ]
+  ],
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

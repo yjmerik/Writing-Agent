@@ -1,5 +1,5 @@
 {
-  "commit": "943c4c6685d8cd890110dbcf9f9b9b0ae811f1f6",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "checkoutNote": "单元/回归门禁在该提交树执行；e2e/基线由 p32-15 在最终合并树统一验证（replay×2 一致 + bless PASS）——三项均为影响注入上下文的改动，批量重建避免多次 record 消耗真实额度。",
   "feature": "p32-09",
@@ -14,5 +14,6 @@
       "result": "710 tests / 0 failures / 1 skipped",
       "exitCode": 0
     }
-  ]
+  ],
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

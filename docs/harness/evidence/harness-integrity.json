@@ -1,6 +1,6 @@
 {
   "verifiedAt": "2026-09-07T23:59:52.314231",
-  "commit": "ae7ee790cbc73ab3948c33de7fe3185f80b75751",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "branch": "codex/p31-01-harness-integrity",
   "checks": [
@@ -38,5 +38,6 @@
     "allUnchanged": true,
     "originalStateArchive": "docs/harness/archive/2026-09-07-*"
   },
-  "scope": "Only harness scripts and records; business source, running service and user data unchanged. Full logs local; this summary is version controlled."
+  "scope": "Only harness scripts and records; business source, running service and user data unchanged. Full logs local; this summary is version controlled.",
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

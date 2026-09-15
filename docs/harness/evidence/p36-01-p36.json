@@ -1,12 +1,12 @@
 {
-  "commit": "57e6d5a38b901b951e1c1eaee080740ea4ba64bf",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "checkoutNote": "合并后验证在 ff 后的本地 main（57e6d5a，树与特性分支一致）执行：全量 mvn compile&&mvn test、verify_cmd happy path（独立临时库场景服务）与失败路径抽检均在合并后重跑。",
   "feature": "p36-01",
   "branch": "codex/p36-01-browser-qa",
   "base_commit": "e4bda1c",
   "implementation": {
-    "commit": "57e6d5a38b901b951e1c1eaee080740ea4ba64bf",
+    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
     "files": [
       "qa/collaboration/package.json",
       "qa/collaboration/package-lock.json",
@@ -60,5 +60,6 @@
     "未运行真实模型：服务以 scenario 模式 + stub embedding 启动",
     "p36-01 只交付 smoke 入口；review-version/workspace-navigation 等专项 spec 属各自特性",
     "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
-  ]
+  ],
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

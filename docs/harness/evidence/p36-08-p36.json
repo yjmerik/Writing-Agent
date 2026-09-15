@@ -1,5 +1,5 @@
 {
-  "commit": "9d42f77caaef1d872be7abaf6b5e937289109ce9",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "checkoutNote": "合并后验证在 ff 后的本地 main（9d42f77caaef1d872be7abaf6b5e937289109ce9）重跑：mvn compile&&mvn test 766/0、前端构建、verify_cmd（场景服务+临时库）全部通过。",
   "feature": "p36-08",
@@ -12,7 +12,7 @@
     "result": "对改动前 bundle：6 failed——目录点击不入路由、页签无 tab 参数、无 version/anchor 深链接。行为性失败。"
   },
   "implementation": {
-    "commit": "9d42f77caaef1d872be7abaf6b5e937289109ce9",
+    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
     "files": [
       "frontend/src/pages/ProjectWorkspace.tsx",
       "frontend/src/components/InteractiveReview.tsx",
@@ -47,5 +47,6 @@
     "anchor 校验依赖 crypto.subtle（localhost 安全上下文可用）",
     "历史弹窗打开时轮询刷新会以 currentBody 填充'当前'侧——被链接版本的正文以 compare 侧为准",
     "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
-  ]
+  ],
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

@@ -1,5 +1,5 @@
 {
-  "commit": "a4778cfeb8a9a1588e94bf28acbe828435e6462b",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "feature": "p37-14",
   "branch": "codex/p37-14-proposal-boundary",
@@ -11,13 +11,28 @@
     "result": "最小编译契约边界（仅委托仓储）下 4/4 行为性失败：500字门槛缺失（短内容被直接应用）、段落冲突错序、快照/批准与重试用例以来源冲突告终。"
   },
   "implementation": {
-    "commit": "a4778cfeb8a9a1588e94bf28acbe828435e6462b",
+    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
     "notes": "ChapterRevisionService.applyProposal/applyProposalInOwnedWork：doEdit 同等校验（500字门槛）、PASSAGE 全文重组、变更前快照、来源比较先于候选校验（全文变动→冲突+独立短事务 STALE，SPI 新增 markProposalStale）、提交切换 commitProposalChapter、APPLIED 重放仅重试派生刷新不另写正文、派生刷新提交后执行失败标 pending。AgentRevisionService CHAPTER/PASSAGE 落盘 READY 候选并经边界应用，删除直写正文路径。范围扩展记录：AgentRevisionApiTest 种子/stub 候选提升至 500 字门槛、段落断言改包含式（旧契约 AGENT_REVISION 豁免门槛已废除）。"
   },
   "checks": [
-    {"command": "mvn test -Dtest=ProposalRevisionBoundaryTest", "result": "4/0/0", "exitCode": 0},
-    {"command": "mvn compile && mvn test（合并后 main）", "result": "781 tests / 0 failures / 0 errors / 1 skipped", "exitCode": 0},
-    {"command": "git merge-base --is-ancestor a4778cfeb8a9a1588e94bf28acbe828435e6462b main", "result": "ancestor OK", "exitCode": 0}
+    {
+      "command": "mvn test -Dtest=ProposalRevisionBoundaryTest",
+      "result": "4/0/0",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（合并后 main）",
+      "result": "781 tests / 0 failures / 0 errors / 1 skipped",
+      "exitCode": 0
+    },
+    {
+      "command": "git merge-base --is-ancestor a4778cfeb8a9a1588e94bf28acbe828435e6462b main",
+      "result": "ancestor OK",
+      "exitCode": 0
+    }
   ],
-  "limits": ["无 prompt/上下文改动，未跑 e2e/baseline，未 bless"]
+  "limits": [
+    "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
+  ],
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

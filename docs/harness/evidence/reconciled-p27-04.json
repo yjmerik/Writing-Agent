@@ -1,6 +1,6 @@
 {
   "verifiedAt": "2026-09-08T00:27:26.075145",
-  "commit": "9add96a9fa769189f664e19d0ebe2ae3f807f4ce",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "branch": "codex/p27-04-author-edit-ownership",
   "checks": [
@@ -39,5 +39,6 @@
       "inputDigest": "c34b422bd3a89282f408191bbe29c95b725d538bde4ff1439b8eb43ac68cba1b"
     }
   ],
-  "inputManifest": "data/verification/reconcile-14/p27-04-main.inputs.json"
+  "inputManifest": "data/verification/reconcile-14/p27-04-main.inputs.json",
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

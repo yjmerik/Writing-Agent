@@ -1,6 +1,6 @@
 {
   "verifiedAt": "2026-09-08T01:30:27.696651",
-  "commit": "c8c7a3fdffc01c82e20b212e4b15f9e6d2ef9d17",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "branch": "codex/p29-01-token-plan-configuration",
   "checks": [
@@ -48,5 +48,6 @@
     "path": "data/verification/reconcile-14/probe-token-plan.py",
     "sha256": "9476cedc961beaaaaf6d7a812e547f5e05c96c0aad42bf1b3e7fb9dc36d91cf6"
   },
-  "historicalUiScope": "原项目UI恢复/第21章续写为2026-09-05/07历史证据；本次检验配置、隔离加载、协议和短文本真实连接，不重启或续写原小说。"
+  "historicalUiScope": "原项目UI恢复/第21章续写为2026-09-05/07历史证据；本次检验配置、隔离加载、协议和短文本真实连接，不重启或续写原小说。",
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

@@ -1,5 +1,5 @@
 {
-  "commit": "587b613982fa9604aa482e4ee9318db473970820",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "checkoutNote": "合并后验证在 ff 后的本地 main（587b613）执行：mvn compile&&mvn test、前端构建、verify_cmd（独立临时库场景服务）全部重跑通过。",
   "feature": "p36-05",
@@ -11,7 +11,7 @@
     "result": "对改动前 bundle（git stash 前端源码后构建）运行：2 failed——旧 UI 无「批准当前稿」按钮（openChapter 等待超时），fixture 全链路（空 tags 互动项目→协作start→批准初始设定→协作start→scenario 首章人审）在 RED 阶段即验证成功。行为性失败，非编译/环境失败。"
   },
   "implementation": {
-    "commit": "587b613982fa9604aa482e4ee9318db473970820",
+    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
     "files": [
       "frontend/src/api/client.ts",
       "frontend/src/components/InteractiveReview.tsx",
@@ -46,5 +46,6 @@
     "旧无版本端点（resolve-review、章节类 checkpoint approve）后端仍在——UI 已全部改走版本化批准，关闭端点属 p36-06（依赖 p36-12/13 测试迁移）",
     "scenario gateway 的 harsh 注入按调用序只覆盖服务生命周期前 2 次检查，fixture 已兼容屏障与章节检查点两种待审形态",
     "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
-  ]
+  ],
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

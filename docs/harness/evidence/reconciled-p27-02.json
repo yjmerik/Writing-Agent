@@ -1,6 +1,6 @@
 {
   "verifiedAt": "2026-09-08T00:15:55.608382",
-  "commit": "a4ce8862f8a983dc9b63683bad2c5b8284a7e2d8",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "branch": "codex/p27-02-collaborative-lifecycle",
   "checks": [
@@ -27,5 +27,6 @@
       "log": "data/verification/reconcile-14/p27-02-branch.log"
     }
   ],
-  "inputEvidenceNote": "本轮较早的此项验证记录使用干净Git提交和运行日志，尚未启用逐文件输入指纹；不补造运行时指纹。后续最终回归覆盖该实现。"
+  "inputEvidenceNote": "本轮较早的此项验证记录使用干净Git提交和运行日志，尚未启用逐文件输入指纹；不补造运行时指纹。后续最终回归覆盖该实现。",
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

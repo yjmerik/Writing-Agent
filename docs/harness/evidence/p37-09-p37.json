@@ -1,5 +1,5 @@
 {
-  "commit": "39e411f13b65c887c64f46a00afdd5331f524d8e",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "feature": "p37-09",
   "branch": "codex/p37-09-directive-context",
@@ -10,7 +10,7 @@
     "result": "1 failure - minimal contract state, section not rendered"
   },
   "implementation": {
-    "commit": "39e411f13b65c887c64f46a00afdd5331f524d8e",
+    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
     "notes": "WritingContext.authorDirectiveSection; toSystemPrompt renders section after premise; null/blank keeps prompt byte-identical; section content assembled by p37-10."
   },
   "checks": [
@@ -32,5 +32,6 @@
   ],
   "limits": [
     "context-assembly quality gate deferred to p37-10 integration"
-  ]
+  ],
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

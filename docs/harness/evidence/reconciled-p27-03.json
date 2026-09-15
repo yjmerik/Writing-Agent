@@ -1,6 +1,6 @@
 {
   "verifiedAt": "2026-09-08T00:23:41.500478",
-  "commit": "d17e8cbb4b2ebdecd0012f1671b92b8a75954a14",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "branch": "codex/p27-03-collaboration-api",
   "checks": [
@@ -28,5 +28,6 @@
       "log": "data/verification/reconcile-14/p27-03-branch.log"
     }
   ],
-  "inputManifest": "data/verification/reconcile-14/p27-03-main.inputs.json"
+  "inputManifest": "data/verification/reconcile-14/p27-03-main.inputs.json",
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

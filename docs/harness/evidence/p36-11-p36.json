@@ -1,5 +1,5 @@
 {
-  "commit": "b3135fb0373e32c9eb5aed1e8374bbbb02c4de6f",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "checkoutNote": "合并后验证在 ff 后的本地 main（b3135fb0373e32c9eb5aed1e8374bbbb02c4de6f）重跑：mvn compile&&mvn test 766/0、前端构建、verify_cmd（场景服务+临时库）2 passed。",
   "feature": "p36-11",
@@ -12,7 +12,7 @@
     "result": "对改动前 bundle：2 failed——DONE 章显示伪造'已批准流程完成'（应'正文流程完成'+'尚未作者批准'），版本化批准后无'作者已批准'标识。行为性失败。"
   },
   "implementation": {
-    "commit": "b3135fb0373e32c9eb5aed1e8374bbbb02c4de6f",
+    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
     "files": [
       "src/main/java/com/writing/novel/spi/NovelRepository.java",
       "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
@@ -49,5 +49,6 @@
     "完整成书批准（manifest 绑定/导出固定 edition）属 p38-05..08",
     "旧稿报告渲染分支保留既有实现（reportCurrent===false），未在本项做独立端到端用例",
     "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
-  ]
+  ],
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

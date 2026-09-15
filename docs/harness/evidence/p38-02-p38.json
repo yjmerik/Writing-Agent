@@ -1,5 +1,5 @@
 {
-  "commit": "a569532af9e01007f0d79cb41e7dced00021ca8f",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "feature": "p38-02",
   "branch": "codex/p38-02-plan-change-repo (fix on main, deviation recorded)",
@@ -10,7 +10,7 @@
     "result": "SPI defaults"
   },
   "implementation": {
-    "commit": "a569532af9e01007f0d79cb41e7dced00021ca8f",
+    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
     "notes": "savePlanChange/findPlanChange/commitPlanChange (planHash verification + CAS + decision audit + same-tx read fix)."
   },
   "checks": [
@@ -26,5 +26,6 @@
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-15 verified: a569532af9e01007f0d79cb41e7dced00021ca8f; 840/0/0/1skip, spec 2/2. record p38-02-p38"
+  "evidence_line": "2026-09-15 verified: a569532af9e01007f0d79cb41e7dced00021ca8f; 840/0/0/1skip, spec 2/2. record p38-02-p38",
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

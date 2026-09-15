@@ -1,5 +1,5 @@
 {
-  "commit": "696cc6d14b02f200c324c8cc2a5c3f903ef03de3",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "checkoutNote": "验证在 ff 合并后的干净主分支检出树执行。注意：e2e replay 语料与当前代码演化路径分叉已登记 p32-15（非 p32-06/10 引入；分叉证据含 prompt 逐字一致的 miss 转储）。",
   "feature": "p32-06",
@@ -19,5 +19,6 @@
       "result": "705 tests / 0 failures / 1 skipped",
       "exitCode": 0
     }
-  ]
+  ],
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

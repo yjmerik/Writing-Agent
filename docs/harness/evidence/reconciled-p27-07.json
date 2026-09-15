@@ -1,6 +1,6 @@
 {
   "verifiedAt": "2026-09-08T01:21:06.100689",
-  "commit": "82ba1f9a83504f468ebacd3f368b677c3a9a9e33",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "branch": "codex/p27-07-collaboration-acceptance",
   "checks": [
@@ -112,5 +112,6 @@
       "data/verification/reconcile-14/p27-07-main-browser/browser/summary.json": "1714899684982544e85e049691a69127a74c25103dc0e91e24589b614008f3d5",
       "data/verification/reconcile-14/p27-07-main-browser/draft-preservation/latest-results.json": "ec16e5de8b872dd49a87eb94af740fa227cb687a09212f3a51f1b8adbfad4071"
     }
-  }
+  },
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

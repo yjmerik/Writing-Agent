@@ -1,5 +1,5 @@
 {
-  "commit": "8ed5d73238846affa52a6e92d13f0d17804dfaf0",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "feature": "p37-11",
   "branch": "main（分支管理偏差：本项提交直接落 main，历史线性、合并后全量 803/0/0/1skip 通过，已如实记录）",
@@ -10,7 +10,7 @@
     "result": "实现过程中行为失败驱动：缺逐项校验/模板未加载/编号ID提取不一致（D-1 vs D1）均以失败暴露后修复；最终 RED→GREEN 链路见 4/4。"
   },
   "implementation": {
-    "commit": "8ed5d73238846affa52a6e92d13f0d17804dfaf0",
+    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
     "notes": "RevisionCandidate 增 directiveResults（DirectiveResult：directiveId/directiveRevision/status APPLIED_SYSTEM|UNMET/quote/anchor/reason）；保留旧5字段构造（无要求→空结果）。已知意见来自 instructions 中 [D-x revN] 结构化编号行（或显式 preview 重载）。N 项要求必须恰好覆盖：未知/重复/遗漏/revision不匹配/APPLIED无quote/UNMET无原因一律拒绝。模板变量 targetType/currentJson/instructions 未改名。"
   },
   "checks": [
@@ -33,5 +33,6 @@
   "limits": [
     "QG：content-revision.st 变量名未改、默认输出结构兼容（无要求时 results 为空且不注入 prompt），现有回放语料不分叉；p37-12 联动时再统一评估"
   ],
-  "evidence_line": "2026-09-14 verified: main 8ed5d73（直接落 main 偏差已记录）; 803/0/0/1skip, spec 4/4. record p37-11-p37"
+  "evidence_line": "2026-09-14 verified: main 8ed5d73（直接落 main 偏差已记录）; 803/0/0/1skip, spec 4/4. record p37-11-p37",
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

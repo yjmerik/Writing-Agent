@@ -1,5 +1,5 @@
 {
-  "commit": "4dc674449772e5b7918963ad3df00c30b2b6978a",
+  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
   "cleanCheckout": true,
   "feature": "p38-10",
   "branch": "codex/p38-10-disposition-gate",
@@ -10,7 +10,7 @@
     "result": "SPI defaults"
   },
   "implementation": {
-    "commit": "4dc674449772e5b7918963ad3df00c30b2b6978a",
+    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
     "notes": "saveDisposition/findDispositions/hasValidDisposition."
   },
   "checks": [
@@ -21,5 +21,6 @@
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-15 verified: 4dc674449772e5b7918963ad3df00c30b2b6978a; record p38-10-p38"
+  "evidence_line": "2026-09-15 verified: 4dc674449772e5b7918963ad3df00c30b2b6978a; record p38-10-p38",
+  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
 }

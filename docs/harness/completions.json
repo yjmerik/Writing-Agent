@@ -1149,8 +1149,8 @@
         "p40-02"
       ],
       "branch": "codex/p40-02-run-details",
-      "implementation_commit": "421264f25f8c90538c8e219b75dd6356f793ffde",
-      "main_commit": "421264f25f8c90538c8e219b75dd6356f793ffde",
+      "implementation_commit": "eee3940b4743e2c43b27e87dd93d3acdb4817a0b",
+      "main_commit": "eee3940b4743e2c43b27e87dd93d3acdb4817a0b",
       "evidence": "docs/harness/evidence/p40-02-p40.json"
     }
   ],

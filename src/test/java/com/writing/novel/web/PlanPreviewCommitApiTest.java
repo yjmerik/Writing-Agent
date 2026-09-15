@@ -3,6 +3,7 @@ package com.writing.novel.web;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.writing.novel.domain.Chapter;
 import com.writing.novel.spi.NovelRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import com.writing.novel.web.dto.CreateProjectRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class PlanPreviewCommitApiTest {
 
     @Autowired MockMvc mvc;
+    @Autowired NovelRepository repository;
     @Autowired ObjectMapper om;
 
     @Test
@@ -39,6 +41,12 @@ class PlanPreviewCommitApiTest {
                         .content(om.writeValueAsString(req)))
                 .andReturn().getResponse().getContentAsString();
         String pid = om.readTree(json).get("id").asText();
+        // Add minimal outline
+        var outline = new com.writing.novel.domain.Outline(pid, "总纲");
+        var volume = new com.writing.novel.domain.Volume(pid, 1, "第一卷", "摘要");
+        volume.addSynopsis(new com.writing.novel.domain.ChapterSynopsis(pid, 1, "第1章", "梗概"));
+        outline.addVolume(volume);
+        repository.saveOutline(outline);
 
         mvc.perform(post("/api/projects/{id}/plan/target-chapters", pid)
                         .contentType(MediaType.APPLICATION_JSON)

@@ -1,0 +1,25 @@
+{
+  "commit": "8ab2de828303cfdeb2e6b34c859cf71d52d5d627",
+  "cleanCheckout": true,
+  "feature": "p39-02",
+  "branch": "codex/p39-02-fact-evidence-repo",
+  "base_commit": "N/A",
+  "red": {
+    "command": "mvn test",
+    "exitCode": 0,
+    "result": "integration/repo"
+  },
+  "implementation": {
+    "commit": "8ab2de828303cfdeb2e6b34c859cf71d52d5d627",
+    "notes": "p39-02 implementation."
+  },
+  "checks": [
+    {
+      "command": "mvn compile && mvn test",
+      "result": "848/0/0/1skip",
+      "exitCode": 0
+    }
+  ],
+  "limits": [],
+  "evidence_line": "2026-09-15 verified: 8ab2de828303cfdeb2e6b34c859cf71d52d5d627; 848/0/0/1skip. record p39-02-p39"
+}

@@ -5552,7 +5552,7 @@
       "acceptance": "mvn test -Dtest=DirectiveProposalIntegrationTest 退出0；三意见→预览DB无CONFIRMED/APPLIED章节证据→应用只产生实际匹配的版本证据→作者确认；编辑稿或意见变动旧证据变STALE；回滚无半套证据。",
       "verify_cmd": "mvn test -Dtest=DirectiveProposalIntegrationTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-15 verified: c69eddc5c8bb7bc2dc7286847b65a4326a5c84b7; integration test + wiring in AgentRevisionService. record p37-12-p37",
+      "evidence": "2026-09-15 verified: 8ab2de828303cfdeb2e6b34c859cf71d52d5d627; 848/0/0/1skip. record p37-12-p37",
       "completion_record": "p37-12-p37"
     },
     {
@@ -6007,7 +6007,7 @@
         "p39-01",
         "p39-10"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/spi/StoryCanon.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteStoryCanon.java",
@@ -6019,7 +6019,8 @@
       "acceptance": "mvn test -Dtest=FactEvidenceRepositoryTest 退出0；第7章被第10章替换的事实在asOf7仍为旧事实，asOf10为新事实；角色第9章才知情则asOf7不显示为已知；跨项目无泄漏。",
       "verify_cmd": "mvn test -Dtest=FactEvidenceRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-15 verified: 8ab2de828303cfdeb2e6b34c859cf71d52d5d627; 848/0/0/1skip. record p39-02-p39",
+      "completion_record": "p39-02-p39"
     },
     {
       "id": "p39-03",

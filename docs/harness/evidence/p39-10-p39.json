@@ -1,0 +1,30 @@
+{
+  "commit": "ca8b3997e91347dde576e578481e580aca712bc3",
+  "cleanCheckout": true,
+  "feature": "p39-10",
+  "branch": "codex/p39-10-story-canon-tx",
+  "base_commit": "6807e67",
+  "red": {
+    "command": "mvn test",
+    "exitCode": 1,
+    "result": "connection helpers not implemented"
+  },
+  "implementation": {
+    "commit": "ca8b3997e91347dde576e578481e580aca712bc3",
+    "notes": "StoryFactRepository tx helpers"
+  },
+  "checks": [
+    {
+      "command": "mvn test -Dtest=StoryCanonConnectionTest",
+      "result": "4/0/0",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test",
+      "result": "838/0/0/1skip",
+      "exitCode": 0
+    }
+  ],
+  "limits": [],
+  "evidence_line": "2026-09-15 verified: 838/0/0/1skip, spec 4/4. record p39-10-p39"
+}

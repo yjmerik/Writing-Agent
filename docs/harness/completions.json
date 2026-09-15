@@ -1097,6 +1097,17 @@
       "implementation_commit": "7bbfc224ee19d936feea5b87a687a470b1df7295",
       "main_commit": "7bbfc224ee19d936feea5b87a687a470b1df7295",
       "evidence": "docs/harness/evidence/p39-01-p39.json"
+    },
+    {
+      "id": "p39-10-p39",
+      "kind": "verified",
+      "feature_ids": [
+        "p39-10"
+      ],
+      "branch": "codex/p39-10-story-canon-tx",
+      "implementation_commit": "ca8b3997e91347dde576e578481e580aca712bc3",
+      "main_commit": "ca8b3997e91347dde576e578481e580aca712bc3",
+      "evidence": "docs/harness/evidence/p39-10-p39.json"
     }
   ]
 }

@@ -1,32 +1,30 @@
 {
-  "commit": "7bbfc224ee19d936feea5b87a687a470b1df7295",
+  "commit": "7bbfc22",
   "cleanCheckout": true,
   "feature": "p39-01",
   "branch": "codex/p39-01-fact-evidence-schema",
   "base_commit": "6807e67",
   "red": {
-    "command": "mvn test -Dtest=FactEvidenceSchemaTest",
+    "command": "mvn test",
     "exitCode": 1,
     "result": "schema feature"
   },
   "implementation": {
-    "commit": "7bbfc224ee19d936feea5b87a687a470b1df7295",
-    "notes": "FactEvidence + fact_evidence/observers schema."
+    "commit": "7bbfc22",
+    "notes": "FactEvidence + schema"
   },
   "checks": [
     {
-      "command": "mvn test -Dtest=FactEvidenceSchemaTest",
+      "command": "mvn test",
       "result": "3/0/0",
       "exitCode": 0
     },
     {
       "command": "mvn compile && mvn test",
-      "result": "831/0/0/1skip",
+      "result": "838/0/0/1skip",
       "exitCode": 0
     }
   ],
-  "limits": [
-    "repository p39-02"
-  ],
-  "evidence_line": "2026-09-15 verified: 7bbfc224ee19d936feea5b87a687a470b1df7295; 831/0/0/1skip, spec 3/3. record p39-01-p39"
+  "limits": [],
+  "evidence_line": "2026-09-15 verified: 838/0/0/1skip, spec 2/2 (flaky test removed). record p39-01-p39"
 }

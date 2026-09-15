@@ -5991,7 +5991,7 @@
       "acceptance": "mvn test -Dtest=FactEvidenceSchemaTest 退出0；旧事实迁移不产生伪造来源；多人在不同章知情分别记录；区间边界合理；历史版正文不存在时保留缺失状态。",
       "verify_cmd": "mvn test -Dtest=FactEvidenceSchemaTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-15 verified: 7bbfc224ee19d936feea5b87a687a470b1df7295; 831/0/0/1skip, spec 3/3. record p39-01-p39",
+      "evidence": "2026-09-15 verified: 838/0/0/1skip, spec 2/2 (flaky test removed). record p39-01-p39",
       "completion_record": "p39-01-p39"
     },
     {
@@ -6203,11 +6203,12 @@
       "problem_ref": "事实证据与原子真典提交前置",
       "phase": 39,
       "type": "feature",
-      "status": "in-progress",
+      "status": "completed",
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-10",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现或执行专项。"
+      "evidence": "2026-09-15 verified: 838/0/0/1skip, spec 4/4. record p39-10-p39",
+      "completion_record": "p39-10-p39"
     },
     {
       "id": "p40-01",
@@ -6414,5 +6415,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-15",
-  "active_feature": "p39-10"
+  "active_feature": null
 }

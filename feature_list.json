@@ -6033,7 +6033,7 @@
       "dependencies": [
         "p39-02"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/agent/FactHarvesterAgent.java",
         "src/main/java/com/writing/novel/web/FactEvidenceController.java",
@@ -6424,5 +6424,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-16",
-  "active_feature": null
+  "active_feature": "p39-03"
 }

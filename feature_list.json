@@ -5687,7 +5687,7 @@
       "dependencies": [
         "p38-01"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/spi/NovelRepository.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
@@ -5699,7 +5699,8 @@
       "acceptance": "mvn test -Dtest=PlanChangeRepositoryTest 退出0；预览22后改计划/新增章再确认旧token409；故障全部回滚；同key重试不重复审计；MIGRATE和OPEN_END落库口径不同。",
       "verify_cmd": "mvn test -Dtest=PlanChangeRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-15 verified: a569532af9e01007f0d79cb41e7dced00021ca8f; 840/0/0/1skip, spec 2/2. record p38-02-p38",
+      "completion_record": "p38-02-p38"
     },
     {
       "id": "p38-03",
@@ -6415,5 +6416,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-15",
-  "active_feature": "p38-02"
+  "active_feature": null
 }

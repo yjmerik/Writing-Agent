@@ -11,16 +11,17 @@ def main():
 
     if not os.path.exists(args.manifest):
         print(json.dumps({"status": "NOT_RUN", "reason": "manifest not found"}))
+        if args.require_complete:
+            sys.exit(1)
         sys.exit(0)
 
     with open(args.manifest) as f:
         manifest = json.load(f)
 
     if not os.path.exists(args.ratings):
-        if args.require_complete:
-            print(json.dumps({"status": "INCOMPLETE", "reason": "ratings not found"}))
-            sys.exit(1)
         print(json.dumps({"status": "NOT_RUN", "reason": "ratings not found"}))
+        if args.require_complete:
+            sys.exit(1)
         sys.exit(0)
 
     with open(args.ratings) as f:

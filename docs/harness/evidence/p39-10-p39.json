@@ -1,5 +1,5 @@
 {
-  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
+  "commit": "70a0fcf37480f0e2a788feebc3c9d55119ee3de1",
   "cleanCheckout": true,
   "feature": "p39-10",
   "branch": "codex/p39-10-story-canon-tx",
@@ -10,7 +10,7 @@
     "result": "connection helpers not implemented"
   },
   "implementation": {
-    "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
+    "commit": "70a0fcf37480f0e2a788feebc3c9d55119ee3de1",
     "notes": "StoryFactRepository tx helpers"
   },
   "checks": [
@@ -27,5 +27,5 @@
   ],
   "limits": [],
   "evidence_line": "2026-09-15 verified: 838/0/0/1skip, spec 4/4. record p39-10-p39",
-  "main_commit": "2b4116199d7fd9ca954f32e4da5e119723828404"
+  "main_commit": "70a0fcf37480f0e2a788feebc3c9d55119ee3de1"
 }

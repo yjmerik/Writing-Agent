@@ -1,5 +1,5 @@
 {
-  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
+  "commit": "7bbfc224ee19d936feea5b87a687a470b1df7295",
   "cleanCheckout": true,
   "feature": "p39-01",
   "branch": "codex/p39-01-fact-evidence-schema",
@@ -10,7 +10,7 @@
     "result": "schema feature"
   },
   "implementation": {
-    "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
+    "commit": "7bbfc224ee19d936feea5b87a687a470b1df7295",
     "notes": "FactEvidence + schema"
   },
   "checks": [
@@ -27,5 +27,5 @@
   ],
   "limits": [],
   "evidence_line": "2026-09-15 verified: 838/0/0/1skip, spec 2/2 (flaky test removed). record p39-01-p39",
-  "main_commit": "2b4116199d7fd9ca954f32e4da5e119723828404"
+  "main_commit": "7bbfc224ee19d936feea5b87a687a470b1df7295"
 }

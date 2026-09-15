@@ -1299,7 +1299,20 @@ public class SqliteNovelRepository implements NovelRepository {
                 ps.setString(1, projectId); ps.setString(2, previewId);
                 ps.executeUpdate();
             } catch (SQLException e) { throw new RuntimeException(e); }
-            return findPlanChange(projectId, previewId).orElseThrow();
+            // Same-transaction read: findPlanChange would open a new connection
+            // and not see the uncommitted status change
+            try (PreparedStatement ps2 = conn.prepareStatement(
+                    "SELECT * FROM plan_changes WHERE project_id=? AND preview_id=?")) {
+                ps2.setString(1, projectId); ps2.setString(2, previewId);
+                ResultSet rs2 = ps2.executeQuery();
+                rs2.next();
+                return new com.writing.novel.domain.PlanChange(
+                        rs2.getString("preview_id"), rs2.getString("project_id"),
+                        rs2.getString("source_plan_hash"), rs2.getInt("target_chapters"),
+                        rs2.getInt("written_boundary"), List.of(), List.of(),
+                        com.writing.novel.domain.PlanChange.Status.CONFIRMED,
+                        Instant.parse(rs2.getString("created_at")));
+            } catch (SQLException e) { throw new RuntimeException(e); }
         });
     }
 

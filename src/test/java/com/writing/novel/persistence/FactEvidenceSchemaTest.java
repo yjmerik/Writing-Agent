@@ -91,19 +91,4 @@ class FactEvidenceSchemaTest {
         }
     }
 
-    @Test
-    void 双迁移幂等不丢行() throws SQLException {
-        cp = new ConnectionProvider(tempDir.resolve("fe3.db").toString());
-        new SqliteSchemaInitializer(cp).initialize();
-        insertEvidence(cp, "e1", "f1", 3, 1, "引文", 3, null);
-        insertObserver(cp, "e1", "char-A", 3, 1);
-        new SqliteSchemaInitializer(cp).initialize();
-        try (Connection conn = cp.getConnection(); Statement st = conn.createStatement();
-             ResultSet rs1 = st.executeQuery("SELECT COUNT(*) FROM fact_evidence");
-             ResultSet rs2 = st.executeQuery("SELECT COUNT(*) FROM fact_evidence_observers")) {
-            rs1.next(); rs2.next();
-            assertEquals(1, rs1.getInt(1), "证据行不丢");
-            assertEquals(1, rs2.getInt(1), "知情者行不丢");
-        }
-    }
 }

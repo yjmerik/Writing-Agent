@@ -1064,6 +1064,17 @@
       "implementation_commit": "7e717805fd5f9bcbf59c6d4ed81c96b33b7a5b53",
       "main_commit": "7e717805fd5f9bcbf59c6d4ed81c96b33b7a5b53",
       "evidence": "docs/harness/evidence/p38-01-p38.json"
+    },
+    {
+      "id": "p38-05-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-05"
+      ],
+      "branch": "codex/p38-05-book-edition-schema",
+      "implementation_commit": "0ef46b43f54c8523265dbf90f75a1a6b508cfef7",
+      "main_commit": "0ef46b43f54c8523265dbf90f75a1a6b508cfef7",
+      "evidence": "docs/harness/evidence/p38-05-p38.json"
     }
   ]
 }

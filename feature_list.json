@@ -5757,7 +5757,7 @@
       "dependencies": [
         "p36-02"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/domain/BookEdition.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
@@ -5769,7 +5769,8 @@
       "acceptance": "mvn test -Dtest=BookEditionSchemaTest 退出0；多章快照顺序确定；正文换行保持；同标题不同版本hash不同；两次schema初始化不损坏既有edition。",
       "verify_cmd": "mvn test -Dtest=BookEditionSchemaTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-15 verified: 0ef46b43f54c8523265dbf90f75a1a6b508cfef7; 828/0/0/1skip, spec 3/3. record p38-05-p38",
+      "completion_record": "p38-05-p38"
     },
     {
       "id": "p38-06",
@@ -6411,5 +6412,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-15",
-  "active_feature": "p38-05"
+  "active_feature": null
 }

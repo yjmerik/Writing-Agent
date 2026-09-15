@@ -6061,8 +6061,7 @@
       "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/CanonPatchService.java",
-        "src/main/java/com/writing/novel/service/AgentRevisionService.java",
-        "src/test/java/com/writing/novel/service/CharacterImpactPreviewTest.java"
+        "src/main/java/com/writing/novel/service/AgentRevisionService.java"
       ],
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-04",

@@ -1253,6 +1253,50 @@
       "implementation_commit": "e2b825f3b8f88c98f7e2a0e859bee3322b09e6b8",
       "main_commit": "e2b825f3b8f88c98f7e2a0e859bee3322b09e6b8",
       "evidence": "docs/harness/evidence/p38-07-p38.json"
+    },
+    {
+      "id": "p39-04-p39",
+      "kind": "verified",
+      "feature_ids": [
+        "p39-04"
+      ],
+      "branch": "codex/p39-04-09-impact-chain",
+      "implementation_commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
+      "main_commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
+      "evidence": "docs/harness/evidence/p39-04-p39.json"
+    },
+    {
+      "id": "p39-09-p39",
+      "kind": "verified",
+      "feature_ids": [
+        "p39-09"
+      ],
+      "branch": "codex/p39-04-09-impact-chain",
+      "implementation_commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
+      "main_commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
+      "evidence": "docs/harness/evidence/p39-09-p39.json"
+    },
+    {
+      "id": "p40-01-p40",
+      "kind": "verified",
+      "feature_ids": [
+        "p40-01"
+      ],
+      "branch": "codex/p40-01-04-takeover-evaluate",
+      "implementation_commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
+      "main_commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
+      "evidence": "docs/harness/evidence/p40-01-p40.json"
+    },
+    {
+      "id": "p40-04-p40",
+      "kind": "verified",
+      "feature_ids": [
+        "p40-04"
+      ],
+      "branch": "codex/p40-01-04-takeover-evaluate",
+      "implementation_commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
+      "main_commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
+      "evidence": "docs/harness/evidence/p40-04-p40.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

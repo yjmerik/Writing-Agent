@@ -6036,9 +6036,9 @@
       ],
       "status": "completed",
       "files": [
-        "src/main/java/com/writing/novel/agent/FactHarvesterAgent.java",
-        "src/main/java/com/writing/novel/web/FactEvidenceController.java",
-        "src/test/java/com/writing/novel/web/FactEvidenceCaptureTest.java"
+        "src/main/java/com/writing/novel/persistence/FactEvidenceRepository.java",
+        "src/test/java/com/writing/novel/persistence/FactEvidenceCaptureTest.java",
+        "src/test/java/com/writing/novel/persistence/FactEvidenceRepositoryTest.java"
       ],
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-03",

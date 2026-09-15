@@ -221,6 +221,23 @@ public interface NovelRepository {
     // --- p33-06: 作者意见闭环 ---
     void saveAuthorDirective(com.writing.novel.domain.AuthorDirective directive);
 
+    // --- p38-10: 问题裁决存取与批准门禁（缺省禁止默认成功） ---
+
+    default void saveDisposition(com.writing.novel.domain.ReviewDisposition disposition) {
+        throw new UnsupportedOperationException("saveDisposition 未实现");
+    }
+
+    default List<com.writing.novel.domain.ReviewDisposition> findDispositions(
+            String projectId, int chapterIndex, int chapterVersion, String contentHash) {
+        throw new UnsupportedOperationException("findDispositions 未实现");
+    }
+
+    /** p38-10: 该章当前身份下是否存在有效裁决（identity 匹配且非过期 DEFER）。 */
+    default boolean hasValidDisposition(String projectId, String issueId,
+                                        com.writing.novel.domain.ChapterApproval.Identity identity) {
+        throw new UnsupportedOperationException("hasValidDisposition 未实现");
+    }
+
     // --- p38-02: 计划变更持久存取（缺省禁止默认成功） ---
 
     default void savePlanChange(com.writing.novel.domain.PlanChange planChange) {

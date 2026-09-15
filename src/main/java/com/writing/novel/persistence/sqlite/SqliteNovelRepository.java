@@ -1218,6 +1218,67 @@ public class SqliteNovelRepository implements NovelRepository {
         }
     }
 
+    // --- p38-10: 问题裁决存取 ---
+
+    @Override
+    public void saveDisposition(com.writing.novel.domain.ReviewDisposition d) {
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "INSERT INTO review_dispositions (id, project_id, issue_id, issue_fingerprint, " +
+                        "chapter_index, chapter_version, content_hash, action, reason, " +
+                        "defer_until_chapter, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, d.getId()); ps.setString(2, d.getProjectId());
+            ps.setString(3, d.getIssueId()); ps.setString(4, d.getIssueFingerprint());
+            ps.setInt(5, d.getIdentity().chapterIndex()); ps.setInt(6, d.getIdentity().version());
+            ps.setString(7, d.getIdentity().contentHash());
+            ps.setString(8, d.getAction().name()); ps.setString(9, d.getReason());
+            if (d.getDeferUntilChapter() != null) ps.setInt(10, d.getDeferUntilChapter());
+            else ps.setNull(10, Types.NULL);
+            ps.setString(11, d.getCreatedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public List<com.writing.novel.domain.ReviewDisposition> findDispositions(
+            String projectId, int chapterIndex, int chapterVersion, String contentHash) {
+        List<com.writing.novel.domain.ReviewDisposition> list = new ArrayList<>();
+        String sql = "SELECT * FROM review_dispositions WHERE project_id=? " +
+                "AND chapter_index=? AND chapter_version=? AND content_hash=?";
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId); ps.setInt(2, chapterIndex);
+            ps.setInt(3, chapterVersion); ps.setString(4, contentHash);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(new com.writing.novel.domain.ReviewDisposition(
+                        rs.getString("id"), rs.getString("project_id"),
+                        rs.getString("issue_id"), rs.getString("issue_fingerprint"),
+                        new ChapterApproval.Identity(projectId, rs.getInt("chapter_index"),
+                                rs.getInt("chapter_version"), rs.getString("content_hash")),
+                        com.writing.novel.domain.ReviewDisposition.Action.valueOf(rs.getString("action")),
+                        rs.getString("reason"),
+                        rs.getObject("defer_until_chapter") == null ? null : rs.getInt("defer_until_chapter"),
+                        Instant.parse(rs.getString("created_at"))));
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    @Override
+    public boolean hasValidDisposition(String projectId, String issueId,
+                                       ChapterApproval.Identity identity) {
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT COUNT(*) FROM review_dispositions WHERE project_id=? AND issue_id=? " +
+                        "AND chapter_index=? AND chapter_version=? AND content_hash=? " +
+                        "AND action IN ('FALSE_POSITIVE','EXCEPTION')")) {
+            ps.setString(1, projectId); ps.setString(2, issueId);
+            ps.setInt(3, identity.chapterIndex()); ps.setInt(4, identity.version());
+            ps.setString(5, identity.contentHash());
+            ResultSet rs = ps.executeQuery();
+            rs.next();
+            return rs.getInt(1) > 0;
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
     // --- p38-02: 计划变更持久存取与原子确认 ---
 
     @Override

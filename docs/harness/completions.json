@@ -1198,6 +1198,17 @@
       "implementation_commit": "77d1d9a637cfa7f285700b1212bc6e2942da7f1b",
       "main_commit": "77d1d9a637cfa7f285700b1212bc6e2942da7f1b",
       "evidence": "docs/harness/evidence/p38-03-p38.json"
+    },
+    {
+      "id": "p38-11-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-11"
+      ],
+      "branch": "codex/p38-11-disposition-api",
+      "implementation_commit": "1a72ffd19a62a86978491a4b00fffa8537324f94",
+      "main_commit": "1a72ffd19a62a86978491a4b00fffa8537324f94",
+      "evidence": "docs/harness/evidence/p38-11-p38.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

@@ -5911,7 +5911,7 @@
         "p38-10",
         "p36-04"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/web/ReviewDecisionController.java",
         "frontend/src/api/client.ts",
@@ -5923,7 +5923,8 @@
       "acceptance": "mvn test -Dtest=ReviewDispositionApiTest 退出0；HTTP逐种裁决成功/缺字段/旧稿409；检查期间新稿产生后报告不冒充新稿；网络重试不创建多份裁决。",
       "verify_cmd": "mvn test -Dtest=ReviewDispositionApiTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-16 verified: 1a72ffd19a62a86978491a4b00fffa8537324f94; 854/0/0/1skip, spec 2/2. record p38-11-p38",
+      "completion_record": "p38-11-p38"
     },
     {
       "id": "p38-12",
@@ -6422,6 +6423,6 @@
     }
   ],
   "schema_version": 2,
-  "updated_at": "2026-09-15",
-  "active_feature": "p38-11"
+  "updated_at": "2026-09-16",
+  "active_feature": null
 }

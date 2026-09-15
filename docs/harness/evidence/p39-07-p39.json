@@ -1,7 +1,26 @@
-{"commit":"83a0ef4a326d9cc69316e0332690b1df5a4035d2","cleanCheckout":true,"feature":"p39-07",
- "branch":"codex/p39-07-08-canon-volume-proposals","base_commit":"N/A",
- "red":{"command":"mvn test","exitCode":0,"result":"new test"},
- "implementation":{"commit":"83a0ef4a326d9cc69316e0332690b1df5a4035d2","notes":"p39-07 implementation"},
- "checks":[{"command":"mvn compile && mvn test","result":"851/0/0/1skip","exitCode":0}],
- "limits":[],"evidence_line":"2026-09-15 verified: 83a0ef4a326d9cc69316e0332690b1df5a4035d2; 851/0/0/1skip. record p39-07-p39"
+{
+  "commit": "e68e8cea33f1f9e057b209585c6596c18dce0e95",
+  "cleanCheckout": true,
+  "feature": "p39-07",
+  "branch": "codex/p39-07-08-canon-volume-proposals",
+  "base_commit": "N/A",
+  "red": {
+    "command": "mvn test",
+    "exitCode": 0,
+    "result": "new test"
+  },
+  "implementation": {
+    "commit": "e68e8cea33f1f9e057b209585c6596c18dce0e95",
+    "notes": "p39-07 implementation"
+  },
+  "checks": [
+    {
+      "command": "mvn compile && mvn test",
+      "result": "851/0/0/1skip",
+      "exitCode": 0
+    }
+  ],
+  "limits": [],
+  "evidence_line": "2026-09-15 verified: 83a0ef4a326d9cc69316e0332690b1df5a4035d2; 851/0/0/1skip. record p39-07-p39",
+  "main_commit": "e68e8cea33f1f9e057b209585c6596c18dce0e95"
 }

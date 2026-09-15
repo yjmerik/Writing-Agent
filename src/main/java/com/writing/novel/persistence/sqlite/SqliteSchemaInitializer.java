@@ -244,7 +244,15 @@ public class SqliteSchemaInitializer {
             "edition_id TEXT NOT NULL, chapter_index INTEGER NOT NULL, version INTEGER NOT NULL, " +
             "title TEXT NOT NULL, content TEXT NOT NULL, content_hash TEXT NOT NULL, " +
             "approval_id TEXT, plan_ref TEXT, " +
-            "PRIMARY KEY (edition_id, chapter_index))"
+            "PRIMARY KEY (edition_id, chapter_index))",
+
+        // p38-09: 版本绑定的问题裁决——identity 变化不继承
+        "CREATE TABLE IF NOT EXISTS review_dispositions (" +
+            "id TEXT PRIMARY KEY, project_id TEXT NOT NULL, issue_id TEXT NOT NULL, " +
+            "issue_fingerprint TEXT NOT NULL, chapter_index INTEGER NOT NULL, " +
+            "chapter_version INTEGER NOT NULL, content_hash TEXT NOT NULL, " +
+            "action TEXT NOT NULL, reason TEXT NOT NULL, defer_until_chapter INTEGER, " +
+            "created_at TEXT NOT NULL)"
     };
 
     private final ConnectionProvider cp;

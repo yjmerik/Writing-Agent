@@ -5911,7 +5911,7 @@
         "p38-10",
         "p36-04"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/web/ReviewDecisionController.java",
         "frontend/src/api/client.ts",
@@ -6423,5 +6423,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-15",
-  "active_feature": null
+  "active_feature": "p38-11"
 }

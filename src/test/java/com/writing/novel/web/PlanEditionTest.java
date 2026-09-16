@@ -129,7 +129,7 @@ class PlanEditionTest {
         // 携带凭证 + 逐项处置 → 生效
         String confirmBody = "{\"targetChapters\":5,\"confirm\":true,\"previewId\":\"" + previewId
                 + "\",\"sourcePlanHash\":\"" + sourcePlanHash
-                + "\",\"requestKey\":\"rk-1\",\"decisions\":[{\"id\":\"d1\",\"promiseId\":\""
+                + "\",\"requestKey\":\"rk-1\",\"decisions\":[{\"id\":\"d-" + java.util.UUID.randomUUID() + "\",\"promiseId\":\""
                 + promiseId + "\",\"action\":\"MIGRATE\",\"targetChapter\":4}]}";
         mvc.perform(post("/api/projects/" + pid + "/plan/target-chapters")
                         .contentType(MediaType.APPLICATION_JSON)

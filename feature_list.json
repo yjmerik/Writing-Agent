@@ -6031,7 +6031,7 @@
         "p38-03",
         "p36-10"
       ],
-      "status": "deferred",
+      "status": "not-started",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/OutlineView.tsx",
@@ -6043,10 +6043,9 @@
       "acceptance": "npm --prefix qa/collaboration test -- plan-resolution.spec.ts 退出0；合成24章计划写20章，22-24有未回收承诺：迁移一条+接受开放一条→确认20→刷新仍20；没有新增21章；处置审计可重读。",
       "verify_cmd": "npm --prefix qa/collaboration test -- plan-resolution.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——depends on p38-03。原登记不符合实际实现。",
+      "evidence": "Dependencies satisfied after audit fixes; ready to implement",
       "completion_record": null,
-      "branch": "main",
-      "deferred_reason": "2026-09-16 audit: blocked by p38-03"
+      "branch": "main"
     },
     {
       "id": "p38-05",
@@ -6137,7 +6136,7 @@
         "p38-07",
         "p36-11"
       ],
-      "status": "deferred",
+      "status": "not-started",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/BookReviewView.tsx",
@@ -6149,10 +6148,9 @@
       "acceptance": "npm --prefix qa/collaboration test -- edition-export.spec.ts 退出0；补齐各章批准→创建edition→批准→下载→修改一章→下载旧edition逐字相同；当前稿缺批准明显标注；390px可操作。",
       "verify_cmd": "npm --prefix qa/collaboration test -- edition-export.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——same。原登记不符合实际实现。",
+      "evidence": "Dependencies satisfied after audit fixes; ready to implement",
       "completion_record": null,
-      "branch": "main",
-      "deferred_reason": "2026-09-16 audit: blocked by p38-07"
+      "branch": "main"
     },
     {
       "id": "p38-09",
@@ -6402,7 +6400,7 @@
         "p39-03",
         "p36-08"
       ],
-      "status": "deferred",
+      "status": "not-started",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/WorldbuildingView.tsx",
@@ -6414,10 +6412,9 @@
       "acceptance": "npm --prefix qa/collaboration test -- fact-evidence.spec.ts 退出0；asOf7/10切换事实替换正确；角色9章知情不提前泄露；来源指向v2时不得显示v6冒用；键盘完成筛选/返回。",
       "verify_cmd": "npm --prefix qa/collaboration test -- fact-evidence.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——depends on p39-03。原登记不符合实际实现。",
+      "evidence": "Dependencies satisfied after audit fixes; ready to implement",
       "completion_record": null,
-      "branch": "main",
-      "deferred_reason": "2026-09-16 audit: blocked by p39-03"
+      "branch": "main"
     },
     {
       "id": "p39-06",
@@ -6430,7 +6427,7 @@
         "p37-05",
         "p39-09"
       ],
-      "status": "deferred",
+      "status": "not-started",
       "files": [
         "frontend/src/components/WorldbuildingView.tsx",
         "frontend/src/components/AgentRevisionDialog.tsx",
@@ -6442,10 +6439,9 @@
       "acceptance": "npm --prefix qa/collaboration test -- character-impact.spec.ts 退出0；修改动机→影响预览→取消无DB变化→确认只更新设定不改正文；两个窗口来源变动409保留表单；无可追踪引用时明确覆盖不足。",
       "verify_cmd": "npm --prefix qa/collaboration test -- character-impact.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——depends on p39-04。原登记不符合实际实现。",
+      "evidence": "Dependencies satisfied after audit fixes; ready to implement",
       "completion_record": null,
-      "branch": "main",
-      "deferred_reason": "2026-09-16 audit: blocked by p39-09"
+      "branch": "main"
     },
     {
       "id": "p39-07",

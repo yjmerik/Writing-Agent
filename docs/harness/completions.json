@@ -209,7 +209,8 @@
       "baseline_commit": "2d8a183d098ba7b2772ad9f51b06b73f7171eca2",
       "notes": "审计前main已登记的200项历史完成记录。逐项原始分支、提交与验证日志未完整记录，保留原evidence；本次未重新执行每项历史验收，不伪造历史合并证明。",
       "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
+      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "branch": "main"
     },
     {
       "id": "llm-provider-fallback",

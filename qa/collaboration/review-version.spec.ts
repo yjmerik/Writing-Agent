@@ -108,11 +108,31 @@ async function createReviewFixture(title: string): Promise<Fixture> {
   if (!context.barrierIds?.length && !context.pendingCheckpointIds?.length) {
     throw new Error('fixture 结束时必须存在待审项（屏障或章节检查点）');
   }
+  // 审计 P1-2: 解决 harsh 模式注入的 HIGH 问题（创建 FALSE_POSITIVE 裁决）
+  const issuesResp = await fetch(`${BASE}/api/projects/${id}/chapters/1/quality`);
+  if (issuesResp.ok) {
+    const quality = await issuesResp.json();
+    const highIssues = (quality.issues || []).filter((i: any) => i.severity === 'HIGH');
+    for (const issue of highIssues) {
+      await fetch(`${BASE}/api/projects/${id}/dispositions`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          issueId: issue.id || `issue-${Date.now()}`,
+          action: 'FALSE_POSITIVE',
+          reason: 'Scenario-injected false positive resolved for approval test',
+          identity: context.identity}) });
+    }
+  }
+
+  // Re-read context after disposition (reviewSetHash changed)
+  const finalCtx = await fetch(`${BASE}/api/projects/${id}/chapters/1/review-context`);
+  const finalContext = await finalCtx.json();
+
   return {
     projectId: id,
-    version: context.identity.version,
-    contentHash: context.identity.contentHash,
-    reviewSetHash: context.reviewSetHash,
+    version: finalContext.identity.version,
+    contentHash: finalContext.identity.contentHash,
+    reviewSetHash: finalContext.reviewSetHash,
   };
 }
 

@@ -19,7 +19,9 @@ test('p39-05: fact evidence query with temporal filter', async () => {
   const chRes = await fetch(`${BASE}/api/projects/${pid}/chapters`, { method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({title: 'Ch1', content: 'The rain fell on the ancient stones. '.repeat(30)}) });
   const chapter = await chRes.json();
-  const hash = 'test-hash-' + Date.now();
+  const ctxResp = await fetch(`${BASE}/api/projects/${pid}/chapters/1/review-context`);
+  const ctx = await ctxResp.json();
+  const hash = ctx.identity.contentHash;
 
   // POST evidence with identity binding
   const evRes = await fetch(`${BASE}/api/projects/${pid}/facts/${fact.id}/evidence`, {

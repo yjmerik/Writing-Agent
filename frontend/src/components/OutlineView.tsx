@@ -261,7 +261,8 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
     && JSON.stringify(draft.volumes) !== JSON.stringify(persistedOutline.volumes));
 
   // p38-04: 每个受影响承诺都有有效处置才允许确认
-  const affectedPromiseList = targetPreview?.preview?.affectedPromises ?? [];
+  const affectedPromiseList = targetPreview?.preview?.affectedPromises
+    ?? targetPreview?.affectedPromises ?? [];
   const allPromisesDecided = affectedPromiseList.every((p) => {
     const d = p.id ? promiseDecisions[p.id] : null;
     if (!p.id || !d) return !p.id ? true : false;
@@ -291,14 +292,18 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
             type={targetPreview.applied ? 'success' : 'warning'}
             showIcon
             message={targetPreview.applied
-              ? '已生效：目标 ' + targetPreview.targetChapters + ' 章（原 ' + targetPreview.preview.oldTarget + '），已裁剪 ' + targetPreview.preview.prunedChapters.length + ' 章'
-              : '影响预览：将裁剪 ' + targetPreview.preview.prunedChapters.length + ' 章（已写 ' + targetPreview.preview.writtenChapters + ' 章保留）'}
+              ? '已生效：目标 ' + targetPreview.targetChapters + ' 章'
+                + (targetPreview.preview
+                  ? '（原 ' + targetPreview.preview.oldTarget + '），已裁剪 ' + targetPreview.preview.prunedChapters.length + ' 章'
+                  : '（预览凭证已消费）')
+              : '影响预览：将裁剪 ' + (targetPreview.preview?.prunedChapters ?? targetPreview.prunedChapters ?? []).length
+                + ' 章（已写 ' + targetPreview.preview?.writtenChapters + ' 章保留）'}
             description={(
               <div>
-                {targetPreview.preview.prunedChapters.length > 0 && (
-                  <div>裁剪章节：第 {targetPreview.preview.prunedChapters.join('、')} 章</div>
+                {((targetPreview.preview?.prunedChapters ?? targetPreview.prunedChapters) ?? []).length > 0 && (
+                  <div>裁剪章节：第 {((targetPreview.preview?.prunedChapters ?? targetPreview.prunedChapters) ?? []).join('、')} 章</div>
                 )}
-                {targetPreview.preview.affectedPromises.map(p => (
+                {(targetPreview.preview?.affectedPromises ?? targetPreview.affectedPromises ?? []).map(p => (
                   <div key={p.id ?? p.description} style={{ marginBottom: 8 }}>
                     ⚠ 「{p.description}」原定第 {p.expectedResolveChapter} 章回收，超出新目标——
                     该承诺将失去承载位置。请逐项处置：

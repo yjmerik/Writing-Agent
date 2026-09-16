@@ -2817,6 +2817,43 @@ public class NovelOrchestrator {
      * p11-I2: 构建章节聚合质量报告。
      * 聚合读者评审 + ContinuityIssue + 场景类型 + 套路词统计。
      */
+    /**
+     * p38-11（审计 P1-4）：按当前稿重新检查——身份不符 409；检查结果绑定触发时稿号，
+     * 检查期间正文变化则丢弃结果（过期产物不冒充新稿报告）。
+     */
+    public ChapterQualityReport recheckChapter(String projectId, int chapterIndex,
+            com.writing.novel.domain.ChapterApproval.Identity expectedIdentity) {
+        Chapter chapter = repository.findChapterByIndex(projectId, chapterIndex)
+                .orElseThrow(() -> new IllegalArgumentException("章节不存在: " + chapterIndex));
+        var currentIdentity = com.writing.novel.domain.ChapterApproval.Identity.of(chapter);
+        if (!currentIdentity.equals(expectedIdentity)) {
+            throw new com.writing.novel.spi.NovelRepository.ReviewConflictException(
+                    com.writing.novel.spi.NovelRepository.ReviewConflictException.Reason.IDENTITY_STALE,
+                    "重新检查必须针对当前稿", currentIdentity, null);
+        }
+        StringBuilder settings = new StringBuilder();
+        for (var c : repository.findCharactersByProject(projectId)) {
+            settings.append(c.getName()).append('：')
+                    .append(c.getAbility() == null ? "" : c.getAbility()).append('；')
+                    .append(c.getPersonality() == null ? "" : c.getPersonality()).append('\n');
+        }
+        var issues = continuityChecker.check(projectId, chapterIndex, chapter.getContent(),
+                settings.toString());
+        // 检查完成后重读：正文已变化则丢弃（不落库为新稿的问题）
+        Chapter after = repository.findChapterByIndex(projectId, chapterIndex).orElse(null);
+        if (after == null || !com.writing.novel.domain.ChapterApproval.Identity.of(after)
+                .equals(currentIdentity)) {
+            log.info("重新检查期间正文已变化(章{})，丢弃过期结果", chapterIndex);
+            return buildChapterQualityReport(projectId, chapterIndex);
+        }
+        for (var issue : issues) {
+            issue.setChapterVersion(currentIdentity.version());
+            issue.setContentHash(currentIdentity.contentHash());
+            repository.saveContinuityIssue(issue);
+        }
+        return buildChapterQualityReport(projectId, chapterIndex);
+    }
+
     public ChapterQualityReport buildChapterQualityReport(String projectId, int chapterIndex) {
         var chapter = repository.findChapterByIndex(projectId, chapterIndex).orElse(null);
         if (chapter == null) {

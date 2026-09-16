@@ -28,11 +28,14 @@ public class ReviewDecisionController {
 
     private final NovelRepository repository;
     private final WritingTaskExecutor writingTaskExecutor;
+    private final com.writing.novel.orchestrator.NovelOrchestrator recheckService;
 
     @Autowired
-    public ReviewDecisionController(NovelRepository repository, WritingTaskExecutor writingTaskExecutor) {
+    public ReviewDecisionController(NovelRepository repository, WritingTaskExecutor writingTaskExecutor,
+                                    com.writing.novel.orchestrator.NovelOrchestrator recheckService) {
         this.repository = repository;
         this.writingTaskExecutor = writingTaskExecutor;
+        this.recheckService = recheckService;
     }
 
     /** 已读正文身份、reviewSetHash、报告/待办/裁决/批准的一致快照。 */
@@ -40,6 +43,53 @@ public class ReviewDecisionController {
     public ChapterApproval.ReviewContext reviewContext(@PathVariable String id,
                                                        @PathVariable int chapterIndex) {
         return repository.readReviewContext(id, chapterIndex);
+    }
+
+    /**
+     * p38-11（审计 P1-4）：按当前稿重新检查——必须携带 identity；不符 409。
+     * 检查产物绑定该稿身份，不会冒充更新稿的报告。
+     */
+    @PostMapping("/recheck")
+    public Map<String, Object> recheck(@PathVariable String id,
+                                       @PathVariable int chapterIndex,
+                                       @RequestBody Map<String, Object> body) {
+        Object identityRaw = body == null ? null : body.get("identity");
+        if (!(identityRaw instanceof Map<?, ?> identityMap)) {
+            throw new IllegalArgumentException("缺少 identity（服务端不补填）");
+        }
+        String identityProjectId = stringField(identityMap, "projectId");
+        if (!id.equals(identityProjectId)) {
+            throw new IllegalArgumentException("identity.projectId 与路径项目不符");
+        }
+        Integer idChapter = intField(identityMap, "chapterIndex");
+        if (idChapter == null || idChapter != chapterIndex) {
+            throw new IllegalArgumentException("identity.chapterIndex 与路径章节不符");
+        }
+        Integer version = intField(identityMap, "version");
+        String contentHash = stringField(identityMap, "contentHash");
+        if (version == null || contentHash == null || contentHash.isBlank()) {
+            throw new IllegalArgumentException("缺少 identity.version/contentHash");
+        }
+        var identity = new com.writing.novel.domain.ChapterApproval.Identity(
+                id, chapterIndex, version, contentHash);
+        String workId = "recheck-" + UUID.randomUUID();
+        if (writingTaskExecutor != null) {
+            writingTaskExecutor.beginWork(id, workId);
+        }
+        try {
+            var report = recheckService.recheckChapter(id, chapterIndex, identity);
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("chapterIndex", chapterIndex);
+            result.put("chapterVersion", version);
+            result.put("grade", report.getGrade());
+            result.put("reportCurrent", report.isReportCurrent());
+            result.put("issues", report.getIssues().size());
+            return result;
+        } finally {
+            if (writingTaskExecutor != null) {
+                writingTaskExecutor.endWork(id, workId);
+            }
+        }
     }
 
     /** 版本化批准：identity + reviewSetHash + idempotencyKey + reason → ChapterApproval.Result。 */

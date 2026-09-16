@@ -1265,6 +1265,25 @@ public class SqliteNovelRepository implements NovelRepository {
     }
 
     @Override
+    public List<com.writing.novel.domain.BookEdition> listBookEditions(String projectId) {
+        List<com.writing.novel.domain.BookEdition> list = new ArrayList<>();
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM book_editions WHERE project_id=? ORDER BY created_at DESC")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(new com.writing.novel.domain.BookEdition(
+                        rs.getString("edition_id"), rs.getString("project_id"),
+                        rs.getString("manifest_hash"),
+                        com.writing.novel.domain.BookEdition.State.valueOf(rs.getString("state")),
+                        Instant.parse(rs.getString("created_at")),
+                        rs.getString("approved_at") == null ? null : Instant.parse(rs.getString("approved_at"))));
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return list;
+    }
+
+    @Override
     public List<com.writing.novel.domain.BookEdition.EditionChapter> findBookEditionChapters(
             String editionId) {
         List<com.writing.novel.domain.BookEdition.EditionChapter> list = new ArrayList<>();

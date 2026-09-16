@@ -233,6 +233,11 @@ public interface NovelRepository {
         throw new UnsupportedOperationException("findBookEdition 未实现");
     }
 
+    /** p38-07: 项目全部成书版本（按创建时间倒序）。 */
+    default List<com.writing.novel.domain.BookEdition> listBookEditions(String projectId) {
+        throw new UnsupportedOperationException("listBookEditions 未实现");
+    }
+
     default List<com.writing.novel.domain.BookEdition.EditionChapter> findBookEditionChapters(
             String editionId) {
         throw new UnsupportedOperationException("findBookEditionChapters 未实现");

@@ -6,10 +6,10 @@
       "exitCode": 1
     }
   ],
-  "commit": "0e3afcdf323e258b26e0af1d294ab482eb1d2b35",
-  "main_commit": "0e3afcdf323e258b26e0af1d294ab482eb1d2b35",
+  "commit": "13193c3f4955d9ccdf63ea6866101156eb8e77ab",
+  "main_commit": "13193c3f4955d9ccdf63ea6866101156eb8e77ab",
   "implementation": {
-    "commit": "0e3afcdf323e258b26e0af1d294ab482eb1d2b35"
+    "commit": "13193c3f4955d9ccdf63ea6866101156eb8e77ab"
   },
   "limits": [
     "p40-06 real experiment requires human participants and real model budget"

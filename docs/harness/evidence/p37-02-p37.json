@@ -1,5 +1,5 @@
 {
-  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+  "commit": "1f8c4a9feb67bde3c8eeac06ee1347e876230789",
   "cleanCheckout": true,
   "checkoutNote": "合并后验证在 ff 后的本地 main（c3b06d22a34780f14dfc2ae046c4aa06ebd8841d）重跑：mvn compile&&mvn test 777/0、专项 6/6。",
   "feature": "p37-02",
@@ -12,7 +12,7 @@
     "result": "Tests run: 6, Errors: 6 —— 全部 UnsupportedOperation 'saveProposal 未实现'（SPI 缺省实现显式抛出，非默认成功；行为性失败非编译失败）。"
   },
   "implementation": {
-    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+    "commit": "1f8c4a9feb67bde3c8eeac06ee1347e876230789",
     "files": [
       "src/main/java/com/writing/novel/spi/NovelRepository.java",
       "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
@@ -48,5 +48,5 @@
     "意见消费证据联动属 p37-12",
     "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
   ],
-  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
+  "main_commit": "1f8c4a9feb67bde3c8eeac06ee1347e876230789"
 }

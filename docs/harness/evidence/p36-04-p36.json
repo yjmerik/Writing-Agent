@@ -1,5 +1,5 @@
 {
-  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+  "commit": "4815b683ed5c6284a0101c2432251490c10ee104",
   "cleanCheckout": true,
   "checkoutNote": "验证在合并后干净 main（fast-forward 至 76dcfd0）执行；工作区仅存合并前已有的未跟踪文件，未参与验证。",
   "feature": "p36-04",
@@ -12,7 +12,7 @@
     "result": "Tests run: 4, Failures: 4 —— review-context/review-decisions 端点不存在（读上下文非 200），行为性失败非编译失败。"
   },
   "implementation": {
-    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+    "commit": "4815b683ed5c6284a0101c2432251490c10ee104",
     "files": [
       "src/main/java/com/writing/novel/web/ReviewDecisionController.java",
       "src/test/java/com/writing/novel/web/VersionedReviewDecisionTest.java"
@@ -47,5 +47,5 @@
     "WORK_OWNERSHIP 并发占用路径沿用 p32-12 全局处理，本项未新增专项断言（p36-12 迁移回归覆盖）",
     "未跑 e2e/compare-baseline：无 prompt、上下文组装或前端改动"
   ],
-  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
+  "main_commit": "4815b683ed5c6284a0101c2432251490c10ee104"
 }

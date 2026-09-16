@@ -1,5 +1,5 @@
 {
-  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+  "commit": "1e301372c8a2ec3367195176203f12072994e999",
   "cleanCheckout": true,
   "checkoutNote": "验证在 ff 合并后的干净主分支检出树执行。",
   "feature": "p34-03",
@@ -15,5 +15,5 @@
       "exitCode": 0
     }
   ],
-  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
+  "main_commit": "1e301372c8a2ec3367195176203f12072994e999"
 }

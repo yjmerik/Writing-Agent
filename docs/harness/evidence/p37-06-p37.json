@@ -1,5 +1,5 @@
 {
-  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+  "commit": "b58fe460ba676ee59f3f1158a1bc2d3a5236a13f",
   "cleanCheckout": true,
   "feature": "p37-06",
   "branch": "codex/p37-06-directive-scope",
@@ -10,7 +10,7 @@
     "result": "3 errors —— no such table: directive_evidence / no such column: revision（行为性；validateScope 先补入编译契约）。"
   },
   "implementation": {
-    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+    "commit": "b58fe460ba676ee59f3f1158a1bc2d3a5236a13f",
     "notes": "AuthorDirective：旧构造默认 revision=1、chapterIndex→同起止、null→全书从1起、enabled=true；validateScope 拒绝半区间/倒置/非正章号；Evidence record（APPLIED_SYSTEM|UNMET|CONFIRMED|STALE）。Schema：directive_evidence 表+索引（同意见多章多稿并存不覆盖）；author_directives 增 revision/from_chapter/to_chapter/enabled 并回填旧行。"
   },
   "checks": [
@@ -33,5 +33,5 @@
   "limits": [
     "意见/证据的仓储方法属 p37-07；无 prompt 改动未跑 e2e"
   ],
-  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
+  "main_commit": "b58fe460ba676ee59f3f1158a1bc2d3a5236a13f"
 }

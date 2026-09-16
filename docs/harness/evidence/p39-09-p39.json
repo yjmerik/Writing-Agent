@@ -1,5 +1,5 @@
 {
-  "commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
+  "commit": "bd76c63d91bf62217ab97436013efe2371db4147",
   "cleanCheckout": true,
   "feature": "p39-09",
   "branch": "codex/p39-04-09-impact-chain",
@@ -10,5 +10,6 @@
       "exitCode": 0
     }
   ],
-  "evidence_line": "verified"
+  "evidence_line": "verified",
+  "main_commit": "bd76c63d91bf62217ab97436013efe2371db4147"
 }

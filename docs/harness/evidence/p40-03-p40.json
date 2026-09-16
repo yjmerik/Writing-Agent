@@ -1,5 +1,5 @@
 {
-  "commit": "ad6218afc69057e31c1981948e4c7fc9b878d1bf",
+  "commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
   "cleanCheckout": true,
   "feature": "p40-03",
   "branch": "codex/p40-03",
@@ -10,7 +10,7 @@
     "result": "QA spec"
   },
   "implementation": {
-    "commit": "ad6218afc69057e31c1981948e4c7fc9b878d1bf",
+    "commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
     "notes": "run-details.spec.ts QA spec, tested against scenario server"
   },
   "checks": [
@@ -27,5 +27,5 @@
   ],
   "limits": [],
   "evidence_line": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec run-details.spec.ts tested against scenario server. record p40-03-p40",
-  "main_commit": "ad6218afc69057e31c1981948e4c7fc9b878d1bf"
+  "main_commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad"
 }

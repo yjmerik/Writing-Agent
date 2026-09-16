@@ -1,5 +1,5 @@
 {
-  "commit": "77d1d9a637cfa7f285700b1212bc6e2942da7f1b",
+  "commit": "d593742d0d928ee3dd653d884323ac324ca523d0",
   "cleanCheckout": true,
   "feature": "p38-03",
   "branch": "codex/p38-03-plan-preview-commit",
@@ -10,7 +10,7 @@
     "result": "endpoint missing"
   },
   "implementation": {
-    "commit": "77d1d9a637cfa7f285700b1212bc6e2942da7f1b",
+    "commit": "d593742d0d928ee3dd653d884323ac324ca523d0",
     "notes": "plan/target-chapters endpoint"
   },
   "checks": [
@@ -21,5 +21,6 @@
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-15 verified: 77d1d9a637cfa7f285700b1212bc6e2942da7f1b; record p38-03-p38"
+  "evidence_line": "2026-09-15 verified: 77d1d9a637cfa7f285700b1212bc6e2942da7f1b; record p38-03-p38",
+  "main_commit": "d593742d0d928ee3dd653d884323ac324ca523d0"
 }

@@ -1,5 +1,5 @@
 {
-  "commit": "cb3d1b12183cd1ed2c56caa0577258eb6e75529d",
+  "commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
   "cleanCheckout": true,
   "feature": "p38-04",
   "branch": "codex/p38-04",
@@ -10,7 +10,7 @@
     "result": "QA spec"
   },
   "implementation": {
-    "commit": "cb3d1b12183cd1ed2c56caa0577258eb6e75529d",
+    "commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
     "notes": "plan-resolution.spec.ts QA spec, tested against scenario server"
   },
   "checks": [
@@ -26,5 +26,6 @@
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec plan-resolution.spec.ts tested against scenario server. record p38-04-p38"
+  "evidence_line": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec plan-resolution.spec.ts tested against scenario server. record p38-04-p38",
+  "main_commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad"
 }

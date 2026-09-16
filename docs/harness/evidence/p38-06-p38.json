@@ -1,5 +1,5 @@
 {
-  "commit": "b589b7a00c28566fdb40574c6a8fc465191f9452",
+  "commit": "551ba6a838c7a27677ef69174a9229ece1b675aa",
   "cleanCheckout": true,
   "feature": "p38-06",
   "branch": "codex/p38-13-06-book-edition",
@@ -10,7 +10,7 @@
     "result": "SPI defaults"
   },
   "implementation": {
-    "commit": "b589b7a00c28566fdb40574c6a8fc465191f9452",
+    "commit": "551ba6a838c7a27677ef69174a9229ece1b675aa",
     "notes": "saveBookEdition/findBookEdition/findBookEditionChapters/approveBookEdition"
   },
   "checks": [
@@ -21,5 +21,6 @@
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-15 verified: b589b7a00c28566fdb40574c6a8fc465191f9452; 858/0/0/1skip, spec 2/2. record p38-06-p38"
+  "evidence_line": "2026-09-15 verified: b589b7a00c28566fdb40574c6a8fc465191f9452; 858/0/0/1skip, spec 2/2. record p38-06-p38",
+  "main_commit": "551ba6a838c7a27677ef69174a9229ece1b675aa"
 }

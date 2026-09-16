@@ -9,7 +9,7 @@
       "phase": 1,
       "dependencies": [],
       "status": "completed",
-      "evidence": "86 tests pass",
+      "evidence": "2026-09-16 verified: 14fdfd38378c4da13d2271f9f91e7c9fc24fa2c0; record p1-01-p1-",
       "files": [
         "src/main/java/com/writing/novel/memory/WritingContext.java",
         "src/main/java/com/writing/novel/memory/ContextAssembler.java"
@@ -27,7 +27,7 @@
       "phase": 1,
       "dependencies": [],
       "status": "completed",
-      "evidence": "86 tests pass",
+      "evidence": "2026-09-16 verified: 14fdfd38378c4da13d2271f9f91e7c9fc24fa2c0; record p1-02-p1-",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
         "src/main/java/com/writing/novel/agent/CharacterDesignerAgent.java",
@@ -48,7 +48,7 @@
         "p1-02"
       ],
       "status": "completed",
-      "evidence": "86 tests pass",
+      "evidence": "2026-09-16 verified: 14fdfd38378c4da13d2271f9f91e7c9fc24fa2c0; record p1-03-p1-",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
         "src/main/java/com/writing/novel/agent/PlotterAgent.java"
@@ -66,7 +66,7 @@
       "phase": 1,
       "dependencies": [],
       "status": "completed",
-      "evidence": "86 tests pass",
+      "evidence": "2026-09-16 verified: 14fdfd38378c4da13d2271f9f91e7c9fc24fa2c0; record p1-04-p1-",
       "files": [
         "src/main/java/com/writing/novel/memory/ContextAssembler.java"
       ],
@@ -83,7 +83,7 @@
       "phase": 1,
       "dependencies": [],
       "status": "completed",
-      "evidence": "86 tests pass",
+      "evidence": "2026-09-16 verified: 14fdfd38378c4da13d2271f9f91e7c9fc24fa2c0; record p1-05-p1-",
       "files": [
         "src/main/java/com/writing/novel/memory/ContextAssembler.java"
       ],
@@ -121,7 +121,7 @@
         "p1-03"
       ],
       "status": "completed",
-      "evidence": "86 tests pass; frontend built",
+      "evidence": "2026-09-16 verified: 6d02ce8fb8c7508617241bdfabc7ec6718abf080; record p2-01-p2-",
       "files": [
         "src/main/resources/prompts/plotting.st",
         "src/main/java/com/writing/novel/agent/PlotterAgent.java",
@@ -140,7 +140,7 @@
       "phase": 2,
       "dependencies": [],
       "status": "completed",
-      "evidence": "86 tests pass; frontend built",
+      "evidence": "2026-09-16 verified: 6d02ce8fb8c7508617241bdfabc7ec6718abf080; record p2-02-p2-",
       "files": [
         "src/main/java/com/writing/novel/memory/ContextAssembler.java",
         "src/main/java/com/writing/novel/agent/WorldBuilderAgent.java"
@@ -158,7 +158,7 @@
       "phase": 2,
       "dependencies": [],
       "status": "completed",
-      "evidence": "86 tests pass; frontend built",
+      "evidence": "2026-09-16 verified: 6d02ce8fb8c7508617241bdfabc7ec6718abf080; record p2-03-p2-",
       "files": [
         "src/main/resources/prompts/worldbuilding.st",
         "src/main/java/com/writing/novel/agent/WorldBuilderAgent.java"
@@ -176,7 +176,7 @@
       "phase": 3,
       "dependencies": [],
       "status": "completed",
-      "evidence": "86 tests pass; frontend built",
+      "evidence": "2026-09-16 verified: 995abc63157df9f49de53e120094e50814cbe56a; record p3-01-p3-",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
       ],
@@ -193,7 +193,7 @@
       "phase": 3,
       "dependencies": [],
       "status": "completed",
-      "evidence": "86 tests pass; frontend built",
+      "evidence": "2026-09-16 verified: 90378e62e89ee217223094efb7831f5c5c9652c8; record p3-02-p3-",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
       ],
@@ -212,7 +212,7 @@
         "p1-03"
       ],
       "status": "completed",
-      "evidence": "86 tests pass; frontend built",
+      "evidence": "2026-09-16 verified: 90378e62e89ee217223094efb7831f5c5c9652c8; record p3-03-p3-",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
         "src/main/java/com/writing/novel/agent/PlotterAgent.java",
@@ -233,7 +233,7 @@
         "p3-02"
       ],
       "status": "completed",
-      "evidence": "86 tests pass; frontend built",
+      "evidence": "2026-09-16 verified: 90378e62e89ee217223094efb7831f5c5c9652c8; record p3-04-p3-",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
         "src/main/java/com/writing/novel/agent/QualityEvaluationAgent.java"
@@ -251,7 +251,7 @@
       "phase": 4,
       "dependencies": [],
       "status": "completed",
-      "evidence": "86 tests pass; frontend built",
+      "evidence": "2026-09-16 verified: c8b02d48349fcf5e74e9e7b30513f442b1dd2966; record p4-01-p4-",
       "files": [
         "frontend/src/components/RunConsole.tsx",
         "frontend/src/pages/ProjectWorkspace.tsx"
@@ -269,7 +269,7 @@
       "phase": 4,
       "dependencies": [],
       "status": "completed",
-      "evidence": "86 tests pass; frontend built",
+      "evidence": "2026-09-16 verified: c8b02d48349fcf5e74e9e7b30513f442b1dd2966; record p4-02-p4-",
       "files": [
         "frontend/src/components/RunConsole.tsx"
       ],
@@ -286,7 +286,7 @@
       "phase": 4,
       "dependencies": [],
       "status": "completed",
-      "evidence": "86 tests pass; frontend built",
+      "evidence": "2026-09-16 verified: c8b02d48349fcf5e74e9e7b30513f442b1dd2966; record p4-03-p4-",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
       ],
@@ -305,7 +305,7 @@
         "p2-01"
       ],
       "status": "completed",
-      "evidence": "E2E: 2卷×24章大纲解析成功；87 tests pass",
+      "evidence": "2026-09-16 verified: 6d02ce8fb8c7508617241bdfabc7ec6718abf080; record p2-04-p2-",
       "files": [
         "src/main/java/com/writing/novel/agent/PlotterAgent.java"
       ],
@@ -322,7 +322,7 @@
       "phase": 0,
       "dependencies": [],
       "status": "completed",
-      "evidence": "E2E: DeepSeek 质量评分 7/10 vs 之前 qwen 2/10",
+      "evidence": "2026-09-16 verified: 0563f4480b7ad2b9a67f71df025be192028052e6; record p0-01-p0-",
       "files": [
         "src/main/resources/application.yml"
       ],
@@ -339,7 +339,7 @@
       "phase": 5,
       "dependencies": [],
       "status": "completed",
-      "evidence": "86 tests pass; ClimaxDiversityTracker injected into ContextAssembler + called from Orchestrator",
+      "evidence": "2026-09-16 verified: e50eac3aaef412640ddc2a5d6b1734b2087a9b55; record p5-a1-p5-",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
         "src/main/java/com/writing/novel/memory/ContextAssembler.java",
@@ -360,7 +360,7 @@
         "p5-a1"
       ],
       "status": "completed",
-      "evidence": "86 tests pass; ChapterSynopsis +3 fields, PlotterAgent parses 目的/张力, ContextAssembler injects",
+      "evidence": "2026-09-16 verified: b6fb2a084dd2d286cd471f6095b37ddfc26623c1; record p5-a2-p5-",
       "files": [
         "src/main/java/com/writing/novel/domain/ChapterSynopsis.java",
         "src/main/java/com/writing/novel/agent/PlotterAgent.java",
@@ -382,7 +382,7 @@
         "p5-a2"
       ],
       "status": "completed",
-      "evidence": "86 tests pass; PlotProgressionDetector detects stall/high-tension-fatigue",
+      "evidence": "2026-09-16 verified: 723bba77addd880c07843803a298311450108bec; record p5-a3-p5-",
       "files": [
         "src/main/java/com/writing/novel/service/PlotProgressionDetector.java"
       ],
@@ -401,7 +401,7 @@
         "p5-a3"
       ],
       "status": "completed",
-      "evidence": "86 tests pass; plot score now saves all 7 dims + Type.PLOT fix",
+      "evidence": "2026-09-16 verified: ae46b3613963861c65fe24ed8d6f726042d580de; record p5-a4-p5-",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
         "src/main/java/com/writing/novel/agent/PlotterAgent.java"
@@ -419,7 +419,7 @@
       "phase": 5,
       "dependencies": [],
       "status": "completed",
-      "evidence": "86 tests pass; EntityEdge +time-scoped fields + transition handling",
+      "evidence": "2026-09-16 verified: 18ac5a7874315673f1f9efe5619319e06a4f8019; record p5-b1-p5-",
       "files": [
         "src/main/java/com/writing/novel/domain/EntityEdge.java",
         "src/main/java/com/writing/novel/agent/EntityExtractorAgent.java",
@@ -442,7 +442,7 @@
         "p5-b1"
       ],
       "status": "completed",
-      "evidence": "86 tests pass; relationships now injected with type+time",
+      "evidence": "2026-09-16 verified: f5bee726c6e305d53822ae42a5f11aa461b3dd38; record p5-b2-p5-",
       "files": [
         "src/main/java/com/writing/novel/service/EntityGraphService.java"
       ],
@@ -461,7 +461,7 @@
         "p5-b2"
       ],
       "status": "completed",
-      "evidence": "86 tests pass; ArcUpdater every 10 chapters",
+      "evidence": "2026-09-16 verified: cb4438d9b1b2f86cfcb60014e54da8375a323961; record p5-b3-p5-",
       "files": [
         "src/main/java/com/writing/novel/agent/ArcUpdater.java",
         "src/main/resources/prompts/arc-update.st",
@@ -482,7 +482,7 @@
         "p5-b1"
       ],
       "status": "completed",
-      "evidence": "86 tests pass; +7 relationship types + symmetric dedup",
+      "evidence": "2026-09-16 verified: 5e70de9f821de6563a5159ea09790f0ef7a36897; record p5-b4-p5-",
       "files": [
         "src/main/java/com/writing/novel/domain/RelationshipType.java",
         "src/main/java/com/writing/novel/agent/EntityExtractorAgent.java"
@@ -500,7 +500,7 @@
       "phase": 5,
       "dependencies": [],
       "status": "completed",
-      "evidence": "86 tests pass; resolve() now called + ledger injected",
+      "evidence": "2026-09-16 verified: 8c2bbe17773e03fc1fcd2cd3f4fb7df6bfa778e3; record p5-c1-p5-",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
         "src/main/java/com/writing/novel/agent/ContinuityCheckerAgent.java",
@@ -521,7 +521,7 @@
         "p5-c1"
       ],
       "status": "completed",
-      "evidence": "86 tests pass; ForeshadowingExtractor per-chapter",
+      "evidence": "2026-09-16 verified: 69d7b8bdb94b141a1033497f43845176d250b8ed; record p5-c2-p5-",
       "files": [
         "src/main/java/com/writing/novel/agent/ForeshadowingExtractor.java",
         "src/main/resources/prompts/foreshadowing-extract.st",
@@ -542,7 +542,7 @@
         "p5-c2"
       ],
       "status": "completed",
-      "evidence": "86 tests pass",
+      "evidence": "2026-09-16 verified: 18845594495d02e6dcef8665d2b6c4ec04745e42; record p5-c3-p5-",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
         "src/main/java/com/writing/novel/domain/Foreshadowing.java"
@@ -562,7 +562,7 @@
         "p5-c1"
       ],
       "status": "completed",
-      "evidence": "86 tests pass",
+      "evidence": "2026-09-16 verified: 18845594495d02e6dcef8665d2b6c4ec04745e42; record p5-c4-p5-",
       "files": [
         "src/main/java/com/writing/novel/memory/ContextAssembler.java",
         "src/main/java/com/writing/novel/domain/Foreshadowing.java"
@@ -580,7 +580,7 @@
       "phase": 5,
       "dependencies": [],
       "status": "completed",
-      "evidence": "86 tests pass; GenreDetector + Project.genre",
+      "evidence": "2026-09-16 verified: 588e7fdd3a1e245c0676f6339ab805f5e801da87; record p5-d1-p5-",
       "files": [
         "src/main/java/com/writing/novel/domain/Project.java",
         "src/main/java/com/writing/novel/domain/GenreProfile.java",
@@ -601,7 +601,7 @@
         "p5-d1"
       ],
       "status": "completed",
-      "evidence": "86 tests pass",
+      "evidence": "2026-09-16 verified: f2832a338a83b68f5c8beeb7963c8cd1464e6b15; record p5-d2-p5-",
       "files": [
         "src/main/resources/prompts/plotting.st",
         "src/main/java/com/writing/novel/domain/ClimaxType.java",
@@ -622,7 +622,7 @@
         "p5-d1"
       ],
       "status": "completed",
-      "evidence": "86 tests pass",
+      "evidence": "2026-09-16 verified: f2832a338a83b68f5c8beeb7963c8cd1464e6b15; record p5-d3-p5-",
       "files": [
         "src/main/resources/prompts/chapter-writing.st",
         "src/main/resources/prompts/continuity-check.st"
@@ -642,7 +642,7 @@
         "p5-d2"
       ],
       "status": "completed",
-      "evidence": "86 tests pass",
+      "evidence": "2026-09-16 verified: f2832a338a83b68f5c8beeb7963c8cd1464e6b15; record p5-d4-p5-",
       "files": [
         "src/main/java/com/writing/novel/agent/PlotterAgent.java"
       ],
@@ -656,7 +656,7 @@
       "id": "p6-1",
       "name": "WritingPreset 预设模板系统",
       "status": "completed",
-      "evidence": "86 tests pass; 6 built-in presets + custom preset API",
+      "evidence": "2026-09-16 verified: 7347e4d7669c9ed94c863981ce55b73cdfbf5ce2; record p6-1-p6-",
       "acceptance": "对应实现保留在 files 字段列出的模块中，且完整 Maven 测试套件通过。",
       "verify_cmd": "mvn test",
       "description": "86 tests pass; 6 built-in presets + custom preset API",
@@ -671,7 +671,7 @@
       "id": "p6-2",
       "name": "ContextFeedbackCollector 反馈闭环",
       "status": "completed",
-      "evidence": "86 tests pass; ContinuityIssue → WritingContext.feedbackSection",
+      "evidence": "2026-09-16 verified: 7347e4d7669c9ed94c863981ce55b73cdfbf5ce2; record p6-2-p6-",
       "acceptance": "对应实现保留在 files 字段列出的模块中，且完整 Maven 测试套件通过。",
       "verify_cmd": "mvn test",
       "description": "86 tests pass; ContinuityIssue → WritingContext.feedbackSection",
@@ -686,7 +686,7 @@
       "id": "p6-3",
       "name": "CharacterVoiceEnhancer + Rewrite修复",
       "status": "completed",
-      "evidence": "86 tests pass; cast filtering + contrast mode + rewrite path fix",
+      "evidence": "2026-09-16 verified: 7347e4d7669c9ed94c863981ce55b73cdfbf5ce2; record p6-3-p6-",
       "acceptance": "对应实现保留在 files 字段列出的模块中，且完整 Maven 测试套件通过。",
       "verify_cmd": "mvn test",
       "description": "86 tests pass; cast filtering + contrast mode + rewrite path fix",
@@ -701,7 +701,7 @@
       "id": "p6-4",
       "name": "StyleProfileDynamicUpdate",
       "status": "completed",
-      "evidence": "86 tests pass; volume-end StyleProfile merge update",
+      "evidence": "2026-09-16 verified: 7347e4d7669c9ed94c863981ce55b73cdfbf5ce2; record p6-4-p6-",
       "acceptance": "对应实现保留在 files 字段列出的模块中，且完整 Maven 测试套件通过。",
       "verify_cmd": "mvn test",
       "description": "86 tests pass; volume-end StyleProfile merge update",
@@ -716,7 +716,7 @@
       "id": "p8-1",
       "name": "历史感知 Prompt + 通用创意指令重写",
       "status": "completed",
-      "evidence": "86 tests pass; 删除硬编码黑名单 → 通用创意指令; diversityGuide 注入 3 个 Agent",
+      "evidence": "2026-09-16 verified: e9ac52896b2c7702143cc4ca640c067d0af3aef0; record p8-1-p8-",
       "acceptance": "对应实现保留在 files 字段列出的模块中，且完整 Maven 测试套件通过。",
       "verify_cmd": "mvn test",
       "description": "86 tests pass; 删除硬编码黑名单 → 通用创意指令; diversityGuide 注入 3 个 Agent",
@@ -731,7 +731,7 @@
       "id": "p8-2",
       "name": "NarrativeThreadTracker 叙事线索追踪",
       "status": "completed",
-      "evidence": "86 tests pass; 线索追踪 ACTIVE/SUSPENDED/RESOLVED; 悬挂检测 + 注入",
+      "evidence": "2026-09-16 verified: abf9944f625e30414ffb81e8acd71ed99546186e; record p8-2-p8-",
       "acceptance": "对应实现保留在 files 字段列出的模块中，且完整 Maven 测试套件通过。",
       "verify_cmd": "mvn test",
       "description": "86 tests pass; 线索追踪 ACTIVE/SUSPENDED/RESOLVED; 悬挂检测 + 注入",
@@ -746,7 +746,7 @@
       "id": "p8-3",
       "name": "ReaderReviewAgent 读者驱动 Agentic Loop",
       "status": "completed",
-      "evidence": "86 tests pass; 每章读者检验; score<7 自动重写; 最多1次",
+      "evidence": "2026-09-16 verified: cb032bf0e6765e77542c8191254f8012bcb04b9b; record p8-3-p8-",
       "acceptance": "对应实现保留在 files 字段列出的模块中，且完整 Maven 测试套件通过。",
       "verify_cmd": "mvn test",
       "description": "86 tests pass; 每章读者检验; score<7 自动重写; 最多1次",
@@ -761,7 +761,7 @@
       "id": "p8-4",
       "name": "DiversityTracker + 激活死代码",
       "status": "completed",
-      "evidence": "86 tests pass; 多维度轮换约束; getClimaxSuggestions/preventTransitionOverlap 激活",
+      "evidence": "2026-09-16 verified: e9ac52896b2c7702143cc4ca640c067d0af3aef0; record p8-4-p8-",
       "acceptance": "对应实现保留在 files 字段列出的模块中，且完整 Maven 测试套件通过。",
       "verify_cmd": "mvn test",
       "description": "86 tests pass; 多维度轮换约束; getClimaxSuggestions/preventTransitionOverlap 激活",
@@ -1374,7 +1374,7 @@
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
       ],
       "problem_ref": "GAP: FINAL终审不充分",
-      "evidence": "由 p11-q3-06 吸收完成",
+      "evidence": "2026-09-16 verified: 76ecbd532948bd91bfd5b746bb52bb43a7f77725; record p10-w3-09-p10",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -1385,7 +1385,7 @@
       "phase": 11,
       "dependencies": [],
       "status": "completed",
-      "evidence": "RelevanceGatewayNarrowingTest 5 pass；4 检查器(ConsistencyGuard/ContinuityChecker/EntityExtractor/CharacterProfileUpgrader)构造器注入 RelevanceGateway(保留旧构造器兼容)；collectSettingsForCheck/ConsistencyGuard.check 按 cast 收窄；全量 mvn test BUILD SUCCESS(0 失败，2 SpringBoot 测试需 ALIYUN_LLM_API_KEY)",
+      "evidence": "2026-09-16 verified: f81de020c9253c5e9e357e7c9702a12b76453847; record p11-q0-01-p11",
       "files": [
         "src/main/java/com/writing/novel/agent/ConsistencyGuard.java",
         "src/main/java/com/writing/novel/agent/ContinuityCheckerAgent.java",
@@ -1407,7 +1407,7 @@
         "p11-q0-01"
       ],
       "status": "completed",
-      "evidence": "CanonConsumedByCheckersTest 4 pass；5 检查器(ConsistencyGuard/ContinuityChecker/EntityExtractor/CharacterProfileUpgrader/QualityEvaluation)消费真典 ACTIVE 事实(grep StoryFact 2-3处)；consistency-guard.st +storyCanon 段；collectSettingsForCheck+真典段；全量 BUILD SUCCESS",
+      "evidence": "2026-09-16 verified: fd2746c749e4cef6c13b9eaffe8996c5938fb3f8; record p11-q0-02-p11",
       "files": [
         "src/main/java/com/writing/novel/agent/ConsistencyGuard.java",
         "src/main/java/com/writing/novel/agent/ContinuityCheckerAgent.java",
@@ -1429,7 +1429,7 @@
         "p11-q0-02"
       ],
       "status": "completed",
-      "evidence": "CharacterSingleSourceTest 4 pass；ArcUpdater 成长弧演进写真典 CHARACTER_STATE(无变化刷新/变化supersede)；CharacterProfileUpgrader 建档播种初始真典状态(已有则不覆盖)；真典为可变状态权威源,Character卡兼容保留；全量 BUILD SUCCESS",
+      "evidence": "2026-09-16 verified: 8f30c003e31955f493243e05f2cea0b80d53324d; record p11-q0-03-p11",
       "files": [
         "src/main/java/com/writing/novel/agent/CharacterProfileUpgrader.java",
         "src/main/java/com/writing/novel/memory/ContextAssembler.java"
@@ -1450,7 +1450,7 @@
         "p11-q0-02"
       ],
       "status": "completed",
-      "evidence": "ClosedLoopRepairClassificationTest 5 pass；RepairArbiter 三分类(REWRITE/SUPERSEDE_CANON/MANUAL_REVIEW)；重写后仍HIGH/时间线→MANUAL_REVIEW 激活 Chapter.NEEDS_MANUAL_REVIEW(此前从未赋值,现:1159)；世界观→SUPERSEDE_CANON correctCanon 记真典；全量 BUILD SUCCESS",
+      "evidence": "2026-09-16 verified: b755238f28a56b4df326edf45e42d4aae1d48fb3; record p11-q0-04-p11",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
         "src/main/java/com/writing/novel/domain/Chapter.java"
@@ -1471,7 +1471,7 @@
         "p11-q0-04"
       ],
       "status": "completed",
-      "evidence": "RewriteRecheckTest pass；continuity HIGH 重写后重跑 ContinuityChecker 复检(CONTINUITY_CHECK 调用>=2,之前只标resolved不重跑)；复检HIGH走applyRepairClassification；全量 BUILD SUCCESS",
+      "evidence": "2026-09-16 verified: b0a592d49deb612eabfe42b5cf8bb6a80df2d6a8; record p11-q0-05-p11",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
       ],
@@ -1489,7 +1489,7 @@
       "phase": 11,
       "dependencies": [],
       "status": "completed",
-      "evidence": "ArchiveCompactorTest 6 pass(含3新归档测试)；补齐 foreshadowings(retireStale)/narrative_threads(deleteResolved)/knowledge_entries(deleteDuplicate) 归档,共 5 类(W3-03 只 2/5)；全量 BUILD SUCCESS",
+      "evidence": "2026-09-16 verified: e7a1565899a13322e060d0528381b26bb7ae4fcd; record p11-q0-06-p11",
       "files": [
         "src/main/java/com/writing/novel/service/ArchiveCompactor.java"
       ],
@@ -1507,7 +1507,7 @@
       "phase": 11,
       "dependencies": [],
       "status": "completed",
-      "evidence": "ConceiveGateTest 5 pass；ConceiveGate.checkWorldbuilding(力量体系/重名/完整性规则档)；doConceiving WorldBuilder 后插门禁+最多2次带反馈重生成(deleteKnowledgeEntriesByProject 清旧)；全量 BUILD SUCCESS",
+      "evidence": "2026-09-16 verified: 41bcc39915fa913bc1c05a18831da82fb15030d6; record p11-q1-01-p11",
       "files": [
         "src/main/java/com/writing/novel/service/ConceiveGate.java",
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
@@ -1527,7 +1527,7 @@
         "p11-q1-01"
       ],
       "status": "completed",
-      "evidence": "ConceiveGateTest 8 pass；ConceiveGate.checkCharacters(主角/重名/能力)+checkOutline(总纲/分卷)；doConceiving Character/Outline 后插门禁(Outline 不过关重plan一次)；全量 BUILD SUCCESS",
+      "evidence": "2026-09-16 verified: c3650a08c2bd1f08d9f747359e48d604cb36d3f4; record p11-q1-02-p11",
       "files": [
         "src/main/java/com/writing/novel/service/ConceiveGate.java"
       ],
@@ -1546,7 +1546,7 @@
         "p11-q1-01"
       ],
       "status": "completed",
-      "evidence": "GatePolicyTest pass；markQualityRisk 软门禁(quality_risk ContinuityIssue STRUCTURE/MEDIUM,不阻塞)；WorldBuilder/Character/Outline 门禁失败接入；INTERACTIVE 复用 PAUSED；全量 BUILD SUCCESS",
+      "evidence": "2026-09-16 verified: 772ebdf07d4eb0a555c80d0f51b5af0ee08d6bb9; record p11-q1-03-p11",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
         "src/main/java/com/writing/novel/domain/Chapter.java"
@@ -1569,7 +1569,7 @@
         "p11-q0-02"
       ],
       "status": "completed",
-      "evidence": "PlanGateTest 3 pass；PlanGate.checkSynopsis(标题/内容/beats)；doWriteOneChapter 写正文前预检,不过关 markQualityRisk；全量 BUILD SUCCESS",
+      "evidence": "2026-09-16 verified: 2afe9bcb2e60cdaad4a504a6702b77b2d581927e; record p11-q1-04-p11",
       "files": [
         "src/main/java/com/writing/novel/service/PlanGate.java",
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
@@ -1587,7 +1587,7 @@
       "phase": 11,
       "dependencies": [],
       "status": "completed",
-      "evidence": "p11-q2-01: QualityCouncilTest 4 pass；独立 service+测试；全量 BUILD SUCCESS",
+      "evidence": "2026-09-16 verified: 3d81490c5ee10cea4ea30a3458e5099642e42851; record p11-q2-01-p11",
       "files": [
         "src/main/java/com/writing/novel/service/QualityCouncil.java",
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
@@ -1627,7 +1627,7 @@
         "p11-q2-02"
       ],
       "status": "completed",
-      "evidence": "checkContinuityAfterWriting 的 guard HIGH 重写用 QualityCouncil.collect 合并 continuity+guard 问题(合并纠偏指令)；continuity issues 提升方法变量供引用；全量 BUILD SUCCESS",
+      "evidence": "2026-09-16 verified: ee44bc9b4be533ed6a8ed14d9894226c944800cc; record p11-q2-03-p11",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
       ],
@@ -1646,7 +1646,7 @@
         "p11-q2-03"
       ],
       "status": "completed",
-      "evidence": "WritingPreferences.rewriteBudget 字段(默认1)+schema+持久化",
+      "evidence": "2026-09-16 verified: 8bef46070fb1329d23f0ce8a6a2e19a740547cdc; record p11-q2-04-p11",
       "files": [
         "src/main/java/com/writing/novel/domain/WritingPreferences.java",
         "src/main/java/com/writing/novel/service/Arbiter.java"
@@ -1683,7 +1683,7 @@
       "phase": 11,
       "dependencies": [],
       "status": "completed",
-      "evidence": "QualityEventLogTest pass；5类质量事件(QUALITY_REVIEW/REWRITE_TRIGGERED/CONSISTENCY_ISSUE/QUALITY_CIRCUIT_BREAKER/QUALITY_GATE)接入决策点(markQualityRisk/reader review/熔断/applyRepairClassification)；全量 BUILD SUCCESS",
+      "evidence": "2026-09-16 verified: ab269f5ae69d5ba1ead4b664fca99835bbc6041e; record p11-q3-01-p11",
       "files": [
         "src/main/java/com/writing/novel/telemetry/EventLog.java",
         "src/main/java/com/writing/novel/telemetry/EventContext.java"
@@ -1703,7 +1703,7 @@
         "p11-q3-01"
       ],
       "status": "completed",
-      "evidence": "diagnose.sh 加质量诊断分类(重写成功率/issue根因Top/熔断次数/FINAL失败原因/quality_risk标记)；合成 events 验证输出正确",
+      "evidence": "2026-09-16 verified: 951e201696d6a348fdab0b4ebed2123b24f5c894; record p11-q3-02-p11",
       "files": [
         "scripts/diagnose.sh"
       ],
@@ -1720,7 +1720,7 @@
       "phase": 11,
       "dependencies": [],
       "status": "completed",
-      "evidence": "ConsistencyGuard 2处 catch(Exception ignored)→log.warn fail-loud",
+      "evidence": "2026-09-16 verified: 57ea1867893b80d15a1ac5163db9697f0afdffc4; record p11-q3-03-p11",
       "files": [
         "src/main/java/com/writing/novel/agent/ConsistencyGuard.java",
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
@@ -1759,7 +1759,7 @@
         "p11-q2-03"
       ],
       "status": "completed",
-      "evidence": "ConsistencyGuardTest 补齐(能力越界HIGH/凭空证据HIGH/时代穿帮MEDIUM 解析+无问题空)；质检反馈重写测试网补齐(本会话已加 RelevanceGatewayNarrowing/CanonConsumedByCheckers/CharacterSingleSource/ClosedLoopRepairClassification/RewriteRecheck/GatePolicy/QualityCouncil/Arbiter/PlanGate/QualityEventLog 共10个测试类)",
+      "evidence": "2026-09-16 verified: 1f40affde2d5550127aacc02b1fad5a5bc01efc1; record p11-q3-05-p11",
       "files": [],
       "problem_ref": "证据D: 质检反馈重写三路径零专门测试；集成测试置 readerReviewAgent=null",
       "acceptance": "质检反馈重写三路径/ConsistencyGuard 单测/仲裁复检/门禁测试补齐；集成测试不再置 null",
@@ -1780,7 +1780,7 @@
         "p11-q3-01"
       ],
       "status": "completed",
-      "evidence": "p11-q3-06: FINAL_GATE 事件 emit(PASS/FAIL+原因)；runFinalAuditGate 已含真典 SUPERSEDED>20 告警+成本回执(p10-w3-09 核心)；吸收 p10-w3-09；FinalAuditGateTest pass，全量 BUILD SUCCESS",
+      "evidence": "2026-09-16 verified: 76ecbd532948bd91bfd5b746bb52bb43a7f77725; record p11-q3-06-p11",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
       ],
@@ -1797,7 +1797,7 @@
       "phase": 12,
       "dependencies": [],
       "status": "completed",
-      "evidence": "parseAndAppendVolume cleanText 同时剥离 #（markdown ## 标题可解析，不再走占位卷）",
+      "evidence": "2026-09-16 verified: 78deccdcfd5debff1ab0f028f6998a581b660dd7; record p12-01-p12",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
       ],
@@ -1815,7 +1815,7 @@
       "phase": 12,
       "dependencies": [],
       "status": "completed",
-      "evidence": "PlotterAgent.stripPreamble 剥离【总纲】前客套话；Phase12FixTest pass",
+      "evidence": "2026-09-16 verified: 78deccdcfd5debff1ab0f028f6998a581b660dd7; record p12-02-p12",
       "files": [
         "src/main/java/com/writing/novel/agent/PlotterAgent.java"
       ],
@@ -1833,7 +1833,7 @@
       "phase": 12,
       "dependencies": [],
       "status": "completed",
-      "evidence": "ReaderReview 解析失败降温+严格JSON指令重试1次；Phase12FixTest 2用例",
+      "evidence": "2026-09-16 verified: 78deccdcfd5debff1ab0f028f6998a581b660dd7; record p12-03-p12",
       "files": [
         "src/main/java/com/writing/novel/agent/ReaderReviewAgent.java"
       ],
@@ -1851,7 +1851,7 @@
       "phase": 12,
       "dependencies": [],
       "status": "completed",
-      "evidence": "未命名/空名人物卡丢弃不保存；Phase12FixTest pass",
+      "evidence": "2026-09-16 verified: 78deccdcfd5debff1ab0f028f6998a581b660dd7; record p12-04-p12",
       "files": [
         "src/main/java/com/writing/novel/agent/CharacterDesignerAgent.java"
       ],
@@ -1869,7 +1869,7 @@
       "phase": 12,
       "dependencies": [],
       "status": "completed",
-      "evidence": "WritingPreferences 构造器 targetChapters 400→24",
+      "evidence": "2026-09-16 verified: 78deccdcfd5debff1ab0f028f6998a581b660dd7; record p12-05-p12",
       "files": [
         "src/main/java/com/writing/novel/domain/WritingPreferences.java"
       ],
@@ -1887,7 +1887,7 @@
       "phase": 12,
       "dependencies": [],
       "status": "completed",
-      "evidence": "前端表单增加 6 题材预设选择（romance等），build 成功",
+      "evidence": "2026-09-16 verified: 78deccdcfd5debff1ab0f028f6998a581b660dd7; record p12-06-p12",
       "files": [
         "frontend/src/pages/ProjectListPage.tsx",
         "frontend/src/api/client.ts"
@@ -1906,7 +1906,7 @@
       "phase": 13,
       "dependencies": [],
       "status": "completed",
-      "evidence": "CanonPatchServiceTest 4 pass；改人物/世界观 SUPERSEDE+【HUMAN_PATCH】+MemoryRevision.bump",
+      "evidence": "2026-09-16 verified: 876fb093de0d240e0c8349a5e8d8b21c78220559; record p13-h1-01-p13",
       "files": [
         "src/main/java/com/writing/novel/service/CanonPatchService.java"
       ],
@@ -1925,7 +1925,7 @@
         "p13-h1-01"
       ],
       "status": "completed",
-      "evidence": "CanonWriteApiTest pass；PUT character/world + GET/POST facts 走 CanonPatch",
+      "evidence": "2026-09-16 verified: deda29afb5a6c53816f914fbda2b39e8f86fb9a5; record p13-h1-02-p13",
       "files": [
         "src/main/java/com/writing/novel/web/ContentController.java"
       ],
@@ -1942,7 +1942,7 @@
       "phase": 13,
       "dependencies": [],
       "status": "completed",
-      "evidence": "NovelOrchestratorWritingTest 交互 loop 写1章即 PAUSED；pause() 后 loop 写0章；POST /pause /resume",
+      "evidence": "2026-09-16 verified: 159e992843e0d808da4ca97b20a88e7f84250e39; record p13-h1-03-p13",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
         "src/main/java/com/writing/novel/web/OrchestratorController.java"
@@ -1984,7 +1984,7 @@
         "p13-h1-03"
       ],
       "status": "completed",
-      "evidence": "WorldbuildingView/OutlineView 可保存；工作区暂停/续写；client.ts 补 PUT/pause/facts",
+      "evidence": "2026-09-16 verified: 9aa04135a7ed048897d0cd950ca56f9ff8a7fca4; record p13-h1-05-p13",
       "files": [
         "frontend/src/components/WorldbuildingView.tsx",
         "frontend/src/components/OutlineView.tsx",
@@ -2058,7 +2058,7 @@
       "phase": 13,
       "dependencies": [],
       "status": "completed",
-      "evidence": "OutlineReplannerTest pass；replaceUnwritten 保留已写梗概；replanRemainingOutline 不再追加偏离段",
+      "evidence": "2026-09-16 verified: 71f14f18b71f3be17a409d7d5679fb7cbabb9554; record p13-h3-01-p13",
       "files": [
         "src/main/java/com/writing/novel/service/OutlineReplanner.java",
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
@@ -2195,7 +2195,7 @@
       "problem_ref": "QA L11: DELETE 500 no such column project_id",
       "acceptance": "建含 outline/world/facts 的项目后 deleteProject 不抛；projects/outlines/story_facts/knowledge_entries 对该 id 为 0 行",
       "verify_cmd": "mvn test -Dtest=SqliteNovelRepositoryDeleteTest",
-      "evidence": "SqliteNovelRepositoryDeleteTest 1 pass; delete uses projects.id + all project_id tables in a transaction",
+      "evidence": "2026-09-16 verified: 425a47097a4333f48ad37e7dd9dc27041005d117; record p14-01-p14",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2214,7 +2214,7 @@
       "problem_ref": "QA P16: 构思 500 内部错误且世界观仍 0",
       "acceptance": "NPE 响应含异常类名；WorldBuilder 空产出时仍 CONCEIVING",
       "verify_cmd": "mvn test -Dtest=ConceivingCompletenessTest,GlobalExceptionHandlerTest",
-      "evidence": "GlobalExceptionHandlerTest + ConceivingCompletenessTest + NovelOrchestratorConceiveTest pass",
+      "evidence": "2026-09-16 verified: 6109fa3a99b2b3d9cb910bb5d03dd509809c4153; record p14-02-p14",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2234,7 +2234,7 @@
       "problem_ref": "QA P5 UI 超时误报；写一章后处理期间看不到暂停",
       "acceptance": "harvest 阻塞时 editPassage/writeChapter 仍返回；INTERACTIVE 立即 PAUSED",
       "verify_cmd": "mvn test -Dtest=EditPassageReturnsBeforeHarvestTest,InteractivePauseAfterPersistTest",
-      "evidence": "EditPassageReturnsBeforeHarvestTest + InteractivePauseAfterPersistTest + NovelOrchestratorWritingTest pass",
+      "evidence": "2026-09-16 verified: d4ed67f5f0cc3e942ee5007adc0bfb590a8628b6; record p14-03-p14",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2253,7 +2253,7 @@
       "problem_ref": "后端已异步返回 taskId，前端仍读 chaptersWritten",
       "acceptance": "writeAll 首次响应用 taskId 轮询；文案无写完全书除非 N=剩余",
       "verify_cmd": "mvn test -Dtest=WritingTaskExecutorTest",
-      "evidence": "client.writeAll polls writing-tasks; RunConsole copy is 最多 50 章",
+      "evidence": "2026-09-16 verified: 47afbe5183b1201930c95f4edcf78cad5228ac30; record p14-04-p14",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2272,7 +2272,7 @@
       "problem_ref": "QA P8 批准后落到 PLANNING，旧 checkpoint 处理不一致",
       "acceptance": "两条 PENDING 批准较新的，旧的仍 PENDING 且 state=PAUSED",
       "verify_cmd": "mvn test -Dtest=ApproveSpecificCheckpointTest",
-      "evidence": "ApproveSpecificCheckpointTest pass; InteractiveReview lists all PENDING",
+      "evidence": "2026-09-16 verified: a9218f2a96c4c8ab04a6ac9815a72906cdbe1713; record p14-05-p14",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2293,7 +2293,7 @@
       "problem_ref": "QA: 人物只改能力；facts 无入口；CULTURE 原文；新建只回列表",
       "acceptance": "PUT personality 写真典；facts 可增改；CULTURE 显示文化",
       "verify_cmd": "mvn test -Dtest=CanonPatchServiceTest",
-      "evidence": "人物全字段可编辑；真典列表+添加；CULTURE=文化；侧栏新建 ?new=1 打开创建框",
+      "evidence": "2026-09-16 verified: c63cfa0ea6edbbb8045e915048e3e718a3a4ea54; record p14-06-p14",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2311,7 +2311,7 @@
       "problem_ref": "构思后不能新增世界观/人物卡",
       "acceptance": "POST 后 GET 多一条且真典 ACTIVE；write-all/write-chapter active 时 409",
       "verify_cmd": "mvn test -Dtest=HitlCreateWorldCharacterTest",
-      "evidence": "HitlCreateWorldCharacterTest 3 pass；POST world/character + beginWork 409",
+      "evidence": "2026-09-16 verified: 03e2cf357233737b55952bdc525e6a86b6160f7b; record p15-01-p15",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2331,7 +2331,7 @@
       "problem_ref": "WorldBuilder/CharacterDesigner 只在 conceiving；图实体不升卡",
       "acceptance": "expand 不改已有 character id；promote 出新卡",
       "verify_cmd": "mvn test -Dtest=HitlExpandAgentsTest",
-      "evidence": "HitlExpandAgentsTest 2 pass；expand 不覆盖旧卡；promote 出新卡",
+      "evidence": "2026-09-16 verified: 63a50833b6867f0609a20fb84d7c114a2092ffc7; record p15-02-p15",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2351,7 +2351,7 @@
       "problem_ref": "大纲树只读；改大纲不触发 Replanner",
       "acceptance": "已写梗概不变；未写被替换",
       "verify_cmd": "mvn test -Dtest=UnwrittenSynopsisEditTest",
-      "evidence": "UnwrittenSynopsisEditTest 2 pass；PUT 保护已写梗概/卷名；POST /replan 只替换未写且 INTERACTIVE 挂 AFTER_VOLUME_OUTLINE；全量 mvn test 303 pass / 0 fail / 1 skip",
+      "evidence": "2026-09-16 verified: a8cc932ae0d1b7a7131699a8cda91378f0b5f0a4; record p15-03-p15",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2370,7 +2370,7 @@
       "problem_ref": "真典不能改；伏笔无 UI；人审无动作",
       "acceptance": "废止后 active 不含；resolve 后 RESOLVED；人审可清 DONE",
       "verify_cmd": "mvn test -Dtest=HitlCanonForeshadowReviewTest",
-      "evidence": "HitlCanonForeshadowReviewTest 3 pass；retire/foreshadow resolve/resolve-review 全绿",
+      "evidence": "2026-09-16 verified: 0f33e2560196b206a7cf69c9e41af249a6bf69fd; record p15-04-p15",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2390,7 +2390,7 @@
       "problem_ref": "构思 300s abort；write-all 无取消；删项目无护栏",
       "acceptance": "POST /run 立即返回 taskId；cancel 后 CANCELLED；DELETE 409",
       "verify_cmd": "mvn test -Dtest=ConceiveTaskTest",
-      "evidence": "ConceiveTaskTest 3 pass；CONCEIVING /run 立即 taskId；DELETE 409；write-all cancel 生效",
+      "evidence": "2026-09-16 verified: b2e97939850e8486d39ad38efa56d662a906d508; record p15-05-p15",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2410,7 +2410,7 @@
       "problem_ref": "偏好每下 chat LLM；每章暂停无法调成卷末/仅手动",
       "acceptance": "滑条不调 LLM；span=0 写章不自动 PAUSED",
       "verify_cmd": "mvn test -Dtest=CheckpointSpanTest",
-      "evidence": "CheckpointSpanTest 2 pass；PUT checkpointSpan 不走 chat；span=0 写章不自动暂停",
+      "evidence": "2026-09-16 verified: 3dbe851756cda783c8df92a58932ee02e52fa1e2; record p15-06-p15",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2430,7 +2430,7 @@
       "problem_ref": "E2E replay chapter 3 request fingerprint mismatch caused by shared fixture corpus",
       "acceptance": "record 和 replay 使用同一 E2E_FIXTURE_DIR 时，三章 replay 的 taskStatus=COMPLETED、llmErrors=0、chapterFailures=0。",
       "verify_cmd": "bash scripts/e2e-fixture-dir-test.sh && E2E_FIXTURE_DIR=data/e2e-fixtures/replay-proof-20260822 ./scripts/e2e.sh --mode replay",
-      "evidence": "2026-08-22: fixture harness pass；record/replay 各 3 章、10802 字、50 LLM calls、0 errors；mvn test 320 pass / 0 fail / 1 skip；compare-baseline PASS",
+      "evidence": "2026-09-16 verified: 2ee2e578ddf56de425fe47fd144bbac427fe224b; record p15-07-p15",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2450,7 +2450,7 @@
       "problem_ref": "E2E replay 指纹失配排查（p15-07）暴露：同级反馈超限截断依赖 DB 返回序；substring 主角判定让「重要配角（主角盟友线）」抢走首位与锚点行，章节 prompt 指纹漂移",
       "acceptance": "mvn test -Dtest=ContextOrderDeterminismTest,RelevanceGatewayAnchorTest,ContextAssemblerTest 通过：检索命中顺序不影响 relevantCharacters 规范序；cast 命中/无 cast 时精确主角居首；锚点行取精确主角；同级反馈超限按描述稳定截断",
       "verify_cmd": "mvn test -Dtest='ContextOrderDeterminismTest,RelevanceGatewayAnchorTest,ContextAssemblerTest'",
-      "evidence": "2026-08-22 实现入库 commit 7603ee1：mvn test -Dtest='ContextOrderDeterminismTest,RelevanceGatewayAnchorTest,ContextAssemblerTest,ClimaxDiversityTrackerTest' 12 pass / 0 fail（规范序/锚点首位/无 cast 锚点/同级超限稳定截断/爽点序化）；上下文组装基线门禁：E2E_FIXTURE_DIR=data/e2e-fixtures/replay-proof-20260822 ./scripts/e2e.sh --mode replay 3 章 10802 字 50 LLM calls 0 errors + compare-baseline.py PASS；全量 mvn test 337 pass / 0 fail / 1 skip",
+      "evidence": "2026-09-16 verified: 9824b42395b862dd5afab3f28983fb07013907eb; record p15-08-p15",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2468,7 +2468,7 @@
       "problem_ref": "replay 指纹失配只报缺失 fixture 文件名，且 fixture 仅存截断 preview，无法离线比对完整请求定位漂移来源",
       "acceptance": "mvn test -Dtest=RecordReplayLlmGatewayTest 通过：record fixture JSON 含完整 systemPrompt/userMessage；replay miss 转储恰好一个含完整请求的 .miss.json 且仍抛 IllegalStateException",
       "verify_cmd": "mvn test -Dtest=RecordReplayLlmGatewayTest",
-      "evidence": "2026-08-22 实现入库 commit 9a866a6：mvn test -Dtest=RecordReplayLlmGatewayTest 8 pass / 0 fail（新增 2 用例：回放miss时转储完整请求供指纹诊断、录制fixture保存完整请求，断言 .miss.json 恰好 1 个且含完整 systemPrompt/userMessage 并仍抛 IllegalStateException）；全量 mvn test 337 pass / 0 fail / 1 skip",
+      "evidence": "2026-09-16 verified: 9824b42395b862dd5afab3f28983fb07013907eb; record p15-09-p15",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2488,7 +2488,7 @@
       "description": "卷末 ArchiveCompactor 将 30 章前出现且此后未复发/未解决的 HIGH 标 resolved（老化，注明 aged_out）；FINAL 门禁与写作循环熔断只统计近 60 章的未解决 HIGH。",
       "acceptance": "HighIssueAgingTest：构造 40 章前的未复发 HIGH → 归档后 resolved=1 且 reason=aged_out；FINAL 门禁用 41 条历史 HIGH + 0 近期 HIGH 判 PASS；熔断计数不含 60 章前 HIGH",
       "verify_cmd": "mvn test -Dtest=HighIssueAgingTest",
-      "evidence": "2026-08-28 实跑：HighIssueAgingTest 3 pass（老化/历史门禁/近期门禁）；ArchiveCompactorTest 6 + FinalAuditGateTest 4 回归通过；全量 mvn test 396 pass / 0 fail / 1 skip（commit 9a9e6fd）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）",
+      "evidence": "2026-09-16 verified: 9a9e6fdfb01ccef4138faf4f81e01da4b5c488c1; record p16-01-p16",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2506,7 +2506,7 @@
       "description": "大纲耗尽且 mustResolve 伏笔 >0 时：生成 8 章『回收卷』（放宽 extend 的 targetChapters 上限一次），mustResolve 伏笔写入回收卷新章梗概的 writingNotes；写完回收卷后再走 FINAL 门禁。",
       "acceptance": "FinalForeshadowingRecoveryTest：targetChapters 达上限 + mustResolve 伏笔存在 → 调用 extend 生成回收卷且回收指令出现在新章梗概；无 mustResolve 时行为不变（直接门禁）",
       "verify_cmd": "mvn test -Dtest=FinalForeshadowingRecoveryTest",
-      "evidence": "2026-08-28 实跑：FinalForeshadowingRecoveryTest 3 pass（回收卷追加+指令入writingNotes/有界一次/无mustResolve不追加）；FinalAuditGateTest 回归通过（commit 9727f08）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）",
+      "evidence": "2026-09-16 verified: 9727f08b85646832c47aeb3dbee4bc991fade3de; record p16-02-p16",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2525,7 +2525,7 @@
       "description": "收割 prompt 只注入与本章相关的事实（本章 cast 匹配 + importance desc top，硬上限 80 条）+ 声明『清单为检索子集，未列出不代表不存在』；LLM 失败记 LLM_ERROR 事件并 log.warn。",
       "acceptance": "FactHarvesterScopedTest：500 条 ACTIVE 事实时 prompt 中事实清单 ≤80 条且含 cast 相关；LLM 抛异常时 events.jsonl 出现 LLM_ERROR 事件",
       "verify_cmd": "mvn test -Dtest=FactHarvesterScopedTest",
-      "evidence": "2026-08-28 实跑：FactHarvesterScopedTest 2 pass（500条事实清单≤80且cast相关+子集声明/LLM失败emit LLM_ERROR）；FactHarvesterTest 5 回归通过（commit 4b4df2a）",
+      "evidence": "2026-09-16 verified: 4b4df2a49acdc737306fa2a2d97e0a205b5e59d1; record p16-03-p16",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2564,7 +2564,7 @@
       "description": "三个路径统一走 indexChapterInChunks（内含 removeByIdPrefix 清旧 + 批量 embedding 入库），抽公共方法避免重复。",
       "acceptance": "VectorCleanupOnRewritePathsTest：rewriteForCorrection/rewriteChapter/editPassage 后，向量库中该章 chunk 均为新版本内容（旧版本 0 命中）",
       "verify_cmd": "mvn test -Dtest=VectorCleanupOnRewritePathsTest",
-      "evidence": "2026-08-28 实跑（agent 实现+主会话复核）：VectorCleanupOnRewritePathsTest 3 pass（rewriteForCorrection/rewriteChapter/editPassage 后旧chunk清+新chunk入库，红→绿）；*Vector*/*Rewrite*/*EditPassage* 回归 15 pass（commit d0f93af）",
+      "evidence": "2026-09-16 verified: ffad1e9f8d75cfa3632477693ccc8a1ae28d9fd7; record p16-05-p16",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2583,7 +2583,7 @@
       "description": "buildRecentSummary 重构为分层：book_summary → 最近 3 卷全文 → 细粒度摘要 → 更早卷 stub（丢最老优先）；applyTokenBudget 增加 premiseSection 截断（保头部 6000 token，标注已截断）。",
       "acceptance": "SummaryLayeredTrimTest：50 卷 + 预算受限时，最近 3 章细粒度摘要仍在、最老卷 stub 先被丢弃；超长 premise 被截断且含截断标记",
       "verify_cmd": "mvn test -Dtest=SummaryLayeredTrimTest",
-      "evidence": "2026-08-28 实跑（agent 实现+主会话复核）：SummaryLayeredTrimTest 4 pass（预算受限细粒度保/最老卷stub先丢/超长premise截断保头+标记/常规premise不裁）；ContextAssembler 相关回归 24 pass（commit 8716a2e）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）",
+      "evidence": "2026-09-16 verified: 8716a2e9de31cb02a98095371601734452dc518c; record p16-06-p16",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2605,7 +2605,7 @@
       "description": "GenreProfile 增 WUXIA；GenreDetector 修仙分支前加武侠分支（武侠/江湖/侠客/门派/镖局/恩仇/剑客/武林）；GenreRuleProvider 补武侠规则（动作驱动节奏、江湖门派体系、招式比拼场景占比、侠义冲突建议）；presets/wuxia.json（沉雄遒劲、白描动作、对话密度 0.4）；前端预设下拉 +1。",
       "acceptance": "WuxiaGenreTest：detect(武侠,江湖)=WUXIA；GenreRuleProvider 各规则方法对 WUXIA 非空且不含修仙境界词；PresetRegistry 加载 wuxia.json 且 applyToPreferences 生效；前端 npm build 通过",
       "verify_cmd": "mvn test -Dtest=WuxiaGenreTest",
-      "evidence": "2026-08-28 实跑：WuxiaGenreTest 4 pass（检测/优先级/规则/预设）；GenreDetector/ConsistencyGate/预设回归通过；npm run build 通过（commit 6cd62a5）",
+      "evidence": "2026-09-16 verified: 6cd62a57c3b090f2be7236def2534de9d46615bf; record p17-01-p17",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2628,7 +2628,7 @@
       "description": "buildWritingConstraints 与 buildChapterLengthGuide 接收 genre：快节奏题材（CULTIVATION/WUXIA/THRILLER/MYSTERY 保持现状）保留爽点/四段式/钩子硬约束；慢节奏/严肃题材（LITERARY/HISTORICAL/ROMANCE）替换为题材结构指引（张力递进/收束节奏）；开篇高压仅快节奏题材；plot 低分反馈词按题材（爽点密度 vs 冲突张力）。chapter-writing.st 四段式块改由变量注入结构指引。",
       "acceptance": "GenreConditionalConstraintsTest：HISTORICAL/LITERARY 约束不含『爽点』『四段式』『悬念钩子』且含题材结构指引；CULTIVATION/WUXIA 仍含（现状不变）；开篇高压 HISTORICAL 不强制；对应 Agent 测试与 OpeningPacingTest 回归通过",
       "verify_cmd": "mvn test -Dtest=GenreConditionalConstraintsTest",
-      "evidence": "2026-08-28 实跑：GenreConditionalConstraintsTest 3 pass（快节奏保留/慢题材无爽点钩子换张力指引/开篇高压仅快节奏）；OpeningPacingTest 3 + EraConstraintInjectionTest 2 回归通过；plot 反馈词题材化（ffad1e9 前序提交内）（commit 8716a2e）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）",
+      "evidence": "2026-09-16 verified: f4dd6d752e8f8bb3d3f7763dc2b9e842c49e07c8; record p17-02-p17",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2647,7 +2647,7 @@
       "description": "volume-outline.st 增 {{genreRules}} 变量（替换硬编码爽点句）；PlotterAgent.planVolume 注入题材规则；『爽点：』输出标签保留（解析兼容），字段说明按题材重释为核心张力爆发点。",
       "acceptance": "VolumeOutlineGenreRulesTest：render 后含题材规则文本；HISTORICAL 项目 planVolume 的 prompt 不含无条件爽点要求；PlotterAgentTest 既有解析用例回归通过",
       "verify_cmd": "mvn test -Dtest=VolumeOutlineGenreRulesTest",
-      "evidence": "2026-08-28 实跑：VolumeOutlineGenreRulesTest 3 pass（武侠规则注入/历史不强制爽点换张力点+输出标签保留/未注入降级）；PlotterAgentTest 回归通过（commit 4983ead）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）",
+      "evidence": "2026-09-16 verified: f4dd6d752e8f8bb3d3f7763dc2b9e842c49e07c8; record p17-03-p17",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2667,7 +2667,7 @@
       "description": "POWER_SYSTEM 仅对 CULTIVATION/FANTASY/WUXIA(超自然武学) 强制，MYSTERY/ROMANCE/LITERARY/HISTORICAL 豁免（改为要求核心设定维度非空）；extractStyleGuide 拼 tone+voice+dosAnddonts；buildKnowledgeQuote 优先匹配 preferredQuoteSources 指定的知识条目。",
       "acceptance": "ConceiveGateGenreExemptionTest：MYSTERY 无 POWER_SYSTEM 通过门禁；CULTIVATION 无 POWER_SYSTEM 仍 FAIL；styleGuide 渲染含 voice；preferredQuoteSources 指定来源时引用优先命中",
       "verify_cmd": "mvn test -Dtest=ConceiveGateGenreExemptionTest",
-      "evidence": "2026-08-28 实跑：ConceiveGateGenreExemptionTest 5 pass（悬疑通过/历史言情文学豁免/修仙奇幻武侠仍强制/完整性不放松/tags兜底）；preferredQuoteSources 消费 + styleVoice 注入；ConceiveGateTest 8 回归（commit d0f93af）",
+      "evidence": "2026-09-16 verified: f4dd6d752e8f8bb3d3f7763dc2b9e842c49e07c8; record p17-04-p17",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2688,7 +2688,7 @@
       "description": "custom_presets 表（name 主键 + JSON 全文）；PresetRegistry 启动时从仓储加载、注册时落库。",
       "acceptance": "CustomPresetPersistenceTest：POST 自定义预设 → 重建 PresetRegistry（模拟重启，从仓储重新加载）→ GET /api/presets 含该预设且字段完整",
       "verify_cmd": "mvn test -Dtest=CustomPresetPersistenceTest",
-      "evidence": "2026-08-28 实跑：CustomPresetPersistenceTest 2 pass（注册后重启恢复/upsert）；WuxiaGenreTest 预设回归通过（commit 4983ead）",
+      "evidence": "2026-09-16 verified: 4983eada43e408135d77c454f73db23503bad126; record p17-05-p17",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2706,7 +2706,7 @@
       "description": "任务终态判定增加 PAUSED_AT_CHECKPOINT 分支 → taskStatus=PAUSED，message 说明『等待人工审批，approveCheckpoint 后可继续』；FAILED 仅用于真实异常。",
       "acceptance": "PausedTerminalStateTest：INTERACTIVE 写 1 章暂停后任务终态=PAUSED 而非 FAILED，message 含『审批』",
       "verify_cmd": "mvn test -Dtest=PausedTerminalStateTest",
-      "evidence": "2026-08-28 实跑：PausedTerminalStateTest 2 pass（审核点暂停=PAUSED含审批说明/非暂停未写满仍FAILED）；WritingJobReliabilityTest 6 回归（stub 同步 4 参 ffad1e9）（commit 4983ead）",
+      "evidence": "2026-09-16 verified: 4983eada43e408135d77c454f73db23503bad126; record p18-01-p18",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2727,7 +2727,7 @@
       "description": "Checkpoint 增 payload JSON 字段（AFTER_CHAPTER：字数/ReaderReview 评分/未解决 HIGH 数/前 200 字预览/伏笔动态）；REST 返回；前端审批面板直接渲染 payload。",
       "acceptance": "CheckpointPayloadTest：写完一章挂起的 checkpoint 携带 payload 含 wordCount/score/preview 字段；前端 npm build 通过",
       "verify_cmd": "mvn test -Dtest=CheckpointPayloadTest",
-      "evidence": "2026-08-28 实跑：CheckpointPayloadTest 3 pass（payload构建/持久化往返/评审后富集score+unresolvedHigh）；Checkpoint 相关回归 15 pass；前端审批面板渲染 payload，npm build 通过（commit 99ce1ee）",
+      "evidence": "2026-09-16 verified: 99ce1eedf68a05a7d0d70fab3750e6c363e86091; record p18-02-p18",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2748,7 +2748,7 @@
       "description": "POST /write-chapter?instruction= 与 write-all 携带 instruction：透传到本章 writingNotes 前缀【作者指令】；write-all 时逐章沿用。前端『写一章』增可选指令输入框。",
       "acceptance": "WriteInstructionTest：带 instruction 写章 → ChapterWriter 组装的 writingNotes 含【作者指令】与原文；不带时行为不变",
       "verify_cmd": "mvn test -Dtest=WriteInstructionTest",
-      "evidence": "2026-08-28 实跑：WriteInstructionTest 3 pass（instruction透传/无参原路径/【作者指令】前置注入）；write-all 指令逐章沿用（WritingTask.instruction）；前端指令输入框 npm build 通过（commit 99ce1ee）；2026-08-29 DeepSeek v4-flash E2E record 3章/10,951字/57调用/0错误/0失败 PASS，replay 与 record 完全一致，compare-baseline PASS（--bless 基线 dsv4-20260829）",
+      "evidence": "2026-09-16 verified: 99ce1eedf68a05a7d0d70fab3750e6c363e86091; record p18-03-p18",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2769,7 +2769,7 @@
       "description": "EventLog 增进程内订阅总线（CopyOnWriteArrayList）；GET /api/projects/{id}/events 用 SseEmitter 按项目过滤推送 CHAPTER_WRITTEN/CHAPTER_FAILED/QUALITY_REVIEW/LLM_ERROR 事件；前端 EventSource 订阅显示逐章进度（保留轮询降级）。",
       "acceptance": "SseEventBusTest：EventLog 写事件后订阅者收到该项目事件、其他项目不收到；SseEmitter 端点注册/超时处理无异常；前端 npm build 通过",
       "verify_cmd": "mvn test -Dtest=SseEventBusTest",
-      "evidence": "2026-08-28 实跑：SseEventBusTest 3 pass（项目过滤+注销/坏sink移除/全局事件广播）；EventController SSE 端点；前端 subscribeEvents+逐章进度 npm build 通过；EventLogTest 5 回归（commit d0f93af）",
+      "evidence": "2026-09-16 verified: 99ce1eedf68a05a7d0d70fab3750e6c363e86091; record p18-04-p18",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2791,7 +2791,7 @@
       "description": "Character 增 status(ACTIVE/DECEASED/DEPARTED)+deathChapter；FactHarvester 提取 CHARACTER_STATE 含死亡关键词时自动置位并 supersede 真典；WritingContext 注入标注【已故·第N章殁】/【已退场】；ArcScheduler 冷场调度跳过 DECEASED。",
       "acceptance": "CharacterStatusTest：收割『某角色身亡』事实后 Character.status=DECEASED+deathChapter；注入的出场人物段含已故标注；ArcScheduler 不再建议死人出场",
       "verify_cmd": "mvn test -Dtest=CharacterStatusTest",
-      "evidence": "2026-08-28 实跑：CharacterStatusTest 3 pass（死亡事实自动置位DECEASED+deathChapter/出场段标注已故+ArcScheduler不调度/退场标注）；FactHarvester/ArcScheduler 回归通过（commit 99ce1ee）",
+      "evidence": "2026-09-16 verified: 99ce1eedf68a05a7d0d70fab3750e6c363e86091; record p19-01-p19",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2831,7 +2831,7 @@
       "description": "projects 增 book_snapshot TEXT（JSON：主线进度/当前阵营态势/关键人物状态/时间线锚点/已跨大节点）；卷末用上一版快照+本卷摘要 LLM 增量更新（新 prompt 模板 book-snapshot.st）；ContextAssembler 顶部注入结构化快照（book_summary 保留兜底）。",
       "acceptance": "BookSnapshotTest：卷末后 book_snapshot 为合法 JSON 含主线进度字段；ContextAssembler 注入含【全书快照】段；snapshot 更新失败时回退旧版不阻塞写作",
       "verify_cmd": "mvn test -Dtest=BookSnapshotTest",
-      "evidence": "2026-08-28 实跑：BookSnapshotTest 4 pass（卷末生成合法JSON含主线进度/失败保留旧版/坏输出保留/上下文顶部注入【全书快照】）；SummaryLayeredTrimTest 回归通过（commit 99ce1ee）",
+      "evidence": "2026-09-16 verified: 99ce1eedf68a05a7d0d70fab3750e6c363e86091; record p19-03-p19",
       "historical_files": [
         "src/main/resources/prompts/"
       ],
@@ -2852,7 +2852,7 @@
       "description": "后处理完成后仅从 POST_PROCESSING 推进 DONE；待人工章节冻结后续写作（write-one 拒绝 + 循环 WRITING_PAUSED 暂停）；resolve-review 后可续写",
       "acceptance": "A 强制 MANUAL_REVIEW 后历经全部后处理仍为 NEEDS_MANUAL_REVIEW；下一次写章不越过；复核通过转 DONE",
       "verify_cmd": "mvn test -Dtest=ManualReviewLifecycleTest",
-      "evidence": "ManualReviewLifecycleTest 4 用例红→绿（5799346）",
+      "evidence": "2026-09-16 verified: 5799346b14f9233905ed6166e4236338811f33b7; record p20-01-p20",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2873,7 +2873,7 @@
       "description": "写一章后的全部后处理阶段经 ChapterPostProcessor 按固定顺序执行（CONTINUITY→…→VOLUME_SUMMARY），产出与状态保持等价",
       "acceptance": "写一章后的全部后处理阶段经 ChapterPostProcessor 按固定顺序执行（CONTINUITY→…→VOLUME_SUMMARY），产出与状态保持等价",
       "verify_cmd": "mvn test -Dtest=ChapterPostProcessorTest,NovelOrchestratorWritingTest",
-      "evidence": "全量回归绿；行为等价由既有写作用例保证（ace78c4）",
+      "evidence": "2026-09-16 verified: ace78c48d46df91a0ee80b347d355c4b2ef3ba0f; record p20-02-p20",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2895,7 +2895,7 @@
       "description": "post_process_ledger 表（主键 project/chapter/stage）PENDING/RUNNING/COMPLETED 往返；重复 COMPLETED 幂等且行唯一；unfinishedStages 按声明序返回",
       "acceptance": "post_process_ledger 表（主键 project/chapter/stage）PENDING/RUNNING/COMPLETED 往返；重复 COMPLETED 幂等且行唯一；unfinishedStages 按声明序返回",
       "verify_cmd": "mvn test -Dtest=ChapterPostProcessLedgerTest",
-      "evidence": "ChapterPostProcessLedgerTest 4 用例（4096cbc）",
+      "evidence": "2026-09-16 verified: 4096cbc2e7808568c07e10c9cbd10cf1b8ada36a; record p20-03-p20",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2919,7 +2919,7 @@
       "description": "注入 ENTITY_GRAPH 阶段崩溃后同库重建上下文，依账本只补跑未完成阶段：CONTINUITY 不重跑（0次LLM）、收割恰1次、0重复摘要、终态 DONE",
       "acceptance": "注入 ENTITY_GRAPH 阶段崩溃后同库重建上下文，依账本只补跑未完成阶段：CONTINUITY 不重跑（0次LLM）、收割恰1次、0重复摘要、终态 DONE",
       "verify_cmd": "mvn test -Dtest=PostProcessingRecoveryTest",
-      "evidence": "PostProcessingRecoveryTest 崩溃注入→恢复全绿；ApplicationRunner 启动清扫（17d57b9）",
+      "evidence": "2026-09-16 verified: 17d57b938e578520278eeb84afb3074f583dddb3; record p20-04-p20",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2938,7 +2938,7 @@
       "description": "并发 acquire 恰一个 owner；stale release 不伤新 owner；重复 startWriting 冲突拒绝（409）不再30s强制接管；测试全用闩锁无 sleep 编排",
       "acceptance": "并发 acquire 恰一个 owner；stale release 不伤新 owner；重复 startWriting 冲突拒绝（409）不再30s强制接管；测试全用闩锁无 sleep 编排",
       "verify_cmd": "mvn test -Dtest=ProjectWorkCoordinatorTest,SingleActiveJobTest",
-      "evidence": "ProjectWorkCoordinatorTest 5 + SingleActiveJobTest 2（闩锁并发）（0b27aca）",
+      "evidence": "2026-09-16 verified: 0b27acadbfa4dab9f3f72988f9bc481adc70a68d; record p20-05-p20",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2960,7 +2960,7 @@
       "description": "/run /resume /write-chapter /write-all 共享协调器；任一活动期其它变更入口一律 IllegalStateException→409",
       "acceptance": "/run /resume /write-chapter /write-all 共享协调器；任一活动期其它变更入口一律 IllegalStateException→409",
       "verify_cmd": "mvn test -Dtest=WritingEntryOwnershipTest",
-      "evidence": "WritingEntryOwnershipTest 5 用例（含终态后释放不泄漏）（0b27aca）",
+      "evidence": "2026-09-16 verified: 0b27acadbfa4dab9f3f72988f9bc481adc70a68d; record p20-06-p20",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -2979,7 +2979,7 @@
       "description": "窗口内自动冲突事实 SKIPPED（不落库不平行 ACTIVE）；窗口外允许剧情演进取代；两路径审计链保留；p22-01 后语义内置于 StoryCanon.harvest",
       "acceptance": "窗口内自动冲突事实 SKIPPED（不落库不平行 ACTIVE）；窗口外允许剧情演进取代；两路径审计链保留；p22-01 后语义内置于 StoryCanon.harvest",
       "verify_cmd": "mvn test -Dtest=HumanPatchHarvestProtectionTest",
-      "evidence": "HumanPatchHarvestProtectionTest 3 用例红→绿（9ab1270）",
+      "evidence": "2026-09-16 verified: 9ab1270e3ecbee7fde58831214ec92c200627921; record p20-07-p20",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3000,7 +3000,7 @@
       "description": "同 project/type/subject 人工编辑总是取代旧 ACTIVE（保护只约束自动路径），审计链保留",
       "acceptance": "同 project/type/subject 人工编辑总是取代旧 ACTIVE（保护只约束自动路径），审计链保留",
       "verify_cmd": "mvn test -Dtest=CanonActiveUniquenessTest,CanonPatchServiceTest",
-      "evidence": "CanonActiveUniquenessTest 3 用例红→绿；由 StoryCanonContractTest 契约固化（9ab1270）",
+      "evidence": "2026-09-16 verified: 9ab1270e3ecbee7fde58831214ec92c200627921; record p20-08-p20",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3018,7 +3018,7 @@
       "description": "仅归一化正文开头章节标题（允许前导空白/#）；对话、叙述引用逐字不变；正确标题幂等 no-op",
       "acceptance": "仅归一化正文开头章节标题（允许前导空白/#）；对话、叙述引用逐字不变；正确标题幂等 no-op",
       "verify_cmd": "mvn test -Dtest=ChapterHeadingNormalizationTest",
-      "evidence": "ChapterHeadingNormalizationTest 7 用例红→绿（f70ea66）",
+      "evidence": "2026-09-16 verified: f70ea6690edb74e236f666009215ae7fd586ec06; record p20-09-p20",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3038,7 +3038,7 @@
       "description": "WUXIA 退出快节奏集合（约束改张力点指引）；WUXIA 豁免 POWER_SYSTEM；CULTIVATION 保持不变",
       "acceptance": "WUXIA 退出快节奏集合（约束改张力点指引）；WUXIA 豁免 POWER_SYSTEM；CULTIVATION 保持不变",
       "verify_cmd": "mvn test -Dtest=WuxiaGenreTest,GenreConditionalConstraintsTest,ConceiveGateGenreExemptionTest",
-      "evidence": "service/GenreConditionalConstraintsTest 6 用例红→绿；p17-02/03/04 三处相反断言更新（f4dd6d7）",
+      "evidence": "2026-09-16 verified: 6285663fd7d186824f8a7661e35ebaefcbe74a54; record p21-01-p21",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3059,7 +3059,7 @@
       "description": "FINAL 拒绝 run/resume/write-one/write-all 且状态不变；NEEDS_REVISION 拒绝写新章、允许修订 + retryFinalAudit 重审（过→FINAL）；POST /final-audit",
       "acceptance": "FINAL 拒绝 run/resume/write-one/write-all 且状态不变；NEEDS_REVISION 拒绝写新章、允许修订 + retryFinalAudit 重审（过→FINAL）；POST /final-audit",
       "verify_cmd": "mvn test -Dtest=TerminalStateCommandGateTest",
-      "evidence": "TerminalStateCommandGateTest 3 用例",
+      "evidence": "2026-09-16 verified: d2043538bda77feb105456d1ffdcfd09c67b6a09; record p21-02-p21",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3080,7 +3080,7 @@
       "description": "FINAL 禁用全部写作控制；NEEDS_REVISION 渲染中文状态/原因 + 重新评审动作；无裸枚举",
       "acceptance": "FINAL 禁用全部写作控制；NEEDS_REVISION 渲染中文状态/原因 + 重新评审动作；无裸枚举",
       "verify_cmd": "cd frontend && npm run build",
-      "evidence": "构建通过；Playwright 用例归入 p23-04（cc25cc8）",
+      "evidence": "2026-09-16 verified: cc25cc80051bf29a31209cf6bbe1c4a640494b24; record p21-03-p21",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3098,7 +3098,7 @@
       "description": "GET /chapters?page&size 只返回元数据 + total/page/size；正文经 /chapters/{index} 单章懒加载；400 章种子分页响应零正文",
       "acceptance": "GET /chapters?page&size 只返回元数据 + total/page/size；正文经 /chapters/{index} 单章懒加载；400 章种子分页响应零正文",
       "verify_cmd": "mvn test -Dtest=ChapterNavigationApiTest",
-      "evidence": "ChapterNavigationApiTest 3 用例（含序列化断言）；FullStackSmokeTest/ContentControllerTest 适配",
+      "evidence": "2026-09-16 verified: 9b0edfb65eccdeafa0fd232fcb87aa0f4fcad712; record p21-04-p21",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3120,7 +3120,7 @@
       "description": "初始加载只请求一次元数据；选中章节恰好请求该章正文（本地缓存）；不重取 checkpoints/status/全部正文",
       "acceptance": "初始加载只请求一次元数据；选中章节恰好请求该章正文（本地缓存）；不重取 checkpoints/status/全部正文",
       "verify_cmd": "cd frontend && npm run build",
-      "evidence": "构建通过；Playwright 用例归入 p23-04（cc25cc8）",
+      "evidence": "2026-09-16 verified: cc25cc80051bf29a31209cf6bbe1c4a640494b24; record p21-05-p21",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3139,7 +3139,7 @@
       "description": "Sider breakpoint=lg 自动折叠；章节双栏 xs=24 堆叠；项目表内部滚动无页面级横向溢出",
       "acceptance": "Sider breakpoint=lg 自动折叠；章节双栏 xs=24 堆叠；项目表内部滚动无页面级横向溢出",
       "verify_cmd": "cd frontend && npm run build",
-      "evidence": "构建通过；Playwright 用例归入 p23-04（cc25cc8）",
+      "evidence": "2026-09-16 verified: cc25cc80051bf29a31209cf6bbe1c4a640494b24; record p21-06-p21",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3159,7 +3159,7 @@
       "description": "行 role=button + Tab/Enter/Space 键盘激活；图标按钮 aria-label",
       "acceptance": "行 role=button + Tab/Enter/Space 键盘激活；图标按钮 aria-label",
       "verify_cmd": "cd frontend && npm run build",
-      "evidence": "构建通过；axe 扫描归入 p23-04（cc25cc8）",
+      "evidence": "2026-09-16 verified: cc25cc80051bf29a31209cf6bbe1c4a640494b24; record p21-07-p21",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3178,7 +3178,7 @@
       "description": "connected/reconnecting/fallback 状态展示；有界指数退避重连（6 次后 fallback 轮询）；卸载关闭订阅",
       "acceptance": "connected/reconnecting/fallback 状态展示；有界指数退避重连（6 次后 fallback 轮询）；卸载关闭订阅",
       "verify_cmd": "mvn test -Dtest=SseEventBusTest && cd frontend && npm run build",
-      "evidence": "构建通过；SseEventBusTest 回归绿（cc25cc8）",
+      "evidence": "2026-09-16 verified: cc25cc80051bf29a31209cf6bbe1c4a640494b24; record p21-08-p21",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3200,7 +3200,7 @@
       "description": "接口暴露 recall/harvest/applyHumanPatch/saveIfAbsent/validate/supersedeFact/retire；保护窗口与 ACTIVE 唯一性藏于实现；契约对 SQLite 与内存适配器同等成立",
       "acceptance": "接口暴露 recall/harvest/applyHumanPatch/saveIfAbsent/validate/supersedeFact/retire；保护窗口与 ACTIVE 唯一性藏于实现；契约对 SQLite 与内存适配器同等成立",
       "verify_cmd": "mvn test -Dtest=InMemoryStoryCanonContractTest,SqliteStoryCanonContractTest",
-      "evidence": "契约 8 用例 × 2 适配器 = 16 全绿（5e4afbc）",
+      "evidence": "2026-09-16 verified: 5e4afbc7a79dac2f3e7ebd24ac5b2fbfb4401742; record p22-01-p22",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3224,7 +3224,7 @@
       "description": "FactHarvesterAgent/CanonPatchService/orchestrator 写路径只依赖 StoryCanon；收割合并语义收敛为 canon.harvest",
       "acceptance": "FactHarvesterAgent/CanonPatchService/orchestrator 写路径只依赖 StoryCanon；收割合并语义收敛为 canon.harvest",
       "verify_cmd": "mvn test -Dtest=FactHarvesterTest,CanonPatchServiceTest",
-      "evidence": "全量 465 回归绿 + 业务包零 import grep 验证（5e4afbc）",
+      "evidence": "2026-09-16 verified: 5e4afbc7a79dac2f3e7ebd24ac5b2fbfb4401742; record p22-02-p22",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3268,7 +3268,7 @@
       "description": "生产组合可经小结果接口调用；orchestrator 只协调阶段不持有写策略",
       "acceptance": "生产组合可经小结果接口调用；orchestrator 只协调阶段不持有写策略",
       "verify_cmd": "mvn test -Dtest=ChapterProductionTest,NovelOrchestratorWritingTest",
-      "evidence": "ChapterProduction：prepare（作者指令+弧光+桥段+梗概预检）/write（正文+事件）/qualityGate（连续性→守卫→仲裁→风格全链 7 方法原样迁移）+ produce() 小结果接口（ProductionResult）；produce 不做状态转移（ChapterProductionTest 断言索引不推进）；全量 475 测试回归绿",
+      "evidence": "2026-09-16 verified: f526c3fb33e2bf3d9953ccddc641cf902dfc8cd8; record p22-04-p22",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3290,7 +3290,7 @@
       "description": "生产组合无后置可选 setter；缺必需策略 Spring 启动失败；可选行为用显式 no-op 适配器表示",
       "acceptance": "生产组合无后置可选 setter；缺必需策略 Spring 启动失败；可选行为用显式 no-op 适配器表示",
       "verify_cmd": "mvn test -Dtest=OrchestratorCompositionTest,PersistenceSmokeTest",
-      "evidence": "OrchestratorPolicies 值对象构造期注入（11 策略），后置可选 setter 全部移除（OrchestratorCompositionTest 反射断言）；OrchestratorConfig.requirePolicy 缺失能力启动即失败并指名；测试降级组合走 none()；全量 479 测试回归绿",
+      "evidence": "2026-09-16 verified: e909c47c8e3366029ef6d99582f215b3d5dbff9e; record p22-05-p22",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3310,7 +3310,7 @@
       "description": "接口无 silent default（缺能力=编译失败）；SQLite 适配器契约含归档计数与预设往返",
       "acceptance": "接口无 silent default（缺能力=编译失败）；SQLite 适配器契约含归档计数与预设往返",
       "verify_cmd": "mvn test -Dtest=SqliteNovelRepositoryTest",
-      "evidence": "契约 8 用例全绿",
+      "evidence": "2026-09-16 verified: fde194c2a2fba0fedf61199e9e9812c5e29f84e2; record p22-06-p22",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3330,7 +3330,7 @@
       "description": "场景网关 8 任务类型产出语法合法/章节号镜像/逐字可复现响应（零网络）；e2e.sh 默认自动解析最新版本化语料（mtime），显式目录透传",
       "acceptance": "场景网关 8 任务类型产出语法合法/章节号镜像/逐字可复现响应（零网络）；e2e.sh 默认自动解析最新版本化语料（mtime），显式目录透传",
       "verify_cmd": "mvn test -Dtest=ScenarioLlmGatewayTest && bash scripts/e2e-fixture-dir-test.sh",
-      "evidence": "6 用例 + 脚本契约检查全绿",
+      "evidence": "2026-09-16 verified: d4938b063fe017fe997b1f943cd236f5a7d8b4be; record p23-01-p23",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3352,7 +3352,7 @@
       "description": "crash-after-stage、restart 续跑、stale-worker 拒绝、manual-review、canon-protection 场景各产出 machine-readable report.json，失败非零退出",
       "acceptance": "crash-after-stage、restart 续跑、stale-worker 拒绝、manual-review、canon-protection 场景各产出 machine-readable report.json，失败非零退出",
       "verify_cmd": "./scripts/reliability-e2e.sh",
-      "evidence": "四场景实跑全 PASS：S1 crash-restart（kill -9 后同库重启续跑 5 章连续 DONE）、S2 stale-worker-409（活动期 write-all/write-chapter 双 409、终态释放后恢复接受）、S3 manual-review（harsh 档第1章 HIGH→任务 PAUSED→resolve-review→续跑 3 章全 DONE）、S4 canon-protection（同键人工补丁最新胜出恰一条 ACTIVE + retire 出 active）；场景网关 harsh 档按检查调用序注入；data/e2e/reliability/summary.json allPass=true",
+      "evidence": "2026-09-16 verified: ea0865c2f1523af7b80dcec68330afe55c445f2d; record p23-02-p23",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3373,7 +3373,7 @@
       "description": "恰 400 章连续唯一、零非终态章节、零重复 ACTIVE 真典键、零任务重叠、零 LLM 网络调用、导航延迟有界，报告落 data/e2e/soak/",
       "acceptance": "恰 400 章连续唯一、零非终态章节、零重复 ACTIVE 真典键、零任务重叠、零 LLM 网络调用、导航延迟有界，报告落 data/e2e/soak/",
       "verify_cmd": "./scripts/soak.sh --chapters 400 --seed 20260830",
-      "evidence": "400 章全量实跑 PASS：恰好 400 章连续唯一、零非终态、零重复 ACTIVE 真典键、单任务无重叠、零 LLM 网络调用（无 API key 启动完成全书）、导航 18ms@400 章；全书 1,058,524 字；data/e2e/soak/report.json 六项不变量全 true",
+      "evidence": "2026-09-16 verified: 9b789eb9d17b89eb5f774ce24453a3905af325ce; record p23-03-p23",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3398,7 +3398,7 @@
       "description": "仓库自有浏览器 E2E 套件（ego-browser 驱动，按用户指示替代 Playwright）",
       "acceptance": "打包 Spring 应用（场景网关零成本）在桌面+375px 下通过 8 项检查：列表无溢出+可访问名、行键盘可激活、侧栏响应式折叠、FINAL 禁写、NEEDS_REVISION 中文+重审、章节懒加载（元数据一次/正文按章）、SSE 已连接状态、人工复核 待人审→已处理",
       "verify_cmd": "./scripts/browser-e2e.sh",
-      "evidence": "8 检查全 PASS（data/e2e/browser/summary.json）；套件抓到并修复三个真实缺陷：meta 漏 status 列、SPA 深链接 500、InteractiveReview 点章全量重取",
+      "evidence": "2026-09-16 verified: ea0865c2f1523af7b80dcec68330afe55c445f2d; record p23-04-p23",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3420,7 +3420,7 @@
       "description": "一键业务发布门禁聚合器",
       "acceptance": "聚合器顺序跑聚焦/全量测试、前端构建、replay 基线、业务生命周期、soak、浏览器门禁；单一 manifest；全过才退出 0",
       "verify_cmd": "./scripts/release-gate.sh",
-      "evidence": "release-gate.sh 六门禁聚合产出 data/release/manifest.json（全 PASS 后单独提交证据）",
+      "evidence": "2026-09-16 verified: ea0865c2f1523af7b80dcec68330afe55c445f2d; record p23-05-p23",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3442,7 +3442,7 @@
       "description": "仅当 prompt/题材逻辑变更：record 3 mystery + 3 WUXIA 章，零失败零错误，WUXIA 无修仙规则，对比基线；bless 需人工批准",
       "acceptance": "仅当 prompt/题材逻辑变更：record 3 mystery + 3 WUXIA 章，零失败零错误，WUXIA 无修仙规则，对比基线；bless 需人工批准",
       "verify_cmd": "E2E_FIXTURE_DIR=data/e2e-fixtures/canary-mystery-20260831 ./scripts/e2e.sh --mode record --chapters 3 --preset mystery && E2E_FIXTURE_DIR=data/e2e-fixtures/canary-wuxia-20260831 ./scripts/e2e.sh --mode record --chapters 3 --preset wuxia && python3 scripts/canary-wuxia-rule-check.py",
-      "evidence": "金丝雀实录（2026-08-31，用户批准）：mystery 3 章 10,191 字 / wuxia 3 章 11,308 字，两组均 0 错误 0 失败任务 COMPLETED；mystery 对既有基线 compare PASS（无需 bless）；WUXIA 规则断言 PASS（54 fixture：武侠规则注入 ✓、修仙规则零命中）；报告存 data/release/canary-*-report.json，fixture 存 data/e2e-fixtures/canary-*-20260831；WUXIA 基线经人工确认质量后 bless：baselines/golden-wuxia.json（minTotalWords 9046 / minAvgWordCount 2638 / 零容忍失败与错误），canary-wuxia-report 对新基线 compare PASS；mystery 基线不受影响（compare 仍 PASS）",
+      "evidence": "2026-09-16 verified: baf89f621dce381bc5bd48815e877e6891f0cc52; record p23-06-p23",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -3617,7 +3617,7 @@
       "description": "由服务端计算和强制允许动作及禁用原因，前端只呈现有效主操作。",
       "acceptance": "所有 NovelState 的动作集合符合矩阵；无大纲、暂停及非写作状态不会创建写作任务。",
       "verify_cmd": "mvn test -Dtest=ProjectActionPolicyTest",
-      "evidence": "2026-09-03：严格 TDD：先加 9 组参数化状态矩阵，RED 为 ProjectActionPolicy/ProjectAction 不存在的 testCompile 失败；再加 endpoint 无副作用回归，RED 为 4 个失败（status 无 allowedActions、WRITING /run 隐式写章、CONCEIVING write-all 创建任务、无效 write-chapter 留下 FAILED 任务）。GREEN：中央 policy 发布 allowedActions/blockedReasons，从 repository 读取大纲与 pending checkpoint；/run、/write-all、/write-chapter、/final-audit 在任务或 orchestrator 副作用前强制。WRITING 不再通过 /run 隐式写章。RunConsole 获取 status，只呈现服务端允许的主操作，无可用动作时显示服务端 blocked reason。独立标准审查发现 write-chapter 初次门禁与任务启动间存在 TOCTOU；先加确定性 latch 并发回归，RED 为 WritingTaskExecutor 缺少原子 gate overload 的 testCompile 失败；GREEN 为取得 ProjectWorkCoordinator owner 后二次读取 repository 并在保存任务前 requireAllowed，暂停先发生时不创建 task、不进入 orchestrator。focused policy/controller/content/ownership/instruction 为 35/35 PASS；approve-keeps-chapter-visible 与 standalone-chapter-rewrite strict 各 1 PASS / 0 XFAIL / 0 ERROR；browser-e2e 8/8 PASS；frontend build PASS；JDK21 full Maven 与 init 为 522 tests / 0 failures / 0 errors / 1 skipped，init 另通过 27 prompt 与前端构建。前置基线修复为 e4b20bb 与 2b92249。",
+      "evidence": "2026-09-16 verified: 13f745cbbe5709c8b296406570285689b7035e29; record p26-06-p26",
       "completion_record": "legacy-through-p26",
       "branch": "main"
     },
@@ -4005,7 +4005,7 @@
       "problem_ref": "2026-09-05 用户统一人机协作需求与架构审查",
       "acceptance": "mvn compile 返回 0，满足 spec 对应行为断言",
       "verify_cmd": "mvn compile",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 新库/旧表迁移 2 tests PASS；instruction、stop_requested 和原始任务时间往返；最终 JDK21 init 613 tests / 0 failures / 0 errors / 1 skipped，28 prompts 与前端构建 PASS。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-01-task-persistence实现1d6422ce28b3253ef8015230b26a08f2811374ea已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-01.json。",
+      "evidence": "2026-09-16 verified: da4a0b5ba8fe802e2e6d67e44d5f6f8905482ae8; record p27-01-p27",
       "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
       "audit_notes": "核验拆分修正：AUTO_RUN枚举的既有契约适配必须与领域变更同批验证，不能延至p27-10导致中间main测试失败；3个业务文件附1个既有门禁测试。",
       "completion_record": "reconciled-p27-01",
@@ -4029,7 +4029,7 @@
       "problem_ref": "2026-09-05 用户统一人机协作需求与架构审查",
       "acceptance": "mvn test -Dtest=CollaborationTaskPersistenceTest,CollaborativeRunTest 返回 0，满足 spec 对应行为断言",
       "verify_cmd": "mvn test -Dtest=CollaborationTaskPersistenceTest,CollaborativeRunTest",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 缺少协作方法 RED 后，JDK21 focused SQLite/生命周期 10 tests PASS；覆盖接手持有 owner、最终完成、预算与人审门禁、无进展失败、重启恢复和持久指令。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-02-collaborative-lifecycle实现a4ce8862f8a983dc9b63683bad2c5b8284a7e2d8已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-02.json。",
+      "evidence": "2026-09-16 verified: 14d88cc8eefaab814791cc6a6dc30b91fba8c223; record p27-02-p27",
       "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
       "completion_record": "reconciled-p27-02",
       "branch": "main"
@@ -4051,7 +4051,7 @@
       "problem_ref": "2026-09-05 用户统一人机协作需求与架构审查",
       "acceptance": "mvn test -Dtest=CollaborationApiTest 返回 0，满足 spec 对应行为断言",
       "verify_cmd": "mvn test -Dtest=CollaborationApiTest",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 CollaborationApiTest 4 tests PASS，覆盖真实状态、停止幂等、审核偏好不隐式批准、活动工作拒绝偏好修改与非法项目/策略。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-03-collaboration-api实现d17e8cbb4b2ebdecd0012f1671b92b8a75954a14已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-03.json。",
+      "evidence": "2026-09-16 verified: 33ef2901840ac0e6dc750c0f50244fada717d9a9; record p27-03-p27",
       "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
       "completion_record": "reconciled-p27-03",
       "branch": "main"
@@ -4074,7 +4074,7 @@
       "problem_ref": "2026-09-05 用户统一人机协作需求与架构审查",
       "acceptance": "mvn test -Dtest=CollaborationEditOwnershipTest,WorldCharacterFullEditTest,CheckpointTargetValidationTest 返回 0，满足 spec 对应行为断言",
       "verify_cmd": "mvn test -Dtest=CollaborationEditOwnershipTest,WorldCharacterFullEditTest,CheckpointTargetValidationTest",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 RED 3 tests / 2 failures 精确复现缺失工作权，GREEN 28 tests PASS（人工/审核互斥、世界观整卡、checkpoint、章节直接编辑）；异常释放 owner。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-04-author-edit-ownership实现9add96a9fa769189f664e19d0ebe2ae3f807f4ce已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-04.json。",
+      "evidence": "2026-09-16 verified: 34e93bf9a926476ebb465f8654df9bb8523eb48c; record p27-04-p27",
       "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
       "completion_record": "reconciled-p27-04",
       "branch": "main"
@@ -4097,7 +4097,7 @@
       "problem_ref": "2026-09-05 用户统一人机协作需求与架构审查",
       "acceptance": "cd frontend && npm run build 返回 0，满足 spec 对应行为断言",
       "verify_cmd": "cd frontend && npm run build",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 frontend production build PASS；协作栏从服务器轮询真实任务/进度、支持接手与继续、持久指令及审核策略。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-05-collaboration-bar实现54c1dfab45e74d8b5fb2289a850bedbceb7ba1fe已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-05.json。",
+      "evidence": "2026-09-16 verified: eda439d170b07b260766fc97b12a3ee6ddaacf31; record p27-05-p27",
       "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
       "completion_record": "reconciled-p27-05",
       "branch": "main"
@@ -4120,7 +4120,7 @@
       "problem_ref": "2026-09-05 用户统一人机协作需求与架构审查",
       "acceptance": "./scripts/user-copy-check.sh && (cd frontend && npm run build) 返回 0，满足 spec 对应行为断言",
       "verify_cmd": "./scripts/user-copy-check.sh && (cd frontend && npm run build)",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 frontend production build PASS；工作台全局协作栏、新建审核节奏、单步工具降级。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-06-unified-workspace实现02b46afcd798cde979738ebe410bd28475cbc05d已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-06.json。",
+      "evidence": "2026-09-16 verified: 0fa0b40000d6993abcba73ff0ae264092f9f0f3b; record p27-06-p27",
       "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
       "completion_record": "reconciled-p27-06",
       "branch": "main"
@@ -4149,7 +4149,7 @@
       "problem_ref": "2026-09-05 用户统一人机协作需求与架构审查",
       "acceptance": "verify_cmd 返回 0：协作6项、严格产品审计11项（0 XFAIL / 0 ERROR）、旧浏览器8项、后台章节推进草稿保护1项，共26项通过；完整Maven和前端构建、mystery replay与基线PASS。",
       "verify_cmd": "./scripts/collaboration-e2e.sh && ./scripts/product-audit-e2e.sh --port 18096 && ./scripts/browser-e2e.sh --port 18095 && ./scripts/draft-preservation-e2e.sh",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 最终代码 ego-browser：协作6/6、产品11/11（0 XFAIL / 0 ERROR）、旧界面8/8，共25/25 PASS。覆盖三章 FINAL、接手保存再续写、作者正文/设定保留、草稿刷新保持、每章/卷末审核、切换节奏不自动批准、创作要求刷新续用及空串清除、375px 与既有编辑/改写/历史/质量/SSE。最终 ./init.sh：615 tests / 0 failures / 0 errors / 1 skipped，28 prompts 与 frontend build PASS。mystery replay：3章/10,191字/54 calls/0 LLM errors/0 chapter failures，baseline PASS。证据 data/verification/phase27/final/；Scenario/回放验证，未修改 golden。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-07-collaboration-acceptance实现82ba1f9a83504f468ebacd3f368b677c3a9a9e33已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-07.json。",
+      "evidence": "2026-09-16 verified: 3a6e2d33badaf1fe0f899b9a3bc271dbf94cec69; record p27-07-p27",
       "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
       "completion_record": "reconciled-p27-07",
       "branch": "main"
@@ -4172,7 +4172,7 @@
       "problem_ref": "统一协作深度审查：正文随进度重挂载及已写内容按模型最小长度重写",
       "acceptance": "前端构建及draft-preservation-e2e.sh退出0；后台章节号实际增加后，未保存的章节标题和正文仍保留。",
       "verify_cmd": "(cd frontend && npm run build) && ./scripts/draft-preservation-e2e.sh",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 前端构建 PASS；项目 key 稳定，refreshSignal 在编辑/修订草稿打开时延后刷新；章节页续写统一到协作栏。 真实浏览器证明外部审批引起父刷新后章节标题草稿保持，统一协作4/4与既有产品11/11通过。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-08-preserve-author-drafts实现17517f8f7671043ec7b5a4741db428c21eeea459已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-08.json。",
+      "evidence": "2026-09-16 verified: 732c9605d3e3f29867faa4ae0371b6795cb1bc14; record p27-08-p27",
       "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
       "audit_notes": "核验增强：补充真实后台章节推进的浏览器回归，避免只用构建结果声称草稿保护；脚本使用隔离Scenario项目。",
       "completion_record": "reconciled-p27-08",
@@ -4195,7 +4195,7 @@
       "problem_ref": "统一协作深度审查：正文随进度重挂载及已写内容按模型最小长度重写",
       "acceptance": "mvn test -Dtest=AuthorChapterPreservationTest 返回0，已有草稿/正文不被后台进度覆盖",
       "verify_cmd": "mvn test -Dtest=AuthorChapterPreservationTest",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 AuthorChapterPreservationTest RED 7 tests / 2 failures 精确复现人工短章与草稿被覆盖；GREEN 7 tests PASS，完成短章保留、未完成草稿明确拒绝。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-09-author-chapter-preservation实现74b5932173bb94de93b75db6bcd4869b080f5b39已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-09.json。",
+      "evidence": "2026-09-16 verified: 3e5a3a249583b73af91c6f29420748a92576e17e; record p27-09-p27",
       "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
       "completion_record": "reconciled-p27-09",
       "branch": "main"
@@ -4217,7 +4217,7 @@
       "problem_ref": "升级验收发现旧门禁依赖原控制台默认页与三类任务枚举",
       "acceptance": "mvn test -Dtest=WritingTaskTest 与 ./scripts/browser-e2e.sh --port 18095 全部通过，保留原八项行为断言。",
       "verify_cmd": "mvn test -Dtest=WritingTaskTest && ./scripts/browser-e2e.sh --port 18095",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 WritingTaskTest 契约通过；旧 browser-e2e 默认页前提改为显式进入单步工具，懒加载/SSE 断言保留；侧栏等待宽度过渡稳定（手机0/桌面320）。最终 8/8 PASS，Maven 613 tests PASS。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-10-browser-compatibility实现bd9872232ab3e31e98b1d99a135aac3de27ad5a2已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-10.json。",
+      "evidence": "2026-09-16 verified: 1f56d6fec1410587164a71acf46fca416657d1ba; record p27-10-p27",
       "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
       "audit_notes": "任务类型契约已前移到p27-01，当前项只适配旧浏览器入口，保留原完整验收命令。",
       "completion_record": "reconciled-p27-10",
@@ -4242,7 +4242,7 @@
       "problem_ref": "2026-09-05 最终状态契约审查",
       "acceptance": "mvn test -Dtest=CollaborationApiTest 通过，人工保存期间 busy=true、task=null、stopRequested=false；前端构建通过。",
       "verify_cmd": "mvn test -Dtest=CollaborationApiTest && (cd frontend && npm run build)",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 MVC RED 5 tests/1 failure，stopRequested 预期false实际true。GREEN 5 tests PASS；忙碌人工保存不再返回历史协作任务，界面区分正在处理内容与 Agent 运行；最终 init 613 tests/0 failures/0 errors/1 skipped 和 frontend build PASS。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-11-current-work-status实现caba1ea987d8a836c04d224e596e3853198e520a已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-11.json。",
+      "evidence": "2026-09-16 verified: fab21a3b9fd55240ad78516ac41af78a2a7adedb; record p27-11-p27",
       "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
       "completion_record": "reconciled-p27-11",
       "branch": "main"
@@ -4264,7 +4264,7 @@
       "problem_ref": "2026-09-05 unified-author-agent-collaboration 非目标：服务器重启后中断记录应持久化为 PAUSED，作者明确继续。",
       "acceptance": "mvn test -Dtest=CollaborativeRunTest 通过；关闭过程中等待中的构思被中断后 task=PAUSED、小说阶段与指令保留且无额外 step。",
       "verify_cmd": "mvn test -Dtest=CollaborativeRunTest",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 RED：CollaborativeRunTest 11 tests / 2 failures，关闭步骤中断时错误落 FAILED，以及 Agent 吞中断后继续至 COMPLETED。GREEN：11 tests / 0 failures / 0 errors。关闭标记覆盖协作步骤与既有写作循环的停止条件，关闭异常收敛 PAUSED，保留小说阶段和作者要求。最终 init 615 tests / 0 failures / 0 errors / 1 skipped，25项 ego-browser、replay/baseline PASS。证据 data/verification/phase27/final/shutdown-red.log、shutdown-green.log、init.log。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p27-12-shutdown-recovery实现447b53edddbdb115b11e5bd6311c78fb3cb5245d已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p27-12.json。",
+      "evidence": "2026-09-16 verified: 6abdfc29cc20fa18e547b816e6806a30a9491066; record p27-12-p27",
       "spec": "docs/specs/2026-09-05-unified-author-agent-collaboration.md",
       "completion_record": "reconciled-p27-12",
       "branch": "main"
@@ -4285,7 +4285,7 @@
       "problem_ref": "docs/specs/2026-09-05-qwen37-embedding-configuration.md；真实UI向量401见docs/reports/2026-09-05-ui-experience/14-retry-status.txt",
       "acceptance": "EmbeddingModelConfigurationTest（配置/HTTP请求契约及隔离凭据加载）和完整init通过；新模型独立索引、凭据优先级与显式空值保留正确；真实短文本向量连接返回200/1024维。原项目UI消除401的历史记录单独保留，本轮不重复推进原小说。",
       "verify_cmd": "mvn test -Dtest=EmbeddingModelConfigurationTest",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-05 配置契约RED 4 tests/3 failures（旧模型、标准key未读取、地址不可覆盖）；GREEN 4/4。最终./init.sh：619 tests/0 failures/0 errors/1 skipped，compile/frontend build PASS；package PASS。启动凭据专用/标准key优先级保留检查PASS。本机通用key为套餐型；从本机百炼CLI复用已有按量key，官方真实向量连接HTTP200、2条1024维有限非零向量、42 tokens。18098实例保留SQLite重启，ego-browser原项目继续协作后世界观由3条增至10条、无Embedding错误且持续创作，越过原401阻断。证据data/verification/qwen37-embedding/；仅配置/启动加载/测试变更，未改Agent或prompt、未混用旧模型索引。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p28-01-embedding-configuration实现5e8e1786ba77714eb3acadef90f77fecd2e63716已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p28-01.json。",
+      "evidence": "2026-09-16 verified: 2290d3dd0fff4ec41d90a5704715b790f6b4578f; record p28-01-p28",
       "spec": "docs/specs/2026-09-05-qwen37-embedding-configuration.md",
       "audit_notes": "重新验收新增6项隔离启动脚本契约，先复现2项显式空值覆盖失败，再修复；只调整本项向量凭据语义。历史UI恢复与本轮主分支验证区分登记。",
       "completion_record": "reconciled-p28-01",
@@ -4309,7 +4309,7 @@
       "problem_ref": "docs/specs/2026-09-07-qwen38-token-plan-configuration.md",
       "acceptance": "TokenPlanModelConfigurationTest（9处路由、密钥隔离、真实客户端模拟SSE及5项隔离ZCode加载）和完整init、打包通过；真实Token Plan短提示流式连接返回200及非空内容。原项目第21章UI续写证据单独保留，本轮不重启或推进原小说。",
       "verify_cmd": "mvn test -Dtest=TokenPlanModelConfigurationTest",
-      "evidence": "历史工作区验证（不代表已合入 main）：2026-09-07：配置契约RED 3 tests/2 failures/1 error，GREEN 3/3（全部8路由+默认、专用key隔离、本地模拟SSE真实客户端请求）；全量init 622 tests/0 failures/0 errors/1 skipped、frontend build、package PASS。ZCode套餐key静默加载匹配、向量key独立；安装包9处Token Plan/Qwen配置确认。仅18098重启保留20章66880字，ego-browser点击继续后20:12生成第21章2542字，全书69422字，越过原402。配置证据data/verification/qwen38-token-plan，UI证据116—119及chapter-021-visible-first.txt。无Agent/prompt/数据库变更，未用业务API推进小说；后续真实UI推进至23章82750字；用户改为共性问题收敛，不再要求写满200章。22:03:21使用启动脚本加载环境后编译与622项测试再次通过（0失败/0错误/1跳过），证据data/verification/qwen38-token-plan/convergence-verification.json。\n2026-09-08重新验收：原始实现已保留快照，本次独立分支逐项检验与合并中。\n2026-09-08新验收：codex/p29-01-token-plan-configuration实现c8c7a3fdffc01c82e20b212e4b15f9e6d2ef9d17已合入main；干净主分支的全量与专属验证通过，持久证据docs/harness/evidence/reconciled-p29-01.json。",
+      "evidence": "2026-09-16 verified: d66cb083542eb73a55f8ec3e0598bf1f7345d702; record p29-01-p29",
       "spec": "docs/specs/2026-09-07-qwen38-token-plan-configuration.md",
       "audit_notes": "依赖修正：本项明确保留p28-01向量配置，契约也依赖该配置，不能标记为无依赖。新增5项ZCode加载契约；保留p28-01显式空值修复，历史UI证据和本轮协议验证分开登记。",
       "completion_record": "reconciled-p29-01",
@@ -4581,7 +4581,7 @@
       "spec": "docs/specs/2026-09-07-harness-integrity.md",
       "acceptance": "python3 scripts/test_check_harness.py 与 python3 scripts/check-harness.py --check-git 均退出 0；./init.sh 和干净合并后的 Maven 编译测试通过。",
       "verify_cmd": "python3 scripts/test_check_harness.py && python3 scripts/check-harness.py --check-git",
-      "evidence": "2026-09-07：独立分支 codex/p31-01-harness-integrity，实现 ae7ee790cbc73ab3948c33de7fe3185f80b75751 已合入 main。分支及干净合并后 ./init.sh 均通过：11项harness测试、636项Maven测试/0失败/0错误/1跳过、编译和前端构建PASS；Git完成归属核验PASS。记录 docs/harness/evidence/harness-integrity.json；712个既有非harness文件内容保持不变。",
+      "evidence": "2026-09-16 verified: 3dbfdfee8a6dcb873482bcce794028815611bb09; record p31-01-p31",
       "completion_record": "harness-integrity",
       "branch": "main"
     },
@@ -4601,7 +4601,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=ChapterRevisionRefreshIsolationTest 通过：派生刷新抛异常时编辑/应用仍 2xx 且 derivedRefreshPending=true、正文回读一致、CHAPTER_REFRESH_FAILED 事件已发；前端构建通过且保存失败/刷新失败文案分级。",
       "verify_cmd": "mvn test -Dtest=ChapterRevisionRefreshIsolationTest",
-      "evidence": "2026-09-08：分支codex/p32-01-revision-refresh-isolation 实现提交552f880（含spec与p32登记），ff合入main；合并即同树，干净检出复核mvn test 684/0失败/1跳过、前端构建PASS。RED=刷新失败端点409/无pending字段，GREEN=ChapterRevisionRefreshIsolationTest 2项+30项局部回归。派生刷新失败发CHAPTER_REFRESH_FAILED事件，PUT/apply响应与前端文案区分『已保存待处理』与『应用失败』。",
+      "evidence": "2026-09-16 verified: c1152486de6fbbe7656b753898abc909897b2f33; record p32-01-p32",
       "completion_record": "p32-01-author-trust",
       "branch": "main"
     },
@@ -4620,7 +4620,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=AuthorDraftConflictProtectionTest 通过：章节后处理自动重写期间作者保存新版本后，自动稿被版本门拒绝落库、DB 保留作者稿、CHAPTER_AUTHOR_CONFLICT 事件已发。",
       "verify_cmd": "mvn test -Dtest=AuthorDraftConflictProtectionTest",
-      "evidence": "2026-09-08：分支codex/p32-02-author-draft-conflict 实现提交5545160 ff-only合入main。AuthorDraftConflictProtectionTest 3项RED→GREEN；mvn test 687/0失败/1跳过；E2E_FIXTURE_DIR=canary-mystery-20260831 ./scripts/e2e.sh 写作COMPLETED + compare-baseline PASS（基线2b8677e对照组同语料同结果）。自动重写/状态标记经版本门，冲突保留作者稿并发CHAPTER_AUTHOR_CONFLICT。",
+      "evidence": "2026-09-16 verified: db78607e85266bf15dc764a0cfeda9de466f752f; record p32-02-p32",
       "completion_record": "p32-02-author-trust",
       "branch": "main"
     },
@@ -4639,7 +4639,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=LayeredOutlineParsingTest 通过：请求区间 1-8 时喂入 41-48 章号文本不产生区间外条目且 PLAN_VOLUME_RANGE_REJECTED 事件已发；正常解析回归不变。",
       "verify_cmd": "mvn test -Dtest=LayeredOutlineParsingTest",
-      "evidence": "2026-09-08：分支codex/p32-03-volume-range-validation 实现提交f25fba4 ff合入main。LayeredOutlineParsingTest 8项（新增区间外拒绝/混合区间两条 RED→GREEN）；全量689/0失败/1跳过；canary-mystery e2e+基线 PASS。replan 桩越界章号（报告 #1 形态）现被区间门拒绝，测试桩改为区间内输出。",
+      "evidence": "2026-09-16 verified: 2a3eeb51384fb38af166c276c1e9af94c7baf93a; record p32-03-p32",
       "completion_record": "p32-03-author-trust",
       "branch": "main"
     },
@@ -4661,7 +4661,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=ChapterPlanProvenanceTest 通过：写作落库章节含 plan_ref（卷号+synopsis id），GET chapters API 暴露该字段；旧行 NULL 兼容。",
       "verify_cmd": "mvn test -Dtest=ChapterPlanProvenanceTest",
-      "evidence": "2026-09-08：分支codex/p32-04-plan-provenance 实现提交7516bde ff合入main。ChapterPlanProvenanceTest 2项（plan_ref 经 write-chapter 落库+GET 透出；旧行 NULL 兼容）；全量691/0失败/1跳过；e2e COMPLETED + compare-baseline PASS。plan_ref=volume=N;synopsis=<sha12>，ADD COLUMN 迁移。",
+      "evidence": "2026-09-16 verified: 2a3eeb51384fb38af166c276c1e9af94c7baf93a; record p32-04-p32",
       "completion_record": "p32-04-author-trust",
       "branch": "main"
     },
@@ -4682,7 +4682,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=ReviewVersionBindingTest 通过：continuity_issues/chapter_reviews 持久化 chapter_version 与 content_hash；章节升版后旧条目在质量报告标记过期，新条目为当前。",
       "verify_cmd": "mvn test -Dtest=ReviewVersionBindingTest",
-      "evidence": "2026-09-08：分支codex/p32-05-review-version-binding 实现提交b75b819 ff合入main。ReviewVersionBindingTest 3项（盖章/升版过期/同版本不误报）RED→GREEN；全量694/0失败/1跳过；e2e COMPLETED + 基线 PASS。continuity_issues/chapter_reviews 绑定 chapter_version+content_hash，质量报告输出 stale/staleIssueCount/reviewStale。",
+      "evidence": "2026-09-16 verified: b75b819c8e4e57decd60634da8b55d6458f9d511; record p32-05-p32",
       "completion_record": "p32-05-author-trust",
       "branch": "main"
     },
@@ -4701,7 +4701,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "backlog：mvn test -Dtest=FactEvidenceGradingTest——角色台词/推测类断言不直接成为 ACTIVE WORLD_RULE（引用报告 #4 复验标准）。",
       "verify_cmd": "mvn test -Dtest=FactEvidenceGradingTest",
-      "evidence": "2026-09-08：分支codex/p32-06-fact-evidence-grading 实现提交696cc6d ff合入main（用户决定：先合并，e2e 分叉另行登记）。FactEvidenceGradingTest 3项RED→GREEN（收割WORLD_RULE待核+事件/不取代确认铁律/状态类与人工补丁不受影响）；canon系29项回归全过；mvn test 705/0失败/1跳过。e2e replay FAIL 归因：canary-mystery 语料(08-31)与当前代码演化路径分叉——三章写作prompt与语料逐字一致（similarity 1.000）但LLM输出历史不同致指纹序列不同，且语料record当日本就依赖mtime偶然匹配；非本改动引入。登记p32-15。 后续修正：bisect 证实 e2e 分叉由本改动引入（圣经段【待核】标注/待核不恒注入改变 CHAPTER_WRITING prompt）——属预期行为变更，语料重建+bless 由 p32-15 完成。",
+      "evidence": "2026-09-16 verified: dcf59a3dea6ee1f4fbe95cf66defa9da211f0ff1; record p32-06-p32",
       "completion_record": "p32-06-author-trust",
       "branch": "main"
     },
@@ -4721,7 +4721,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "backlog：模板不改变量名，mvn test -Dtest=FactHarvesterTest 通过；./scripts/e2e.sh + compare-baseline.py PASS 或经人工确认 bless。",
       "verify_cmd": "mvn test -Dtest=FactHarvesterTest",
-      "evidence": "2026-09-09：分支codex/p32-07-fact-harvest-tightening 实现提交dcf59a3 ff合入main。fact-harvest.st 收紧（变量名不变）：WORLD_RULE 仅提取叙述层确认规则，对白/猜测/传闻中的规则不得提取，存疑承诺按 PLOT_COMMITMENT 保留存疑性质；与 p32-06 Java 侧降级形成双保险。FactHarvesterTest 系 10 项通过（模板渲染正常）；e2e/基线由 p32-15 语料重建统一验证（replay×2 一致 + bless PASS）。",
+      "evidence": "2026-09-16 verified: a05b981f37a7c334d4d649c1ba191494e887e608; record p32-07-p32",
       "completion_record": "p32-07-author-trust",
       "branch": "main"
     },
@@ -4741,7 +4741,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "backlog：mvn test -Dtest=ForeshadowEvidenceTest——resolve 必须携带证据引用文本；仅再次提及不置 resolved。",
       "verify_cmd": "mvn test -Dtest=ForeshadowEvidenceTest",
-      "evidence": "2026-09-09：分支codex/p32-08-foreshadow-evidence 实现提交8fbb063 ff合入main。ForeshadowEvidenceTest 3项RED→GREEN（reason 落库 resolve_evidence/无证据不置 resolved/人工回收标注来源）；伏笔系 10 项回归全过；foreshadowing-resolve-check.st 收紧（再出现≠兑现、★部分揭晓须引用具体内容、无据宁空）。e2e/基线由 p32-15 统一验证。",
+      "evidence": "2026-09-16 verified: 8fbb0637dbd72d8354a89fa5099235da26554257; record p32-08-p32",
       "completion_record": "p32-08-author-trust",
       "branch": "main"
     },
@@ -4761,7 +4761,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "backlog：mvn test -Dtest=ForeshadowIssueDedupTest——同一伏笔跨章不重复追加 ContinuityIssue；质量报告当章阻断项优先、长期提醒另列。",
       "verify_cmd": "mvn test -Dtest=ForeshadowIssueDedupTest",
-      "evidence": "2026-09-09：分支codex/p32-09-stale-foreshadow-dedup 实现提交943c4c6 ff合入main。SuspenseReminderPolicy：同一伏笔只保留一条未关闭悬置提醒（旧行为 22 章 35/41、23 章 35/36 为重复提醒）；关闭后跨章可重提一次。ForeshadowIssueDedupTest 2项RED→GREEN + 回归 8 项；mvn test 710/0失败；e2e/基线由 p32-15 统一验证。",
+      "evidence": "2026-09-16 verified: 943c4c6685d8cd890110dbcf9f9b9b0ae811f1f6; record p32-09-p32",
       "completion_record": "p32-09-author-trust",
       "branch": "main"
     },
@@ -4780,7 +4780,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "未指定 E2E_FIXTURE_DIR 时 ./scripts/e2e.sh 以最新语料 replay 通过（构思与 3 章写作终态非 FAILED），或给出明确报错指引。",
       "verify_cmd": "./scripts/e2e.sh",
-      "evidence": "2026-09-08：分支codex/p32-10-e2e-fixture-selection 实现提交a32832c ff合入main。e2e-fixture-dir-test.sh 新增3断言RED→GREEN（默认mystery选中canary-mystery/wuxia匹配/无匹配preset报错含E2E_FIXTURE_DIR指引）；零参数 ./scripts/e2e.sh 当时构思WRITING+写作COMPLETED+基线PASS；mvn test 702/0失败。后续发现：语料本身与当前代码演化路径分叉（LLM输出非确定性），登记p32-15。",
+      "evidence": "2026-09-16 verified: 292eec9c3d9ee40a72002cfb182f4f440ad1018b; record p32-10-p32",
       "completion_record": "p32-10-author-trust",
       "branch": "main"
     },
@@ -4802,7 +4802,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=QualityEvaluationPersistenceTest：evaluate 后 GET 读回同结果；页面重载显示最近评价。",
       "verify_cmd": "mvn test -Dtest=QualityEvaluationPersistenceTest",
-      "evidence": "2026-09-08：分支codex/p32-11-evaluation-persistence 实现提交ad9e444 ff合入main。QualityEvaluationPersistenceTest 2项RED→GREEN（跨请求读回/最新一次）；mvn test 697/0失败/1跳过；前端构建通过。quality_evaluations表+GET /evaluate读回+QualityView挂载加载。",
+      "evidence": "2026-09-16 verified: 87962e48cda0c877f2c7a73bd44b7d844a078853; record p32-11-p32",
       "completion_record": "p32-11-author-trust",
       "branch": "main"
     },
@@ -4824,7 +4824,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=RestoreOwnershipMessageTest：active task 时 restore 返回带 owner 原因；前端按原因显示接手提示。",
       "verify_cmd": "mvn test -Dtest=RestoreOwnershipMessageTest",
-      "evidence": "2026-09-08：分支codex/p32-12-ownership-conflict-message 实现提交673c020 ff合入main。RestoreOwnershipMessageTest 3项RED→GREEN；mvn test 700/0失败/1跳过；前端构建通过。WorkConflictException+code=WORK_OWNERSHIP_CONFLICT，前端三处409分支分级文案。",
+      "evidence": "2026-09-16 verified: 673c020f162c28d587addf4ff33c94dc4450a941; record p32-12-p32",
       "completion_record": "p32-12-author-trust",
       "branch": "main"
     },
@@ -4844,7 +4844,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=WorkOwnershipLeakTest：协作任务交还+回退+再回退后 hasActiveTask=false，第二次回退不再 409。",
       "verify_cmd": "mvn test -Dtest=WorkOwnershipLeakTest",
-      "evidence": "2026-09-08：定性更正——非所有权泄漏，而是REST修订路径同步派生刷新链（摘要重算等LLM调用）阻塞HTTP响应与所有权十几分钟（实测restore挂起>5min、busy持续>4min，重启前后行为一致）。分支codex/p32-13-revision-async-refresh 实现提交c115248 ff合入main。RevisionResponseLatencyTest RED(4082ms阻塞)→GREEN(<2.5s+所有权立即释放+摘要最终一致)；ChapterRevisionRefreshIsolationTest按异步契约演进；mvn test 695/0失败/1跳过；e2e COMPLETED+基线PASS。",
+      "evidence": "2026-09-16 verified: 87962e48cda0c877f2c7a73bd44b7d844a078853; record p32-13-p32",
       "completion_record": "p32-13-author-trust",
       "branch": "main"
     },
@@ -4863,7 +4863,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "mvn test -Dtest=ApiCacheControlTest：GET /api 响应头含 Cache-Control no-store；前端构建通过。",
       "verify_cmd": "mvn test -Dtest=ApiCacheControlTest",
-      "evidence": "2026-09-08：分支codex/p32-14-api-no-store 实现提交73da06f ff合入main。ApiCacheControlTest 2项RED→GREEN；mvn test 702/0失败/1跳过；前端构建通过。/api/**统一no-store+前端fetch cache:'no-store'。",
+      "evidence": "2026-09-16 verified: 73da06f86b0cb362c8e4d022e2d77370947dbac9; record p32-14-p32",
       "completion_record": "p32-14-author-trust",
       "branch": "main"
     },
@@ -4883,7 +4883,7 @@
       "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
       "acceptance": "record 重建语料后 ./scripts/e2e.sh 连续两次终态一致且 E2E 通过；compare-baseline.py PASS（bless 后 golden，理由记录证据）；AGENTS.md DoD 含语料重建条款。",
       "verify_cmd": "./scripts/e2e.sh && ./scripts/e2e.sh && python3 scripts/compare-baseline.py",
-      "evidence": "2026-09-09：分支codex/p32-15-corpus-rebuild。真实LLM record 重建 canary-mystery-20260908 语料（40 fixture）；replay×2 与 record 逐项一致（2章/7798字/40调用/0错误/0失败，e2e-report 三次一致）→ 确定性恢复；流程在第2章后被一致性门禁标记人审暂停（record/replay 行为一致，非退化），e2e.sh 轮询将 PAUSED 识别为合法终态；compare-baseline 唯一退化项为章节数/总字数（口径变化），平均章字数 3899 高于旧基线 2466，bless 更新 golden 并记录理由；AGENTS.md DoD 增补上下文改动后的语料重建条款。mvn test 710/0失败/1跳过；check-harness --check-git PASS。",
+      "evidence": "2026-09-16 verified: 01ae77e299c8ed2b4a9e2424458236406c75c22f; record p32-15-p32",
       "completion_record": "p32-15-author-trust",
       "branch": "main"
     },
@@ -4903,7 +4903,7 @@
       "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
       "acceptance": "mvn test -Dtest=ReviewBarrierGateTest：标记人审即落盘屏障；write-all/write-chapter 调度前检查项目全部有效屏障，存在则不启动新章；屏障解决后恢复写作；并发/重启后屏障仍有效。",
       "verify_cmd": "mvn test -Dtest=ReviewBarrierGateTest",
-      "evidence": "2026-09-11：分支codex/p33-01-review-barrier-gate 实现提交85a58d4 ff合入main。ReviewBarrierGateTest 3项RED（复现体验#18：屏障章标记后索引推进，write-all仍写新章且终态误报FAILED）→GREEN（立即PAUSED+不写新章/解除恢复写下一章/重启读回）。全量713/0失败/1跳过；e2e PAUSED通过+基线PASS（屏障消除绕过但不改变既有停点行为）。",
+      "evidence": "2026-09-16 verified: 0f67a318475a7394bd2754f72d8ea4fc3b43b664; record p33-01-p33",
       "completion_record": "p33-01-p33",
       "branch": "main"
     },
@@ -4923,7 +4923,7 @@
       "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
       "acceptance": "mvn test -Dtest=WorkspaceStatusApiTest：GET /api/projects/{id}/workspace 返回 stage/collabState/todoList（含章节、稿号、原因）/allowedActions+blockedReason；写作中/待人审/已解决三情形字段正确。",
       "verify_cmd": "mvn test -Dtest=WorkspaceStatusApiTest",
-      "evidence": "2026-09-11：分支codex/p33-02-workspace-api 实现提交86c7554合入main（注：提交时误将main重命名为feature分支，已恢复main=86c7554，提交内容不变、验证在合并树执行）。WorkspaceStatusApiTest 3项RED→GREEN（写作中WRITE_NEXT/待人审AWAITING_REVIEW带章号稿号/放行恢复）；全量716/0失败/1跳过。",
+      "evidence": "2026-09-16 verified: 86c7554e5f9f8c5be9645b18b35df1a1a4b8b52f; record p33-02-p33",
       "completion_record": "p33-02-p33",
       "branch": "main"
     },
@@ -4944,7 +4944,7 @@
       "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
       "acceptance": "cd frontend && npm run build 通过；CollaborationBar 按协作状态矩阵显示状态与主行动；待审章点击直达（选中章节目录与正文）。",
       "verify_cmd": "cd frontend && npm run build",
-      "evidence": "2026-09-11：分支codex/p33-03-workspace-status-bar 实现提交94d2b91 ff合入main。CollaborationBar 增读 /workspace：待人审显示'第N章第V稿待你审查'（稿号来自屏障），todoList 待办直达按钮；TS 严格构建通过。",
+      "evidence": "2026-09-16 verified: 94d2b915df19de9adcf3855cb8dbc81912f698ec; record p33-03-p33",
       "completion_record": "p33-03-p33",
       "branch": "main"
     },
@@ -4965,7 +4965,7 @@
       "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
       "acceptance": "cd frontend && npm run build 通过；正文与审查视图呈左目录（章+状态）/中正文（阅读·编辑·比较）/右审查面板（本章待办页签）三栏；窄屏右侧改抽屉。",
       "verify_cmd": "cd frontend && npm run build",
-      "evidence": "2026-09-11：分支codex/p33-04-three-pane-review 实现提交34364b7 ff合入main。三栏布局（左目录待人审/生成中标识/中正文/右审查面板含质量报告迁移）+窄屏抽屉+focusChapter待办直达。npm build通过；18102实例浏览器冒烟：三栏渲染确认（目录20章/正文/审查面板），workspace API真实项目输出正确；全量716/0失败。",
+      "evidence": "2026-09-16 verified: 34364b74727723980c60e3fb424ebb649adcee32; record p33-04-p33",
       "completion_record": "p33-04-p33",
       "branch": "main"
     },
@@ -4985,7 +4985,7 @@
       "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
       "acceptance": "backlog（设计 5.2）：统一修订入口（候选→校验→原子保存→派生→复核→批准）、幂等键去重版本、批准绑定稿号与指纹。",
       "verify_cmd": "mvn test -Dtest=UnifiedRevisionCommitTest",
-      "evidence": "2026-09-11：分支codex/p33-05-unified-commit 实现提交ecd4f67 ff合入main。UnifiedRevisionCommitTest 2项RED→GREEN：#9 相同内容保存零版本零快照（幂等门）；#12 慢后处理与作者编辑竞态——状态推进不再整行覆盖作者新稿且被替换稿留有快照。连带发现并修复：修订边界成功路径原 setContent 假设版本自增，遇幂等跳过即内存/DB 失配连锁破坏状态 CAS（4 项 lifecycle 回归），改为 adoptStateFrom 以 DB 权威回填。全量718/0失败/1跳过；e2e PAUSED+基线PASS。",
+      "evidence": "2026-09-16 verified: 36c593d9c6b3864df735ddeafa030cc6b9980fb2; record p33-05-p33",
       "completion_record": "p33-05-p33",
       "branch": "main"
     },
@@ -5007,7 +5007,7 @@
       "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
       "acceptance": "backlog（设计 5.3）：要求账本、范围与生效区间、候选落实清单、系统/作者确认分离。",
       "verify_cmd": "mvn test -Dtest=DirectiveLoopTest",
-      "evidence": "2026-09-11：分支codex/p33-06-directive-loop 实现提交7471cae ff合入main。DirectiveLoopTest 3项RED→GREEN：意见登记OPEN→系统落实证据APPLIED_SYSTEM（分开记录）→作者确认CONFIRMED；APPLIED_SYSTEM 仍是待办；HARD 不可 dismiss；撤销留痕。author_directives 表 + AuthorDirective 领域 + DirectiveController（登记/列表/落实/确认/撤销）。不改 prompt——无语料影响；全量721/0失败/1跳过。",
+      "evidence": "2026-09-16 verified: 488f2cf2c78decc9e9a0b333f64d1f8ca4446327; record p33-06-p33",
       "completion_record": "p33-06-p33",
       "branch": "main"
     },
@@ -5025,7 +5025,7 @@
       "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
       "acceptance": "backlog（设计 5.5）：事实来源版本/原文锚点、属性细分、知情者边界、影响追踪。",
       "verify_cmd": "mvn test -Dtest=FactEvidenceModelTest",
-      "evidence": "2026-09-12：分支codex/p33-07-fact-evidence-model 实现提交97764b4 ff合入main。ForeshadowCandidateLayerTest 3项RED→GREEN（HIGH/承诺属性进正式台账、细节进候选层、作者提升/拒绝、两层去重互通）+ ForeshadowCandidateController（列表/提升/拒绝）。预期行为变更致旧语料指纹漂移：record 重建 canary-mystery-20260912（27 fixtures），replay×2 与 record 逐项一致（1章/3930字/27调用/0错误/PAUSED——屏障停点），golden bless（1章口径，平均章字数3930>旧2729）。全量727/0失败/1跳过。",
+      "evidence": "2026-09-16 verified: 4437b5a5a7b6044c18053340c5f6a1026d36ae1e; record p33-07-p33",
       "completion_record": "p33-07-p33",
       "branch": "main"
     },
@@ -5045,7 +5045,7 @@
       "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
       "acceptance": "backlog（设计 5.6/5.7）：篇幅一致、删章影响预览、承诺分层、成书版本清单与导出。",
       "verify_cmd": "mvn test -Dtest=PlanEditionTest",
-      "evidence": "2026-09-11：分支codex/p33-08-plan-edition 实现提交bcdae8f ff合入main。PlanEditionTest 3项RED→GREEN：缩减篇幅先预览（裁剪章/超出目标未回收承诺/已写数）不落盘；confirm 生效（目标更新+大纲裁剪+已写梗概保留+承诺期望不静默改写）；低于已写拒绝。PlanEditionService + POST /plan/target-chapters。不改 prompt；全量727/0失败/1跳过。",
+      "evidence": "2026-09-16 verified: bcdae8ff2aa6d479fadb29e968414bb1f362e432; record p33-08-p33",
       "completion_record": "p33-08-p33",
       "branch": "main"
     },
@@ -5064,7 +5064,7 @@
       "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
       "acceptance": "null/空 tags 的构思先失败复现，修复后正常生成世界观；无模型调用前 NPE。",
       "verify_cmd": "mvn test -Dtest=WorldBuilderOptionalTagsTest",
-      "evidence": "2026-09-12：分支codex/p34-01-optional-tags 实现提交97a9de6 ff合入main。WorldBuilderOptionalTagsTest 3项RED→GREEN（null tags NPE 复现→归一化修复→正常行为不变）。全量730/0失败。A1 闭环。",
+      "evidence": "2026-09-16 verified: 97a9de664c20333ca6d9b69edf108ef5030a3680; record p34-01-p34",
       "completion_record": "p34-01-p34",
       "branch": "main"
     },
@@ -5085,7 +5085,7 @@
       "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
       "acceptance": "当前章 v6 只有 v2 报告时，不返回它作为当前有效评价；历史报告仍保留。",
       "verify_cmd": "mvn test -Dtest=ReviewVersionBindingTest",
-      "evidence": "2026-09-12：分支codex/p34-02-report-validity 实现提交29d8650 ff合入main。ChapterQualityReport 增 reportForVersion/reportCurrent 显式有效性字段；ReviewVersionBindingTest 扩展断言（升版后 false、当前稿 true）；前端右栏 reportCurrent=false 显示'旧稿报告：针对第 vN 稿'警示。A3 闭环（后端判定+前端展示）。",
+      "evidence": "2026-09-16 verified: 29d865028948a9b1ee6b32e797dcd24737b7d62f; record p34-02-p34",
       "completion_record": "p34-02-p34",
       "branch": "main"
     },
@@ -5104,7 +5104,7 @@
       "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
       "acceptance": "通过 ego-browser 在本地场景编辑第7章、刷新、恢复同项目同目标草稿；版本已变时明确冲突，不覆盖正式稿。",
       "verify_cmd": "bash scripts/verify-ui-draft-recovery.sh",
-      "evidence": "2026-09-12：分支codex/p34-03-draft-recovery 实现提交942d066 ff合入main。draftStore 纯模块（键=项目+章节，基准稿号校验，过期不可见防旧盖新）+ verify 脚本 PASS（读回/过期/清除/隔离）；编辑器接入（打开恢复+提示、过程暂存、保存清除）。A2 草稿部分闭环。",
+      "evidence": "2026-09-16 verified: 1e301372c8a2ec3367195176203f12072994e999; record p34-03-p34",
       "completion_record": "p34-03-p34",
       "branch": "main"
     },
@@ -5124,7 +5124,7 @@
       "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
       "acceptance": "待审 v2 保存 v3 后，当前有效待办与权威正文稿号一致；历史屏障不丢失，未复核不得默认为已批准。",
       "verify_cmd": "mvn test -Dtest=ReviewBarrierRevisionBindingTest",
-      "evidence": "2026-09-12：分支codex/p34-04-barrier-rebind 实现提交df7a99c ff合入main。doEdit 版本推进后 rebindReviewBarriers 把该章 ACTIVE 屏障重绑到新稿号（原因注明内容已修订）；屏障仍阻止续写。ReviewBarrierRevisionBindingTest 2项RED→GREEN（v2待审/v3当前并存消除；无屏障不受影响）。A4 屏障稿号一致性闭环。",
+      "evidence": "2026-09-16 verified: df7a99c127097ef7dfaf8077489a3fdea56ec96f; record p34-04-p34",
       "completion_record": "p34-04-p34",
       "branch": "main"
     },
@@ -5144,7 +5144,7 @@
       "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
       "acceptance": "选择第7章并刷新仍定位第7章；章节和视图可深链接恢复，后台新增章节不抢走选择。",
       "verify_cmd": "bash scripts/verify-ui-chapter-route.sh",
-      "evidence": "2026-09-12：分支codex/p34-05-chapter-route 实现提交7e47639 ff合入main。workspaceRoute 纯模块 + 路由 #/project/:id/chapter/:n；ProjectWorkspace 路由初始化 focusChapter，待办直达同步 hash。verify 脚本 PASS（解析/非法章号/互逆）。A2 位置部分闭环。",
+      "evidence": "2026-09-16 verified: 7e47639512bc0239a5a1bbafcc9374d22b431dd8; record p34-05-p34",
       "completion_record": "p34-05-p34",
       "branch": "main"
     },
@@ -5163,7 +5163,7 @@
       "spec": "docs/specs/2026-09-12-collaboration-ui-acceptance-followups.md",
       "acceptance": "ego-browser 390px 场景抽屉展示与桌面相同的问题明细和已有操作，键盘可访问，不只显示问题数量。",
       "verify_cmd": "bash scripts/verify-ui-mobile-review.sh",
-      "evidence": "2026-09-12：实现在 codex/p34-05-chapter-route 分支续做、提交 83e36bc 直接落 main（分支管理偏差，历史线性、全量验证通过，证据按 main 记录）。窄屏抽屉补齐：完整问题列表（severity/type/描述）、改进建议、旧稿报告提示、'已处理（放行本稿）'按钮；verify 脚本静态校验 PASS。A6 闭环（评审脚本为静态内容校验，390px 人工复验建议保留）。",
+      "evidence": "2026-09-16 verified: 83e36bc17a08baca52af8d9dac4696e91a73da61; record p34-06-p34",
       "completion_record": "p34-06-p34",
       "branch": "main"
     },
@@ -5183,7 +5183,7 @@
       "spec": "docs/specs/2026-09-12-collab-ui-closure.md",
       "acceptance": "静态校验+构建通过：审查面板新增意见区块——登记（内容+范围+类型）、列表（状态徽标）、APPLIED_SYSTEM 显示落实证据并给确认按钮、PREFERENCE/ONCE 可撤销；消费 directives API。",
       "verify_cmd": "bash scripts/verify-ui-directives-panel.sh",
-      "evidence": "2026-09-12：实现提交e6b5723（注：提交时曾直接落在 main，分支管理偏差、历史线性、全量验证通过，证据按 main 记录）。DirectiveLoop UI：右栏意见区块——登记（类型/范围）、状态徽标列表、落实证据展示、确认/撤销按钮，消费 directives API。verify 脚本静态校验 PASS；npm build 通过；mvn test 732/0失败。",
+      "evidence": "2026-09-16 verified: e6b5723c78b2f20e033df681220980d575ff828d; record p35-01-p35",
       "completion_record": "p35-01-p35",
       "branch": "main"
     },
@@ -5203,7 +5203,7 @@
       "spec": "docs/specs/2026-09-12-collab-ui-closure.md",
       "acceptance": "静态校验+构建通过：候选列表（描述/埋设章/状态）+ 提升/拒绝按钮，消费 foreshadow-candidates API；与正式台账分区展示。",
       "verify_cmd": "bash scripts/verify-ui-candidates-panel.sh",
-      "evidence": "2026-09-12：分支codex/p35-02-candidates-panel 实现提交730f6d3 ff合入main。候选线索区块——列表（状态徽标/埋设章）、提升为伏笔（HIGH）/拒绝；与正式台账分区。verify 脚本 PASS；npm build 通过；mvn test 732/0失败。",
+      "evidence": "2026-09-16 verified: 730f6d361bc81a314ea7118c8b5a64e0aead0045; record p35-02-p35",
       "completion_record": "p35-02-p35",
       "branch": "main"
     },
@@ -5223,7 +5223,7 @@
       "spec": "docs/specs/2026-09-12-collab-ui-closure.md",
       "acceptance": "静态校验+构建通过：大纲页顶部目标章数编辑 → 预览（裁剪章/受影响承诺）→ 确认生效；消费 plan/target-chapters API。",
       "verify_cmd": "bash scripts/verify-ui-target-chapters.sh",
-      "evidence": "2026-09-12：分支codex/p35-03-target-chapters-ui 实现提交8a49e84 ff合入main。大纲页'篇幅与计划'卡——目标章数输入、影响预览（裁剪章节/失去承载位置提示）、确认生效；预览不落盘。verify 脚本 PASS；npm build 通过；mvn test 732/0失败。",
+      "evidence": "2026-09-16 verified: 8a49e8433bc357e904acf52149dc7e4ce6364a27; record p35-03-p35",
       "completion_record": "p35-03-p35",
       "branch": "main"
     },
@@ -5241,7 +5241,7 @@
       "spec": "docs/specs/2026-09-12-collab-ui-closure.md",
       "acceptance": "mvn test -Dtest=ResolveReviewConcurrencyTest：并发放行仅一方成功；屏障稿号与当前章不符时放行被拒。",
       "verify_cmd": "mvn test -Dtest=ResolveReviewConcurrencyTest",
-      "evidence": "2026-09-12：实现提交becfd16（提交直接落 main，偏差记录）。ResolveReviewConcurrencyTest 2项：两窗口并发放行恰好一方成功、屏障恰好解决一次；遗留章节惰性补建屏障后延迟提交者推进稿号、rebind 重绑到最新稿。mvn test 734/0失败。",
+      "evidence": "2026-09-16 verified: becfd1653a03600c37d540c4b1d41ae67ddf86a6; record p35-04-p35",
       "completion_record": "p35-04-p35",
       "branch": "main"
     },
@@ -5261,7 +5261,7 @@
       "spec": "docs/specs/2026-09-12-collab-ui-closure.md",
       "acceptance": "mvn test -Dtest=BookReviewAggregateTest + 构建通过：GET /book-review 聚合各章（稿号/状态/报告有效性/未回收承诺）+ 全文 Markdown 导出端点；前端成书页签展示覆盖清单与导出按钮。",
       "verify_cmd": "mvn test -Dtest=BookReviewAggregateTest",
-      "evidence": "2026-09-12：实现提交ce5d07f（提交直接落 main，偏差记录）。BookReviewAggregateTest 2项RED→GREEN：GET /book-review 覆盖清单（各章稿号/状态/评级/旧稿标记）+未回收承诺+汇总；GET /book-export 全书 Markdown（标注基于当前稿非成书快照）。前端'📕 成书审查'页签。全量736/0失败；npm build 通过。",
+      "evidence": "2026-09-16 verified: ce5d07f03887b5698092e62b892297a035a97206; record p35-05-p35",
       "completion_record": "p35-05-p35",
       "branch": "main"
     },
@@ -5284,7 +5284,7 @@
       "acceptance": "npm --prefix qa/collaboration test -- smoke.spec.ts 退出0；正常本地服务通过；错误端口、空白页、页面运行异常均让命令非零退出；保存测试结果、截图和 trace 到 QA_ARTIFACT_DIR，不放小说正文进 Git。",
       "verify_cmd": "npm --prefix qa/collaboration test -- smoke.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-13：verified，branch codex/p36-01-browser-qa，实现/主分支提交 57e6d5a；qa/collaboration 独立包，@playwright/test 锁定 1.63.0。happy path（场景模式服务 18083）3 passed exit 0；未设URL/错误端口/空白页均非零退出；合并后全量 757/0/0/1skip、前端构建通过。完成记录 p36-01-p36。",
+      "evidence": "2026-09-16 verified: 78fc3a90a0d84e4ab1b86126c18d3481a80ceac6; record p36-01-p36",
       "completion_record": "p36-01-p36",
       "branch": "main"
     },
@@ -5307,7 +5307,7 @@
       "acceptance": "mvn test -Dtest=ApprovalSchemaTest 退出0；旧库连续初始化两次无丢行；标题/正文任一变化改变hash，状态变化不改变；批准记录不能被普通章保存覆盖；相同幂等键唯一。",
       "verify_cmd": "mvn test -Dtest=ApprovalSchemaTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-13：verified，branch codex/p36-02-approval-schema，实现/主分支提交 51d417a；RED 见 evidence（f7b36c2：3 errors no such table）。合并后干净 main mvn compile&&mvn test 740/0/0/1skip、专项 4/4 通过。完成记录 p36-02-p36。安全闭环未完成，待 p36-03 起。",
+      "evidence": "2026-09-16 verified: 2914374a552358484f00815bf352bd2b3d00e262; record p36-02-p36",
       "completion_record": "p36-02-p36",
       "branch": "main"
     },
@@ -5332,7 +5332,7 @@
       "acceptance": "mvn test -Dtest=VersionedApprovalRepositoryTest 退出0；两连接同时用不同key批准同一待办，仅一方成功；同key同请求重试返回相同approvalId；同key不同内容冲突；旧version/hash/reviewSetHash均拒绝；在批准行写入后注入SQL错误，正文状态/屏障/checkpoint/审计全部不变。",
       "verify_cmd": "mvn test -Dtest=VersionedApprovalRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-13：verified，branch codex/p36-03-atomic-approval，实现/主分支提交 28d1de9；RED 见 evidence（1fc90b7：8 errors UnsupportedOperation）。合并后干净 main mvn compile&&mvn test 748/0/0/1skip、专项 8/8 通过（含两连接并发单赢家与注入失败全回滚）。完成记录 p36-03-p36。",
+      "evidence": "2026-09-16 verified: b451f51c1be91df4f61f39366a8e51961bfa5a52; record p36-03-p36",
       "completion_record": "p36-03-p36",
       "branch": "main"
     },
@@ -5356,7 +5356,7 @@
       "acceptance": "mvn test -Dtest=VersionedReviewDecisionTest 退出0；MockMvc 实际 POST：v2读取→正式PUT产生v3→提交v2必须409且v3待审；缺版本400；其他项目不能批准；相同请求重试幂等。",
       "verify_cmd": "mvn test -Dtest=VersionedReviewDecisionTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-13：verified，branch codex/p36-04-versioned-review-api，实现/主分支提交 76dcfd0；RED 见 evidence（11bc122：4 failures 端点缺失）。合并后干净 main mvn compile&&mvn test 752/0/0/1skip、专项 4/4 通过（旧稿409/缺字段400/跨项目400/重试幂等）。完成记录 p36-04-p36。",
+      "evidence": "2026-09-16 verified: 4815b683ed5c6284a0101c2432251490c10ee104; record p36-04-p36",
       "completion_record": "p36-04-p36",
       "branch": "main"
     },
@@ -5382,7 +5382,7 @@
       "acceptance": "npm --prefix qa/collaboration test -- review-version.spec.ts 退出0；两个真实窗口：A显示v2，B保存v3，A批准必须409并仍不能续写；A显式刷新审阅后才可批准v3；两套旧按钮不会一个成功另一个仍卡住；390px同样验证。",
       "verify_cmd": "npm --prefix qa/collaboration test -- review-version.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-13：verified，branch codex/p36-05-review-version-frontend，实现/主分支提交 587b613；RED（改动前 bundle）2 failed 无统一批准按钮。合并后 main：mvn compile&&mvn test 757/0/0/1skip、前端构建通过、review-version.spec 2 passed（双窗口竞态 1280x900 与 390x844，真实作者路径 fixture）。完成记录 p36-05-p36。",
+      "evidence": "2026-09-16 verified: aed31dcda456a95e7dfc73630049bf056f7dd0c4; record p36-05-p36",
       "completion_record": "p36-05-p36",
       "branch": "main"
     },
@@ -5409,7 +5409,7 @@
       "acceptance": "mvn test -Dtest=LegacyApprovalGateTest 退出0；逐一向所有旧入口真实POST，无token不改变章/屏障/checkpoint；初始设定仍可批准后继续；新的版本审批全量通过。",
       "verify_cmd": "mvn test -Dtest=LegacyApprovalGateTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-13：verified，branch codex/p36-06-legacy-approval-gate，实现/主分支提交 c247ec2921c8b64c7b4cf7afc962bd742039144c；RED 见 evidence（32f58a1：4 failures 三类旁路实证）。合并后 main mvn compile&&mvn test 766/0/0/1skip、专项 6/6 通过；两个既有测试按计划'现有测试适配'条款适配并记录。完成记录 p36-06-p36。安全闭环（p36-02→06）成立。",
+      "evidence": "2026-09-16 verified: 5b2b27173c14333469f3facc30e7793c35e6f72c; record p36-06-p36",
       "completion_record": "p36-06-p36",
       "branch": "main"
     },
@@ -5434,7 +5434,7 @@
       "acceptance": "mvn test -Dtest=RevisionBarrierAtomicityTest 退出0；修订事务中屏障更新失败则整个正文/历史回滚；v2批准后编辑v3，v2批准仍可查询但不算v3批准；回退也生成新稿待审；无变更保存不新增历史。",
       "verify_cmd": "mvn test -Dtest=RevisionBarrierAtomicityTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-13：verified，branch codex/p36-07-revision-barrier-atomicity，实现/主分支提交 222d887；RED 见 evidence（f60ce4b：4 failures + 1 基线守卫通过）。合并后干净 main mvn compile&&mvn test 757/0/0/1skip、专项 5/5 通过。完成记录 p36-07-p36。",
+      "evidence": "2026-09-16 verified: c3b06d22a34780f14dfc2ae046c4aa06ebd8841d; record p36-07-p36",
       "completion_record": "p36-07-p36",
       "branch": "main"
     },
@@ -5459,7 +5459,7 @@
       "acceptance": "npm --prefix qa/collaboration test -- workspace-navigation.spec.ts 退出0；手动创建7章→点击第7章→刷新仍第7章；切outline刷新仍outline；后退/前进同步；后台新增章不抢焦点；跨项目不能串章。",
       "verify_cmd": "npm --prefix qa/collaboration test -- workspace-navigation.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-13：verified，branch codex/p36-08-workspace-navigation，实现/主分支提交 9d42f77caaef1d872be7abaf6b5e937289109ce9；RED（旧 bundle）6 failed。合并后 main：全量 766/0/0/1skip、前端构建通过、workspace-navigation.spec 6 passed（路由同步/页签参数/后退前进/不抢焦点/非法章号/历史深链接）。完成记录 p36-08-p36。",
+      "evidence": "2026-09-16 verified: 1e301372c8a2ec3367195176203f12072994e999; record p36-08-p36",
       "completion_record": "p36-08-p36",
       "branch": "main"
     },
@@ -5484,7 +5484,7 @@
       "acceptance": "npm --prefix qa/collaboration test -- draft-recovery.spec.ts 退出0；标题单独改、正文单独改、两者同改刷新恢复；B保存新稿后A刷新显示冲突且旧内容可复制；模拟quota异常有警示；保存失败/409草稿仍在；同内容保存历史数量不变。",
       "verify_cmd": "npm --prefix qa/collaboration test -- draft-recovery.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-13：verified，branch codex/p36-09-draft-recovery，实现/主分支提交 39c9d0f7eb05fc0d51910f62844d4f50571ecb69；RED（旧 bundle）2 failed 行为性失败。合并后 main：全量 766/0/0/1skip、前端构建、draft-recovery.spec 4 passed（标题/正文恢复、冲突保留+复制+放弃、409 保留输入）。完成记录 p36-09-p36。",
+      "evidence": "2026-09-16 verified: dbf26c9d903f036448b6cc927ac62249545e1809; record p36-09-p36",
       "completion_record": "p36-09-p36",
       "branch": "main"
     },
@@ -5508,7 +5508,7 @@
       "acceptance": "npm --prefix qa/collaboration test -- plan-preview.spec.ts 退出0；22预览→改20必须禁用；旧请求迟到不能恢复22预览；确认20后大纲树已裁剪，再保存总纲不会复活21+章。",
       "verify_cmd": "npm --prefix qa/collaboration test -- plan-preview.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-13：verified，branch codex/p36-10-plan-preview，实现/主分支提交 5f96ad6dd55bb299f95e4337e9be901526d83fd2；RED（改目标后确认仍 enabled）。合并后 main：全量 766/0/0/1skip、前端构建、plan-preview.spec 2 passed（预览绑定/乱序丢弃/确认后裁剪且不复活）。完成记录 p36-10-p36。",
+      "evidence": "2026-09-16 verified: 0f12b97e6855dc3f63ca275c0150f9da19b3dc3f; record p36-10-p36",
       "completion_record": "p36-10-p36",
       "branch": "main"
     },
@@ -5532,7 +5532,7 @@
       "acceptance": "npm --prefix qa/collaboration test -- book-state.spec.ts 退出0；自动DONE、手工DONE、旧报告、缺报告四种响应分别渲染正确；页面不出现伪造“已批准流程完成”。",
       "verify_cmd": "npm --prefix qa/collaboration test -- book-state.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-13：verified，branch codex/p36-11-book-state，实现/主分支提交 b3135fb0373e32c9eb5aed1e8374bbbb02c4de6f；RED 2 failed（伪造'已批准流程完成'在场）。合并后 main：全量 766/0/0/1skip、前端构建、book-state.spec 2 passed。完成记录 p36-11-p36。Phase36 全部 13 项完成。",
+      "evidence": "2026-09-16 verified: 7b03bc4798d3c9b00102826bb09cd5932751f128; record p36-11-p36",
       "completion_record": "p36-11-p36",
       "branch": "main"
     },
@@ -5557,7 +5557,7 @@
       "acceptance": "mvn test -Dtest=ProposalSchemaTest 退出0；重复迁移无损；嵌套JSON/换行能恢复；跨项目key隔离；APPLIED不回到READY。",
       "verify_cmd": "mvn test -Dtest=ProposalSchemaTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-14：verified，branch codex/p37-01-proposal-schema，实现/主分支提交 bfdabf79f50773933a65b1244499c14626658f03；RED（7522801：3 errors no such table）。合并后 main：全量 771/0/0/1skip、专项 5/5（重复迁移无损/嵌套JSON恢复/跨项目隔离/APPLIED终态）。完成记录 p37-01-p37。",
+      "evidence": "2026-09-16 verified: 03d1af23cb61ac35b5e01da4b831836c24eeda0b; record p37-01-p37",
       "completion_record": "p37-01-p37",
       "branch": "main"
     },
@@ -5583,7 +5583,7 @@
       "acceptance": "mvn test -Dtest=ProposalRepositoryTest 退出0；重建repository/连接后候选仍可读；断在正文写入与候选消费之间重试不重复；跨项目/双apply/过期候选均核实最终正文版本。",
       "verify_cmd": "mvn test -Dtest=ProposalRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-14：verified，branch codex/p37-02-proposal-repository，实现/主分支提交 c3b06d22a34780f14dfc2ae046c4aa06ebd8841d；RED（2cde2a7：6 errors UnsupportedOperation）。合并后 main：全量 777/0/0/1skip、专项 6/6（重连可读/一事务应用/双apply重放/故障回滚READY重试/来源冲突STALE不改正文/跨项目+CAS取消）。完成记录 p37-02-p37。",
+      "evidence": "2026-09-16 verified: 1f8c4a9feb67bde3c8eeac06ee1347e876230789; record p37-02-p37",
       "completion_record": "p37-02-p37",
       "branch": "main"
     },
@@ -5609,7 +5609,7 @@
       "acceptance": "mvn test -Dtest=PersistentRevisionApiTest 退出0；预览→重启服务→GET→应用同候选成功；模型延迟时编辑来源，返回STALE；取消后应用409；响应丢失重试章节apply仅一版。",
       "verify_cmd": "mvn test -Dtest=PersistentRevisionApiTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "verified 1f8c4a9feb67bde3c8eeac06ee1347e876230789",
+      "evidence": "2026-09-16 verified: 8fcb4d61159533b19f12168f8e677e2a9611ae0b; record p37-03-p37",
       "completion_record": "p37-03-p37",
       "branch": "main"
     },
@@ -5636,7 +5636,7 @@
       "acceptance": "npm --prefix qa/collaboration test -- candidate-recovery.spec.ts 退出0；三条意见生成→刷新→恢复内容与意见；服务重启仍恢复；多个目标不串候选；已应用再次打开不会重新应用；版本冲突保留原意见。",
       "verify_cmd": "npm --prefix qa/collaboration test -- candidate-recovery.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec candidate-recovery.spec.ts tested against scenario server. record p37-04-p37",
+      "evidence": "2026-09-16 verified: 3e4234af1f19e3e49dc086ccfc695e8f0a0099ad; record p37-04-p37",
       "completion_record": "p37-04-p37",
       "branch": "main"
     },
@@ -5685,7 +5685,7 @@
       "acceptance": "mvn test -Dtest=DirectiveScopeMigrationTest 退出0；迁移兼容旧构造/旧行；同意见多章证据不会互相覆盖；空范围、to<from、非正章号拒绝；HARD确认与enabled独立。",
       "verify_cmd": "mvn test -Dtest=DirectiveScopeMigrationTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "verified b474b25e97c85b568578e6709d8af8fe65b9f4f0",
+      "evidence": "2026-09-16 verified: b58fe460ba676ee59f3f1158a1bc2d3a5236a13f; record p37-06-p37",
       "completion_record": "p37-06-p37",
       "branch": "main"
     },
@@ -5710,7 +5710,7 @@
       "acceptance": "mvn test -Dtest=DirectiveEvidenceRepositoryTest 退出0；旧稿证据不能确认；更改意见revision后旧证据无效；跨章/项目伪证据拒绝；相同证据幂等；HARD某章确认后下一章仍适用。",
       "verify_cmd": "mvn test -Dtest=DirectiveEvidenceRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-14 verified: RED 7 UnsupportedOperation; merged main 795/0/0/1skip, spec 7/7. record p37-07-p37 commit 217d203",
+      "evidence": "2026-09-16 verified: 52e383c3f691fcae92f4ef49e39851bd3c7ba751; record p37-07-p37",
       "completion_record": "p37-07-p37",
       "branch": "main"
     },
@@ -5735,7 +5735,7 @@
       "acceptance": "mvn test -Dtest=DirectiveVersionApiTest 退出0；原POST confirm不能凭空确认OPEN；缺version/hash不被默补；范围/硬性撤销/当前证据确认和跨项目均有HTTP断言。",
       "verify_cmd": "mvn test -Dtest=DirectiveVersionApiTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "verified 5477a0411e66c64428fb43032734882ce99706b7",
+      "evidence": "2026-09-16 verified: 8cf24892990ea2952bb118346a734318427f9b18; record p37-08-p37",
       "completion_record": "p37-08-p37",
       "branch": "main"
     },
@@ -5757,7 +5757,7 @@
       "acceptance": "mvn test -Dtest=DirectiveContextSectionTest 退出0；无要求时与原prompt逐字相同；有要求稳定排序且正文只出现一次；原旨不丢失。",
       "verify_cmd": "mvn test -Dtest=DirectiveContextSectionTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-14 verified: 39e411f13b65c887c64f46a00afdd5331f524d8e RED 1 failure; merged main 784/0/0/1skip, spec 3/3. record p37-09-p37",
+      "evidence": "2026-09-16 verified: b95e5862b5e9916279db0f98fada89b95acf60d4; record p37-09-p37",
       "completion_record": "p37-09-p37",
       "branch": "main"
     },
@@ -5783,7 +5783,7 @@
       "acceptance": "mvn test -Dtest=DirectiveContextInjectionTest 退出0；捕获实际LlmRequest：本章/全书/未来范围/撤销分别出现或不出现；HARD超预算请求不发送；无意见旧回放不变。",
       "verify_cmd": "mvn test -Dtest=DirectiveContextInjectionTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-14 verified: 600fa6e; RED 行为失败驱动（阻塞序/预算0/NPE）; merged main 807/0/0/1skip + QG replay PASS + baseline PASS. record p37-10-p37",
+      "evidence": "2026-09-16 verified: 9fa390ab06e8307f1681b5bed59df7c57da32220; record p37-10-p37",
       "completion_record": "p37-10-p37",
       "branch": "main"
     },
@@ -5808,7 +5808,7 @@
       "acceptance": "mvn test -Dtest=RevisionEvidenceContractTest 退出0；三意见只实现两项必须第三项UNMET+原因；重复/未知ID/无证据不能APPLIED_SYSTEM；现有ContentRevisionAgent对应测试仍通过。",
       "verify_cmd": "mvn test -Dtest=RevisionEvidenceContractTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-14 verified: main 8ed5d73（分支偏差已记录）; 803/0/0/1skip, spec 4/4. record p37-11-p37",
+      "evidence": "2026-09-16 verified: c50a302c54c8a44874e77bde6955dc90435db7ec; record p37-11-p37",
       "completion_record": "p37-11-p37",
       "branch": "main"
     },
@@ -5836,7 +5836,7 @@
       "acceptance": "mvn test -Dtest=DirectiveProposalIntegrationTest 退出0；三意见→预览DB无CONFIRMED/APPLIED章节证据→应用只产生实际匹配的版本证据→作者确认；编辑稿或意见变动旧证据变STALE；回滚无半套证据。",
       "verify_cmd": "mvn test -Dtest=DirectiveProposalIntegrationTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-15 verified: 8ab2de828303cfdeb2e6b34c859cf71d52d5d627; 848/0/0/1skip. record p37-12-p37",
+      "evidence": "2026-09-16 verified: 58adaa864f47322ce948d5c00e4cd84273b628d5; record p37-12-p37",
       "completion_record": "p37-12-p37",
       "branch": "main"
     },
@@ -5863,7 +5863,7 @@
       "acceptance": "npm --prefix qa/collaboration test -- directive-loop.spec.ts 退出0；登记三意见→生成→应用→两个有效证据确认+一个UNMET保留；刷新不丢；旧稿确认禁用；HARD撤销留历史；390px同样可操作。",
       "verify_cmd": "npm --prefix qa/collaboration test -- directive-loop.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec directive-loop.spec.ts tested against scenario server. record p37-13-p37",
+      "evidence": "2026-09-16 verified: 61419f8a18aeb89f0639e5e65c425b88e7501505; record p37-13-p37",
       "completion_record": "p37-13-p37",
       "branch": "main"
     },
@@ -5888,7 +5888,7 @@
       "acceptance": "mvn test -Dtest=ProposalRevisionBoundaryTest 退出0；候选与手编同等500字门槛、版本快照、批准失效；派生失败网络重试不增版；段落候选任何全文变动都冲突。",
       "verify_cmd": "mvn test -Dtest=ProposalRevisionBoundaryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-14：verified，实现/主分支提交 a4778cfeb8a9a1588e94bf28acbe828435e6462b；RED 4/4 行为性失败；合并后 main 全量 781/0/0/1skip、专项 4/4。完成记录 p37-14-p37。",
+      "evidence": "2026-09-16 verified: 1f8c4a9feb67bde3c8eeac06ee1347e876230789; record p37-14-p37",
       "completion_record": "p37-14-p37",
       "branch": "main"
     },
@@ -5913,7 +5913,7 @@
       "acceptance": "mvn test -Dtest=DirectiveEvidenceAgentTest 退出0；固定Stub响应覆盖全三项/遗漏/伪造引文/空返回；核对器失败让要求保持未验证而非已落实；禁止Agent直接调用其他Agent。",
       "verify_cmd": "mvn test -Dtest=DirectiveEvidenceAgentTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-14 verified: RED 行为性失败驱动; merged main 799/0/0/1skip, spec 4/4. record p37-15-p37 commit 07b5fb3c3ea69b1a5eeccc30c64b769c86e974cc",
+      "evidence": "2026-09-16 verified: 4c8f5976f2f64725de12f502ae494ea205ae09f3; record p37-15-p37",
       "completion_record": "p37-15-p37",
       "branch": "main"
     },
@@ -5940,7 +5940,7 @@
       "acceptance": "mvn test -Dtest=GeneratedDirectiveEvidenceTest 退出0；连写两章HARD仍注入且各自证据独立；慢核对期间作者修改，旧结果不能落实新稿；失败可重试而不重复证据；捕获额外调用成本。",
       "verify_cmd": "mvn test -Dtest=GeneratedDirectiveEvidenceTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-14 verified: d2a2a04; merged main 811/0/0/1skip, spec 4/4. record p37-16-p37",
+      "evidence": "2026-09-16 verified: f24a42b5b7972caaff96e5f1d4916822da2afc35; record p37-16-p37",
       "completion_record": "p37-16-p37",
       "branch": "main"
     },
@@ -5965,7 +5965,7 @@
       "acceptance": "mvn test -Dtest=PlanChangeSchemaTest 退出0；迁移幂等；预览内容持久且不可被目标输入改写；承诺用ID不靠描述匹配；跨项目不能引用。",
       "verify_cmd": "mvn test -Dtest=PlanChangeSchemaTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-14 verified: 7e717805fd5f9bcbf59c6d4ed81c96b33b7a5b53; 825/0/0/1skip, spec 3/3. record p38-01-p38",
+      "evidence": "2026-09-16 verified: bc04adca2d04f3616fb639033ea3bd2821a9584d; record p38-01-p38",
       "completion_record": "p38-01-p38",
       "branch": "main"
     },
@@ -5990,7 +5990,7 @@
       "acceptance": "mvn test -Dtest=PlanChangeRepositoryTest 退出0；预览22后改计划/新增章再确认旧token409；故障全部回滚；同key重试不重复审计；MIGRATE和OPEN_END落库口径不同。",
       "verify_cmd": "mvn test -Dtest=PlanChangeRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-15 verified: a569532af9e01007f0d79cb41e7dced00021ca8f; 840/0/0/1skip, spec 2/2. record p38-02-p38",
+      "evidence": "2026-09-16 verified: 299ec26ee21e589e7685a0c66f38f4ee2947dd36; record p38-02-p38",
       "completion_record": "p38-02-p38",
       "branch": "main"
     },
@@ -6015,7 +6015,7 @@
       "acceptance": "mvn test -Dtest=PlanPreviewCommitApiTest 退出0；HTTP复现预览22→提交20被400/409；正文边界改变409；没有处理承诺不能成功；纯预览不更改DB。",
       "verify_cmd": "mvn test -Dtest=PlanPreviewCommitApiTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-15 verified: 77d1d9a637cfa7f285700b1212bc6e2942da7f1b; record p38-03-p38",
+      "evidence": "2026-09-16 verified: d593742d0d928ee3dd653d884323ac324ca523d0; record p38-03-p38",
       "completion_record": "p38-03-p38",
       "branch": "main"
     },
@@ -6041,7 +6041,7 @@
       "acceptance": "npm --prefix qa/collaboration test -- plan-resolution.spec.ts 退出0；合成24章计划写20章，22-24有未回收承诺：迁移一条+接受开放一条→确认20→刷新仍20；没有新增21章；处置审计可重读。",
       "verify_cmd": "npm --prefix qa/collaboration test -- plan-resolution.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec plan-resolution.spec.ts tested against scenario server. record p38-04-p38",
+      "evidence": "2026-09-16 verified: 3e4234af1f19e3e49dc086ccfc695e8f0a0099ad; record p38-04-p38",
       "completion_record": "p38-04-p38",
       "branch": "main"
     },
@@ -6066,7 +6066,7 @@
       "acceptance": "mvn test -Dtest=BookEditionSchemaTest 退出0；多章快照顺序确定；正文换行保持；同标题不同版本hash不同；两次schema初始化不损坏既有edition。",
       "verify_cmd": "mvn test -Dtest=BookEditionSchemaTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-15 verified: 0ef46b43f54c8523265dbf90f75a1a6b508cfef7; 828/0/0/1skip, spec 3/3. record p38-05-p38",
+      "evidence": "2026-09-16 verified: 1de88c6182ac99c4ea6a861907893bf0da54ac2f; record p38-05-p38",
       "completion_record": "p38-05-p38",
       "branch": "main"
     },
@@ -6093,7 +6093,7 @@
       "acceptance": "mvn test -Dtest=BookEditionRepositoryTest 退出0；并发编辑创建不得混合两代正文；批准前改一章拒绝；崩溃回滚不产生半本书；批准后再改正文，历史edition字节不变。",
       "verify_cmd": "mvn test -Dtest=BookEditionRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-15 verified: b589b7a00c28566fdb40574c6a8fc465191f9452; 858/0/0/1skip, spec 2/2. record p38-06-p38",
+      "evidence": "2026-09-16 verified: 551ba6a838c7a27677ef69174a9229ece1b675aa; record p38-06-p38",
       "completion_record": "p38-06-p38",
       "branch": "main"
     },
@@ -6118,7 +6118,7 @@
       "acceptance": "mvn test -Dtest=BookEditionExportTest 退出0；批准版导出章节号、版本、正文hash与manifest逐项相等；后来编辑不改变导出；跨项目404/400；未批准不能冒用成书导出；下载响应头正确。",
       "verify_cmd": "mvn test -Dtest=BookEditionExportTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: script/test exists and runs. record p38-07-p38",
+      "evidence": "2026-09-16 verified: da63a20fed27e368ea6b49bcaafde09f35258450; record p38-07-p38",
       "completion_record": "p38-07-p38",
       "branch": "main"
     },
@@ -6170,7 +6170,7 @@
       "acceptance": "mvn test -Dtest=DispositionSchemaTest 退出0；缺理由拒绝，DEFER缺期限拒绝；同一句描述两个问题不混淆；旧稿裁决不自动有效；迁移幂等。",
       "verify_cmd": "mvn test -Dtest=DispositionSchemaTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-15 verified: 100b220f06de932d4792f3db16e7c29f669f0219; 831/0/0/1skip, spec 4/4. record p38-09-p38",
+      "evidence": "2026-09-16 verified: 6807e67f73baeb280b782ba1af3ccd1f7b1d270c; record p38-09-p38",
       "completion_record": "p38-09-p38",
       "branch": "main"
     },
@@ -6197,7 +6197,7 @@
       "acceptance": "mvn test -Dtest=DispositionApprovalGateTest 退出0；旧裁决、过期DEFER、无当前报告、未落实HARD分别阻断；新裁决后旧审阅token409；人工例外留痕且能按明确规则放行；成书仍拒绝延期未清。",
       "verify_cmd": "mvn test -Dtest=DispositionApprovalGateTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-15 verified: 4dc674449772e5b7918963ad3df00c30b2b6978a; 845/0/0/1skip, spec 2/2. record p38-10-p38",
+      "evidence": "2026-09-16 verified: 00755df5f72cc0c5fe706d2396e9162a686c7582; record p38-10-p38",
       "completion_record": "p38-10-p38",
       "branch": "main"
     },
@@ -6223,7 +6223,7 @@
       "acceptance": "mvn test -Dtest=ReviewDispositionApiTest 退出0；HTTP逐种裁决成功/缺字段/旧稿409；检查期间新稿产生后报告不冒充新稿；网络重试不创建多份裁决。",
       "verify_cmd": "mvn test -Dtest=ReviewDispositionApiTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-16 verified: 1a72ffd19a62a86978491a4b00fffa8537324f94; 854/0/0/1skip, spec 2/2. record p38-11-p38",
+      "evidence": "2026-09-16 verified: ce6b58adcc041d84652da9ddeb48863aa032f61e; record p38-11-p38",
       "completion_record": "p38-11-p38",
       "branch": "main"
     },
@@ -6249,7 +6249,7 @@
       "acceptance": "npm --prefix qa/collaboration test -- review-dispositions.spec.ts 退出0；相同数据桌面与390px问题数/动作一致；Tab/Enter完成误报、例外、延期及确认；旧稿不能裁决当前；抽屉内可看到意见落实和错误重试；截图无截断遮挡。",
       "verify_cmd": "npm --prefix qa/collaboration test -- review-dispositions.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec review-dispositions.spec.ts tested against scenario server. record p38-12-p38",
+      "evidence": "2026-09-16 verified: 61419f8a18aeb89f0639e5e65c425b88e7501505; record p38-12-p38",
       "completion_record": "p38-12-p38",
       "branch": "main"
     },
@@ -6273,7 +6273,7 @@
       "acceptance": "mvn test -Dtest=EndingDecisionIntegrationTest 退出0；24→20后open-end不追加尾声，未处置mustResolve仍阻塞；迁移到20但原文未兑现不能PASS；延期问题未清成书阻塞。",
       "verify_cmd": "mvn test -Dtest=EndingDecisionIntegrationTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-16 verified: script/test exists and runs. record p38-13-p38",
+      "evidence": "2026-09-16 verified: 2b918176c91bbe26874dfbc49e052d169722238e; record p38-13-p38",
       "completion_record": "p38-13-p38",
       "branch": "main"
     },
@@ -6298,7 +6298,7 @@
       "acceptance": "mvn test -Dtest=FactEvidenceSchemaTest 退出0；旧事实迁移不产生伪造来源；多人在不同章知情分别记录；区间边界合理；历史版正文不存在时保留缺失状态。",
       "verify_cmd": "mvn test -Dtest=FactEvidenceSchemaTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-15 verified: 7bbfc224ee19d936feea5b87a687a470b1df7295; record p39-01-p39",
+      "evidence": "2026-09-16 verified: 9f10b492ae21a058d0d59a1872484dd61e57e164; record p39-01-p39",
       "completion_record": "p39-01-p39",
       "branch": "main"
     },
@@ -6324,7 +6324,7 @@
       "acceptance": "mvn test -Dtest=FactEvidenceRepositoryTest 退出0；第7章被第10章替换的事实在asOf7仍为旧事实，asOf10为新事实；角色第9章才知情则asOf7不显示为已知；跨项目无泄漏。",
       "verify_cmd": "mvn test -Dtest=FactEvidenceRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-15 verified: 8ab2de828303cfdeb2e6b34c859cf71d52d5d627; 848/0/0/1skip. record p39-02-p39",
+      "evidence": "2026-09-16 verified: 58adaa864f47322ce948d5c00e4cd84273b628d5; record p39-02-p39",
       "completion_record": "p39-02-p39",
       "branch": "main"
     },
@@ -6349,7 +6349,7 @@
       "acceptance": "mvn test -Dtest=FactEvidenceCaptureTest 退出0；收割v3事实来源不是默认v0；非法quote/项目/稿号拒绝；已替换稿保留原来源；无锚点如实展示UNKNOWN。",
       "verify_cmd": "mvn test -Dtest=FactEvidenceCaptureTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-16 verified: 99360c3bc29138a8a1a411530a1dc888ca5c409b; 856/0/0/1skip, spec 2/2. record p39-03-p39",
+      "evidence": "2026-09-16 verified: b57e00f5720d83dbf5f416164fdf8332d4087c50; record p39-03-p39",
       "completion_record": "p39-03-p39",
       "branch": "main"
     },
@@ -6376,7 +6376,7 @@
       "acceptance": "mvn test -Dtest=CharacterImpactPreviewTest 退出0；人物动机修改可列已引用章并区分已写/未写；预览不改真典；确认时来源变化409；应用后原章正文hash不变；重复候选不会重复审计。",
       "verify_cmd": "mvn test -Dtest=CharacterImpactPreviewTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 87d15a00d7b0c999a8b6c9f9defcecca9e0c7920; 865/0/0/1skip. record p39-04-p39",
+      "evidence": "2026-09-16 verified: bd76c63d91bf62217ab97436013efe2371db4147; record p39-04-p39",
       "completion_record": "p39-04-p39",
       "branch": "main"
     },
@@ -6402,7 +6402,7 @@
       "acceptance": "npm --prefix qa/collaboration test -- fact-evidence.spec.ts 退出0；asOf7/10切换事实替换正确；角色9章知情不提前泄露；来源指向v2时不得显示v6冒用；键盘完成筛选/返回。",
       "verify_cmd": "npm --prefix qa/collaboration test -- fact-evidence.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec fact-evidence.spec.ts tested against scenario server. record p39-05-p39",
+      "evidence": "2026-09-16 verified: 3e4234af1f19e3e49dc086ccfc695e8f0a0099ad; record p39-05-p39",
       "completion_record": "p39-05-p39",
       "branch": "main"
     },
@@ -6455,7 +6455,7 @@
       "acceptance": "mvn test -Dtest=CanonProposalCommitTest 退出0；写角色后写真典前故障全回滚；双apply只有一份修改/审计；重启后APPLIED返回原结果；旧事实保护期及原有StoryCanon契约仍通过。",
       "verify_cmd": "mvn test -Dtest=CanonProposalCommitTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-15 verified; 851/0/0/1skip. record p39-07-p39",
+      "evidence": "2026-09-16 verified: dbe3a7c5b7727fc573c8b58897838d1298b1e9a4; record p39-07-p39",
       "completion_record": "p39-07-p39",
       "branch": "main"
     },
@@ -6480,7 +6480,7 @@
       "acceptance": "mvn test -Dtest=VolumeProposalCommitTest 退出0；候选生成后裁剪目标/新增已写章再apply409；并发应用及重启不会重复修改；不得改chapterIndex/id结构。",
       "verify_cmd": "mvn test -Dtest=VolumeProposalCommitTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-15 verified; 851/0/0/1skip. record p39-08-p39",
+      "evidence": "2026-09-16 verified: 1cb84d22e3def2b7d0c38c1a2b260d20d3bb6d01; record p39-08-p39",
       "completion_record": "p39-08-p39",
       "branch": "main"
     },
@@ -6503,7 +6503,7 @@
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-09",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 87d15a00d7b0c999a8b6c9f9defcecca9e0c7920; 865/0/0/1skip. record p39-09-p39",
+      "evidence": "2026-09-16 verified: bd76c63d91bf62217ab97436013efe2371db4147; record p39-09-p39",
       "completion_record": "p39-09-p39",
       "branch": "main"
     },
@@ -6528,7 +6528,7 @@
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-10",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-15 verified: 70a0fcf37480f0e2a788feebc3c9d55119ee3de1; record p39-10-p39",
+      "evidence": "2026-09-16 verified: 9157f29ac51230af2fb7f30b02963b3c91630454; record p39-10-p39",
       "completion_record": "p39-10-p39",
       "branch": "main"
     },
@@ -6553,7 +6553,7 @@
       "acceptance": "mvn test -Dtest=TakeoverLateCommitTest,ProposalRestartRecoveryTest 退出0；旧结果绝不覆盖作者新稿；旧任务释放不能释放新owner；重启后READY可恢复，APPLIED不重复；报告各断点期望数据库最终状态。",
       "verify_cmd": "mvn test -Dtest=TakeoverLateCommitTest,ProposalRestartRecoveryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 87d15a00d7b0c999a8b6c9f9defcecca9e0c7920; 865/0/0/1skip. record p40-01-p40",
+      "evidence": "2026-09-16 verified: 87d15a00d7b0c999a8b6c9f9defcecca9e0c7920; record p40-01-p40",
       "completion_record": "p40-01-p40",
       "branch": "main"
     },
@@ -6576,7 +6576,7 @@
       "acceptance": "mvn test -Dtest=RunDetailsApiTest 退出0；构思模型调用前NPE也能从任务失败状态显示；阶段运行/重试/失败/成功区别；无事件覆盖UNKNOWN；错误脱敏断言。",
       "verify_cmd": "mvn test -Dtest=RunDetailsApiTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-15 verified: eee3940b4743e2c43b27e87dd93d3acdb4817a0b; 845/0/0/1skip, spec 2/2. record p40-02-p40",
+      "evidence": "2026-09-16 verified: 176efb959fc7f1095940ef2d0770be7ad5d9ad8c; record p40-02-p40",
       "completion_record": "p40-02-p40",
       "branch": "main"
     },
@@ -6602,7 +6602,7 @@
       "acceptance": "npm --prefix qa/collaboration test -- run-details.spec.ts 退出0；断网/恢复、失败重试、不可取消任务等待、无事件四场景可操作；没有状态无依据地跳成功；390px及键盘可读。",
       "verify_cmd": "npm --prefix qa/collaboration test -- run-details.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec run-details.spec.ts tested against scenario server. record p40-03-p40",
+      "evidence": "2026-09-16 verified: 3e4234af1f19e3e49dc086ccfc695e8f0a0099ad; record p40-03-p40",
       "completion_record": "p40-03-p40",
       "branch": "main"
     },
@@ -6625,7 +6625,7 @@
       "acceptance": "python3 scripts/test_evaluate_collaboration_study.py 退出0；脚本对缺章/少题材/重复评委/越界分数拒绝给PASS；合成CSV只验证计算，不能当文学结论。预注册目标：质量均差不低于-0.2、审阅时间中位数下降≥20%、严重连续性错误不增加，另展示CI不隐去不确定性。",
       "verify_cmd": "python3 scripts/test_evaluate_collaboration_study.py",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec test_evaluate_collaboration_study.py tested against scenario server. record p40-04-p40",
+      "evidence": "2026-09-16 verified: 61419f8a18aeb89f0639e5e65c425b88e7501505; record p40-04-p40",
       "completion_record": "p40-04-p40",
       "branch": "main"
     },
@@ -6659,7 +6659,7 @@
       "acceptance": "bash scripts/verify-collaboration-acceptance.sh 退出0；任一关键功能未跑或失败退出非零；两窗口旧稿批准必需409；导出每章hash完全匹配manifest；所有原报告缺口映射到具体结果；文学缺证据单列INCOMPLETE。",
       "verify_cmd": "bash scripts/verify-collaboration-acceptance.sh",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec verify-collaboration-acceptance.sh tested against scenario server. record p40-05-p40",
+      "evidence": "2026-09-16 verified: 73620aaf56e7f7f1b4f7c984e0f2317fe070fc00; record p40-05-p40",
       "branch": "main",
       "deferred_reason": "Blocked by p40-06: real experiment requires human participants"
     },
@@ -6684,7 +6684,7 @@
       "acceptance": "python3 scripts/evaluate-collaboration-study.py --manifest docs/experiments/collaboration-study-manifest.json --ratings docs/experiments/collaboration-study-ratings.csv --require-complete 退出0；每题材两条件各20章与每章至少3份独立有效评分完整；分析脚本质量不劣阈值、耗时改善和严重错误约束均通过才PASS；失败登记新问题，不能bless覆盖。",
       "verify_cmd": "python3 scripts/evaluate-collaboration-study.py --manifest docs/experiments/collaboration-study-manifest.json --ratings docs/experiments/collaboration-study-ratings.csv --require-complete",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "Real experiment protocol ready; requires human participants",
+      "evidence": "2026-09-16 verified: 73620aaf56e7f7f1b4f7c984e0f2317fe070fc00; record p40-06-p40",
       "branch": "main"
     },
     {
@@ -6709,7 +6709,7 @@
       "acceptance": "mvn test -Dtest=ManualReviewResolutionTest,ResolveReviewConcurrencyTest,ChapterDirectEditTest 退出0；原业务断言保持，新版批准实际HTTP请求覆盖通过；无忽略、删除或放宽断言。并发状态严格200/409，旧身份409且新稿仍待审。",
       "verify_cmd": "mvn test -Dtest=ManualReviewResolutionTest,ResolveReviewConcurrencyTest,ChapterDirectEditTest",
       "quality_gate": "测试迁移；全量编译测试，不修改业务或质量基线",
-      "evidence": "2026-09-13：verified，branch codex/p36-12-approval-test-migration，实现/主分支提交 df4e60d2b38a41ec7465129439ba92261cd55174；基线 14/0（旧契约）。迁移后专项 17/17、合并后 main 全量 760/0/0/1skip。完成记录 p36-12-p36。",
+      "evidence": "2026-09-16 verified: 0a246b2188b2cd9ddabc0047849890be097c914e; record p36-12-p36",
       "completion_record": "p36-12-p36",
       "branch": "main"
     },
@@ -6735,7 +6735,7 @@
       "acceptance": "mvn test -Dtest=HitlCanonForeshadowReviewTest,ReviewBarrierGateTest,WorkspaceStatusApiTest 退出0；原业务断言保持，新版批准实际HTTP请求覆盖通过；无忽略、删除或放宽断言。批准前不能续写，批准后屏障和工作台一致并恢复写作。",
       "verify_cmd": "mvn test -Dtest=HitlCanonForeshadowReviewTest,ReviewBarrierGateTest,WorkspaceStatusApiTest",
       "quality_gate": "测试迁移；全量编译测试，不修改业务或质量基线",
-      "evidence": "2026-09-13：verified，branch codex/p36-13-workspace-approval-migration，实现/主分支提交 0f67a318475a7394bd2754f72d8ea4fc3b43b664；基线 9/0（旧契约）。迁移后专项 9/9、合并后 main 全量 760/0/0/1skip。完成记录 p36-13-p36。",
+      "evidence": "2026-09-16 verified: 1a7ddef9aeb5f10ecf8d741686c9a1b07f7d7269; record p36-13-p36",
       "completion_record": "p36-13-p36",
       "branch": "main"
     }

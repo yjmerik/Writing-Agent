@@ -1,5 +1,5 @@
 {
-  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+  "commit": "6807e67f73baeb280b782ba1af3ccd1f7b1d270c",
   "cleanCheckout": true,
   "feature": "p38-09",
   "branch": "codex/p38-09-disposition-schema",
@@ -10,7 +10,7 @@
     "result": "schema feature"
   },
   "implementation": {
-    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+    "commit": "6807e67f73baeb280b782ba1af3ccd1f7b1d270c",
     "notes": "ReviewDisposition + review_dispositions schema."
   },
   "checks": [
@@ -29,5 +29,5 @@
     "p38-10 repository/API"
   ],
   "evidence_line": "2026-09-15 verified: 100b220f06de932d4792f3db16e7c29f669f0219; 831/0/0/1skip, spec 4/4. record p38-09-p38",
-  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
+  "main_commit": "6807e67f73baeb280b782ba1af3ccd1f7b1d270c"
 }

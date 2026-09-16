@@ -1,5 +1,5 @@
 {
-  "commit": "cb3d1b12183cd1ed2c56caa0577258eb6e75529d",
+  "commit": "61419f8a18aeb89f0639e5e65c425b88e7501505",
   "cleanCheckout": true,
   "feature": "p37-13",
   "branch": "codex/p37-13",
@@ -10,7 +10,7 @@
     "result": "QA spec"
   },
   "implementation": {
-    "commit": "cb3d1b12183cd1ed2c56caa0577258eb6e75529d",
+    "commit": "61419f8a18aeb89f0639e5e65c425b88e7501505",
     "notes": "directive-loop.spec.ts QA spec, tested against scenario server"
   },
   "checks": [
@@ -26,5 +26,6 @@
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec directive-loop.spec.ts tested against scenario server. record p37-13-p37"
+  "evidence_line": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec directive-loop.spec.ts tested against scenario server. record p37-13-p37",
+  "main_commit": "61419f8a18aeb89f0639e5e65c425b88e7501505"
 }

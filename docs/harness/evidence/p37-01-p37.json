@@ -1,5 +1,5 @@
 {
-  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+  "commit": "03d1af23cb61ac35b5e01da4b831836c24eeda0b",
   "cleanCheckout": true,
   "checkoutNote": "合并后验证在 ff 后的本地 main（bfdabf79f50773933a65b1244499c14626658f03）重跑：mvn compile&&mvn test 771/0、专项 5/5。",
   "feature": "p37-01",
@@ -12,7 +12,7 @@
     "result": "Tests run: 5, Errors: 3 —— no such table: revision_proposals（重复迁移/JSON恢复/跨项目隔离三项行为性失败）；状态守卫与指纹同构为纯领域断言，RED 阶段即通过。一次前置编译失败（测试引用了暂被移除的守卫方法）未计 RED，恢复守卫方法后重新锁定行为性 RED。"
   },
   "implementation": {
-    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+    "commit": "03d1af23cb61ac35b5e01da4b831836c24eeda0b",
     "files": [
       "src/main/java/com/writing/novel/domain/RevisionProposal.java",
       "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
@@ -47,5 +47,5 @@
     "候选存取与章节原子应用协议属 p37-02",
     "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
   ],
-  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
+  "main_commit": "03d1af23cb61ac35b5e01da4b831836c24eeda0b"
 }

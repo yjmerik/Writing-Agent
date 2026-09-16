@@ -1,5 +1,5 @@
 {
-  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+  "commit": "5b2b27173c14333469f3facc30e7793c35e6f72c",
   "cleanCheckout": true,
   "checkoutNote": "合并后验证在 ff 后的本地 main（c247ec2）重跑全量与专项。",
   "feature": "p36-06",
@@ -12,7 +12,7 @@
     "result": "Tests run: 6, Failures: 4 —— resolve-review 实测 200（应409）、章节类 approve 实测 200（应409）、章节类 modify 实测默认批准（status=modified，应回到待审）、CONTINUITY modify 实测 200（应409）；两个保留流程断言（初始设定独立批准、版本化新入口）RED 阶段即通过。行为性失败非编译失败。"
   },
   "implementation": {
-    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+    "commit": "5b2b27173c14333469f3facc30e7793c35e6f72c",
     "files": [
       "src/main/java/com/writing/novel/web/ContentController.java",
       "src/main/java/com/writing/novel/web/CheckpointController.java",
@@ -50,5 +50,5 @@
     "前端「拒绝并重写/修改意见重写」仍走 reject/modify（重写路径保留）",
     "无 prompt/上下文改动，未跑 e2e/baseline，未 bless"
   ],
-  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
+  "main_commit": "5b2b27173c14333469f3facc30e7793c35e6f72c"
 }

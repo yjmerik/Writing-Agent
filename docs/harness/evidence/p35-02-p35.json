@@ -1,5 +1,5 @@
 {
-  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+  "commit": "730f6d361bc81a314ea7118c8b5a64e0aead0045",
   "cleanCheckout": true,
   "checkoutNote": "验证在合并后干净主分支检出树执行。p35-01/04/05 存在提交直接落 main 的分支管理偏差（历史线性、全量验证通过），已在证据中如实记录。",
   "feature": "p35-02",
@@ -20,5 +20,5 @@
       "exitCode": 0
     }
   ],
-  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
+  "main_commit": "730f6d361bc81a314ea7118c8b5a64e0aead0045"
 }

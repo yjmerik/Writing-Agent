@@ -1,5 +1,5 @@
 {
-  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+  "commit": "52e383c3f691fcae92f4ef49e39851bd3c7ba751",
   "cleanCheckout": true,
   "feature": "p37-07",
   "branch": "codex/p37-07-directive-repository",
@@ -10,7 +10,7 @@
     "result": "7 behavioral failures (UnsupportedOperation defaults)。"
   },
   "implementation": {
-    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+    "commit": "52e383c3f691fcae92f4ef49e39851bd3c7ba751",
     "notes": "updateDirective CAS revision+1；findApplicableDirectives（enabled+范围+未撤销+HARD/PREference持续+ONCE确认后排除）；saveDirectiveEvidence 幂等；confirmDirectiveEvidence 单事务重读证据/意见/当前章身份，拒绝旧稿/修订过期/UNMET/跨项目/跨章；revokeDirective CAS+必填理由+revision 审计。saveAuthorDirective/mapDirective 持久化新列。"
   },
   "checks": [
@@ -33,5 +33,5 @@
   "limits": [
     "HTTP 层属 p37-08；无 prompt 改动未跑 e2e"
   ],
-  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
+  "main_commit": "52e383c3f691fcae92f4ef49e39851bd3c7ba751"
 }

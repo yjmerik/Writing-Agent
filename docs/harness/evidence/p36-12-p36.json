@@ -1,5 +1,5 @@
 {
-  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+  "commit": "0a246b2188b2cd9ddabc0047849890be097c914e",
   "cleanCheckout": true,
   "checkoutNote": "合并后验证在 ff 后的本地 main（df4e60d）重跑全量与专项。",
   "feature": "p36-12",
@@ -11,7 +11,7 @@
     "result": "基线 14 tests / 0 failures——记录旧契约（resolve-review 无版本放行）通过；本项为测试迁移 feature，按计划不声称发现新 RED 业务缺陷。"
   },
   "implementation": {
-    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+    "commit": "0a246b2188b2cd9ddabc0047849890be097c914e",
     "files": [
       "src/test/java/com/writing/novel/web/ManualReviewResolutionTest.java",
       "src/test/java/com/writing/novel/web/ResolveReviewConcurrencyTest.java",
@@ -46,5 +46,5 @@
     "旧 resolve-review 端点仍存在（p36-06 关闭，依赖本项与 p36-13 完成）",
     "checkpoint modify 旧拒绝测试保留原样（其覆盖由新增版本化批准工权用例补强）"
   ],
-  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
+  "main_commit": "0a246b2188b2cd9ddabc0047849890be097c914e"
 }

@@ -1,5 +1,5 @@
 {
-  "commit": "219e1c05e5db1ce61a6b110d36e17cc5854da9e2",
+  "commit": "2b918176c91bbe26874dfbc49e052d169722238e",
   "cleanCheckout": true,
   "feature": "p38-13",
   "branch": "codex/p38-13",
@@ -10,7 +10,7 @@
     "result": "new test"
   },
   "implementation": {
-    "commit": "219e1c05e5db1ce61a6b110d36e17cc5854da9e2",
+    "commit": "2b918176c91bbe26874dfbc49e052d169722238e",
     "notes": "p38-13 test."
   },
   "checks": [
@@ -21,5 +21,6 @@
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-16 verified: 219e1c05e5db1ce61a6b110d36e17cc5854da9e2; 860/0/0/1skip. record p38-13-p38"
+  "evidence_line": "2026-09-16 verified: 219e1c05e5db1ce61a6b110d36e17cc5854da9e2; 860/0/0/1skip. record p38-13-p38",
+  "main_commit": "2b918176c91bbe26874dfbc49e052d169722238e"
 }

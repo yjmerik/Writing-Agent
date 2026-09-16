@@ -580,8 +580,8 @@
         "p33-01"
       ],
       "branch": "codex/p33-01-review-barrier-gate",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "0f67a318475a7394bd2754f72d8ea4fc3b43b664",
+      "main_commit": "0f67a318475a7394bd2754f72d8ea4fc3b43b664",
       "evidence": "docs/harness/evidence/p33-01-p33.json"
     },
     {
@@ -591,8 +591,8 @@
         "p33-02"
       ],
       "branch": "codex/p33-02-workspace-api",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "86c7554e5f9f8c5be9645b18b35df1a1a4b8b52f",
+      "main_commit": "86c7554e5f9f8c5be9645b18b35df1a1a4b8b52f",
       "evidence": "docs/harness/evidence/p33-02-p33.json"
     },
     {
@@ -602,8 +602,8 @@
         "p33-03"
       ],
       "branch": "codex/p33-03-workspace-status-bar",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "94d2b915df19de9adcf3855cb8dbc81912f698ec",
+      "main_commit": "94d2b915df19de9adcf3855cb8dbc81912f698ec",
       "evidence": "docs/harness/evidence/p33-03-p33.json"
     },
     {
@@ -613,8 +613,8 @@
         "p33-04"
       ],
       "branch": "codex/p33-04-three-pane-review",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "34364b74727723980c60e3fb424ebb649adcee32",
+      "main_commit": "34364b74727723980c60e3fb424ebb649adcee32",
       "evidence": "docs/harness/evidence/p33-04-p33.json"
     },
     {
@@ -624,8 +624,8 @@
         "p33-05"
       ],
       "branch": "codex/p33-05-unified-commit",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "36c593d9c6b3864df735ddeafa030cc6b9980fb2",
+      "main_commit": "36c593d9c6b3864df735ddeafa030cc6b9980fb2",
       "evidence": "docs/harness/evidence/p33-05-p33.json"
     },
     {
@@ -635,8 +635,8 @@
         "p33-06"
       ],
       "branch": "codex/p33-06-directive-loop",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "488f2cf2c78decc9e9a0b333f64d1f8ca4446327",
+      "main_commit": "488f2cf2c78decc9e9a0b333f64d1f8ca4446327",
       "evidence": "docs/harness/evidence/p33-06-p33.json"
     },
     {
@@ -646,8 +646,8 @@
         "p33-08"
       ],
       "branch": "codex/p33-08-plan-edition",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "bcdae8ff2aa6d479fadb29e968414bb1f362e432",
+      "main_commit": "bcdae8ff2aa6d479fadb29e968414bb1f362e432",
       "evidence": "docs/harness/evidence/p33-08-p33.json"
     },
     {
@@ -657,8 +657,8 @@
         "p33-07"
       ],
       "branch": "codex/p33-07-fact-evidence-model",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "4437b5a5a7b6044c18053340c5f6a1026d36ae1e",
+      "main_commit": "4437b5a5a7b6044c18053340c5f6a1026d36ae1e",
       "evidence": "docs/harness/evidence/p33-07-p33.json"
     },
     {
@@ -668,8 +668,8 @@
         "p34-01"
       ],
       "branch": "codex/p34-01-optional-tags",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "97a9de664c20333ca6d9b69edf108ef5030a3680",
+      "main_commit": "97a9de664c20333ca6d9b69edf108ef5030a3680",
       "evidence": "docs/harness/evidence/p34-01-p34.json"
     },
     {
@@ -679,8 +679,8 @@
         "p34-02"
       ],
       "branch": "codex/p34-02-report-validity",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "29d865028948a9b1ee6b32e797dcd24737b7d62f",
+      "main_commit": "29d865028948a9b1ee6b32e797dcd24737b7d62f",
       "evidence": "docs/harness/evidence/p34-02-p34.json"
     },
     {
@@ -690,8 +690,8 @@
         "p34-03"
       ],
       "branch": "codex/p34-03-draft-recovery",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "1e301372c8a2ec3367195176203f12072994e999",
+      "main_commit": "1e301372c8a2ec3367195176203f12072994e999",
       "evidence": "docs/harness/evidence/p34-03-p34.json"
     },
     {
@@ -701,8 +701,8 @@
         "p34-04"
       ],
       "branch": "codex/p34-04-barrier-rebind",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "df7a99c127097ef7dfaf8077489a3fdea56ec96f",
+      "main_commit": "df7a99c127097ef7dfaf8077489a3fdea56ec96f",
       "evidence": "docs/harness/evidence/p34-04-p34.json"
     },
     {
@@ -712,8 +712,8 @@
         "p34-05"
       ],
       "branch": "codex/p34-05-chapter-route",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "7e47639512bc0239a5a1bbafcc9374d22b431dd8",
+      "main_commit": "7e47639512bc0239a5a1bbafcc9374d22b431dd8",
       "evidence": "docs/harness/evidence/p34-05-p34.json"
     },
     {
@@ -723,8 +723,8 @@
         "p34-06"
       ],
       "branch": "codex/p34-06-mobile-drawer",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "83e36bc17a08baca52af8d9dac4696e91a73da61",
+      "main_commit": "83e36bc17a08baca52af8d9dac4696e91a73da61",
       "evidence": "docs/harness/evidence/p34-06-p34.json"
     },
     {
@@ -734,8 +734,8 @@
         "p35-01"
       ],
       "branch": "codex/p35-01-directives-panel",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "e6b5723c78b2f20e033df681220980d575ff828d",
+      "main_commit": "e6b5723c78b2f20e033df681220980d575ff828d",
       "evidence": "docs/harness/evidence/p35-01-p35.json"
     },
     {
@@ -745,8 +745,8 @@
         "p35-02"
       ],
       "branch": "codex/p35-02-candidates-panel",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "730f6d361bc81a314ea7118c8b5a64e0aead0045",
+      "main_commit": "730f6d361bc81a314ea7118c8b5a64e0aead0045",
       "evidence": "docs/harness/evidence/p35-02-p35.json"
     },
     {
@@ -756,8 +756,8 @@
         "p35-03"
       ],
       "branch": "codex/p35-03-target-chapters-ui",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "8a49e8433bc357e904acf52149dc7e4ce6364a27",
+      "main_commit": "8a49e8433bc357e904acf52149dc7e4ce6364a27",
       "evidence": "docs/harness/evidence/p35-03-p35.json"
     },
     {
@@ -767,8 +767,8 @@
         "p35-04"
       ],
       "branch": "codex/p35-04-resolve-cas",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "becfd1653a03600c37d540c4b1d41ae67ddf86a6",
+      "main_commit": "becfd1653a03600c37d540c4b1d41ae67ddf86a6",
       "evidence": "docs/harness/evidence/p35-04-p35.json"
     },
     {
@@ -778,8 +778,8 @@
         "p35-05"
       ],
       "branch": "codex/p35-05-book-review",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "ce5d07f03887b5698092e62b892297a035a97206",
+      "main_commit": "ce5d07f03887b5698092e62b892297a035a97206",
       "evidence": "docs/harness/evidence/p35-05-p35.json"
     },
     {
@@ -789,8 +789,8 @@
         "p36-02"
       ],
       "branch": "codex/p36-02-approval-schema",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "2914374a552358484f00815bf352bd2b3d00e262",
+      "main_commit": "2914374a552358484f00815bf352bd2b3d00e262",
       "evidence": "docs/harness/evidence/p36-02-p36.json"
     },
     {
@@ -800,8 +800,8 @@
         "p36-03"
       ],
       "branch": "codex/p36-03-atomic-approval",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "b451f51c1be91df4f61f39366a8e51961bfa5a52",
+      "main_commit": "b451f51c1be91df4f61f39366a8e51961bfa5a52",
       "evidence": "docs/harness/evidence/p36-03-p36.json"
     },
     {
@@ -811,8 +811,8 @@
         "p36-04"
       ],
       "branch": "codex/p36-04-versioned-review-api",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "4815b683ed5c6284a0101c2432251490c10ee104",
+      "main_commit": "4815b683ed5c6284a0101c2432251490c10ee104",
       "evidence": "docs/harness/evidence/p36-04-p36.json"
     },
     {
@@ -822,8 +822,8 @@
         "p36-07"
       ],
       "branch": "codex/p36-07-revision-barrier-atomicity",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "c3b06d22a34780f14dfc2ae046c4aa06ebd8841d",
+      "main_commit": "c3b06d22a34780f14dfc2ae046c4aa06ebd8841d",
       "evidence": "docs/harness/evidence/p36-07-p36.json"
     },
     {
@@ -833,8 +833,8 @@
         "p36-01"
       ],
       "branch": "codex/p36-01-browser-qa",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "78fc3a90a0d84e4ab1b86126c18d3481a80ceac6",
+      "main_commit": "78fc3a90a0d84e4ab1b86126c18d3481a80ceac6",
       "evidence": "docs/harness/evidence/p36-01-p36.json"
     },
     {
@@ -844,8 +844,8 @@
         "p36-05"
       ],
       "branch": "codex/p36-05-review-version-frontend",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "aed31dcda456a95e7dfc73630049bf056f7dd0c4",
+      "main_commit": "aed31dcda456a95e7dfc73630049bf056f7dd0c4",
       "evidence": "docs/harness/evidence/p36-05-p36.json"
     },
     {
@@ -855,8 +855,8 @@
         "p36-12"
       ],
       "branch": "codex/p36-12-approval-test-migration",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "0a246b2188b2cd9ddabc0047849890be097c914e",
+      "main_commit": "0a246b2188b2cd9ddabc0047849890be097c914e",
       "evidence": "docs/harness/evidence/p36-12-p36.json"
     },
     {
@@ -866,8 +866,8 @@
         "p36-13"
       ],
       "branch": "codex/p36-13-workspace-approval-migration",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "1a7ddef9aeb5f10ecf8d741686c9a1b07f7d7269",
+      "main_commit": "1a7ddef9aeb5f10ecf8d741686c9a1b07f7d7269",
       "evidence": "docs/harness/evidence/p36-13-p36.json"
     },
     {
@@ -877,8 +877,8 @@
         "p36-06"
       ],
       "branch": "codex/p36-06-legacy-approval-gate",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "5b2b27173c14333469f3facc30e7793c35e6f72c",
+      "main_commit": "5b2b27173c14333469f3facc30e7793c35e6f72c",
       "evidence": "docs/harness/evidence/p36-06-p36.json"
     },
     {
@@ -888,8 +888,8 @@
         "p36-08"
       ],
       "branch": "codex/p36-08-workspace-navigation",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "1e301372c8a2ec3367195176203f12072994e999",
+      "main_commit": "1e301372c8a2ec3367195176203f12072994e999",
       "evidence": "docs/harness/evidence/p36-08-p36.json"
     },
     {
@@ -899,8 +899,8 @@
         "p36-09"
       ],
       "branch": "codex/p36-09-draft-recovery",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "dbf26c9d903f036448b6cc927ac62249545e1809",
+      "main_commit": "dbf26c9d903f036448b6cc927ac62249545e1809",
       "evidence": "docs/harness/evidence/p36-09-p36.json"
     },
     {
@@ -910,8 +910,8 @@
         "p36-10"
       ],
       "branch": "codex/p36-10-plan-preview",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "0f12b97e6855dc3f63ca275c0150f9da19b3dc3f",
+      "main_commit": "0f12b97e6855dc3f63ca275c0150f9da19b3dc3f",
       "evidence": "docs/harness/evidence/p36-10-p36.json"
     },
     {
@@ -921,8 +921,8 @@
         "p36-11"
       ],
       "branch": "codex/p36-11-book-state",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "7b03bc4798d3c9b00102826bb09cd5932751f128",
+      "main_commit": "7b03bc4798d3c9b00102826bb09cd5932751f128",
       "evidence": "docs/harness/evidence/p36-11-p36.json"
     },
     {
@@ -932,8 +932,8 @@
         "p37-01"
       ],
       "branch": "codex/p37-01-proposal-schema",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "03d1af23cb61ac35b5e01da4b831836c24eeda0b",
+      "main_commit": "03d1af23cb61ac35b5e01da4b831836c24eeda0b",
       "evidence": "docs/harness/evidence/p37-01-p37.json"
     },
     {
@@ -943,8 +943,8 @@
         "p37-02"
       ],
       "branch": "codex/p37-02-proposal-repository",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "1f8c4a9feb67bde3c8eeac06ee1347e876230789",
+      "main_commit": "1f8c4a9feb67bde3c8eeac06ee1347e876230789",
       "evidence": "docs/harness/evidence/p37-02-p37.json"
     },
     {
@@ -954,8 +954,8 @@
         "p37-14"
       ],
       "branch": "codex/p37-14-proposal-boundary",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "1f8c4a9feb67bde3c8eeac06ee1347e876230789",
+      "main_commit": "1f8c4a9feb67bde3c8eeac06ee1347e876230789",
       "evidence": "docs/harness/evidence/p37-14-p37.json"
     },
     {
@@ -965,8 +965,8 @@
         "p37-09"
       ],
       "branch": "codex/p37-09-directive-context",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "b95e5862b5e9916279db0f98fada89b95acf60d4",
+      "main_commit": "b95e5862b5e9916279db0f98fada89b95acf60d4",
       "evidence": "docs/harness/evidence/p37-09-p37.json"
     },
     {
@@ -976,8 +976,8 @@
         "p37-06"
       ],
       "branch": "codex/p37-06-directive-scope",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "b58fe460ba676ee59f3f1158a1bc2d3a5236a13f",
+      "main_commit": "b58fe460ba676ee59f3f1158a1bc2d3a5236a13f",
       "evidence": "docs/harness/evidence/p37-06-p37.json"
     },
     {
@@ -987,8 +987,8 @@
         "p37-07"
       ],
       "branch": "codex/p37-07-directive-repository",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "52e383c3f691fcae92f4ef49e39851bd3c7ba751",
+      "main_commit": "52e383c3f691fcae92f4ef49e39851bd3c7ba751",
       "evidence": "docs/harness/evidence/p37-07-p37.json"
     },
     {
@@ -998,8 +998,8 @@
         "p37-15"
       ],
       "branch": "codex/p37-15-directive-evidence-agent",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "4c8f5976f2f64725de12f502ae494ea205ae09f3",
+      "main_commit": "4c8f5976f2f64725de12f502ae494ea205ae09f3",
       "evidence": "docs/harness/evidence/p37-15-p37.json"
     },
     {
@@ -1009,8 +1009,8 @@
         "p37-11"
       ],
       "branch": "codex/p37-11-directive-results（偏差：实现提交 8ed5d73 直接落 main，历史线性、全量验证通过）",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "c50a302c54c8a44874e77bde6955dc90435db7ec",
+      "main_commit": "c50a302c54c8a44874e77bde6955dc90435db7ec",
       "evidence": "docs/harness/evidence/p37-11-p37.json"
     },
     {
@@ -1020,8 +1020,8 @@
         "p37-10"
       ],
       "branch": "codex/p37-10-directive-injection",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "9fa390ab06e8307f1681b5bed59df7c57da32220",
+      "main_commit": "9fa390ab06e8307f1681b5bed59df7c57da32220",
       "evidence": "docs/harness/evidence/p37-10-p37.json"
     },
     {
@@ -1031,8 +1031,8 @@
         "p37-16"
       ],
       "branch": "codex/p37-16-generated-evidence",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "f24a42b5b7972caaff96e5f1d4916822da2afc35",
+      "main_commit": "f24a42b5b7972caaff96e5f1d4916822da2afc35",
       "evidence": "docs/harness/evidence/p37-16-p37.json"
     },
     {
@@ -1042,8 +1042,8 @@
         "p37-03"
       ],
       "branch": "codex/p37-03-persistent-revision-api",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "8fcb4d61159533b19f12168f8e677e2a9611ae0b",
+      "main_commit": "8fcb4d61159533b19f12168f8e677e2a9611ae0b",
       "evidence": "docs/harness/evidence/p37-03-p37.json"
     },
     {
@@ -1053,8 +1053,8 @@
         "p37-08"
       ],
       "branch": "codex/p37-08-directive-api",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "8cf24892990ea2952bb118346a734318427f9b18",
+      "main_commit": "8cf24892990ea2952bb118346a734318427f9b18",
       "evidence": "docs/harness/evidence/p37-08-p37.json"
     },
     {
@@ -1064,8 +1064,8 @@
         "p38-01"
       ],
       "branch": "codex/p38-01-plan-change-schema",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "bc04adca2d04f3616fb639033ea3bd2821a9584d",
+      "main_commit": "bc04adca2d04f3616fb639033ea3bd2821a9584d",
       "evidence": "docs/harness/evidence/p38-01-p38.json"
     },
     {
@@ -1075,8 +1075,8 @@
         "p38-05"
       ],
       "branch": "codex/p38-05-book-edition-schema",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "1de88c6182ac99c4ea6a861907893bf0da54ac2f",
+      "main_commit": "1de88c6182ac99c4ea6a861907893bf0da54ac2f",
       "evidence": "docs/harness/evidence/p38-05-p38.json"
     },
     {
@@ -1086,8 +1086,8 @@
         "p38-09"
       ],
       "branch": "codex/p38-09-disposition-schema",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "6807e67f73baeb280b782ba1af3ccd1f7b1d270c",
+      "main_commit": "6807e67f73baeb280b782ba1af3ccd1f7b1d270c",
       "evidence": "docs/harness/evidence/p38-09-p38.json"
     },
     {
@@ -1097,8 +1097,8 @@
         "p39-01"
       ],
       "branch": "codex/p39-01-fact-evidence-schema",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "9f10b492ae21a058d0d59a1872484dd61e57e164",
+      "main_commit": "9f10b492ae21a058d0d59a1872484dd61e57e164",
       "evidence": "docs/harness/evidence/p39-01-p39.json"
     },
     {
@@ -1108,8 +1108,8 @@
         "p39-10"
       ],
       "branch": "codex/p39-10-story-canon-tx",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "9157f29ac51230af2fb7f30b02963b3c91630454",
+      "main_commit": "9157f29ac51230af2fb7f30b02963b3c91630454",
       "evidence": "docs/harness/evidence/p39-10-p39.json"
     },
     {
@@ -1119,8 +1119,8 @@
         "p38-02"
       ],
       "branch": "codex/p38-02-plan-change-repo",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "299ec26ee21e589e7685a0c66f38f4ee2947dd36",
+      "main_commit": "299ec26ee21e589e7685a0c66f38f4ee2947dd36",
       "evidence": "docs/harness/evidence/p38-02-p38.json"
     },
     {
@@ -1141,8 +1141,8 @@
         "p38-10"
       ],
       "branch": "codex/p38-10-disposition-gate",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "00755df5f72cc0c5fe706d2396e9162a686c7582",
+      "main_commit": "00755df5f72cc0c5fe706d2396e9162a686c7582",
       "evidence": "docs/harness/evidence/p38-10-p38.json"
     },
     {
@@ -1152,8 +1152,8 @@
         "p40-02"
       ],
       "branch": "codex/p40-02-run-details",
-      "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+      "implementation_commit": "176efb959fc7f1095940ef2d0770be7ad5d9ad8c",
+      "main_commit": "176efb959fc7f1095940ef2d0770be7ad5d9ad8c",
       "evidence": "docs/harness/evidence/p40-02-p40.json"
     },
     {
@@ -1174,8 +1174,8 @@
         "p39-07"
       ],
       "branch": "codex/p39-07-08-canon-volume-proposals",
-      "implementation_commit": "e68e8cea33f1f9e057b209585c6596c18dce0e95",
-      "main_commit": "e68e8cea33f1f9e057b209585c6596c18dce0e95",
+      "implementation_commit": "dbe3a7c5b7727fc573c8b58897838d1298b1e9a4",
+      "main_commit": "dbe3a7c5b7727fc573c8b58897838d1298b1e9a4",
       "evidence": "docs/harness/evidence/p39-07-p39.json"
     },
     {
@@ -1185,8 +1185,8 @@
         "p39-08"
       ],
       "branch": "codex/p39-07-08-canon-volume-proposals",
-      "implementation_commit": "e68e8cea33f1f9e057b209585c6596c18dce0e95",
-      "main_commit": "e68e8cea33f1f9e057b209585c6596c18dce0e95",
+      "implementation_commit": "1cb84d22e3def2b7d0c38c1a2b260d20d3bb6d01",
+      "main_commit": "1cb84d22e3def2b7d0c38c1a2b260d20d3bb6d01",
       "evidence": "docs/harness/evidence/p39-08-p39.json"
     },
     {
@@ -1196,8 +1196,8 @@
         "p38-03"
       ],
       "branch": "codex/p38-03-plan-preview-commit",
-      "implementation_commit": "77d1d9a637cfa7f285700b1212bc6e2942da7f1b",
-      "main_commit": "77d1d9a637cfa7f285700b1212bc6e2942da7f1b",
+      "implementation_commit": "d593742d0d928ee3dd653d884323ac324ca523d0",
+      "main_commit": "d593742d0d928ee3dd653d884323ac324ca523d0",
       "evidence": "docs/harness/evidence/p38-03-p38.json"
     },
     {
@@ -1207,8 +1207,8 @@
         "p38-11"
       ],
       "branch": "codex/p38-11-disposition-api",
-      "implementation_commit": "1a72ffd19a62a86978491a4b00fffa8537324f94",
-      "main_commit": "1a72ffd19a62a86978491a4b00fffa8537324f94",
+      "implementation_commit": "ce6b58adcc041d84652da9ddeb48863aa032f61e",
+      "main_commit": "ce6b58adcc041d84652da9ddeb48863aa032f61e",
       "evidence": "docs/harness/evidence/p38-11-p38.json"
     },
     {
@@ -1218,8 +1218,8 @@
         "p39-03"
       ],
       "branch": "codex/p39-03-fact-capture",
-      "implementation_commit": "99360c3bc29138a8a1a411530a1dc888ca5c409b",
-      "main_commit": "99360c3bc29138a8a1a411530a1dc888ca5c409b",
+      "implementation_commit": "b57e00f5720d83dbf5f416164fdf8332d4087c50",
+      "main_commit": "b57e00f5720d83dbf5f416164fdf8332d4087c50",
       "evidence": "docs/harness/evidence/p39-03-p39.json"
     },
     {
@@ -1229,8 +1229,8 @@
         "p38-06"
       ],
       "branch": "codex/p38-13-06-book-edition",
-      "implementation_commit": "b589b7a00c28566fdb40574c6a8fc465191f9452",
-      "main_commit": "b589b7a00c28566fdb40574c6a8fc465191f9452",
+      "implementation_commit": "551ba6a838c7a27677ef69174a9229ece1b675aa",
+      "main_commit": "551ba6a838c7a27677ef69174a9229ece1b675aa",
       "evidence": "docs/harness/evidence/p38-06-p38.json"
     },
     {
@@ -1240,8 +1240,8 @@
         "p38-13"
       ],
       "branch": "codex/p38-13",
-      "implementation_commit": "219e1c05e5db1ce61a6b110d36e17cc5854da9e2",
-      "main_commit": "219e1c05e5db1ce61a6b110d36e17cc5854da9e2",
+      "implementation_commit": "2b918176c91bbe26874dfbc49e052d169722238e",
+      "main_commit": "2b918176c91bbe26874dfbc49e052d169722238e",
       "evidence": "docs/harness/evidence/p38-13-p38.json"
     },
     {
@@ -1251,8 +1251,8 @@
         "p38-07"
       ],
       "branch": "codex/p38-07",
-      "implementation_commit": "e2b825f3b8f88c98f7e2a0e859bee3322b09e6b8",
-      "main_commit": "e2b825f3b8f88c98f7e2a0e859bee3322b09e6b8",
+      "implementation_commit": "da63a20fed27e368ea6b49bcaafde09f35258450",
+      "main_commit": "da63a20fed27e368ea6b49bcaafde09f35258450",
       "evidence": "docs/harness/evidence/p38-07-p38.json"
     },
     {
@@ -1262,8 +1262,8 @@
         "p39-04"
       ],
       "branch": "codex/p39-04-09-impact-chain",
-      "implementation_commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
-      "main_commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
+      "implementation_commit": "bd76c63d91bf62217ab97436013efe2371db4147",
+      "main_commit": "bd76c63d91bf62217ab97436013efe2371db4147",
       "evidence": "docs/harness/evidence/p39-04-p39.json"
     },
     {
@@ -1273,8 +1273,8 @@
         "p39-09"
       ],
       "branch": "codex/p39-04-09-impact-chain",
-      "implementation_commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
-      "main_commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
+      "implementation_commit": "bd76c63d91bf62217ab97436013efe2371db4147",
+      "main_commit": "bd76c63d91bf62217ab97436013efe2371db4147",
       "evidence": "docs/harness/evidence/p39-09-p39.json"
     },
     {
@@ -1295,8 +1295,8 @@
         "p40-04"
       ],
       "branch": "codex/p40-01-04-takeover-evaluate",
-      "implementation_commit": "385f919977a5f4be1209a55ffd94bb0bbeb5a324",
-      "main_commit": "385f919977a5f4be1209a55ffd94bb0bbeb5a324",
+      "implementation_commit": "61419f8a18aeb89f0639e5e65c425b88e7501505",
+      "main_commit": "61419f8a18aeb89f0639e5e65c425b88e7501505",
       "evidence": "docs/harness/evidence/p40-04-p40.json"
     },
     {
@@ -1306,8 +1306,8 @@
         "p37-04"
       ],
       "branch": "codex/p37-04-impl",
-      "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
-      "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "implementation_commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
+      "main_commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
       "evidence": "docs/harness/evidence/p37-04-p37.json"
     },
     {
@@ -1328,8 +1328,8 @@
         "p37-13"
       ],
       "branch": "codex/p37-13-impl",
-      "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
-      "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "implementation_commit": "61419f8a18aeb89f0639e5e65c425b88e7501505",
+      "main_commit": "61419f8a18aeb89f0639e5e65c425b88e7501505",
       "evidence": "docs/harness/evidence/p37-13-p37.json"
     },
     {
@@ -1339,8 +1339,8 @@
         "p38-04"
       ],
       "branch": "codex/p38-04-impl",
-      "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
-      "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "implementation_commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
+      "main_commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
       "evidence": "docs/harness/evidence/p38-04-p38.json"
     },
     {
@@ -1361,8 +1361,8 @@
         "p38-12"
       ],
       "branch": "codex/p38-12-impl",
-      "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
-      "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "implementation_commit": "61419f8a18aeb89f0639e5e65c425b88e7501505",
+      "main_commit": "61419f8a18aeb89f0639e5e65c425b88e7501505",
       "evidence": "docs/harness/evidence/p38-12-p38.json"
     },
     {
@@ -1372,8 +1372,8 @@
         "p39-05"
       ],
       "branch": "codex/p39-05-impl",
-      "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
-      "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "implementation_commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
+      "main_commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
       "evidence": "docs/harness/evidence/p39-05-p39.json"
     },
     {
@@ -1394,8 +1394,8 @@
         "p40-03"
       ],
       "branch": "codex/p40-03-impl",
-      "implementation_commit": "ad6218afc69057e31c1981948e4c7fc9b878d1bf",
-      "main_commit": "ad6218afc69057e31c1981948e4c7fc9b878d1bf",
+      "implementation_commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
+      "main_commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
       "evidence": "docs/harness/evidence/p40-03-p40.json"
     }
   ],

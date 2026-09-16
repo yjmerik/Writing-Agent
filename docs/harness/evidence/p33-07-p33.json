@@ -1,5 +1,5 @@
 {
-  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+  "commit": "4437b5a5a7b6044c18053340c5f6a1026d36ae1e",
   "cleanCheckout": true,
   "checkoutNote": "单元门禁在提交树验证；语料重建（record 20260912）+双次 replay+bless 在其后干净 main 执行（含 p33-08 合并，均不改 prompt 注入路径）。",
   "feature": "p33-07",
@@ -35,5 +35,5 @@
       "exitCode": 0
     }
   ],
-  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
+  "main_commit": "4437b5a5a7b6044c18053340c5f6a1026d36ae1e"
 }

@@ -101,6 +101,27 @@ export interface AgentRevisionPreview {
   summary: string;
 }
 
+/** p37-03/04: 持久修订候选（DB 资源，刷新/重启后可恢复） */
+export interface RevisionCandidateRecord {
+  id: string;
+  projectId: string;
+  targetType: AgentRevisionTargetType;
+  targetId: string;
+  chapterIndex: number | null;
+  passageIndex: number | null;
+  baseVersion: number;
+  sourceHash: string;
+  instructions: string | null;
+  beforeJson: string;
+  afterJson: string;
+  summary: string | null;
+  status: 'READY' | 'APPLIED' | 'STALE' | 'CANCELLED';
+  requestKey: string;
+  resultJson: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AgentRevisionApplyResult {
   previewId: string;
   targetType: AgentRevisionTargetType;
@@ -381,6 +402,21 @@ export const api = {
     request<AgentRevisionApplyResult>(`/projects/${projectId}/revisions/${previewId}/apply`, {
       method: 'POST',
     }, 300000),
+
+  /** p37-04: 恢复入口——查询持久候选（刷新/重启后仍在） */
+  listRevisionCandidates: (projectId: string, targetId?: string, status?: string) => {
+    const params = new URLSearchParams();
+    if (targetId) params.set('targetId', targetId);
+    if (status) params.set('status', status);
+    const qs = params.toString();
+    return request<RevisionCandidateRecord[]>(
+      `/projects/${projectId}/revisions${qs ? `?${qs}` : ''}`);
+  },
+
+  cancelRevisionCandidate: (projectId: string, candidateId: string) =>
+    request<RevisionCandidateRecord>(`/projects/${projectId}/revisions/${candidateId}/cancel`, {
+      method: 'POST',
+    }),
 
   getFacts: (id: string) =>
     request<Array<{ id: string; subject: string; assertion: string; factType: string }>>(`/projects/${id}/facts`),

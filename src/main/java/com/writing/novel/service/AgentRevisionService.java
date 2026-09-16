@@ -133,7 +133,7 @@ public class AgentRevisionService {
                 stored.address.chapterIndex,
                 stored.address.passageIndex,
                 baseVersion, sourceHash,
-                null, stored.before.toString(), stored.after.toString(), stored.summary,
+                request.instructions(), stored.before.toString(), stored.after.toString(), stored.summary,
                 stale ? RevisionProposal.Status.STALE : RevisionProposal.Status.READY,
                 request.requestKey() != null && !request.requestKey().isBlank()
                         ? request.requestKey() : stored.previewId,

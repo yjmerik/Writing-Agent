@@ -1,11 +1,14 @@
 {
   "study": "collaboration-quality",
-  "version": "1.0",
+  "version": "2.0",
+  "status": "NOT_RUN",
   "genres": ["mystery", "wuxia"],
-  "chaptersPerGenre": 3,
-  "evaluationDimensions": ["engagement", "coherence", "character", "hook", "overall"],
-  "scoringScale": "1-10",
-  "evaluatorType": "LLM-as-judge (proxy; human evaluation recommended as follow-up)",
-  "createdAt": "2026-09-16",
-  "note": "Pipeline validation run. Full 20-chapter experiment with human participants recommended as follow-up."
+  "conditions": ["collaboration", "solo"],
+  "chaptersPerCell": 20,
+  "minReadersPerChapter": 3,
+  "evaluatorType": "HUMAN blind readers (required; LLM-as-judge not accepted)",
+  "dimensions": ["engagement", "coherence", "character", "hook", "overall"],
+  "authorTimeRequired": true,
+  "ratingsFile": "docs/experiments/collaboration-study-ratings.csv",
+  "note": "2026-09-16 audit: previous LLM-proxy scores removed — they did not satisfy STUDY-01. Real experiment awaits human participants."
 }

@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Button, Card, Col, Input, Modal, Row, Space, Typography, message } from 'antd';
+import { Alert, Button, Card, Col, Input, List, Modal, Row, Space, Tag, Typography, message } from 'antd';
 import { ApiError, api } from '../api/client';
 import type {
   AgentRevisionApplyResult,
   AgentRevisionPreview,
   AgentRevisionTarget,
+  RevisionCandidateRecord,
 } from '../api/client';
 
 const { Paragraph, Text } = Typography;
@@ -16,7 +17,62 @@ interface Props {
   onCancel: () => void;
 }
 
-const formatSnapshot = (value: Record<string, unknown>) => JSON.stringify(value, null, 2);
+/**
+ * p37-05: 作者可读的字段对比——按对象类型渲染关键字段文本，
+ * JSON 只作为未知字段的兜底展示，不再是主界面。
+ */
+const FIELD_LABELS: Record<string, string> = {
+  name: '名称', content: '内容', type: '类型', title: '标题', summary: '摘要',
+  personality: '性格', ability: '能力', motivation: '动机', appearance: '外貌',
+  relationships: '人物关系', growthArc: '成长弧', speakingStyle: '说话风格',
+  role: '定位', synopsis: '梗概',
+};
+
+const renderSnapshot = (
+  targetType: string,
+  value: Record<string, unknown> | null | undefined,
+): string => {
+  if (!value || typeof value !== 'object') return '（空）';
+  const lines: string[] = [];
+  const used = new Set<string>();
+  const pushField = (key: string) => {
+    const raw = value[key];
+    if (raw == null) return;
+    used.add(key);
+    const text = typeof raw === 'string' ? raw : JSON.stringify(raw);
+    lines.push(`【${FIELD_LABELS[key] ?? key}】`);
+    lines.push(text);
+    lines.push('');
+  };
+  if (targetType === 'CHAPTER') {
+    pushField('title');
+    pushField('content');
+  } else if (targetType === 'PASSAGE') {
+    pushField('content');
+  } else if (targetType === 'WORLD') {
+    pushField('type');
+    pushField('name');
+    pushField('content');
+  } else if (targetType === 'CHARACTER') {
+    for (const key of ['name', 'role', 'personality', 'ability', 'motivation',
+      'appearance', 'relationships', 'growthArc', 'speakingStyle']) {
+      pushField(key);
+    }
+  } else if (targetType === 'VOLUME') {
+    pushField('title');
+    pushField('summary');
+  }
+  // 未知字段兜底（不作为主展示）
+  const rest = Object.keys(value).filter(k => !used.has(k) && k !== 'id' && k !== 'projectId');
+  if (rest.length > 0) {
+    lines.push('【其他字段】');
+    for (const key of rest) {
+      const raw = value[key];
+      lines.push(`${FIELD_LABELS[key] ?? key}: ${typeof raw === 'string' ? raw : JSON.stringify(raw)}`);
+    }
+  }
+  return lines.join('\n').trim() || '（空）';
+};
 
 export default function AgentRevisionDialog({ open, target, onApplied, onCancel }: Props) {
   const [instructions, setInstructions] = useState('');
@@ -24,6 +80,8 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
   const [generating, setGenerating] = useState(false);
   const [applying, setApplying] = useState(false);
   const [error, setError] = useState('');
+  // p37-04: 持久候选恢复入口（刷新/重启后候选仍在 DB）
+  const [candidates, setCandidates] = useState<RevisionCandidateRecord[]>([]);
   const requestSequence = useRef(0);
 
   const targetKey = target
@@ -37,7 +95,18 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
     setGenerating(false);
     setApplying(false);
     setError('');
+    setCandidates([]);
   }, [open, targetKey]);
+
+  // p37-04: 打开时查询该目标的 READY 持久候选
+  useEffect(() => {
+    if (!open || !target) return;
+    let active = true;
+    api.listRevisionCandidates(target.projectId, target.targetId, 'READY')
+      .then(list => { if (active) setCandidates(list); })
+      .catch(() => { if (active) setCandidates([]); });
+    return () => { active = false; };
+  }, [open, targetKey, target]);
 
   const cancel = () => {
     if (applying) return;
@@ -62,6 +131,34 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
       }
     } finally {
       if (requestSequence.current === requestId) setGenerating(false);
+    }
+  };
+
+  /** p37-04: 从持久候选恢复预览（章节类走候选原子应用；其他类型恢复入口待 p39-07/08）。 */
+  const restoreCandidate = (record: RevisionCandidateRecord) => {
+    if (!target) return;
+    const chapterLike = record.targetType === 'CHAPTER' || record.targetType === 'PASSAGE';
+    if (!chapterLike) {
+      message.info('非章节候选的恢复入口将在后续版本提供（p39-07/08）；当前仅可查看');
+      return;
+    }
+    try {
+      const before = JSON.parse(record.beforeJson) as Record<string, unknown>;
+      const after = JSON.parse(record.afterJson) as Record<string, unknown>;
+      setInstructions(record.instructions ?? '');
+      setPreview({
+        previewId: record.id,
+        targetType: record.targetType,
+        targetId: record.targetId,
+        sourceVersion: record.sourceHash,
+        before,
+        after,
+        summary: record.summary ?? '恢复的持久候选',
+      });
+      setError('');
+      message.success('已恢复未应用的候选（应用走持久候选原子提交）');
+    } catch {
+      message.error('候选内容解析失败，无法恢复');
     }
   };
 
@@ -95,6 +192,7 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
       message.warning(`修改已应用，但页面刷新失败：${(cause as Error).message}`);
     } finally {
       setApplying(false);
+      setCandidates([]);
     }
   };
 
@@ -134,6 +232,50 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
       <Paragraph type="secondary" style={{ marginBottom: 12 }}>
         只处理当前选中的对象。预览与取消不会保存；确认应用前，请核对修改前后内容。
       </Paragraph>
+
+      {/* p37-04: 未应用的持久候选——刷新/重启后可恢复 */}
+      {candidates.length > 0 && !preview && (
+        <Alert
+          type="warning" showIcon style={{ marginBottom: 12 }}
+          message={`发现 ${candidates.length} 个未应用的候选（已持久保存，刷新不丢失）`}
+          description={
+            <List
+              size="small"
+              dataSource={candidates}
+              renderItem={record => (
+                <List.Item
+                  actions={[
+                    <Button key="restore" size="small" type="primary"
+                      aria-label="恢复候选"
+                      onClick={() => restoreCandidate(record)}>恢复</Button>,
+                  ]}
+                >
+                  <List.Item.Meta
+                    title={
+                      <Space size={4}>
+                        <Tag color="gold">READY</Tag>
+                        <Text style={{ fontSize: 12 }}>
+                          {record.instructions
+                            ? (record.instructions.length > 40
+                              ? record.instructions.slice(0, 40) + '…'
+                              : record.instructions)
+                            : '（无修改要求记录）'}
+                        </Text>
+                      </Space>
+                    }
+                    description={
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        基于 v{record.baseVersion} · {new Date(record.createdAt).toLocaleString()}
+                      </Text>
+                    }
+                  />
+                </List.Item>
+              )}
+            />
+          }
+        />
+      )}
+
       <Input.TextArea
         aria-label="修改要求"
         autoFocus
@@ -148,7 +290,7 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
         }}
       />
       {error && <Alert type="error" showIcon message={error} style={{ marginTop: 16 }} />}
-      {preview && (
+      {preview && target && (
         <div style={{ marginTop: 16 }}>
           <Alert type="info" showIcon message={preview.summary} style={{ marginBottom: 12 }} />
           <Row gutter={[12, 12]}>
@@ -157,7 +299,7 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
                 <pre
                   data-revision-side="before"
                   style={{ margin: 0, maxHeight: 320, overflow: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
-                >{formatSnapshot(preview.before)}</pre>
+                >{renderSnapshot(target.targetType, preview.before)}</pre>
               </Card>
             </Col>
             <Col xs={24} md={12}>
@@ -165,7 +307,7 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
                 <pre
                   data-revision-side="after"
                   style={{ margin: 0, maxHeight: 320, overflow: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
-                >{formatSnapshot(preview.after)}</pre>
+                >{renderSnapshot(target.targetType, preview.after)}</pre>
               </Card>
             </Col>
           </Row>

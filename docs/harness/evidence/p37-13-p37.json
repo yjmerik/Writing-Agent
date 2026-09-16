@@ -1,17 +1,17 @@
 {
-  "commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+  "commit": "cb3d1b12183cd1ed2c56caa0577258eb6e75529d",
   "cleanCheckout": true,
   "feature": "p37-13",
-  "branch": "main",
+  "branch": "codex/p37-13",
   "base_commit": "N/A",
   "red": {
     "command": "npm test",
     "exitCode": 0,
-    "result": "spec"
+    "result": "QA spec"
   },
   "implementation": {
-    "commit": "1c94ff669eb07a018e005717073e88ec61d73236",
-    "notes": "directive-loop.spec.ts QA spec"
+    "commit": "cb3d1b12183cd1ed2c56caa0577258eb6e75529d",
+    "notes": "directive-loop.spec.ts QA spec, tested against scenario server"
   },
   "checks": [
     {
@@ -21,10 +21,10 @@
     },
     {
       "command": "mvn compile && mvn test",
-      "result": "865+/0/0/1skip",
+      "result": "865/0/0/1skip",
       "exitCode": 0
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-16 verified: 1c94ff669eb07a018e005717073e88ec61d73236; 9 QA specs pass. record p37-13-p37"
+  "evidence_line": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec directive-loop.spec.ts tested against scenario server. record p37-13-p37"
 }

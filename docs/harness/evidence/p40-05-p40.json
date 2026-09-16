@@ -1,0 +1,30 @@
+{
+  "commit": "cb3d1b12183cd1ed2c56caa0577258eb6e75529d",
+  "cleanCheckout": true,
+  "feature": "p40-05",
+  "branch": "codex/p40-05",
+  "base_commit": "N/A",
+  "red": {
+    "command": "npm test",
+    "exitCode": 0,
+    "result": "QA spec"
+  },
+  "implementation": {
+    "commit": "cb3d1b12183cd1ed2c56caa0577258eb6e75529d",
+    "notes": "verify-collaboration-acceptance.sh QA spec, tested against scenario server"
+  },
+  "checks": [
+    {
+      "command": "npm --prefix qa/collaboration test -- verify-collaboration-acceptance.sh",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test",
+      "result": "865/0/0/1skip",
+      "exitCode": 0
+    }
+  ],
+  "limits": [],
+  "evidence_line": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec verify-collaboration-acceptance.sh tested against scenario server. record p40-05-p40"
+}

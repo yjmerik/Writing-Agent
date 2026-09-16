@@ -1,0 +1,42 @@
+{
+  "commit": "d4423bf23e2ce199d75f2d25e0c916ecd40267ef",
+  "cleanCheckout": true,
+  "feature": "p40-06",
+  "branch": "codex/p40-05-06-final",
+  "base_commit": "N/A",
+  "red": {
+    "command": "N/A",
+    "exitCode": 0,
+    "result": "experiment execution"
+  },
+  "implementation": {
+    "commit": "d4423bf23e2ce199d75f2d25e0c916ecd40267ef",
+    "notes": "Real LLM e2e record for mystery + wuxia. compare-baseline PASS. evaluate script COMPLETE."
+  },
+  "checks": [
+    {
+      "command": "./scripts/e2e.sh --mode record --preset mystery",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "./scripts/e2e.sh --mode record --preset wuxia",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/compare-baseline.py",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/evaluate-collaboration-study.py --require-complete",
+      "result": "COMPLETE",
+      "exitCode": 0
+    }
+  ],
+  "limits": [
+    "LLM-as-judge proxy scoring; human evaluation recommended as follow-up"
+  ],
+  "evidence_line": "2026-09-16 verified: d4423bf23e2ce199d75f2d25e0c916ecd40267ef; real LLM e2e both genres PASS; record p40-06-p40"
+}

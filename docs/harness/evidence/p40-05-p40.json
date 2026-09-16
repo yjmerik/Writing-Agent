@@ -1,1 +1,17 @@
-{"checks":[{"command":"verify","result":"pass","exitCode":0}]}
+{
+  "checks": [
+    {
+      "command": "bash scripts/verify-collaboration-acceptance.sh",
+      "result": "56/58 completed, p40-06 NOT_RUN",
+      "exitCode": 1
+    }
+  ],
+  "commit": "0e3afcdf323e258b26e0af1d294ab482eb1d2b35",
+  "main_commit": "0e3afcdf323e258b26e0af1d294ab482eb1d2b35",
+  "implementation": {
+    "commit": "0e3afcdf323e258b26e0af1d294ab482eb1d2b35"
+  },
+  "limits": [
+    "p40-06 real experiment requires human participants and real model budget"
+  ]
+}

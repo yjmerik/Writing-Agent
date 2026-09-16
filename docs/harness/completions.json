@@ -1405,8 +1405,8 @@
         "p40-05"
       ],
       "branch": "codex/p40-05",
-      "implementation_commit": "N/A",
-      "main_commit": "N/A",
+      "implementation_commit": "2b918176c91bbe26874dfbc49e052d169722238e",
+      "main_commit": "2b918176c91bbe26874dfbc49e052d169722238e",
       "evidence": "docs/harness/evidence/p40-05-p40.json"
     }
   ],

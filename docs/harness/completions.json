@@ -1397,6 +1397,17 @@
       "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "evidence": "docs/harness/evidence/p40-03-p40.json"
+    },
+    {
+      "id": "p40-05-p40",
+      "kind": "verified",
+      "feature_ids": [
+        "p40-05"
+      ],
+      "branch": "codex/p40-05",
+      "implementation_commit": "N/A",
+      "main_commit": "N/A",
+      "evidence": "docs/harness/evidence/p40-05-p40.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

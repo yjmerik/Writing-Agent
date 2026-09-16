@@ -6659,9 +6659,9 @@
       "acceptance": "bash scripts/verify-collaboration-acceptance.sh 退出0；任一关键功能未跑或失败退出非零；两窗口旧稿批准必需409；导出每章hash完全匹配manifest；所有原报告缺口映射到具体结果；文学缺证据单列INCOMPLETE。",
       "verify_cmd": "bash scripts/verify-collaboration-acceptance.sh",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16: script written, runs and correctly reports INCOMPLETE (p40-06 real experiment needs human participants). record p40-05-p40",
+      "evidence": "2026-09-16: script written and runs; INCOMPLETE (p40-06 real experiment needs human participants and model budget)",
       "branch": "main",
-      "completion_record": "p40-05-p40"
+      "completion_record": null
     },
     {
       "id": "p40-06",

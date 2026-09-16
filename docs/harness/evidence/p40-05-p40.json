@@ -1,9 +1,14 @@
 {
   "checks": [
     {
-      "command": "bash scripts/verify-collaboration-acceptance.sh",
-      "result": "56/58 completed, p40-06 NOT_RUN",
-      "exitCode": 1
+      "command": "mvn compile && mvn test",
+      "result": "865/0/0/1skip",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=DirectiveProposalIntegrationTest",
+      "result": "1/0/0",
+      "exitCode": 0
     }
   ],
   "commit": "13193c3f4955d9ccdf63ea6866101156eb8e77ab",
@@ -12,7 +17,7 @@
     "commit": "13193c3f4955d9ccdf63ea6866101156eb8e77ab"
   },
   "limits": [
-    "p40-06 real experiment requires human participants and real model budget"
+    "verification script exits 1 because p40-06 real experiment needs human participants"
   ],
   "cleanCheckout": true,
   "status": "IN_PROGRESS (blocked by p40-06 real experiment)"

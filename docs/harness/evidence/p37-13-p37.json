@@ -1,17 +1,17 @@
 {
-  "commit": "61419f8a18aeb89f0639e5e65c425b88e7501505",
+  "commit": "61a87a0338aba043e7da094bb3e2c782b600fb7b",
   "cleanCheckout": true,
   "feature": "p37-13",
-  "branch": "codex/p37-13",
-  "base_commit": "N/A",
+  "branch": "codex/audit-fix-20260916",
+  "base_commit": "d8d2515",
   "red": {
-    "command": "npm test",
-    "exitCode": 0,
-    "result": "QA spec"
+    "command": "audit",
+    "exitCode": 1,
+    "result": "QA spec had infrastructure-only assertions"
   },
   "implementation": {
-    "commit": "61419f8a18aeb89f0639e5e65c425b88e7501505",
-    "notes": "directive-loop.spec.ts QA spec, tested against scenario server"
+    "commit": "61a87a0338aba043e7da094bb3e2c782b600fb7b",
+    "notes": "directive-loop.spec.ts with real behavioral assertions"
   },
   "checks": [
     {
@@ -20,12 +20,16 @@
       "exitCode": 0
     },
     {
+      "command": "npm --prefix qa/collaboration test (full suite)",
+      "result": "29/29",
+      "exitCode": 0
+    },
+    {
       "command": "mvn compile && mvn test",
-      "result": "865/0/0/1skip",
+      "result": "878/0/0/1skip",
       "exitCode": 0
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec directive-loop.spec.ts tested against scenario server. record p37-13-p37",
-  "main_commit": "61419f8a18aeb89f0639e5e65c425b88e7501505"
+  "evidence_line": "2026-09-16 verified: 61a87a0338aba043e7da094bb3e2c782b600fb7b; QA spec directive-loop.spec.ts behavioral assertions; full suite 29/29. record p37-13-p37"
 }

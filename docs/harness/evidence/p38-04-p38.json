@@ -1,17 +1,17 @@
 {
-  "commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
+  "commit": "61a87a0338aba043e7da094bb3e2c782b600fb7b",
   "cleanCheckout": true,
   "feature": "p38-04",
-  "branch": "codex/p38-04",
-  "base_commit": "N/A",
+  "branch": "codex/audit-fix-20260916",
+  "base_commit": "d8d2515",
   "red": {
-    "command": "npm test",
-    "exitCode": 0,
-    "result": "QA spec"
+    "command": "audit",
+    "exitCode": 1,
+    "result": "QA spec had infrastructure-only assertions"
   },
   "implementation": {
-    "commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
-    "notes": "plan-resolution.spec.ts QA spec, tested against scenario server"
+    "commit": "61a87a0338aba043e7da094bb3e2c782b600fb7b",
+    "notes": "plan-resolution.spec.ts with real behavioral assertions"
   },
   "checks": [
     {
@@ -20,12 +20,16 @@
       "exitCode": 0
     },
     {
+      "command": "npm --prefix qa/collaboration test (full suite)",
+      "result": "29/29",
+      "exitCode": 0
+    },
+    {
       "command": "mvn compile && mvn test",
-      "result": "865/0/0/1skip",
+      "result": "878/0/0/1skip",
       "exitCode": 0
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec plan-resolution.spec.ts tested against scenario server. record p38-04-p38",
-  "main_commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad"
+  "evidence_line": "2026-09-16 verified: 61a87a0338aba043e7da094bb3e2c782b600fb7b; QA spec plan-resolution.spec.ts behavioral assertions; full suite 29/29. record p38-04-p38"
 }

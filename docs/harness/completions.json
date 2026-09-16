@@ -1331,6 +1331,61 @@
       "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
       "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
       "evidence": "docs/harness/evidence/p39-07-p39.json"
+    },
+    {
+      "id": "p37-13-p37",
+      "kind": "verified",
+      "feature_ids": [
+        "p37-13"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "61a87a0338aba043e7da094bb3e2c782b600fb7b",
+      "main_commit": "61a87a0338aba043e7da094bb3e2c782b600fb7b",
+      "evidence": "docs/harness/evidence/p37-13-p37.json"
+    },
+    {
+      "id": "p38-04-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-04"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "61a87a0338aba043e7da094bb3e2c782b600fb7b",
+      "main_commit": "61a87a0338aba043e7da094bb3e2c782b600fb7b",
+      "evidence": "docs/harness/evidence/p38-04-p38.json"
+    },
+    {
+      "id": "p38-08-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-08"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "61a87a0338aba043e7da094bb3e2c782b600fb7b",
+      "main_commit": "61a87a0338aba043e7da094bb3e2c782b600fb7b",
+      "evidence": "docs/harness/evidence/p38-08-p38.json"
+    },
+    {
+      "id": "p39-05-p39",
+      "kind": "verified",
+      "feature_ids": [
+        "p39-05"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "61a87a0338aba043e7da094bb3e2c782b600fb7b",
+      "main_commit": "61a87a0338aba043e7da094bb3e2c782b600fb7b",
+      "evidence": "docs/harness/evidence/p39-05-p39.json"
+    },
+    {
+      "id": "p39-06-p39",
+      "kind": "verified",
+      "feature_ids": [
+        "p39-06"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "61a87a0338aba043e7da094bb3e2c782b600fb7b",
+      "main_commit": "61a87a0338aba043e7da094bb3e2c782b600fb7b",
+      "evidence": "docs/harness/evidence/p39-06-p39.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

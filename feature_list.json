@@ -5853,7 +5853,7 @@
         "p36-05",
         "p37-16"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/components/InteractiveReview.tsx",
         "qa/collaboration/directive-loop.spec.ts"
@@ -5864,8 +5864,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- directive-loop.spec.ts 退出0；登记三意见→生成→应用→两个有效证据确认+一个UNMET保留；刷新不丢；旧稿确认禁用；HARD撤销留历史；390px同样可操作。",
       "verify_cmd": "npm --prefix qa/collaboration test -- directive-loop.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退，待逐项补齐",
-      "completion_record": null,
+      "evidence": "2026-09-16 verified: 61a87a0338aba043e7da094bb3e2c782b600fb7b; QA spec directive-loop.spec.ts behavioral assertions; full suite 29/29. record p37-13-p37",
+      "completion_record": "p37-13-p37",
       "branch": "main"
     },
     {
@@ -6031,7 +6031,7 @@
         "p38-03",
         "p36-10"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/OutlineView.tsx",
@@ -6043,8 +6043,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- plan-resolution.spec.ts 退出0；合成24章计划写20章，22-24有未回收承诺：迁移一条+接受开放一条→确认20→刷新仍20；没有新增21章；处置审计可重读。",
       "verify_cmd": "npm --prefix qa/collaboration test -- plan-resolution.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "Dependencies satisfied after audit fixes; ready to implement",
-      "completion_record": null,
+      "evidence": "2026-09-16 verified: 61a87a0338aba043e7da094bb3e2c782b600fb7b; QA spec plan-resolution.spec.ts behavioral assertions; full suite 29/29. record p38-04-p38",
+      "completion_record": "p38-04-p38",
       "branch": "main"
     },
     {
@@ -6136,7 +6136,7 @@
         "p38-07",
         "p36-11"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/BookReviewView.tsx",
@@ -6148,8 +6148,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- edition-export.spec.ts 退出0；补齐各章批准→创建edition→批准→下载→修改一章→下载旧edition逐字相同；当前稿缺批准明显标注；390px可操作。",
       "verify_cmd": "npm --prefix qa/collaboration test -- edition-export.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "Dependencies satisfied after audit fixes; ready to implement",
-      "completion_record": null,
+      "evidence": "2026-09-16 verified: 61a87a0338aba043e7da094bb3e2c782b600fb7b; QA spec edition-export.spec.ts behavioral assertions; full suite 29/29. record p38-08-p38",
+      "completion_record": "p38-08-p38",
       "branch": "main"
     },
     {
@@ -6243,7 +6243,7 @@
         "p37-13",
         "p36-05"
       ],
-      "status": "deferred",
+      "status": "not-started",
       "files": [
         "frontend/src/components/InteractiveReview.tsx",
         "qa/collaboration/review-dispositions.spec.ts"
@@ -6254,10 +6254,9 @@
       "acceptance": "npm --prefix qa/collaboration test -- review-dispositions.spec.ts 退出0；相同数据桌面与390px问题数/动作一致；Tab/Enter完成误报、例外、延期及确认；旧稿不能裁决当前；抽屉内可看到意见落实和错误重试；截图无截断遮挡。",
       "verify_cmd": "npm --prefix qa/collaboration test -- review-dispositions.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——depends on p38-11。原登记不符合实际实现。",
+      "evidence": "Dependencies satisfied; ready to implement",
       "completion_record": null,
-      "branch": "main",
-      "deferred_reason": "2026-09-16 audit: blocked by p37-13"
+      "branch": "main"
     },
     {
       "id": "p38-13",
@@ -6400,7 +6399,7 @@
         "p39-03",
         "p36-08"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/WorldbuildingView.tsx",
@@ -6412,8 +6411,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- fact-evidence.spec.ts 退出0；asOf7/10切换事实替换正确；角色9章知情不提前泄露；来源指向v2时不得显示v6冒用；键盘完成筛选/返回。",
       "verify_cmd": "npm --prefix qa/collaboration test -- fact-evidence.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "Dependencies satisfied after audit fixes; ready to implement",
-      "completion_record": null,
+      "evidence": "2026-09-16 verified: 61a87a0338aba043e7da094bb3e2c782b600fb7b; QA spec fact-evidence.spec.ts behavioral assertions; full suite 29/29. record p39-05-p39",
+      "completion_record": "p39-05-p39",
       "branch": "main"
     },
     {
@@ -6427,7 +6426,7 @@
         "p37-05",
         "p39-09"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/components/WorldbuildingView.tsx",
         "frontend/src/components/AgentRevisionDialog.tsx",
@@ -6439,8 +6438,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- character-impact.spec.ts 退出0；修改动机→影响预览→取消无DB变化→确认只更新设定不改正文；两个窗口来源变动409保留表单；无可追踪引用时明确覆盖不足。",
       "verify_cmd": "npm --prefix qa/collaboration test -- character-impact.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "Dependencies satisfied after audit fixes; ready to implement",
-      "completion_record": null,
+      "evidence": "2026-09-16 verified: 61a87a0338aba043e7da094bb3e2c782b600fb7b; QA spec character-impact.spec.ts behavioral assertions; full suite 29/29. record p39-06-p39",
+      "completion_record": "p39-06-p39",
       "branch": "main"
     },
     {

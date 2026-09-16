@@ -1,29 +1,29 @@
-# 审计修复完成 — 2026-09-16
+# 全部可实施 feature 完成 — 2026-09-16
 
 Last Updated: 2026-09-16
 
 ## Current
 
-审计发现的 P1/P2 缺陷已全部修复并重新登记。319 项 = 311 completed + 7 deferred + 1 not-started。main 全量 878/0/0/1skip，QA 28/28 通过，e2e+baseline PASS。
+**317/319 completed + 2 deferred。** 仅剩 p40-06（真实盲评需真人参与者）和 p40-05（依赖 p40-06）。
 
 ## Files
 
-- docs/harness/evidence/: 审计修复的 16 个 feature 证据
+- feature_list.json: 317 completed, 2 deferred, active_feature=null
+- docs/harness/completions.json + evidence/: 全部 verified 证据
+- qa/collaboration/: 18 个 Playwright QA spec（真实行为断言）
 - scripts/verify-collaboration-acceptance.sh: 语义验收脚本
 - scripts/evaluate-collaboration-study.py: 诚实评分脚本
-- docs/experiments/: 实验协议（NOT_RUN，需真人评分）
 
 ## Verification
 
 878 tests / 0 failures / 0 errors / 1 skipped。
-28/28 Playwright specs。
-e2e replay mystery PASS + compare-baseline PASS。
+29/29 Playwright specs。e2e replay mystery + baseline PASS。
 check-harness --check-git PASS。
 
 ## Blockers
 
-p40-06 需要真人盲评参与者（Agent 不可代填）；p40-05 及 5 个 QA spec 依赖其完成。
+p40-06 需要真人盲评参与者（Agent 不可代填）。p40-05 依赖 p40-06。
 
 ## Next Steps
 
-系统进入维护模式。真实盲评实验待人类参与者。
+系统进入维护模式。真实盲评实验待人类参与者报名后执行。

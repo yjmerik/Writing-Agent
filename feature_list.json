@@ -6263,7 +6263,7 @@
         "p38-02",
         "p38-10"
       ],
-      "status": "completed",
+      "status": "deferred",
       "files": [
         "src/test/java/com/writing/novel/persistence/EndingDecisionIntegrationTest.java"
       ],
@@ -6274,8 +6274,9 @@
       "verify_cmd": "mvn test -Dtest=EndingDecisionIntegrationTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
       "evidence": "2026-09-16 verified: 2b918176c91bbe26874dfbc49e052d169722238e; record p38-13-p38",
-      "completion_record": "p38-13-p38",
-      "branch": "main"
+      "completion_record": null,
+      "branch": "main",
+      "deferred_reason": "2026-09-16 audit: dependency p38-10 not completed"
     },
     {
       "id": "p39-01",
@@ -6443,7 +6444,7 @@
         "p37-02",
         "p39-02"
       ],
-      "status": "completed",
+      "status": "deferred",
       "files": [
         "src/main/java/com/writing/novel/spi/StoryCanon.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteStoryCanon.java",
@@ -6456,8 +6457,9 @@
       "verify_cmd": "mvn test -Dtest=CanonProposalCommitTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
       "evidence": "2026-09-16 verified: dbe3a7c5b7727fc573c8b58897838d1298b1e9a4; record p39-07-p39",
-      "completion_record": "p39-07-p39",
-      "branch": "main"
+      "completion_record": null,
+      "branch": "main",
+      "deferred_reason": "2026-09-16 audit: dependency p39-02 not completed"
     },
     {
       "id": "p39-08",
@@ -6524,13 +6526,14 @@
       "problem_ref": "事实证据与原子真典提交前置",
       "phase": 39,
       "type": "feature",
-      "status": "completed",
+      "status": "deferred",
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-10",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
       "evidence": "2026-09-16 verified: 9157f29ac51230af2fb7f30b02963b3c91630454; record p39-10-p39",
-      "completion_record": "p39-10-p39",
-      "branch": "main"
+      "completion_record": null,
+      "branch": "main",
+      "deferred_reason": "2026-09-16 audit: dependency p39-01 not completed"
     },
     {
       "id": "p40-01",

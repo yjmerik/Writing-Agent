@@ -1091,17 +1091,6 @@
       "evidence": "docs/harness/evidence/p38-09-p38.json"
     },
     {
-      "id": "p39-10-p39",
-      "kind": "verified",
-      "feature_ids": [
-        "p39-10"
-      ],
-      "branch": "codex/p39-10-story-canon-tx",
-      "implementation_commit": "9157f29ac51230af2fb7f30b02963b3c91630454",
-      "main_commit": "9157f29ac51230af2fb7f30b02963b3c91630454",
-      "evidence": "docs/harness/evidence/p39-10-p39.json"
-    },
-    {
       "id": "p37-12-p37",
       "kind": "verified",
       "feature_ids": [
@@ -1124,17 +1113,6 @@
       "evidence": "docs/harness/evidence/p40-02-p40.json"
     },
     {
-      "id": "p39-07-p39",
-      "kind": "verified",
-      "feature_ids": [
-        "p39-07"
-      ],
-      "branch": "codex/p39-07-08-canon-volume-proposals",
-      "implementation_commit": "dbe3a7c5b7727fc573c8b58897838d1298b1e9a4",
-      "main_commit": "dbe3a7c5b7727fc573c8b58897838d1298b1e9a4",
-      "evidence": "docs/harness/evidence/p39-07-p39.json"
-    },
-    {
       "id": "p39-08-p39",
       "kind": "verified",
       "feature_ids": [
@@ -1144,17 +1122,6 @@
       "implementation_commit": "1cb84d22e3def2b7d0c38c1a2b260d20d3bb6d01",
       "main_commit": "1cb84d22e3def2b7d0c38c1a2b260d20d3bb6d01",
       "evidence": "docs/harness/evidence/p39-08-p39.json"
-    },
-    {
-      "id": "p38-13-p38",
-      "kind": "verified",
-      "feature_ids": [
-        "p38-13"
-      ],
-      "branch": "codex/p38-13",
-      "implementation_commit": "2b918176c91bbe26874dfbc49e052d169722238e",
-      "main_commit": "2b918176c91bbe26874dfbc49e052d169722238e",
-      "evidence": "docs/harness/evidence/p38-13-p38.json"
     },
     {
       "id": "p40-03-p40",

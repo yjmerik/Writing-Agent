@@ -13,5 +13,7 @@
   },
   "limits": [
     "p40-06 real experiment requires human participants and real model budget"
-  ]
+  ],
+  "cleanCheckout": true,
+  "status": "IN_PROGRESS (blocked by p40-06 real experiment)"
 }

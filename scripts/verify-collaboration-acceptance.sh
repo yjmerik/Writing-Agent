@@ -19,13 +19,29 @@ PASS=0; FAIL=0
 record() { # name, exitcode
   if [ "$2" -eq 0 ]; then PASS=$((PASS+1)); echo "  ✅ $1"; else FAIL=$((FAIL+1)); echo "  ❌ $1"; fi
 }
+# 确保退出码不被后续命令覆盖
+run_check() { # name, command...
+  local name="$1"; shift
+  "$@" > "/tmp/acceptance-check.log" 2>&1
+  local code=$?
+  record "$name" "$code"
+}
 
 echo "=== 1. 编译与全量测试 ==="
 mvn -q compile > /tmp/acceptance-compile.log 2>&1
 record "mvn compile" $?
 mvn test > /tmp/acceptance-test.log 2>&1
-grep -q "Failures: 0, Errors: 0" /tmp/acceptance-test.log
-record "mvn test (0 failures/errors)" $?
+TEST_EXIT=$?
+if [ $TEST_EXIT -ne 0 ]; then
+  record "mvn test (exit=$TEST_EXIT)" $TEST_EXIT
+else
+  # 额外验证总结行
+  if grep -q "Failures: [1-9]" /tmp/acceptance-test.log || grep -q "Errors: [1-9]" /tmp/acceptance-test.log; then
+    record "mvn test (failures/errors found)" 1
+  else
+    record "mvn test (0 failures/errors)" 0
+  fi
+fi
 
 echo "=== 2. 关键语义专项测试（分组运行） ==="
 SEMANTIC_GROUPS=(
@@ -46,8 +62,9 @@ SEMANTIC_GROUPS=(
 )
 for GROUP in "${SEMANTIC_GROUPS[@]}"; do
   mvn -q test -Dtest="$GROUP" > "/tmp/acceptance-group.log" 2>&1
+  GROUP_EXIT=$?
   SHORT=$(echo "$GROUP" | cut -d, -f1 | sed 's/Test$//')
-  record "semantic: $SHORT" $?
+  record "semantic: $SHORT" "$GROUP_EXIT"
 done
 
 echo "=== 3. 评审协议脚本 ==="

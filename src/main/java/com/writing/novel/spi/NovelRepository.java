@@ -281,6 +281,11 @@ public interface NovelRepository {
         throw new UnsupportedOperationException("commitPlanChange 未实现");
     }
 
+    /** 审计 P1-1: 补偿回退——把 CONFIRMED 回退为 PENDING（plan_change 写入失败的回退路径）。 */
+    default void reopenPlanChange(String projectId, String previewId) {
+        throw new UnsupportedOperationException("reopenPlanChange 未实现");
+    }
+
     // --- p37-07: 意见与证据版本化仓储（缺省禁止默认成功） ---
 
     /** CAS 更新意见内容/范围/启用：expectedRevision 匹配才生效，成功后 revision+1。 */

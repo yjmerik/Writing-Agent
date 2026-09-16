@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Card, Tag, Empty, Spin, Row, Col, Descriptions, Divider, Button, Space, Input, Select, message, List, Typography } from 'antd';
+import { Card, Tag, Empty, Spin, Row, Col, Descriptions, Divider, Button, Space, Input, Select, message, List, Typography, Modal} from 'antd';
 import { ReloadOutlined, SaveOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
 import type { AgentRevisionApplyResult, AgentRevisionTarget } from '../api/client';
@@ -334,14 +334,36 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
                     onClick={async () => {
                       setSaving(c.id);
                       try {
-                        const saved = await api.updateCharacter(projectId, c.id, characterDrafts[c.id] ?? characterDraft(c));
-                        setCharacters((current) => current.map((character) => character.id === saved.id ? saved : character));
-                        setCharacterDrafts((current) => {
-                          const next = { ...current };
-                          delete next[c.id];
-                          return next;
+                        // p39-04（审计 P2-7）: 先预览影响，确认后才落库
+                        const draft = characterDrafts[c.id] ?? characterDraft(c);
+                        const preview = await api.previewCharacterUpdate(projectId, c.id, draft);
+                        const certain = preview.impact.certainReferences.length;
+                        const possible = preview.impact.possibleReferences.length;
+                        Modal.confirm({
+                          title: `确认保存 ${c.name} 的修改`,
+                          content: `该修改将影响 ${certain} 个确定引用章节、${possible} 个可能引用章节。` +
+                            (certain > 0 ? `（第 ${preview.impact.certainReferences.slice(0, 5).join('、')}${certain > 5 ? '…' : ''} 章）` : '') +
+                            ' 保存后将写入真典。来源已变化时需要重新预览。',
+                          okText: '确认保存',
+                          cancelText: '取消',
+                          onOk: async () => {
+                            try {
+                              const result = await api.confirmCharacterUpdate(
+                                projectId, c.id, draft, preview.previewToken);
+                              const saved = result.character;
+                              setCharacters((current) =>
+                                current.map((ch) => ch.id === saved.id ? saved : ch));
+                              setCharacterDrafts((current) => {
+                                const next = { ...current };
+                                delete next[c.id];
+                                return next;
+                              });
+                              message.success(`${saved.name} 已保存并写入真典`);
+                            } catch (err) {
+                              message.error((err as Error).message);
+                            }
+                          },
                         });
-                        message.success(`${saved.name} 已保存并写入真典`);
                       } catch (err) {
                         message.error((err as Error).message);
                       } finally {

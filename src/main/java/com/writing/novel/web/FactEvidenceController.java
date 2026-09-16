@@ -59,9 +59,13 @@ public class FactEvidenceController {
     public Map<String, Object> addEvidence(@PathVariable String id, @PathVariable String factId,
                                            @RequestBody Map<String, Object> body) {
         repository.findProject(id).orElseThrow(() -> new IllegalArgumentException("项目不存在: " + id));
-        if (storyFacts.findById(factId).isEmpty()) {
-            throw new IllegalArgumentException("事实不存在: " + factId);
+        // 审计 P1-4: 事实必须属于本项目（防跨项目写入证据）
+        var fact = storyFacts.findById(factId)
+                .orElseThrow(() -> new IllegalArgumentException("事实不存在: " + factId));
+        if (!id.equals(fact.getProjectId())) {
+            throw new IllegalArgumentException("事实不属于该项目，不能写入证据");
         }
+
         Integer chapterIndex = intOf(body.get("chapterIndex"));
         Integer chapterVersion = intOf(body.get("chapterVersion"));
         String contentHash = strOf(body.get("contentHash"));
@@ -69,7 +73,28 @@ public class FactEvidenceController {
                 || contentHash == null || contentHash.isBlank()) {
             throw new IllegalArgumentException("证据必须绑定 chapterIndex/chapterVersion/contentHash");
         }
+
+        // 审计 P1-4: 章节必须存在于本项目
+        var chapter = repository.findChapterByIndex(id, chapterIndex)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "章节不存在: " + chapterIndex + "（不能伪造来源）"));
+
+        // 审计 P1-4: 指定版本/指纹必须与章节实际身份匹配（防伪造稿号/指纹）
+        String actualHash = com.writing.novel.domain.ChapterApproval.contentHash(
+                chapter.getTitle(), chapter.getContent());
+        if (chapterVersion != chapter.getVersion() || !actualHash.equals(contentHash)) {
+            throw new IllegalArgumentException("章节身份不匹配：指定 v" + chapterVersion
+                    + "/" + contentHash.substring(0, Math.min(8, contentHash.length()))
+                    + "，实际 v" + chapter.getVersion()
+                    + "/" + actualHash.substring(0, 8) + "（不能伪造来源）");
+        }
+
+        // 审计 P1-4: 如果提供引文，必须在正文中存在
         String quote = strOf(body.get("quote")); // 可为 null = UNKNOWN
+        if (quote != null && !quote.isBlank() && !chapter.getContent().contains(quote)) {
+            throw new IllegalArgumentException("引文不在该章正文中（不能伪造 quote）");
+        }
+
         Integer validFrom = intOf(body.get("validFromChapter"));
         Integer validTo = intOf(body.get("validToChapter"));
         String evidenceId = UUID.randomUUID().toString();

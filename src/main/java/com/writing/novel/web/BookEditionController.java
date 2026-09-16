@@ -124,14 +124,17 @@ public class BookEditionController {
         if (!providedHash.equals(edition.getManifestHash())) {
             throw new IllegalStateException("manifestHash 不匹配，拒绝批准");
         }
-        // 重读当前覆盖资格：无活动屏障 + 每章当前稿已获作者批准
+        // 重读覆盖资格：无活动屏障 + 快照内每章的快照版本已获作者批准
+        // 审计 P1-3: 原实现检查"当前稿"而非"快照版本"——编辑并批准新稿后，旧快照也能通过。
+        // 现在严格按快照内记录的 version 和 contentHash 验证。
         if (!repository.findActiveReviewBarriers(id).isEmpty()) {
             throw new IllegalStateException("存在活动人审屏障，成书批准被阻塞");
         }
-        for (Chapter ch : repository.findChaptersByProject(id)) {
-            String hash = ChapterApproval.contentHash(ch.getTitle(), ch.getContent());
-            if (!repository.isChapterApproved(id, ch.getChapterIndex(), ch.getVersion(), hash)) {
-                throw new IllegalStateException("第" + ch.getChapterIndex() + "章当前稿未获作者批准");
+        for (BookEdition.EditionChapter snapshotChapter : repository.findBookEditionChapters(editionId)) {
+            if (!repository.isChapterApproved(id, snapshotChapter.chapterIndex(),
+                    snapshotChapter.version(), snapshotChapter.contentHash())) {
+                throw new IllegalStateException("第" + snapshotChapter.chapterIndex()
+                        + "章快照版本(v" + snapshotChapter.version() + ")未获作者批准");
             }
         }
         repository.approveBookEdition(id, editionId, providedHash);

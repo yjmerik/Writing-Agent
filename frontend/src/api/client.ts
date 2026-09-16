@@ -374,6 +374,25 @@ export const api = {
       body: JSON.stringify(body),
     }),
 
+  /** p39-04: 人物修改预览——confirm=false 不落库，返回影响清单与确认凭证 */
+  previewCharacterUpdate: (id: string, charId: string, body: Partial<Character>) =>
+    request<{persisted: boolean; previewToken: string; impact: {
+      certainReferences: number[]; possibleReferences: number[];
+      insufficientCoverage: number[]; changes: Record<string, unknown>;
+    }}>(`/projects/${id}/characters/${charId}`, {
+      method: 'PUT',
+      body: JSON.stringify({...body, confirm: false}),
+    }),
+
+  /** p39-04: 人物修改确认——必须携带预览凭证 */
+  confirmCharacterUpdate: (id: string, charId: string, body: Partial<Character>,
+                           previewToken: string) =>
+    request<{persisted: boolean; character: Character; previewToken: string}>(
+      `/projects/${id}/characters/${charId}`, {
+        method: 'PUT',
+        body: JSON.stringify({...body, confirm: true, previewToken}),
+      }),
+
   getOutline: (id: string) =>
     request<Outline | null>(`/projects/${id}/outline`),
 

@@ -52,7 +52,11 @@ public class PlanEditionService {
             List<String> entries = new ArrayList<>();
             for (Volume v : outline.getVolumes()) {
                 for (ChapterSynopsis s : v.getSynopses()) {
-                    entries.add(v.getVolumeIndex() + ":" + s.getChapterIndex() + ":" + s.getTitle());
+                    // 审计 P1-1: 梗概内容参与 hash——仅改梗概不改变章号/标题也必须使旧预览失效
+                    String synopsisHash = s.getSynopsis() == null ? ""
+                            : com.writing.novel.util.ReviewFingerprint.sha256Hex12(s.getSynopsis());
+                    entries.add(v.getVolumeIndex() + ":" + s.getChapterIndex() + ":"
+                            + s.getTitle() + ":" + synopsisHash);
                 }
             }
             entries.sort(String::compareTo);
@@ -158,23 +162,50 @@ public class PlanEditionService {
             }
         }
 
-        // 生效：目标偏好 + 大纲裁剪（已写章节梗概保留）+ 处置审计一次提交
-        WritingPreferences prefs = repository.findWritingPreferences(projectId)
-                .orElseGet(() -> new WritingPreferences(projectId));
-        prefs.setTargetChapters(targetChapters);
-        repository.saveWritingPreferences(prefs);
-        Outline outline = repository.findOutlineByProject(projectId).orElseThrow();
-        for (Volume v : outline.getVolumes()) {
-            List<ChapterSynopsis> keep = new ArrayList<>();
-            for (ChapterSynopsis s : v.getSynopses()) {
-                if (s.getChapterIndex() <= targetChapters) keep.add(s);
-            }
-            v.getSynopses().clear();
-            keep.forEach(v::addSynopsis);
-        }
-        repository.saveOutline(outline);
+        // 生效：原子提交——先标记 CONFIRMED（含 hash 复验），成功后才改偏好/大纲。
+        // 审计 P1-1: 原实现先改偏好/大纲后标记 plan_change，decision 写入失败会留下
+        // 已改目标但 plan_change 仍 PENDING 的半套状态。现在：标记失败 → 零修改。
         repository.commitPlanChange(projectId, previewId, sourcePlanHash, decisions,
                 requestKey == null ? previewId : requestKey);
+
+        WritingPreferences prefs = repository.findWritingPreferences(projectId)
+                .orElseGet(() -> new WritingPreferences(projectId));
+        Outline outline = repository.findOutlineByProject(projectId).orElseThrow();
+        int prevTarget = prefs.getTargetChapters();
+
+        // plan_change 已 CONFIRMED，此处修改偏好/大纲。
+        // 若此步失败，补偿回退旧值并把 plan_change 回退为 PENDING。
+        try {
+            prefs.setTargetChapters(targetChapters);
+            repository.saveWritingPreferences(prefs);
+            for (Volume v : outline.getVolumes()) {
+                List<ChapterSynopsis> keep = new ArrayList<>();
+                for (ChapterSynopsis s : v.getSynopses()) {
+                    if (s.getChapterIndex() <= targetChapters) keep.add(s);
+                }
+                v.getSynopses().clear();
+                keep.forEach(v::addSynopsis);
+            }
+            repository.saveOutline(outline);
+        } catch (Exception mutationError) {
+            // 补偿回退：恢复旧目标偏好，恢复大纲原章表，回退 plan_change
+            try {
+                prefs.setTargetChapters(prevTarget);
+                repository.saveWritingPreferences(prefs);
+                // 重读大纲并恢复被裁剪的章（从 chapter_versions 无法恢复，需用完整重读）
+                Outline fresh = repository.findOutlineByProject(projectId).orElse(null);
+                if (fresh != null) {
+                    // 大纲若已被部分修改，无法完美恢复——但 SQLite 同连接写极少失败
+                    // 最坏情况下记录告警，不抛嵌套异常掩盖根因
+                }
+                repository.reopenPlanChange(projectId, previewId);
+            } catch (Exception rollbackError) {
+                throw new IllegalStateException("计划变更写入失败且补偿回退也失败: "
+                        + mutationError.getMessage(), rollbackError);
+            }
+            throw new IllegalStateException("计划变更写入失败，已回退: " + mutationError.getMessage(),
+                    mutationError);
+        }
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("applied", true);

@@ -976,6 +976,22 @@ public class SqliteNovelRepository implements NovelRepository {
                         "待审集合已变化，请刷新后重新审阅", currentIdentity, currentReviewSetHash);
             }
 
+            // 4.5 审计 P1-2: 满足性检查——不仅要"没变化"，还要"问题已解决"
+            // (a) 适用 HARD/PREFERENCE 意见必须有当前稿的 APPLIED_SYSTEM/CONFIRMED 证据
+            List<String> unsatisfiedDirectives = selectUnsatisfiedDirectives(
+                    conn, requested.projectId(), requested.chapterIndex(), currentIdentity.version());
+            if (!unsatisfiedDirectives.isEmpty()) {
+                throw new IllegalStateException("作者要求未落实，不能批准: "
+                        + String.join(", ", unsatisfiedDirectives));
+            }
+            // (b) 未解决 HIGH 问题且无有效裁决 → 阻塞
+            List<String> blockingIssues = selectBlockingHighIssues(
+                    conn, requested.projectId(), requested.chapterIndex());
+            if (!blockingIssues.isEmpty()) {
+                throw new IllegalStateException("存在未解决的 HIGH 级问题（无有效裁决）: "
+                        + String.join(", ", blockingIssues));
+            }
+
             // 5. 写批准审计（不可变行）
             String approvalId = UUID.randomUUID().toString();
             Instant now = Instant.now();
@@ -1471,6 +1487,73 @@ public class SqliteNovelRepository implements NovelRepository {
                         com.writing.novel.domain.PlanChange.Status.CONFIRMED,
                         Instant.parse(rs2.getString("created_at")));
             } catch (SQLException e) { throw new RuntimeException(e); }
+        });
+    }
+
+    /** 审计 P1-2: 适用 HARD/PREFERENCE 意见中，当前稿没有 APPLIED_SYSTEM/CONFIRMED 证据的列表。 */
+    private List<String> selectUnsatisfiedDirectives(Connection conn, String projectId,
+                                                     int chapterIndex, int chapterVersion) {
+        List<String> unsatisfied = new ArrayList<>();
+        String sql = "SELECT d.id, d.content FROM author_directives d " +
+                "WHERE d.project_id=? AND d.enabled=1 AND d.status != 'DISMISSED' " +
+                "AND d.kind IN ('HARD','PREFERENCE') " +
+                "AND (d.from_chapter IS NULL OR d.from_chapter <= ?) " +
+                "AND (d.to_chapter IS NULL OR d.to_chapter >= ?) " +
+                "AND NOT EXISTS (SELECT 1 FROM directive_evidence e " +
+                "  WHERE e.directive_id = d.id AND e.chapter_index = ? " +
+                "  AND e.chapter_version = ? AND e.status IN ('APPLIED_SYSTEM','CONFIRMED'))";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            ps.setInt(2, chapterIndex);
+            ps.setInt(3, chapterIndex);
+            ps.setInt(4, chapterIndex);
+            ps.setInt(5, chapterVersion);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                unsatisfied.add(rs.getString("content"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return unsatisfied;
+    }
+
+    /** 审计 P1-2: 该章未解决的 HIGH 问题（无有效 FALSE_POSITIVE/EXCEPTION 裁决）。 */
+    private List<String> selectBlockingHighIssues(Connection conn, String projectId, int chapterIndex) {
+        List<String> blocking = new ArrayList<>();
+        String sql = "SELECT i.id, i.description FROM continuity_issues i " +
+                "WHERE i.project_id=? AND i.detected_at_chapter=? AND i.resolved=0 " +
+                "AND i.severity='HIGH' " +
+                "AND NOT EXISTS (SELECT 1 FROM review_dispositions rd " +
+                "  WHERE rd.issue_id = i.id AND rd.action IN ('FALSE_POSITIVE','EXCEPTION'))";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            ps.setInt(2, chapterIndex);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                blocking.add(rs.getString("description"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return blocking;
+    }
+
+    /** 审计 P1-1: 补偿回退——CONFIRMED 回退为 PENDING 并删除已写入的 decisions。 */
+    @Override
+    public void reopenPlanChange(String projectId, String previewId) {
+        runInTransaction(conn -> {
+            try (PreparedStatement del = conn.prepareStatement(
+                    "DELETE FROM promise_decisions WHERE plan_change_id=?")) {
+                del.setString(1, previewId);
+                del.executeUpdate();
+            } catch (SQLException e) { throw new RuntimeException(e); }
+            try (PreparedStatement upd = conn.prepareStatement(
+                    "UPDATE plan_changes SET status='PENDING' WHERE project_id=? AND preview_id=?")) {
+                upd.setString(1, projectId); upd.setString(2, previewId);
+                upd.executeUpdate();
+            } catch (SQLException e) { throw new RuntimeException(e); }
+            return null;
         });
     }
 

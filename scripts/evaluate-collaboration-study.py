@@ -64,12 +64,64 @@ def evaluate(manifest_path: Path, ratings_path: Path):
     if not any(r.get("authorMinutes") for r in rows):
         missing.append("no author time data (authorMinutes column empty)")
 
-    result["summary"] = {
-        "entries": len(rows),
-        "genreConditionChapterCells": len(coverage),
-        "cellsBelowReaderThreshold": sum(
-            1 for v in coverage.values() if len(v) < MIN_READERS_PER_CHAPTER),
-    }
+    # Score range validation: each dimension must be 1-10, authorMinutes >= 0
+    DIMENSIONS = ["engagement", "coherence", "character", "hook", "overall"]
+    invalid_scores = 0
+    for r in rows:
+        for dim in DIMENSIONS:
+            try:
+                val = float(r.get(dim, 0))
+                if val < 1 or val > 10:
+                    invalid_scores += 1
+            except (ValueError, TypeError):
+                invalid_scores += 1
+        try:
+            am = float(r.get("authorMinutes", 0))
+            if am < 0:
+                invalid_scores += 1
+        except (ValueError, TypeError):
+            invalid_scores += 1
+    if invalid_scores > 0:
+        result["reasons"].append(f"{invalid_scores} invalid score/time entries (out of range)")
+        return result
+
+    # Quality threshold: collaboration overall must not be worse than solo
+    def avg_overall(condition):
+        scores = [float(r["overall"]) for r in rows
+                  if r.get("condition") == condition and r.get("overall")]
+        return sum(scores) / len(scores) if scores else 0
+
+    collab_avg = avg_overall("collaboration")
+    solo_avg = avg_overall("solo")
+    result["summary"]["collaborationOverall"] = round(collab_avg, 2)
+    result["summary"]["soloOverall"] = round(solo_avg, 2)
+    if solo_avg > 0 and collab_avg < solo_avg - 1.5:
+        result["reasons"].append(
+            f"Quality regression: collaboration ({collab_avg:.1f}) significantly "
+            f"worse than solo ({solo_avg:.1f})")
+        return result
+
+    # Author time: collaboration should not dramatically increase burden
+    def avg_time(condition):
+        times = [float(r["authorMinutes"]) for r in rows
+                 if r.get("condition") == condition and r.get("authorMinutes")]
+        return sum(times) / len(times) if times else 0
+
+    collab_time = avg_time("collaboration")
+    solo_time = avg_time("solo")
+    result["summary"]["collaborationMinutes"] = round(collab_time, 1)
+    result["summary"]["soloMinutes"] = round(solo_time, 1)
+    if solo_time > 0 and collab_time > solo_time * 2:
+        result["reasons"].append(
+            f"Author burden regression: collaboration ({collab_time:.0f}min) "
+            f"more than doubles solo ({solo_time:.0f}min)")
+        return result
+
+    result["summary"]["entries"] = len(rows)
+    result["summary"]["genreConditionChapterCells"] = len(coverage)
+    result["summary"]["cellsBelowReaderThreshold"] = sum(
+        1 for v in coverage.values() if len(v) < MIN_READERS_PER_CHAPTER)
+
     if missing:
         # cap reported reasons (keep earlier protocol-level reasons)
         result["reasons"] = result["reasons"] + missing[:20]

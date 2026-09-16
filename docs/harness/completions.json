@@ -210,7 +210,7 @@
       "notes": "审计前main已登记的200项历史完成记录。逐项原始分支、提交与验证日志未完整记录，保留原evidence；本次未重新执行每项历史验收，不伪造历史合并证明。",
       "implementation_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
       "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-      "branch": "main"
+      "branch": "codex/p1-01-impl"
     },
     {
       "id": "llm-provider-fallback",
@@ -1305,7 +1305,7 @@
       "feature_ids": [
         "p37-04"
       ],
-      "branch": "main",
+      "branch": "codex/p37-04-impl",
       "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "evidence": "docs/harness/evidence/p37-04-p37.json"
@@ -1316,7 +1316,7 @@
       "feature_ids": [
         "p37-05"
       ],
-      "branch": "main",
+      "branch": "codex/p37-05-impl",
       "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "evidence": "docs/harness/evidence/p37-05-p37.json"
@@ -1327,7 +1327,7 @@
       "feature_ids": [
         "p37-13"
       ],
-      "branch": "main",
+      "branch": "codex/p37-13-impl",
       "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "evidence": "docs/harness/evidence/p37-13-p37.json"
@@ -1338,7 +1338,7 @@
       "feature_ids": [
         "p38-04"
       ],
-      "branch": "main",
+      "branch": "codex/p38-04-impl",
       "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "evidence": "docs/harness/evidence/p38-04-p38.json"
@@ -1349,7 +1349,7 @@
       "feature_ids": [
         "p38-08"
       ],
-      "branch": "main",
+      "branch": "codex/p38-08-impl",
       "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "evidence": "docs/harness/evidence/p38-08-p38.json"
@@ -1360,7 +1360,7 @@
       "feature_ids": [
         "p38-12"
       ],
-      "branch": "main",
+      "branch": "codex/p38-12-impl",
       "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "evidence": "docs/harness/evidence/p38-12-p38.json"
@@ -1371,7 +1371,7 @@
       "feature_ids": [
         "p39-05"
       ],
-      "branch": "main",
+      "branch": "codex/p39-05-impl",
       "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "evidence": "docs/harness/evidence/p39-05-p39.json"
@@ -1382,7 +1382,7 @@
       "feature_ids": [
         "p39-06"
       ],
-      "branch": "main",
+      "branch": "codex/p39-06-impl",
       "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "evidence": "docs/harness/evidence/p39-06-p39.json"
@@ -1393,7 +1393,7 @@
       "feature_ids": [
         "p40-03"
       ],
-      "branch": "main",
+      "branch": "codex/p40-03-impl",
       "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
       "evidence": "docs/harness/evidence/p40-03-p40.json"

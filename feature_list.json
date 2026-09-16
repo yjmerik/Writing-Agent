@@ -6661,7 +6661,7 @@
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
       "evidence": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec verify-collaboration-acceptance.sh tested against scenario server. record p40-05-p40",
       "branch": "main",
-      "deferred_reason": "Blocked by p40-06: real 2-genre 20-chapter blind evaluation requires human participants and real model budget. Agent cannot substitute."
+      "deferred_reason": "Blocked by p40-06: real experiment requires human participants"
     },
     {
       "id": "p40-06",
@@ -6684,7 +6684,7 @@
       "acceptance": "python3 scripts/evaluate-collaboration-study.py --manifest docs/experiments/collaboration-study-manifest.json --ratings docs/experiments/collaboration-study-ratings.csv --require-complete 退出0；每题材两条件各20章与每章至少3份独立有效评分完整；分析脚本质量不劣阈值、耗时改善和严重错误约束均通过才PASS；失败登记新问题，不能bless覆盖。",
       "verify_cmd": "python3 scripts/evaluate-collaboration-study.py --manifest docs/experiments/collaboration-study-manifest.json --ratings docs/experiments/collaboration-study-ratings.csv --require-complete",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16: protocol and script ready; real experiment requires human participants for blind evaluation. Agent cannot substitute.",
+      "evidence": "Real experiment protocol ready; requires human participants",
       "branch": "main"
     },
     {
@@ -6742,5 +6742,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-16",
-  "active_feature": null
+  "active_feature": "p40-06"
 }

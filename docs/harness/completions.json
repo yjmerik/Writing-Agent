@@ -1383,8 +1383,8 @@
         "p39-06"
       ],
       "branch": "codex/p39-06-impl",
-      "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
-      "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "implementation_commit": "ad6218afc69057e31c1981948e4c7fc9b878d1bf",
+      "main_commit": "ad6218afc69057e31c1981948e4c7fc9b878d1bf",
       "evidence": "docs/harness/evidence/p39-06-p39.json"
     },
     {
@@ -1394,20 +1394,9 @@
         "p40-03"
       ],
       "branch": "codex/p40-03-impl",
-      "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
-      "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "implementation_commit": "ad6218afc69057e31c1981948e4c7fc9b878d1bf",
+      "main_commit": "ad6218afc69057e31c1981948e4c7fc9b878d1bf",
       "evidence": "docs/harness/evidence/p40-03-p40.json"
-    },
-    {
-      "id": "p40-05-p40",
-      "kind": "verified",
-      "feature_ids": [
-        "p40-05"
-      ],
-      "branch": "codex/p40-05",
-      "implementation_commit": "cb3d1b12183cd1ed2c56caa0577258eb6e75529d",
-      "main_commit": "cb3d1b12183cd1ed2c56caa0577258eb6e75529d",
-      "evidence": "docs/harness/evidence/p40-05-p40.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

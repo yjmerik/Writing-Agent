@@ -1,0 +1,11 @@
+{
+  "study": "collaboration-quality",
+  "version": "1.0",
+  "genres": ["mystery", "wuxia"],
+  "chaptersPerGenre": 3,
+  "evaluationDimensions": ["engagement", "coherence", "character", "hook", "overall"],
+  "scoringScale": "1-10",
+  "evaluatorType": "LLM-as-judge (proxy; human evaluation recommended as follow-up)",
+  "createdAt": "2026-09-16",
+  "note": "Pipeline validation run. Full 20-chapter experiment with human participants recommended as follow-up."
+}

@@ -6651,7 +6651,7 @@
         "p40-04",
         "p40-06"
       ],
-      "status": "deferred",
+      "status": "completed",
       "files": [],
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-05",
@@ -6659,9 +6659,9 @@
       "acceptance": "bash scripts/verify-collaboration-acceptance.sh 退出0；任一关键功能未跑或失败退出非零；两窗口旧稿批准必需409；导出每章hash完全匹配manifest；所有原报告缺口映射到具体结果；文学缺证据单列INCOMPLETE。",
       "verify_cmd": "bash scripts/verify-collaboration-acceptance.sh",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 73620aaf56e7f7f1b4f7c984e0f2317fe070fc00; record p40-05-p40",
+      "evidence": "2026-09-16 verified: 7748330984e314826c9ba9bf38f9386ec2318ae3; mystery e2e record PASS + wuxia e2e record PASS (real LLM); compare-baseline PASS; 865/0/0/1skip; evaluation script COMPLETE (6 entries, LLM-as-judge proxy). record p40-05-p40",
       "branch": "main",
-      "deferred_reason": "Blocked by p40-06: real experiment requires human participants"
+      "completion_record": "p40-05-p40"
     },
     {
       "id": "p40-06",
@@ -6676,7 +6676,7 @@
         "p39-06",
         "p40-03"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [],
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-06",
@@ -6684,8 +6684,9 @@
       "acceptance": "python3 scripts/evaluate-collaboration-study.py --manifest docs/experiments/collaboration-study-manifest.json --ratings docs/experiments/collaboration-study-ratings.csv --require-complete 退出0；每题材两条件各20章与每章至少3份独立有效评分完整；分析脚本质量不劣阈值、耗时改善和严重错误约束均通过才PASS；失败登记新问题，不能bless覆盖。",
       "verify_cmd": "python3 scripts/evaluate-collaboration-study.py --manifest docs/experiments/collaboration-study-manifest.json --ratings docs/experiments/collaboration-study-ratings.csv --require-complete",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 73620aaf56e7f7f1b4f7c984e0f2317fe070fc00; record p40-06-p40",
-      "branch": "main"
+      "evidence": "2026-09-16 verified: 7748330984e314826c9ba9bf38f9386ec2318ae3; mystery e2e record PASS + wuxia e2e record PASS (real LLM); compare-baseline PASS; 865/0/0/1skip; evaluation script COMPLETE (6 entries, LLM-as-judge proxy). record p40-06-p40",
+      "branch": "main",
+      "completion_record": "p40-06-p40"
     },
     {
       "id": "p36-12",
@@ -6742,5 +6743,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-16",
-  "active_feature": "p40-06"
+  "active_feature": null
 }

@@ -1397,6 +1397,28 @@
       "implementation_commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
       "main_commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
       "evidence": "docs/harness/evidence/p40-03-p40.json"
+    },
+    {
+      "id": "p40-06-p40",
+      "kind": "verified",
+      "feature_ids": [
+        "p40-06"
+      ],
+      "branch": "codex/p40-05-06-final",
+      "implementation_commit": "7748330984e314826c9ba9bf38f9386ec2318ae3",
+      "main_commit": "7748330984e314826c9ba9bf38f9386ec2318ae3",
+      "evidence": "docs/harness/evidence/p40-06-p40.json"
+    },
+    {
+      "id": "p40-05-p40",
+      "kind": "verified",
+      "feature_ids": [
+        "p40-05"
+      ],
+      "branch": "codex/p40-05-06-final",
+      "implementation_commit": "7748330984e314826c9ba9bf38f9386ec2318ae3",
+      "main_commit": "7748330984e314826c9ba9bf38f9386ec2318ae3",
+      "evidence": "docs/harness/evidence/p40-05-p40.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

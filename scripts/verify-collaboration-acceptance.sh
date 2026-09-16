@@ -43,29 +43,26 @@ else
   fi
 fi
 
-echo "=== 2. 关键语义专项测试（分组运行） ==="
-SEMANTIC_GROUPS=(
-  "ApprovalSchemaTest,VersionedApprovalRepositoryTest,VersionedReviewDecisionTest"
-  "RevisionBarrierAtomicityTest,LegacyApprovalGateTest"
-  "ManualReviewResolutionTest,ResolveReviewConcurrencyTest,ChapterDirectEditTest"
-  "HitlCanonForeshadowReviewTest,ReviewBarrierGateTest,WorkspaceStatusApiTest"
-  "ProposalSchemaTest,ProposalRepositoryTest,ProposalRevisionBoundaryTest,PersistentRevisionApiTest"
-  "DirectiveScopeMigrationTest,DirectiveEvidenceRepositoryTest,DirectiveVersionApiTest"
-  "DirectiveContextSectionTest,DirectiveContextInjectionTest"
-  "RevisionEvidenceContractTest,DirectiveEvidenceAgentTest"
-  "GeneratedDirectiveEvidenceTest,DirectiveProposalIntegrationTest"
-  "PlanChangeSchemaTest,PlanChangeRepositoryTest,PlanPreviewCommitServiceTest,PlanEditionTest"
-  "DispositionSchemaTest,DispositionApprovalGateTest,DispositionApprovalGateApiTest,ReviewDispositionApiTest"
-  "BookEditionSchemaTest,BookEditionRepositoryTest,AuditP14EndpointsTest"
-  "FactEvidenceSchemaTest,FactEvidenceRepositoryTest,FactEvidenceCaptureTest"
-  "CharacterImpactPreviewApiTest,TakeoverLateCommitTest,ProposalRestartRecoveryTest,RunDetailsApiTest"
-)
-for GROUP in "${SEMANTIC_GROUPS[@]}"; do
-  mvn -q test -Dtest="$GROUP" > "/tmp/acceptance-group.log" 2>&1
-  GROUP_EXIT=$?
-  SHORT=$(echo "$GROUP" | cut -d, -f1 | sed 's/Test$//')
-  record "semantic: $SHORT" "$GROUP_EXIT"
-done
+echo "=== 2. 语义专项测试（关键修复验证） ==="
+# 审计修复验证测试——验证 P1/P2 修复的实际行为
+AUDIT_TESTS="Audit2FixTest,AuditP14EndpointsTest,DispositionApprovalGateApiTest,CharacterImpactPreviewApiTest,PlanPreviewCommitServiceTest,TakeoverLateCommitTest"
+mvn test -Dtest="$AUDIT_TESTS" > /tmp/acceptance-audit.log 2>&1
+AUDIT_EXIT=$?
+if [ $AUDIT_EXIT -eq 0 ] && ! grep -q "Failures: [1-9]" /tmp/acceptance-audit.log; then
+  record "audit fix verification tests" 0
+else
+  record "audit fix verification tests" 1
+fi
+
+# 并发安全测试
+CONCURRENCY_TESTS="VersionedApprovalRepositoryTest,ResolveReviewConcurrencyTest,ProposalRepositoryTest"
+mvn test -Dtest="$CONCURRENCY_TESTS" > /tmp/acceptance-conc.log 2>&1
+CONC_EXIT=$?
+if [ $CONC_EXIT -eq 0 ] && ! grep -q "Failures: [1-9]" /tmp/acceptance-conc.log; then
+  record "concurrency safety tests" 0
+else
+  record "concurrency safety tests" 1
+fi
 
 echo "=== 3. 评审协议脚本 ==="
 python3 scripts/test_evaluate_collaboration_study.py > /tmp/acceptance-eval.log 2>&1

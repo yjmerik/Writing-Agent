@@ -89,18 +89,110 @@ public class ContentController {
     }
 
     @PutMapping("/characters/{charId}")
-    public Character updateCharacter(@PathVariable String id, @PathVariable String charId,
-                                     @RequestBody Map<String, String> body) {
+    public Object updateCharacter(@PathVariable String id, @PathVariable String charId,
+                                  @RequestBody Map<String, Object> body) {
+        // p39-04（审计 P1-2）：confirm=false 仅返回影响预览与凭证，绝不写库
+        Object confirmRaw = body.get("confirm");
+        boolean explicitConfirm = confirmRaw != null && Boolean.parseBoolean(String.valueOf(confirmRaw));
+        boolean hasConfirmField = confirmRaw != null;
+        if (hasConfirmField && !explicitConfirm) {
+            Character current = repository.findCharacter(charId)
+                    .orElseThrow(() -> new IllegalArgumentException("人物不存在: " + charId));
+            if (!id.equals(current.getProjectId())) {
+                throw new IllegalArgumentException("人物不属于该项目");
+            }
+            return java.util.Map.of(
+                    "persisted", false,
+                    "previewToken", characterPreviewToken(current),
+                    "impact", characterImpact(id, current, body));
+        }
         return withChapterWork(id, () -> {
-            Character patch = new Character(id, body.get("name"), body.get("role"));
-            if (body.get("personality") != null) patch.setPersonality(body.get("personality"));
-            if (body.get("ability") != null) patch.setAbility(body.get("ability"));
-            if (body.get("motivation") != null) patch.setMotivation(body.get("motivation"));
-            if (body.get("appearance") != null) patch.setAppearance(body.get("appearance"));
-            if (body.get("relationships") != null) patch.setRelationships(body.get("relationships"));
-            if (body.get("growthArc") != null) patch.setGrowthArc(body.get("growthArc"));
-            return (Character) canonPatch.patchCharacter(id, charId, patch, chapterOf(id)).entity();
+            Character patch = new Character(id, str(body.get("name")), str(body.get("role")));
+            if (body.get("personality") != null) patch.setPersonality(str(body.get("personality")));
+            if (body.get("ability") != null) patch.setAbility(str(body.get("ability")));
+            if (body.get("motivation") != null) patch.setMotivation(str(body.get("motivation")));
+            if (body.get("appearance") != null) patch.setAppearance(str(body.get("appearance")));
+            if (body.get("relationships") != null) patch.setRelationships(str(body.get("relationships")));
+            if (body.get("growthArc") != null) patch.setGrowthArc(str(body.get("growthArc")));
+            // p39-04: confirm=true 时必须携带与当前来源一致的 previewToken——来源已变化 409
+            if (explicitConfirm) {
+                Object tokenRaw = body.get("previewToken");
+                if (tokenRaw == null || String.valueOf(tokenRaw).isBlank()) {
+                    throw new IllegalArgumentException("confirm=true 缺少 previewToken（服务端不补填）");
+                }
+                Character current = repository.findCharacter(charId)
+                        .orElseThrow(() -> new IllegalArgumentException("人物不存在: " + charId));
+                if (!characterPreviewToken(current).equals(String.valueOf(tokenRaw))) {
+                    throw new IllegalStateException("人物设定已变化，预览凭证失效，请重新预览");
+                }
+            }
+            Character saved = (Character) canonPatch.patchCharacter(id, charId, patch, chapterOf(id)).entity();
+            if (hasConfirmField) {
+                java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+                result.put("persisted", true);
+                result.put("character", saved);
+                result.put("previewToken", characterPreviewToken(saved));
+                return result;
+            }
+            return saved;
         });
+    }
+
+    /** p39-09（审计 P1-2）：设定影响预览端点——只读，返回影响清单与确认凭证。 */
+    @PostMapping("/characters/{charId}/impact-preview")
+    public Map<String, Object> characterImpactPreview(@PathVariable String id, @PathVariable String charId,
+                                                      @RequestBody(required = false) Map<String, Object> body) {
+        Character current = repository.findCharacter(charId)
+                .orElseThrow(() -> new IllegalArgumentException("人物不存在: " + charId));
+        if (!id.equals(current.getProjectId())) {
+            throw new IllegalArgumentException("人物不属于该项目");
+        }
+        java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("persisted", false);
+        result.put("previewToken", characterPreviewToken(current));
+        result.put("impact", characterImpact(id, current, body == null ? Map.of() : body));
+        return result;
+    }
+
+    /** 预览凭证：人物当前规范状态的 SHA-256（12 hex）。 */
+    private String characterPreviewToken(Character c) {
+        String canonical = String.join("\u0001",
+                n(c.getName()), n(c.getRole()), n(c.getPersonality()), n(c.getAbility()),
+                n(c.getMotivation()), n(c.getAppearance()), n(c.getRelationships()), n(c.getGrowthArc()));
+        return com.writing.novel.util.ReviewFingerprint.sha256Hex12(canonical);
+    }
+
+    /** 影响分析：确定引用（正文含名字）/可能引用（标题或梗概含名字）/覆盖不足（无文本可查）。 */
+    private Map<String, Object> characterImpact(String projectId, Character c, Map<String, Object> changes) {
+        String name = n(c.getName());
+        java.util.List<Integer> certain = new java.util.ArrayList<>();
+        java.util.List<Integer> possible = new java.util.ArrayList<>();
+        java.util.List<Integer> insufficient = new java.util.ArrayList<>();
+        for (Chapter ch : repository.findChaptersByProject(projectId)) {
+            String content = ch.getContent();
+            if (content == null) {
+                insufficient.add(ch.getChapterIndex());
+            } else if (!name.isEmpty() && content.contains(name)) {
+                certain.add(ch.getChapterIndex());
+            } else {
+                possible.add(ch.getChapterIndex());
+            }
+        }
+        java.util.Map<String, Object> impact = new java.util.LinkedHashMap<>();
+        impact.put("certainReferences", certain);
+        impact.put("possibleReferences", possible);
+        impact.put("insufficientCoverage", insufficient);
+        impact.put("changes", changes);
+        impact.put("autoRewriteHistory", false); // 不承诺自动修复历史正文
+        return impact;
+    }
+
+    private String str(Object value) {
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private static String n(String value) {
+        return value == null ? "" : value;
     }
 
     @PutMapping("/worldbuilding/{entryId}")

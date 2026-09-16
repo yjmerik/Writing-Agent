@@ -5624,7 +5624,7 @@
         "p37-03",
         "p36-09"
       ],
-      "status": "in-progress",
+      "status": "not-started",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/AgentRevisionDialog.tsx",
@@ -5636,7 +5636,7 @@
       "acceptance": "npm --prefix qa/collaboration test -- candidate-recovery.spec.ts 退出0；三条意见生成→刷新→恢复内容与意见；服务重启仍恢复；多个目标不串候选；已应用再次打开不会重新应用；版本冲突保留原意见。",
       "verify_cmd": "npm --prefix qa/collaboration test -- candidate-recovery.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——candidate recovery not working after refresh。原登记不符合实际实现。",
+      "evidence": "2026-09-16 audit: 完成记录回退，待逐项补齐",
       "completion_record": null,
       "branch": "main"
     },
@@ -5853,7 +5853,7 @@
         "p36-05",
         "p37-16"
       ],
-      "status": "in-progress",
+      "status": "not-started",
       "files": [
         "frontend/src/components/InteractiveReview.tsx",
         "qa/collaboration/directive-loop.spec.ts"
@@ -5864,7 +5864,7 @@
       "acceptance": "npm --prefix qa/collaboration test -- directive-loop.spec.ts 退出0；登记三意见→生成→应用→两个有效证据确认+一个UNMET保留；刷新不丢；旧稿确认禁用；HARD撤销留历史；390px同样可操作。",
       "verify_cmd": "npm --prefix qa/collaboration test -- directive-loop.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——depends on p37-04/05。原登记不符合实际实现。",
+      "evidence": "2026-09-16 audit: 完成记录回退，待逐项补齐",
       "completion_record": null,
       "branch": "main"
     },
@@ -5979,7 +5979,7 @@
       "dependencies": [
         "p38-01"
       ],
-      "status": "in-progress",
+      "status": "not-started",
       "files": [
         "src/main/java/com/writing/novel/spi/NovelRepository.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
@@ -5991,7 +5991,7 @@
       "acceptance": "mvn test -Dtest=PlanChangeRepositoryTest 退出0；预览22后改计划/新增章再确认旧token409；故障全部回滚；同key重试不重复审计；MIGRATE和OPEN_END落库口径不同。",
       "verify_cmd": "mvn test -Dtest=PlanChangeRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——plan commit not wired to API with preview credential。原登记不符合实际实现。",
+      "evidence": "2026-09-16 audit: 完成记录回退，待逐项补齐",
       "completion_record": null,
       "branch": "main"
     },
@@ -6295,7 +6295,7 @@
       "dependencies": [
         "p36-02"
       ],
-      "status": "in-progress",
+      "status": "not-started",
       "files": [
         "src/main/java/com/writing/novel/domain/FactEvidence.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
@@ -6307,7 +6307,7 @@
       "acceptance": "mvn test -Dtest=FactEvidenceSchemaTest 退出0；旧事实迁移不产生伪造来源；多人在不同章知情分别记录；区间边界合理；历史版正文不存在时保留缺失状态。",
       "verify_cmd": "mvn test -Dtest=FactEvidenceSchemaTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——facts/evidence endpoint missing (500)。原登记不符合实际实现。",
+      "evidence": "2026-09-16 audit: 完成记录回退，待逐项补齐",
       "completion_record": null,
       "branch": "main"
     },
@@ -6559,7 +6559,7 @@
         "p36-07",
         "p37-03"
       ],
-      "status": "in-progress",
+      "status": "not-started",
       "files": [
         "src/test/java/com/writing/novel/service/TakeoverLateCommitTest.java",
         "src/test/java/com/writing/novel/service/ProposalRestartRecoveryTest.java"
@@ -6570,7 +6570,7 @@
       "acceptance": "mvn test -Dtest=TakeoverLateCommitTest,ProposalRestartRecoveryTest 退出0；旧结果绝不覆盖作者新稿；旧任务释放不能释放新owner；重启后READY可恢复，APPLIED不重复；报告各断点期望数据库最终状态。",
       "verify_cmd": "mvn test -Dtest=TakeoverLateCommitTest,ProposalRestartRecoveryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——slow model test is assertTrue(true)。原登记不符合实际实现。",
+      "evidence": "2026-09-16 audit: 完成记录回退，待逐项补齐",
       "completion_record": null,
       "branch": "main"
     },
@@ -6630,7 +6630,7 @@
       "phase": 40,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "not-started",
       "files": [
         "scripts/evaluate-collaboration-study.py",
         "scripts/test_evaluate_collaboration_study.py",
@@ -6642,7 +6642,7 @@
       "acceptance": "python3 scripts/test_evaluate_collaboration_study.py 退出0；脚本对缺章/少题材/重复评委/越界分数拒绝给PASS；合成CSV只验证计算，不能当文学结论。预注册目标：质量均差不低于-0.2、审阅时间中位数下降≥20%、严重连续性错误不增加，另展示CI不隐去不确定性。",
       "verify_cmd": "python3 scripts/test_evaluate_collaboration_study.py",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——evaluation script accepts empty scores。原登记不符合实际实现。",
+      "evidence": "2026-09-16 audit: 完成记录回退，待逐项补齐",
       "completion_record": null,
       "branch": "main"
     },

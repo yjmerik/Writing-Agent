@@ -40,6 +40,10 @@ public class DispositionController {
 
         Map<String, Object> identityRaw = (Map<String, Object>) body.get("identity");
         if (identityRaw == null) throw new IllegalArgumentException("缺少 identity");
+        String identityProjectId = String.valueOf(identityRaw.get("projectId"));
+        if (!id.equals(identityProjectId)) {
+            throw new IllegalArgumentException("identity.projectId 与路径项目不符，不能跨项目操作");
+        }
         ChapterApproval.Identity identity = new ChapterApproval.Identity(
                 id, intOf(identityRaw.get("chapterIndex")),
                 intOf(identityRaw.get("version")), String.valueOf(identityRaw.get("contentHash")));

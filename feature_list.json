@@ -5855,7 +5855,6 @@
       ],
       "status": "completed",
       "files": [
-        "frontend/src/components/DirectivePanel.tsx",
         "frontend/src/components/InteractiveReview.tsx",
         "qa/collaboration/directive-loop.spec.ts"
       ],
@@ -6242,7 +6241,6 @@
       ],
       "status": "completed",
       "files": [
-        "frontend/src/components/ReviewPanel.tsx",
         "frontend/src/components/InteractiveReview.tsx",
         "qa/collaboration/review-dispositions.spec.ts"
       ],

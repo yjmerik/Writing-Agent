@@ -1,5 +1,5 @@
 {
-  "commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+  "commit": "385f919977a5f4be1209a55ffd94bb0bbeb5a324",
   "cleanCheckout": true,
   "feature": "p40-04",
   "branch": "main",
@@ -10,7 +10,7 @@
     "result": "spec"
   },
   "implementation": {
-    "commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+    "commit": "385f919977a5f4be1209a55ffd94bb0bbeb5a324",
     "notes": "evaluate-collaboration-study.py QA spec"
   },
   "checks": [
@@ -26,5 +26,6 @@
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-16 verified: 1c94ff669eb07a018e005717073e88ec61d73236; 9 QA specs pass. record p40-04-p40"
+  "evidence_line": "2026-09-16 verified: 1c94ff669eb07a018e005717073e88ec61d73236; 9 QA specs pass. record p40-04-p40",
+  "main_commit": "385f919977a5f4be1209a55ffd94bb0bbeb5a324"
 }

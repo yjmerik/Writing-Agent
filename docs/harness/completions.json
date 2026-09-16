@@ -1295,8 +1295,8 @@
         "p40-04"
       ],
       "branch": "codex/p40-01-04-takeover-evaluate",
-      "implementation_commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
-      "main_commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
+      "implementation_commit": "385f919977a5f4be1209a55ffd94bb0bbeb5a324",
+      "main_commit": "385f919977a5f4be1209a55ffd94bb0bbeb5a324",
       "evidence": "docs/harness/evidence/p40-04-p40.json"
     },
     {

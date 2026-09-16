@@ -5651,7 +5651,6 @@
       ],
       "status": "completed",
       "files": [
-        "frontend/src/components/RevisionDiff.tsx",
         "frontend/src/components/AgentRevisionDialog.tsx",
         "qa/collaboration/revision-diff.spec.ts"
       ],
@@ -6653,11 +6652,7 @@
         "p40-06"
       ],
       "status": "not-started",
-      "files": [
-        "qa/collaboration/collaboration-acceptance.spec.ts",
-        "scripts/verify-collaboration-acceptance.sh",
-        "docs/reports/collaboration-acceptance-checklist.md"
-      ],
+      "files": [],
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-05",
       "problem_ref": "原报告完整验收",
@@ -6681,11 +6676,7 @@
         "p40-03"
       ],
       "status": "not-started",
-      "files": [
-        "docs/experiments/collaboration-study-manifest.json",
-        "docs/experiments/collaboration-study-ratings.csv",
-        "docs/reports/collaboration-study-results.md"
-      ],
+      "files": [],
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-06",
       "problem_ref": "P4实际实验",

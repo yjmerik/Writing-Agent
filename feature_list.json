@@ -5624,7 +5624,7 @@
         "p37-03",
         "p36-09"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/AgentRevisionDialog.tsx",
@@ -5636,8 +5636,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- candidate-recovery.spec.ts 退出0；三条意见生成→刷新→恢复内容与意见；服务重启仍恢复；多个目标不串候选；已应用再次打开不会重新应用；版本冲突保留原意见。",
       "verify_cmd": "npm --prefix qa/collaboration test -- candidate-recovery.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 3e4234af1f19e3e49dc086ccfc695e8f0a0099ad; record p37-04-p37",
-      "completion_record": "p37-04-p37",
+      "evidence": "2026-09-16 audit: 完成记录回退——candidate recovery not working after refresh。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -5649,7 +5649,7 @@
       "dependencies": [
         "p37-04"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "frontend/src/components/AgentRevisionDialog.tsx",
         "qa/collaboration/revision-diff.spec.ts"
@@ -5660,8 +5660,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- revision-diff.spec.ts 退出0；中文换行、引号、超长段落、空字段、只改标题均可读；DOM正文不含转义JSON；键盘可切换比较；390px无横向遮挡。",
       "verify_cmd": "npm --prefix qa/collaboration test -- revision-diff.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec revision-diff.spec.ts tested against scenario server. record p37-05-p37",
-      "completion_record": "p37-05-p37",
+      "evidence": "2026-09-16 audit: 完成记录回退——diff still shows raw JSON。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -5852,7 +5852,7 @@
         "p36-05",
         "p37-16"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "frontend/src/components/InteractiveReview.tsx",
         "qa/collaboration/directive-loop.spec.ts"
@@ -5863,8 +5863,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- directive-loop.spec.ts 退出0；登记三意见→生成→应用→两个有效证据确认+一个UNMET保留；刷新不丢；旧稿确认禁用；HARD撤销留历史；390px同样可操作。",
       "verify_cmd": "npm --prefix qa/collaboration test -- directive-loop.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 61419f8a18aeb89f0639e5e65c425b88e7501505; record p37-13-p37",
-      "completion_record": "p37-13-p37",
+      "evidence": "2026-09-16 audit: 完成记录回退——depends on p37-04/05。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -5978,7 +5978,7 @@
       "dependencies": [
         "p38-01"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/spi/NovelRepository.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
@@ -5990,8 +5990,8 @@
       "acceptance": "mvn test -Dtest=PlanChangeRepositoryTest 退出0；预览22后改计划/新增章再确认旧token409；故障全部回滚；同key重试不重复审计；MIGRATE和OPEN_END落库口径不同。",
       "verify_cmd": "mvn test -Dtest=PlanChangeRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 299ec26ee21e589e7685a0c66f38f4ee2947dd36; record p38-02-p38",
-      "completion_record": "p38-02-p38",
+      "evidence": "2026-09-16 audit: 完成记录回退——plan commit not wired to API with preview credential。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6003,7 +6003,7 @@
       "dependencies": [
         "p38-02"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/service/PlanEditionService.java",
         "src/main/java/com/writing/novel/web/ContentController.java",
@@ -6015,8 +6015,8 @@
       "acceptance": "mvn test -Dtest=PlanPreviewCommitApiTest 退出0；HTTP复现预览22→提交20被400/409；正文边界改变409；没有处理承诺不能成功；纯预览不更改DB。",
       "verify_cmd": "mvn test -Dtest=PlanPreviewCommitApiTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: d593742d0d928ee3dd653d884323ac324ca523d0; record p38-03-p38",
-      "completion_record": "p38-03-p38",
+      "evidence": "2026-09-16 audit: 完成记录回退——same as p38-02。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6029,7 +6029,7 @@
         "p38-03",
         "p36-10"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/OutlineView.tsx",
@@ -6041,8 +6041,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- plan-resolution.spec.ts 退出0；合成24章计划写20章，22-24有未回收承诺：迁移一条+接受开放一条→确认20→刷新仍20；没有新增21章；处置审计可重读。",
       "verify_cmd": "npm --prefix qa/collaboration test -- plan-resolution.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 3e4234af1f19e3e49dc086ccfc695e8f0a0099ad; record p38-04-p38",
-      "completion_record": "p38-04-p38",
+      "evidence": "2026-09-16 audit: 完成记录回退——depends on p38-03。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6082,7 +6082,7 @@
         "p38-02",
         "p38-10"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/spi/NovelRepository.java",
         "src/test/java/com/writing/novel/persistence/BookEditionRepositoryTest.java"
@@ -6093,8 +6093,8 @@
       "acceptance": "mvn test -Dtest=BookEditionRepositoryTest 退出0；并发编辑创建不得混合两代正文；批准前改一章拒绝；崩溃回滚不产生半本书；批准后再改正文，历史edition字节不变。",
       "verify_cmd": "mvn test -Dtest=BookEditionRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 551ba6a838c7a27677ef69174a9229ece1b675aa; record p38-06-p38",
-      "completion_record": "p38-06-p38",
+      "evidence": "2026-09-16 audit: 完成记录回退——book editions API endpoints missing (500)。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6108,7 +6108,7 @@
         "p38-10",
         "p38-13"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "src/test/java/com/writing/novel/persistence/BookEditionExportTest.java"
       ],
@@ -6118,8 +6118,8 @@
       "acceptance": "mvn test -Dtest=BookEditionExportTest 退出0；批准版导出章节号、版本、正文hash与manifest逐项相等；后来编辑不改变导出；跨项目404/400；未批准不能冒用成书导出；下载响应头正确。",
       "verify_cmd": "mvn test -Dtest=BookEditionExportTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: da63a20fed27e368ea6b49bcaafde09f35258450; record p38-07-p38",
-      "completion_record": "p38-07-p38",
+      "evidence": "2026-09-16 audit: 完成记录回退——same as p38-06。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6132,7 +6132,7 @@
         "p38-07",
         "p36-11"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/BookReviewView.tsx",
@@ -6144,8 +6144,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- edition-export.spec.ts 退出0；补齐各章批准→创建edition→批准→下载→修改一章→下载旧edition逐字相同；当前稿缺批准明显标注；390px可操作。",
       "verify_cmd": "npm --prefix qa/collaboration test -- edition-export.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec edition-export.spec.ts tested against scenario server. record p38-08-p38",
-      "completion_record": "p38-08-p38",
+      "evidence": "2026-09-16 audit: 完成记录回退——same。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6185,7 +6185,7 @@
         "p37-07",
         "p36-03"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/spi/NovelRepository.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
@@ -6197,8 +6197,8 @@
       "acceptance": "mvn test -Dtest=DispositionApprovalGateTest 退出0；旧裁决、过期DEFER、无当前报告、未落实HARD分别阻断；新裁决后旧审阅token409；人工例外留痕且能按明确规则放行；成书仍拒绝延期未清。",
       "verify_cmd": "mvn test -Dtest=DispositionApprovalGateTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 00755df5f72cc0c5fe706d2396e9162a686c7582; record p38-10-p38",
-      "completion_record": "p38-10-p38",
+      "evidence": "2026-09-16 audit: 完成记录回退——reviewSetHash does not include directives/dispositions。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6211,7 +6211,7 @@
         "p38-10",
         "p36-04"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/web/ReviewDecisionController.java",
         "frontend/src/api/client.ts",
@@ -6223,8 +6223,8 @@
       "acceptance": "mvn test -Dtest=ReviewDispositionApiTest 退出0；HTTP逐种裁决成功/缺字段/旧稿409；检查期间新稿产生后报告不冒充新稿；网络重试不创建多份裁决。",
       "verify_cmd": "mvn test -Dtest=ReviewDispositionApiTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-16 verified: ce6b58adcc041d84652da9ddeb48863aa032f61e; record p38-11-p38",
-      "completion_record": "p38-11-p38",
+      "evidence": "2026-09-16 audit: 完成记录回退——recheck endpoint missing (500)。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6238,7 +6238,7 @@
         "p37-13",
         "p36-05"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "frontend/src/components/InteractiveReview.tsx",
         "qa/collaboration/review-dispositions.spec.ts"
@@ -6249,8 +6249,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- review-dispositions.spec.ts 退出0；相同数据桌面与390px问题数/动作一致；Tab/Enter完成误报、例外、延期及确认；旧稿不能裁决当前；抽屉内可看到意见落实和错误重试；截图无截断遮挡。",
       "verify_cmd": "npm --prefix qa/collaboration test -- review-dispositions.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 61419f8a18aeb89f0639e5e65c425b88e7501505; record p38-12-p38",
-      "completion_record": "p38-12-p38",
+      "evidence": "2026-09-16 audit: 完成记录回退——depends on p38-11。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6286,7 +6286,7 @@
       "dependencies": [
         "p36-02"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/domain/FactEvidence.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
@@ -6298,8 +6298,8 @@
       "acceptance": "mvn test -Dtest=FactEvidenceSchemaTest 退出0；旧事实迁移不产生伪造来源；多人在不同章知情分别记录；区间边界合理；历史版正文不存在时保留缺失状态。",
       "verify_cmd": "mvn test -Dtest=FactEvidenceSchemaTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 9f10b492ae21a058d0d59a1872484dd61e57e164; record p39-01-p39",
-      "completion_record": "p39-01-p39",
+      "evidence": "2026-09-16 audit: 完成记录回退——facts/evidence endpoint missing (500)。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6312,7 +6312,7 @@
         "p39-01",
         "p39-10"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/spi/StoryCanon.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteStoryCanon.java",
@@ -6324,8 +6324,8 @@
       "acceptance": "mvn test -Dtest=FactEvidenceRepositoryTest 退出0；第7章被第10章替换的事实在asOf7仍为旧事实，asOf10为新事实；角色第9章才知情则asOf7不显示为已知；跨项目无泄漏。",
       "verify_cmd": "mvn test -Dtest=FactEvidenceRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 58adaa864f47322ce948d5c00e4cd84273b628d5; record p39-02-p39",
-      "completion_record": "p39-02-p39",
+      "evidence": "2026-09-16 audit: 完成记录回退——same。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6337,7 +6337,7 @@
       "dependencies": [
         "p39-02"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/persistence/FactEvidenceRepository.java",
         "src/test/java/com/writing/novel/persistence/FactEvidenceCaptureTest.java",
@@ -6349,8 +6349,8 @@
       "acceptance": "mvn test -Dtest=FactEvidenceCaptureTest 退出0；收割v3事实来源不是默认v0；非法quote/项目/稿号拒绝；已替换稿保留原来源；无锚点如实展示UNKNOWN。",
       "verify_cmd": "mvn test -Dtest=FactEvidenceCaptureTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-16 verified: b57e00f5720d83dbf5f416164fdf8332d4087c50; record p39-03-p39",
-      "completion_record": "p39-03-p39",
+      "evidence": "2026-09-16 audit: 完成记录回退——same。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6365,7 +6365,7 @@
         "p39-07",
         "p39-08"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/service/CanonPatchService.java",
         "src/main/java/com/writing/novel/service/AgentRevisionService.java"
@@ -6376,8 +6376,8 @@
       "acceptance": "mvn test -Dtest=CharacterImpactPreviewTest 退出0；人物动机修改可列已引用章并区分已写/未写；预览不改真典；确认时来源变化409；应用后原章正文hash不变；重复候选不会重复审计。",
       "verify_cmd": "mvn test -Dtest=CharacterImpactPreviewTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: bd76c63d91bf62217ab97436013efe2371db4147; record p39-04-p39",
-      "completion_record": "p39-04-p39",
+      "evidence": "2026-09-16 audit: 完成记录回退——character preview directly saves without confirm flow。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6390,7 +6390,7 @@
         "p39-03",
         "p36-08"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/WorldbuildingView.tsx",
@@ -6402,8 +6402,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- fact-evidence.spec.ts 退出0；asOf7/10切换事实替换正确；角色9章知情不提前泄露；来源指向v2时不得显示v6冒用；键盘完成筛选/返回。",
       "verify_cmd": "npm --prefix qa/collaboration test -- fact-evidence.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 3e4234af1f19e3e49dc086ccfc695e8f0a0099ad; record p39-05-p39",
-      "completion_record": "p39-05-p39",
+      "evidence": "2026-09-16 audit: 完成记录回退——depends on p39-03。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6417,7 +6417,7 @@
         "p37-05",
         "p39-09"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "frontend/src/components/WorldbuildingView.tsx",
         "frontend/src/components/AgentRevisionDialog.tsx",
@@ -6429,8 +6429,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- character-impact.spec.ts 退出0；修改动机→影响预览→取消无DB变化→确认只更新设定不改正文；两个窗口来源变动409保留表单；无可追踪引用时明确覆盖不足。",
       "verify_cmd": "npm --prefix qa/collaboration test -- character-impact.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec character-impact.spec.ts tested against scenario server. record p39-06-p39",
-      "completion_record": "p39-06-p39",
+      "evidence": "2026-09-16 audit: 完成记录回退——depends on p39-04。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6499,12 +6499,12 @@
       "problem_ref": "人物影响API与UI衔接",
       "phase": 39,
       "type": "feature",
-      "status": "completed",
+      "status": "in-progress",
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-09",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: bd76c63d91bf62217ab97436013efe2371db4147; record p39-09-p39",
-      "completion_record": "p39-09-p39",
+      "evidence": "2026-09-16 audit: 完成记录回退——same as p39-04。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6542,7 +6542,7 @@
         "p36-07",
         "p37-03"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "src/test/java/com/writing/novel/service/TakeoverLateCommitTest.java",
         "src/test/java/com/writing/novel/service/ProposalRestartRecoveryTest.java"
@@ -6553,8 +6553,8 @@
       "acceptance": "mvn test -Dtest=TakeoverLateCommitTest,ProposalRestartRecoveryTest 退出0；旧结果绝不覆盖作者新稿；旧任务释放不能释放新owner；重启后READY可恢复，APPLIED不重复；报告各断点期望数据库最终状态。",
       "verify_cmd": "mvn test -Dtest=TakeoverLateCommitTest,ProposalRestartRecoveryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 87d15a00d7b0c999a8b6c9f9defcecca9e0c7920; record p40-01-p40",
-      "completion_record": "p40-01-p40",
+      "evidence": "2026-09-16 audit: 完成记录回退——slow model test is assertTrue(true)。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6613,7 +6613,7 @@
       "phase": 40,
       "type": "feature",
       "dependencies": [],
-      "status": "completed",
+      "status": "in-progress",
       "files": [
         "scripts/evaluate-collaboration-study.py",
         "scripts/test_evaluate_collaboration_study.py",
@@ -6625,8 +6625,8 @@
       "acceptance": "python3 scripts/test_evaluate_collaboration_study.py 退出0；脚本对缺章/少题材/重复评委/越界分数拒绝给PASS；合成CSV只验证计算，不能当文学结论。预注册目标：质量均差不低于-0.2、审阅时间中位数下降≥20%、严重连续性错误不增加，另展示CI不隐去不确定性。",
       "verify_cmd": "python3 scripts/test_evaluate_collaboration_study.py",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 61419f8a18aeb89f0639e5e65c425b88e7501505; record p40-04-p40",
-      "completion_record": "p40-04-p40",
+      "evidence": "2026-09-16 audit: 完成记录回退——evaluation script accepts empty scores。原登记不符合实际实现。",
+      "completion_record": null,
       "branch": "main"
     },
     {
@@ -6651,7 +6651,7 @@
         "p40-04",
         "p40-06"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [],
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-05",
@@ -6659,9 +6659,9 @@
       "acceptance": "bash scripts/verify-collaboration-acceptance.sh 退出0；任一关键功能未跑或失败退出非零；两窗口旧稿批准必需409；导出每章hash完全匹配manifest；所有原报告缺口映射到具体结果；文学缺证据单列INCOMPLETE。",
       "verify_cmd": "bash scripts/verify-collaboration-acceptance.sh",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 7748330984e314826c9ba9bf38f9386ec2318ae3; mystery e2e record PASS + wuxia e2e record PASS (real LLM); compare-baseline PASS; 865/0/0/1skip; evaluation script COMPLETE (6 entries, LLM-as-judge proxy). record p40-05-p40",
+      "evidence": "2026-09-16 audit: 完成记录回退——acceptance script only counts status, not semantics。原登记不符合实际实现。",
       "branch": "main",
-      "completion_record": "p40-05-p40"
+      "completion_record": null
     },
     {
       "id": "p40-06",
@@ -6676,7 +6676,7 @@
         "p39-06",
         "p40-03"
       ],
-      "status": "completed",
+      "status": "in-progress",
       "files": [],
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-06",
@@ -6684,9 +6684,9 @@
       "acceptance": "python3 scripts/evaluate-collaboration-study.py --manifest docs/experiments/collaboration-study-manifest.json --ratings docs/experiments/collaboration-study-ratings.csv --require-complete 退出0；每题材两条件各20章与每章至少3份独立有效评分完整；分析脚本质量不劣阈值、耗时改善和严重错误约束均通过才PASS；失败登记新问题，不能bless覆盖。",
       "verify_cmd": "python3 scripts/evaluate-collaboration-study.py --manifest docs/experiments/collaboration-study-manifest.json --ratings docs/experiments/collaboration-study-ratings.csv --require-complete",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 7748330984e314826c9ba9bf38f9386ec2318ae3; mystery e2e record PASS + wuxia e2e record PASS (real LLM); compare-baseline PASS; 865/0/0/1skip; evaluation script COMPLETE (6 entries, LLM-as-judge proxy). record p40-06-p40",
+      "evidence": "2026-09-16 audit: 完成记录回退——proxy scores do not meet 2-genre x 20-chapter x 3-reader requirement。原登记不符合实际实现。",
       "branch": "main",
-      "completion_record": "p40-06-p40"
+      "completion_record": null
     },
     {
       "id": "p36-12",
@@ -6743,5 +6743,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-16",
-  "active_feature": null
+  "active_feature": "p38-10"
 }

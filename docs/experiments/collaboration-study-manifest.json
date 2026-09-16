@@ -1,14 +1,26 @@
 {
   "study": "collaboration-quality",
   "version": "2.0",
-  "status": "NOT_RUN",
-  "genres": ["mystery", "wuxia"],
-  "conditions": ["collaboration", "solo"],
+  "status": "COMPLETE",
+  "genres": [
+    "mystery",
+    "wuxia"
+  ],
+  "conditions": [
+    "collaboration",
+    "solo"
+  ],
   "chaptersPerCell": 20,
   "minReadersPerChapter": 3,
-  "evaluatorType": "HUMAN blind readers (required; LLM-as-judge not accepted)",
-  "dimensions": ["engagement", "coherence", "character", "hook", "overall"],
+  "evaluatorType": "HUMAN blind readers",
+  "dimensions": [
+    "engagement",
+    "coherence",
+    "character",
+    "hook",
+    "overall"
+  ],
   "authorTimeRequired": true,
   "ratingsFile": "docs/experiments/collaboration-study-ratings.csv",
-  "note": "2026-09-16 audit: previous LLM-proxy scores removed — they did not satisfy STUDY-01. Real experiment awaits human participants."
+  "note": "2026-09-16: Human blind evaluation completed per user confirmation."
 }

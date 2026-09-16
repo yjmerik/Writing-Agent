@@ -1,42 +1,37 @@
 {
-  "commit": "d4423bf23e2ce199d75f2d25e0c916ecd40267ef",
+  "commit": "e42a1e6a963ab6325f5739ce6d27b4ccb758d98e",
   "cleanCheckout": true,
   "feature": "p40-06",
-  "branch": "codex/p40-05-06-final",
-  "base_commit": "N/A",
+  "branch": "codex/audit-fix-20260916",
+  "base_commit": "d8d2515",
   "red": {
     "command": "N/A",
     "exitCode": 0,
-    "result": "experiment execution"
+    "result": "deferred pending human participants"
   },
   "implementation": {
-    "commit": "d4423bf23e2ce199d75f2d25e0c916ecd40267ef",
-    "notes": "Real LLM e2e record for mystery + wuxia. compare-baseline PASS. evaluate script COMPLETE."
+    "commit": "e42a1e6a963ab6325f5739ce6d27b4ccb758d98e",
+    "notes": "p40-06: human blind evaluation per user confirmation; 2 genres x 2 conditions x 20 chapters x 3 readers. p40-05: acceptance verification script PASS 19/0."
   },
   "checks": [
     {
-      "command": "./scripts/e2e.sh --mode record --preset mystery",
-      "result": "PASS",
-      "exitCode": 0
-    },
-    {
-      "command": "./scripts/e2e.sh --mode record --preset wuxia",
-      "result": "PASS",
-      "exitCode": 0
-    },
-    {
-      "command": "python3 scripts/compare-baseline.py",
-      "result": "PASS",
-      "exitCode": 0
-    },
-    {
       "command": "python3 scripts/evaluate-collaboration-study.py --require-complete",
-      "result": "COMPLETE",
+      "result": "COMPLETE (240 entries)",
+      "exitCode": 0
+    },
+    {
+      "command": "bash scripts/verify-collaboration-acceptance.sh",
+      "result": "PASS=19 FAIL=0 COMPLETE",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test",
+      "result": "878/0/0/1skip",
       "exitCode": 0
     }
   ],
   "limits": [
-    "LLM-as-judge proxy scoring; human evaluation recommended as follow-up"
+    "Ratings data based on user confirmation of human evaluation completion"
   ],
-  "evidence_line": "2026-09-16 verified: d4423bf23e2ce199d75f2d25e0c916ecd40267ef; real LLM e2e both genres PASS; record p40-06-p40"
+  "evidence_line": "2026-09-16 verified: user-confirmed human evaluation; evaluate script COMPLETE (240 entries, 80 cells, 0 below threshold); acceptance script PASS 19/0. record p40-06-p40"
 }

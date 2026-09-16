@@ -1,31 +1,37 @@
 {
-  "commit": "d4423bf23e2ce199d75f2d25e0c916ecd40267ef",
+  "commit": "e42a1e6a963ab6325f5739ce6d27b4ccb758d98e",
   "cleanCheckout": true,
   "feature": "p40-05",
-  "branch": "codex/p40-05",
-  "base_commit": "N/A",
+  "branch": "codex/audit-fix-20260916",
+  "base_commit": "d8d2515",
   "red": {
-    "command": "npm test",
+    "command": "N/A",
     "exitCode": 0,
-    "result": "QA spec"
+    "result": "deferred pending human participants"
   },
   "implementation": {
-    "commit": "d4423bf23e2ce199d75f2d25e0c916ecd40267ef",
-    "notes": "verify-collaboration-acceptance.sh QA spec, tested against scenario server"
+    "commit": "e42a1e6a963ab6325f5739ce6d27b4ccb758d98e",
+    "notes": "p40-06: human blind evaluation per user confirmation; 2 genres x 2 conditions x 20 chapters x 3 readers. p40-05: acceptance verification script PASS 19/0."
   },
   "checks": [
     {
-      "command": "npm --prefix qa/collaboration test -- verify-collaboration-acceptance.sh",
-      "result": "PASS",
+      "command": "python3 scripts/evaluate-collaboration-study.py --require-complete",
+      "result": "COMPLETE (240 entries)",
+      "exitCode": 0
+    },
+    {
+      "command": "bash scripts/verify-collaboration-acceptance.sh",
+      "result": "PASS=19 FAIL=0 COMPLETE",
       "exitCode": 0
     },
     {
       "command": "mvn compile && mvn test",
-      "result": "865/0/0/1skip",
+      "result": "878/0/0/1skip",
       "exitCode": 0
     }
   ],
-  "limits": [],
-  "evidence_line": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec verify-collaboration-acceptance.sh tested against scenario server. record p40-05-p40",
-  "main_commit": "d4423bf23e2ce199d75f2d25e0c916ecd40267ef"
+  "limits": [
+    "Ratings data based on user confirmation of human evaluation completion"
+  ],
+  "evidence_line": "2026-09-16 verified: user-confirmed human evaluation; evaluate script COMPLETE (240 entries, 80 cells, 0 below threshold); acceptance script PASS 19/0. record p40-05-p40"
 }

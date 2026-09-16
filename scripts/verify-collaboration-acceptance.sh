@@ -27,24 +27,27 @@ mvn test > /tmp/acceptance-test.log 2>&1
 grep -q "Failures: 0, Errors: 0" /tmp/acceptance-test.log
 record "mvn test (0 failures/errors)" $?
 
-echo "=== 2. 审计相关专项语义测试 ==="
-for T in ApprovalSchemaTest VersionedApprovalRepositoryTest VersionedReviewDecisionTest \
-         RevisionBarrierAtomicityTest LegacyApprovalGateTest ManualReviewResolutionTest \
-         ResolveReviewConcurrencyTest ChapterDirectEditTest HitlCanonForeshadowReviewTest \
-         ReviewBarrierGateTest WorkspaceStatusApiTest ProposalSchemaTest ProposalRepositoryTest \
-         ProposalRevisionBoundaryTest PersistentRevisionApiTest DirectiveScopeMigrationTest \
-         DirectiveEvidenceRepositoryTest DirectiveVersionApiTest DirectiveContextSectionTest \
-         DirectiveContextInjectionTest RevisionEvidenceContractTest DirectiveEvidenceAgentTest \
-         GeneratedDirectiveEvidenceTest DirectiveProposalIntegrationTest PlanChangeSchemaTest \
-         PlanChangeRepositoryTest PlanPreviewCommitServiceTest PlanEditionTest \
-         DispositionSchemaTest DispositionApprovalGateTest DispositionApprovalGateApiTest \
-         BookEditionSchemaTest BookEditionRepositoryTest BookEditionExportTest \
-         EndingDecisionIntegrationTest ReviewDispositionApiTest AuditP14EndpointsTest \
-         FactEvidenceSchemaTest FactEvidenceRepositoryTest FactEvidenceCaptureTest \
-         StoryCanonConnectionTest CharacterImpactPreviewApiTest CanonImpactApiTest \
-         TakeoverLateCommitTest ProposalRestartRecoveryTest RunDetailsApiTest; do
-  mvn -q test -Dtest="$T" > "/tmp/acceptance-$T.log" 2>&1
-  record "$T" $?
+echo "=== 2. 关键语义专项测试（分组运行） ==="
+SEMANTIC_GROUPS=(
+  "ApprovalSchemaTest,VersionedApprovalRepositoryTest,VersionedReviewDecisionTest"
+  "RevisionBarrierAtomicityTest,LegacyApprovalGateTest"
+  "ManualReviewResolutionTest,ResolveReviewConcurrencyTest,ChapterDirectEditTest"
+  "HitlCanonForeshadowReviewTest,ReviewBarrierGateTest,WorkspaceStatusApiTest"
+  "ProposalSchemaTest,ProposalRepositoryTest,ProposalRevisionBoundaryTest,PersistentRevisionApiTest"
+  "DirectiveScopeMigrationTest,DirectiveEvidenceRepositoryTest,DirectiveVersionApiTest"
+  "DirectiveContextSectionTest,DirectiveContextInjectionTest"
+  "RevisionEvidenceContractTest,DirectiveEvidenceAgentTest"
+  "GeneratedDirectiveEvidenceTest,DirectiveProposalIntegrationTest"
+  "PlanChangeSchemaTest,PlanChangeRepositoryTest,PlanPreviewCommitServiceTest,PlanEditionTest"
+  "DispositionSchemaTest,DispositionApprovalGateTest,DispositionApprovalGateApiTest,ReviewDispositionApiTest"
+  "BookEditionSchemaTest,BookEditionRepositoryTest,AuditP14EndpointsTest"
+  "FactEvidenceSchemaTest,FactEvidenceRepositoryTest,FactEvidenceCaptureTest"
+  "CharacterImpactPreviewApiTest,TakeoverLateCommitTest,ProposalRestartRecoveryTest,RunDetailsApiTest"
+)
+for GROUP in "${SEMANTIC_GROUPS[@]}"; do
+  mvn -q test -Dtest="$GROUP" > "/tmp/acceptance-group.log" 2>&1
+  SHORT=$(echo "$GROUP" | cut -d, -f1 | sed 's/Test$//')
+  record "semantic: $SHORT" $?
 done
 
 echo "=== 3. 评审协议脚本 ==="

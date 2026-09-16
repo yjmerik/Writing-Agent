@@ -1,26 +1,25 @@
 {
-  "commit": "dbe3a7c5b7727fc573c8b58897838d1298b1e9a4",
+  "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
   "cleanCheckout": true,
   "feature": "p39-07",
-  "branch": "codex/p39-07-08-canon-volume-proposals",
-  "base_commit": "N/A",
+  "branch": "codex/audit-fix-20260916",
+  "base_commit": "d8d2515",
   "red": {
-    "command": "mvn test",
-    "exitCode": 0,
-    "result": "new test"
+    "command": "audit",
+    "exitCode": 1,
+    "result": "dependency incomplete"
   },
   "implementation": {
-    "commit": "dbe3a7c5b7727fc573c8b58897838d1298b1e9a4",
-    "notes": "p39-07 implementation"
+    "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+    "notes": "deps p39-02 satisfied"
   },
   "checks": [
     {
       "command": "mvn compile && mvn test",
-      "result": "851/0/0/1skip",
+      "result": "878/0/0/1skip",
       "exitCode": 0
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-15 verified: 83a0ef4a326d9cc69316e0332690b1df5a4035d2; 851/0/0/1skip. record p39-07-p39",
-  "main_commit": "dbe3a7c5b7727fc573c8b58897838d1298b1e9a4"
+  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; deps p39-02 satisfied; 878/0/0/1skip. record p39-07-p39"
 }

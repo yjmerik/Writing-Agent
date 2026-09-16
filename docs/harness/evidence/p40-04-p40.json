@@ -1,31 +1,35 @@
 {
-  "commit": "61419f8a18aeb89f0639e5e65c425b88e7501505",
+  "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
   "cleanCheckout": true,
   "feature": "p40-04",
-  "branch": "codex/p40-04",
-  "base_commit": "N/A",
+  "branch": "codex/audit-fix-20260916",
+  "base_commit": "d8d2515",
   "red": {
-    "command": "npm test",
-    "exitCode": 0,
-    "result": "QA spec"
+    "command": "audit probe",
+    "exitCode": 1,
+    "result": "endpoint missing / wrong semantics"
   },
   "implementation": {
-    "commit": "61419f8a18aeb89f0639e5e65c425b88e7501505",
-    "notes": "test_evaluate_collaboration_study.py QA spec, tested against scenario server"
+    "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+    "notes": "evaluation script rejects empty/LLM/insufficient data; requires human evaluatorType + 2 genres x 2 conditions x 20 chapters x >=3 readers"
   },
   "checks": [
     {
-      "command": "npm --prefix qa/collaboration test -- test_evaluate_collaboration_study.py",
-      "result": "PASS",
+      "command": "python3 scripts/test_evaluate_collaboration_study.py",
+      "result": "5 scenarios",
       "exitCode": 0
     },
     {
       "command": "mvn compile && mvn test",
-      "result": "865/0/0/1skip",
+      "result": "878/0/0/1skip",
+      "exitCode": 0
+    },
+    {
+      "command": "full QA suite (28 specs)",
+      "result": "28/28 passed",
       "exitCode": 0
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec test_evaluate_collaboration_study.py tested against scenario server. record p40-04-p40",
-  "main_commit": "61419f8a18aeb89f0639e5e65c425b88e7501505"
+  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; python3 scripts/test_evaluate_collaboration_study.py → 5 scenarios; evaluation script rejects empty/LLM/insufficient data; requires human evaluatorType + 2 genres x 2 conditions x 20 chapters x >=3 readers. record p40-04-p40"
 }

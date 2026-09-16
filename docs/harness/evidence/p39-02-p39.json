@@ -1,26 +1,35 @@
 {
-  "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
+  "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
   "cleanCheckout": true,
   "feature": "p39-02",
-  "branch": "codex/p39-02-fact-evidence-repo",
-  "base_commit": "N/A",
+  "branch": "codex/audit-fix-20260916",
+  "base_commit": "d8d2515",
   "red": {
-    "command": "mvn test",
-    "exitCode": 0,
-    "result": "integration/repo"
+    "command": "audit probe",
+    "exitCode": 1,
+    "result": "endpoint missing / wrong semantics"
   },
   "implementation": {
-    "commit": "58adaa864f47322ce948d5c00e4cd84273b628d5",
-    "notes": "p39-02 implementation."
+    "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+    "notes": "findByFact/findKnownAt/findObservers; GET /facts/evidence with temporal+knowledge filters"
   },
   "checks": [
     {
+      "command": "mvn test -Dtest=FactEvidenceRepositoryTest,AuditP14EndpointsTest",
+      "result": "3/3+3/3",
+      "exitCode": 0
+    },
+    {
       "command": "mvn compile && mvn test",
-      "result": "848/0/0/1skip",
+      "result": "878/0/0/1skip",
+      "exitCode": 0
+    },
+    {
+      "command": "full QA suite (28 specs)",
+      "result": "28/28 passed",
       "exitCode": 0
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-15 verified: 8ab2de828303cfdeb2e6b34c859cf71d52d5d627; 848/0/0/1skip. record p39-02-p39",
-  "main_commit": "58adaa864f47322ce948d5c00e4cd84273b628d5"
+  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=FactEvidenceRepositoryTest,AuditP14EndpointsTest → 3/3+3/3; findByFact/findKnownAt/findObservers; GET /facts/evidence with temporal+knowledge filters. record p39-02-p39"
 }

@@ -1,26 +1,35 @@
 {
-  "commit": "00755df5f72cc0c5fe706d2396e9162a686c7582",
+  "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
   "cleanCheckout": true,
   "feature": "p38-10",
-  "branch": "codex/p38-10-disposition-gate",
-  "base_commit": "N/A",
+  "branch": "codex/audit-fix-20260916",
+  "base_commit": "d8d2515",
   "red": {
-    "command": "mvn test",
-    "exitCode": 0,
-    "result": "SPI defaults"
+    "command": "audit probe",
+    "exitCode": 1,
+    "result": "endpoint missing / wrong semantics"
   },
   "implementation": {
-    "commit": "00755df5f72cc0c5fe706d2396e9162a686c7582",
-    "notes": "saveDisposition/findDispositions/hasValidDisposition."
+    "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+    "notes": "reviewSetHash now includes directives/dispositions/issues; new HARD after read → stale hash → 409"
   },
   "checks": [
     {
+      "command": "mvn test -Dtest=DispositionApprovalGateApiTest,DispositionApprovalGateTest",
+      "result": "1/1+2/2",
+      "exitCode": 0
+    },
+    {
       "command": "mvn compile && mvn test",
-      "result": "845/0/0/1skip",
+      "result": "878/0/0/1skip",
+      "exitCode": 0
+    },
+    {
+      "command": "full QA suite (28 specs)",
+      "result": "28/28 passed",
       "exitCode": 0
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-15 verified: 4dc674449772e5b7918963ad3df00c30b2b6978a; record p38-10-p38",
-  "main_commit": "00755df5f72cc0c5fe706d2396e9162a686c7582"
+  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=DispositionApprovalGateApiTest,DispositionApprovalGateTest → 1/1+2/2; reviewSetHash now includes directives/dispositions/issues; new HARD after read → stale hash → 409. record p38-10-p38"
 }

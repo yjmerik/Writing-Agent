@@ -1,15 +1,35 @@
 {
-  "commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
+  "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
   "cleanCheckout": true,
   "feature": "p40-01",
-  "branch": "codex/p40-01-04-takeover-evaluate",
+  "branch": "codex/audit-fix-20260916",
+  "base_commit": "d8d2515",
+  "red": {
+    "command": "audit probe",
+    "exitCode": 1,
+    "result": "endpoint missing / wrong semantics"
+  },
+  "implementation": {
+    "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+    "notes": "real races: slow model stale CAS rejected + ownership rejection during slow task; proposal survives restart"
+  },
   "checks": [
     {
+      "command": "mvn test -Dtest=TakeoverLateCommitTest,ProposalRestartRecoveryTest",
+      "result": "2/2+1/1",
+      "exitCode": 0
+    },
+    {
       "command": "mvn compile && mvn test",
-      "result": "865/0/0/1skip",
+      "result": "878/0/0/1skip",
+      "exitCode": 0
+    },
+    {
+      "command": "full QA suite (28 specs)",
+      "result": "28/28 passed",
       "exitCode": 0
     }
   ],
-  "evidence_line": "verified",
-  "main_commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920"
+  "limits": [],
+  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=TakeoverLateCommitTest,ProposalRestartRecoveryTest → 2/2+1/1; real races: slow model stale CAS rejected + ownership rejection during slow task; proposal survives restart. record p40-01-p40"
 }

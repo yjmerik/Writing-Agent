@@ -1133,6 +1133,204 @@
       "implementation_commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
       "main_commit": "3e4234af1f19e3e49dc086ccfc695e8f0a0099ad",
       "evidence": "docs/harness/evidence/p40-03-p40.json"
+    },
+    {
+      "id": "p38-10-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-10"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p38-10-p38.json"
+    },
+    {
+      "id": "p39-04-p39",
+      "kind": "verified",
+      "feature_ids": [
+        "p39-04"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p39-04-p39.json"
+    },
+    {
+      "id": "p39-09-p39",
+      "kind": "verified",
+      "feature_ids": [
+        "p39-09"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p39-09-p39.json"
+    },
+    {
+      "id": "p38-02-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-02"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p38-02-p38.json"
+    },
+    {
+      "id": "p38-03-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-03"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p38-03-p38.json"
+    },
+    {
+      "id": "p38-06-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-06"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p38-06-p38.json"
+    },
+    {
+      "id": "p38-07-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-07"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p38-07-p38.json"
+    },
+    {
+      "id": "p39-01-p39",
+      "kind": "verified",
+      "feature_ids": [
+        "p39-01"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p39-01-p39.json"
+    },
+    {
+      "id": "p39-02-p39",
+      "kind": "verified",
+      "feature_ids": [
+        "p39-02"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p39-02-p39.json"
+    },
+    {
+      "id": "p39-03-p39",
+      "kind": "verified",
+      "feature_ids": [
+        "p39-03"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p39-03-p39.json"
+    },
+    {
+      "id": "p38-11-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-11"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p38-11-p38.json"
+    },
+    {
+      "id": "p37-04-p37",
+      "kind": "verified",
+      "feature_ids": [
+        "p37-04"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p37-04-p37.json"
+    },
+    {
+      "id": "p37-05-p37",
+      "kind": "verified",
+      "feature_ids": [
+        "p37-05"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p37-05-p37.json"
+    },
+    {
+      "id": "p40-01-p40",
+      "kind": "verified",
+      "feature_ids": [
+        "p40-01"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p40-01-p40.json"
+    },
+    {
+      "id": "p40-04-p40",
+      "kind": "verified",
+      "feature_ids": [
+        "p40-04"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p40-04-p40.json"
+    },
+    {
+      "id": "p38-13-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-13"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p38-13-p38.json"
+    },
+    {
+      "id": "p39-10-p39",
+      "kind": "verified",
+      "feature_ids": [
+        "p39-10"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p39-10-p39.json"
+    },
+    {
+      "id": "p39-07-p39",
+      "kind": "verified",
+      "feature_ids": [
+        "p39-07"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "evidence": "docs/harness/evidence/p39-07-p39.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

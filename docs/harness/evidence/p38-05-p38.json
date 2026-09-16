@@ -1,33 +1,35 @@
 {
-  "commit": "1de88c6182ac99c4ea6a861907893bf0da54ac2f",
+  "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
   "cleanCheckout": true,
   "feature": "p38-05",
-  "branch": "codex/p38-05-book-edition-schema",
-  "base_commit": "bc04adc",
+  "branch": "codex/audit-fix-20260916",
+  "base_commit": "d8d2515",
   "red": {
-    "command": "mvn test -Dtest=BookEditionSchemaTest",
+    "command": "audit probe",
     "exitCode": 1,
-    "result": "3 errors no such table"
+    "result": "endpoint missing / wrong semantics"
   },
   "implementation": {
-    "commit": "1de88c6182ac99c4ea6a861907893bf0da54ac2f",
-    "notes": "BookEdition + book_editions/book_edition_chapters schema."
+    "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+    "notes": "immutable edition model + storage"
   },
   "checks": [
     {
       "command": "mvn test -Dtest=BookEditionSchemaTest",
-      "result": "3/0/0",
+      "result": "3/3",
       "exitCode": 0
     },
     {
       "command": "mvn compile && mvn test",
-      "result": "828/0/0/1skip",
+      "result": "878/0/0/1skip",
+      "exitCode": 0
+    },
+    {
+      "command": "full QA suite (28 specs)",
+      "result": "28/28 passed",
       "exitCode": 0
     }
   ],
-  "limits": [
-    "create/approve/export API p38-06/07"
-  ],
-  "evidence_line": "2026-09-15 verified: 0ef46b43f54c8523265dbf90f75a1a6b508cfef7; 828/0/0/1skip, spec 3/3. record p38-05-p38",
-  "main_commit": "1de88c6182ac99c4ea6a861907893bf0da54ac2f"
+  "limits": [],
+  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=BookEditionSchemaTest → 3/3; immutable edition model + storage. record p38-05-p38"
 }

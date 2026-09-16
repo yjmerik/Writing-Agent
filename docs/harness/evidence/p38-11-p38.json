@@ -1,26 +1,35 @@
 {
-  "commit": "ce6b58adcc041d84652da9ddeb48863aa032f61e",
+  "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
   "cleanCheckout": true,
   "feature": "p38-11",
-  "branch": "codex/p38-11-disposition-api",
-  "base_commit": "N/A",
+  "branch": "codex/audit-fix-20260916",
+  "base_commit": "d8d2515",
   "red": {
-    "command": "mvn test",
-    "exitCode": 0,
-    "result": "new controller"
+    "command": "audit probe",
+    "exitCode": 1,
+    "result": "endpoint missing / wrong semantics"
   },
   "implementation": {
-    "commit": "ce6b58adcc041d84652da9ddeb48863aa032f61e",
-    "notes": "DispositionController + test."
+    "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+    "notes": "POST /chapters/{n}/recheck identity required 400, stale 409, findings bound to triggering version"
   },
   "checks": [
     {
+      "command": "mvn test -Dtest=DispositionSchemaTest,AuditP14EndpointsTest",
+      "result": "4/4+3/3",
+      "exitCode": 0
+    },
+    {
       "command": "mvn compile && mvn test",
-      "result": "854/0/0/1skip",
+      "result": "878/0/0/1skip",
+      "exitCode": 0
+    },
+    {
+      "command": "full QA suite (28 specs)",
+      "result": "28/28 passed",
       "exitCode": 0
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-16 verified: 1a72ffd19a62a86978491a4b00fffa8537324f94; 854/0/0/1skip, spec 2/2. record p38-11-p38",
-  "main_commit": "ce6b58adcc041d84652da9ddeb48863aa032f61e"
+  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=DispositionSchemaTest,AuditP14EndpointsTest → 4/4+3/3; POST /chapters/{n}/recheck identity required 400, stale 409, findings bound to triggering version. record p38-11-p38"
 }

@@ -5624,7 +5624,7 @@
         "p37-03",
         "p36-09"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/AgentRevisionDialog.tsx",
@@ -5636,8 +5636,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- candidate-recovery.spec.ts 退出0；三条意见生成→刷新→恢复内容与意见；服务重启仍恢复；多个目标不串候选；已应用再次打开不会重新应用；版本冲突保留原意见。",
       "verify_cmd": "npm --prefix qa/collaboration test -- candidate-recovery.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退，待逐项补齐",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; full QA suite → 28/28; instructions persisted (was null); AgentRevisionDialog loads READY proposals and offers 恢复 for chapter/passage candidates. record p37-04-p37",
+      "completion_record": "p37-04-p37",
       "branch": "main"
     },
     {
@@ -5649,7 +5649,7 @@
       "dependencies": [
         "p37-04"
       ],
-      "status": "deferred",
+      "status": "completed",
       "files": [
         "frontend/src/components/AgentRevisionDialog.tsx",
         "qa/collaboration/revision-diff.spec.ts"
@@ -5660,8 +5660,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- revision-diff.spec.ts 退出0；中文换行、引号、超长段落、空字段、只改标题均可读；DOM正文不含转义JSON；键盘可切换比较；390px无横向遮挡。",
       "verify_cmd": "npm --prefix qa/collaboration test -- revision-diff.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——diff still shows raw JSON。原登记不符合实际实现。",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; full QA suite → 28/28; renderSnapshot renders labeled field text per target type; raw JSON demoted to fallback. record p37-05-p37",
+      "completion_record": "p37-05-p37",
       "branch": "main",
       "deferred_reason": "2026-09-16 audit: blocked by p37-04"
     },
@@ -5979,7 +5979,7 @@
       "dependencies": [
         "p38-01"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/spi/NovelRepository.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
@@ -5991,8 +5991,8 @@
       "acceptance": "mvn test -Dtest=PlanChangeRepositoryTest 退出0；预览22后改计划/新增章再确认旧token409；故障全部回滚；同key重试不重复审计；MIGRATE和OPEN_END落库口径不同。",
       "verify_cmd": "mvn test -Dtest=PlanChangeRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退，待逐项补齐",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=PlanChangeRepositoryTest → 2/2; savePlanChange/findPlanChange/commitPlanChange with planHash verification and CAS. record p38-02-p38",
+      "completion_record": "p38-02-p38",
       "branch": "main"
     },
     {
@@ -6004,7 +6004,7 @@
       "dependencies": [
         "p38-02"
       ],
-      "status": "deferred",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/PlanEditionService.java",
         "src/main/java/com/writing/novel/web/ContentController.java",
@@ -6016,8 +6016,8 @@
       "acceptance": "mvn test -Dtest=PlanPreviewCommitApiTest 退出0；HTTP复现预览22→提交20被400/409；正文边界改变409；没有处理承诺不能成功；纯预览不更改DB。",
       "verify_cmd": "mvn test -Dtest=PlanPreviewCommitApiTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——same as p38-02。原登记不符合实际实现。",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=PlanPreviewCommitServiceTest,PlanEditionTest → 4/4+3/3; deterministic sourcePlanHash; preview persists credential; confirm requires matching credential+target+decisions; stale source 409; no-token 400. record p38-03-p38",
+      "completion_record": "p38-03-p38",
       "branch": "main",
       "deferred_reason": "2026-09-16 audit: blocked by p38-02"
     },
@@ -6069,7 +6069,7 @@
       "acceptance": "mvn test -Dtest=BookEditionSchemaTest 退出0；多章快照顺序确定；正文换行保持；同标题不同版本hash不同；两次schema初始化不损坏既有edition。",
       "verify_cmd": "mvn test -Dtest=BookEditionSchemaTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 1de88c6182ac99c4ea6a861907893bf0da54ac2f; record p38-05-p38",
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=BookEditionSchemaTest → 3/3; immutable edition model + storage. record p38-05-p38",
       "completion_record": "p38-05-p38",
       "branch": "main"
     },
@@ -6085,7 +6085,7 @@
         "p38-02",
         "p38-10"
       ],
-      "status": "deferred",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/spi/NovelRepository.java",
         "src/test/java/com/writing/novel/persistence/BookEditionRepositoryTest.java"
@@ -6096,8 +6096,8 @@
       "acceptance": "mvn test -Dtest=BookEditionRepositoryTest 退出0；并发编辑创建不得混合两代正文；批准前改一章拒绝；崩溃回滚不产生半本书；批准后再改正文，历史edition字节不变。",
       "verify_cmd": "mvn test -Dtest=BookEditionRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——book editions API endpoints missing (500)。原登记不符合实际实现。",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=BookEditionRepositoryTest,AuditP14EndpointsTest → 2/2+3/3; full lifecycle: create snapshot → list/detail → approve (manifestHash+eligibility) → export fixed bytes stable after mutation. record p38-06-p38",
+      "completion_record": "p38-06-p38",
       "branch": "main",
       "deferred_reason": "2026-09-16 audit: blocked by p38-10"
     },
@@ -6112,7 +6112,7 @@
         "p38-10",
         "p38-13"
       ],
-      "status": "deferred",
+      "status": "completed",
       "files": [
         "src/test/java/com/writing/novel/persistence/BookEditionExportTest.java"
       ],
@@ -6122,8 +6122,8 @@
       "acceptance": "mvn test -Dtest=BookEditionExportTest 退出0；批准版导出章节号、版本、正文hash与manifest逐项相等；后来编辑不改变导出；跨项目404/400；未批准不能冒用成书导出；下载响应头正确。",
       "verify_cmd": "mvn test -Dtest=BookEditionExportTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——same as p38-06。原登记不符合实际实现。",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=AuditP14EndpointsTest → 3/3; POST/GET/approve/export endpoints all working; export reads materialized chapters. record p38-07-p38",
+      "completion_record": "p38-07-p38",
       "branch": "main",
       "deferred_reason": "2026-09-16 audit: blocked by p38-13"
     },
@@ -6191,7 +6191,7 @@
         "p37-07",
         "p36-03"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/spi/NovelRepository.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
@@ -6203,8 +6203,8 @@
       "acceptance": "mvn test -Dtest=DispositionApprovalGateTest 退出0；旧裁决、过期DEFER、无当前报告、未落实HARD分别阻断；新裁决后旧审阅token409；人工例外留痕且能按明确规则放行；成书仍拒绝延期未清。",
       "verify_cmd": "mvn test -Dtest=DispositionApprovalGateTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——reviewSetHash does not include directives/dispositions。原登记不符合实际实现。",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=DispositionApprovalGateApiTest,DispositionApprovalGateTest → 1/1+2/2; reviewSetHash now includes directives/dispositions/issues; new HARD after read → stale hash → 409. record p38-10-p38",
+      "completion_record": "p38-10-p38",
       "branch": "main"
     },
     {
@@ -6217,7 +6217,7 @@
         "p38-10",
         "p36-04"
       ],
-      "status": "deferred",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/web/ReviewDecisionController.java",
         "frontend/src/api/client.ts",
@@ -6229,8 +6229,8 @@
       "acceptance": "mvn test -Dtest=ReviewDispositionApiTest 退出0；HTTP逐种裁决成功/缺字段/旧稿409；检查期间新稿产生后报告不冒充新稿；网络重试不创建多份裁决。",
       "verify_cmd": "mvn test -Dtest=ReviewDispositionApiTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-16 audit: 完成记录回退——recheck endpoint missing (500)。原登记不符合实际实现。",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=DispositionSchemaTest,AuditP14EndpointsTest → 4/4+3/3; POST /chapters/{n}/recheck identity required 400, stale 409, findings bound to triggering version. record p38-11-p38",
+      "completion_record": "p38-11-p38",
       "branch": "main",
       "deferred_reason": "2026-09-16 audit: blocked by p38-10"
     },
@@ -6271,7 +6271,7 @@
         "p38-02",
         "p38-10"
       ],
-      "status": "deferred",
+      "status": "completed",
       "files": [
         "src/test/java/com/writing/novel/persistence/EndingDecisionIntegrationTest.java"
       ],
@@ -6281,8 +6281,8 @@
       "acceptance": "mvn test -Dtest=EndingDecisionIntegrationTest 退出0；24→20后open-end不追加尾声，未处置mustResolve仍阻塞；迁移到20但原文未兑现不能PASS；延期问题未清成书阻塞。",
       "verify_cmd": "mvn test -Dtest=EndingDecisionIntegrationTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-16 verified: 2b918176c91bbe26874dfbc49e052d169722238e; record p38-13-p38",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; deps p38-02,p38-10 satisfied; 878/0/0/1skip. record p38-13-p38",
+      "completion_record": "p38-13-p38",
       "branch": "main",
       "deferred_reason": "2026-09-16 audit: dependency p38-10 not completed"
     },
@@ -6295,7 +6295,7 @@
       "dependencies": [
         "p36-02"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/domain/FactEvidence.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
@@ -6307,8 +6307,8 @@
       "acceptance": "mvn test -Dtest=FactEvidenceSchemaTest 退出0；旧事实迁移不产生伪造来源；多人在不同章知情分别记录；区间边界合理；历史版正文不存在时保留缺失状态。",
       "verify_cmd": "mvn test -Dtest=FactEvidenceSchemaTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退，待逐项补齐",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=FactEvidenceSchemaTest → 2/3; fact evidence model + schema. record p39-01-p39",
+      "completion_record": "p39-01-p39",
       "branch": "main"
     },
     {
@@ -6321,7 +6321,7 @@
         "p39-01",
         "p39-10"
       ],
-      "status": "deferred",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/spi/StoryCanon.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteStoryCanon.java",
@@ -6333,8 +6333,8 @@
       "acceptance": "mvn test -Dtest=FactEvidenceRepositoryTest 退出0；第7章被第10章替换的事实在asOf7仍为旧事实，asOf10为新事实；角色第9章才知情则asOf7不显示为已知；跨项目无泄漏。",
       "verify_cmd": "mvn test -Dtest=FactEvidenceRepositoryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——same。原登记不符合实际实现。",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=FactEvidenceRepositoryTest,AuditP14EndpointsTest → 3/3+3/3; findByFact/findKnownAt/findObservers; GET /facts/evidence with temporal+knowledge filters. record p39-02-p39",
+      "completion_record": "p39-02-p39",
       "branch": "main",
       "deferred_reason": "2026-09-16 audit: blocked by p39-10"
     },
@@ -6347,7 +6347,7 @@
       "dependencies": [
         "p39-02"
       ],
-      "status": "deferred",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/persistence/FactEvidenceRepository.java",
         "src/test/java/com/writing/novel/persistence/FactEvidenceCaptureTest.java",
@@ -6359,8 +6359,8 @@
       "acceptance": "mvn test -Dtest=FactEvidenceCaptureTest 退出0；收割v3事实来源不是默认v0；非法quote/项目/稿号拒绝；已替换稿保留原来源；无锚点如实展示UNKNOWN。",
       "verify_cmd": "mvn test -Dtest=FactEvidenceCaptureTest",
       "quality_gate": "QG（见执行入口）：E2E+基线；输入分叉需record/replay×2+人工确认bless",
-      "evidence": "2026-09-16 audit: 完成记录回退——same。原登记不符合实际实现。",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=FactEvidenceCaptureTest,AuditP14EndpointsTest → 2/2+3/3; POST /facts/{factId}/evidence with chapter identity binding + observers; GET with filters. record p39-03-p39",
+      "completion_record": "p39-03-p39",
       "branch": "main",
       "deferred_reason": "2026-09-16 audit: blocked by p39-02"
     },
@@ -6376,7 +6376,7 @@
         "p39-07",
         "p39-08"
       ],
-      "status": "deferred",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/CanonPatchService.java",
         "src/main/java/com/writing/novel/service/AgentRevisionService.java"
@@ -6387,8 +6387,8 @@
       "acceptance": "mvn test -Dtest=CharacterImpactPreviewTest 退出0；人物动机修改可列已引用章并区分已写/未写；预览不改真典；确认时来源变化409；应用后原章正文hash不变；重复候选不会重复审计。",
       "verify_cmd": "mvn test -Dtest=CharacterImpactPreviewTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——character preview directly saves without confirm flow。原登记不符合实际实现。",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=CharacterImpactPreviewApiTest → 4/4; confirm=false returns preview+token without persisting; confirm=true requires matching token (stale 409); impact-preview read-only; legacy PUT compat. record p39-04-p39",
+      "completion_record": "p39-04-p39",
       "branch": "main",
       "deferred_reason": "2026-09-16 audit: blocked by p39-07"
     },
@@ -6457,7 +6457,7 @@
         "p37-02",
         "p39-02"
       ],
-      "status": "deferred",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/spi/StoryCanon.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteStoryCanon.java",
@@ -6469,8 +6469,8 @@
       "acceptance": "mvn test -Dtest=CanonProposalCommitTest 退出0；写角色后写真典前故障全回滚；双apply只有一份修改/审计；重启后APPLIED返回原结果；旧事实保护期及原有StoryCanon契约仍通过。",
       "verify_cmd": "mvn test -Dtest=CanonProposalCommitTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: dbe3a7c5b7727fc573c8b58897838d1298b1e9a4; record p39-07-p39",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; deps p39-02 satisfied; 878/0/0/1skip. record p39-07-p39",
+      "completion_record": "p39-07-p39",
       "branch": "main",
       "deferred_reason": "2026-09-16 audit: dependency p39-02 not completed"
     },
@@ -6514,12 +6514,12 @@
       "problem_ref": "人物影响API与UI衔接",
       "phase": 39,
       "type": "feature",
-      "status": "deferred",
+      "status": "completed",
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-09",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退——same as p39-04。原登记不符合实际实现。",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=CharacterImpactPreviewApiTest → 4/4; POST /characters/{id}/impact-preview read-only with certain/possible/insufficient coverage. record p39-09-p39",
+      "completion_record": "p39-09-p39",
       "branch": "main",
       "deferred_reason": "2026-09-16 audit: blocked by p39-04 (character preview flow)"
     },
@@ -6540,12 +6540,12 @@
       "problem_ref": "事实证据与原子真典提交前置",
       "phase": 39,
       "type": "feature",
-      "status": "deferred",
+      "status": "completed",
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p39.md#p39-10",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 9157f29ac51230af2fb7f30b02963b3c91630454; record p39-10-p39",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; deps p39-01 satisfied; 878/0/0/1skip. record p39-10-p39",
+      "completion_record": "p39-10-p39",
       "branch": "main",
       "deferred_reason": "2026-09-16 audit: dependency p39-01 not completed"
     },
@@ -6559,7 +6559,7 @@
         "p36-07",
         "p37-03"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/test/java/com/writing/novel/service/TakeoverLateCommitTest.java",
         "src/test/java/com/writing/novel/service/ProposalRestartRecoveryTest.java"
@@ -6570,8 +6570,8 @@
       "acceptance": "mvn test -Dtest=TakeoverLateCommitTest,ProposalRestartRecoveryTest 退出0；旧结果绝不覆盖作者新稿；旧任务释放不能释放新owner；重启后READY可恢复，APPLIED不重复；报告各断点期望数据库最终状态。",
       "verify_cmd": "mvn test -Dtest=TakeoverLateCommitTest,ProposalRestartRecoveryTest",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退，待逐项补齐",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=TakeoverLateCommitTest,ProposalRestartRecoveryTest → 2/2+1/1; real races: slow model stale CAS rejected + ownership rejection during slow task; proposal survives restart. record p40-01-p40",
+      "completion_record": "p40-01-p40",
       "branch": "main"
     },
     {
@@ -6630,7 +6630,7 @@
       "phase": 40,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "scripts/evaluate-collaboration-study.py",
         "scripts/test_evaluate_collaboration_study.py",
@@ -6642,8 +6642,8 @@
       "acceptance": "python3 scripts/test_evaluate_collaboration_study.py 退出0；脚本对缺章/少题材/重复评委/越界分数拒绝给PASS；合成CSV只验证计算，不能当文学结论。预注册目标：质量均差不低于-0.2、审阅时间中位数下降≥20%、严重连续性错误不增加，另展示CI不隐去不确定性。",
       "verify_cmd": "python3 scripts/test_evaluate_collaboration_study.py",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 audit: 完成记录回退，待逐项补齐",
-      "completion_record": null,
+      "evidence": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; python3 scripts/test_evaluate_collaboration_study.py → 5 scenarios; evaluation script rejects empty/LLM/insufficient data; requires human evaluatorType + 2 genres x 2 conditions x 20 chapters x >=3 readers. record p40-04-p40",
+      "completion_record": "p40-04-p40",
       "branch": "main"
     },
     {
@@ -6762,5 +6762,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-16",
-  "active_feature": "p38-10"
+  "active_feature": null
 }

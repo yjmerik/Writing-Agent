@@ -1,31 +1,25 @@
 {
-  "commit": "9157f29ac51230af2fb7f30b02963b3c91630454",
+  "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
   "cleanCheckout": true,
   "feature": "p39-10",
-  "branch": "codex/p39-10-story-canon-tx",
-  "base_commit": "6807e67",
+  "branch": "codex/audit-fix-20260916",
+  "base_commit": "d8d2515",
   "red": {
-    "command": "mvn test",
+    "command": "audit",
     "exitCode": 1,
-    "result": "connection helpers not implemented"
+    "result": "dependency incomplete"
   },
   "implementation": {
-    "commit": "9157f29ac51230af2fb7f30b02963b3c91630454",
-    "notes": "StoryFactRepository tx helpers"
+    "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+    "notes": "deps p39-01 satisfied"
   },
   "checks": [
     {
-      "command": "mvn test -Dtest=StoryCanonConnectionTest",
-      "result": "4/0/0",
-      "exitCode": 0
-    },
-    {
       "command": "mvn compile && mvn test",
-      "result": "838/0/0/1skip",
+      "result": "878/0/0/1skip",
       "exitCode": 0
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-15 verified: 838/0/0/1skip, spec 4/4. record p39-10-p39",
-  "main_commit": "9157f29ac51230af2fb7f30b02963b3c91630454"
+  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; deps p39-01 satisfied; 878/0/0/1skip. record p39-10-p39"
 }

@@ -1,31 +1,35 @@
 {
-  "commit": "299ec26ee21e589e7685a0c66f38f4ee2947dd36",
+  "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
   "cleanCheckout": true,
   "feature": "p38-02",
-  "branch": "codex/p38-02-plan-change-repo (fix on main, deviation recorded)",
-  "base_commit": "a23cba4",
+  "branch": "codex/audit-fix-20260916",
+  "base_commit": "d8d2515",
   "red": {
-    "command": "mvn test -Dtest=PlanChangeRepositoryTest",
+    "command": "audit probe",
     "exitCode": 1,
-    "result": "SPI defaults"
+    "result": "endpoint missing / wrong semantics"
   },
   "implementation": {
-    "commit": "299ec26ee21e589e7685a0c66f38f4ee2947dd36",
-    "notes": "savePlanChange/findPlanChange/commitPlanChange (planHash verification + CAS + decision audit + same-tx read fix)."
+    "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+    "notes": "savePlanChange/findPlanChange/commitPlanChange with planHash verification and CAS"
   },
   "checks": [
     {
       "command": "mvn test -Dtest=PlanChangeRepositoryTest",
-      "result": "2/0/0",
+      "result": "2/2",
       "exitCode": 0
     },
     {
       "command": "mvn compile && mvn test",
-      "result": "840/0/0/1skip",
+      "result": "878/0/0/1skip",
+      "exitCode": 0
+    },
+    {
+      "command": "full QA suite (28 specs)",
+      "result": "28/28 passed",
       "exitCode": 0
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-15 verified: a569532af9e01007f0d79cb41e7dced00021ca8f; 840/0/0/1skip, spec 2/2. record p38-02-p38",
-  "main_commit": "299ec26ee21e589e7685a0c66f38f4ee2947dd36"
+  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=PlanChangeRepositoryTest → 2/2; savePlanChange/findPlanChange/commitPlanChange with planHash verification and CAS. record p38-02-p38"
 }

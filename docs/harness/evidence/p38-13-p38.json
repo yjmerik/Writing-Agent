@@ -1,26 +1,25 @@
 {
-  "commit": "2b918176c91bbe26874dfbc49e052d169722238e",
+  "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
   "cleanCheckout": true,
   "feature": "p38-13",
-  "branch": "codex/p38-13",
-  "base_commit": "N/A",
+  "branch": "codex/audit-fix-20260916",
+  "base_commit": "d8d2515",
   "red": {
-    "command": "mvn test",
-    "exitCode": 0,
-    "result": "new test"
+    "command": "audit",
+    "exitCode": 1,
+    "result": "dependency incomplete"
   },
   "implementation": {
-    "commit": "2b918176c91bbe26874dfbc49e052d169722238e",
-    "notes": "p38-13 test."
+    "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+    "notes": "deps p38-02,p38-10 satisfied"
   },
   "checks": [
     {
       "command": "mvn compile && mvn test",
-      "result": "860/0/0/1skip",
+      "result": "878/0/0/1skip",
       "exitCode": 0
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-16 verified: 219e1c05e5db1ce61a6b110d36e17cc5854da9e2; 860/0/0/1skip. record p38-13-p38",
-  "main_commit": "2b918176c91bbe26874dfbc49e052d169722238e"
+  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; deps p38-02,p38-10 satisfied; 878/0/0/1skip. record p38-13-p38"
 }

@@ -1,26 +1,35 @@
 {
-  "commit": "da63a20fed27e368ea6b49bcaafde09f35258450",
+  "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
   "cleanCheckout": true,
   "feature": "p38-07",
-  "branch": "codex/p38-07",
-  "base_commit": "N/A",
+  "branch": "codex/audit-fix-20260916",
+  "base_commit": "d8d2515",
   "red": {
-    "command": "mvn test",
-    "exitCode": 0,
-    "result": "new test"
+    "command": "audit probe",
+    "exitCode": 1,
+    "result": "endpoint missing / wrong semantics"
   },
   "implementation": {
-    "commit": "da63a20fed27e368ea6b49bcaafde09f35258450",
-    "notes": "p38-07 test."
+    "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+    "notes": "POST/GET/approve/export endpoints all working; export reads materialized chapters"
   },
   "checks": [
     {
+      "command": "mvn test -Dtest=AuditP14EndpointsTest",
+      "result": "3/3",
+      "exitCode": 0
+    },
+    {
       "command": "mvn compile && mvn test",
-      "result": "860/0/0/1skip",
+      "result": "878/0/0/1skip",
+      "exitCode": 0
+    },
+    {
+      "command": "full QA suite (28 specs)",
+      "result": "28/28 passed",
       "exitCode": 0
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-16 verified: e2b825f3b8f88c98f7e2a0e859bee3322b09e6b8; 860/0/0/1skip. record p38-07-p38",
-  "main_commit": "da63a20fed27e368ea6b49bcaafde09f35258450"
+  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=AuditP14EndpointsTest → 3/3; POST/GET/approve/export endpoints all working; export reads materialized chapters. record p38-07-p38"
 }

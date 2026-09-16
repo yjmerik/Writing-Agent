@@ -1,15 +1,35 @@
 {
-  "commit": "bd76c63d91bf62217ab97436013efe2371db4147",
+  "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
   "cleanCheckout": true,
   "feature": "p39-04",
-  "branch": "codex/p39-04-09-impact-chain",
+  "branch": "codex/audit-fix-20260916",
+  "base_commit": "d8d2515",
+  "red": {
+    "command": "audit probe",
+    "exitCode": 1,
+    "result": "endpoint missing / wrong semantics"
+  },
+  "implementation": {
+    "commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+    "notes": "confirm=false returns preview+token without persisting; confirm=true requires matching token (stale 409); impact-preview read-only; legacy PUT compat"
+  },
   "checks": [
     {
+      "command": "mvn test -Dtest=CharacterImpactPreviewApiTest",
+      "result": "4/4",
+      "exitCode": 0
+    },
+    {
       "command": "mvn compile && mvn test",
-      "result": "865/0/0/1skip",
+      "result": "878/0/0/1skip",
+      "exitCode": 0
+    },
+    {
+      "command": "full QA suite (28 specs)",
+      "result": "28/28 passed",
       "exitCode": 0
     }
   ],
-  "evidence_line": "verified",
-  "main_commit": "bd76c63d91bf62217ab97436013efe2371db4147"
+  "limits": [],
+  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=CharacterImpactPreviewApiTest → 4/4; confirm=false returns preview+token without persisting; confirm=true requires matching token (stale 409); impact-preview read-only; legacy PUT compat. record p39-04-p39"
 }

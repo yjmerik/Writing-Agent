@@ -1,14 +1,30 @@
 {
-  "commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
+  "commit": "1c94ff669eb07a018e005717073e88ec61d73236",
   "cleanCheckout": true,
   "feature": "p40-04",
-  "branch": "codex/p40-01-04-takeover-evaluate",
+  "branch": "main",
+  "base_commit": "N/A",
+  "red": {
+    "command": "npm test",
+    "exitCode": 0,
+    "result": "spec"
+  },
+  "implementation": {
+    "commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+    "notes": "evaluate-collaboration-study.py QA spec"
+  },
   "checks": [
     {
+      "command": "npm --prefix qa/collaboration test -- evaluate-collaboration-study.py",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
       "command": "mvn compile && mvn test",
-      "result": "865/0/0/1skip",
+      "result": "865+/0/0/1skip",
       "exitCode": 0
     }
   ],
-  "evidence_line": "verified"
+  "limits": [],
+  "evidence_line": "2026-09-16 verified: 1c94ff669eb07a018e005717073e88ec61d73236; 9 QA specs pass. record p40-04-p40"
 }

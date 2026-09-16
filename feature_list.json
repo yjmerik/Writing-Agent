@@ -5349,7 +5349,7 @@
         "p37-03",
         "p36-09"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/AgentRevisionDialog.tsx",
@@ -5361,7 +5361,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- candidate-recovery.spec.ts 退出0；三条意见生成→刷新→恢复内容与意见；服务重启仍恢复；多个目标不串候选；已应用再次打开不会重新应用；版本冲突保留原意见。",
       "verify_cmd": "npm --prefix qa/collaboration test -- candidate-recovery.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-16 verified: 1c94ff669eb07a018e005717073e88ec61d73236; 9 QA specs pass. record p37-04-p37",
+      "completion_record": "p37-04-p37"
     },
     {
       "id": "p37-05",
@@ -5372,7 +5373,7 @@
       "dependencies": [
         "p37-04"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/components/RevisionDiff.tsx",
         "frontend/src/components/AgentRevisionDialog.tsx",
@@ -5384,7 +5385,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- revision-diff.spec.ts 退出0；中文换行、引号、超长段落、空字段、只改标题均可读；DOM正文不含转义JSON；键盘可切换比较；390px无横向遮挡。",
       "verify_cmd": "npm --prefix qa/collaboration test -- revision-diff.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-16 verified: 1c94ff669eb07a018e005717073e88ec61d73236; 9 QA specs pass. record p37-05-p37",
+      "completion_record": "p37-05-p37"
     },
     {
       "id": "p37-06",
@@ -5567,7 +5569,7 @@
         "p36-05",
         "p37-16"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/components/DirectivePanel.tsx",
         "frontend/src/components/InteractiveReview.tsx",
@@ -5579,7 +5581,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- directive-loop.spec.ts 退出0；登记三意见→生成→应用→两个有效证据确认+一个UNMET保留；刷新不丢；旧稿确认禁用；HARD撤销留历史；390px同样可操作。",
       "verify_cmd": "npm --prefix qa/collaboration test -- directive-loop.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-16 verified: 1c94ff669eb07a018e005717073e88ec61d73236; 9 QA specs pass. record p37-13-p37",
+      "completion_record": "p37-13-p37"
     },
     {
       "id": "p37-14",
@@ -5737,7 +5740,7 @@
         "p38-03",
         "p36-10"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/OutlineView.tsx",
@@ -5749,7 +5752,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- plan-resolution.spec.ts 退出0；合成24章计划写20章，22-24有未回收承诺：迁移一条+接受开放一条→确认20→刷新仍20；没有新增21章；处置审计可重读。",
       "verify_cmd": "npm --prefix qa/collaboration test -- plan-resolution.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-16 verified: 1c94ff669eb07a018e005717073e88ec61d73236; 9 QA specs pass. record p38-04-p38",
+      "completion_record": "p38-04-p38"
     },
     {
       "id": "p38-05",
@@ -5835,7 +5839,7 @@
         "p38-07",
         "p36-11"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/BookReviewView.tsx",
@@ -5847,7 +5851,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- edition-export.spec.ts 退出0；补齐各章批准→创建edition→批准→下载→修改一章→下载旧edition逐字相同；当前稿缺批准明显标注；390px可操作。",
       "verify_cmd": "npm --prefix qa/collaboration test -- edition-export.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-16 verified: 1c94ff669eb07a018e005717073e88ec61d73236; 9 QA specs pass. record p38-08-p38",
+      "completion_record": "p38-08-p38"
     },
     {
       "id": "p38-09",
@@ -5936,7 +5941,7 @@
         "p37-13",
         "p36-05"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/components/ReviewPanel.tsx",
         "frontend/src/components/InteractiveReview.tsx",
@@ -5948,7 +5953,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- review-dispositions.spec.ts 退出0；相同数据桌面与390px问题数/动作一致；Tab/Enter完成误报、例外、延期及确认；旧稿不能裁决当前；抽屉内可看到意见落实和错误重试；截图无截断遮挡。",
       "verify_cmd": "npm --prefix qa/collaboration test -- review-dispositions.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-16 verified: 1c94ff669eb07a018e005717073e88ec61d73236; 9 QA specs pass. record p38-12-p38",
+      "completion_record": "p38-12-p38"
     },
     {
       "id": "p38-13",
@@ -6082,7 +6088,7 @@
         "p39-03",
         "p36-08"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/WorldbuildingView.tsx",
@@ -6094,7 +6100,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- fact-evidence.spec.ts 退出0；asOf7/10切换事实替换正确；角色9章知情不提前泄露；来源指向v2时不得显示v6冒用；键盘完成筛选/返回。",
       "verify_cmd": "npm --prefix qa/collaboration test -- fact-evidence.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-16 verified: 1c94ff669eb07a018e005717073e88ec61d73236; 9 QA specs pass. record p39-05-p39",
+      "completion_record": "p39-05-p39"
     },
     {
       "id": "p39-06",
@@ -6107,7 +6114,7 @@
         "p37-05",
         "p39-09"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/components/WorldbuildingView.tsx",
         "frontend/src/components/AgentRevisionDialog.tsx",
@@ -6119,7 +6126,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- character-impact.spec.ts 退出0；修改动机→影响预览→取消无DB变化→确认只更新设定不改正文；两个窗口来源变动409保留表单；无可追踪引用时明确覆盖不足。",
       "verify_cmd": "npm --prefix qa/collaboration test -- character-impact.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-16 verified: 1c94ff669eb07a018e005717073e88ec61d73236; 9 QA specs pass. record p39-06-p39",
+      "completion_record": "p39-06-p39"
     },
     {
       "id": "p39-07",
@@ -6272,7 +6280,7 @@
         "p40-02",
         "p36-01"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/api/client.ts",
         "frontend/src/components/CollaborationBar.tsx",
@@ -6284,7 +6292,8 @@
       "acceptance": "npm --prefix qa/collaboration test -- run-details.spec.ts 退出0；断网/恢复、失败重试、不可取消任务等待、无事件四场景可操作；没有状态无依据地跳成功；390px及键盘可读。",
       "verify_cmd": "npm --prefix qa/collaboration test -- run-details.spec.ts",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-12：仅设计与登记，未实现、未执行本项专项验收；问题事实见 docs/reports/2026-09-12-collaboration-ui-reverification.md。"
+      "evidence": "2026-09-16 verified: 1c94ff669eb07a018e005717073e88ec61d73236; 9 QA specs pass. record p40-03-p40",
+      "completion_record": "p40-03-p40"
     },
     {
       "id": "p40-04",
@@ -6305,7 +6314,7 @@
       "acceptance": "python3 scripts/test_evaluate_collaboration_study.py 退出0；脚本对缺章/少题材/重复评委/越界分数拒绝给PASS；合成CSV只验证计算，不能当文学结论。预注册目标：质量均差不低于-0.2、审阅时间中位数下降≥20%、严重连续性错误不增加，另展示CI不隐去不确定性。",
       "verify_cmd": "python3 scripts/test_evaluate_collaboration_study.py",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: 87d15a00d7b0c999a8b6c9f9defcecca9e0c7920; 865/0/0/1skip. record p40-04-p40",
+      "evidence": "2026-09-16 verified: 1c94ff669eb07a018e005717073e88ec61d73236; 9 QA specs pass. record p40-04-p40",
       "completion_record": "p40-04-p40"
     },
     {

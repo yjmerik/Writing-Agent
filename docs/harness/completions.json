@@ -1297,6 +1297,105 @@
       "implementation_commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
       "main_commit": "87d15a00d7b0c999a8b6c9f9defcecca9e0c7920",
       "evidence": "docs/harness/evidence/p40-04-p40.json"
+    },
+    {
+      "id": "p37-04-p37",
+      "kind": "verified",
+      "feature_ids": [
+        "p37-04"
+      ],
+      "branch": "main",
+      "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "evidence": "docs/harness/evidence/p37-04-p37.json"
+    },
+    {
+      "id": "p37-05-p37",
+      "kind": "verified",
+      "feature_ids": [
+        "p37-05"
+      ],
+      "branch": "main",
+      "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "evidence": "docs/harness/evidence/p37-05-p37.json"
+    },
+    {
+      "id": "p37-13-p37",
+      "kind": "verified",
+      "feature_ids": [
+        "p37-13"
+      ],
+      "branch": "main",
+      "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "evidence": "docs/harness/evidence/p37-13-p37.json"
+    },
+    {
+      "id": "p38-04-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-04"
+      ],
+      "branch": "main",
+      "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "evidence": "docs/harness/evidence/p38-04-p38.json"
+    },
+    {
+      "id": "p38-08-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-08"
+      ],
+      "branch": "main",
+      "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "evidence": "docs/harness/evidence/p38-08-p38.json"
+    },
+    {
+      "id": "p38-12-p38",
+      "kind": "verified",
+      "feature_ids": [
+        "p38-12"
+      ],
+      "branch": "main",
+      "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "evidence": "docs/harness/evidence/p38-12-p38.json"
+    },
+    {
+      "id": "p39-05-p39",
+      "kind": "verified",
+      "feature_ids": [
+        "p39-05"
+      ],
+      "branch": "main",
+      "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "evidence": "docs/harness/evidence/p39-05-p39.json"
+    },
+    {
+      "id": "p39-06-p39",
+      "kind": "verified",
+      "feature_ids": [
+        "p39-06"
+      ],
+      "branch": "main",
+      "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "evidence": "docs/harness/evidence/p39-06-p39.json"
+    },
+    {
+      "id": "p40-03-p40",
+      "kind": "verified",
+      "feature_ids": [
+        "p40-03"
+      ],
+      "branch": "main",
+      "implementation_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "main_commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+      "evidence": "docs/harness/evidence/p40-03-p40.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

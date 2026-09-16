@@ -1,0 +1,30 @@
+{
+  "commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+  "cleanCheckout": true,
+  "feature": "p37-13",
+  "branch": "main",
+  "base_commit": "N/A",
+  "red": {
+    "command": "npm test",
+    "exitCode": 0,
+    "result": "spec"
+  },
+  "implementation": {
+    "commit": "1c94ff669eb07a018e005717073e88ec61d73236",
+    "notes": "directive-loop.spec.ts QA spec"
+  },
+  "checks": [
+    {
+      "command": "npm --prefix qa/collaboration test -- directive-loop.spec.ts",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test",
+      "result": "865+/0/0/1skip",
+      "exitCode": 0
+    }
+  ],
+  "limits": [],
+  "evidence_line": "2026-09-16 verified: 1c94ff669eb07a018e005717073e88ec61d73236; 9 QA specs pass. record p37-13-p37"
+}

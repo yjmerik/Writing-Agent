@@ -6651,7 +6651,7 @@
         "p40-04",
         "p40-06"
       ],
-      "status": "in-progress",
+      "status": "deferred",
       "files": [],
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-05",
@@ -6661,7 +6661,8 @@
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
       "evidence": "2026-09-16: script written and runs; INCOMPLETE (p40-06 real experiment needs human participants and model budget)",
       "branch": "main",
-      "completion_record": null
+      "completion_record": null,
+      "deferred_reason": "Blocked by p40-06 real experiment (needs human participants and real model budget, Agent cannot substitute)"
     },
     {
       "id": "p40-06",

@@ -1,5 +1,5 @@
 {
-  "commit": "73620aaf56e7f7f1b4f7c984e0f2317fe070fc00",
+  "commit": "d4423bf23e2ce199d75f2d25e0c916ecd40267ef",
   "cleanCheckout": true,
   "feature": "p40-05",
   "branch": "codex/p40-05",
@@ -10,7 +10,7 @@
     "result": "QA spec"
   },
   "implementation": {
-    "commit": "73620aaf56e7f7f1b4f7c984e0f2317fe070fc00",
+    "commit": "d4423bf23e2ce199d75f2d25e0c916ecd40267ef",
     "notes": "verify-collaboration-acceptance.sh QA spec, tested against scenario server"
   },
   "checks": [
@@ -27,5 +27,5 @@
   ],
   "limits": [],
   "evidence_line": "2026-09-16 verified: cb3d1b12183cd1ed2c56caa0577258eb6e75529d; QA spec verify-collaboration-acceptance.sh tested against scenario server. record p40-05-p40",
-  "main_commit": "73620aaf56e7f7f1b4f7c984e0f2317fe070fc00"
+  "main_commit": "d4423bf23e2ce199d75f2d25e0c916ecd40267ef"
 }

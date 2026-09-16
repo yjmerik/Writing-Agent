@@ -1405,8 +1405,8 @@
         "p40-06"
       ],
       "branch": "codex/p40-05-06-final",
-      "implementation_commit": "7748330984e314826c9ba9bf38f9386ec2318ae3",
-      "main_commit": "7748330984e314826c9ba9bf38f9386ec2318ae3",
+      "implementation_commit": "d4423bf23e2ce199d75f2d25e0c916ecd40267ef",
+      "main_commit": "d4423bf23e2ce199d75f2d25e0c916ecd40267ef",
       "evidence": "docs/harness/evidence/p40-06-p40.json"
     },
     {
@@ -1416,8 +1416,8 @@
         "p40-05"
       ],
       "branch": "codex/p40-05-06-final",
-      "implementation_commit": "7748330984e314826c9ba9bf38f9386ec2318ae3",
-      "main_commit": "7748330984e314826c9ba9bf38f9386ec2318ae3",
+      "implementation_commit": "d4423bf23e2ce199d75f2d25e0c916ecd40267ef",
+      "main_commit": "d4423bf23e2ce199d75f2d25e0c916ecd40267ef",
       "evidence": "docs/harness/evidence/p40-05-p40.json"
     }
   ],

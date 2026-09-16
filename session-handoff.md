@@ -12,3 +12,8 @@ Last Updated: 2026-09-16
 check-harness --check-git PASS。
 verify-collaboration-acceptance.sh COMPLETE 58/58。
 e2e record mystery + wuxia（真实 LLM）PASS。compare-baseline PASS。
+
+
+## Next Steps
+
+系统进入维护模式。后续改进由新需求驱动。

@@ -31,5 +31,6 @@
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=BookEditionSchemaTest → 3/3; immutable edition model + storage. record p38-05-p38"
+  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=BookEditionSchemaTest → 3/3; immutable edition model + storage. record p38-05-p38",
+  "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805"
 }

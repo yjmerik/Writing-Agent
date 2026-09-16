@@ -31,5 +31,6 @@
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; full QA suite → 28/28; instructions persisted (was null); AgentRevisionDialog loads READY proposals and offers 恢复 for chapter/passage candidates. record p37-04-p37"
+  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; full QA suite → 28/28; instructions persisted (was null); AgentRevisionDialog loads READY proposals and offers 恢复 for chapter/passage candidates. record p37-04-p37",
+  "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805"
 }

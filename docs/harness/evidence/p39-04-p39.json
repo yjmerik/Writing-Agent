@@ -31,5 +31,6 @@
     }
   ],
   "limits": [],
-  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=CharacterImpactPreviewApiTest → 4/4; confirm=false returns preview+token without persisting; confirm=true requires matching token (stale 409); impact-preview read-only; legacy PUT compat. record p39-04-p39"
+  "evidence_line": "2026-09-16 audit-fix verified: 0d2c5792a6c68dcdf432cee867096abc09c9b805; mvn test -Dtest=CharacterImpactPreviewApiTest → 4/4; confirm=false returns preview+token without persisting; confirm=true requires matching token (stale 409); impact-preview read-only; legacy PUT compat. record p39-04-p39",
+  "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805"
 }

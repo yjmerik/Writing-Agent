@@ -1074,9 +1074,9 @@
       "feature_ids": [
         "p38-05"
       ],
-      "branch": "codex/p38-05-book-edition-schema",
-      "implementation_commit": "1de88c6182ac99c4ea6a861907893bf0da54ac2f",
-      "main_commit": "1de88c6182ac99c4ea6a861907893bf0da54ac2f",
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
+      "main_commit": "0d2c5792a6c68dcdf432cee867096abc09c9b805",
       "evidence": "docs/harness/evidence/p38-05-p38.json"
     },
     {

@@ -1733,7 +1733,7 @@ public class SqliteNovelRepository implements NovelRepository {
         }
     }
 
-    /** C1：reviewSetHash=同事务读取的有序待审集合（报告/屏障/章节类检查点），JSON 键排序后 SHA-256。 */
+    /** C1：reviewSetHash=同事务读取的有序待审集合（报告/屏障/章节类检查点/适用意见/有效裁决），JSON 键排序后 SHA-256。 */
     private String computeReviewSetHash(Connection conn, String projectId, int chapterIndex) {
         try {
             String report = selectReportCurrent(conn, projectId, chapterIndex);
@@ -1756,13 +1756,59 @@ public class SqliteNovelRepository implements NovelRepository {
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) checkpoints.add("checkpoint:" + rs.getString("id") + "@" + rs.getString("type"));
             }
+            // p38-10: 适用意见（enabled + 范围含该章 + 未撤销）纳入指纹——新增/撤销意见使旧批准失效
+            List<String> directives = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT id, revision FROM author_directives WHERE project_id=? AND enabled=1 " +
+                            "AND status != 'DISMISSED' " +
+                            "AND (from_chapter IS NULL OR from_chapter <= ?) " +
+                            "AND (to_chapter IS NULL OR to_chapter >= ?)")) {
+                ps.setString(1, projectId);
+                ps.setInt(2, chapterIndex);
+                ps.setInt(3, chapterIndex);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    directives.add("directive:" + rs.getString("id") + "@rev"
+                            + (rs.getObject("revision") == null ? 1 : rs.getInt("revision")));
+                }
+            }
+            // p38-10: 该章有效裁决纳入指纹——裁决变化使旧批准失效
+            List<String> dispositions = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT id, issue_id, action FROM review_dispositions WHERE project_id=? " +
+                            "AND chapter_index=?")) {
+                ps.setString(1, projectId);
+                ps.setInt(2, chapterIndex);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    dispositions.add("disposition:" + rs.getString("id") + ":" + rs.getString("issue_id")
+                            + "@" + rs.getString("action"));
+                }
+            }
+            // p38: 该章有效问题（未解决）纳入指纹
+            List<String> issues = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT id, severity FROM continuity_issues WHERE project_id=? " +
+                            "AND detected_at_chapter<=? AND resolved=0")) {
+                ps.setString(1, projectId);
+                ps.setInt(2, chapterIndex);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    issues.add("issue:" + rs.getString("id") + "@" + rs.getString("severity"));
+                }
+            }
             Collections.sort(barriers);
             Collections.sort(checkpoints);
+            Collections.sort(directives);
+            Collections.sort(dispositions);
+            Collections.sort(issues);
             StringBuilder canonical = new StringBuilder();
             canonical.append("{\"barriers\":").append(jsonStringArray(barriers))
                     .append(",\"checkpoints\":").append(jsonStringArray(checkpoints))
-                    // p37/p38 接入前为空集合：意见/裁决/处置身份不参与指纹
-                    .append(",\"directives\":[],\"dispositions\":[],\"issues\":[],\"report\":")
+                    .append(",\"directives\":").append(jsonStringArray(directives))
+                    .append(",\"dispositions\":").append(jsonStringArray(dispositions))
+                    .append(",\"issues\":").append(jsonStringArray(issues))
+                    .append(",\"report\":")
                     .append(report == null ? "null" : "\"" + report + "\"")
                     .append("}");
             return sha256Hex(canonical.toString());

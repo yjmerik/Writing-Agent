@@ -100,14 +100,43 @@ class PlanEditionTest {
 
     @Test
     void 确认后目标更新大纲裁剪并暴露未决承诺() throws Exception {
+        // p38-03（审计 P1-3）：确认必须绑定预览凭证 + 受影响承诺逐项处置
+        String previewJson = mvc.perform(post("/api/projects/" + pid + "/plan/target-chapters")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"targetChapters\":5}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.applied").value(false))
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        com.fasterxml.jackson.databind.JsonNode preview =
+                new com.fasterxml.jackson.databind.ObjectMapper().readTree(previewJson);
+        String previewId = preview.path("previewId").asText();
+        String sourcePlanHash = preview.path("sourcePlanHash").asText();
+        String promiseId = preview.path("affectedPromises").get(0).path("id").asText();
+
+        // 无凭证直接确认 → 400（不得沿用旧语义）
         mvc.perform(post("/api/projects/" + pid + "/plan/target-chapters")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"targetChapters\":5,\"confirm\":true}"))
+                .andExpect(status().isBadRequest());
+
+        // 改目标数字沿用旧预览 → 409
+        mvc.perform(post("/api/projects/" + pid + "/plan/target-chapters")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"targetChapters\":4,\"confirm\":true,\"previewId\":\"" + previewId
+                                + "\",\"sourcePlanHash\":\"" + sourcePlanHash + "\"}"))
+                .andExpect(status().isConflict());
+
+        // 携带凭证 + 逐项处置 → 生效
+        String confirmBody = "{\"targetChapters\":5,\"confirm\":true,\"previewId\":\"" + previewId
+                + "\",\"sourcePlanHash\":\"" + sourcePlanHash
+                + "\",\"requestKey\":\"rk-1\",\"decisions\":[{\"id\":\"d1\",\"promiseId\":\""
+                + promiseId + "\",\"action\":\"MIGRATE\",\"targetChapter\":4}]}";
+        mvc.perform(post("/api/projects/" + pid + "/plan/target-chapters")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(confirmBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.applied").value(true))
-                .andExpect(jsonPath("$.targetChapters").value(5))
-                .andExpect(jsonPath("$.preview.affectedPromises[0].description").value("红回形针的来历"))
-                .andExpect(jsonPath("$.preview.affectedPromises[0].expectedResolveChapter").value(7));
+                .andExpect(jsonPath("$.targetChapters").value(5));
 
         assertEquals(5, repository.findWritingPreferences(pid).orElseThrow().getTargetChapters());
         assertEquals(5, countSynopses(), "大纲裁剪到新目标");

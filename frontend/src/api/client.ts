@@ -115,16 +115,40 @@ export interface AgentRevisionApplyResult {
 export interface PlanTargetPreview {
   applied: boolean;
   targetChapters: number;
+  /** p38-03: 预览凭证——确认必须原样带回 */
+  previewId?: string;
+  sourcePlanHash?: string;
+  prunedChapters?: number[];
+  affectedPromises?: Array<{
+    id: string;
+    description: string;
+    expectedResolveChapter: number;
+    plantedAtChapter: number;
+    mustResolve?: boolean;
+    priority?: string;
+  }>;
   preview: {
     prunedChapters: number[];
     affectedPromises: Array<{
+      id?: string;
       description: string;
       expectedResolveChapter: number;
       plantedAtChapter: number;
+      mustResolve?: boolean;
+      priority?: string;
     }>;
     writtenChapters: number;
     oldTarget: number;
   };
+}
+
+/** p38-03: 承诺处置决定 */
+export interface PromiseDecisionInput {
+  id: string;
+  promiseId: string;
+  action: 'MIGRATE' | 'OPEN_END';
+  targetChapter?: number;
+  reason?: string;
 }
 
 export interface ForeshadowCandidateView {
@@ -571,9 +595,20 @@ export const api = {
   getPlanTargetPreview: (id: string, newTarget: number) =>
     request<PlanTargetPreview>(`/projects/${id}/plan/target-chapters`,
       { method: 'POST', body: JSON.stringify({ targetChapters: newTarget, confirm: false }) }),
-  applyPlanTarget: (id: string, newTarget: number) =>
+  applyPlanTarget: (id: string, newTarget: number, credential: {
+    previewId: string;
+    sourcePlanHash: string;
+    decisions?: PromiseDecisionInput[];
+    requestKey?: string;
+  }) =>
     request<PlanTargetPreview>(`/projects/${id}/plan/target-chapters`,
-      { method: 'POST', body: JSON.stringify({ targetChapters: newTarget, confirm: true }) }),
+      { method: 'POST', body: JSON.stringify({
+        targetChapters: newTarget, confirm: true,
+        previewId: credential.previewId,
+        sourcePlanHash: credential.sourcePlanHash,
+        decisions: credential.decisions ?? [],
+        requestKey: credential.requestKey ?? crypto.randomUUID(),
+      }) }),
 
   // --- p35-02: 候选线索层 UI API ---
   getForeshadowCandidates: (id: string) =>

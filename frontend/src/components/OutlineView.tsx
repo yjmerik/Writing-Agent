@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Tree, Spin, Empty, Card, Typography, Button, Space, Input, InputNumber, Alert, message } from 'antd';
+import { Tree, Spin, Empty, Card, Typography, Button, Space, Input, InputNumber, Alert, Select, message } from 'antd';
 import {
   DeleteOutlined,
   DownOutlined,
@@ -8,7 +8,7 @@ import {
   SaveOutlined,
   UpOutlined,
 } from '@ant-design/icons';
-import type { PlanTargetPreview } from '../api/client';
+import type { PlanTargetPreview, PromiseDecisionInput } from '../api/client';
 import type { DataNode } from 'antd/es/tree';
 import { api } from '../api/client';
 import type { AgentRevisionTarget } from '../api/client';
@@ -38,6 +38,8 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
   const [previewTargetNumber, setPreviewTargetNumber] = useState<number | null>(null);
   const [appliedTargetNumber, setAppliedTargetNumber] = useState<number | null>(null);
   const [targetBusy, setTargetBusy] = useState(false);
+  // p38-04: 受影响承诺的逐项处置（MIGRATE 章号 / OPEN_END 理由）——未处置齐不得确认
+  const [promiseDecisions, setPromiseDecisions] = useState<Record<string, PromiseDecisionInput | null>>({});
   const previewRequestSeqRef = useRef(0);
   const previewTarget = async () => {
     if (newTarget === '' || Number(newTarget) < 1) return;
@@ -51,6 +53,7 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
       setTargetPreview(result);
       setPreviewTargetNumber(requested);
       setAppliedTargetNumber(null);
+      setPromiseDecisions({});
     } catch (err) {
       if (sequence === previewRequestSeqRef.current) message.error((err as Error).message);
     } finally {
@@ -61,9 +64,17 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
     // 只有确认按钮（绑定当前输入且未生效）能进入这里
     if (newTarget === '' || Number(newTarget) < 1) return;
     if (targetPreview == null || targetPreview.applied || previewTargetNumber !== Number(newTarget)) return;
+    if (!targetPreview.previewId || !targetPreview.sourcePlanHash) {
+      message.error('预览缺少凭证，请重新预览');
+      return;
+    }
     setTargetBusy(true);
     try {
-      const result = await api.applyPlanTarget(projectId, Number(newTarget));
+      const result = await api.applyPlanTarget(projectId, Number(newTarget), {
+        previewId: targetPreview.previewId,
+        sourcePlanHash: targetPreview.sourcePlanHash,
+        decisions: Object.values(promiseDecisions).filter((d): d is PromiseDecisionInput => d != null),
+      });
       setTargetPreview(result);
       setPreviewTargetNumber(Number(newTarget));
       setAppliedTargetNumber(Number(newTarget));
@@ -249,6 +260,15 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
   const hasUnsavedStructure = Boolean(draft && persistedOutline
     && JSON.stringify(draft.volumes) !== JSON.stringify(persistedOutline.volumes));
 
+  // p38-04: 每个受影响承诺都有有效处置才允许确认
+  const affectedPromiseList = targetPreview?.preview?.affectedPromises ?? [];
+  const allPromisesDecided = affectedPromiseList.every((p) => {
+    const d = p.id ? promiseDecisions[p.id] : null;
+    if (!p.id || !d) return !p.id ? true : false;
+    if (d.action === 'MIGRATE') return d.targetChapter != null && d.targetChapter >= 1;
+    return Boolean(d.reason && d.reason.trim());
+  });
+
   return (
     <Card>
       <Card size="small" style={{ marginBottom: 16 }} title="📐 篇幅与计划">
@@ -262,7 +282,8 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
           <Button onClick={() => void previewTarget()} loading={targetBusy && appliedTargetNumber == null}>影响预览</Button>
           <Button type="primary"
             disabled={targetPreview == null || targetPreview.applied
-              || newTarget === '' || previewTargetNumber !== Number(newTarget)}
+              || newTarget === '' || previewTargetNumber !== Number(newTarget)
+              || !allPromisesDecided}
             loading={targetBusy} onClick={() => void applyTarget()}>确认生效</Button>
         </Space>
         {targetPreview && (
@@ -278,9 +299,55 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
                   <div>裁剪章节：第 {targetPreview.preview.prunedChapters.join('、')} 章</div>
                 )}
                 {targetPreview.preview.affectedPromises.map(p => (
-                  <div key={p.description}>
+                  <div key={p.id ?? p.description} style={{ marginBottom: 8 }}>
                     ⚠ 「{p.description}」原定第 {p.expectedResolveChapter} 章回收，超出新目标——
-                    该承诺将失去承载位置——请迁移到保留章节、调整目标或接受开放结局。
+                    该承诺将失去承载位置。请逐项处置：
+                    {p.id && (
+                      <Space wrap style={{ marginTop: 4 }}>
+                        <Select
+                          aria-label={`处置承诺 ${p.description}`}
+                          size="small"
+                          style={{ width: 150 }}
+                          placeholder="选择处置"
+                          value={promiseDecisions[p.id]?.action}
+                          onChange={(action: 'MIGRATE' | 'OPEN_END') => setPromiseDecisions(prev => ({
+                            ...prev,
+                            [p.id!]: { id: `${p.id}-decision`, promiseId: p.id!, action,
+                              targetChapter: action === 'MIGRATE' ? (prev[p.id!]?.targetChapter ?? undefined) : undefined,
+                              reason: action === 'OPEN_END' ? (prev[p.id!]?.reason ?? '') : undefined },
+                          }))}
+                          options={[
+                            { value: 'MIGRATE', label: '迁移到保留章节' },
+                            { value: 'OPEN_END', label: '接受开放结局' },
+                          ]}
+                        />
+                        {promiseDecisions[p.id]?.action === 'MIGRATE' && (
+                          <InputNumber
+                            aria-label={`迁移目标章号 ${p.description}`}
+                            size="small" min={1}
+                            max={Number(newTarget) || undefined}
+                            placeholder="目标章号"
+                            value={promiseDecisions[p.id]?.targetChapter}
+                            onChange={(v) => setPromiseDecisions(prev => ({
+                              ...prev,
+                              [p.id!]: { ...(prev[p.id!] as PromiseDecisionInput), targetChapter: v ?? undefined },
+                            }))}
+                          />
+                        )}
+                        {promiseDecisions[p.id]?.action === 'OPEN_END' && (
+                          <Input
+                            aria-label={`开放结局理由 ${p.description}`}
+                            size="small"
+                            placeholder="接受开放结局的理由"
+                            value={promiseDecisions[p.id]?.reason ?? ''}
+                            onChange={(e) => setPromiseDecisions(prev => ({
+                              ...prev,
+                              [p.id!]: { ...(prev[p.id!] as PromiseDecisionInput), reason: e.target.value },
+                            }))}
+                          />
+                        )}
+                      </Space>
+                    )}
                   </div>
                 ))}
               </div>

@@ -495,12 +495,39 @@ public class ContentController {
     }
 
     /** p33-08（设计 5.6）：篇幅变更——先预览影响，confirm 才生效。 */
+    /**
+     * p38-03（审计 P1-3）：篇幅变更——预览返回凭证（previewId+sourcePlanHash），
+     * 确认必须携带与预览一致的凭证、目标与逐项承诺处置；缺凭证 400、过期/不符 409。
+     */
     @PostMapping("/plan/target-chapters")
     public Map<String, Object> changeTargetChapters(@PathVariable String id,
                                                     @RequestBody Map<String, Object> body) {
         int newTarget = Integer.parseInt(String.valueOf(body.get("targetChapters")));
         boolean confirm = Boolean.parseBoolean(String.valueOf(body.getOrDefault("confirm", "false")));
-        return planEdition.changeTargetChapters(id, newTarget, confirm);
+        if (!confirm) {
+            return planEdition.previewTarget(id, newTarget);
+        }
+        String previewId = body.get("previewId") == null ? null : String.valueOf(body.get("previewId"));
+        String sourcePlanHash = body.get("sourcePlanHash") == null ? null
+                : String.valueOf(body.get("sourcePlanHash"));
+        String requestKey = body.get("requestKey") == null ? null : String.valueOf(body.get("requestKey"));
+        java.util.List<com.writing.novel.domain.PlanChange.PromiseDecision> decisions = new java.util.ArrayList<>();
+        Object decisionsRaw = body.get("decisions");
+        if (decisionsRaw instanceof java.util.List<?> list) {
+            for (Object item : list) {
+                if (item instanceof Map<?, ?> m) {
+                    decisions.add(new com.writing.novel.domain.PlanChange.PromiseDecision(
+                            String.valueOf(m.get("id")),
+                            previewId,
+                            String.valueOf(m.get("promiseId")),
+                            String.valueOf(m.get("action")),
+                            m.get("targetChapter") == null ? null
+                                    : Integer.parseInt(String.valueOf(m.get("targetChapter"))),
+                            m.get("reason") == null ? null : String.valueOf(m.get("reason"))));
+                }
+            }
+        }
+        return planEdition.confirmTarget(id, previewId, sourcePlanHash, newTarget, decisions, requestKey);
     }
 
     /**

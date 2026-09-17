@@ -30,7 +30,7 @@ public class DispositionController {
         if (!Set.of("FALSE_POSITIVE", "EXCEPTION", "DEFER").contains(action)) {
             throw new IllegalArgumentException("未知裁决类型: " + action);
         }
-        String reason = String.valueOf(body.getOrDefault("reason", "")).trim();
+        String reason = body.get("reason") instanceof String text ? text.trim() : "";
         if (reason.isEmpty()) throw new IllegalArgumentException("裁决必须说明理由");
         Integer deferUntil = body.get("deferUntilChapter") == null ? null
                 : Integer.valueOf(String.valueOf(body.get("deferUntilChapter")));
@@ -38,15 +38,31 @@ public class DispositionController {
             throw new IllegalArgumentException("DEFER 必须指定 deferUntilChapter");
         }
 
-        Map<String, Object> identityRaw = (Map<String, Object>) body.get("identity");
-        if (identityRaw == null) throw new IllegalArgumentException("缺少 identity");
+        if (!(body.get("identity") instanceof Map<?, ?> identityRaw)) {
+            throw new IllegalArgumentException("identity 必须是稿件身份对象");
+        }
         String identityProjectId = String.valueOf(identityRaw.get("projectId"));
         if (!id.equals(identityProjectId)) {
             throw new IllegalArgumentException("identity.projectId 与路径项目不符，不能跨项目操作");
         }
-        ChapterApproval.Identity identity = new ChapterApproval.Identity(
-                id, intOf(identityRaw.get("chapterIndex")),
-                intOf(identityRaw.get("version")), String.valueOf(identityRaw.get("contentHash")));
+        Integer chapterIndex = intOf(identityRaw.get("chapterIndex"));
+        Integer version = intOf(identityRaw.get("version"));
+        String hash = identityRaw.get("contentHash") instanceof String text ? text : "";
+        if (chapterIndex == null || chapterIndex < 1 || version == null || version < 1 || hash.isBlank()) {
+            throw new IllegalArgumentException("identity 需要有效 chapterIndex/version/contentHash");
+        }
+        var issue = repository.findContinuityIssuesByProject(id).stream()
+                .filter(item -> issueId.equals(item.getId())).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("问题不存在或不属于该项目"));
+        if (issue.getDetectedAtChapter() != chapterIndex) {
+            throw new IllegalArgumentException("问题不属于指定章节");
+        }
+        var chapter = repository.findChapterByIndex(id, chapterIndex)
+                .orElseThrow(() -> new IllegalArgumentException("指定章节不存在"));
+        if (version != chapter.getVersion() || !hash.equals(ChapterApproval.contentHash(chapter.getTitle(), chapter.getContent()))) {
+            throw new IllegalStateException("稿件身份已变化或无效，请刷新后重新裁决");
+        }
+        ChapterApproval.Identity identity = new ChapterApproval.Identity(id, chapterIndex, version, hash);
 
         ReviewDisposition disposition = new ReviewDisposition(
                 UUID.randomUUID().toString(), id, issueId,
@@ -78,7 +94,6 @@ public class DispositionController {
 
     private Integer intOf(Object value) {
         if (value == null) return null;
-        if (value instanceof Number n) return n.intValue();
         try { return Integer.parseInt(String.valueOf(value).trim()); }
         catch (NumberFormatException e) { return null; }
     }

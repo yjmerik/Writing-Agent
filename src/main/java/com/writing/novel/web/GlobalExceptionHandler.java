@@ -1,5 +1,6 @@
 package com.writing.novel.web;
 
+import com.writing.novel.spi.NovelRepository.ProposalSourceConflictException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -26,6 +27,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                 "error", e.getMessage(),
                 "code", "WORK_OWNERSHIP_CONFLICT"));
+    }
+
+    /** 候选生成后来源变化：正文提交已拒绝，客户端应重新生成预览。 */
+    @ExceptionHandler(ProposalSourceConflictException.class)
+    public ResponseEntity<Map<String, String>> handleProposalSourceConflict(ProposalSourceConflictException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
     }
 
     /** 非法状态（如从错误状态推进）→ 409 */

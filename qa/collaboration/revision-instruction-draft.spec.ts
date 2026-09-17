@@ -110,7 +110,7 @@ test('generation failure keeps the draft across reload', async ({ page, request 
   await expect(input(page)).toHaveValue(DRAFT);
 });
 
-test('failed application after a real source change preserves instructions', async ({ page, request }) => {
+test('stale candidate returns 409 and preserves instructions after a real source change', async ({ page, request }) => {
   const pid = await seed(request);
   await open(page, pid);
   await input(page).fill(DRAFT);
@@ -122,11 +122,11 @@ test('failed application after a real source change preserves instructions', asy
   expect(edit.ok()).toBeTruthy();
   const rejected = page.waitForResponse(response => response.url().endsWith('/apply'));
   await dialog(page).getByRole('button', { name: '确认应用', exact: true }).click();
-  // This test verifies draft retention on rejection. The existing stale-candidate HTTP 500 mapping is separately recorded in backlog.
-  expect((await rejected).ok()).toBeFalsy();
-  await expect(dialog(page).getByText(/当前内容已变化|应用失败/)).toBeVisible();
+  expect((await rejected).status()).toBe(409);
+  await expect(dialog(page).getByText(/当前内容已变化/)).toBeVisible();
   const unchanged = await (await request.get(`${BASE}/api/projects/${pid}/chapters/1`)).json();
   expect(unchanged.content).toBe(BODY + '并发的新稿。');
+  expect(unchanged.version).toBe(current.version + 1);
   await expect(input(page)).toHaveValue(DRAFT);
   await page.reload();
   await page.getByRole('button', { name: '让 Agent 修改第1章', exact: true }).click();

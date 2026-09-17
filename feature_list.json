@@ -6955,24 +6955,26 @@
     {
       "id": "p41-10",
       "name": "过期候选返回409业务冲突",
-      "description": "独立发现：正式修改来源后应用旧候选拒绝写入但HTTP500，应映射明确候选过期异常为409；本轮仅登记，不混入p41-09。",
+      "description": "正式修改来源后应用旧候选返回409业务冲突，保持正文和版本不变；真实存储异常仍为500。",
       "phase": 41,
       "type": "bug",
       "dependencies": [
         "p37-04"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/web/GlobalExceptionHandler.java",
-        "src/test/java/com/writing/novel/web/StaleRevisionCandidateApiTest.java"
+        "src/test/java/com/writing/novel/web/StaleRevisionCandidateApiTest.java",
+        "qa/collaboration/revision-instruction-draft.spec.ts"
       ],
       "spec": "docs/specs/2026-09-18-stale-candidate-http-status.md",
       "acceptance": "真实API生成候选并正式编辑来源后应用旧候选返回409且稿件/版本不变；有效候选成功，未分类异常仍500。",
       "verify_cmd": "mvn test -Dtest=StaleRevisionCandidateApiTest",
-      "evidence": "2026-09-18 p41-09 browser trace: HTTP500 {error:候选来源已变化，请刷新后重新生成}; 原始trace及复现流程见spec。待独立修复，尚未运行本项专项测试。"
+      "evidence": "2026-09-18: 实施中；先记录复现测试，再修复。",
+      "branch": "codex/p41-10-stale-candidate-conflict"
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-09-18",
-  "active_feature": null
+  "active_feature": "p41-10"
 }

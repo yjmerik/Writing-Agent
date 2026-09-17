@@ -1,41 +1,36 @@
-# 协作第三轮修复 — 2026-09-18
+# 协作复验后续修复 — 2026-09-18
 
 Last Updated: 2026-09-18
 
 ## Current
 
-用户确认实施的六类问题按p41-01至p41-09完成，均已独立提交、合入main并干净检出复验。
-最终业务提交：fb9e03396660189d7c5029dea8357e371b737770；分支codex/p41-09-revision-instruction-draft；本次为完成回执。
-active_feature=null；p41-10为独立发现的not-started，p40-05/p40-06为deferred。
-完整文学验收仍INCOMPLETE，不以软件测试或基线PASS替代。
+p41-01～09 已合并 main；当前唯一进行中项 p41-10，分支 codex/p41-10-stale-candidate-conflict。
+用户已要求继续修复。过期候选专用异常映射已实现，全量及浏览器通过，待提交合并与主分支复验。
+工作目录 /tmp/writing-agent-audit3-design；主工作区原有两处未跟踪内容保留。
 
 ## Files
 
-- 最终报告：docs/reports/2026-09-18-collaboration-audit3-repair-result.md
-- 设计：docs/specs/2026-09-17-collaboration-audit3-repair.md
-- 实施清单：docs/superpowers/plans/2026-09-17-collaboration-audit3-repair.md
-- 各项回执：feature_list.json → completion_record → docs/harness/completions.json / evidence/
-- 旧实验声明原样归档：docs/harness/archive/2026-09-18-audit3-superseded-study.json
+- docs/specs/2026-09-18-stale-candidate-http-status.md
+- src/main/java/com/writing/novel/web/GlobalExceptionHandler.java
+- src/test/java/com/writing/novel/web/StaleRevisionCandidateApiTest.java
+- qa/collaboration/revision-instruction-draft.spec.ts
+- 上次状态已归档 docs/harness/archive/2026-09-18-pre-p41-10-*.md
 
 ## Verification
 
-main@fb9e033：编译通过；后端931项、0失败/0错误/1跳过；统计14项；前端构建通过。
-全部协作回归38通过（0失败/跳过/flaky）；草稿专项9通过；桌面1280与窄屏390截图已复核。
-真实HTTP：错误稿号裁决/旧revision批准409，正确证据200；人物缺confirm400；历史v2来源200。
-持续偏好故障：各表原样、计划PENDING；去故障后同请求200、重复已成功请求409。
-完整验收入口PASS=7 FAIL=1、退出1：仅真实实验缺严重错误计数，不是软件检查失败。
-两题材replay基线PASS，mystery在2章、wuxia在1章PAUSED，evaluation均null；未录制或bless。
-原始本轮证据：/tmp/audit3-final、/tmp/p41-*-*.log；逐项关键结果已随回执提交。
+基线 ./init.sh 通过：931 tests，0 failures，0 errors，1 skipped；前端构建通过。
+新增真实 API 测试修复前4项中2项失败（CHAPTER/PASSAGE期望409实际500）；修复后4项通过。
+专项命令：mvn test -Dtest=StaleRevisionCandidateApiTest。
+分支全量编译测试通过：935 tests，0 failures，0 errors，1 skipped（/tmp/p41-10-full.log）。
+浏览器9项回归通过，含真实来源修改后409、冲突提示、新稿版本不变及草稿保留。
+日志 /tmp/p41-10-qa-branch.log；尚未登记完成。
 
 ## Blockers
 
-真实CSV缺severeContinuityErrors，需真实人工逐章计数后重新验收p40-06，再验收p40-05。
-两题材需作者人工复核后继续，当前不是完整流程或20章实验完成。
-p41-10：过期候选不写正文但HTTP500，应独立映射409；spec已登记，未在本轮混入修复。
+无本项实施阻塞。p40-05/p40-06仍deferred：真实文学实验缺严重连续性错误计数。
+两题材回放分别在第2/1章等待人工复核，整体验收仍INCOMPLETE。
 
 ## Next Steps
 
-优先读取最终报告。若继续p41-10，按其spec从main新建独立分支，先写真实API失败测试。
-人工实验资料不得代填或补零；补齐后严格重评。
-隔离服务18089和回放服务18098均已停止。工作区/tmp/writing-agent-audit3-design保留。
-主目录两处原有未跟踪路径保留，未推送远端、未修改用户小说数据。
+完成全量及浏览器检查，提交并合入main，干净检出复验后登记p41-10完成。
+不绕过人工复核，不以软件回归通过代替完整文学实验验收。

@@ -1,6 +1,6 @@
 # Spec: 过期候选的 HTTP 冲突状态
 
-状态：第三轮草稿回归中发现的独立问题，仅登记，未在 p41-09 混入实现。
+状态：2026-09-18 用户要求“继续修复”，独立分支实施 p41-10。
 
 ## 背景与动机
 
@@ -16,8 +16,8 @@
 
 ## 验收标准
 
-- [ ] 先以真实 API 生成候选、正式编辑来源，再真实应用旧候选，测试修复前 500、修复后 409 且正文/版本不变。
-- [ ] 有效候选正常应用；未分类运行异常仍返回 500。
+- [x] 先以真实 API 生成候选、正式编辑来源，再真实应用旧候选，测试修复前 500、修复后 409 且正文/版本不变。
+- [x] 有效候选正常应用；未分类运行异常仍返回 500。
 - [ ] `mvn test -Dtest=StaleRevisionCandidateApiTest` 和全量编译测试通过，独立分支合并后复验。
 
 ## 影响面
@@ -33,8 +33,8 @@
 |----|------|------|------------|------------|
 | p41-10 | 过期候选返回409业务冲突 | p37-04 | 真实来源编辑后应用旧候选返回409且稿件不变；有效候选可应用；未分类异常仍500。 | `mvn test -Dtest=StaleRevisionCandidateApiTest` |
 
-目标文件：`src/main/java/com/writing/novel/web/GlobalExceptionHandler.java` 与 `src/test/java/com/writing/novel/web/StaleRevisionCandidateApiTest.java`。
+目标文件：`src/main/java/com/writing/novel/web/GlobalExceptionHandler.java`、`src/test/java/com/writing/novel/web/StaleRevisionCandidateApiTest.java` 与 `qa/collaboration/revision-instruction-draft.spec.ts`。
 
 ## 风险与备选方案
 
-只映射明确的候选过期异常，不把所有 RuntimeException 当作409。不得用接受500的原接口断言代替本项修复；p41-09 的 UI 草稿测试仅验证失败后输入保留，不证明冲突状态已经正确。
+只映射明确的候选过期异常，不把所有 RuntimeException 当作409。不得用接受500的原接口断言代替本项修复；同步收紧原 p41-09 浏览器断言：必须返回409并显示来源变化提示，同时保留输入及并发新稿。

@@ -6827,7 +6827,7 @@
       "dependencies": [
         "p41-03"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
         "src/main/java/com/writing/novel/service/PlanEditionService.java",
@@ -6836,8 +6836,9 @@
       "spec": "docs/specs/2026-09-17-collaboration-audit3-repair.md",
       "acceptance": "对决定、偏好、大纲、确认状态各写入点注入 SQLite 失败后，四类数据全部维持原值；移除故障后同一请求成功一次；已确认请求不重复写入。",
       "verify_cmd": "mvn test -Dtest=PlanConfirmationAtomicityTest,PlanEditionTest,PlanChangeRepositoryTest,Audit2FixTest",
-      "evidence": "2026-09-17: 实施中；先记录复现测试，再修复。",
-      "branch": "codex/p41-04-atomic-plan-confirmation"
+      "evidence": "2026-09-17 verified: 7ee72a604c64283defbc94d60d1c390e24d698e2; record p41-04-audit3",
+      "branch": "codex/p41-04-atomic-plan-confirmation",
+      "completion_record": "p41-04-audit3"
     },
     {
       "id": "p41-05",
@@ -6940,5 +6941,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-17",
-  "active_feature": "p41-04"
+  "active_feature": null
 }

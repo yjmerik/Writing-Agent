@@ -1452,6 +1452,17 @@
       "implementation_commit": "65d8d5665034cd51064c47575391b656c2e00d72",
       "main_commit": "65d8d5665034cd51064c47575391b656c2e00d72",
       "evidence": "docs/harness/evidence/2026-09-17-p41-03.json"
+    },
+    {
+      "id": "p41-04-audit3",
+      "kind": "verified",
+      "feature_ids": [
+        "p41-04"
+      ],
+      "branch": "codex/p41-04-atomic-plan-confirmation",
+      "implementation_commit": "7ee72a604c64283defbc94d60d1c390e24d698e2",
+      "main_commit": "7ee72a604c64283defbc94d60d1c390e24d698e2",
+      "evidence": "docs/harness/evidence/2026-09-17-p41-04.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

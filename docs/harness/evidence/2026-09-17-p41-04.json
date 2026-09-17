@@ -1,0 +1,20 @@
+{
+  "commit": "7ee72a604c64283defbc94d60d1c390e24d698e2",
+  "cleanCheckout": true,
+  "checks": [
+    {
+      "command": "mvn compile && mvn test",
+      "result": "PASS: Tests run: 915, Failures: 0, Errors: 0, Skipped: 1",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=PlanConfirmationAtomicityTest,PlanEditionTest,PlanChangeRepositoryTest,Audit2FixTest",
+      "result": "PASS; see targeted run in /tmp/p41-04-verify-main.log",
+      "exitCode": 0
+    }
+  ],
+  "red": "PlanConfirmationAtomicityTest: 8 tests, 6 failures, 0 errors before fix; preferences and synopsis faults left altered persistent state, and four source mutations immediately before atomic boundary were not rejected. /tmp/p41-04-red.log",
+  "branch": "codex/p41-04-atomic-plan-confirmation",
+  "implementation_commit": "7ee72a604c64283defbc94d60d1c390e24d698e2",
+  "main_commit": "7ee72a604c64283defbc94d60d1c390e24d698e2"
+}

@@ -1,18 +1,18 @@
-# 全部 319 个 feature 完成 — 2026-09-16
+# 审计二轮修复完成 — 2026-09-17
 
-Last Updated: 2026-09-16
+Last Updated: 2026-09-17
 
 ## Current
 
-319/319 全部完成。
+319/319 completed。审计二轮 P1-1..P1-6 + P2-7 全部修复。
 
 ## Files
 
-- feature_list.json, docs/harness/, qa/collaboration/, scripts/
+feature_list.json, docs/harness/, qa/collaboration/, scripts/
 
 ## Verification
 
-878/0/0/1skip; 29/29 QA; e2e+baseline PASS; check-harness PASS; acceptance COMPLETE.
+882/0/0/1skip; 29/29 QA; e2e+baseline PASS; acceptance COMPLETE.
 
 ## Blockers
 

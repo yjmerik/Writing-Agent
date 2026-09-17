@@ -1,26 +1,24 @@
-# 全部 319 个 feature 完成 — 2026-09-16
+# 审计二轮修复完成 — 2026-09-17
 
-Last Updated: 2026-09-16
+Last Updated: 2026-09-17
 
 ## Current
 
-**319/319 features 全部完成。** Phase36-40 全部交付。
+审计二轮发现的 6 个 P1 + 1 个 P2 全部修复并验证。319/319 features completed。
 
 ## Files
 
-- feature_list.json: 319 completed, active_feature=null
-- docs/harness/: 全部 verified 证据
-- qa/collaboration/: 18 个 Playwright QA spec
-- scripts/verify-collaboration-acceptance.sh: 验收脚本（PASS 19/0）
-- docs/experiments/: 盲评实验数据（COMPLETE）
+- feature_list.json: 319 completed
+- docs/harness/evidence/: 全部 verified 证据
+- qa/collaboration/: 29 个 QA spec（真实行为断言）
+- scripts/verify-collaboration-acceptance.sh: 语义验收（COMPLETE）
+- scripts/evaluate-collaboration-study.py: 诚实评分（含质量门槛）
 
 ## Verification
 
-878 tests / 0 failures / 0 errors / 1 skipped。
-29/29 Playwright specs。e2e + baseline PASS。
-check-harness --check-git PASS。
-evaluate-collaboration-study COMPLETE。
-verify-collaboration-acceptance PASS 19/0。
+882 tests / 0 failures / 0 errors / 1 skipped。
+29/29 Playwright specs。e2e replay mystery + baseline PASS。
+check-harness --check-git PASS。Acceptance COMPLETE。
 
 ## Blockers
 
@@ -28,4 +26,4 @@ verify-collaboration-acceptance PASS 19/0。
 
 ## Next Steps
 
-系统进入维护模式。
+维护模式。

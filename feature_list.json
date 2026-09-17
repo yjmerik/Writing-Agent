@@ -6850,7 +6850,7 @@
         "p39-04",
         "p39-09"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/test/java/com/writing/novel/web/CanonWriteApiTest.java",
         "src/test/java/com/writing/novel/web/WorldCharacterFullEditTest.java"
@@ -6858,7 +6858,8 @@
       "spec": "docs/specs/2026-09-17-collaboration-audit3-repair.md",
       "acceptance": "既有成功编辑测试先取真实 previewToken 后确认；原人物字段、真典及屏障断言保留且通过，不把拒绝旧路径误当成功覆盖。",
       "verify_cmd": "mvn test -Dtest=CanonWriteApiTest,WorldCharacterFullEditTest",
-      "evidence": "2026-09-17 audit3：docs/reports/2026-09-17-collaboration-audit3/verification-report.md；设计待审阅，尚未运行本项修复测试。"
+      "evidence": "2026-09-17: 实施中；先记录复现测试，再修复。",
+      "branch": "codex/p41-05-character-test-migration"
     },
     {
       "id": "p41-06",
@@ -6941,5 +6942,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-17",
-  "active_feature": null
+  "active_feature": "p41-05"
 }

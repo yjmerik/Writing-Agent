@@ -42,11 +42,17 @@ class CanonWriteApiTest {
                 .andReturn().getResponse().getContentAsString();
         String charId = om.readTree(chars).get(0).get("id").asText();
 
+        String preview = mvc.perform(put("/api/projects/" + id + "/characters/" + charId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"ability\":\"金丹期\",\"confirm\":false}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.persisted").value(false))
+                .andReturn().getResponse().getContentAsString();
+        String token = om.readTree(preview).path("previewToken").asText();
         mvc.perform(put("/api/projects/" + id + "/characters/" + charId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"ability\":\"金丹期\"}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.ability").value("金丹期"));
+                        .content(om.writeValueAsString(java.util.Map.of("ability", "金丹期", "confirm", true, "previewToken", token))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.persisted").value(true))
+                .andExpect(jsonPath("$.character.ability").value("金丹期"));
 
         mvc.perform(get("/api/projects/" + id + "/facts"))
                 .andExpect(status().isOk())

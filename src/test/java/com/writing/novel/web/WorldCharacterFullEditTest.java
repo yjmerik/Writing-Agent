@@ -46,6 +46,7 @@ class WorldCharacterFullEditTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper objectMapper;
     @Autowired NovelRepository repository;
+    @Autowired com.writing.novel.persistence.sqlite.ConnectionProvider connections;
     @Autowired StoryCanon canon;
     @Autowired MemoryRevision memoryRevision;
     @Autowired RelevanceGateway relevanceGateway;
@@ -87,10 +88,7 @@ class WorldCharacterFullEditTest {
                 "appearance", "左眉有浅疤",
                 "relationships", "与顾清舟互为盟友",
                 "growthArc", "从自保走向担当");
-        mvc.perform(put("/api/projects/{id}/characters/{charId}", projectId, character.get("id").asText())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(characterPatch)))
-                .andExpect(status().isOk());
+        updateCharacter(projectId, character.get("id").asText(), characterPatch);
 
         JsonNode reloadedWorld = findById(getArray("/api/projects/" + projectId + "/worldbuilding"),
                 world.get("id").asText());
@@ -176,10 +174,10 @@ class WorldCharacterFullEditTest {
                 .andExpect(status().isBadRequest());
         mvc.perform(put("/api/projects/{id}/characters/{charId}", attackerProject, character.get("id").asText())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of(
+                        .content(objectMapper.writeValueAsString(confirmedCharacterPatch(ownerProject, character.get("id").asText(), Map.of(
                                 "name", "越权人物", "role", "反派", "personality", "越权性格",
                                 "ability", "越权能力", "motivation", "越权动机", "appearance", "越权外貌",
-                                "relationships", "越权关系", "growthArc", "越权成长"))))
+                                "relationships", "越权关系", "growthArc", "越权成长")))))
                 .andExpect(status().isBadRequest());
 
         JsonNode worldAfter = findById(getArray("/api/projects/" + ownerProject + "/worldbuilding"),
@@ -313,12 +311,46 @@ class WorldCharacterFullEditTest {
                 .andExpect(status().isOk());
     }
 
+    private Map<String, String> persistedCharacterRow(String characterId) throws Exception {
+        // Hydration calls entity setters that refresh its in-memory timestamp; compare the actual row.
+        try (var connection = connections.getConnection();
+             var query = connection.prepareStatement("SELECT * FROM characters WHERE id=?")) {
+            query.setString(1, characterId);
+            try (var row = query.executeQuery()) {
+                assertTrue(row.next());
+                var values = new java.util.TreeMap<String, String>();
+                for (int i = 1; i <= row.getMetaData().getColumnCount(); i++)
+                    values.put(row.getMetaData().getColumnName(i), row.getString(i));
+                return values;
+            }
+        }
+    }
+
+    private Map<String, Object> confirmedCharacterPatch(String projectId, String characterId, Map<String, String> fields)
+            throws Exception {
+        Map<String, String> before = persistedCharacterRow(characterId);
+        List<String> factsBefore = factSnapshot(projectId);
+        long revisionBefore = memoryRevision.current(projectId);
+        var body = new java.util.HashMap<String, Object>(fields);
+        body.put("confirm", false);
+        String preview = mvc.perform(put("/api/projects/{id}/characters/{charId}", projectId, characterId)
+                        .contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.persisted").value(false))
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        assertEquals(before, persistedCharacterRow(characterId));
+        assertEquals(factsBefore, factSnapshot(projectId));
+        assertEquals(revisionBefore, memoryRevision.current(projectId));
+        body.put("confirm", true);
+        body.put("previewToken", objectMapper.readTree(preview).path("previewToken").asText());
+        return body;
+    }
+
     private void updateCharacter(String projectId, String characterId, Map<String, String> fields)
             throws Exception {
+        var body = confirmedCharacterPatch(projectId, characterId, fields);
         mvc.perform(put("/api/projects/{id}/characters/{charId}", projectId, characterId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(fields)))
-                .andExpect(status().isOk());
+                        .contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.persisted").value(true));
     }
 
     private Map<String, String> characterFields(String name, String role, String personality, String ability,

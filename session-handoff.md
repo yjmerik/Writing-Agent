@@ -5,8 +5,8 @@ Last Updated: 2026-09-17
 ## Current
 
 用户已确认实施。已合并并复验：p41-01, p41-02, p41-03, p41-04。
-当前：无进行中项；待实施：p41-05, p41-06, p41-07, p41-08, p41-09。
-最近操作：p41-04 finish；分支 codex/p41-04-atomic-plan-confirmation。
+当前：p41-05；待实施：p41-06, p41-07, p41-08, p41-09。
+最近操作：p41-05 start；分支 codex/p41-05-character-test-migration。
 工作区 /tmp/writing-agent-audit3-design；原工作区两个未跟踪路径保留。
 
 ## Files
@@ -14,12 +14,12 @@ Last Updated: 2026-09-17
 - docs/specs/2026-09-17-collaboration-audit3-repair.md
 - docs/superpowers/plans/2026-09-17-collaboration-audit3-repair.md
 - feature_list.json / docs/harness/completions.json / docs/harness/evidence/
-- 当前范围：src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java; src/main/java/com/writing/novel/service/PlanEditionService.java; src/test/java/com/writing/novel/web/PlanConfirmationAtomicityTest.java
+- 当前范围：src/test/java/com/writing/novel/web/CanonWriteApiTest.java; src/test/java/com/writing/novel/web/WorldCharacterFullEditTest.java
 
 ## Verification
 
 每项证据记录见 feature_list 的 completion_record；仅合入 main 并干净检出验证后登记完成。
-本项专项：mvn test -Dtest=PlanConfirmationAtomicityTest,PlanEditionTest,PlanChangeRepositoryTest,Audit2FixTest
+本项专项：mvn test -Dtest=CanonWriteApiTest,WorldCharacterFullEditTest
 业务未完成项不以原882测试基线通过替代专项验收。
 
 ## Blockers

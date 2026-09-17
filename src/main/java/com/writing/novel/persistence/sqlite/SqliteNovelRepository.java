@@ -1434,60 +1434,131 @@ public class SqliteNovelRepository implements NovelRepository {
     }
 
     @Override
-    public com.writing.novel.domain.PlanChange commitPlanChange(
-            String projectId, String previewId, String sourcePlanHash,
-            List<com.writing.novel.domain.PlanChange.PromiseDecision> decisions, String key) {
-        return runInTransaction(conn -> {
-            try (PreparedStatement ps = conn.prepareStatement(
-                    "SELECT * FROM plan_changes WHERE project_id=? AND preview_id=?")) {
-                ps.setString(1, projectId); ps.setString(2, previewId);
-                ResultSet rs = ps.executeQuery();
-                if (!rs.next()) throw new IllegalArgumentException("计划变更不存在: " + previewId);
-                String storedHash = rs.getString("source_plan_hash");
-                if (!storedHash.equals(sourcePlanHash)) {
-                    throw new IllegalStateException("计划已变化，旧预览失效（planHash 不匹配）");
-                }
-                String status = rs.getString("status");
-                if ("CONFIRMED".equals(status)) {
-                    throw new IllegalStateException("计划变更已确认");
-                }
-            } catch (SQLException e) { throw new RuntimeException(e); }
-            // Save decisions
-            for (var decision : decisions) {
-                try (PreparedStatement ps = conn.prepareStatement(
-                        "INSERT INTO promise_decisions (id, plan_change_id, promise_id, action, " +
-                                "target_chapter, reason, created_at) VALUES (?,?,?,?,?,?,?)")) {
-                    ps.setString(1, decision.id());
-                    ps.setString(2, previewId);
-                    ps.setString(3, decision.promiseId());
-                    ps.setString(4, decision.action());
-                    if (decision.targetChapter() != null) ps.setInt(5, decision.targetChapter());
-                    else ps.setNull(5, Types.NULL);
-                    ps.setString(6, decision.reason());
-                    ps.setString(7, Instant.now().toString());
-                    ps.executeUpdate();
-                } catch (SQLException e) { throw new RuntimeException(e); }
+    public PlanChange commitPlanChange(String projectId, String previewId, String sourcePlanHash,
+            List<PlanChange.PromiseDecision> decisions, String key) {
+        return runInTransaction(conn -> commitPlanChange(conn, projectId, previewId, sourcePlanHash, decisions));
+    }
+
+    private PlanChange commitPlanChange(Connection conn, String projectId, String previewId,
+            String sourcePlanHash, List<PlanChange.PromiseDecision> decisions) {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM plan_changes WHERE project_id=? AND preview_id=?")) {
+            ps.setString(1, projectId); ps.setString(2, previewId);
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) throw new IllegalArgumentException("计划变更不存在: " + previewId);
+            String storedHash = rs.getString("source_plan_hash");
+            if (!storedHash.equals(sourcePlanHash)) {
+                throw new IllegalStateException("计划已变化，旧预览失效（planHash 不匹配）");
             }
+            String status = rs.getString("status");
+            if ("CONFIRMED".equals(status)) {
+                throw new IllegalStateException("计划变更已确认");
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        // Save decisions
+        for (var decision : decisions) {
             try (PreparedStatement ps = conn.prepareStatement(
-                    "UPDATE plan_changes SET status='CONFIRMED' WHERE project_id=? AND preview_id=?")) {
-                ps.setString(1, projectId); ps.setString(2, previewId);
+                    "INSERT INTO promise_decisions (id, plan_change_id, promise_id, action, " +
+                            "target_chapter, reason, created_at) VALUES (?,?,?,?,?,?,?)")) {
+                ps.setString(1, decision.id());
+                ps.setString(2, previewId);
+                ps.setString(3, decision.promiseId());
+                ps.setString(4, decision.action());
+                if (decision.targetChapter() != null) ps.setInt(5, decision.targetChapter());
+                else ps.setNull(5, Types.NULL);
+                ps.setString(6, decision.reason());
+                ps.setString(7, Instant.now().toString());
                 ps.executeUpdate();
             } catch (SQLException e) { throw new RuntimeException(e); }
-            // Same-transaction read: findPlanChange would open a new connection
-            // and not see the uncommitted status change
-            try (PreparedStatement ps2 = conn.prepareStatement(
-                    "SELECT * FROM plan_changes WHERE project_id=? AND preview_id=?")) {
-                ps2.setString(1, projectId); ps2.setString(2, previewId);
-                ResultSet rs2 = ps2.executeQuery();
-                rs2.next();
-                return new com.writing.novel.domain.PlanChange(
-                        rs2.getString("preview_id"), rs2.getString("project_id"),
-                        rs2.getString("source_plan_hash"), rs2.getInt("target_chapters"),
-                        rs2.getInt("written_boundary"), List.of(), List.of(),
-                        com.writing.novel.domain.PlanChange.Status.CONFIRMED,
-                        Instant.parse(rs2.getString("created_at")));
+        }
+        try (PreparedStatement ps = conn.prepareStatement(
+                "UPDATE plan_changes SET status='CONFIRMED' WHERE project_id=? AND preview_id=?")) {
+            ps.setString(1, projectId); ps.setString(2, previewId);
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        // Same-transaction read: findPlanChange would open a new connection
+        // and not see the uncommitted status change
+        try (PreparedStatement ps2 = conn.prepareStatement(
+                "SELECT * FROM plan_changes WHERE project_id=? AND preview_id=?")) {
+            ps2.setString(1, projectId); ps2.setString(2, previewId);
+            ResultSet rs2 = ps2.executeQuery();
+            rs2.next();
+            return new com.writing.novel.domain.PlanChange(
+                    rs2.getString("preview_id"), rs2.getString("project_id"),
+                    rs2.getString("source_plan_hash"), rs2.getInt("target_chapters"),
+                    rs2.getInt("written_boundary"), List.of(), List.of(),
+                    com.writing.novel.domain.PlanChange.Status.CONFIRMED,
+                    Instant.parse(rs2.getString("created_at")));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public PlanChange commitPlanEdition(String projectId, String previewId, String sourcePlanHash,
+            WritingPreferences preferences, Outline outline, List<PlanChange.PromiseDecision> decisions,
+            String requestKey) {
+        if (!projectId.equals(preferences.getProjectId()) || !projectId.equals(outline.getProjectId())) {
+            throw new IllegalArgumentException("计划对象不属于该项目");
+        }
+        return runInTransaction(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT source_plan_hash, target_chapters, written_boundary, status FROM plan_changes WHERE project_id=? AND preview_id=?")) {
+                ps.setString(1, projectId); ps.setString(2, previewId);
+                ResultSet rs = ps.executeQuery();
+                if (!rs.next()) throw new IllegalArgumentException("计划变更凭证不存在");
+                if (!"PENDING".equals(rs.getString("status"))
+                        || preferences.getTargetChapters() != rs.getInt("target_chapters")
+                        || preferences.getTargetChapters() < rs.getInt("written_boundary")
+                        || !sourcePlanHash.equals(rs.getString("source_plan_hash"))) {
+                    throw new IllegalStateException("计划预览状态或目标已变化，请重新预览");
+                }
             } catch (SQLException e) { throw new RuntimeException(e); }
+            if (!sourcePlanHash.equals(currentPlanSourceHash(conn, projectId, preferences.getTargetChapters()))) {
+                throw new IllegalStateException("计划来源已变化，旧预览凭证失效，请重新预览");
+            }
+            saveWritingPreferences(conn, preferences);
+            saveOutline(conn, outline);
+            // Decisions and CONFIRMED are part of this same transaction, never a nested connection.
+            return commitPlanChange(conn, projectId, previewId, sourcePlanHash, decisions);
         });
+    }
+
+    /** Same canonical source as PlanEditionService.computeSourcePlanHash, read under the write transaction. */
+    private String currentPlanSourceHash(Connection conn, String projectId, int newTarget) {
+        int oldTarget = new WritingPreferences(projectId).getTargetChapters();
+        int written;
+        try {
+            try (PreparedStatement ps = conn.prepareStatement("SELECT current_chapter_index FROM projects WHERE id=?")) {
+                ps.setString(1, projectId); ResultSet rs = ps.executeQuery();
+                if (!rs.next()) throw new IllegalArgumentException("项目不存在");
+                written = rs.getInt(1);
+            }
+            try (PreparedStatement ps = conn.prepareStatement("SELECT target_chapters FROM writing_preferences WHERE project_id=?")) {
+                ps.setString(1, projectId); ResultSet rs = ps.executeQuery();
+                if (rs.next()) oldTarget = rs.getInt(1);
+            }
+            List<String> entries = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT v.volume_index, cs.chapter_index, cs.title, cs.synopsis FROM volumes v JOIN chapter_synopses cs ON cs.volume_id=v.id WHERE v.project_id=?")) {
+                ps.setString(1, projectId); ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    String synopsis = rs.getString("synopsis");
+                    entries.add(rs.getInt("volume_index") + ":" + rs.getInt("chapter_index") + ":"
+                            + rs.getString("title") + ":" + (synopsis == null ? "" : ReviewFingerprint.sha256Hex12(synopsis)));
+                }
+            }
+            Collections.sort(entries);
+            List<String> promises = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT id, priority, must_resolve, expected_resolve_chapter FROM foreshadowings WHERE project_id=? AND resolved=0")) {
+                ps.setString(1, projectId); ResultSet rs = ps.executeQuery();
+                while (rs.next()) promises.add(rs.getString("id") + ":" + rs.getString("priority")
+                        + ":" + (rs.getInt("must_resolve") != 0) + ":" + rs.getObject("expected_resolve_chapter"));
+            }
+            Collections.sort(promises);
+            return ReviewFingerprint.sha256Hex12("target=" + oldTarget + ";reqTarget=" + newTarget
+                    + ";written=" + written + ";outline=" + String.join(",", entries)
+                    + ";promises=" + String.join(",", promises));
+        } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
     /** 审计 P1-2: 适用 HARD/PREFERENCE 意见中，当前稿没有 APPLIED_SYSTEM/CONFIRMED 证据的列表。 */
@@ -3076,6 +3147,12 @@ public class SqliteNovelRepository implements NovelRepository {
 
     @Override
     public void saveWritingPreferences(WritingPreferences p) {
+        try (Connection conn = cp.getConnection()) {
+            saveWritingPreferences(conn, p);
+        } catch (SQLException ex) { throw new RuntimeException(ex); }
+    }
+
+    private void saveWritingPreferences(Connection conn, WritingPreferences p) {
         String sql = "INSERT INTO writing_preferences (project_id,dialogue_density,enable_dialogue_enforcement," +
                 "enable_climax_rotation,enable_character_voice,enable_knowledge_quotes," +
                 "preferred_quote_sources,prevent_transition_overlap," +
@@ -3110,8 +3187,7 @@ public class SqliteNovelRepository implements NovelRepository {
                 "circuit_breaker_threshold=excluded.circuit_breaker_threshold, " +
                 "checkpoint_span=excluded.checkpoint_span, " +
                 "updated_at=excluded.updated_at";
-        try (Connection conn = cp.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, p.getProjectId());
             ps.setDouble(2, p.getDialogueDensity());
             ps.setInt(3, p.isEnableDialogueEnforcement() ? 1 : 0);

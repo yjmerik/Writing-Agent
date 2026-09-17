@@ -1,0 +1,20 @@
+{
+  "commit": "02dc11d47f2e9faae60cce810d7eb9f73afb106a",
+  "cleanCheckout": true,
+  "checks": [
+    {
+      "command": "mvn compile && mvn test",
+      "result": "PASS: Tests run: 923, Failures: 0, Errors: 0, Skipped: 1",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=CharacterImpactPreviewApiTest,CanonWriteApiTest,WorldCharacterFullEditTest",
+      "result": "PASS; see targeted run in /tmp/p41-06-verify-main.log",
+      "exitCode": 0
+    }
+  ],
+  "red": "CharacterImpactPreviewApiTest: 12 tests, 8 failures before strict Boolean gate; missing/null/string/number/array/object confirm returned 200 instead of 400. Existing valid preview/confirm/stale-token tests retained. /tmp/p41-06-red.log",
+  "branch": "codex/p41-06-require-character-preview",
+  "implementation_commit": "02dc11d47f2e9faae60cce810d7eb9f73afb106a",
+  "main_commit": "02dc11d47f2e9faae60cce810d7eb9f73afb106a"
+}

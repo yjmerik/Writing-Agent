@@ -1,0 +1,50 @@
+{
+  "commit": "fb9e03396660189d7c5029dea8357e371b737770",
+  "cleanCheckout": true,
+  "checks": [
+    {
+      "command": "mvn compile && mvn test",
+      "result": "PASS: Tests run: 931, Failures: 0, Errors: 0, Skipped: 1",
+      "exitCode": 0
+    },
+    {
+      "command": "QA_BASE_URL=http://127.0.0.1:18089 npx --prefix qa/collaboration playwright test -c qa/collaboration/playwright.config.ts revision-instruction-draft.spec.ts",
+      "result": "PASS; see targeted run in /tmp/p41-09-verify-main.log",
+      "exitCode": 0
+    },
+    {
+      "command": "npm --prefix frontend run build",
+      "result": "PASS: clean main build; existing chunk-size warning only",
+      "exitCode": 0
+    },
+    {
+      "command": "QA_BASE_URL=http://127.0.0.1:18089 npm --prefix qa/collaboration test",
+      "result": "PASS: 38 passed, 0 failed; /tmp/writingagent-acceptance-qa/report.json",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/test_evaluate_collaboration_study.py",
+      "result": "PASS: 14 contract tests; original degradation counterexample FAILED with exit 1 as required",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 /tmp/audit3-final/api-probes.py",
+      "result": "PASS: actual HTTP rejects wrong stored disposition and old directive revision; matching evidence approves; plan complete rollback and retry; character confirmation; real historical source accepted",
+      "exitCode": 0
+    },
+    {
+      "command": "/tmp/audit3-replay.sh (existing fixtures, replay only)",
+      "result": "PASS existing baseline checks; mystery PAUSED at chapter 2, wuxia PAUSED at chapter 1; no complete-flow/quality acceptance claim; evaluation null",
+      "exitCode": 0
+    },
+    {
+      "command": "assert complete acceptance returns INCOMPLETE solely for missing human severe error counts",
+      "result": "PASS assertion: acceptance command exit 1, PASS=7 FAIL=1, STUDY-01 INCOMPLETE; this is not a COMPLETE literary experiment",
+      "exitCode": 0
+    }
+  ],
+  "red": "未修复静态界面上9项真实浏览器测试全部失败：桌面/窄屏刷新丢输入，取消/失败恢复/对象隔离/成功后他对象保留失败，旧候选覆盖新草稿且无选择，存储不可用无提示。校正按钮中文空格和实际段落编号后重跑确认；日志 /tmp/p41-09-red-confirmed.log，截图/trace/report /tmp/p41-09-qa-red-confirmed。初轮发现的独立旧候选500映射已登记p41-10，不冒充本项失败修复。\n",
+  "branch": "codex/p41-09-revision-instruction-draft",
+  "implementation_commit": "fb9e03396660189d7c5029dea8357e371b737770",
+  "main_commit": "fb9e03396660189d7c5029dea8357e371b737770"
+}

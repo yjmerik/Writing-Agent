@@ -6939,7 +6939,7 @@
       "dependencies": [
         "p37-04"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "frontend/src/components/AgentRevisionDialog.tsx",
         "frontend/src/hooks/useRevisionInstructionDraft.ts",
@@ -6948,8 +6948,9 @@
       "spec": "docs/specs/2026-09-17-collaboration-audit3-repair.md",
       "acceptance": "未生成候选的输入刷新重开后逐字恢复；项目/对象/段落隔离；取消、生成失败、应用失败不丢输入；成功应用清理对应草稿；存储异常显示未暂存而不崩溃。",
       "verify_cmd": "QA_BASE_URL=http://127.0.0.1:18089 npx --prefix qa/collaboration playwright test -c qa/collaboration/playwright.config.ts revision-instruction-draft.spec.ts",
-      "evidence": "2026-09-18: 实施中；先记录复现测试，再修复。",
-      "branch": "codex/p41-09-revision-instruction-draft"
+      "evidence": "2026-09-18 verified: fb9e03396660189d7c5029dea8357e371b737770; record p41-09-audit3",
+      "branch": "codex/p41-09-revision-instruction-draft",
+      "completion_record": "p41-09-audit3"
     },
     {
       "id": "p41-10",
@@ -6973,5 +6974,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-18",
-  "active_feature": "p41-09"
+  "active_feature": null
 }

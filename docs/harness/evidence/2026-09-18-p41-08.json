@@ -1,0 +1,25 @@
+{
+  "commit": "05c3993e22d57a022ac49a09c3d8f94f1c87837e",
+  "cleanCheckout": true,
+  "checks": [
+    {
+      "command": "mvn compile && mvn test",
+      "result": "PASS: Tests run: 931, Failures: 0, Errors: 0, Skipped: 1",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/test_evaluate_collaboration_study.py",
+      "result": "PASS; see targeted run in /tmp/p41-08-verify-main.log",
+      "exitCode": 0
+    },
+    {
+      "command": "evaluate-collaboration-study.py --require-complete on existing human ratings (expected INCOMPLETE and exit 1)",
+      "result": "PASS: status INCOMPLETE; missing columns: severeContinuityErrors; exit 1 asserted; ratings unchanged",
+      "exitCode": 0
+    }
+  ],
+  "red": "修复前 14 项契约测试：20 个断言/子用例失败、2 个缺少新统计输出的 KeyError。原 240 行下降1分/耗时增50%反例错误 COMPLETE；严格边界、严重错误、重复读者、NaN 等存在放行。日志 /tmp/p41-08-red.log。\n",
+  "branch": "codex/p41-08-strict-study-evaluation",
+  "implementation_commit": "05c3993e22d57a022ac49a09c3d8f94f1c87837e",
+  "main_commit": "05c3993e22d57a022ac49a09c3d8f94f1c87837e"
+}

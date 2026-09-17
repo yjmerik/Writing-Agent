@@ -4,9 +4,9 @@ Last Updated: 2026-09-18
 
 ## Current
 
-用户已确认实施。已合并并复验：p41-01, p41-02, p41-03, p41-04, p41-05, p41-06, p41-07。
-当前：p41-08；待实施：p41-09。
-最近操作：p41-08 start；分支 codex/p41-08-strict-study-evaluation。
+用户已确认实施。已合并并复验：p41-01, p41-02, p41-03, p41-04, p41-05, p41-06, p41-07, p41-08。
+当前：无进行中项；待实施：p41-09。
+最近操作：p41-08 finish；分支 codex/p41-08-strict-study-evaluation。
 工作区 /tmp/writing-agent-audit3-design；原工作区两个未跟踪路径保留。
 
 ## Files
@@ -24,7 +24,7 @@ Last Updated: 2026-09-18
 
 ## Blockers
 
-无实施授权阻塞。真实实验严格重评 INCOMPLETE（缺严重错误计数）；p40-05/06 已恢复 deferred，历史完成记录保留。
+无实施授权阻塞。现有文学实验缺严重连续性错误计数，严格重评须如实记录。
 两题材原回放在2/1章等待人工复核；不能视为完整流程或文学质量验收。
 
 ## Next Steps

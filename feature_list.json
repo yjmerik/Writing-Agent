@@ -6917,7 +6917,7 @@
       "dependencies": [
         "p40-04"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "scripts/evaluate-collaboration-study.py",
         "scripts/test_evaluate_collaboration_study.py",
@@ -6926,8 +6926,9 @@
       "spec": "docs/specs/2026-09-17-collaboration-audit3-repair.md",
       "acceptance": "240 行评分下降1分且耗时增长50%的反例不再 COMPLETE 且 require-complete 非零；-0.2/20%边界、严重错误增加/缺失、重复评委/非有限数字被正确判定；固定种子的置信区间可复现。",
       "verify_cmd": "python3 scripts/test_evaluate_collaboration_study.py",
-      "evidence": "2026-09-17: 实施中；先记录复现测试，再修复。",
-      "branch": "codex/p41-08-strict-study-evaluation"
+      "evidence": "2026-09-18 verified: 05c3993e22d57a022ac49a09c3d8f94f1c87837e; record p41-08-audit3",
+      "branch": "codex/p41-08-strict-study-evaluation",
+      "completion_record": "p41-08-audit3"
     },
     {
       "id": "p41-09",
@@ -6952,5 +6953,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-18",
-  "active_feature": "p41-08"
+  "active_feature": null
 }

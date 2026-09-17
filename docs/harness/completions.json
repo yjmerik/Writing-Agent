@@ -1474,6 +1474,17 @@
       "implementation_commit": "a9455dd983489ada31ea823d5058317956af8431",
       "main_commit": "a9455dd983489ada31ea823d5058317956af8431",
       "evidence": "docs/harness/evidence/2026-09-17-p41-07.json"
+    },
+    {
+      "id": "p41-08-audit3",
+      "kind": "verified",
+      "feature_ids": [
+        "p41-08"
+      ],
+      "branch": "codex/p41-08-strict-study-evaluation",
+      "implementation_commit": "05c3993e22d57a022ac49a09c3d8f94f1c87837e",
+      "main_commit": "05c3993e22d57a022ac49a09c3d8f94f1c87837e",
+      "evidence": "docs/harness/evidence/2026-09-18-p41-08.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

@@ -1,0 +1,20 @@
+{
+  "commit": "682ad0173a63ae5a1f11af3193bf9495f7e3cbc8",
+  "cleanCheckout": true,
+  "checks": [
+    {
+      "command": "mvn compile && mvn test",
+      "result": "PASS: Tests run: 895, Failures: 0, Errors: 0, Skipped: 1",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=ApprovalEvidenceIdentityTest,VersionedApprovalRepositoryTest,DispositionApprovalGateTest",
+      "result": "PASS; see targeted run in /tmp/p41-01-verify-main.log",
+      "exitCode": 0
+    }
+  ],
+  "red": "ApprovalEvidenceIdentityTest: 13 tests; 8 failed before fix: wrong project/chapter/version/hash dispositions and wrong project/revision/hash/null hash directive evidence were accepted. Failures are expected IllegalStateException not thrown; no compile errors. Full log /tmp/p41-01-red.log.",
+  "branch": "codex/p41-01-approval-evidence",
+  "implementation_commit": "682ad0173a63ae5a1f11af3193bf9495f7e3cbc8",
+  "main_commit": "682ad0173a63ae5a1f11af3193bf9495f7e3cbc8"
+}

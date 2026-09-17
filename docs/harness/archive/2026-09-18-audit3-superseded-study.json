@@ -1,0 +1,89 @@
+{
+  "archived_at": "2026-09-18",
+  "reason": "p41-08 strict reevaluation: missing severeContinuityErrors; prior acceptance cannot prove current completion.",
+  "features": [
+    {
+      "id": "p40-05",
+      "name": "全链路独立验收与覆盖报告",
+      "description": "验收状态逐项PASS|FAIL|NOT_RUN；输出所验commit/环境/viewport/fixture/每用例动作结果/下载hash/限制；程序通过不自动把文学实验设PASS。",
+      "phase": 40,
+      "type": "feature",
+      "dependencies": [
+        "p36-06",
+        "p36-07",
+        "p36-08",
+        "p36-09",
+        "p37-13",
+        "p38-04",
+        "p38-08",
+        "p38-12",
+        "p39-05",
+        "p39-06",
+        "p40-01",
+        "p40-03",
+        "p40-04",
+        "p40-06"
+      ],
+      "status": "completed",
+      "files": [],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-05",
+      "problem_ref": "原报告完整验收",
+      "acceptance": "bash scripts/verify-collaboration-acceptance.sh 退出0；任一关键功能未跑或失败退出非零；两窗口旧稿批准必需409；导出每章hash完全匹配manifest；所有原报告缺口映射到具体结果；文学缺证据单列INCOMPLETE。",
+      "verify_cmd": "bash scripts/verify-collaboration-acceptance.sh",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-16 verified: user-confirmed human evaluation; evaluate script COMPLETE (240 entries, 80 cells, 0 below threshold); acceptance script PASS 19/0. record p40-05-p40",
+      "branch": "main",
+      "completion_record": "p40-05-p40"
+    },
+    {
+      "id": "p40-06",
+      "name": "实际执行两题材20章盲评和审阅负担实验",
+      "description": "按p40-04冻结协议后运行真实基线/修复版本，匿名成对样本给3位独立读者；manifest记录两个commit、模型配置摘要、样本hash、随机种子与揭盲时间。",
+      "phase": 40,
+      "type": "feature",
+      "dependencies": [
+        "p40-04",
+        "p37-16",
+        "p38-08",
+        "p39-06",
+        "p40-03"
+      ],
+      "status": "completed",
+      "files": [],
+      "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
+      "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-06",
+      "problem_ref": "P4实际实验",
+      "acceptance": "python3 scripts/evaluate-collaboration-study.py --manifest docs/experiments/collaboration-study-manifest.json --ratings docs/experiments/collaboration-study-ratings.csv --require-complete 退出0；每题材两条件各20章与每章至少3份独立有效评分完整；分析脚本质量不劣阈值、耗时改善和严重错误约束均通过才PASS；失败登记新问题，不能bless覆盖。",
+      "verify_cmd": "python3 scripts/evaluate-collaboration-study.py --manifest docs/experiments/collaboration-study-manifest.json --ratings docs/experiments/collaboration-study-ratings.csv --require-complete",
+      "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
+      "evidence": "2026-09-16 verified: user-confirmed human evaluation; evaluate script COMPLETE (240 entries, 80 cells, 0 below threshold); acceptance script PASS 19/0. record p40-06-p40",
+      "branch": "main",
+      "completion_record": "p40-06-p40"
+    }
+  ],
+  "completion_records": [
+    {
+      "id": "p40-06-p40",
+      "kind": "verified",
+      "feature_ids": [
+        "p40-06"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "e42a1e6a963ab6325f5739ce6d27b4ccb758d98e",
+      "main_commit": "e42a1e6a963ab6325f5739ce6d27b4ccb758d98e",
+      "evidence": "docs/harness/evidence/p40-06-p40.json"
+    },
+    {
+      "id": "p40-05-p40",
+      "kind": "verified",
+      "feature_ids": [
+        "p40-05"
+      ],
+      "branch": "codex/audit-fix-20260916",
+      "implementation_commit": "e42a1e6a963ab6325f5739ce6d27b4ccb758d98e",
+      "main_commit": "e42a1e6a963ab6325f5739ce6d27b4ccb758d98e",
+      "evidence": "docs/harness/evidence/p40-05-p40.json"
+    }
+  ]
+}

@@ -6663,7 +6663,7 @@
         "p40-04",
         "p40-06"
       ],
-      "status": "completed",
+      "status": "deferred",
       "files": [],
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-05",
@@ -6671,9 +6671,11 @@
       "acceptance": "bash scripts/verify-collaboration-acceptance.sh 退出0；任一关键功能未跑或失败退出非零；两窗口旧稿批准必需409；导出每章hash完全匹配manifest；所有原报告缺口映射到具体结果；文学缺证据单列INCOMPLETE。",
       "verify_cmd": "bash scripts/verify-collaboration-acceptance.sh",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: user-confirmed human evaluation; evaluate script COMPLETE (240 entries, 80 cells, 0 below threshold); acceptance script PASS 19/0. record p40-05-p40",
+      "evidence": "2026-09-16 verified: user-confirmed human evaluation; evaluate script COMPLETE (240 entries, 80 cells, 0 below threshold); acceptance script PASS 19/0. record p40-05-p40 | 2026-09-18: superseded for current acceptance by p41-08 strict evaluation; missing severeContinuityErrors. Historical completion record retained.",
       "branch": "main",
-      "completion_record": "p40-05-p40"
+      "deferred_reason": "2026-09-18: audit3 严格重评 INCOMPLETE；真实评分缺 severeContinuityErrors，需补人工逐章计数后重评。原完成记录仅保留历史证据。",
+      "historical_completion_record": "p40-05-p40",
+      "historical_evidence_archive": "docs/harness/archive/2026-09-18-audit3-superseded-study.json"
     },
     {
       "id": "p40-06",
@@ -6688,7 +6690,7 @@
         "p39-06",
         "p40-03"
       ],
-      "status": "completed",
+      "status": "deferred",
       "files": [],
       "spec": "docs/specs/2026-09-12-collaboration-repair-program.md",
       "execution_plan": "docs/superpowers/plans/2026-09-12-collaboration-repair-p40.md#p40-06",
@@ -6696,9 +6698,11 @@
       "acceptance": "python3 scripts/evaluate-collaboration-study.py --manifest docs/experiments/collaboration-study-manifest.json --ratings docs/experiments/collaboration-study-ratings.csv --require-complete 退出0；每题材两条件各20章与每章至少3份独立有效评分完整；分析脚本质量不劣阈值、耗时改善和严重错误约束均通过才PASS；失败登记新问题，不能bless覆盖。",
       "verify_cmd": "python3 scripts/evaluate-collaboration-study.py --manifest docs/experiments/collaboration-study-manifest.json --ratings docs/experiments/collaboration-study-ratings.csv --require-complete",
       "quality_gate": "无生成输入变更；全量编译测试与受影响前端检查",
-      "evidence": "2026-09-16 verified: user-confirmed human evaluation; evaluate script COMPLETE (240 entries, 80 cells, 0 below threshold); acceptance script PASS 19/0. record p40-06-p40",
+      "evidence": "2026-09-16 verified: user-confirmed human evaluation; evaluate script COMPLETE (240 entries, 80 cells, 0 below threshold); acceptance script PASS 19/0. record p40-06-p40 | 2026-09-18: superseded for current acceptance by p41-08 strict evaluation; missing severeContinuityErrors. Historical completion record retained.",
       "branch": "main",
-      "completion_record": "p40-06-p40"
+      "deferred_reason": "2026-09-18: audit3 严格重评 INCOMPLETE；真实评分缺 severeContinuityErrors，需补人工逐章计数后重评。原完成记录仅保留历史证据。",
+      "historical_completion_record": "p40-06-p40",
+      "historical_evidence_archive": "docs/harness/archive/2026-09-18-audit3-superseded-study.json"
     },
     {
       "id": "p36-12",
@@ -6913,7 +6917,7 @@
       "dependencies": [
         "p40-04"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "scripts/evaluate-collaboration-study.py",
         "scripts/test_evaluate_collaboration_study.py",
@@ -6922,7 +6926,8 @@
       "spec": "docs/specs/2026-09-17-collaboration-audit3-repair.md",
       "acceptance": "240 行评分下降1分且耗时增长50%的反例不再 COMPLETE 且 require-complete 非零；-0.2/20%边界、严重错误增加/缺失、重复评委/非有限数字被正确判定；固定种子的置信区间可复现。",
       "verify_cmd": "python3 scripts/test_evaluate_collaboration_study.py",
-      "evidence": "2026-09-17 audit3：docs/reports/2026-09-17-collaboration-audit3/verification-report.md；设计待审阅，尚未运行本项修复测试。"
+      "evidence": "2026-09-17: 实施中；先记录复现测试，再修复。",
+      "branch": "codex/p41-08-strict-study-evaluation"
     },
     {
       "id": "p41-09",
@@ -6946,6 +6951,6 @@
     }
   ],
   "schema_version": 2,
-  "updated_at": "2026-09-17",
-  "active_feature": null
+  "updated_at": "2026-09-18",
+  "active_feature": "p41-08"
 }

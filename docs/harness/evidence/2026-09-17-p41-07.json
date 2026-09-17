@@ -1,0 +1,20 @@
+{
+  "commit": "a9455dd983489ada31ea823d5058317956af8431",
+  "cleanCheckout": true,
+  "checks": [
+    {
+      "command": "mvn compile && mvn test",
+      "result": "PASS: Tests run: 931, Failures: 0, Errors: 0, Skipped: 1",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=HistoricalFactEvidenceApiTest,AuditP14EndpointsTest,Audit2FixTest",
+      "result": "PASS; see targeted run in /tmp/p41-07-verify-main.log",
+      "exitCode": 0
+    }
+  ],
+  "red": "修复前 HistoricalFactEvidenceApiTest 8 项，2 失败、0 错误：正式编辑生成的历史稿匹配证据（已知/UNKNOWN 引文）均预期 200 实际 400。其余六类伪造来源拒绝通过。日志 /tmp/p41-07-red.log。\n",
+  "branch": "codex/p41-07-historical-fact-evidence",
+  "implementation_commit": "a9455dd983489ada31ea823d5058317956af8431",
+  "main_commit": "a9455dd983489ada31ea823d5058317956af8431"
+}

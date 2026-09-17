@@ -1485,6 +1485,17 @@
       "implementation_commit": "02dc11d47f2e9faae60cce810d7eb9f73afb106a",
       "main_commit": "02dc11d47f2e9faae60cce810d7eb9f73afb106a",
       "evidence": "docs/harness/evidence/2026-09-17-p41-06.json"
+    },
+    {
+      "id": "p41-07-audit3",
+      "kind": "verified",
+      "feature_ids": [
+        "p41-07"
+      ],
+      "branch": "codex/p41-07-historical-fact-evidence",
+      "implementation_commit": "a9455dd983489ada31ea823d5058317956af8431",
+      "main_commit": "a9455dd983489ada31ea823d5058317956af8431",
+      "evidence": "docs/harness/evidence/2026-09-17-p41-07.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

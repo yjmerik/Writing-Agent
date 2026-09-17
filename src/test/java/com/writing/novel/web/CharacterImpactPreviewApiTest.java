@@ -145,16 +145,38 @@ class CharacterImpactPreviewApiTest {
         assertNotEquals(null, node.path("impact"));
     }
 
-    @Test
-    void legacyPutWithoutConfirmFieldKeepsWorking() throws Exception {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings={"missing","missingWithToken","null","stringFalse","stringTrue","number","array","object"})
+    void missingOrAmbiguousConfirmationNeverWrites(String kind) throws Exception {
         String pid = seed();
-        Map<String, String> body = Map.of("name", "Li Hua", "role", "lead", "motivation", "legacy path");
+        String cid = charId(pid);
+        String preview = mvc.perform(put("/api/projects/{id}/characters/{cid}", pid, cid)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(Map.of("motivation", "changed", "confirm", false))))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        var body = new HashMap<String, Object>();
+        body.put("motivation", "changed");
+        if (!kind.equals("missing")) body.put("previewToken", om.readTree(preview).path("previewToken").asText());
+        switch (kind) {
+            case "null" -> body.put("confirm", null);
+            case "stringFalse" -> body.put("confirm", "false");
+            case "stringTrue" -> body.put("confirm", "true");
+            case "number" -> body.put("confirm", 1);
+            case "array" -> body.put("confirm", java.util.List.of(true));
+            case "object" -> body.put("confirm", Map.of("value", true));
+        }
+        mvc.perform(put("/api/projects/{id}/characters/{cid}", pid, cid)
+                        .contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsString(body)))
+                .andExpect(status().isBadRequest());
+        assertEquals("revenge", repository.findCharacter(cid).orElseThrow().getMotivation());
+    }
+
+    @Test void explicitConfirmationWithoutCredentialNeverWrites() throws Exception {
+        String pid = seed();
         mvc.perform(put("/api/projects/{id}/characters/{cid}", pid, charId(pid))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(om.writeValueAsString(body)))
-                .andExpect(status().isOk());
-        assertEquals("legacy path",
-                repository.findCharacter(charId(pid)).orElseThrow().getMotivation(),
-                "compat: PUT without confirm field writes directly (legacy callers)");
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(Map.of("motivation", "changed", "confirm", true))))
+                .andExpect(status().isBadRequest());
+        assertEquals("revenge", repository.findCharacter(charId(pid)).orElseThrow().getMotivation());
     }
 }

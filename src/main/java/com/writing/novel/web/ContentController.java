@@ -92,10 +92,10 @@ public class ContentController {
     public Object updateCharacter(@PathVariable String id, @PathVariable String charId,
                                   @RequestBody Map<String, Object> body) {
         // p39-04（审计 P1-2）：confirm=false 仅返回影响预览与凭证，绝不写库
-        Object confirmRaw = body.get("confirm");
-        boolean explicitConfirm = confirmRaw != null && Boolean.parseBoolean(String.valueOf(confirmRaw));
-        boolean hasConfirmField = confirmRaw != null;
-        if (hasConfirmField && !explicitConfirm) {
+        if (!(body.get("confirm") instanceof Boolean explicitConfirm)) {
+            throw new IllegalArgumentException("confirm 必须明确为布尔值，请先预览再确认");
+        }
+        if (!explicitConfirm) {
             Character current = repository.findCharacter(charId)
                     .orElseThrow(() -> new IllegalArgumentException("人物不存在: " + charId));
             if (!id.equals(current.getProjectId())) {
@@ -127,14 +127,11 @@ public class ContentController {
                 }
             }
             Character saved = (Character) canonPatch.patchCharacter(id, charId, patch, chapterOf(id)).entity();
-            if (hasConfirmField) {
-                java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
-                result.put("persisted", true);
-                result.put("character", saved);
-                result.put("previewToken", characterPreviewToken(saved));
-                return result;
-            }
-            return saved;
+            java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+            result.put("persisted", true);
+            result.put("character", saved);
+            result.put("previewToken", characterPreviewToken(saved));
+            return result;
         });
     }
 

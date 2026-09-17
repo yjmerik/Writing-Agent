@@ -6871,7 +6871,7 @@
       "dependencies": [
         "p41-05"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/web/ContentController.java",
         "src/test/java/com/writing/novel/web/CharacterImpactPreviewApiTest.java"
@@ -6879,7 +6879,8 @@
       "spec": "docs/specs/2026-09-17-collaboration-audit3-repair.md",
       "acceptance": "confirm 缺失/null/非布尔拒绝且库不变；false 只预览；true 无凭证拒绝、过期凭证 409、有效凭证才保存；跨项目不写入。",
       "verify_cmd": "mvn test -Dtest=CharacterImpactPreviewApiTest,CanonWriteApiTest,WorldCharacterFullEditTest",
-      "evidence": "2026-09-17 audit3：docs/reports/2026-09-17-collaboration-audit3/verification-report.md；设计待审阅，尚未运行本项修复测试。"
+      "evidence": "2026-09-17: 实施中；先记录复现测试，再修复。",
+      "branch": "codex/p41-06-require-character-preview"
     },
     {
       "id": "p41-07",
@@ -6943,5 +6944,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-17",
-  "active_feature": null
+  "active_feature": "p41-06"
 }

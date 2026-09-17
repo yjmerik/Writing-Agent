@@ -6961,7 +6961,7 @@
       "dependencies": [
         "p37-04"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/web/GlobalExceptionHandler.java",
         "src/test/java/com/writing/novel/web/StaleRevisionCandidateApiTest.java",
@@ -6970,11 +6970,12 @@
       "spec": "docs/specs/2026-09-18-stale-candidate-http-status.md",
       "acceptance": "真实API生成候选并正式编辑来源后应用旧候选返回409且稿件/版本不变；有效候选成功，未分类异常仍500。",
       "verify_cmd": "mvn test -Dtest=StaleRevisionCandidateApiTest",
-      "evidence": "2026-09-18: 实施中；先记录复现测试，再修复。",
-      "branch": "codex/p41-10-stale-candidate-conflict"
+      "evidence": "2026-09-18 verified: 04fc22a68875ab785217a8c3d8577c0f2ee0b80a; record p41-10-audit3",
+      "branch": "codex/p41-10-stale-candidate-conflict",
+      "completion_record": "p41-10-audit3"
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-09-18",
-  "active_feature": "p41-10"
+  "active_feature": null
 }

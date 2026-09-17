@@ -1,0 +1,40 @@
+{
+  "commit": "04fc22a68875ab785217a8c3d8577c0f2ee0b80a",
+  "cleanCheckout": true,
+  "checks": [
+    {
+      "command": "mvn compile && mvn test",
+      "result": "PASS: Tests run: 935, Failures: 0, Errors: 0, Skipped: 1",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=StaleRevisionCandidateApiTest",
+      "result": "PASS; see targeted run in /tmp/p41-10-verify-main.log",
+      "exitCode": 0
+    },
+    {
+      "command": "npm --prefix frontend run build",
+      "result": "PASS; /tmp/p41-10-frontend-main.log (existing bundle-size advisory only)",
+      "exitCode": 0
+    },
+    {
+      "command": "QA_BASE_URL=http://127.0.0.1:18089 QA_ARTIFACT_DIR=/tmp/p41-10-qa-main npx --prefix qa/collaboration playwright test -c qa/collaboration/playwright.config.ts",
+      "result": "PASS: 38 tests; 0 unexpected, 0 skipped, 0 flaky. Includes actual stale-source HTTP409, conflict UI, draft preservation and unchanged current version. /tmp/p41-10-qa-main/report.json",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/check-harness.py --check-git",
+      "result": "PASS; legacy historical evidence warning retained",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/test_check_harness.py",
+      "result": "PASS: 11 tests",
+      "exitCode": 0
+    }
+  ],
+  "red": "2026-09-18 pre-fix StaleRevisionCandidateApiTest: 4 tests, 2 failures, 0 errors. CHAPTER and PASSAGE both expected 409 but returned 500 after actual API source edits. Valid apply/retry and injected SQLite storage failure/recovery passed. Full log: /tmp/p41-10-red.log.\n",
+  "branch": "codex/p41-10-stale-candidate-conflict",
+  "implementation_commit": "04fc22a68875ab785217a8c3d8577c0f2ee0b80a",
+  "main_commit": "04fc22a68875ab785217a8c3d8577c0f2ee0b80a"
+}

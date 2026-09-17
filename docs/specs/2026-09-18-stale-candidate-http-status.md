@@ -1,6 +1,6 @@
 # Spec: 过期候选的 HTTP 冲突状态
 
-状态：2026-09-18 用户要求“继续修复”，独立分支实施 p41-10。
+状态：2026-09-18 p41-10 已独立合并 main 并完成干净检出复验；证据见 ../harness/evidence/2026-09-18-p41-10.json。
 
 ## 背景与动机
 
@@ -18,7 +18,7 @@
 
 - [x] 先以真实 API 生成候选、正式编辑来源，再真实应用旧候选，测试修复前 500、修复后 409 且正文/版本不变。
 - [x] 有效候选正常应用；未分类运行异常仍返回 500。
-- [ ] `mvn test -Dtest=StaleRevisionCandidateApiTest` 和全量编译测试通过，独立分支合并后复验。
+- [x] `mvn test -Dtest=StaleRevisionCandidateApiTest` 和全量编译测试通过，独立分支合并后复验。
 
 ## 影响面
 

@@ -1496,6 +1496,17 @@
       "implementation_commit": "fb9e03396660189d7c5029dea8357e371b737770",
       "main_commit": "fb9e03396660189d7c5029dea8357e371b737770",
       "evidence": "docs/harness/evidence/2026-09-18-p41-09.json"
+    },
+    {
+      "id": "p41-10-audit3",
+      "kind": "verified",
+      "feature_ids": [
+        "p41-10"
+      ],
+      "branch": "codex/p41-10-stale-candidate-conflict",
+      "implementation_commit": "04fc22a68875ab785217a8c3d8577c0f2ee0b80a",
+      "main_commit": "04fc22a68875ab785217a8c3d8577c0f2ee0b80a",
+      "evidence": "docs/harness/evidence/2026-09-18-p41-10.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

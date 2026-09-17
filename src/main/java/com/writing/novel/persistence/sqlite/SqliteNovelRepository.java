@@ -979,14 +979,14 @@ public class SqliteNovelRepository implements NovelRepository {
             // 4.5 审计 P1-2: 满足性检查——不仅要"没变化"，还要"问题已解决"
             // (a) 适用 HARD/PREFERENCE 意见必须有当前稿的 APPLIED_SYSTEM/CONFIRMED 证据
             List<String> unsatisfiedDirectives = selectUnsatisfiedDirectives(
-                    conn, requested.projectId(), requested.chapterIndex(), currentIdentity.version());
+                    conn, requested.projectId(), requested.chapterIndex(), currentIdentity.version(), currentIdentity.contentHash());
             if (!unsatisfiedDirectives.isEmpty()) {
                 throw new IllegalStateException("作者要求未落实，不能批准: "
                         + String.join(", ", unsatisfiedDirectives));
             }
             // (b) 未解决 HIGH 问题且无有效裁决 → 阻塞
             List<String> blockingIssues = selectBlockingHighIssues(
-                    conn, requested.projectId(), requested.chapterIndex());
+                    conn, currentIdentity);
             if (!blockingIssues.isEmpty()) {
                 throw new IllegalStateException("存在未解决的 HIGH 级问题（无有效裁决）: "
                         + String.join(", ", blockingIssues));
@@ -1492,7 +1492,7 @@ public class SqliteNovelRepository implements NovelRepository {
 
     /** 审计 P1-2: 适用 HARD/PREFERENCE 意见中，当前稿没有 APPLIED_SYSTEM/CONFIRMED 证据的列表。 */
     private List<String> selectUnsatisfiedDirectives(Connection conn, String projectId,
-                                                     int chapterIndex, int chapterVersion) {
+                                                     int chapterIndex, int chapterVersion, String contentHash) {
         List<String> unsatisfied = new ArrayList<>();
         String sql = "SELECT d.id, d.content FROM author_directives d " +
                 "WHERE d.project_id=? AND d.enabled=1 AND d.status != 'DISMISSED' " +
@@ -1500,14 +1500,15 @@ public class SqliteNovelRepository implements NovelRepository {
                 "AND (d.from_chapter IS NULL OR d.from_chapter <= ?) " +
                 "AND (d.to_chapter IS NULL OR d.to_chapter >= ?) " +
                 "AND NOT EXISTS (SELECT 1 FROM directive_evidence e " +
-                "  WHERE e.directive_id = d.id AND e.chapter_index = ? " +
-                "  AND e.chapter_version = ? AND e.status IN ('APPLIED_SYSTEM','CONFIRMED'))";
+                "  WHERE e.directive_id = d.id AND e.project_id = d.project_id AND e.directive_revision = d.revision AND e.chapter_index = ? " +
+                "  AND e.chapter_version = ? AND e.content_hash = ? AND e.status IN ('APPLIED_SYSTEM','CONFIRMED'))";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, projectId);
             ps.setInt(2, chapterIndex);
             ps.setInt(3, chapterIndex);
             ps.setInt(4, chapterIndex);
             ps.setInt(5, chapterVersion);
+            ps.setString(6, contentHash);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 unsatisfied.add(rs.getString("content"));
@@ -1519,16 +1520,19 @@ public class SqliteNovelRepository implements NovelRepository {
     }
 
     /** 审计 P1-2: 该章未解决的 HIGH 问题（无有效 FALSE_POSITIVE/EXCEPTION 裁决）。 */
-    private List<String> selectBlockingHighIssues(Connection conn, String projectId, int chapterIndex) {
+    private List<String> selectBlockingHighIssues(Connection conn, ChapterApproval.Identity identity) {
         List<String> blocking = new ArrayList<>();
         String sql = "SELECT i.id, i.description FROM continuity_issues i " +
                 "WHERE i.project_id=? AND i.detected_at_chapter=? AND i.resolved=0 " +
                 "AND i.severity='HIGH' " +
                 "AND NOT EXISTS (SELECT 1 FROM review_dispositions rd " +
-                "  WHERE rd.issue_id = i.id AND rd.action IN ('FALSE_POSITIVE','EXCEPTION'))";
+                "  WHERE rd.issue_id = i.id AND rd.project_id = i.project_id AND rd.chapter_index = ? AND rd.chapter_version = ? AND rd.content_hash = ? AND rd.action IN ('FALSE_POSITIVE','EXCEPTION'))";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, projectId);
-            ps.setInt(2, chapterIndex);
+            ps.setString(1, identity.projectId());
+            ps.setInt(2, identity.chapterIndex());
+            ps.setInt(3, identity.chapterIndex());
+            ps.setInt(4, identity.version());
+            ps.setString(5, identity.contentHash());
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 blocking.add(rs.getString("description"));

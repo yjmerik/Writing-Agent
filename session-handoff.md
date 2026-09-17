@@ -1,36 +1,33 @@
-# 协作系统第三轮复验修复 — 2026-09-17
+# 协作第三轮修复 — 2026-09-17
 
 Last Updated: 2026-09-17
 
 ## Current
 
-main@1b06d01 的六类缺陷有外部复验记录与源码佐证。旧测试全绿不能支持全部完成。
-新增 p41-01..09 为 not-started，active_feature=null；当前仅设计/登记，未修改业务代码。
-设计分支：codex/docs-audit3-repair-design；工作区 /tmp/writing-agent-audit3-design。
-方案与登记文件尚未提交/合并；main 仍为 1b06d01；实现分支尚未创建。
-用户已确认实施；按执行清单从 p41-01 开始逐项闭环。
+用户已确认实施。已合并并复验：暂无业务修复。
+当前：p41-01；待实施：p41-02, p41-03, p41-04, p41-05, p41-06, p41-07, p41-08, p41-09。
+最近操作：p41-01 start；分支 codex/p41-01-approval-evidence。
+工作区 /tmp/writing-agent-audit3-design；原工作区两个未跟踪路径保留。
 
 ## Files
 
-- docs/specs/2026-09-17-collaboration-audit3-repair.md：根因、方案、文件边界与验收。
-- docs/reports/2026-09-17-collaboration-audit3/verification-report.md：原复验报告归档。
-- feature_list.json：新增9项，原319项完成记录保持历史，不作为本轮验收证明。
-- docs/harness/archive/2026-09-17-before-audit3-*：上轮入口归档。
+- docs/specs/2026-09-17-collaboration-audit3-repair.md
+- docs/superpowers/plans/2026-09-17-collaboration-audit3-repair.md
+- feature_list.json / docs/harness/completions.json / docs/harness/evidence/
+- 当前范围：src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java; src/test/java/com/writing/novel/persistence/ApprovalEvidenceIdentityTest.java
 
 ## Verification
 
-本轮 ./init.sh PASS：882 tests / 0 failures / 0 errors / 1 skipped；前端构建 PASS。
-Harness检查及11项Harness回归通过。详细结果见 docs/harness/evidence/2026-09-17-audit3-design.json。
-用户复验：882后端测试/0失败/0错误/1跳过、29前端回归通过（非本轮重跑结果）。
-两题材回放分别在2/1章等待人工复核；基线PASS不代表完整流程通过。
-六类修复的失败测试与修复后结果均尚未生成，不标记完成。
+每项证据记录见 feature_list 的 completion_record；仅合入 main 并干净检出验证后登记完成。
+本项专项：mvn test -Dtest=ApprovalEvidenceIdentityTest,VersionedApprovalRepositoryTest,DispositionApprovalGateTest
+业务未完成项不以原882测试基线通过替代专项验收。
 
 ## Blockers
 
-实施已获授权。现有评分数据缺严重连续性错误计数，严格重评不能宣称COMPLETE。
-原工作区两个未跟踪路径保持不动。无远端推送、无模型录制、无golden更新。
+无实施授权阻塞。现有文学实验缺严重连续性错误计数，严格重评须如实记录。
+两题材原回放在2/1章等待人工复核；不能视为完整流程或文学质量验收。
 
 ## Next Steps
 
-为p41-01从main创建独立分支，先复现错误稿号裁决/旧revision证据批准旁路。
-按AGENTS.md逐项测试、提交、合并、干净main复验及登记证据，再启动下一项。
+继续当前项闭环；若无进行中项，从main为下个依赖已满足项创建独立分支。
+完成软件修复后重跑浏览器回归、两题材回放、诊断与实验重评；不绕过人工检查点。

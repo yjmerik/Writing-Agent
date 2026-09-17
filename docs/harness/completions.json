@@ -1430,6 +1430,17 @@
       "implementation_commit": "682ad0173a63ae5a1f11af3193bf9495f7e3cbc8",
       "main_commit": "682ad0173a63ae5a1f11af3193bf9495f7e3cbc8",
       "evidence": "docs/harness/evidence/2026-09-17-p41-01.json"
+    },
+    {
+      "id": "p41-02-audit3",
+      "kind": "verified",
+      "feature_ids": [
+        "p41-02"
+      ],
+      "branch": "codex/p41-02-disposition-identity",
+      "implementation_commit": "51b6898cd27b83931adef4f5226409b8378b60d6",
+      "main_commit": "51b6898cd27b83931adef4f5226409b8378b60d6",
+      "evidence": "docs/harness/evidence/2026-09-17-p41-02.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

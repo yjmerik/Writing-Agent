@@ -1,0 +1,20 @@
+{
+  "commit": "51b6898cd27b83931adef4f5226409b8378b60d6",
+  "cleanCheckout": true,
+  "checks": [
+    {
+      "command": "mvn compile && mvn test",
+      "result": "PASS: Tests run: 906, Failures: 0, Errors: 0, Skipped: 1",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=ReviewDispositionApiTest,DispositionApprovalGateApiTest",
+      "result": "PASS; see targeted run in /tmp/p41-02-verify-main.log",
+      "exitCode": 0
+    }
+  ],
+  "red": "ReviewDispositionApiTest: 13 tests, 10 failures, 0 errors before fix; expected rejection got 200 for forged sources and 500 for malformed identity. Real valid disposition + HTTP approval succeeds as positive control. /tmp/p41-02-red.log",
+  "branch": "codex/p41-02-disposition-identity",
+  "implementation_commit": "51b6898cd27b83931adef4f5226409b8378b60d6",
+  "main_commit": "51b6898cd27b83931adef4f5226409b8378b60d6"
+}

@@ -79,20 +79,27 @@ public class FactEvidenceController {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "章节不存在: " + chapterIndex + "（不能伪造来源）"));
 
-        // 审计 P1-4: 指定版本/指纹必须与章节实际身份匹配（防伪造稿号/指纹）
-        String actualHash = com.writing.novel.domain.ChapterApproval.contentHash(
-                chapter.getTitle(), chapter.getContent());
-        if (chapterVersion != chapter.getVersion() || !actualHash.equals(contentHash)) {
+        // 来源身份按指定稿件核验，历史稿只能使用实际保存的不可变快照。
+        String sourceTitle;
+        String sourceContent;
+        if (chapterVersion == chapter.getVersion()) {
+            sourceTitle = chapter.getTitle();
+            sourceContent = chapter.getContent();
+        } else {
+            var snapshot = repository.findChapterVersion(id, chapterIndex, chapterVersion)
+                    .orElseThrow(() -> new IllegalArgumentException("历史稿不存在: v" + chapterVersion));
+            sourceTitle = snapshot.getTitle();
+            sourceContent = snapshot.getContent();
+        }
+        String actualHash = com.writing.novel.domain.ChapterApproval.contentHash(sourceTitle, sourceContent);
+        if (!actualHash.equals(contentHash)) {
             throw new IllegalArgumentException("章节身份不匹配：指定 v" + chapterVersion
-                    + "/" + contentHash.substring(0, Math.min(8, contentHash.length()))
-                    + "，实际 v" + chapter.getVersion()
-                    + "/" + actualHash.substring(0, 8) + "（不能伪造来源）");
+                    + " 的内容指纹与来源稿件不一致（不能伪造来源）");
         }
 
-        // 审计 P1-4: 如果提供引文，必须在正文中存在
         String quote = strOf(body.get("quote")); // 可为 null = UNKNOWN
-        if (quote != null && !quote.isBlank() && !chapter.getContent().contains(quote)) {
-            throw new IllegalArgumentException("引文不在该章正文中（不能伪造 quote）");
+        if (quote != null && !quote.isBlank() && !sourceContent.contains(quote)) {
+            throw new IllegalArgumentException("引文不在该来源稿件正文中（不能伪造 quote）");
         }
 
         Integer validFrom = intOf(body.get("validFromChapter"));

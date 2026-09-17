@@ -6892,7 +6892,7 @@
       "dependencies": [
         "p39-03"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/web/FactEvidenceController.java",
         "src/test/java/com/writing/novel/web/HistoricalFactEvidenceApiTest.java"
@@ -6900,7 +6900,8 @@
       "spec": "docs/specs/2026-09-17-collaboration-audit3-repair.md",
       "acceptance": "经正式编辑产生 v3 后，真实历史 v2 的 hash/引文返回 200；不存在版本、错 hash、仅新稿含有的引文、跨项目来源拒绝；UNKNOWN 引文语义保留。",
       "verify_cmd": "mvn test -Dtest=HistoricalFactEvidenceApiTest,AuditP14EndpointsTest,Audit2FixTest",
-      "evidence": "2026-09-17 audit3：docs/reports/2026-09-17-collaboration-audit3/verification-report.md；设计待审阅，尚未运行本项修复测试。"
+      "evidence": "2026-09-17: 实施中；先记录复现测试，再修复。",
+      "branch": "codex/p41-07-historical-fact-evidence"
     },
     {
       "id": "p41-08",
@@ -6945,5 +6946,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-17",
-  "active_feature": null
+  "active_feature": "p41-07"
 }

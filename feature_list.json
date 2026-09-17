@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": 40,
+  "current_phase": 41,
   "features": [
     {
       "id": "p1-01",
@@ -6751,9 +6751,187 @@
       "evidence": "2026-09-16 verified: 1a7ddef9aeb5f10ecf8d741686c9a1b07f7d7269; record p36-13-p36",
       "completion_record": "p36-13-p36",
       "branch": "main"
+    },
+    {
+      "id": "p41-01",
+      "name": "批准事务绑定稿件身份与意见修订",
+      "description": "错误项目/章号/版本/hash 的既有裁决不解除 HIGH 阻挡；revision=1 证据不满足 revision=2 意见；匹配证据可批准；失败不写批准记录、不解除屏障。",
+      "phase": 41,
+      "type": "bug",
+      "dependencies": [
+        "p36-04",
+        "p37-07",
+        "p38-05"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/test/java/com/writing/novel/persistence/ApprovalEvidenceIdentityTest.java"
+      ],
+      "spec": "docs/specs/2026-09-17-collaboration-audit3-repair.md",
+      "acceptance": "错误项目/章号/版本/hash 的既有裁决不解除 HIGH 阻挡；revision=1 证据不满足 revision=2 意见；匹配证据可批准；失败不写批准记录、不解除屏障。",
+      "verify_cmd": "mvn test -Dtest=ApprovalEvidenceIdentityTest,VersionedApprovalRepositoryTest,DispositionApprovalGateTest",
+      "evidence": "2026-09-17 audit3：docs/reports/2026-09-17-collaboration-audit3/verification-report.md；设计待审阅，尚未运行本项修复测试。"
+    },
+    {
+      "id": "p41-02",
+      "name": "裁决写入校验真实问题和稿件",
+      "description": "不存在的问题或稿件、跨项目/错章和伪造 hash 返回 400/409 且无新增裁决；真实当前稿裁决可保存并经批准事务核验。",
+      "phase": 41,
+      "type": "bug",
+      "dependencies": [
+        "p41-01"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/web/DispositionController.java",
+        "src/test/java/com/writing/novel/web/ReviewDispositionApiTest.java"
+      ],
+      "spec": "docs/specs/2026-09-17-collaboration-audit3-repair.md",
+      "acceptance": "不存在的问题或稿件、跨项目/错章和伪造 hash 返回 400/409 且无新增裁决；真实当前稿裁决可保存并经批准事务核验。",
+      "verify_cmd": "mvn test -Dtest=ReviewDispositionApiTest,DispositionApprovalGateApiTest",
+      "evidence": "2026-09-17 audit3：docs/reports/2026-09-17-collaboration-audit3/verification-report.md；设计待审阅，尚未运行本项修复测试。"
+    },
+    {
+      "id": "p41-03",
+      "name": "计划原子提交的 SPI 契约",
+      "description": "新增领域级原子确认操作，默认实现明确拒绝且无写入；参数含预览身份、目标、大纲/偏好与逐项决定；不暴露 JDBC、不改变现有调用行为。",
+      "phase": 41,
+      "type": "feature",
+      "dependencies": [
+        "p38-02",
+        "p38-03"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/spi/NovelRepository.java",
+        "src/test/java/com/writing/novel/persistence/PlanCommitContractTest.java"
+      ],
+      "spec": "docs/specs/2026-09-17-collaboration-audit3-repair.md",
+      "acceptance": "新增领域级原子确认操作，默认实现明确拒绝且无写入；参数含预览身份、目标、大纲/偏好与逐项决定；不暴露 JDBC、不改变现有调用行为。",
+      "verify_cmd": "mvn test -Dtest=PlanCommitContractTest",
+      "evidence": "2026-09-17 audit3：docs/reports/2026-09-17-collaboration-audit3/verification-report.md；设计待审阅，尚未运行本项修复测试。"
+    },
+    {
+      "id": "p41-04",
+      "name": "计划确认跨对象事务及故障重试",
+      "description": "对决定、偏好、大纲、确认状态各写入点注入 SQLite 失败后，四类数据全部维持原值；移除故障后同一请求成功一次；已确认请求不重复写入。",
+      "phase": 41,
+      "type": "bug",
+      "dependencies": [
+        "p41-03"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/main/java/com/writing/novel/service/PlanEditionService.java",
+        "src/test/java/com/writing/novel/web/PlanConfirmationAtomicityTest.java"
+      ],
+      "spec": "docs/specs/2026-09-17-collaboration-audit3-repair.md",
+      "acceptance": "对决定、偏好、大纲、确认状态各写入点注入 SQLite 失败后，四类数据全部维持原值；移除故障后同一请求成功一次；已确认请求不重复写入。",
+      "verify_cmd": "mvn test -Dtest=PlanConfirmationAtomicityTest,PlanEditionTest,PlanChangeRepositoryTest,Audit2FixTest",
+      "evidence": "2026-09-17 audit3：docs/reports/2026-09-17-collaboration-audit3/verification-report.md；设计待审阅，尚未运行本项修复测试。"
+    },
+    {
+      "id": "p41-05",
+      "name": "人物旧调用测试迁移到预览确认",
+      "description": "既有成功编辑测试先取真实 previewToken 后确认；原人物字段、真典及屏障断言保留且通过，不把拒绝旧路径误当成功覆盖。",
+      "phase": 41,
+      "type": "feature",
+      "dependencies": [
+        "p39-04",
+        "p39-09"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/test/java/com/writing/novel/web/CanonWriteApiTest.java",
+        "src/test/java/com/writing/novel/web/WorldCharacterFullEditTest.java"
+      ],
+      "spec": "docs/specs/2026-09-17-collaboration-audit3-repair.md",
+      "acceptance": "既有成功编辑测试先取真实 previewToken 后确认；原人物字段、真典及屏障断言保留且通过，不把拒绝旧路径误当成功覆盖。",
+      "verify_cmd": "mvn test -Dtest=CanonWriteApiTest,WorldCharacterFullEditTest",
+      "evidence": "2026-09-17 audit3：docs/reports/2026-09-17-collaboration-audit3/verification-report.md；设计待审阅，尚未运行本项修复测试。"
+    },
+    {
+      "id": "p41-06",
+      "name": "关闭人物无预览写入旁路",
+      "description": "confirm 缺失/null/非布尔拒绝且库不变；false 只预览；true 无凭证拒绝、过期凭证 409、有效凭证才保存；跨项目不写入。",
+      "phase": 41,
+      "type": "bug",
+      "dependencies": [
+        "p41-05"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/web/ContentController.java",
+        "src/test/java/com/writing/novel/web/CharacterImpactPreviewApiTest.java"
+      ],
+      "spec": "docs/specs/2026-09-17-collaboration-audit3-repair.md",
+      "acceptance": "confirm 缺失/null/非布尔拒绝且库不变；false 只预览；true 无凭证拒绝、过期凭证 409、有效凭证才保存；跨项目不写入。",
+      "verify_cmd": "mvn test -Dtest=CharacterImpactPreviewApiTest,CanonWriteApiTest,WorldCharacterFullEditTest",
+      "evidence": "2026-09-17 audit3：docs/reports/2026-09-17-collaboration-audit3/verification-report.md；设计待审阅，尚未运行本项修复测试。"
+    },
+    {
+      "id": "p41-07",
+      "name": "事实证据验证对应历史稿",
+      "description": "经正式编辑产生 v3 后，真实历史 v2 的 hash/引文返回 200；不存在版本、错 hash、仅新稿含有的引文、跨项目来源拒绝；UNKNOWN 引文语义保留。",
+      "phase": 41,
+      "type": "bug",
+      "dependencies": [
+        "p39-03"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/web/FactEvidenceController.java",
+        "src/test/java/com/writing/novel/web/HistoricalFactEvidenceApiTest.java"
+      ],
+      "spec": "docs/specs/2026-09-17-collaboration-audit3-repair.md",
+      "acceptance": "经正式编辑产生 v3 后，真实历史 v2 的 hash/引文返回 200；不存在版本、错 hash、仅新稿含有的引文、跨项目来源拒绝；UNKNOWN 引文语义保留。",
+      "verify_cmd": "mvn test -Dtest=HistoricalFactEvidenceApiTest,AuditP14EndpointsTest,Audit2FixTest",
+      "evidence": "2026-09-17 audit3：docs/reports/2026-09-17-collaboration-audit3/verification-report.md；设计待审阅，尚未运行本项修复测试。"
+    },
+    {
+      "id": "p41-08",
+      "name": "实验严格门槛与可复现统计",
+      "description": "240 行评分下降1分且耗时增长50%的反例不再 COMPLETE 且 require-complete 非零；-0.2/20%边界、严重错误增加/缺失、重复评委/非有限数字被正确判定；固定种子的置信区间可复现。",
+      "phase": 41,
+      "type": "bug",
+      "dependencies": [
+        "p40-04"
+      ],
+      "status": "not-started",
+      "files": [
+        "scripts/evaluate-collaboration-study.py",
+        "scripts/test_evaluate_collaboration_study.py",
+        "docs/experiments/collaboration-quality-protocol.md"
+      ],
+      "spec": "docs/specs/2026-09-17-collaboration-audit3-repair.md",
+      "acceptance": "240 行评分下降1分且耗时增长50%的反例不再 COMPLETE 且 require-complete 非零；-0.2/20%边界、严重错误增加/缺失、重复评委/非有限数字被正确判定；固定种子的置信区间可复现。",
+      "verify_cmd": "python3 scripts/test_evaluate_collaboration_study.py",
+      "evidence": "2026-09-17 audit3：docs/reports/2026-09-17-collaboration-audit3/verification-report.md；设计待审阅，尚未运行本项修复测试。"
+    },
+    {
+      "id": "p41-09",
+      "name": "Agent 修改要求独立草稿恢复",
+      "description": "未生成候选的输入刷新重开后逐字恢复；项目/对象/段落隔离；取消、生成失败、应用失败不丢输入；成功应用清理对应草稿；存储异常显示未暂存而不崩溃。",
+      "phase": 41,
+      "type": "bug",
+      "dependencies": [
+        "p37-04"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/AgentRevisionDialog.tsx",
+        "frontend/src/hooks/useRevisionInstructionDraft.ts",
+        "qa/collaboration/revision-instruction-draft.spec.ts"
+      ],
+      "spec": "docs/specs/2026-09-17-collaboration-audit3-repair.md",
+      "acceptance": "未生成候选的输入刷新重开后逐字恢复；项目/对象/段落隔离；取消、生成失败、应用失败不丢输入；成功应用清理对应草稿；存储异常显示未暂存而不崩溃。",
+      "verify_cmd": "QA_BASE_URL=http://127.0.0.1:18089 npx --prefix qa/collaboration playwright test -c qa/collaboration/playwright.config.ts revision-instruction-draft.spec.ts",
+      "evidence": "2026-09-17 audit3：docs/reports/2026-09-17-collaboration-audit3/verification-report.md；设计待审阅，尚未运行本项修复测试。"
     }
   ],
   "schema_version": 2,
-  "updated_at": "2026-09-16",
+  "updated_at": "2026-09-17",
   "active_feature": null
 }

@@ -1,0 +1,35 @@
+{
+  "kind": "design-baseline",
+  "commit": "1b06d01421f13e7b07cda708783b6610a4f61fe7",
+  "date": "2026-09-17",
+  "scope": "Design and backlog only; no business fix or completed feature",
+  "checks": [
+    {
+      "command": "python3 scripts/check-harness.py --check-git",
+      "result": "PASS: 328 features; 319 historical completed entries retained, 9 not-started",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/test_check_harness.py",
+      "result": "PASS: 11 tests",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "./init.sh",
+      "result": "PASS: {'tests': 882, 'failures': 0, 'errors': 0, 'skipped': 1}; frontend build PASS",
+      "exitCode": 0
+    }
+  ],
+  "baseline": "PASS after generating frontend assets in isolated worktree; no source changes required",
+  "approval": "Written spec pending user approval; no implementation has started",
+  "limitations": [
+    "Initial sandbox run failed because Mockito attach and local sockets were prohibited; unrestricted rerun first exposed missing generated static assets; after frontend build, complete rerun passed.",
+    "This is a baseline run on unchanged business code, not evidence that the six reported bugs are fixed.",
+    "Design and backlog changes are not committed or merged; pending written-spec approval."
+  ]
+}

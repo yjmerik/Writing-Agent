@@ -1441,6 +1441,17 @@
       "implementation_commit": "51b6898cd27b83931adef4f5226409b8378b60d6",
       "main_commit": "51b6898cd27b83931adef4f5226409b8378b60d6",
       "evidence": "docs/harness/evidence/2026-09-17-p41-02.json"
+    },
+    {
+      "id": "p41-03-audit3",
+      "kind": "verified",
+      "feature_ids": [
+        "p41-03"
+      ],
+      "branch": "codex/p41-03-plan-commit-contract",
+      "implementation_commit": "65d8d5665034cd51064c47575391b656c2e00d72",
+      "main_commit": "65d8d5665034cd51064c47575391b656c2e00d72",
+      "evidence": "docs/harness/evidence/2026-09-17-p41-03.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

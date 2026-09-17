@@ -1,0 +1,20 @@
+{
+  "commit": "65d8d5665034cd51064c47575391b656c2e00d72",
+  "cleanCheckout": true,
+  "checks": [
+    {
+      "command": "mvn compile && mvn test",
+      "result": "PASS: Tests run: 907, Failures: 0, Errors: 0, Skipped: 1",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=PlanCommitContractTest",
+      "result": "PASS; see targeted run in /tmp/p41-03-verify-main.log",
+      "exitCode": 0
+    }
+  ],
+  "red": "PlanCommitContractTest: 1 test, 1 assertion failure before interface addition (NoSuchMethodException). After addition, invokes real interface default through proxy and requires UnsupportedOperationException; any partial operation fallback fails the test. /tmp/p41-03-red.log",
+  "branch": "codex/p41-03-plan-commit-contract",
+  "implementation_commit": "65d8d5665034cd51064c47575391b656c2e00d72",
+  "main_commit": "65d8d5665034cd51064c47575391b656c2e00d72"
+}

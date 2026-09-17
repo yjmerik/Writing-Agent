@@ -4,9 +4,9 @@ Last Updated: 2026-09-17
 
 ## Current
 
-用户已确认实施。已合并并复验：p41-01, p41-02。
-当前：p41-03；待实施：p41-04, p41-05, p41-06, p41-07, p41-08, p41-09。
-最近操作：p41-03 start；分支 codex/p41-03-plan-commit-contract。
+用户已确认实施。已合并并复验：p41-01, p41-02, p41-03。
+当前：无进行中项；待实施：p41-04, p41-05, p41-06, p41-07, p41-08, p41-09。
+最近操作：p41-03 finish；分支 codex/p41-03-plan-commit-contract。
 工作区 /tmp/writing-agent-audit3-design；原工作区两个未跟踪路径保留。
 
 ## Files

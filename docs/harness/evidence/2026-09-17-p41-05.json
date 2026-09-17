@@ -1,0 +1,20 @@
+{
+  "commit": "64e7245b417ce7f06a03d8490e86eeae81763c63",
+  "cleanCheckout": true,
+  "checks": [
+    {
+      "command": "mvn compile && mvn test",
+      "result": "PASS: Tests run: 915, Failures: 0, Errors: 0, Skipped: 1",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=CanonWriteApiTest,WorldCharacterFullEditTest",
+      "result": "PASS; see targeted run in /tmp/p41-05-verify-main.log",
+      "exitCode": 0
+    }
+  ],
+  "red": "Test-only protocol migration: prior full baseline PASS; no business logic modified and no bugfix claim. Existing field/canon/memory/ownership assertions retained; real preview token acquisition replaces legacy direct writes, with added no-side-effect assertions for previews.",
+  "branch": "codex/p41-05-character-test-migration",
+  "implementation_commit": "64e7245b417ce7f06a03d8490e86eeae81763c63",
+  "main_commit": "64e7245b417ce7f06a03d8490e86eeae81763c63"
+}

@@ -5,8 +5,8 @@ Last Updated: 2026-09-17
 ## Current
 
 用户已确认实施。已合并并复验：p41-01, p41-02。
-当前：无进行中项；待实施：p41-03, p41-04, p41-05, p41-06, p41-07, p41-08, p41-09。
-最近操作：p41-02 finish；分支 codex/p41-02-disposition-identity。
+当前：p41-03；待实施：p41-04, p41-05, p41-06, p41-07, p41-08, p41-09。
+最近操作：p41-03 start；分支 codex/p41-03-plan-commit-contract。
 工作区 /tmp/writing-agent-audit3-design；原工作区两个未跟踪路径保留。
 
 ## Files
@@ -14,12 +14,12 @@ Last Updated: 2026-09-17
 - docs/specs/2026-09-17-collaboration-audit3-repair.md
 - docs/superpowers/plans/2026-09-17-collaboration-audit3-repair.md
 - feature_list.json / docs/harness/completions.json / docs/harness/evidence/
-- 当前范围：src/main/java/com/writing/novel/web/DispositionController.java; src/test/java/com/writing/novel/web/ReviewDispositionApiTest.java
+- 当前范围：src/main/java/com/writing/novel/spi/NovelRepository.java; src/test/java/com/writing/novel/persistence/PlanCommitContractTest.java
 
 ## Verification
 
 每项证据记录见 feature_list 的 completion_record；仅合入 main 并干净检出验证后登记完成。
-本项专项：mvn test -Dtest=ReviewDispositionApiTest,DispositionApprovalGateApiTest
+本项专项：mvn test -Dtest=PlanCommitContractTest
 业务未完成项不以原882测试基线通过替代专项验收。
 
 ## Blockers

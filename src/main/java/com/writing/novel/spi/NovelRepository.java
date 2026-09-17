@@ -281,6 +281,18 @@ public interface NovelRepository {
         throw new UnsupportedOperationException("commitPlanChange 未实现");
     }
 
+    /**
+     * Atomically confirm a plan preview and persist its preferences, outline and promise decisions.
+     * Implementations must revalidate the source within the same transaction and roll back all
+     * objects on failure. A failed request remains retryable; no multi-write default is safe.
+     */
+    default com.writing.novel.domain.PlanChange commitPlanEdition(
+            String projectId, String previewId, String sourcePlanHash,
+            WritingPreferences preferences, Outline outline,
+            List<com.writing.novel.domain.PlanChange.PromiseDecision> decisions, String requestKey) {
+        throw new UnsupportedOperationException("原子计划确认未实现");
+    }
+
     /** 审计 P1-1: 补偿回退——把 CONFIRMED 回退为 PENDING（plan_change 写入失败的回退路径）。 */
     default void reopenPlanChange(String projectId, String previewId) {
         throw new UnsupportedOperationException("reopenPlanChange 未实现");

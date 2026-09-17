@@ -4,6 +4,7 @@
 # 需要: mvn, python3; --with-browser 需要 qa/collaboration 依赖与运行中的服务。
 set -uo pipefail
 cd "$(dirname "$0")/.."
+source scripts/load-env.sh 2>/dev/null || true
 
 WITH_BROWSER=0
 BASE_URL="${BASE_URL:-}"

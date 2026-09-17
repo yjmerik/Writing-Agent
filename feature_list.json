@@ -6939,7 +6939,7 @@
       "dependencies": [
         "p37-04"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "frontend/src/components/AgentRevisionDialog.tsx",
         "frontend/src/hooks/useRevisionInstructionDraft.ts",
@@ -6948,10 +6948,30 @@
       "spec": "docs/specs/2026-09-17-collaboration-audit3-repair.md",
       "acceptance": "未生成候选的输入刷新重开后逐字恢复；项目/对象/段落隔离；取消、生成失败、应用失败不丢输入；成功应用清理对应草稿；存储异常显示未暂存而不崩溃。",
       "verify_cmd": "QA_BASE_URL=http://127.0.0.1:18089 npx --prefix qa/collaboration playwright test -c qa/collaboration/playwright.config.ts revision-instruction-draft.spec.ts",
-      "evidence": "2026-09-17 audit3：docs/reports/2026-09-17-collaboration-audit3/verification-report.md；设计待审阅，尚未运行本项修复测试。"
+      "evidence": "2026-09-18: 实施中；先记录复现测试，再修复。",
+      "branch": "codex/p41-09-revision-instruction-draft"
+    },
+    {
+      "id": "p41-10",
+      "name": "过期候选返回409业务冲突",
+      "description": "独立发现：正式修改来源后应用旧候选拒绝写入但HTTP500，应映射明确候选过期异常为409；本轮仅登记，不混入p41-09。",
+      "phase": 41,
+      "type": "bug",
+      "dependencies": [
+        "p37-04"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/web/GlobalExceptionHandler.java",
+        "src/test/java/com/writing/novel/web/StaleRevisionCandidateApiTest.java"
+      ],
+      "spec": "docs/specs/2026-09-18-stale-candidate-http-status.md",
+      "acceptance": "真实API生成候选并正式编辑来源后应用旧候选返回409且稿件/版本不变；有效候选成功，未分类异常仍500。",
+      "verify_cmd": "mvn test -Dtest=StaleRevisionCandidateApiTest",
+      "evidence": "2026-09-18 p41-09 browser trace: HTTP500 {error:候选来源已变化，请刷新后重新生成}; 原始trace及复现流程见spec。待独立修复，尚未运行本项专项测试。"
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-09-18",
-  "active_feature": null
+  "active_feature": "p41-09"
 }

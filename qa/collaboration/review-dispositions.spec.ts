@@ -4,41 +4,40 @@ const rawBase = process.env.QA_BASE_URL;
 if (!rawBase?.trim()) throw new Error('QA_BASE_URL required');
 const BASE = rawBase.replace(/\/+$/, '');
 
-/** p38-12: 桌面与窄屏共享完整审查操作——问题裁决 CRUD + recheck + reviewSetHash 联动。 */
-test('p38-12: disposition CRUD + recheck + reviewSetHash integration', async () => {
+/** p41-02 regression: forged issues must be rejected; recheck retains identity validation.
+ * Positive disposition creation/listing/approval with a real stored issue is covered by ReviewDispositionApiTest. */
+test('p41-02: forged disposition rejection + recheck identity integration', async () => {
   const pr = await fetch(`${BASE}/api/projects`, { method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({title: 'review-disp', concept: 'rd', tags: '', mode: 'SOLO'}) });
   const pid = ((await pr.json()) as {id:string}).id;
 
-  // Create chapter in review state
+  // Create a real chapter; this API does not create a continuity issue.
   const chRes = await fetch(`${BASE}/api/projects/${pid}/chapters`, { method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({title: 'Ch1', content: 'A chapter with some content for disposition testing. '.repeat(30)}) });
-  const chapter = await chRes.json();
+  expect(chRes.status).toBe(200);
 
   // Get review context (to get identity)
   const ctxRes = await fetch(`${BASE}/api/projects/${pid}/chapters/1/review-context`);
   const ctx = await ctxRes.json();
   const identity = ctx.identity;
 
-  // Create disposition (FALSE_POSITIVE)
+  // A made-up issue cannot produce a disposition even with a valid current chapter identity.
   const dispRes = await fetch(`${BASE}/api/projects/${pid}/dispositions`, {
     method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
       issueId: 'issue-fp-1', action: 'FALSE_POSITIVE', reason: 'Not a real issue',
       identity: {projectId: pid, chapterIndex: 1, version: identity.version,
         contentHash: identity.contentHash}}) });
-  expect(dispRes.status).toBe(200);
-  const disposition = await dispRes.json();
-  expect(disposition.action).toBe('FALSE_POSITIVE');
-  expect(disposition.reason).toBe('Not a real issue');
+  expect(dispRes.status).toBe(400);
 
   // List dispositions by chapter identity
   const listRes = await fetch(
     `${BASE}/api/projects/${pid}/dispositions?chapterIndex=1&chapterVersion=${identity.version}&contentHash=${identity.contentHash}`);
   expect(listRes.status).toBe(200);
   const list = await listRes.json();
-  expect(list.length).toBe(1);
-  expect(list[0].issueId).toBe('issue-fp-1');
+  expect(list).toEqual([]);
+  const afterReject = await (await fetch(`${BASE}/api/projects/${pid}/chapters/1/review-context`)).json();
+  expect(afterReject.reviewSetHash).toBe(ctx.reviewSetHash);
 
   // Missing reason → 400
   const noReasonRes = await fetch(`${BASE}/api/projects/${pid}/dispositions`, {

@@ -5,8 +5,8 @@ Last Updated: 2026-09-18
 ## Current
 
 用户已确认实施。已合并并复验：p41-01, p41-02, p41-03, p41-04, p41-05, p41-06, p41-07, p41-08。
-当前：无进行中项；待实施：p41-09。
-最近操作：p41-08 finish；分支 codex/p41-08-strict-study-evaluation。
+当前：p41-09；待实施：无。
+最近操作：p41-09 start；分支 codex/p41-09-revision-instruction-draft。
 工作区 /tmp/writing-agent-audit3-design；原工作区两个未跟踪路径保留。
 
 ## Files
@@ -14,12 +14,12 @@ Last Updated: 2026-09-18
 - docs/specs/2026-09-17-collaboration-audit3-repair.md
 - docs/superpowers/plans/2026-09-17-collaboration-audit3-repair.md
 - feature_list.json / docs/harness/completions.json / docs/harness/evidence/
-- 当前范围：scripts/evaluate-collaboration-study.py; scripts/test_evaluate_collaboration_study.py; docs/experiments/collaboration-quality-protocol.md
+- 当前范围：frontend/src/components/AgentRevisionDialog.tsx; frontend/src/hooks/useRevisionInstructionDraft.ts; qa/collaboration/revision-instruction-draft.spec.ts
 
 ## Verification
 
 每项证据记录见 feature_list 的 completion_record；仅合入 main 并干净检出验证后登记完成。
-本项专项：python3 scripts/test_evaluate_collaboration_study.py
+本项专项：QA_BASE_URL=http://127.0.0.1:18089 npx --prefix qa/collaboration playwright test -c qa/collaboration/playwright.config.ts revision-instruction-draft.spec.ts
 业务未完成项不以原882测试基线通过替代专项验收。
 
 ## Blockers

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Card, Col, Input, List, Modal, Row, Space, Tag, Typography, message } from 'antd';
 import { ApiError, api } from '../api/client';
+import { useRevisionInstructionDraft } from '../hooks/useRevisionInstructionDraft';
 import type {
   AgentRevisionApplyResult,
   AgentRevisionPreview,
@@ -75,7 +76,6 @@ const renderSnapshot = (
 };
 
 export default function AgentRevisionDialog({ open, target, onApplied, onCancel }: Props) {
-  const [instructions, setInstructions] = useState('');
   const [preview, setPreview] = useState<AgentRevisionPreview | null>(null);
   const [generating, setGenerating] = useState(false);
   const [applying, setApplying] = useState(false);
@@ -85,12 +85,12 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
   const requestSequence = useRef(0);
 
   const targetKey = target
-    ? `${target.projectId}:${target.targetType}:${target.targetId}:${target.chapterIndex ?? ''}:${target.passageIndex ?? ''}`
+    ? JSON.stringify([target.projectId, target.targetType, target.targetId, target.chapterIndex ?? null, target.passageIndex ?? null])
     : '';
+  const { instructions, setInstructions, clearInstructions, draftUnsaved } = useRevisionInstructionDraft(targetKey, open);
 
   useEffect(() => {
     requestSequence.current += 1;
-    setInstructions('');
     setPreview(null);
     setGenerating(false);
     setApplying(false);
@@ -135,11 +135,24 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
   };
 
   /** p37-04: 从持久候选恢复预览（章节类走候选原子应用；其他类型恢复入口待 p39-07/08）。 */
-  const restoreCandidate = (record: RevisionCandidateRecord) => {
+  const restoreCandidate = (record: RevisionCandidateRecord, replaceInstructions = false) => {
     if (!target) return;
     const chapterLike = record.targetType === 'CHAPTER' || record.targetType === 'PASSAGE';
     if (!chapterLike) {
       message.info('非章节候选的恢复入口将在后续版本提供（p39-07/08）；当前仅可查看');
+      return;
+    }
+    if (!replaceInstructions && instructions !== '' && instructions !== (record.instructions ?? '')) {
+      const requestId = requestSequence.current;
+      Modal.confirm({
+        title: '候选使用了较早的修改要求',
+        content: '当前输入与候选要求不同。保留当前要求，或明确选择使用候选要求后再核对预览。',
+        okText: '使用候选要求',
+        cancelText: '保留当前要求',
+        onOk: () => {
+          if (requestSequence.current === requestId) restoreCandidate(record, true);
+        },
+      });
       return;
     }
     try {
@@ -181,6 +194,8 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
       return;
     }
 
+    // The server has committed; even a later page-refresh failure must not resurrect this draft.
+    clearInstructions();
     if (result.derivedRefreshPending) {
       message.warning(`${target.label}的修改已保存，但后续处理（摘要/索引）未完成，稍后会自动重算，无需重新应用`);
     } else {
@@ -230,8 +245,10 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
       ]}
     >
       <Paragraph type="secondary" style={{ marginBottom: 12 }}>
-        只处理当前选中的对象。预览与取消不会保存；确认应用前，请核对修改前后内容。
+        只处理当前选中的对象。预览与取消不会写入正文；修改要求会在本浏览器暂存，确认应用前请核对修改前后内容。
       </Paragraph>
+
+      {draftUnsaved && <Alert type="warning" showIcon message="修改要求尚未暂存，刷新可能丢失" style={{ marginBottom: 12 }} />}
 
       {/* p37-04: 未应用的持久候选——刷新/重启后可恢复 */}
       {candidates.length > 0 && !preview && (

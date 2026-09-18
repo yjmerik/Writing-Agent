@@ -1,38 +1,38 @@
-# 协作复验后续修复 — 2026-09-18
+# 审阅体验修复 — 2026-09-18
 
 Last Updated: 2026-09-18
 
 ## Current
 
-p41-01～10 均已合并 main 并复验；active_feature=null，无待实施软件项。
-p41-10 分支 codex/p41-10-stale-candidate-conflict，实现及主分支验证提交 04fc22a68875ab785217a8c3d8577c0f2ee0b80a。
-本次为完成状态回执；p40-05/p40-06仍deferred，完整文学验收仍INCOMPLETE。
+用户在凤鸣九州人工复核失败，当前唯一进行中项 p42-01。
+分支 codex/p42-01-review-workspace；工作目录 /tmp/writing-agent-audit3-design。
+p41-01～10完成状态保留；本项分支验证通过，待提交合并与主分支复验。
 
 ## Files
 
-- 后续报告：docs/reports/2026-09-18-stale-candidate-http-status-result.md
-- 原六类问题报告：docs/reports/2026-09-18-collaboration-audit3-repair-result.md
-- 设计：docs/specs/2026-09-18-stale-candidate-http-status.md
-- 完成证据：docs/harness/evidence/2026-09-18-p41-10.json
-- 前次状态：docs/harness/archive/2026-09-18-pre-p41-10-*.md
+- docs/specs/2026-09-18-review-workspace-usability.md
+- docs/superpowers/plans/2026-09-18-review-workspace-usability.md
+- frontend/src/pages/ProjectWorkspace.tsx
+- frontend/src/components/InteractiveReview.tsx
+- qa/collaboration/review-workspace.spec.ts
+- 前次状态归档：docs/harness/archive/2026-09-18-pre-p42-01-*.md
 
 ## Verification
 
-修复前CHAPTER/PASSAGE真实来源编辑用例均因期望409实际500失败；修复后专项4项通过。
-合并后干净main编译及后端935项通过，0失败/0错误/1跳过。
-全部浏览器38项通过，0失败/跳过/flaky；前端构建及Harness归属检查、11项自测通过。
-过期候选409并标STALE，正文/版本/历史不变；正向200且幂等；SQL故障500，恢复后可重试。
-浏览器显示来源变化提示、保留要求草稿及并发新稿。
-原始日志 /tmp/p41-10-*.log；浏览器产物 /tmp/p41-10-qa-main；关键结果已记录到Git证据摘要。
+./init.sh 基线通过；新增6项Playwright在原版全部失败（无面板、错误tab、正文410px）。
+修复后专项6项、全部44项浏览器回归通过；构建通过。Browser plugin not available，使用现有Playwright。
+桌面1280/1440与手机390px已核对；凤鸣九州第63章只读复验，专注正文1000px、无pageerror。
+后端首次全量935项：0 failures，1 error（VectorCleanupOnRewritePathsTest临时SQLite WAL/SHM清理），1 skipped。
+单独复查3项通过；完整重跑935项，0失败/0错误/1跳过；未修改业务测试。
+日志 /tmp/p42-01-*.log；截图 /tmp/p42-fengming-*.png、/tmp/p42-01-green/。
 
 ## Blockers
 
-无本项软件修复阻塞。真实实验CSV缺severeContinuityErrors，需真实人工逐章计数。
-最近两题材回放分别在第2/1章等待作者复核，不能视为完整流程或20章实验完成。
+无实施授权阻塞；验证完成前保持in-progress。
+文学实验p40-05/p40-06仍deferred：缺真实严重错误计数、回放等待人工复核，不在本项变更范围。
 
 ## Next Steps
 
-补齐真实实验资料并完成作者复核后，再恢复p40-06/p40-05验收；不得代填或默认零。
-后续软件需求应新建spec及独立feature；不复用已合并分支堆叠新实现。
-隔离服务已停止，工作目录/tmp/writing-agent-audit3-design保留供查阅产物。
-主目录原有两处未跟踪内容保留；未推送远端、未修改用户小说数据。
+完整门禁通过后提交并合并main，干净检出复验后登记完成。
+重新打包并替换8080服务，供用户继续在凤鸣九州人工复核；不替用户批准内容。
+原主目录两处未跟踪文件保留。

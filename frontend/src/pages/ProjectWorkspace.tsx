@@ -61,6 +61,10 @@ export default function ProjectWorkspace() {
   const [chatting, setChatting] = useState(false);
   const [narrowLayout, setNarrowLayout] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [reviewPanelOpen, setReviewPanelOpen] = useState(false);
+  const [readingMode, setReadingMode] = useState(false);
+
+  useEffect(() => { setReviewPanelOpen(false); setReadingMode(false); }, [id]);
 
   // p36-08: 路由参数变化（后退/前进/深链接）必须响应，不能只在初次渲染读取
   useEffect(() => { setFocusChapter(routeChapter); }, [routeChapter]);
@@ -73,6 +77,7 @@ export default function ProjectWorkspace() {
   }, [activeTab, id, navigate]);
 
   const handleTabChange = useCallback((tab: string) => {
+    if (tab !== 'review') setReviewPanelOpen(false);
     const params = new URLSearchParams();
     if (tab !== 'review') params.set('tab', tab);
     setSearchParams(params, { replace: false });
@@ -119,8 +124,9 @@ export default function ProjectWorkspace() {
   const displayTitle = project.title || project.concept?.slice(0, 12) + '…' || '未命名项目';
 
   return (
-    <Layout style={{ background: 'transparent', minHeight: '100vh', position: 'relative' }}>
-      {narrowLayout && sidebarCollapsed && (
+    <Layout data-review-workspace style={{ background: 'transparent', minHeight: '100vh', position: 'relative' }}>
+      <style>{'body:has([data-review-workspace]) { margin: 0; }'}</style>
+      {narrowLayout && sidebarCollapsed && !readingMode && !reviewPanelOpen && (
         <Button
           data-sidebar-toggle
           type="primary"
@@ -132,7 +138,7 @@ export default function ProjectWorkspace() {
       )}
       {/* p21-06: 响应式侧栏——小于 lg 自动折叠，375px 下无页面级横向溢出 */}
       <Sider
-        width={320}
+        width={240}
         breakpoint="lg"
         collapsedWidth="0"
         collapsible
@@ -145,6 +151,7 @@ export default function ProjectWorkspace() {
         onCollapse={setSidebarCollapsed}
         theme="light"
         style={{
+          display: readingMode ? 'none' : undefined,
           padding: narrowLayout && sidebarCollapsed ? 0 : '16px 12px',
           background: '#fafaf8',
           borderRight: narrowLayout && sidebarCollapsed ? 'none' : '1px solid #eee',
@@ -284,8 +291,11 @@ export default function ProjectWorkspace() {
       </Sider>
 
       <Content style={{ padding: narrowLayout ? '52px 0 0' : '0 16px', minWidth: 0, width: '100%' }}>
-        <CollaborationBar projectId={project.id} onChanged={load} onReview={() => handleTabChange('review')}
-          onSelectChapter={(chapterIndex) => { handleTabChange('review'); handleSelectChapter(chapterIndex); }} />
+        <CollaborationBar projectId={project.id} onChanged={load} onReview={() => { handleTabChange('review'); setReviewPanelOpen(true); }}
+          onSelectChapter={(chapterIndex) => {
+            navigate(`/project/${project.id}/chapter/${chapterIndex}`);
+            setReviewPanelOpen(true);
+          }} />
         <Tabs
           activeKey={activeTab}
           onChange={handleTabChange}
@@ -294,7 +304,7 @@ export default function ProjectWorkspace() {
             { key: 'run', label: '创作工具', children: <RunConsole projectId={project.id} projectState={project.state} onChanged={load} /> },
             { key: 'world', label: '🌍 世界观与人物', children: <WorldbuildingView key={`world-${project.id}`} projectId={project.id} /> },
             { key: 'outline', label: '📋 大纲', children: <OutlineView key={`outline-${project.id}`} projectId={project.id} currentChapter={project.currentChapterIndex} /> },
-            { key: 'review', label: '📖 章节管理', children: <InteractiveReview key={`review-${project.id}`} refreshSignal={refreshSignal} projectId={project.id} onChanged={load} onNavigateTab={handleTabChange} focusChapter={focusChapter} onSelectChapter={handleSelectChapter} historyView={historyView} /> },
+            { key: 'review', label: '📖 章节管理', children: <InteractiveReview key={`review-${project.id}`} refreshSignal={refreshSignal} projectId={project.id} onChanged={load} onNavigateTab={handleTabChange} focusChapter={focusChapter} onSelectChapter={handleSelectChapter} historyView={historyView} reviewPanelOpen={reviewPanelOpen} onReviewPanelChange={setReviewPanelOpen} readingMode={readingMode} onReadingModeChange={setReadingMode} /> },
             { key: 'quality', label: '🔍 质量评价', children: <QualityView projectId={project.id} /> },
             { key: 'book', label: '📕 成书审查', children: <BookReviewView projectId={project.id} /> },
           ]}

@@ -17,6 +17,10 @@ const { Text } = Typography;
 
 interface Props {
   projectId: string;
+  reviewPanelOpen: boolean;
+  onReviewPanelChange: (open: boolean) => void;
+  readingMode: boolean;
+  onReadingModeChange: (enabled: boolean) => void;
   refreshSignal?: number;
   onChanged: () => void;
   onNavigateTab: (target: 'world' | 'outline') => void;
@@ -82,7 +86,7 @@ export const normalizeCheckpointPayload = (value: unknown): CheckpointPayload | 
   };
 };
 
-export default function InteractiveReview({ projectId, onChanged, onNavigateTab, refreshSignal, focusChapter, onSelectChapter, historyView }: Props) {
+export default function InteractiveReview({ projectId, onChanged, onNavigateTab, refreshSignal, focusChapter, onSelectChapter, historyView, reviewPanelOpen, onReviewPanelChange: setReviewPanelOpen, readingMode, onReadingModeChange }: Props) {
   // p21-05: 元数据一次加载；正文按选中章节懒加载缓存
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [bodies, setBodies] = useState<Record<number, Chapter>>({});
@@ -104,7 +108,6 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
   const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const [status, setStatus] = useState<ProjectStatus | null>(null);
   const [selectedIdx, setSelectedIdx] = useState(0);
-  const [reviewPanelOpen, setReviewPanelOpen] = useState(false);
   // p35-01: 意见面板状态
   const [directives, setDirectives] = useState<AuthorDirectiveView[]>([]);
   const [directiveContent, setDirectiveContent] = useState('');
@@ -826,10 +829,10 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
         <div
           key={`passage-action-${index}`}
           data-passage-action-index={index}
-          style={{ display: 'flex', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}
+          style={{ marginBottom: 12 }}
         >
-          <div style={{ flex: '1 1 240px', minWidth: 0 }}>{node}</div>
-          <Space wrap size={4} style={{ marginLeft: 'auto' }}>
+          <div style={{ minWidth: 0, fontSize: 17, overflowWrap: 'anywhere' }}>{node}</div>
+          {!readingMode && <Space wrap size={4} style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               type="text"
               icon={<EditOutlined />}
@@ -850,7 +853,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
               })}
               style={{ minHeight: 44 }}
             >让 Agent 修改</Button>
-          </Space>
+          </Space>}
         </div>
       );
     });
@@ -1043,9 +1046,9 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
           <Alert type="warning" showIcon style={{ marginBottom: 16 }} message={historyNotice} />
         )}
 
-        <Row gutter={16}>
+        <Row gutter={[16, 16]}>
           {/* 章节列表（p21-06: 小屏堆叠） */}
-          <Col xs={24} md={5}>
+          <Col xs={24} md={5} style={{ display: readingMode ? 'none' : undefined }}>
             <Card title={`📖 章节 (${chapters.length})`} size="small" style={{ maxHeight: '70vh', overflow: 'auto' }}>
               <List
                 size="small"
@@ -1072,7 +1075,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                     <List.Item.Meta
                       title={<Text strong>第{ch.chapterIndex}章 {ch.title.replace(/\*\*/g, '')}</Text>}
                       description={
-                        <Space size={4}>
+                        <Space wrap size={4}>
                           <Tag>{ch.wordCount} 字</Tag>
                           {ch.status === 'NEEDS_MANUAL_REVIEW' && <Tag color="red">待人审</Tag>}
                           {(ch.status === 'POST_PROCESSING' || ch.status === 'DRAFTING') && <Tag color="processing">生成中</Tag>}
@@ -1085,18 +1088,21 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
             </Card>
           </Col>
 
-          {/* 章节正文（p33-04 三栏：中栏） */}
-          <Col xs={24} md={13}>
+          {/* 章节正文：主阅读区 */}
+          <Col xs={24} md={readingMode ? 24 : 19}>
             {currentChapter ? (
-              <Card
-                title={`第${currentChapter.chapterIndex}章 ${currentChapter.title.replace(/\*\*/g, '')}`}
-                extra={
-                  <Space wrap>
+              <Card data-chapter-reader styles={{ body: { padding: screens.md ? 24 : 16 } }}>
+                <div style={{ maxWidth: readingMode ? 1000 : undefined, margin: '0 auto' }}>
+                <Typography.Title level={3} style={{ marginTop: 0, whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
+                  第{currentChapter.chapterIndex}章 {currentChapter.title.replace(/\*\*/g, '')}
+                </Typography.Title>
+                  <Space wrap style={{ marginBottom: 24 }}>
+                    <Button size="small" onClick={() => onReadingModeChange(!readingMode)}>
+                      {readingMode ? '退出专注阅读' : '专注阅读'}
+                    </Button>
                     <Tag color="blue">{currentChapter.wordCount} 字</Tag>
                     <Tag color="purple">v{currentChapter.version}</Tag>
-                    {!screens.md && (
-                      <Button size="small" onClick={() => setReviewPanelOpen(true)}>审查</Button>
-                    )}
+                    <Button size="small" onClick={() => setReviewPanelOpen(true)}>审查</Button>
                     {currentChapter.status === 'NEEDS_MANUAL_REVIEW' && (
                       <Button size="small" type="primary" loading={approving}
                         disabled={!currentApproveReady}
@@ -1144,9 +1150,6 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                       重写此章
                     </Button>
                   </Space>
-                }
-                style={{ maxHeight: '70vh', overflow: 'auto' }}
-              >
                 {currentBody ? (
                   <>
                     {renderChapterContent(currentChapter.content)}
@@ -1214,15 +1217,23 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                     </div>
                   </Card>
                 )}
+                </div>
               </Card>
             ) : (
-              <Card><Text type="secondary">暂无章节。点击"写一章"开始创作。</Text></Card>
+              <Card><Text type="secondary">暂无章节。点击「新增章节」开始创作。</Text></Card>
             )}
           </Col>
 
-          {/* p33-04: 审查面板（右栏；窄屏抽屉） */}
-          <Col xs={24} md={6}>
-            <Card title="🔍 审查面板" size="small" style={{ maxHeight: '76vh', overflow: 'auto' }}>
+        </Row>
+
+        <Drawer title="审查面板" zIndex={1100} placement="right" width={screens.md ? 480 : '100%'} open={reviewPanelOpen}
+          onClose={() => setReviewPanelOpen(false)}
+          extra={<Button onClick={() => setReviewPanelOpen(false)}>返回正文</Button>}
+          styles={{ body: { padding: screens.md ? 24 : 16, overflowWrap: 'anywhere' } }}>
+          <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>
+            {currentChapter && <Typography.Title level={5} style={{ marginTop: 0, overflowWrap: 'anywhere' }}>
+              第{currentChapter.chapterIndex}章 · {currentChapter.title} · v{currentChapter.version}
+            </Typography.Title>}
               {/* p35-01: 意见面板 */}
               <Collapse
                 size="small"
@@ -1264,7 +1275,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                         size="small"
                         dataSource={directives}
                         renderItem={d => (
-                          <List.Item
+                          <List.Item style={{ flexDirection: 'column', alignItems: 'stretch', gap: 8 }}
                             actions={[
                               d.status === 'APPLIED_SYSTEM' ? (
                                 <Button key="c" size="small" type="primary"
@@ -1277,7 +1288,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                           >
                             <List.Item.Meta
                               title={
-                                <Space size={4}>
+                                <Space wrap size={4}>
                                   <Tag color={d.kind === 'HARD' ? 'red' : d.kind === 'ONCE' ? 'blue' : 'default'}>
                                     {d.kind === 'HARD' ? '硬性' : d.kind === 'ONCE' ? '单次' : '偏好'}
                                   </Tag>
@@ -1324,7 +1335,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                         size="small"
                         dataSource={candidates}
                         renderItem={c => (
-                          <List.Item
+                          <List.Item style={{ flexDirection: 'column', alignItems: 'stretch', gap: 8 }}
                             actions={
                               c.status === 'PENDING' ? [
                                 <Button key="p" size="small" type="primary"
@@ -1335,7 +1346,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                           >
                             <List.Item.Meta
                               title={
-                                <Space size={4}>
+                                <Space wrap size={4}>
                                   <Tag color={c.status === 'PROMOTED' ? 'green'
                                     : c.status === 'REJECTED' ? 'default' : 'gold'}>
                                     {c.status === 'PROMOTED' ? '已提升' : c.status === 'REJECTED' ? '已拒绝' : '待裁决'}
@@ -1357,7 +1368,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                   message={`第 ${currentChapter.chapterIndex} 章第 v${currentChapter.version} 稿待你审查`}
                   description="处理完成后再继续写作。正文头部的「批准当前稿」按钮核验已读稿件后放行本稿。" />
               )}
-              {!currentChapter && <Text type="secondary">选择左侧章节查看审查信息。</Text>}
+              {!currentChapter && <Text type="secondary">暂无章节。可关闭面板后新增章节。</Text>}
               {qualityReport ? (
                 <div>
                   <Typography.Title level={5} style={{ marginTop: 0 }}>
@@ -1373,27 +1384,20 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                       description="当前稿已更新且尚未重新检查。该报告不代表当前稿的审查结论，保存/应用修改后会自动触发重新检查。" />
                   )}
                   {qualityReport.review && (
-                    <Row gutter={8} style={{ marginBottom: 12 }}>
-                      <Col span={8}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: 24, fontWeight: 700, color: qualityReport.review.overallScore >= 7 ? '#52c41a' : '#faad14' }}>
-                            {qualityReport.review.overallScore}
-                          </div>
-                          <Text type="secondary" style={{ fontSize: 12 }}>综合评分</Text>
-                        </div>
-                      </Col>
+                    <div style={{ marginBottom: 16 }}>
+                      <Text strong>综合评分 {qualityReport.review.overallScore} / 10</Text>
                       {[
                         { label: '吸引力', val: qualityReport.review.engagement },
                         { label: '连贯性', val: qualityReport.review.coherence },
                         { label: '角色塑造', val: qualityReport.review.character },
                         { label: '章末钩子', val: qualityReport.review.hook },
                       ].map(d => (
-                        <Col span={4} key={d.label}>
-                          <Text type="secondary" style={{ fontSize: 12 }}>{d.label}</Text>
-                          <Progress percent={d.val * 10} size="small" format={() => `${d.val}/10`} />
-                        </Col>
+                        <div key={d.label} style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 8 }}>
+                          <Text style={{ flex: '0 0 72px' }}>{d.label}</Text>
+                          <Progress percent={d.val * 10} size="small" format={() => `${d.val}/10`} style={{ flex: 1, minWidth: 0, margin: 0 }} />
+                        </div>
                       ))}
-                    </Row>
+                    </div>
                   )}
                   {qualityReport.review?.summary && (
                     <Alert type="info" message={qualityReport.review.summary} style={{ marginBottom: 8 }} />
@@ -1412,12 +1416,14 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                             size="small"
                             dataSource={qualityReport.issues}
                             renderItem={item => (
-                              <List.Item>
+                              <List.Item style={{ display: 'block' }}>
+                                <Space wrap size={[4, 8]} style={{ marginBottom: 8, maxWidth: '100%' }}>
                                 <Tag color={item.severity === 'HIGH' ? 'red' : item.severity === 'MEDIUM' ? 'orange' : 'default'}>
                                   {item.severity}
                                 </Tag>
-                                <Tag>{item.type}</Tag>
-                                <Text style={{ fontSize: 12 }}>{item.description}</Text>
+                                <Tag style={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>{item.type}</Tag>
+                                </Space>
+                                <div style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', lineHeight: 1.8 }}>{item.description}</div>
                               </List.Item>
                             )}
                           />
@@ -1435,63 +1441,12 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
               ) : (
                 currentChapter && <Text type="secondary">本章暂无质量报告。</Text>
               )}
-            </Card>
-          </Col>
-        </Row>
 
-        {/* p33-04: 窄屏审查面板抽屉 */}
-        <Drawer title="🔍 审查面板" placement="right" width="85%" open={reviewPanelOpen}
-          onClose={() => setReviewPanelOpen(false)}>
-          {currentChapter?.status === 'NEEDS_MANUAL_REVIEW' && (
-            <Alert type="warning" showIcon style={{ marginBottom: 12 }}
-              message={`第 ${currentChapter.chapterIndex} 章第 v${currentChapter.version} 稿待你审查`} />
-          )}
-          {qualityReport?.reportCurrent === false && qualityReport.reportForVersion != null && (
-            <Alert type="warning" showIcon style={{ marginBottom: 12 }}
-              message={`旧稿报告：针对第 v${qualityReport.reportForVersion} 稿`} />
-          )}
-          {qualityReport && (
-            <>
-              <Alert type="info" style={{ marginBottom: 12 }}
-                message={`本章质量 ${qualityReport.grade} 级 · ${qualityReport.issues.length} 项问题`}
-                description={qualityReport.review?.summary ?? ''} />
-              {qualityReport.review?.improvement && (
-                <Alert type="warning" message="改进建议" description={qualityReport.review.improvement}
-                  style={{ marginBottom: 12 }} />
-              )}
-              {qualityReport.issues.length > 0 && (
-                <List
-                  size="small"
-                  header="检测问题"
-                  dataSource={qualityReport.issues}
-                  renderItem={item => (
-                    <List.Item>
-                      <Tag color={item.severity === 'HIGH' ? 'red' : item.severity === 'MEDIUM' ? 'orange' : 'default'}>
-                        {item.severity}
-                      </Tag>
-                      <Tag>{item.type}</Tag>
-                      <Text style={{ fontSize: 12 }}>{item.description}</Text>
-                    </List.Item>
-                  )}
-                />
-              )}
-              {screens.md && <Text type="secondary" style={{ fontSize: 12 }}>当前为桌面布局，右侧面板含完整证据。</Text>}
-              {!screens.md && currentChapter?.status === 'NEEDS_MANUAL_REVIEW' && (
-                <Button type="primary" block style={{ marginTop: 12 }} loading={approving}
-                  disabled={!currentApproveReady}
-                  title={currentApproveReady ? '批准当前加载的稿件' : '正文或审阅上下文尚未就绪'}
-                  onClick={() => currentChapter && void approveChapterDraft(currentChapter.chapterIndex)}>
-                    批准当前稿
-                  </Button>
-              )}
-              {!screens.md && (
-                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
-                  完整问题证据与逐条裁决已在桌面版查看完整问题明细与裁决后同步；窄屏保留评分、明细与放行动作。
-                </Text>
-              )}
-            </>
-          )}
-          {!qualityReport && currentChapter && <Text type="secondary">本章暂无质量报告。</Text>}
+            {currentChapter?.status === 'NEEDS_MANUAL_REVIEW' && (
+              <Button type="primary" block loading={approving} disabled={!currentApproveReady}
+                onClick={() => void approveChapterDraft(currentChapter.chapterIndex)}>批准当前稿</Button>
+            )}
+          </div>
         </Drawer>
 
         {/* 刷新按钮 */}

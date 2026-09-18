@@ -6987,7 +6987,8 @@
       "files": [
         "frontend/src/pages/ProjectWorkspace.tsx",
         "frontend/src/components/InteractiveReview.tsx",
-        "qa/collaboration/review-workspace.spec.ts"
+        "qa/collaboration/review-workspace.spec.ts",
+        "src/test/java/com/writing/novel/agent/VectorCleanupOnRewritePathsTest.java"
       ],
       "spec": "docs/specs/2026-09-18-review-workspace-usability.md",
       "acceptance": "真实浏览器审阅打开/重复打开，跨页签待审直达，正文宽度与专注模式、390px长意见无溢出均通过。",

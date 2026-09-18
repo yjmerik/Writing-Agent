@@ -73,8 +73,7 @@ class VectorCleanupOnRewritePathsTest {
         @Override public void streamComplete(LlmRequest req, StreamHandler h) {}
     };
 
-    /** editPassage 的 POST_PROCESS 后台任务是异步的——harvest 是其中最后一步，
-     *  用 latch 等它完成，避免 @TempDir 清理与后台 SQLite 写入竞态（同 EditPassageReturnsBeforeHarvestTest） */
+    /** 等到异步派生刷新最后一步返回，再允许 @TempDir 删除 SQLite 文件。 */
     private final CountDownLatch postProcessDone = new CountDownLatch(1);
 
     @BeforeEach
@@ -140,18 +139,23 @@ class VectorCleanupOnRewritePathsTest {
                         new FactHarvesterAgent(gateway, null, promptSvc) {
                             @Override
                             public HarvestResult harvest(String projectId, Chapter chapter) {
-                                postProcessDone.countDown();
                                 return new HarvestResult(0, 0, 0);
                             }
 
                             @Override
                             public HarvestResult harvest(String projectId, Chapter chapter,
                                     com.writing.novel.service.ChapterRevisionService.DerivedWriteBoundary boundary) {
-                                postProcessDone.countDown();
                                 HarvestResult empty = new HarvestResult(0, 0, 0);
                                 return boundary.apply(() -> empty, empty);
                             }
-                        }, null, null, null));
+                        }, null, null, null)) {
+            @Override
+            public void captureDirectiveEvidenceAfterGeneration(String projectId, int chapterIndex) {
+                super.captureDirectiveEvidenceAfterGeneration(projectId, chapterIndex);
+                // harvest 内的版本边界仍需访问 SQLite，不能在 harvest 入口提前放行清理。
+                postProcessDone.countDown();
+            }
+        };
     }
 
     // ---------- 用例 1：ChapterWriterAgent.rewriteForCorrection ----------
@@ -190,7 +194,7 @@ class VectorCleanupOnRewritePathsTest {
     // ---------- 用例 3：NovelOrchestrator.editPassage ----------
 
     @Test
-    void editPassage后该章旧chunk被清新chunk入库() {
+    void editPassage后该章旧chunk被清新chunk入库() throws InterruptedException {
         String pid = seedProjectWithChapterAndOldVectors(300);
         String cid = chapterId(pid);
 
@@ -203,10 +207,7 @@ class VectorCleanupOnRewritePathsTest {
         assertOldChunksCleared(cid);
         assertNewContentIndexed(pid, cid);
 
-        // 等 POST_PROCESS 后台块跑完（harvest 为末步），避免 @TempDir 清理与后台 SQLite 写入竞态
-        try { postProcessDone.await(5, TimeUnit.SECONDS); } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        assertTrue(postProcessDone.await(5, TimeUnit.SECONDS), "异步派生刷新必须完成后才能清理数据库");
     }
 
     // ---------- helpers ----------

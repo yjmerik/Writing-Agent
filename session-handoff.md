@@ -1,39 +1,32 @@
-# 审阅体验修复 — 2026-09-18
+# 审阅体验修复交接 — 2026-09-18
 
 Last Updated: 2026-09-18
 
 ## Current
 
-用户在凤鸣九州人工复核失败，当前唯一进行中项 p42-01。
-分支 codex/p42-01-review-workspace；工作目录 /tmp/writing-agent-audit3-design。
-p41-01～10完成状态保留；UI实现879c90b已合入main；合并后发现测试清理竞态，回原分支修复验收门禁。
+无进行中特性（active_feature=null）。p42-01 已完成合入 main：实现 879c90b + 测试门禁修复 a64d13a，完成记录 p42-01-p42（docs/harness/evidence/2026-09-18-p42-01.json）。
+恢复入口：从 main 为下一特性新建独立分支；一轮只推进一个 feature。
 
 ## Files
 
-- docs/specs/2026-09-18-review-workspace-usability.md
-- docs/superpowers/plans/2026-09-18-review-workspace-usability.md
-- frontend/src/pages/ProjectWorkspace.tsx
-- frontend/src/components/InteractiveReview.tsx
-- qa/collaboration/review-workspace.spec.ts
-- 前次状态归档：docs/harness/archive/2026-09-18-pre-p42-01-*.md
+- 特性实现：frontend/src/pages/ProjectWorkspace.tsx、frontend/src/components/InteractiveReview.tsx
+- 测试：qa/collaboration/review-workspace.spec.ts（6 项）、src/test/java/com/writing/novel/agent/VectorCleanupOnRewritePathsTest.java
+- 文档：docs/specs/2026-09-18-review-workspace-usability.md、docs/superpowers/plans/2026-09-18-review-workspace-usability.md
+- 历史状态：docs/harness/archive/2026-09-18-pre-p42-01-*.md、2026-09-18-mid-p42-01-*.md
 
 ## Verification
 
-./init.sh 基线通过；新增6项Playwright在原版全部失败（无面板、错误tab、正文410px）。
-修复后专项6项、全部44项浏览器回归通过；构建通过。Browser plugin not available，使用现有Playwright。
-桌面1280/1440与手机390px已核对；凤鸣九州第63章只读复验，专注正文1000px、无pageerror。
-后端首次全量935项：0 failures，1 error（VectorCleanupOnRewritePathsTest临时SQLite WAL/SHM清理），1 skipped。
-单独复查3项和首次完整重跑曾通过；合并后相同竞态复现，不能以重跑绿替代修复。
-已将该测试的完成信号移至异步刷新最后一步后，并断言等待成功；专项3项通过；修复后全套935项，0失败/0错误/1跳过。待合并后干净main复验。
-日志 /tmp/p42-01-*.log；截图 /tmp/p42-fengming-*.png、/tmp/p42-01-green/。
+干净检出（worktree --detach a64d13a）复验全部通过：mvn compile && mvn test 935 项 0 失败/0 错误/1 跳过；verify_cmd 6 项 Playwright（隔离 18089 服务）6/6；前端构建通过；check-harness --check-git PASS。
+8080 正式服务已是 a64d13a 构建的 jar，凤鸣九州数据完好；本轮验证只读，未改小说内容与审批状态。
+环境注记：全新检出需先构建前端（生成 gitignore 的 src/main/resources/static）再跑全量测试，否则 ApiCacheControlTest 因缺首页 500；详见 evidence。
+日志 /tmp/p42-01-*.log；QA 产物 /tmp/p42-01-qa-clean-main/。
 
 ## Blockers
 
-无实施授权阻塞；验证完成前保持in-progress。
-文学实验p40-05/p40-06仍deferred：缺真实严重错误计数、回放等待人工复核，不在本项变更范围。
+无。
+p40-05/p40-06 保持 deferred：缺真实严重错误计数、回放等待人工复核。
 
 ## Next Steps
 
-完成门禁修复的分支验证、提交合并与干净main复验后登记完成。
-重新打包并替换8080服务，供用户继续在凤鸣九州人工复核；不替用户批准内容。
-原主目录两处未跟踪文件保留。
+等待用户在凤鸣九州复核新审阅界面；复核意见若产生新缺陷，按需求拆分协议登记新 feature。
+启动新会话时先跑 ./init.sh 确认基线健康。

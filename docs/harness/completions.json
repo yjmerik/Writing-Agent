@@ -1507,6 +1507,17 @@
       "implementation_commit": "04fc22a68875ab785217a8c3d8577c0f2ee0b80a",
       "main_commit": "04fc22a68875ab785217a8c3d8577c0f2ee0b80a",
       "evidence": "docs/harness/evidence/2026-09-18-p41-10.json"
+    },
+    {
+      "id": "p42-01-p42",
+      "kind": "verified",
+      "feature_ids": [
+        "p42-01"
+      ],
+      "branch": "codex/p42-01-review-workspace",
+      "implementation_commit": "879c90bc723755f23f13b4a7e12fa784c798090b",
+      "main_commit": "a64d13a3b24cc37cf200c8fcb34051e5220e0d94",
+      "evidence": "docs/harness/evidence/2026-09-18-p42-01.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

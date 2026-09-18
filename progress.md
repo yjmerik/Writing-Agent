@@ -1,39 +1,38 @@
-# 审阅体验修复 — 2026-09-18
+# 审阅体验修复完成 — 2026-09-18
 
 Last Updated: 2026-09-18
 
 ## Current
 
-用户在凤鸣九州人工复核失败，当前唯一进行中项 p42-01。
-分支 codex/p42-01-review-workspace；工作目录 /tmp/writing-agent-audit3-design。
-p41-01～10完成状态保留；UI实现879c90b已合入main；合并后发现测试清理竞态，回原分支修复验收门禁。
+p42-01「审阅入口与阅读工作区修复」已完成并合入本地 main：实现 879c90b，测试门禁修复 a64d13a（当前 main HEAD）。
+干净检出复验通过，完成记录 p42-01-p42 已登记，active_feature=null。
+8080 正式服务运行新构建 target/manual-review/writing-agent-p42-01-a64d13a.jar；凤鸣九州数据完好（12 个项目、第 63 章可访问），本轮只读验证未改小说内容，等待用户人工复核新界面，不代用户批准章节。
+主目录两处未跟踪材料（.zcode/plans/plan-sess_8dbf5c3f*.md、docs/reports/2026-09-05-ui-experience/）按此前约定保留不动。
 
 ## Files
 
 - docs/specs/2026-09-18-review-workspace-usability.md
 - docs/superpowers/plans/2026-09-18-review-workspace-usability.md
-- frontend/src/pages/ProjectWorkspace.tsx
-- frontend/src/components/InteractiveReview.tsx
-- qa/collaboration/review-workspace.spec.ts
-- 前次状态归档：docs/harness/archive/2026-09-18-pre-p42-01-*.md
+- frontend/src/pages/ProjectWorkspace.tsx、frontend/src/components/InteractiveReview.tsx
+- qa/collaboration/review-workspace.spec.ts（6 项专项回归）
+- src/test/java/com/writing/novel/agent/VectorCleanupOnRewritePathsTest.java（清理竞态修复）
+- 本轮归档：docs/harness/archive/2026-09-18-mid-p42-01-*.md、2026-09-18-pre-p42-01-*.md
 
 ## Verification
 
-./init.sh 基线通过；新增6项Playwright在原版全部失败（无面板、错误tab、正文410px）。
-修复后专项6项、全部44项浏览器回归通过；构建通过。Browser plugin not available，使用现有Playwright。
-桌面1280/1440与手机390px已核对；凤鸣九州第63章只读复验，专注正文1000px、无pageerror。
-后端首次全量935项：0 failures，1 error（VectorCleanupOnRewritePathsTest临时SQLite WAL/SHM清理），1 skipped。
-单独复查3项和首次完整重跑曾通过；合并后相同竞态复现，不能以重跑绿替代修复。
-已将该测试的完成信号移至异步刷新最后一步后，并断言等待成功；专项3项通过；修复后全套935项，0失败/0错误/1跳过。待合并后干净main复验。
-日志 /tmp/p42-01-*.log；截图 /tmp/p42-fengming-*.png、/tmp/p42-01-green/。
+干净检出（git worktree --detach a64d13a）复验，均为本轮实际执行：
+- mvn compile && mvn test：935 项，0 失败 / 0 错误 / 1 跳过（/tmp/p42-01-clean-main-verify4.log）
+- verify_cmd：6 项 Playwright 专项（隔离库 18089 服务 + a64d13a jar）6/6 通过（/tmp/p42-01-qa-clean-main/report.json）
+- npm --prefix frontend run build：通过（/tmp/p42-01-frontend-main.log）
+- python3 scripts/check-harness.py --check-git：PASS（330 特性：328 completed / 2 deferred）；scripts/test_check_harness.py 11 项 OK
+- 正式服务：进程命令行确认为 a64d13a jar，/api/projects 200
+已知环境注记（未顺带改代码）：src/main/resources/static 为前端构建产物（gitignore）；全新检出未构建前端直接 mvn test，ApiCacheControlTest 的 GET / 会因缺首页 500——先构建前端再跑全量即绿，已记入 evidence。
 
 ## Blockers
 
-无实施授权阻塞；验证完成前保持in-progress。
-文学实验p40-05/p40-06仍deferred：缺真实严重错误计数、回放等待人工复核，不在本项变更范围。
+无。
 
 ## Next Steps
 
-完成门禁修复的分支验证、提交合并与干净main复验后登记完成。
-重新打包并替换8080服务，供用户继续在凤鸣九州人工复核；不替用户批准内容。
-原主目录两处未跟踪文件保留。
+用户在凤鸣九州人工复核：点「审阅内容」直接打开完整审查面板（可重复开关且保留未提交意见）；「专注阅读」正文宽 1000px；390px 窄屏无横向溢出。
+p40-05/p40-06 文学实验仍 deferred：缺真实严重错误计数与回放，待用户复核，不在本项范围。

@@ -1,0 +1,40 @@
+{
+  "commit": "a64d13a3b24cc37cf200c8fcb34051e5220e0d94",
+  "cleanCheckout": true,
+  "checks": [
+    {
+      "command": "mvn compile && mvn test",
+      "result": "PASS: Tests run: 935, Failures: 0, Errors: 0, Skipped: 1. 在 git worktree --detach a64d13a 的干净检出复验（/tmp/p42-01-clean-main-verify4.log）。注意：src/main/resources/static 为前端构建产物（gitignore），全新检出未构建前端直接 mvn test 时 ApiCacheControlTest 的 GET / 因缺首页 500（首跑 /tmp/p42-01-clean-main-verify3.log 复现，单项复查确认）；先 npm build 再全量即全绿，未顺带改代码。",
+      "exitCode": 0
+    },
+    {
+      "command": "QA_BASE_URL=http://127.0.0.1:18089 QA_ARTIFACT_DIR=/tmp/p42-01-qa-clean-main npx --prefix qa/collaboration playwright test -c qa/collaboration/playwright.config.ts review-workspace.spec.ts",
+      "result": "PASS: 6 tests, 0 failed。审阅内容同页签开关重开完整面板、跨页签待审直达、1280px 正文宽度与专注阅读、1440/390px 长审查报告无横向溢出、空状态。隔离服务为 a64d13a 构建的 target/manual-review/writing-agent-p42-01-a64d13a.jar + 临时数据目录；report: /tmp/p42-01-qa-clean-main/report.json",
+      "exitCode": 0
+    },
+    {
+      "command": "npm --prefix frontend run build",
+      "result": "PASS；/tmp/p42-01-frontend-main.log（既有 chunk-size advisory）",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/check-harness.py --check-git",
+      "result": "PASS；保留 legacy-through-p26 historical 证据 WARN",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/test_check_harness.py",
+      "result": "PASS: 11 tests",
+      "exitCode": 0
+    },
+    {
+      "command": "正式服务确认（ps + curl /api/projects）",
+      "result": "8080 运行 target/manual-review/writing-agent-p42-01-a64d13a.jar（main HEAD 构建）；/api/projects 200，12 个项目，凤鸣九州第63章可访问，数据未被本轮改动",
+      "exitCode": 0
+    }
+  ],
+  "red": "2026-09-18 修复前：新增 6 项 review-workspace.spec.ts 在未修复版本全部失败（无审查面板、待审入口停留错误页签、正文卡片仅约 410-547px）；后端合并后全量曾复现 VectorCleanupOnRewritePathsTest 临时 SQLite 清理竞态 error，以 a64d13a 将完成信号移至异步刷新最后一步后修复。过程日志见 /tmp/p42-01-*.log（如 /tmp/p42-01-all-branch.log、/tmp/p42-01-red*.log）。",
+  "branch": "codex/p42-01-review-workspace",
+  "implementation_commit": "879c90bc723755f23f13b4a7e12fa784c798090b",
+  "main_commit": "a64d13a3b24cc37cf200c8fcb34051e5220e0d94"
+}

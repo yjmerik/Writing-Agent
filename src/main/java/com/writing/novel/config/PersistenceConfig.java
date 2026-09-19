@@ -129,6 +129,19 @@ public class PersistenceConfig {
                 impactAnalysisService, agentRevisionService, revisionRequestService, repository);
     }
 
+    // NCS-022: 审美档案
+    @Bean
+    @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)
+    public com.writing.novel.persistence.sqlite.AestheticProfileRepository aestheticProfileRepository(ConnectionProvider cp) {
+        return new com.writing.novel.persistence.sqlite.AestheticProfileRepository(cp);
+    }
+
+    @Bean
+    public com.writing.novel.service.AestheticProfileService aestheticProfileService(
+            com.writing.novel.persistence.sqlite.AestheticProfileRepository aestheticProfileRepository) {
+        return new com.writing.novel.service.AestheticProfileService(aestheticProfileRepository);
+    }
+
     // NCS-021: 按正文更新计划
     @Bean
     public com.writing.novel.service.ReplanFromTextService replanFromTextService(

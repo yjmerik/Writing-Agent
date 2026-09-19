@@ -51,6 +51,13 @@ public class ChapterProduction {
     /** 生产结果：章节 + 质量链是否触发了重写 */
     public record ProductionResult(Chapter chapter, boolean rewritten) {}
 
+    /** NCS-022: 审美档案注入函数（projectId → 注入文本；空=无档案不注入）——late-set */
+    private volatile java.util.function.Function<String, String> aestheticInjection;
+
+    public void setAestheticInjection(java.util.function.Function<String, String> injection) {
+        this.aestheticInjection = injection;
+    }
+
     ChapterProduction(NovelOrchestrator orch,
                       NovelRepository repository,
                       ChapterWriterAgent chapterWriter,
@@ -127,7 +134,14 @@ public class ChapterProduction {
             enhancedNotes = (enhancedNotes != null ? enhancedNotes + "\n\n" : "")
                     + "【场景合同（本章必须成立的因果约束）】\n" + synopsis.getSceneContract();
         }
-        return enhancedNotes;
+        // NCS-022: 审美档案条件注入——仅有档案条目时追加（空档案注入不变）
+        if (aestheticInjection != null) {
+            String aesthetic = aestheticInjection.apply(projectId);
+            if (aesthetic != null && !aesthetic.isBlank()) {
+                enhancedNotes = (enhancedNotes != null ? enhancedNotes + "\n\n" : "") + aesthetic;
+            }
+        }
+        return enhancedNotes == null ? "" : enhancedNotes;
     }
 
     /** Write：正文生成（chapterWriter 保证 ≥500 字或抛异常），发 CHAPTER_WRITTEN 事件 */

@@ -7618,11 +7618,13 @@
       "phase": 48,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/domain/AestheticProfile.java",
+        "src/main/java/com/writing/novel/service/AestheticProfileService.java",
         "src/main/java/com/writing/novel/web/AestheticProfileController.java",
-        "src/main/java/com/writing/novel/memory/ContextAssembler.java"
+        "src/main/java/com/writing/novel/orchestrator/ChapterProduction.java",
+        "frontend/src/components/IntentView.tsx"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "API 测试：增删改查与版本；注入测试：档案条目进入写作上下文且可裁剪优先级明确；对应 Agent 测试通过；e2e 重建后双 replay 一致。",
@@ -7841,5 +7843,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-022"
 }

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Card, Button, Spin, Alert, Tag, Typography, Space, Form, Input, Collapse, Empty, message } from 'antd';
+import { Card, Button, Spin, Alert, Tag, Typography, Space, Form, Input, Collapse, Empty, message, Divider } from 'antd';
 import { AuditOutlined, BookOutlined, RocketOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
-import type { AuthorIntent } from '../types';
+import type { AuthorIntent, AestheticProfileData } from '../types';
 
 const { Paragraph, Text } = Typography;
 
@@ -58,6 +58,33 @@ export default function IntentView({ projectId, currentChapter }: {
       .finally(() => { if (requestRef.current === requestId) setLoading(false); });
     return () => { requestRef.current++; };
   }, [projectId, form]);
+
+  // NCS-022: 审美档案
+  const [aesthetic, setAesthetic] = useState<AestheticProfileData | null>(null);
+  const [aestheticSaving, setAestheticSaving] = useState(false);
+  useEffect(() => {
+    void api.getAestheticProfile(projectId).then(setAesthetic).catch(() => setAesthetic(null));
+  }, [projectId]);
+  const handleAestheticSave = async (values: { likedSnippetChapter?: string; likedSnippetExcerpt?: string; likedSnippetReason?: string; dislikedPatterns?: string; narrativeDistance?: string; languageDensity?: string; humorStyle?: string; imageryPreference?: string }) => {
+    setAestheticSaving(true);
+    try {
+      const snippets = (values.likedSnippetExcerpt?.trim() && values.likedSnippetReason?.trim())
+        ? [{ chapterRef: values.likedSnippetChapter?.trim() || '未标注', excerpt: values.likedSnippetExcerpt.trim(), reason: values.likedSnippetReason.trim() }]
+        : [];
+      const saved = await api.saveAestheticProfile(projectId, {
+        likedSnippets: [...(aesthetic?.likedSnippets ?? []), ...snippets],
+        dislikedPatterns: values.dislikedPatterns ?? aesthetic?.dislikedPatterns ?? '',
+        narrativeDistance: values.narrativeDistance ?? aesthetic?.narrativeDistance ?? '',
+        languageDensity: values.languageDensity ?? aesthetic?.languageDensity ?? '',
+        humorStyle: values.humorStyle ?? aesthetic?.humorStyle ?? '',
+        imageryPreference: values.imageryPreference ?? aesthetic?.imageryPreference ?? '',
+      });
+      setAesthetic(saved);
+      messageApi.success(`审美档案已保存为第 ${saved.revision} 版（写作时向此校准）`);
+    } catch (e) {
+      messageApi.error(e instanceof Error ? e.message : '保存失败');
+    } finally { setAestheticSaving(false); }
+  };
 
   const handleSave = async (values: Partial<AuthorIntent>) => {
     setSaving(true);
@@ -138,6 +165,61 @@ export default function IntentView({ projectId, currentChapter }: {
                 ? '例：江砚把密信凑近烛火，纸角卷起来，像一声没出口的叹息。' : ''} />
             </Form.Item>
           ))}
+        </Form>
+      </Card>
+
+      <Card title="🎨 作者审美档案" size="small" extra={
+        aesthetic && aesthetic.revision > 0 ? <Tag>第 {aesthetic.revision} 版</Tag> : <Tag color="gold">未建立</Tag>
+      }>
+        <Typography.Paragraph type="secondary" style={{ fontSize: 12 }}>
+          「喜欢这段的什么」比「文笔细腻」更可执行。认可片段与偏好会注入后续写作（校准信号，非硬规则）；
+          单次选择不会自动升级为全书禁令。
+        </Typography.Paragraph>
+        {aesthetic && aesthetic.likedSnippets.length > 0 && (
+          <div style={{ marginBottom: 8 }}>
+            {aesthetic.likedSnippets.map((sn, i) => (
+              <div key={i} style={{ fontSize: 12, padding: '2px 0' }}>
+                <Text>"{sn.excerpt}"</Text>
+                <Text type="secondary"> —— {sn.chapterRef}；认可理由：{sn.reason}</Text>
+              </div>
+            ))}
+          </div>
+        )}
+        <Form layout="vertical" onFinish={handleAestheticSave}>
+          <Form.Item name="likedSnippetExcerpt" label="认可的语言片段" style={{ marginBottom: 6 }}
+            extra={<Text type="secondary" style={{ fontSize: 11 }}>贴一段你喜欢的文字（自己写的或喜欢的都行）</Text>}>
+            <Input.TextArea rows={2} />
+          </Form.Item>
+          <Space size={12} wrap>
+            <Form.Item name="likedSnippetChapter" label="出处" style={{ marginBottom: 6 }}>
+              <Input style={{ width: 120 }} placeholder="如：第 8 章" />
+            </Form.Item>
+            <Form.Item name="likedSnippetReason" label="喜欢它什么" style={{ marginBottom: 6, minWidth: 260 }}>
+              <Input placeholder="如：动作代替了对痛苦的直接描写" />
+            </Form.Item>
+          </Space>
+          <Divider style={{ margin: '6px 0' }} />
+          <Form.Item name="dislikedPatterns" label="希望减少的表达" style={{ marginBottom: 6 }}
+            initialValue={aesthetic?.dislikedPatterns}>
+            <Input placeholder="如：解释性独白；巧合解围" />
+          </Form.Item>
+          <Space size={12} wrap>
+            <Form.Item name="narrativeDistance" label="叙述距离" style={{ marginBottom: 6 }} initialValue={aesthetic?.narrativeDistance}>
+              <Input style={{ width: 200 }} placeholder="贴近但不说破" />
+            </Form.Item>
+            <Form.Item name="languageDensity" label="语言密度" style={{ marginBottom: 6 }} initialValue={aesthetic?.languageDensity}>
+              <Input style={{ width: 200 }} placeholder="中等，留白多于铺陈" />
+            </Form.Item>
+          </Space>
+          <Space size={12} wrap>
+            <Form.Item name="humorStyle" label="幽默方式" style={{ marginBottom: 6 }} initialValue={aesthetic?.humorStyle}>
+              <Input style={{ width: 200 }} placeholder="冷幽默，不刻意" />
+            </Form.Item>
+            <Form.Item name="imageryPreference" label="意象偏好" style={{ marginBottom: 6 }} initialValue={aesthetic?.imageryPreference}>
+              <Input style={{ width: 260 }} placeholder="渡口水汽、火光、旧纸的质感" />
+            </Form.Item>
+          </Space>
+          <Button htmlType="submit" loading={aestheticSaving}>保存审美档案</Button>
         </Form>
       </Card>
 

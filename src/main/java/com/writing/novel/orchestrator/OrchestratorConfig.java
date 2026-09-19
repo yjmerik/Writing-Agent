@@ -73,7 +73,8 @@ public class OrchestratorConfig {
                                                   com.writing.novel.agent.DirectiveEvidenceAgent directiveEvidenceAgent,
                                                   com.writing.novel.service.WriteLeaseService writeLease,
                                                   com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository,
-                                                  com.writing.novel.service.VolumeReadbackService volumeReadbackService) {
+                                                  com.writing.novel.service.VolumeReadbackService volumeReadbackService,
+                                                  com.writing.novel.service.AestheticProfileService aestheticProfileService) {
         NovelOrchestrator orchestrator = new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
@@ -104,6 +105,8 @@ public class OrchestratorConfig {
         orchestrator.setCheckResultRepository(checkResultRepository);
         // NCS-020: 卷末回读——未确认阻断下一卷自动续写
         orchestrator.setVolumeReadbackService(volumeReadbackService);
+        // NCS-022: 审美档案条件注入
+        orchestrator.setAestheticInjection(aestheticProfileService::buildInjection);
         return orchestrator;
     }
 

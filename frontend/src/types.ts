@@ -476,3 +476,16 @@ export interface VolumeReadbackItem {
   status: string;
   acknowledgedAt: string | null;
 }
+
+// NCS-022: 审美档案
+export interface AestheticProfileData {
+  projectId: string;
+  revision: number;
+  likedSnippets: { chapterRef: string; excerpt: string; reason: string }[];
+  dislikedPatterns: string;
+  narrativeDistance: string;
+  languageDensity: string;
+  humorStyle: string;
+  imageryPreference: string;
+  updatedAt: string;
+}

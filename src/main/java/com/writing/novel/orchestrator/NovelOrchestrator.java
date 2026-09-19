@@ -117,6 +117,13 @@ public class NovelOrchestrator {
         this.volumeReadbackService = s;
     }
 
+    /** NCS-022: 注入审美档案文本函数（生产装配转发到生产模块）。 */
+    public void setAestheticInjection(java.util.function.Function<String, String> injection) {
+        if (this.production != null) {
+            this.production.setAestheticInjection(injection);
+        }
+    }
+
     /** NCS-007: 注入检查结果信封仓储（生产装配用）。 */
     public void setCheckResultRepository(com.writing.novel.persistence.sqlite.CheckResultRepository repo) {
         this.checkResultRepository = repo;

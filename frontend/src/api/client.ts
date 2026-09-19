@@ -35,6 +35,7 @@ import type {
   SceneContractResult,
   PlanDeviationItem,
   VolumeReadbackItem,
+  AestheticProfileData,
 } from '../types';
 
 const BASE = '/api';
@@ -320,6 +321,12 @@ export const api = {
   // NCS-010/011: 人物时点读取
   getCharacterAsOf: (id: string, charName: string, chapter: number) =>
     request<CharacterAsOf>(`/projects/${id}/characters/${encodeURIComponent(charName)}/as-of?chapter=${chapter}`),
+  // NCS-022: 审美档案
+  getAestheticProfile: (id: string) =>
+    request<AestheticProfileData>(`/projects/${id}/aesthetic-profile`),
+  saveAestheticProfile: (id: string, body: Partial<AestheticProfileData>) =>
+    request<AestheticProfileData>(`/projects/${id}/aesthetic-profile`, { method: 'PUT', body: JSON.stringify(body) }),
+
   // NCS-020: 卷末回读
   listVolumeReadbacks: (id: string) =>
     request<{ projectId: string; readbacks: VolumeReadbackItem[] }>(`/projects/${id}/volume-readbacks`),

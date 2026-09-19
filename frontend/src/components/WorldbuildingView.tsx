@@ -5,6 +5,7 @@ import { api } from '../api/client';
 import type { AgentRevisionApplyResult, AgentRevisionTarget } from '../api/client';
 import type { KnowledgeEntry, Character, Foreshadowing } from '../types';
 import CharacterAsOfView from './CharacterAsOfView';
+import CharacterDecisionsView from './CharacterDecisionsView';
 import AgentRevisionDialog from './AgentRevisionDialog';
 
 const { Text } = Typography;
@@ -266,6 +267,7 @@ export default function WorldbuildingView({ projectId, currentChapter = 0 }: { p
 
       <Divider />
       <CharacterAsOfView projectId={projectId} currentChapter={currentChapter} />
+      <CharacterDecisionsView projectId={projectId} currentChapter={currentChapter} />
       <h2>👥 人物卡</h2>
       <Space style={{ marginBottom: 12 }} wrap>
         <Input style={{ width: 140 }} value={newChar.name} onChange={(e) => setNewChar({ ...newChar, name: e.target.value })} placeholder="姓名" />

@@ -192,6 +192,14 @@ public class SqliteSchemaInitializer {
             "id TEXT PRIMARY KEY, project_id TEXT, chapter_index INTEGER, checker TEXT, " +
             "status TEXT, reason TEXT, created_at TEXT)",
 
+        // NCS-012: 人物关键决策——绑定章号+稿版本，同章同稿同人物幂等
+        "CREATE TABLE IF NOT EXISTS character_decisions (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, character_name TEXT, chapter_index INTEGER, " +
+            "chapter_version INTEGER, trigger_event TEXT, knew_then TEXT, options_json TEXT, " +
+            "chosen_action TEXT, cost TEXT, conflict_with_commitment TEXT, evidence_quote TEXT, " +
+            "created_at TEXT)",
+        "CREATE INDEX IF NOT EXISTS idx_character_decisions ON character_decisions(project_id, character_name, chapter_index)",
+
         // p17-05: 自定义预设持久化（跨项目共享，name 主键 upsert）
         "CREATE TABLE IF NOT EXISTS custom_presets (" +
             "name TEXT PRIMARY KEY, content TEXT, updated_at TEXT)",

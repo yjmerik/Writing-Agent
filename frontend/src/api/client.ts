@@ -26,6 +26,8 @@ import type {
   AuthorIntentHistory,
   WorkspaceView,
   CharacterAsOf,
+  CharacterDecisionItem,
+  CharacterDecisionExtractResult,
 } from '../types';
 
 const BASE = '/api';
@@ -311,6 +313,11 @@ export const api = {
   // NCS-010/011: 人物时点读取
   getCharacterAsOf: (id: string, charName: string, chapter: number) =>
     request<CharacterAsOf>(`/projects/${id}/characters/${encodeURIComponent(charName)}/as-of?chapter=${chapter}`),
+  // NCS-012: 关键决策
+  getCharacterDecisions: (id: string) =>
+    request<{ projectId: string; decisions: CharacterDecisionItem[] }>(`/projects/${id}/decisions`),
+  extractCharacterDecisions: (id: string, chapter: number) =>
+    request<CharacterDecisionExtractResult>(`/projects/${id}/decisions/extract?chapter=${chapter}`, { method: 'POST' }),
 
   createProject: (req: CreateProjectRequest) =>
     request<Project>('/projects', {

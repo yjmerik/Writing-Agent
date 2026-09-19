@@ -64,6 +64,27 @@ public class PersistenceConfig {
         return new com.writing.novel.service.SupportWithdrawalService(storyFactRepository);
     }
 
+    // NCS-012: 人物关键决策
+    @Bean
+    @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)
+    public com.writing.novel.persistence.sqlite.CharacterDecisionRepository characterDecisionRepository(ConnectionProvider cp) {
+        return new com.writing.novel.persistence.sqlite.CharacterDecisionRepository(cp);
+    }
+
+    @Bean
+    public com.writing.novel.agent.CharacterDecisionExtractor characterDecisionExtractor(
+            com.writing.novel.llm.LlmGateway llmGateway,
+            com.writing.novel.llm.prompt.PromptTemplateService promptTemplateService) {
+        return new com.writing.novel.agent.CharacterDecisionExtractor(llmGateway, promptTemplateService);
+    }
+
+    @Bean
+    public com.writing.novel.service.CharacterDecisionService characterDecisionService(
+            com.writing.novel.persistence.sqlite.CharacterDecisionRepository characterDecisionRepository,
+            com.writing.novel.agent.CharacterDecisionExtractor characterDecisionExtractor) {
+        return new com.writing.novel.service.CharacterDecisionService(characterDecisionRepository, characterDecisionExtractor);
+    }
+
     // NCS-010: 人物时点读取
     @Bean
     public com.writing.novel.service.CharacterAsOfService characterAsOfService(

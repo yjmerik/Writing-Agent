@@ -384,3 +384,26 @@ export interface CharacterAsOf {
   believes: CharacterAsOfLearned[];
   relationships: CharacterAsOfRelationship[];
 }
+
+// NCS-012: 人物关键决策
+export interface CharacterDecisionItem {
+  id: string;
+  character: string;
+  chapterIndex: number;
+  chapterVersion: number;
+  triggerEvent: string;
+  knewThen: string;
+  options: string[];
+  chosenAction: string;
+  cost: string;
+  conflictWithCommitment: string;
+  evidenceQuote: string;
+}
+
+export interface CharacterDecisionExtractResult {
+  chapterIndex: number;
+  chapterVersion: number;
+  extracted: number;
+  status: string;
+  decisions: CharacterDecisionItem[];
+}

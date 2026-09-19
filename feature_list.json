@@ -7333,27 +7333,31 @@
     {
       "id": "NCS-012",
       "name": "CharacterDecision 决策记录",
-      "description": "character_decisions 表与提取：关键决策（触发事件、当时所知、可行选择、所选行动、代价、与旧承诺冲突、正文证据锚点）按章落库（新增提取模板，不动既有变量名）；人物经历视图展示并可跳转来源章；提取失败标 UNKNOWN 不伪装为空（方案 §07/F16）。",
+      "description": "character_decisions 表与提取：关键决策（触发事件、当时所知、可行选择、所选行动、代价、与旧承诺冲突、正文证据锚点）按章落库；提取为后处理可选阶段（写作偏好开关，默认关）+ REST 按需端点，新模板 character-decision.st 不动既有变量名；人物经历视图展示并可跳转来源章；提取失败标 UNKNOWN 不伪装为空（方案 §07/F16）。设计决策：默认关闭管线自动提取，避免确定性回放管线指纹分叉；开启后由按需/管线双路径覆盖。",
       "phase": 45,
       "type": "feature",
       "dependencies": [
         "NCS-008"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/domain/CharacterDecision.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/CharacterDecisionRepository.java",
         "src/main/java/com/writing/novel/agent/CharacterDecisionExtractor.java",
-        "src/main/resources/prompts/character-decision.st"
+        "src/main/java/com/writing/novel/service/CharacterDecisionService.java",
+        "src/main/java/com/writing/novel/web/CharacterDecisionController.java",
+        "src/main/resources/prompts/character-decision.st",
+        "frontend/src/components/CharacterDecisionsView.tsx"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
-      "acceptance": "提取测试（回放/桩）：决策字段完整落库、证据锚点可定位；坏输出→UNKNOWN；e2e 管线纳入后重建 fixture 双 replay 一致；mvn compile && mvn test 通过。",
+      "acceptance": "提取测试（桩网关）：决策字段完整落库、证据锚点可定位章稿；坏输出→UNKNOWN 不产生空决策；按需端点 POST /decisions/extract 触发单章提取并幂等（重复调用不重复落库）；管线阶段默认关闭时 e2e replay 不变（指纹无影响）；人物经历视图展示决策并附来源跳转；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=CharacterDecisionTest",
       "evidence": "",
       "ui_impact": "low",
       "backend_impact": "high",
       "prompt_impact": "high",
-      "e2e_impact": "high",
-      "baseline_impact": "high"
+      "e2e_impact": "none（默认关闭管线阶段，按需端点不在 e2e 3 章流程）",
+      "baseline_impact": "none"
     },
     {
       "id": "NCS-013",
@@ -7803,5 +7807,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-012"
 }

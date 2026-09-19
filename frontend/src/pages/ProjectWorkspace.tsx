@@ -6,6 +6,7 @@ import { api } from '../api/client';
 import type { Project } from '../types';
 import RunConsole from '../components/RunConsole';
 import IntentView from '../components/IntentView';
+import IdentityBar from '../components/IdentityBar';
 import WorldbuildingView from '../components/WorldbuildingView';
 import OutlineView from '../components/OutlineView';
 import InteractiveReview from '../components/InteractiveReview';
@@ -297,6 +298,7 @@ export default function ProjectWorkspace() {
             navigate(`/project/${project.id}/chapter/${chapterIndex}`);
             setReviewPanelOpen(true);
           }} />
+        <IdentityBar projectId={project.id} />
         <Tabs
           activeKey={activeTab}
           onChange={handleTabChange}

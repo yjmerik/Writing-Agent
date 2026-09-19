@@ -303,3 +303,44 @@ export interface AuthorIntentHistory {
   projectId: string;
   revisions: AuthorIntent[];
 }
+
+// NCS-005/006: WorkspaceView 统一读取模型
+export interface WorkspaceViewCurrentChapter {
+  index: number;
+  title: string;
+  version: number;
+  status: string;
+}
+
+export interface WorkspaceView {
+  identity: {
+    projectId: string;
+    title: string;
+    state: string;
+    mode: string;
+    currentChapterIndex: number;
+    revisionOfView: string;
+  };
+  contentStatus: {
+    currentChapter?: WorkspaceViewCurrentChapter;
+    totalChapters: number;
+    doneChapters: number;
+    pendingCandidates: number;
+  };
+  run?: {
+    taskId: string;
+    type: string;
+    status: string;
+    stopRequested: boolean;
+    chaptersWritten: number;
+    currentChapter: number;
+    errorMessage: string | null;
+  };
+  review: {
+    activeBarriers: number;
+    pendingCheckpoints: number;
+    unknownChecks: number;
+    staleIssues: number;
+  };
+  availableActions: { action: string; allowed: boolean; reason: string }[];
+}

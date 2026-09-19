@@ -24,6 +24,7 @@ import type {
   LlmModelUpdateRequest,
   AuthorIntent,
   AuthorIntentHistory,
+  WorkspaceView,
 } from '../types';
 
 const BASE = '/api';
@@ -304,6 +305,8 @@ export const api = {
   saveIntent: (id: string, intent: Partial<AuthorIntent>) =>
     request<AuthorIntent>(`/projects/${id}/intent`, { method: 'PUT', body: JSON.stringify(intent) }),
   getIntentHistory: (id: string) => request<AuthorIntentHistory>(`/projects/${id}/intent/history`),
+  // NCS-005/006: 统一工作台读取
+  getWorkspaceView: (id: string) => request<WorkspaceView>(`/projects/${id}/workspace-view`),
 
   createProject: (req: CreateProjectRequest) =>
     request<Project>('/projects', {

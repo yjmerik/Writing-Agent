@@ -7563,7 +7563,7 @@
       "dependencies": [
         "NCS-018"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/domain/VolumeReadback.java",
         "src/main/java/com/writing/novel/service/VolumeReadbackService.java",
@@ -7575,12 +7575,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "测试（回放/桩）：卷末触发报告生成与持久化、界面可读；未决决定阻断自动续写且显式继续可用；报告绑定卷与稿版本；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=VolumeReadbackTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: 0f49a19（ff-merge）; verify_cmd VolumeReadbackTest 3/0F; mvn test 1050/0F/0E/1S; npm build PASS; e2e+baseline PASS; 证据 docs/harness/evidence/2026-09-19-ncs-020.json",
       "ui_impact": "medium",
       "backend_impact": "high",
       "prompt_impact": "high",
       "e2e_impact": "high",
-      "baseline_impact": "high"
+      "baseline_impact": "high",
+      "branch": "codex/ncs-020-volume-readback",
+      "completion_record": "ncs-020-verified"
     },
     {
       "id": "NCS-021",
@@ -7836,5 +7838,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-020"
+  "active_feature": null
 }

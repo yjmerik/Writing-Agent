@@ -1,0 +1,31 @@
+{
+ "commit": "0f49a1983aa7f89020a0d31d240a2d6c509b04cb",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1050 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "npm --prefix frontend run build",
+   "result": "PASS（分支+干净检出）。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=VolumeReadbackTest",
+   "result": "PASS: 3 tests 0 failures（含干净检出）。生成回读报告落库（五区块+PENDING_REVIEW）；未确认回读阻断下一卷自动续写（step 保持 VOLUME_DONE+VOLUME_READBACK_PENDING 事件）+确认后放行（WRITING）；坏输出不落库可重试；无回读时卷过渡正常（旧行为兼容）。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py",
+   "result": "PASS（按需生成不在管线，指纹不变；e2e 3 章不触达卷末）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "volume_readbacks 表（每卷最新）；volume-readback.st（卷摘要/章梗概/承诺台账/偏离输入）；startNextVolumeOrFinish 入口阻断（late-set service）；REST generate/list/acknowledge；成书审查页『📖 卷末回读』卡片（生成/重新生成/确认并继续下一卷/待确认状态提示下一卷已暂停）。",
+ "feature_ids": [
+  "NCS-020"
+ ],
+ "branch": "codex/ncs-020-volume-readback"
+}

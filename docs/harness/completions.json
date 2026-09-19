@@ -1738,6 +1738,17 @@
    "implementation_commit": "61490119cbc0702baaadb99f4bbf6a530bb391f2",
    "main_commit": "61490119cbc0702baaadb99f4bbf6a530bb391f2",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-019.json"
+  },
+  {
+   "id": "ncs-020-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-020"
+   ],
+   "branch": "codex/ncs-020-volume-readback",
+   "implementation_commit": "0f49a1983aa7f89020a0d31d240a2d6c509b04cb",
+   "main_commit": "0f49a1983aa7f89020a0d31d240a2d6c509b04cb",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-020.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

@@ -1,0 +1,31 @@
+{
+ "commit": "daf01e66c6fd323dce6997d5708b82ccaa055915",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "npm --prefix frontend run build",
+   "result": "PASS（分支 + 干净检出各一次）。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1036 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "ego-browser 浏览器验证（隔离实例，真实 API）",
+   "result": "PASS：『🛠 修订』页签四步工作区——登记修订请求（意图+章号）→ 待批准范围 → 批准范围（≠内容采纳徽标）→ 运行影响分析 → 影响卡片渲染（第2章 MUST_REPAIR 红标+理由+涉及实体、覆盖说明 tooltip、标记已读按钮、『采纳 1 章修订』按钮、已读≠采纳说明文案）；顶部固定原要求/状态徽标；截图 docs/reports/ncs-017-revision-workspace.png。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py",
+   "result": "PASS（无 prompt 改动）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "RevisionWorkspace 组件（Steps 五步：登记→范围→建议→审阅→采纳核对）；操作链 record→approve-scope→analyze-impact→generate-repairs→accept-group 对应 NCS-013..016 后端；已读为本地审阅标记；URL 权威 ?tab=revisions。",
+ "feature_ids": [
+  "NCS-017"
+ ],
+ "branch": "codex/ncs-017-revision-workspace"
+}

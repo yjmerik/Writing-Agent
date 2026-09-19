@@ -7477,7 +7477,7 @@
       "dependencies": [
         "NCS-016"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "frontend/src/components/RevisionWorkspace.tsx",
         "frontend/src/pages/ProjectWorkspace.tsx",
@@ -7487,12 +7487,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "npm --prefix frontend run build 通过；ego-browser 走通四步与整组采纳/重基提示。",
       "verify_cmd": "npm --prefix frontend run build",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: daf01e6（ff-merge）; npm build PASS; mvn test 1036/0F/0E/1S（分支+干净检出）; ego-browser 四步流程+影响卡片全过; e2e+baseline PASS; 证据 docs/harness/evidence/2026-09-19-ncs-017.json",
       "ui_impact": "high",
       "backend_impact": "low",
       "prompt_impact": "none",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-017-revision-workspace",
+      "completion_record": "ncs-017-verified"
     },
     {
       "id": "NCS-018",
@@ -7820,5 +7822,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-017"
+  "active_feature": null
 }

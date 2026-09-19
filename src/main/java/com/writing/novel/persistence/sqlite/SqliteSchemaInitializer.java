@@ -296,6 +296,11 @@ public class SqliteSchemaInitializer {
             "id TEXT PRIMARY KEY, plan_change_id TEXT NOT NULL, promise_id TEXT NOT NULL, " +
             "action TEXT NOT NULL, target_chapter INTEGER, reason TEXT, created_at TEXT NOT NULL)",
 
+        // NCS-028: 绑定固定整书记录的校验报告，追加历史而不覆盖。
+        "CREATE TABLE IF NOT EXISTS edition_validations (" +
+            "report_id TEXT PRIMARY KEY, project_id TEXT NOT NULL, edition_id TEXT NOT NULL, " +
+            "manifest_hash TEXT NOT NULL, report_json TEXT NOT NULL, created_at TEXT NOT NULL)",
+
         // p38-05: 不可变成书版本——正文快照物化，批准绑定 manifestHash
         "CREATE TABLE IF NOT EXISTS book_editions (" +
             "edition_id TEXT PRIMARY KEY, project_id TEXT NOT NULL, manifest_hash TEXT NOT NULL, " +
@@ -473,6 +478,7 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE writing_tasks ADD COLUMN stop_requested INTEGER NOT NULL DEFAULT 0");
         // NCS-001: 任务启动时捕获的写入门禁 epoch（旧任务默认 0 与无租约行匹配）
         safeAddColumn(st, "ALTER TABLE writing_tasks ADD COLUMN lease_epoch INTEGER NOT NULL DEFAULT 0");
+        safeAddColumn(st, "ALTER TABLE check_results ADD COLUMN content_fingerprint TEXT");
         // p32-04: 章节写作采用的计划出处（卷号+梗概指纹），旧行 NULL
         safeAddColumn(st, "ALTER TABLE chapters ADD COLUMN plan_ref TEXT");
         // p32-06: 真典事实证据分级（机器收割的世界铁律=UNVERIFIED），旧行默认 CONFIRMED

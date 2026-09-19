@@ -29,10 +29,13 @@ public class BookEditionController {
 
     private final NovelRepository repository;
     private final ObjectMapper objectMapper;
+    private final com.writing.novel.service.EditionValidationService validation;
 
-    public BookEditionController(NovelRepository repository, ObjectMapper objectMapper) {
+    public BookEditionController(NovelRepository repository, ObjectMapper objectMapper,
+            com.writing.novel.service.EditionValidationService validation) {
         this.repository = repository;
         this.objectMapper = objectMapper;
+        this.validation = validation;
     }
 
     /** 创建一致快照：物化每章正文/身份/批准，计算 manifestHash。 */
@@ -110,6 +113,16 @@ public class BookEditionController {
         return result;
     }
 
+    @PostMapping("/{editionId}/validate")
+    public Map<String, Object> validate(@PathVariable String id, @PathVariable String editionId) {
+        return validation.validate(id, editionId);
+    }
+
+    @GetMapping("/{editionId}/validation")
+    public Map<String, Object> validation(@PathVariable String id, @PathVariable String editionId) {
+        return validation.current(id, editionId);
+    }
+
     /** 批准：重读当前覆盖资格（全部章节有当前身份批准 + 无活动屏障），绑定 manifestHash。 */
     @PostMapping("/{editionId}/approve")
     public Map<String, Object> approve(@PathVariable String id, @PathVariable String editionId,
@@ -124,20 +137,7 @@ public class BookEditionController {
         if (!providedHash.equals(edition.getManifestHash())) {
             throw new IllegalStateException("manifestHash 不匹配，拒绝批准");
         }
-        // 重读覆盖资格：无活动屏障 + 快照内每章的快照版本已获作者批准
-        // 审计 P1-3: 原实现检查"当前稿"而非"快照版本"——编辑并批准新稿后，旧快照也能通过。
-        // 现在严格按快照内记录的 version 和 contentHash 验证。
-        if (!repository.findActiveReviewBarriers(id).isEmpty()) {
-            throw new IllegalStateException("存在活动人审屏障，成书批准被阻塞");
-        }
-        for (BookEdition.EditionChapter snapshotChapter : repository.findBookEditionChapters(editionId)) {
-            if (!repository.isChapterApproved(id, snapshotChapter.chapterIndex(),
-                    snapshotChapter.version(), snapshotChapter.contentHash())) {
-                throw new IllegalStateException("第" + snapshotChapter.chapterIndex()
-                        + "章快照版本(v" + snapshotChapter.version() + ")未获作者批准");
-            }
-        }
-        repository.approveBookEdition(id, editionId, providedHash);
+        validation.approve(id, editionId, providedHash);
         return Map.of("editionId", editionId, "state", "APPROVED", "manifestHash", providedHash);
     }
 

@@ -40,6 +40,7 @@ import type {
   DelegationRules,
   BookEditionSummary,
   BookEditionDetail,
+  EditionValidation,
 } from '../types';
 
 const BASE = '/api';
@@ -333,6 +334,10 @@ export const api = {
       `/projects/${id}/book-editions`, { method: 'POST' }),
   getBookEditionDetail: (id: string, editionId: string) =>
     request<BookEditionDetail>(`/projects/${id}/book-editions/${editionId}`),
+  validateBookEdition: (id: string, editionId: string) =>
+    request<EditionValidation>(`/projects/${id}/book-editions/${editionId}/validate`, { method: 'POST' }),
+  getEditionValidation: (id: string, editionId: string) =>
+    request<EditionValidation>(`/projects/${id}/book-editions/${editionId}/validation`),
   approveBookEdition: (id: string, editionId: string, manifestHash: string) =>
     request<Record<string, unknown>>(`/projects/${id}/book-editions/${editionId}/approve`,
       { method: 'POST', body: JSON.stringify({ manifestHash }) }),

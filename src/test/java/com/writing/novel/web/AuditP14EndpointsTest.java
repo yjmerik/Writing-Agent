@@ -51,6 +51,7 @@ class AuditP14EndpointsTest {
     @Autowired ObjectMapper om;
     @Autowired NovelRepository repository;
     @Autowired StoryFactRepository storyFactRepository;
+    @Autowired com.writing.novel.persistence.sqlite.CheckResultRepository checks;
 
     private String createProject(String title) throws Exception {
         CreateProjectRequest req = new CreateProjectRequest(title, "c", "tag", "SOLO", null);
@@ -127,7 +128,10 @@ class AuditP14EndpointsTest {
         // 批准两章当前稿后再批成书 → APPROVED
         for (int i = 1; i <= 2; i++) {
             approveChapterViaApi(pid, i);
+            checks.save(pid, i, "continuity", com.writing.novel.agent.CheckResultEnvelope.Status.VALID_EMPTY, "无矛盾");
         }
+        mvc.perform(post("/api/projects/{id}/book-editions/{eid}/validate", pid, editionId))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("PASS"));
         mvc.perform(post("/api/projects/{id}/book-editions/{eid}/approve", pid, editionId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(om.writeValueAsString(Map.of("manifestHash", manifestHash))))

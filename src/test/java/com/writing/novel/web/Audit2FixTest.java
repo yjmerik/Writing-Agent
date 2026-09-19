@@ -214,17 +214,17 @@ class Audit2FixTest {
             }
         }
 
-        // 尝试批准旧快照（v2 版本）→ 必须被拒绝（快照 v2 版本未获批准）
+        // 新门禁报告也必须识别快照稿号未批准，不能借用新稿批准。
+        mvc.perform(post("/api/projects/{id}/book-editions/{eid}/validate", pid, editionId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("BLOCKED"))
+                .andExpect(result -> assertTrue(result.getResponse().getContentAsString()
+                        .contains("AUTHOR_APPROVAL")));
         mvc.perform(post("/api/projects/{id}/book-editions/{eid}/approve", pid, editionId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(om.writeValueAsString(Map.of("manifestHash", manifestHash))))
-                .andExpect(status().isConflict())
-                .andExpect(result -> {
-                    String body = result.getResponse()
-                            .getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
-                    assertTrue(body.contains("快照") || body.contains("v2") || body.contains("屏障"),
-                            "错误消息应提及快照版本或屏障，实际: " + body);
-                });
+                .andExpect(status().isConflict());
+
     }
 
     /** P1-4: 事实证据验证章存在、身份匹配、项目归属、引文核验。 */

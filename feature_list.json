@@ -7780,7 +7780,7 @@
       "dependencies": [
         "NCS-027"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/service/EditionValidationService.java",
         "src/main/java/com/writing/novel/web/BookEditionController.java",
@@ -7789,12 +7789,13 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：报告绑定 manifestHash 且旧窗口外 HIGH 计入；无有效报告不可确认定稿；新稿产生后旧报告失效标识；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=EditionValidationTest",
-      "evidence": "",
+      "evidence": "2026-09-19 in-progress: EditionValidationTest 8/0F/0E（先 RED 8F/0E）；./init.sh PASS 1082/0F/0E/1S；replay+baseline PASS。报告与范围外发现见 docs/reports/2026-09-19-ncs-028/README.md。待提交合并后复验。",
       "ui_impact": "low",
       "backend_impact": "high",
       "prompt_impact": "none",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-028-edition-validation"
     },
     {
       "id": "NCS-029",
@@ -7856,5 +7857,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-028"
 }

@@ -247,6 +247,25 @@ public interface NovelRepository {
         throw new UnsupportedOperationException("approveBookEdition 未实现");
     }
 
+    // NCS-028: 服务仅依赖 SPI；一致读、报告保存和批准在同一事务内执行。
+    default <T> T withEditionTransaction(java.util.function.Function<NovelRepository, T> work) {
+        throw new UnsupportedOperationException("成书校验事务未实现");
+    }
+    record EditionCheck(String id, String checker, String status, String reason, boolean bound) {}
+    default List<EditionCheck> findEditionChecks(String projectId, int chapterIndex, String content) {
+        throw new UnsupportedOperationException("成书检查证据未实现");
+    }
+    default List<com.writing.novel.domain.PlanChange.PromiseDecision> findPromiseDecisions(String projectId) {
+        throw new UnsupportedOperationException("承诺处置读取未实现");
+    }
+    default void saveEditionValidation(String projectId, String editionId, String manifestHash,
+                                       String reportId, String reportJson) {
+        throw new UnsupportedOperationException("成书报告持久化未实现");
+    }
+    default Optional<String> findEditionValidation(String projectId, String editionId, String manifestHash) {
+        throw new UnsupportedOperationException("成书报告读取未实现");
+    }
+
     // --- p38-10: 问题裁决存取与批准门禁（缺省禁止默认成功） ---
 
     default void saveDisposition(com.writing.novel.domain.ReviewDisposition disposition) {

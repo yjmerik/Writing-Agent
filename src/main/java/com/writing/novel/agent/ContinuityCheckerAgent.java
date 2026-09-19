@@ -100,7 +100,7 @@ public class ContinuityCheckerAgent {
         }
         if (checkResultRepository != null) {
             checkResultRepository.save(projectId, chapterIndex, "continuity",
-                    envelope.status(), envelope.reason());
+                    envelope.status(), envelope.reason(), chapterContent);
         }
 
         if (repository != null) {

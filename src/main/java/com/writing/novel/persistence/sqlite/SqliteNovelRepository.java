@@ -1331,6 +1331,77 @@ public class SqliteNovelRepository implements NovelRepository {
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
+    @Override
+    public <T> T withEditionTransaction(java.util.function.Function<NovelRepository, T> work) {
+        return runInTransaction(conn -> {
+            // 所有 repository 方法复用同一 SQLite 快照；方法级 close 不关闭外层事务。
+            Connection borrowed = (Connection) java.lang.reflect.Proxy.newProxyInstance(
+                    Connection.class.getClassLoader(), new Class<?>[]{Connection.class}, (proxy, method, args) -> {
+                        if (method.getName().equals("close")) return null;
+                        try { return method.invoke(conn, args); }
+                        catch (java.lang.reflect.InvocationTargetException e) { throw e.getCause(); }
+                    });
+            ConnectionProvider scoped = new ConnectionProvider(cp.getDbPath()) {
+                @Override public Connection getConnection() { return borrowed; }
+            };
+            return work.apply(new SqliteNovelRepository(scoped));
+        });
+    }
+
+    @Override
+    public List<NovelRepository.EditionCheck> findEditionChecks(String projectId, int chapterIndex, String content) {
+        Map<String, NovelRepository.EditionCheck> latest = new TreeMap<>();
+        String hash = ChapterApproval.contentHash("", content);
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT * FROM check_results WHERE project_id=? AND chapter_index=? " +
+                "AND (content_fingerprint=? OR content_fingerprint IS NULL) ORDER BY created_at, rowid")) {
+            ps.setString(1, projectId); ps.setInt(2, chapterIndex); ps.setString(3, hash);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) latest.put(rs.getString("checker"), new NovelRepository.EditionCheck(
+                        rs.getString("id"), rs.getString("checker"), rs.getString("status"),
+                        rs.getString("reason"), hash.equals(rs.getString("content_fingerprint"))));
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return new ArrayList<>(latest.values());
+    }
+
+    @Override
+    public List<PlanChange.PromiseDecision> findPromiseDecisions(String projectId) {
+        List<PlanChange.PromiseDecision> result = new ArrayList<>();
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT d.* FROM promise_decisions d JOIN plan_changes p ON d.plan_change_id=p.preview_id " +
+                "WHERE p.project_id=? AND p.status='CONFIRMED' ORDER BY d.created_at, d.rowid")) {
+            ps.setString(1, projectId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) result.add(new PlanChange.PromiseDecision(rs.getString("id"),
+                        rs.getString("plan_change_id"), rs.getString("promise_id"), rs.getString("action"),
+                        rs.getObject("target_chapter") == null ? null : rs.getInt("target_chapter"), rs.getString("reason")));
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return result;
+    }
+
+    @Override
+    public void saveEditionValidation(String projectId, String editionId, String manifestHash,
+                                      String reportId, String reportJson) {
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "INSERT INTO edition_validations VALUES (?,?,?,?,?,?)")) {
+            ps.setString(1, reportId); ps.setString(2, projectId); ps.setString(3, editionId);
+            ps.setString(4, manifestHash); ps.setString(5, reportJson); ps.setString(6, Instant.now().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    @Override
+    public Optional<String> findEditionValidation(String projectId, String editionId, String manifestHash) {
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT report_json FROM edition_validations WHERE project_id=? AND edition_id=? " +
+                "AND manifest_hash=? ORDER BY rowid DESC LIMIT 1")) {
+            ps.setString(1, projectId); ps.setString(2, editionId); ps.setString(3, manifestHash);
+            try (ResultSet rs = ps.executeQuery()) { return rs.next() ? Optional.of(rs.getString(1)) : Optional.empty(); }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
     // --- p38-10: 问题裁决存取 ---
 
     @Override

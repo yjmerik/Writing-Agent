@@ -31,8 +31,21 @@ public class CheckResultRepository {
 
     public void save(String projectId, int chapterIndex, String checker,
                      CheckResultEnvelope.Status status, String reason) {
-        String sql = "INSERT INTO check_results (id, project_id, chapter_index, checker, status, reason, created_at) " +
-                "VALUES (?,?,?,?,?,?,?)";
+        // 兼容调用：仅绑定调用时存在的正文；无正文/旧记录绝不当作已覆盖。
+        String content = null;
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT content FROM chapters WHERE project_id=? AND chapter_index=?")) {
+            ps.setString(1, projectId); ps.setInt(2, chapterIndex);
+            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) content = rs.getString(1); }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        save(projectId, chapterIndex, checker, status, reason, content);
+    }
+
+    /** 绑定实际被检查的正文，而非可能已被作者更新的当前稿。 */
+    public void save(String projectId, int chapterIndex, String checker,
+                     CheckResultEnvelope.Status status, String reason, String checkedContent) {
+        String sql = "INSERT INTO check_results (id, project_id, chapter_index, checker, status, reason, created_at, content_fingerprint) " +
+                "VALUES (?,?,?,?,?,?,?,?)";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, java.util.UUID.randomUUID().toString());
@@ -42,6 +55,7 @@ public class CheckResultRepository {
             ps.setString(5, status.name());
             ps.setString(6, reason == null ? "" : reason);
             ps.setString(7, Instant.now().toString());
+            ps.setString(8, checkedContent == null ? null : com.writing.novel.domain.ChapterApproval.contentHash("", checkedContent));
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);

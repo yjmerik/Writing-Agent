@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Card, Button, Table, Tag, Space, Typography, Empty, Spin, Modal, message } from 'antd';
+import { Card, Button, Table, Tag, Space, Typography, Empty, Spin, Modal, message, Alert, List } from 'antd';
 import { BookOutlined, CheckOutlined, ExportOutlined, FileAddOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
-import type { BookEditionSummary, BookEditionDetail } from '../types';
+import type { BookEditionSummary, BookEditionDetail, EditionValidation } from '../types';
 
 const { Text } = Typography;
 
@@ -14,6 +14,8 @@ const { Text } = Typography;
 export default function EditionsPanel({ projectId }: { projectId: string }) {
   const [editions, setEditions] = useState<BookEditionSummary[]>([]);
   const [detail, setDetail] = useState<BookEditionDetail | null>(null);
+  const [validation, setValidation] = useState<EditionValidation | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [approveTarget, setApproveTarget] = useState<BookEditionSummary | null>(null);
@@ -45,6 +47,21 @@ export default function EditionsPanel({ projectId }: { projectId: string }) {
     setBusy(true);
     try {
       setDetail(await api.getBookEditionDetail(projectId, editionId));
+    } catch (e) {
+      messageApi.error(e instanceof Error ? e.message : '读取详情失败');
+    } finally { setBusy(false); }
+  };
+
+  const showValidation = async (record: BookEditionSummary, run: boolean, approve = false) => {
+    setBusy(true);
+    try {
+      const report = await (run ? api.validateBookEdition(projectId, record.editionId)
+        : api.getEditionValidation(projectId, record.editionId));
+      setValidation(report);
+      if (approve) setApproveTarget(record);
+      else setReportOpen(true);
+    } catch (e) {
+      messageApi.error(e instanceof Error ? e.message : '读取校验报告失败');
     } finally { setBusy(false); }
   };
 
@@ -83,9 +100,11 @@ export default function EditionsPanel({ projectId }: { projectId: string }) {
               { title: '创建时间', dataIndex: 'createdAt', render: (v: string) => v.slice(0, 19).replace('T', ' ') },
               { title: '操作', render: (_: unknown, record: BookEditionSummary) => (
                   <Space size={6}>
-                    <Button size="small" onClick={() => openDetail(record.editionId)}>详情</Button>
+                    <Button size="small" disabled={busy} onClick={() => openDetail(record.editionId)}>详情</Button>
+                    <Button size="small" disabled={busy} onClick={() => showValidation(record, true)}>校验此版本</Button>
+                    <Button size="small" disabled={busy} onClick={() => showValidation(record, false)}>校验报告</Button>
                     {record.state !== 'APPROVED' && (
-                      <Button size="small" type="primary" onClick={() => setApproveTarget(record)}>确认定稿</Button>
+                      <Button size="small" type="primary" disabled={busy} onClick={() => showValidation(record, false, true)}>确认定稿</Button>
                     )}
                     <Button size="small" icon={<ExportOutlined />}
                       href={api.exportBookEditionUrl(projectId, record.editionId)}
@@ -114,13 +133,49 @@ export default function EditionsPanel({ projectId }: { projectId: string }) {
         )}
       </Modal>
 
+      <Modal open={reportOpen} title="这份整书记录的校验报告" onCancel={() => setReportOpen(false)} footer={null} width={760}>
+        {validation && <Space direction="vertical" style={{ width: '100%' }}>
+          <Alert showIcon type={validation.status === 'PASS' && !validation.stale ? 'success' : 'warning'}
+            message={validation.stale ? '检查证据已变化，请重新校验此版本' : validation.status === 'PASS'
+              ? '此版本校验通过，等待作者确认定稿' : validation.status === 'NOT_RUN' ? '此版本尚未校验' : '此版本仍有待处理项'} />
+          {validation.workingCopyChanged && <Alert type="info" showIcon message="当前工作稿已更新；此报告只属于所选整书记录，不适用于新稿。" />}
+          <Text>整书记录 {validation.editionId.slice(0, 8)} · 指纹 {validation.manifestHash.slice(0, 12)}</Text>
+          <Text type="secondary">{validation.scope}</Text>
+          <Table size="small" pagination={false} rowKey="chapterIndex" dataSource={validation.coverage ?? []}
+            columns={[
+              { title: '章', dataIndex: 'chapterIndex' },
+              { title: '稿', dataIndex: 'version', render: (v: number) => `第 ${v} 稿` },
+              { title: '作者决定', dataIndex: 'authorApproved', render: (v: boolean) => v ? '已批准' : '待批准' },
+              { title: '检查证据', dataIndex: 'checks', render: (cs: NonNullable<EditionValidation['coverage']>[number]['checks']) =>
+                cs.length ? cs.map(c => `${c.checker}：${c.bound && ['SUCCESS', 'VALID_EMPTY'].includes(c.status) ? '已检查' : '尚未查清'}`).join('；') : '未检查' },
+            ]} />
+          {([
+            ['必须处理', validation.mustFix], ['尚未查清', validation.unknown],
+            ['刻意保留的例外 / 误报决定', validation.exceptions], ['故事承诺与处置', validation.promises],
+            ['文学建议', validation.suggestions],
+          ] as const).map(([label, items]) => <div key={label} style={{ width: '100%' }}>
+            <Text strong>{label}（{items?.length ?? 0}）</Text>
+            {!!items?.length && <List size="small" dataSource={items} renderItem={item => <List.Item>
+              <Space direction="vertical" size={0}>
+                <Text>第 {item.chapterIndex} 章：{item.description}</Text>
+                {item.reason && <Text type="secondary">{item.reason}</Text>}
+                {item.state && <Text type="secondary">{item.state === 'RESOLVED' ? '已兑现' : item.state === 'OPEN_END' ? '作者决定开放结局' : '未处置'}</Text>}
+              </Space>
+            </List.Item>} />}
+          </div>)}
+        </Space>}
+      </Modal>
+
       <Modal open={!!approveTarget} title="确认这份定稿" onCancel={() => setApproveTarget(null)}
         onOk={handleApprove} okText={`确认定稿 ${approveTarget?.manifestHash.slice(0, 8) ?? ''}`}
-        cancelText="再看看" okButtonProps={{ loading: busy }}>
+        cancelText="再看看" okButtonProps={{ loading: busy, disabled: validation?.status !== 'PASS' || validation.stale }}>
+        {validation?.workingCopyChanged && <Alert type="warning" showIcon message="当前工作稿已更新，你确认的是这份历史整书记录。" />}
+        {(validation?.status !== 'PASS' || validation.stale) && <Alert type="warning" showIcon
+          message="请先校验此版本并处理阻断项；证据过期时需重新校验。" />}
         <Text>将把整书记录 <Text code>{approveTarget?.editionId.slice(0, 8)}</Text> 确认为定稿。</Text>
         <ul style={{ marginTop: 8, paddingLeft: 18, fontSize: 12 }}>
           <li>绑定精确 manifestHash：<Text code style={{ fontSize: 11 }}>{approveTarget?.manifestHash.slice(0, 16)}…</Text></li>
-          <li>要求全部章节有当前身份的作者批准、无活动人审屏障</li>
+          <li>要求所选章稿已获作者批准、所选版本的有效校验报告通过，无未决必查项</li>
           <li>确认后该版本不可变；工作稿继续修改不影响已确认的定稿</li>
         </ul>
       </Modal>

@@ -532,3 +532,29 @@ export interface BookEditionDetail extends BookEditionSummary {
     wordCount: number;
   }[];
 }
+
+// NCS-028: 固定整书记录的校验报告。
+export interface EditionValidation {
+  reportId?: string;
+  editionId: string;
+  manifestHash: string;
+  status: 'NOT_RUN' | 'PASS' | 'BLOCKED';
+  stale: boolean;
+  workingCopyChanged: boolean;
+  scope?: string;
+  coverage?: { chapterIndex: number; version: number; authorApproved: boolean;
+    checks: { id: string; checker: string; status: string; bound: boolean }[] }[];
+  mustFix?: EditionValidationItem[];
+  unknown?: EditionValidationItem[];
+  exceptions?: EditionValidationItem[];
+  promises?: EditionValidationItem[];
+  suggestions?: EditionValidationItem[];
+}
+export interface EditionValidationItem {
+  kind: string;
+  chapterIndex: number;
+  description: string;
+  reason?: string;
+  action?: string;
+  state?: string;
+}

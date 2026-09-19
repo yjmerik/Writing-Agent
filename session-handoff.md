@@ -1,40 +1,41 @@
-# ZCode → Codex 接手记录 — 2026-09-19
+# NCS 方案实施进度 — 2026-09-19
 
 Last Updated: 2026-09-19
 
 ## Current
 
-已完成工作区盘点并接收未完事项。本次交接维护分支：codex/docs-zcode-takeover-20260919。
-接手时 main=9348eac，无未合并本地分支，仅一个工作区，无未提交业务代码。
-NCS-001..027 已登记完成并合入 main；最新实现 4864435，状态回执 9348eac。
-旧 progress/handoff 的 21/30 与 NCS-022 恢复入口已失效；真实进度为 27/30。
-active_feature=null；本次未开启 NCS-028，不将计划接手记为 in-progress 或 completed。
+NCS-028 进行中，分支 codex/ncs-028-edition-validation，基于 main 02b23d3。
+NCS-001..027 已合入；NCS-028 实现与分支验证通过，待提交、合并及干净主分支复验。
+用户最新约束：仅完成 feature 列表规定的特性；其他发现只记录，不顺带修复或重构。
 
 ## Files
 
-- feature_list.json：唯一状态入口；docs/harness/completions.json：完成提交与证据索引。
-- docs/specs/2026-09-19-novel-complete-solution.md：当前方案、NCS-028 验收及成书路径范围约束。
-- src/main/java/com/writing/novel/web/BookEditionController.java：下一开发入口。
-- 既有未跟踪 .zcode Phase 32 计划和 2026-09-05-ui-experience 报告目录原样保留，不应整体暂存或当作当前特性。
-- 旧 progress/handoff 归档：docs/harness/archive/2026-09-19-pre-codex-takeover-*.md。
+- EditionValidationService：固定整书校验、报告读取、事务批准。
+- NovelRepository / SqliteNovelRepository / SqliteSchemaInitializer：SPI、检查证据读取、报告表与一致事务。
+- CheckResultRepository / ContinuityCheckerAgent：绑定实际检查正文指纹，不改变 prompt。
+- BookEditionController、EditionsPanel、client.ts、types.ts：校验与报告接口/界面。
+- EditionValidationTest；既有 Audit2FixTest / AuditP14EndpointsTest 补齐新门禁前置。
+- docs/reports/2026-09-19-ncs-028/README.md 与截图；额外发现仅记录于报告。
 
 ## Verification
 
-- 交接文档提交 0a9b7ee 已从 codex/docs-zcode-takeover-20260919 快进合入 main；合并后 Java 21 ./init.sh 再次 PASS（1074/0F/0E/1S，编译与前端构建通过），日志 /tmp/writingagent-takeover-main-20260919.log。跟踪文件无改动，原有未跟踪材料未参与构建。
-
-- harness --check-git PASS；完成证据的提交归属已核验。
-- 本次 Java 21 运行 ./init.sh PASS：编译通过；1074 tests / 0 failures / 0 errors / 1 skipped；前端构建通过（既有大包提示）。本地日志 /tmp/writingagent-takeover-init-jdk21-20260919.log。
-- 历史 NCS-027 证据记录 1074 tests / 0 failures / 0 errors / 1 skipped、前端构建和浏览器流程通过；详见 docs/harness/evidence/2026-09-19-ncs-027.json。
+- 基线 ./init.sh PASS：1074/0F/0E/1S（Java 21）。
+- 新专项先 RED 8F/0E，再 GREEN 8/0F/0E。
+- 最终限定范围 ./init.sh PASS：1082/0F/0E/1S，编译及前端构建通过。
+- ./scripts/e2e.sh + python3 scripts/compare-baseline.py PASS：3 章、9730 字、0 章节失败/LLM 错误。
+- 浏览器：新记录未检查时显示阻断；合法检查/批准样本的报告通过、确认定稿 UI 成功；章节前置由 API 准备，不冒充全 UI Journey。
+- 本地日志 /tmp/ncs028-red.log、/tmp/ncs028-scoped-final.log、/tmp/ncs028-e2e.log。
 
 ## Blockers
 
-- p40-05/06：缺人工 severeContinuityErrors，继续保持 deferred。
-- 验证环境：默认 Maven 使用 Java 26；受限执行 Mockito 自附加失败，不能据此认定业务回归。
-- 使用本机 Java 21：env JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ./init.sh；测试需要正常 JVM 附加与本地端口权限。
+- 本 feature 无已知阻塞。场景网关 `[]` 与检查协议不兼容、DONE 章稿批准/重新检查 UI 入口缺口仅记录，不修复。
+- p40-05/06 人工实验保持 deferred，是本方案明示非目标。
+- Java 21 与正常进程附加权限为验证环境；默认 Maven Java 26 受限运行会失败。
 
 ## Next Steps
 
-1. 唯一下一特性 NCS-028（not-started），依赖 NCS-027 已满足；新建 codex/ncs-028-edition-validation。
-2. 先写 failing test，再实现 EditionValidationService / BookEditionController 等必要改动；只改变成书路径，保持写作循环门禁行为。
-3. verify_cmd：mvn test -Dtest=EditionValidationTest；完整 mvn compile && mvn test；遵守逐项合并、合并后验证及完成记录协议。
-4. NCS-028 完成后再做 NCS-029，然后 NCS-030（真实浏览器 T01–T11 + console/network + 报告证据）。
+1. 完成 NCS-028 本地提交、合并、干净 main 导出验证及完成证据登记。
+2. NCS-029：任务与版本中心 UI，严格按已登记范围。
+3. NCS-030：T01–T11 浏览器联合验收；遇既有缺口如实记录，不扩大修改范围。
+4. 浏览器 space 23 / p1；隔离服务 localhost:18097，数据库 /tmp/writingagent-ncs-browser/novel.db。
+5. 原有未跟踪 ZCode 计划与 2026-09-05-ui-experience 报告原样保留。

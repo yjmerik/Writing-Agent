@@ -13,6 +13,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @TestPropertySource(properties = {
+        // p43-01: 禁用模型配置覆盖文件，避免生产 data/config/llm-models.json 污染断言
+        "llm.model-config-file=",
         "llm.models.CHAPTER_WRITING.base-url=https://api.example.com/v1",
         "llm.models.CHAPTER_WRITING.api-key=sk-chapter-key",
         "llm.models.CHAPTER_WRITING.model=qwen-max",

@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": 42,
+  "current_phase": 43,
   "features": [
     {
       "id": "p1-01",
@@ -6996,9 +6996,36 @@
       "evidence": "2026-09-18 verified: 实现 879c90bc723755f23f13b4a7e12fa784c798090b（审阅入口/阅读工作区）+ a64d13a3b24cc37cf200c8fcb34051e5220e0d94（异步完成信号后再清理DB，main HEAD）；干净检出 mvn compile && mvn test 935 项 0失败/0错误/1跳过，verify_cmd 6项 Playwright 全过，前端构建通过；record p42-01-p42",
       "branch": "codex/p42-01-review-workspace",
       "completion_record": "p42-01-p42"
+    },
+    {
+      "id": "p43-01",
+      "name": "LLM 模型配置界面化",
+      "description": "模型配置页面：DEFAULT+8 任务类型模型配置的展示/新增/修改/删除，支持 base_url/api_key/model_id 与 OPENAI_CHAT_COMPLETIONS/OPENAI_RESPONSES/ANTHROPIC_MESSAGES 三种协议；页面配置持久化 data/config/llm-models.json 并运行时生效，删除回退 yml 基线。",
+      "phase": 43,
+      "type": "feature",
+      "dependencies": [],
+      "status": "in-progress",
+      "files": [
+        "src/main/java/com/writing/novel/llm/config/LlmProtocol.java",
+        "src/main/java/com/writing/novel/llm/config/ModelConfig.java",
+        "src/main/java/com/writing/novel/llm/config/LlmModelConfigStore.java",
+        "src/main/java/com/writing/novel/llm/client/AnthropicMessagesClient.java",
+        "src/main/java/com/writing/novel/llm/client/OpenAiResponsesClient.java",
+        "src/main/java/com/writing/novel/llm/client/ProtocolRoutingLlmClient.java",
+        "src/main/java/com/writing/novel/llm/config/LlmConfig.java",
+        "src/main/java/com/writing/novel/web/ModelConfigController.java",
+        "frontend/src/pages/ModelConfigPage.tsx",
+        "frontend/src/App.tsx",
+        "frontend/src/api/client.ts",
+        "frontend/src/types.ts"
+      ],
+      "spec": "docs/specs/2026-09-19-llm-model-config-ui.md",
+      "acceptance": "页面展示现有 yml 模型配置；通过页面新增/修改/删除模型配置即时生效并持久化到 data/config/llm-models.json，重启后保持，删除后回退 yml；三种协议客户端按规范构造请求与解析响应；mvn compile && mvn test 与前端 npm run build 通过；ego-browser 端到端验证通过。",
+      "verify_cmd": "mvn test -Dtest='LlmModelConfigStoreTest,ModelConfigControllerTest,AnthropicMessagesClientTest,OpenAiResponsesClientTest,ProtocolRoutingLlmClientTest'",
+      "branch": "codex/p43-01-llm-model-config-ui"
     }
   ],
   "schema_version": 2,
-  "updated_at": "2026-09-18",
-  "active_feature": null
+  "updated_at": "2026-09-19",
+  "active_feature": "p43-01"
 }

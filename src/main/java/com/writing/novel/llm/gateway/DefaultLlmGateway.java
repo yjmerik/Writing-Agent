@@ -292,6 +292,7 @@ public class DefaultLlmGateway implements LlmGateway {
         c.setBaseUrl(src.getBaseUrl());
         c.setApiKey(src.getApiKey());
         c.setModel(src.getModel());
+        c.setProtocol(src.getProtocol());
         c.setTemperature(src.getTemperature());
         c.setMaxTokens(src.getMaxTokens());
         c.setStreaming(src.isStreaming());

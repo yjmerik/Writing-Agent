@@ -16,6 +16,8 @@ public class ModelConfig {
     private String baseUrl;
     private String apiKey;
     private String model;
+    /** p43-01: API 协议（chat/completions | responses | anthropic messages），默认 OpenAI 兼容 */
+    private LlmProtocol protocol = LlmProtocol.OPENAI_CHAT_COMPLETIONS;
     private double temperature = 0.7;
     private int maxTokens = 4096;
     /** 模型上下文窗口（输入+输出，token）。0 表示未配置，回退默认预算（mc-p2-03） */
@@ -39,6 +41,8 @@ public class ModelConfig {
     public void setApiKey(String apiKey) { this.apiKey = apiKey; }
     public String getModel() { return model; }
     public void setModel(String model) { this.model = model; }
+    public LlmProtocol getProtocol() { return protocol; }
+    public void setProtocol(LlmProtocol protocol) { this.protocol = protocol == null ? LlmProtocol.OPENAI_CHAT_COMPLETIONS : protocol; }
     public double getTemperature() { return temperature; }
     public void setTemperature(double temperature) { this.temperature = temperature; }
     public int getMaxTokens() { return maxTokens; }

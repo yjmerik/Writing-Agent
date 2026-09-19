@@ -19,6 +19,9 @@ import type {
   Foreshadowing,
   ChapterPage,
   SseState,
+  LlmModelEntry,
+  LlmModelOverview,
+  LlmModelUpdateRequest,
 } from '../types';
 
 const BASE = '/api';
@@ -757,4 +760,17 @@ export const api = {
       { method: 'POST', body: JSON.stringify(body) },
       120000,
     ),
+
+  // --- p43-01: 模型配置 UI API ---
+  getLlmModels: () =>
+    request<LlmModelOverview>('/llm/models'),
+
+  updateLlmModel: (scope: string, body: LlmModelUpdateRequest) =>
+    request<LlmModelEntry>(`/llm/models/${scope}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+
+  deleteLlmModel: (scope: string) =>
+    request<LlmModelEntry>(`/llm/models/${scope}`, { method: 'DELETE' }),
 };

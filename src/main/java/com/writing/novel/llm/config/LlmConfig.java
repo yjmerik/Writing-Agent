@@ -2,7 +2,7 @@ package com.writing.novel.llm.config;
 
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.client.LlmClient;
-import com.writing.novel.llm.client.OpenAiCompatibleClient;
+import com.writing.novel.llm.client.ProtocolRoutingLlmClient;
 import com.writing.novel.llm.gateway.DefaultLlmGateway;
 import com.writing.novel.llm.gateway.ObservedLlmGateway;
 import com.writing.novel.llm.gateway.RecordReplayLlmGateway;
@@ -22,16 +22,19 @@ public class LlmConfig {
 
     @Bean
     public LlmClient llmClient() {
-        return new OpenAiCompatibleClient();
+        // p43-01: 协议分发——OPENAI_CHAT_COMPLETIONS（默认）仍走 OpenAiCompatibleClient，存量配置零行为变化
+        return new ProtocolRoutingLlmClient();
     }
 
     @Bean
-    public LlmGateway llmGateway(LlmProperties properties, LlmClient client,
+    public LlmGateway llmGateway(LlmProperties properties, LlmModelConfigStore modelConfigStore, LlmClient client,
                                  @Value("${llm.replay.mode:off}") String replayMode,
                                  @Value("${llm.replay.dir:data/fixtures/llm}") String replayDir,
                                  @Value("${llm.scenario.enabled:false}") boolean scenarioEnabled,
                                  @Value("${llm.scenario.harsh:false}") boolean scenarioHarsh,
                                  CostBudgetMonitor costBudgetMonitor) {
+        // modelConfigStore 作为依赖注入：其构造函数先执行页面覆盖层合并，
+        // 保证下方 validateKeys() 校验的是 yml 基线 + 覆盖层合并后的最终配置
         // p23-01/p23-03: 确定性场景网关——零网络零成本（soak/可靠性验证专用），无需任何 API key
         if (scenarioEnabled) {
             return new ObservedLlmGateway(new com.writing.novel.llm.ScenarioLlmGateway(scenarioHarsh),

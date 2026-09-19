@@ -245,3 +245,41 @@ export interface CollaborationStatus {
   targetChapters: number;
   totalWords: number;
 }
+
+/** p43-01: 模型配置页面 */
+export type LlmProtocolType = 'OPENAI_CHAT_COMPLETIONS' | 'OPENAI_RESPONSES' | 'ANTHROPIC_MESSAGES';
+export type LlmConfigSource = 'PAGE' | 'YML' | 'FALLBACK';
+
+export interface LlmModelEntry {
+  scope: string;
+  label: string;
+  source: LlmConfigSource;
+  protocol: LlmProtocolType;
+  baseUrl: string;
+  model: string;
+  apiKeyMasked: string;
+  hasApiKey: boolean;
+  temperature: number;
+  maxTokens: number;
+  contextWindow: number;
+  streaming: boolean;
+  requestTimeoutSeconds: number;
+}
+
+export interface LlmModelOverview {
+  entries: LlmModelEntry[];
+  protocols: { value: LlmProtocolType; label: string }[];
+  addableScopes: { scope: string; label: string }[];
+}
+
+export interface LlmModelUpdateRequest {
+  protocol?: string;
+  baseUrl?: string;
+  apiKey?: string;
+  model?: string;
+  temperature?: number;
+  maxTokens?: number;
+  contextWindow?: number;
+  streaming?: boolean;
+  requestTimeoutSeconds?: number;
+}

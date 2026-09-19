@@ -1,0 +1,26 @@
+{
+ "commit": "ce32e45f72fffe7f6c223bbc5990262a8783fb7e",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1074 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest='RevisionExperienceTest,GroupAcceptanceTest,DelegationPolicyTest'",
+   "result": "PASS: 16 tests 0 failures（含干净检出；GroupAcceptance/Delegation 回归通过）。经验测试：样本按类落库查询；同类注入拒绝理由优先、他类不混入；空库不注入；作者删除后不再注入+重复删除无效；经验不写真典。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py",
+   "result": "PASS（经验仅在按需修复链路注入，默认管线无影响）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "revision_outcomes 表；GroupAcceptanceService 成功后记录 ACCEPTED（跨章/单章分类）；RevisionRepairService.buildInstructions 注入同类经验（拒绝优先，≤3 条，标注『非故事事实』）；REST list/delete（作者撤回）；事件 REVISION_OUTCOME_RECORDED。",
+ "feature_ids": [
+  "NCS-026"
+ ],
+ "branch": "codex/ncs-026-revision-experience"
+}

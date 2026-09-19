@@ -7728,7 +7728,7 @@
       "dependencies": [
         "NCS-013"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/RevisionExperienceService.java",
         "src/main/java/com/writing/novel/web/RevisionOutcomeController.java"
@@ -7736,12 +7736,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "测试（回放/桩）：样本落库、同类任务注入、删除后不注入、经验不写入真典；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=RevisionExperienceTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: ce32e45（ff-merge）; verify_cmd RevisionExperienceTest 5/0F（+回归 16/0F）; mvn test 1074/0F/0E/1S（分支+干净检出）; e2e+baseline PASS; 证据 docs/harness/evidence/2026-09-19-ncs-026.json",
       "ui_impact": "low",
       "backend_impact": "high",
       "prompt_impact": "high",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-026-revision-experience",
+      "completion_record": "ncs-026-verified"
     },
     {
       "id": "NCS-027",
@@ -7851,5 +7853,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-026"
+  "active_feature": null
 }

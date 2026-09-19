@@ -1804,6 +1804,17 @@
    "implementation_commit": "66a697dd4be022eff4efdd387891f7d9f657b4ff",
    "main_commit": "66a697dd4be022eff4efdd387891f7d9f657b4ff",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-025.json"
+  },
+  {
+   "id": "ncs-026-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-026"
+   ],
+   "branch": "codex/ncs-026-revision-experience",
+   "implementation_commit": "ce32e45f72fffe7f6c223bbc5990262a8783fb7e",
+   "main_commit": "ce32e45f72fffe7f6c223bbc5990262a8783fb7e",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-026.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

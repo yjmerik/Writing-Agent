@@ -1,0 +1,26 @@
+{
+ "commit": "688b59838464bef5f5f5050a41dd937728291860",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1036 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=GroupAcceptanceTest",
+   "result": "PASS: 5 tests 0 failures（含干净检出）。整组接受成功（全部应用+请求 COMPLETED+acceptance 含 commandId）；中间失败回滚无半套（12 章版本不变）；基准漂移候选 STALE 保留+请求回 SCOPE_APPROVED（GROUP_REVISION_REBASED 事件）；commandId 幂等重放同收据不重复写正文；保护锚点 span 存在于基准正文时候选必须原样保留（拒绝时零写入）。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py",
+   "result": "PASS（无 prompt 改动）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "两阶段：前置校验（基准一致+保护锚点，零写入）→ 逐章应用+失败补偿回滚（editInOwnedWork 恢复旧文，版本照常推进，半套内容消除）；REST generate-repairs/accept-group 端点；事件 GROUP_REVISION_APPLIED/REBASED/FAILED/ROLLBACK_FAILED。",
+ "feature_ids": [
+  "NCS-016"
+ ],
+ "branch": "codex/ncs-016-group-acceptance"
+}

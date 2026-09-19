@@ -1694,6 +1694,17 @@
    "implementation_commit": "68ed44137bc34ecd4cf98ad18e7df59c5e3fc529",
    "main_commit": "68ed44137bc34ecd4cf98ad18e7df59c5e3fc529",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-015.json"
+  },
+  {
+   "id": "ncs-016-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-016"
+   ],
+   "branch": "codex/ncs-016-group-acceptance",
+   "implementation_commit": "688b59838464bef5f5f5050a41dd937728291860",
+   "main_commit": "688b59838464bef5f5f5050a41dd937728291860",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-016.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

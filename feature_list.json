@@ -7451,7 +7451,7 @@
         "NCS-015",
         "NCS-001"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/GroupAcceptanceService.java",
         "src/main/java/com/writing/novel/web/RevisionRequestController.java"
@@ -7459,12 +7459,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：中间章失败→已应用章回滚、版本/收据状态无半套；基准漂移 409 且候选保留；重复 commandId 幂等；保护段变更→拒绝；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=GroupAcceptanceTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: 688b598（ff-merge）; verify_cmd GroupAcceptanceTest 5/0F; mvn test 1036/0F/0E/1S（分支+干净检出）; e2e+baseline PASS; 证据 docs/harness/evidence/2026-09-19-ncs-016.json",
       "ui_impact": "low",
       "backend_impact": "high",
       "prompt_impact": "none",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-016-group-acceptance",
+      "completion_record": "ncs-016-verified"
     },
     {
       "id": "NCS-017",
@@ -7817,5 +7819,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-016"
+  "active_feature": null
 }

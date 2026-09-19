@@ -1,6 +1,6 @@
 # 审阅体验修复完成 — 2026-09-18
 
-Last Updated: 2026-09-18
+Last Updated: 2026-09-19
 
 ## Current
 
@@ -25,7 +25,7 @@ p42-01「审阅入口与阅读工作区修复」已完成并合入本地 main：
 - verify_cmd：6 项 Playwright 专项（隔离库 18089 服务 + a64d13a jar）6/6 通过（/tmp/p42-01-qa-clean-main/report.json）
 - npm --prefix frontend run build：通过（/tmp/p42-01-frontend-main.log）
 - python3 scripts/check-harness.py --check-git：PASS（330 特性：328 completed / 2 deferred）；scripts/test_check_harness.py 11 项 OK
-- 正式服务：进程命令行确认为 a64d13a jar，/api/projects 200
+- 正式服务：运行 a64d13a jar，/api/projects 200；09-19 晨发现旧进程在会话挂起期间被回收，已用 start_new_session 脱离进程组重启，并在凤鸣九州第 63 章生产页面复核审阅入口开/关/重开稳定、评分与长意见排版正常、0 页面错误（/tmp/p42-01-prod-ch63-panel2.png）
 已知环境注记（未顺带改代码）：src/main/resources/static 为前端构建产物（gitignore）；全新检出未构建前端直接 mvn test，ApiCacheControlTest 的 GET / 会因缺首页 500——先构建前端再跑全量即绿，已记入 evidence。
 
 ## Blockers

@@ -64,6 +64,17 @@ public class PersistenceConfig {
         return new com.writing.novel.service.SupportWithdrawalService(storyFactRepository);
     }
 
+    // NCS-010: 人物时点读取
+    @Bean
+    public com.writing.novel.service.CharacterAsOfService characterAsOfService(
+            NovelRepository repository,
+            com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository,
+            com.writing.novel.persistence.FactEvidenceRepository factEvidenceRepository) {
+        return new com.writing.novel.service.CharacterAsOfService(repository,
+                new com.writing.novel.persistence.sqlite.SqliteStoryCanon(storyFactRepository, repository),
+                factEvidenceRepository);
+    }
+
     // NCS-007: 检查结果信封持久化
     @Bean
     @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)

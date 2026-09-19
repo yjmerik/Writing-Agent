@@ -208,6 +208,21 @@ public class StoryFactRepository {
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
+    /** NCS-010: 记录知情者（观察者在 learnedAtChapter 通过该证据得知事实） */
+    public void saveObserver(String evidenceId, String characterId, int learnedAtChapter, int chapterVersion) {
+        String sql = "INSERT INTO fact_evidence_observers (id, evidence_id, character_id, " +
+                "learned_at_chapter, chapter_version) VALUES (?,?,?,?,?)";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, java.util.UUID.randomUUID().toString());
+            ps.setString(2, evidenceId);
+            ps.setString(3, characterId);
+            ps.setInt(4, learnedAtChapter);
+            ps.setInt(5, chapterVersion);
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
     /** 按 factId 查证据行（map 形式，含 stale 标记） */
     public List<java.util.Map<String, Object>> findByFactId(String projectId, String factId) {
         String sql = "SELECT id, chapter_index, chapter_version, stale FROM fact_evidence " +

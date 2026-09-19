@@ -7282,10 +7282,12 @@
       "dependencies": [
         "NCS-008"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/service/CharacterAsOfService.java",
-        "src/main/java/com/writing/novel/web/CharacterAsOfController.java"
+        "src/main/java/com/writing/novel/web/CharacterAsOfController.java",
+        "src/main/java/com/writing/novel/persistence/FactEvidenceRepository.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/StoryFactRepository.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "API 测试：时点过滤正确（N 前发生/获知可见、N 后不可见）；信念与事实分列；来源可定位；mvn compile && mvn test 通过。",
@@ -7795,5 +7797,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-010"
 }

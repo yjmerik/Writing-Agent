@@ -4,34 +4,31 @@ Last Updated: 2026-09-19
 
 ## Current
 
-novel-complete-solution 方案（docs/specs/2026-09-19-novel-complete-solution.md）30 个 NCS feature
-按 M1–M6 逐个闭环。**M1（001-007）与 M2（008-012）已全部完成合入 main**。
-active_feature=null；下一特性 NCS-013（统一修订请求与范围批准，M3 起点）。
+novel-complete-solution 方案 30 个 NCS feature 按 M1–M6 逐个闭环。
+**M1（001-007）/M2（008-012）/M3（013-017）已全部完成合入 main（17/30）**。
+M3 交付跨章修订闭环：统一修订请求→影响分析→修复候选→整组接受→修订工作区 UI。
+active_feature=null；下一特性 NCS-018（SceneContract，M4 起点）。
 
 ## Files
 
-- M1：WriteLease（epoch 租约）、FinalRequestBudget（窗口核算）、AuthorIntent（创作约定）、
-  IntentView/IdentityBar（UI）、WorkspaceView（统一读取）、CheckResultEnvelope（检查信封）
-- M2：谓词化断言（StoryFact+SqliteStoryCanon+fact-harvest.st）、SupportWithdrawal（撤回传播）、
-  CharacterAsOf（时点 API+视图）、CharacterDecision（决策记录+经历视图）
-- e2e 语料重建：data/e2e-fixtures/mystery-20260919（record 3章/9730字/双 replay 一致/baseline PASS）
+- M3：RevisionRequest/RevisionRequestRepository/RevisionRequestService（六入口归一+范围批准分离）、
+  ImpactAnalysisService（词法三分类+覆盖说明）、RevisionRepairService（隔离候选挂接）、
+  GroupAcceptanceService（原子+回滚+幂等+保护锚点）、RevisionWorkspace.tsx（四步 UI）
+- e2e 语料 mystery-20260919（NCS-008 重建，双 replay 一致，baseline PASS）
 
 ## Verification
 
-至 NCS-012（各 feature 均含分支+干净 main 检出双验证）：
-- mvn test 1017 项 0 失败 / 0 错误 / 1 跳过（既有）
-- e2e replay 3 章 COMPLETED/0 错误；compare-baseline PASS（NCS-008 语料重建后未退化，未触发 bless）
-- npm build PASS；浏览器验证（创作约定/身份栏/时点视图/决策视图）全过
-- 证据 docs/harness/evidence/2026-09-19-ncs-00{1..9}.json、-ncs-01{0,1,2}.json
+至 NCS-017（每 feature 分支+干净 main 检出双验证）：
+- mvn test 1036 项 0 失败/0 错误/1 跳过（既有）；e2e replay+baseline PASS；npm build PASS
+- 浏览器验证：创作约定/身份栏/时点视图/决策视图/修订工作区（登记→批准→分析→影响卡片）
+- 证据 docs/harness/evidence/2026-09-19-ncs-*.json（001..017）
 
 ## Blockers
 
-无。环境注记：
-- mvn test 需 set -a; source data/.prod-env-keys; set +a; source scripts/load-env.sh
-- 干净检出：cp -R frontend/node_modules → npm build → mvn test；e2e 需复制 data/e2e-fixtures（gitignore）
-- prompt 类 feature 触发语料重建（NCS-008 已重建一次；后续 NCS-018/019/020/022 若改 e2e 管线 prompt 需再重建）
+无。环境注记见 session-handoff。
 
 ## Next Steps
 
-- NCS-013 统一修订请求（deps: []，从 main 新建 codex/ncs-013-revision-requests）
-- 之后 NCS-014/015/016/017（M3 修订闭环）→ M4（018-021）→ M5（022-026）→ M6（027-030）
+- NCS-018 SceneContract（设计决策同 NCS-012：结构化字段+条件注入+按需生成，
+  默认管线不变避免语料分叉；无合同的 synopsis 注入不变→指纹不变）
+- 之后 NCS-019/020/021（M4）→ M5（022-026）→ M6（027-030）

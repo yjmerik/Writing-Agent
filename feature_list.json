@@ -7253,7 +7253,7 @@
       "dependencies": [
         "NCS-008"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/SupportWithdrawalService.java",
         "src/main/java/com/writing/novel/service/ChapterRevisionService.java",
@@ -7264,12 +7264,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：删唯一证据→UNSUPPORTED 且不注入；双证据删一→保留；事件与审计可查；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=SupportWithdrawalTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: 1f0bb4d（ff-merge）; verify_cmd SupportWithdrawalTest 5/0F; mvn test 1009/0F/0E/1S（分支+干净检出）; e2e replay+baseline PASS（无 prompt 改动）; 证据 docs/harness/evidence/2026-09-19-ncs-009.json",
       "ui_impact": "none",
       "backend_impact": "high",
       "prompt_impact": "low",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-009-support-withdrawal",
+      "completion_record": "ncs-009-verified"
     },
     {
       "id": "NCS-010",
@@ -7793,5 +7795,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-009"
+  "active_feature": null
 }

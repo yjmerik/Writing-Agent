@@ -1617,6 +1617,17 @@
    "implementation_commit": "cd7e310245e6ce60c8d53195b1c4963f0ba3176b",
    "main_commit": "cd7e310245e6ce60c8d53195b1c4963f0ba3176b",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-008.json"
+  },
+  {
+   "id": "ncs-009-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-009"
+   ],
+   "branch": "codex/ncs-009-support-withdrawal",
+   "implementation_commit": "1f0bb4d6e12871c261ebaea704c45813873984dd",
+   "main_commit": "1f0bb4d6e12871c261ebaea704c45813873984dd",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-009.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

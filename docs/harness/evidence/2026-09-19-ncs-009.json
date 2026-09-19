@@ -1,0 +1,26 @@
+{
+ "commit": "1f0bb4d6e12871c261ebaea704c45813873984dd",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1009 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=SupportWithdrawalTest",
+   "result": "PASS: 5 tests 0 failures（含干净检出）。覆盖：唯一证据失效→UNSUPPORTED+事件+recall 停止注入；双证据删一保留；证据版本==当前版本不失效；重新收割恢复 ACTIVE；作者 DIRECT_EDIT 修订真实边界自动触发传播。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py",
+   "result": "PASS：3 章 COMPLETED/0 错误，baseline 质量未退化（无 prompt 改动，指纹未变）。干净检出同样 PASS。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "fact_evidence 加 stale 列；StoryFact.Status 加 UNSUPPORTED（recall 只返回 ACTIVE 自然停注入，仅有 2 处既有枚举使用安全）；SupportWithdrawalService.onChapterRevised 幂等传播（事务内标失效→逐事实核支持→无支持转 UNSUPPORTED+FACT_UNSUPPORTED 事件）；ChapterRevisionService 4 参构造（doEdit/doApplyProposal 版本推进后触发，失败留 SUPPORT_WITHDRAWAL_FAILED 事件不回滚正文，p32-01 容错模式）；ContentController/AgentRevisionService/PersistenceConfig 生产接线。",
+ "feature_ids": [
+  "NCS-009"
+ ],
+ "branch": "codex/ncs-009-support-withdrawal"
+}

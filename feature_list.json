@@ -7503,7 +7503,7 @@
       "phase": 47,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/domain/ChapterSynopsis.java",
         "src/main/java/com/writing/novel/agent/SceneContractAgent.java",
@@ -7516,12 +7516,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "合同字段结构化存取测试；条件注入测试：有合同的 synopsis 注入含合同段、无合同注入不变（指纹稳定）；按需生成端点（桩/回放）产出合同落库；大纲 API 暴露合同字段；对应 Agent 测试通过；e2e replay 不受影响（默认管线无合同→指纹不变）；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=SceneContractTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: 561fc4a（ff-merge）; verify_cmd 5/0F; mvn test 1041/0F/0E/1S; npm build PASS; 真实 LLM 合同生成+大纲 UI 全过; e2e+baseline PASS（条件注入指纹稳定实证）; 证据 docs/harness/evidence/2026-09-19-ncs-018.json",
       "ui_impact": "low",
       "backend_impact": "high",
       "prompt_impact": "high",
       "e2e_impact": "none（条件注入：无合同不追加段，默认管线指纹不变）",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-018-scene-contract",
+      "completion_record": "ncs-018-verified"
     },
     {
       "id": "NCS-019",
@@ -7826,5 +7828,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-018"
+  "active_feature": null
 }

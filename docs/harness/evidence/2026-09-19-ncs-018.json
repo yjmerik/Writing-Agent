@@ -1,0 +1,31 @@
+{
+ "commit": "561fc4a71f1b5da57a0fdd1bc8d770392e9968cd",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1041 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest='SceneContractTest,SceneContractInjectionTest'",
+   "result": "PASS: 5 tests 0 failures（含干净检出）。合同字段持久化存取（null 兼容）；条件注入：无合同注入不变（指纹稳定）、有合同追加【场景合同】段（确定性输入通道）；按需生成端点落库+GET 读回；坏输出不落库。",
+   "exitCode": 0
+  },
+  {
+   "command": "真实 LLM 生成 + ego-browser（隔离实例）",
+   "result": "PASS：POST /outline/scene-contract?chapter=1 真实调用（32s）生成完整 10 字段合同（目的/进入状态/行动者POV/所知/冲突目标/代价/预期变化/读者获得/读者不应知道/保护内容——内容紧扣种子梗概且区分了各方目标与读者披露策略）并落库；大纲页每章『📋 场景合同（已定义）』折叠卡片渲染全部字段（中文标签）+ AI 生成/编辑按钮；截图 docs/reports/ncs-018-scene-contract.png。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py",
+   "result": "PASS：3 章 COMPLETED/0 错误，baseline 未退化——条件注入设计实证（语料无合同→写作管线指纹不变）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "设计决策（登记修订，同 NCS-012）：条件注入（有合同才追加段）+按需生成，默认写作管线不变避免语料分叉；scene-contract.st 新模板（chapterTitle/synopsis/contextNotes 三变量）；PUT 端点支持作者手动编辑合同；OutlineView SceneContractBlock（展示/生成/编辑）。",
+ "feature_ids": [
+  "NCS-018"
+ ],
+ "branch": "codex/ncs-018-scene-contract"
+}

@@ -1716,6 +1716,17 @@
    "implementation_commit": "daf01e66c6fd323dce6997d5708b82ccaa055915",
    "main_commit": "daf01e66c6fd323dce6997d5708b82ccaa055915",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-017.json"
+  },
+  {
+   "id": "ncs-018-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-018"
+   ],
+   "branch": "codex/ncs-018-scene-contract",
+   "implementation_commit": "561fc4a71f1b5da57a0fdd1bc8d770392e9968cd",
+   "main_commit": "561fc4a71f1b5da57a0fdd1bc8d770392e9968cd",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-018.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

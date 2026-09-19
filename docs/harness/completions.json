@@ -1562,6 +1562,17 @@
    "implementation_commit": "6ed99b023b81ec2e970ac3114a8ecf56cb263536",
    "main_commit": "6ed99b023b81ec2e970ac3114a8ecf56cb263536",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-003.json"
+  },
+  {
+   "id": "ncs-004-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-004"
+   ],
+   "branch": "codex/ncs-004-intent-workspace-ui",
+   "implementation_commit": "cb52825a48d7862591ab7e2a78a32a739cb474c3",
+   "main_commit": "cb52825a48d7862591ab7e2a78a32a739cb474c3",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-004.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

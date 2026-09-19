@@ -7117,7 +7117,7 @@
       "dependencies": [
         "NCS-003"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "frontend/src/components/IntentView.tsx",
         "frontend/src/pages/ProjectWorkspace.tsx",
@@ -7127,12 +7127,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "npm --prefix frontend run build 通过；ego-browser 验证页签渲染、保存回显、空项目指引出现。",
       "verify_cmd": "npm --prefix frontend run build",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: cb52825（ff-merge）; npm build PASS（分支+干净检出）; mvn test 988/0F/0E/1S（干净检出）; ego-browser 空态指引/两版保存/历史/刷新回读全过（隔离实例）; 证据 docs/harness/evidence/2026-09-19-ncs-004.json",
       "ui_impact": "high",
       "backend_impact": "low",
       "prompt_impact": "none",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-004-intent-workspace-ui",
+      "completion_record": "ncs-004-verified"
     },
     {
       "id": "NCS-005",
@@ -7773,5 +7775,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-004"
+  "active_feature": null
 }

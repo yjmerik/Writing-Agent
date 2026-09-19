@@ -1,0 +1,26 @@
+{
+ "commit": "cb52825a48d7862591ab7e2a78a32a739cb474c3",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "npm --prefix frontend run build",
+   "result": "PASS（分支工作区 + 干净检出各一次；既有 chunk-size advisory）。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 988 tests, 0 failures, 0 errors, 1 skipped（既有）。干净检出。",
+   "exitCode": 0
+  },
+  {
+   "command": "ego-browser 浏览器验证（隔离实例 127.0.0.1:18099，独立 SQLite）",
+   "result": "PASS：1) 新项目进入「📜 创作约定」页签，空契约态显示（第 0 版 + '空契约——尚未填写'标签）+ '从零开始：先让故事有个方向'下一步指引（写原旨/去创作工具构思/补人物后试写第一章）；2) 填写原旨+语言样本保存→'已保存为第 1 版创作约定'，修订标签与历史条目出现；3) 修改原旨保存→第 2 版；API 断言 revision=2、premise 更新、languageSamples 持久、history=[1,2]；4) 刷新回读：第 2 版原旨与历史第 1 版均正确显示；截图 docs/reports/ncs-004-intent-view.png。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "IntentView 组件（8 契约字段+版本历史折叠+空契约/已建立两组指引）；ProjectWorkspace 新增 intent 页签（URL 权威 ?tab=intent）；client.ts 三个 intent 方法。验证用隔离实例（--server.port=18099 --persistence.sqlite.db-path=/tmp 独立库），未触碰 8080 生产服务与生产数据。",
+ "feature_ids": [
+  "NCS-004"
+ ],
+ "branch": "codex/ncs-004-intent-workspace-ui"
+}

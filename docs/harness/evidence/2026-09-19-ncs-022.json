@@ -1,0 +1,31 @@
+{
+ "commit": "290c81bd355f5d8527d5a05441a842dae7e67dfc",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1057 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "npm --prefix frontend run build",
+   "result": "PASS（分支+干净检出）。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest='AestheticProfileTest,AestheticInjectionTest'",
+   "result": "PASS: 4 tests 0 failures（含干净检出）。空档案合法（修订0）；保存生成修订（字段完整：认可片段+理由/减少表达/四偏好维度）；条件注入：空档案注入不变（指纹稳定）、有档案追加【作者审美档案】段（样本+理由+反面模式+偏好）；项目不存在 400。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py（干净检出含语料）",
+   "result": "PASS：3 章 COMPLETED/0 错误，baseline 未退化（条件注入：无档案项目指纹不变）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "aesthetic_profiles 表（项目单行 append-only 修订）；AestheticProfile.LikedSnippet（出处+节选+理由）；注入经 ChapterProduction 函数式 late-set（OrchestratorConfig 转发 service::buildInjection）；IntentView 🎨 作者审美档案卡片（样本累加+偏好编辑，说明文案强调校准信号非硬规则/单次选择不升级禁令）。",
+ "feature_ids": [
+  "NCS-022"
+ ],
+ "branch": "codex/ncs-022-aesthetic-profile"
+}

@@ -1760,6 +1760,17 @@
    "implementation_commit": "3ccf7695454471c114ab1e025bf1a4703eea430b",
    "main_commit": "3ccf7695454471c114ab1e025bf1a4703eea430b",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-021.json"
+  },
+  {
+   "id": "ncs-022-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-022"
+   ],
+   "branch": "codex/ncs-022-aesthetic-profile",
+   "implementation_commit": "290c81bd355f5d8527d5a05441a842dae7e67dfc",
+   "main_commit": "290c81bd355f5d8527d5a05441a842dae7e67dfc",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-022.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

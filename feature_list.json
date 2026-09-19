@@ -7618,7 +7618,7 @@
       "phase": 48,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/domain/AestheticProfile.java",
         "src/main/java/com/writing/novel/service/AestheticProfileService.java",
@@ -7629,12 +7629,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "API 测试：增删改查与版本；注入测试：档案条目进入写作上下文且可裁剪优先级明确；对应 Agent 测试通过；e2e 重建后双 replay 一致。",
       "verify_cmd": "mvn test -Dtest=AestheticProfileTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: 290c81b（ff-merge）; verify_cmd 4/0F; mvn test 1057/0F/0E/1S（分支+干净检出）; npm build PASS; e2e+baseline PASS（条件注入指纹稳定）; 证据 docs/harness/evidence/2026-09-19-ncs-022.json",
       "ui_impact": "medium",
       "backend_impact": "high",
       "prompt_impact": "high",
       "e2e_impact": "high",
-      "baseline_impact": "high"
+      "baseline_impact": "high",
+      "branch": "codex/ncs-022-aesthetic-profile",
+      "completion_record": "ncs-022-verified"
     },
     {
       "id": "NCS-023",
@@ -7843,5 +7845,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-022"
+  "active_feature": null
 }

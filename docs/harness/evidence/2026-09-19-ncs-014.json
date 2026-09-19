@@ -1,0 +1,26 @@
+{
+ "commit": "2430a6a6b714e2abef731afd90eb822212c0b509",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1028 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出（含 npm build 生成 static）各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=ImpactAnalysisTest",
+   "result": "PASS: 5 tests 0 failures（含干净检出）。锚定事实后文命中→MUST_REPAIR（12/20 章引用密信，理由点名实体+factIds）；仅实体名→RECHECK；无关章→UNAFFECTED_WITH_REASON 且理由保留（未找到边不证明不受影响）；覆盖说明含扫描方式与未知声明；无后文时空计划+覆盖说明。词法局限实证：『那封信』不命中『密信』是正确边界行为。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py",
+   "result": "PASS（无 prompt 改动）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "确定性实现（无 LLM）：受影响事实=锚定修订章旧稿证据所属+该章收割事实；词法命中三分类；REST POST /revision-requests/{id}/analyze-impact?chapter=N（需范围批准——影响分析消耗探索范围）；ImpactItem 域+ImpactPlan 覆盖说明。",
+ "feature_ids": [
+  "NCS-014"
+ ],
+ "branch": "codex/ncs-014-impact-analysis"
+}

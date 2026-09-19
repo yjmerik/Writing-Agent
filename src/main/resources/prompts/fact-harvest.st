@@ -21,11 +21,17 @@
 3. subject 用规范实体名（角色名/势力名/物品名），与已有真典保持一致
 4. assertion 用简洁陈述句（如"季衡突破至金丹期"、"季衡与沈墨结为盟友"）
 5. 优先提取对后续剧情有约束力的事实（状态变化 > 静态描述）
+6. 尽量给出谓词化字段（可判别同一属性是否同一/相反）：
+   - predicate: 短谓语键，同类属性用同一写法（如 "ability.read"、"location"、"持有"、"状态"）
+   - object: 谓词的取值/宾语（如 "false"、"城门"、"已焚毁"）
+   - polarity: "positive"（肯定/成立）或 "negative"（否定/不成立）——
+     否定性事实（不识字/未持有/已死亡）必须用 negative，不得写成肯定句混淆
+   - 同一 subject 的不同 predicate 是不同属性，可并存；同一 predicate 相反 polarity 是剧情冲突信号
 
 章节正文：
 {{chapterContent}}
 
 只输出 JSON 数组，不要任何解释文字：
-[{"type":"CHARACTER_STATE","subject":"季衡","assertion":"突破至金丹期"},{"type":"RELATIONSHIP_STATE","subject":"季衡与沈墨","assertion":"结为盟友，共同对抗天机阁"}]
+[{"type":"CHARACTER_STATE","subject":"季衡","assertion":"突破至金丹期","predicate":"修为","object":"金丹期","polarity":"positive"},{"type":"CHARACTER_STATE","subject":"沈昭","assertion":"沈昭不识字","predicate":"ability.read","object":"false","polarity":"negative"}]
 
 无事实则输出：[]

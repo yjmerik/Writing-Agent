@@ -29,7 +29,7 @@ public interface StoryCanon {
     int HUMAN_PATCH_PROTECT_CHAPTERS = 5;
 
     /** 自动合并结果 */
-    enum Outcome { ADDED, VALIDATED, SUPERSEDED, SKIPPED_PROTECTED, SKIPPED_UNVERIFIED }
+    enum Outcome { ADDED, VALIDATED, SUPERSEDED, SKIPPED_PROTECTED, SKIPPED_UNVERIFIED, CONFLICT }
 
     /** 写入结果：outcome + 关键事实（SKIPPED_PROTECTED 时 fact 为 null） */
     record WriteResult(Outcome outcome, StoryFact fact) {

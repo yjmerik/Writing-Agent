@@ -29,12 +29,15 @@ public class StoryFactRepository {
     public void save(StoryFact f) {
         String sql = "INSERT INTO story_facts (id,project_id,fact_type,subject,assertion," +
                 "chapter_established,source_chapter_version,importance,status,superseded_by," +
-                "last_validated_chapter,created_at,updated_at,evidence_grade) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) " +
+                "last_validated_chapter,created_at,updated_at,evidence_grade," +
+                "predicate,object_value,polarity,valid_from,valid_to) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) " +
                 "ON CONFLICT(id) DO UPDATE SET subject=excluded.subject, assertion=excluded.assertion, " +
                 "importance=excluded.importance, status=excluded.status, superseded_by=excluded.superseded_by, " +
                 "last_validated_chapter=excluded.last_validated_chapter, updated_at=excluded.updated_at, " +
-                "evidence_grade=excluded.evidence_grade";
+                "evidence_grade=excluded.evidence_grade, predicate=excluded.predicate, " +
+                "object_value=excluded.object_value, polarity=excluded.polarity, " +
+                "valid_from=excluded.valid_from, valid_to=excluded.valid_to";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, f.getId()); ps.setString(2, f.getProjectId());
@@ -45,6 +48,11 @@ public class StoryFactRepository {
             ps.setString(10, f.getSupersededBy()); ps.setInt(11, f.getLastValidatedChapter());
             ps.setString(12, f.getCreatedAt().toString()); ps.setString(13, f.getUpdatedAt().toString());
             ps.setString(14, f.getEvidenceGrade().name());
+            ps.setString(15, f.getPredicate());
+            ps.setString(16, f.getObjectValue());
+            ps.setString(17, f.getPolarity());
+            if (f.getValidFromChapter() > 0) ps.setInt(18, f.getValidFromChapter()); else ps.setInt(18, f.getChapterEstablished());
+            if (f.getValidToChapter() != null) ps.setInt(19, f.getValidToChapter()); else ps.setNull(19, Types.NULL);
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
@@ -134,12 +142,15 @@ public class StoryFactRepository {
     public void save(Connection conn, StoryFact f) {
         String sql = "INSERT INTO story_facts (id,project_id,fact_type,subject,assertion," +
                 "chapter_established,source_chapter_version,importance,status,superseded_by," +
-                "last_validated_chapter,created_at,updated_at,evidence_grade) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) " +
+                "last_validated_chapter,created_at,updated_at,evidence_grade," +
+                "predicate,object_value,polarity,valid_from,valid_to) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) " +
                 "ON CONFLICT(id) DO UPDATE SET subject=excluded.subject, assertion=excluded.assertion, " +
                 "importance=excluded.importance, status=excluded.status, superseded_by=excluded.superseded_by, " +
                 "last_validated_chapter=excluded.last_validated_chapter, updated_at=excluded.updated_at, " +
-                "evidence_grade=excluded.evidence_grade";
+                "evidence_grade=excluded.evidence_grade, predicate=excluded.predicate, " +
+                "object_value=excluded.object_value, polarity=excluded.polarity, " +
+                "valid_from=excluded.valid_from, valid_to=excluded.valid_to";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, f.getId()); ps.setString(2, f.getProjectId());
             ps.setString(3, f.getFactType().name()); ps.setString(4, f.getSubject());
@@ -149,6 +160,11 @@ public class StoryFactRepository {
             ps.setString(10, f.getSupersededBy()); ps.setInt(11, f.getLastValidatedChapter());
             ps.setString(12, f.getCreatedAt().toString()); ps.setString(13, f.getUpdatedAt().toString());
             ps.setString(14, f.getEvidenceGrade().name());
+            ps.setString(15, f.getPredicate());
+            ps.setString(16, f.getObjectValue());
+            ps.setString(17, f.getPolarity());
+            if (f.getValidFromChapter() > 0) ps.setInt(18, f.getValidFromChapter()); else ps.setInt(18, f.getChapterEstablished());
+            if (f.getValidToChapter() != null) ps.setInt(19, f.getValidToChapter()); else ps.setNull(19, Types.NULL);
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
@@ -197,6 +213,15 @@ public class StoryFactRepository {
                 rs.getString("subject"), rs.getString("assertion"),
                 rs.getInt("chapter_established"));
         f.setId(rs.getString("id"));
+        try {
+            f.setPredicate(rs.getString("predicate"));
+            f.setObjectValue(rs.getString("object_value"));
+            f.setPolarity(rs.getString("polarity"));
+            int vf = rs.getInt("valid_from");
+            if (!rs.wasNull() && vf > 0) f.setValidFromChapter(vf);
+            int vt = rs.getInt("valid_to");
+            f.setValidToChapter(rs.wasNull() ? null : vt);
+        } catch (SQLException ignored) {}
         f.setSourceChapterVersion(rs.getInt("source_chapter_version"));
         f.setImportance(rs.getInt("importance"));
         f.setStatus(StoryFact.Status.valueOf(rs.getString("status")));

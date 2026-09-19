@@ -433,6 +433,12 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE chapters ADD COLUMN plan_ref TEXT");
         // p32-06: 真典事实证据分级（机器收割的世界铁律=UNVERIFIED），旧行默认 CONFIRMED
         safeAddColumn(st, "ALTER TABLE story_facts ADD COLUMN evidence_grade TEXT DEFAULT 'CONFIRMED'");
+        // NCS-008: 谓词化断言——谓词/取值/极性/生效区间（旧行 NULL/默认）
+        safeAddColumn(st, "ALTER TABLE story_facts ADD COLUMN predicate TEXT");
+        safeAddColumn(st, "ALTER TABLE story_facts ADD COLUMN object_value TEXT");
+        safeAddColumn(st, "ALTER TABLE story_facts ADD COLUMN polarity TEXT");
+        safeAddColumn(st, "ALTER TABLE story_facts ADD COLUMN valid_from INTEGER");
+        safeAddColumn(st, "ALTER TABLE story_facts ADD COLUMN valid_to INTEGER");
         // p32-05: 审核产物绑定产生时点的章节版本与正文指纹，旧行 NULL
         safeAddColumn(st, "ALTER TABLE continuity_issues ADD COLUMN chapter_version INTEGER");
         safeAddColumn(st, "ALTER TABLE continuity_issues ADD COLUMN content_hash TEXT");

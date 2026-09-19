@@ -164,6 +164,10 @@ public class FactHarvesterAgent {
                 // p22-02: 冲突裁决 / HUMAN_PATCH 保护窗口 / 审计链全部在 StoryCanon 端口内
                 StoryFact machine = new StoryFact(projectId, type, subject, assertion, chapterIndex);
                 machine.setImportance(3);
+                // NCS-008: 谓词化字段（旧格式缺省为 null，兼容）
+                if (item.hasNonNull("predicate")) machine.setPredicate(item.get("predicate").asText());
+                if (item.hasNonNull("object")) machine.setObjectValue(item.get("object").asText());
+                if (item.hasNonNull("polarity")) machine.setPolarity(item.get("polarity").asText());
                 // p32-06（体验报告 #4/P1）: 机器收割的世界铁律一律待核——
                 // LLM 可能把角色台词/推测分类为 WORLD_RULE，未确认前不得以铁律身份约束创作
                 if (type == StoryFact.FactType.WORLD_RULE) {
@@ -193,6 +197,10 @@ public class FactHarvesterAgent {
                                     projectId, chapterIndex, subject);
                     case VALIDATED -> validated++;
                     case SUPERSEDED -> superseded++;
+                    case CONFLICT ->
+                            // NCS-008: 同谓词相反极性——双方保留待裁决，问题与事件已由真典端口记录
+                            log.warn("真典断言冲突待裁决(项目{}, 章{}): subject={}, predicate={}",
+                                    projectId, chapterIndex, subject, machine.getPredicate());
                     case SKIPPED_PROTECTED ->
                         // 5 章保护窗口内的 HUMAN_PATCH 不被自动冲突取代——
                         // 机器断言丢弃（不落库），人工意图最高优先

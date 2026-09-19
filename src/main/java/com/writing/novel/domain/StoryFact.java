@@ -37,6 +37,16 @@ public class StoryFact {
     private FactType factType;
     private String subject;          // 主体（角色名/势力/物品），可关联 entity
     private String assertion;        // 规范陈述
+    /** NCS-008: 谓词——属性的判别键（如 ability.read / location / 持有），null=旧数据 */
+    private String predicate;
+    /** NCS-008: 谓词的取值/宾语（如 false / 城门 / 已焚毁） */
+    private String objectValue;
+    /** NCS-008: 极性 positive/negative——同谓词相反极性是冲突候选，不是同义确认 */
+    private String polarity;
+    /** NCS-008: 生效区间起点（缺省=建立章） */
+    private int validFromChapter;
+    /** NCS-008: 生效区间终点（null=开放，尚未失效） */
+    private Integer validToChapter;
     private int chapterEstablished;  // 建立章节
     private int sourceChapterVersion;// 溯源：建立时该章版本
     private int importance;          // 1-5，用于检索排序与衰减
@@ -55,6 +65,7 @@ public class StoryFact {
         this.subject = subject;
         this.assertion = assertion;
         this.chapterEstablished = chapterEstablished;
+        this.validFromChapter = chapterEstablished;
         this.importance = 3;
         this.status = Status.ACTIVE;
         this.lastValidatedChapter = chapterEstablished;
@@ -90,6 +101,16 @@ public class StoryFact {
     public void setSubject(String s) { this.subject = s; }
     public String getAssertion() { return assertion; }
     public void setAssertion(String a) { this.assertion = a; }
+    public String getPredicate() { return predicate; }
+    public void setPredicate(String p) { this.predicate = p == null || p.isBlank() ? null : p.trim(); }
+    public String getObjectValue() { return objectValue; }
+    public void setObjectValue(String o) { this.objectValue = o == null || o.isBlank() ? null : o.trim(); }
+    public String getPolarity() { return polarity; }
+    public void setPolarity(String p) { this.polarity = p == null || p.isBlank() ? null : p.trim().toLowerCase(); }
+    public int getValidFromChapter() { return validFromChapter; }
+    public void setValidFromChapter(int c) { this.validFromChapter = c; }
+    public Integer getValidToChapter() { return validToChapter; }
+    public void setValidToChapter(Integer c) { this.validToChapter = c; }
     public int getChapterEstablished() { return chapterEstablished; }
     public int getSourceChapterVersion() { return sourceChapterVersion; }
     public void setSourceChapterVersion(int v) { this.sourceChapterVersion = v; }

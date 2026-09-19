@@ -25,6 +25,7 @@ import type {
   AuthorIntent,
   AuthorIntentHistory,
   WorkspaceView,
+  CharacterAsOf,
 } from '../types';
 
 const BASE = '/api';
@@ -307,6 +308,9 @@ export const api = {
   getIntentHistory: (id: string) => request<AuthorIntentHistory>(`/projects/${id}/intent/history`),
   // NCS-005/006: 统一工作台读取
   getWorkspaceView: (id: string) => request<WorkspaceView>(`/projects/${id}/workspace-view`),
+  // NCS-010/011: 人物时点读取
+  getCharacterAsOf: (id: string, charName: string, chapter: number) =>
+    request<CharacterAsOf>(`/projects/${id}/characters/${encodeURIComponent(charName)}/as-of?chapter=${chapter}`),
 
   createProject: (req: CreateProjectRequest) =>
     request<Project>('/projects', {

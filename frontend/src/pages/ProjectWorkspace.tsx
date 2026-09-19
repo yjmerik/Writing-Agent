@@ -305,7 +305,7 @@ export default function ProjectWorkspace() {
           destroyInactiveTabPane
           items={[
             { key: 'run', label: '创作工具', children: <RunConsole projectId={project.id} projectState={project.state} onChanged={load} /> },
-            { key: 'world', label: '🌍 世界观与人物', children: <WorldbuildingView key={`world-${project.id}`} projectId={project.id} /> },
+            { key: 'world', label: '🌍 世界观与人物', children: <WorldbuildingView key={`world-${project.id}`} projectId={project.id} currentChapter={project.currentChapterIndex} /> },
             { key: 'outline', label: '📋 大纲', children: <OutlineView key={`outline-${project.id}`} projectId={project.id} currentChapter={project.currentChapterIndex} /> },
             { key: 'review', label: '📖 章节管理', children: <InteractiveReview key={`review-${project.id}`} refreshSignal={refreshSignal} projectId={project.id} onChanged={load} onNavigateTab={handleTabChange} focusChapter={focusChapter} onSelectChapter={handleSelectChapter} historyView={historyView} reviewPanelOpen={reviewPanelOpen} onReviewPanelChange={setReviewPanelOpen} readingMode={readingMode} onReadingModeChange={setReadingMode} /> },
             { key: 'quality', label: '🔍 质量评价', children: <QualityView projectId={project.id} /> },

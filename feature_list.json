@@ -7310,11 +7310,13 @@
       "dependencies": [
         "NCS-010"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "frontend/src/components/CharacterAsOfView.tsx",
         "frontend/src/components/WorldbuildingView.tsx",
-        "frontend/src/api/client.ts"
+        "frontend/src/pages/ProjectWorkspace.tsx",
+        "frontend/src/api/client.ts",
+        "frontend/src/types.ts"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "npm --prefix frontend run build 通过；ego-browser 验证时点切换、三类知识分列、错误信念标注、全书视角后文提示。",
@@ -7799,5 +7801,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-011"
 }

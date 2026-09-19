@@ -4,6 +4,7 @@ import { ReloadOutlined, SaveOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
 import type { AgentRevisionApplyResult, AgentRevisionTarget } from '../api/client';
 import type { KnowledgeEntry, Character, Foreshadowing } from '../types';
+import CharacterAsOfView from './CharacterAsOfView';
 import AgentRevisionDialog from './AgentRevisionDialog';
 
 const { Text } = Typography;
@@ -78,7 +79,7 @@ function characterDraft(character: Character): CharacterDraft {
   };
 }
 
-export default function WorldbuildingView({ projectId }: { projectId: string }) {
+export default function WorldbuildingView({ projectId, currentChapter = 0 }: { projectId: string; currentChapter?: number }) {
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [facts, setFacts] = useState<Array<{ id: string; subject: string; assertion: string; factType: string }>>([]);
@@ -264,6 +265,7 @@ export default function WorldbuildingView({ projectId }: { projectId: string }) 
       )}
 
       <Divider />
+      <CharacterAsOfView projectId={projectId} currentChapter={currentChapter} />
       <h2>👥 人物卡</h2>
       <Space style={{ marginBottom: 12 }} wrap>
         <Input style={{ width: 140 }} value={newChar.name} onChange={(e) => setNewChar({ ...newChar, name: e.target.value })} placeholder="姓名" />

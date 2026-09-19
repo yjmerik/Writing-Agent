@@ -344,3 +344,43 @@ export interface WorkspaceView {
   };
   availableActions: { action: string; allowed: boolean; reason: string }[];
 }
+
+// NCS-010/011: 人物时点读取
+export interface CharacterAsOfFact {
+  factId: string;
+  type: string;
+  assertion: string;
+  predicate: string | null;
+  objectValue: string | null;
+  polarity: string | null;
+  validFromChapter: number;
+  validToChapter: number | null;
+}
+
+export interface CharacterAsOfLearned {
+  factId: string;
+  quote: string;
+  learnedAtChapter: number;
+  sourceChapter: number;
+  sourceVersion: number;
+  evidenceStale: boolean;
+  beliefStatus?: string;
+}
+
+export interface CharacterAsOfRelationship {
+  relationship: string;
+  source: string;
+  target: string;
+  validFromChapter: number;
+  validToChapter: number;
+  direction: string;
+}
+
+export interface CharacterAsOf {
+  character: { id: string; name: string; role: string; status: string };
+  asOfChapter: number;
+  facts: CharacterAsOfFact[];
+  knows: CharacterAsOfLearned[];
+  believes: CharacterAsOfLearned[];
+  relationships: CharacterAsOfRelationship[];
+}

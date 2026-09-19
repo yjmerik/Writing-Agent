@@ -7425,10 +7425,9 @@
       "dependencies": [
         "NCS-014"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
-        "src/main/java/com/writing/novel/service/RevisionRepairService.java",
-        "src/main/java/com/writing/novel/agent/ContentRevisionAgent.java"
+        "src/main/java/com/writing/novel/service/RevisionRepairService.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "测试（回放/桩）：候选生成挂接请求、含影响上下文与保护项、主稿未变；生成失败→请求状态可恢复非半套；mvn compile && mvn test 通过。",
@@ -7816,5 +7815,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-015"
 }

@@ -20,6 +20,8 @@ active_feature=null；未开始 NCS-028/029/030。本次仅核验与交接维护
 
 ## Verification
 
+- 交接文档提交 0a9b7ee 已从 codex/docs-zcode-takeover-20260919 快进合入 main；合并后 Java 21 ./init.sh 再次 PASS（1074/0F/0E/1S，编译与前端构建通过），日志 /tmp/writingagent-takeover-main-20260919.log。跟踪文件无改动，原有未跟踪材料未参与构建。
+
 - python3 scripts/check-harness.py --check-git：PASS，361 项，356 completed / 2 deferred / 3 not-started。
 - 本次 Java 21 运行 ./init.sh PASS：编译通过；1074 tests / 0 failures / 0 errors / 1 skipped；前端构建通过（既有大包提示）。本地日志 /tmp/writingagent-takeover-init-jdk21-20260919.log。
 - 本次未重跑 E2E、文学质量评估或浏览器 Journey；既有记录不等于本次重新验收。

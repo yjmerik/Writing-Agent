@@ -20,6 +20,8 @@ active_feature=null；本次未开启 NCS-028，不将计划接手记为 in-prog
 
 ## Verification
 
+- 交接文档提交 0a9b7ee 已从 codex/docs-zcode-takeover-20260919 快进合入 main；合并后 Java 21 ./init.sh 再次 PASS（1074/0F/0E/1S，编译与前端构建通过），日志 /tmp/writingagent-takeover-main-20260919.log。跟踪文件无改动，原有未跟踪材料未参与构建。
+
 - harness --check-git PASS；完成证据的提交归属已核验。
 - 本次 Java 21 运行 ./init.sh PASS：编译通过；1074 tests / 0 failures / 0 errors / 1 skipped；前端构建通过（既有大包提示）。本地日志 /tmp/writingagent-takeover-init-jdk21-20260919.log。
 - 历史 NCS-027 证据记录 1074 tests / 0 failures / 0 errors / 1 skipped、前端构建和浏览器流程通过；详见 docs/harness/evidence/2026-09-19-ncs-027.json。

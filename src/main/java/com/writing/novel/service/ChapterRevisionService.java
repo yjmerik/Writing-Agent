@@ -29,26 +29,37 @@ public class ChapterRevisionService {
     private final RevisionEffects effects;
     /** NCS-009: 来源撤回传播；null 时不触发（旧装配/测试） */
     private final SupportWithdrawalService supportWithdrawal;
+    /** NCS-013: 统一修订请求登记；null 时不登记（旧装配/测试） */
+    private final RevisionRequestService revisionRequests;
 
     public ChapterRevisionService(NovelRepository repository) {
-        this(repository, null, null, null);
+        this(repository, null, null, null, null);
     }
 
     public ChapterRevisionService(NovelRepository repository,
                                   WritingTaskExecutor writingTaskExecutor,
                                   RevisionEffects effects) {
-        this(repository, writingTaskExecutor, effects, null);
+        this(repository, writingTaskExecutor, effects, null, null);
     }
 
-    /** NCS-009: 带支持撤回传播的构造 */
     public ChapterRevisionService(NovelRepository repository,
                                   WritingTaskExecutor writingTaskExecutor,
                                   RevisionEffects effects,
                                   SupportWithdrawalService supportWithdrawal) {
+        this(repository, writingTaskExecutor, effects, supportWithdrawal, null);
+    }
+
+    /** NCS-013: 带统一修订请求登记的构造 */
+    public ChapterRevisionService(NovelRepository repository,
+                                  WritingTaskExecutor writingTaskExecutor,
+                                  RevisionEffects effects,
+                                  SupportWithdrawalService supportWithdrawal,
+                                  RevisionRequestService revisionRequests) {
         this.repository = repository;
         this.writingTaskExecutor = writingTaskExecutor;
         this.effects = effects;
         this.supportWithdrawal = supportWithdrawal;
+        this.revisionRequests = revisionRequests;
     }
 
     public Chapter createDraft(String projectId, String title, String content) {
@@ -121,6 +132,13 @@ public class ChapterRevisionService {
         // p36-07: 屏障重绑/批准失效历史已在 saveChapterRevision 同一事务内原子完成——
         // 事务后吞异常的 rebind 已删除，避免"正文已推进而屏障仍绑旧稿号"的半套状态。
         withdrawStaleEvidence(projectId, chapterIndex, current.getVersion());
+        if (revisionRequests != null && "DIRECT_EDIT".equals(normalizedSource(source))) {
+            revisionRequests.recordAndComplete(projectId, "DIRECT_EDIT",
+                    "作者直接编辑第 " + chapterIndex + " 章",
+                    "[{\"chapterIndex\":" + chapterIndex + "}]",
+                    "{\"" + chapterIndex + "\":" + expectedVersion + "}", "[]",
+                    "作者直存并推进到 v" + current.getVersion());
+        }
         refreshIsolated(projectId, current);
         return current;
     }
@@ -218,7 +236,7 @@ public class ChapterRevisionService {
     }
 
     public Chapter restore(String projectId, int chapterIndex, int historyVersion, int expectedVersion) {
-        return withProjectWork(projectId, () -> {
+        Chapter result = withProjectWork(projectId, () -> {
             Chapter current = requireChapter(projectId, chapterIndex);
             if (current.getVersion() != expectedVersion) {
                 throw new IllegalStateException("章节版本已变化");
@@ -228,6 +246,14 @@ public class ChapterRevisionService {
             return editInOwnedWork(projectId, chapterIndex, expectedVersion,
                     target.getTitle(), target.getContent(), "RESTORE");
         });
+        if (revisionRequests != null) {
+            revisionRequests.recordAndComplete(projectId, "RESTORE",
+                    "以第 " + chapterIndex + " 章 v" + historyVersion + " 的内容恢复为新稿",
+                    "[{\"chapterIndex\":" + chapterIndex + ",\"historyVersion\":" + historyVersion + "}]",
+                    "{\"" + chapterIndex + "\":" + expectedVersion + "}", "[]",
+                    "恢复完成（旧历史保留）");
+        }
+        return result;
     }
 
     /** p37-14: 候选应用结果——仓储持久 commit result + 应用后的当前章（含派生刷新标记）。 */
@@ -315,6 +341,15 @@ public class ChapterRevisionService {
         Chapter applied = repository.findChapterByIndex(projectId, proposal.getChapterIndex())
                 .orElseThrow(() -> new IllegalStateException("候选应用后章节不存在"));
         withdrawStaleEvidence(projectId, proposal.getChapterIndex(), applied.getVersion());
+        if (revisionRequests != null) {
+            String origin = proposal.getTargetType() == RevisionProposal.TargetType.PASSAGE
+                    ? "PASSAGE_POLISH" : "CHAPTER_REWRITE";
+            revisionRequests.recordAndComplete(projectId, origin,
+                    "采纳候选 " + proposal.getId() + "（" + (proposal.getInstructions() == null ? "" : proposal.getInstructions()) + "）",
+                    "[{\"chapterIndex\":" + proposal.getChapterIndex() + "}]",
+                    "{\"" + proposal.getChapterIndex() + "\":" + currentIdentity.version() + "}", "[]",
+                    "候选应用完成，proposalId=" + commit.proposalId());
+        }
         // 派生刷新在提交后执行：失败标 pending，不得再次写一版正文
         refreshIsolated(projectId, applied);
         return new ProposalApplyResult(commit, applied);

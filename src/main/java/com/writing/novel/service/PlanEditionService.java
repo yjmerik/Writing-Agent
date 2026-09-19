@@ -30,8 +30,18 @@ public class PlanEditionService {
 
     private final NovelRepository repository;
 
+    /** NCS-013: 统一修订请求；null 时不登记（旧装配/测试） */
+    private RevisionRequestService revisionRequests;
+
     public PlanEditionService(NovelRepository repository) {
         this.repository = repository;
+    }
+
+    /** NCS-013: 注入统一修订请求服务（生产装配用） */
+    @org.springframework.beans.factory.annotation.Autowired
+    public PlanEditionService(NovelRepository repository, RevisionRequestService revisionRequests) {
+        this(repository);
+        this.revisionRequests = revisionRequests;
     }
 
     /**
@@ -173,6 +183,14 @@ public class PlanEditionService {
         repository.commitPlanEdition(projectId, previewId, sourcePlanHash, prefs, outline, decisions,
                 requestKey == null ? previewId : requestKey);
 
+        // NCS-013: 计划调整登记为统一修订请求（承诺逐项处置即采纳决定）
+        if (revisionRequests != null) {
+            revisionRequests.recordAndComplete(projectId, "PLAN_ADJUST",
+                    "目标章数变更为 " + targetChapters + "（承诺处置 " + decisions.size() + " 项）",
+                    "[{\"planChangeId\":\"" + previewId + "\"}]",
+                    "{\"sourcePlanHash\":\"" + sourcePlanHash + "\"}", "[]",
+                    "计划变更生效，requestKey=" + (requestKey == null ? previewId : requestKey));
+        }
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("applied", true);
         result.put("previewId", previewId);

@@ -64,6 +64,19 @@ public class PersistenceConfig {
         return new com.writing.novel.service.SupportWithdrawalService(storyFactRepository);
     }
 
+    // NCS-013: 统一修订请求
+    @Bean
+    @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)
+    public com.writing.novel.persistence.sqlite.RevisionRequestRepository revisionRequestRepository(ConnectionProvider cp) {
+        return new com.writing.novel.persistence.sqlite.RevisionRequestRepository(cp);
+    }
+
+    @Bean
+    public com.writing.novel.service.RevisionRequestService revisionRequestService(
+            com.writing.novel.persistence.sqlite.RevisionRequestRepository revisionRequestRepository) {
+        return new com.writing.novel.service.RevisionRequestService(revisionRequestRepository);
+    }
+
     // NCS-012: 人物关键决策
     @Bean
     @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)

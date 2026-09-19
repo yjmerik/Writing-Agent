@@ -25,6 +25,8 @@ public class ContentController {
     private final CanonPatchService canonPatch;
     private final OutlineStructureService outlineStructure;
     private final com.writing.novel.service.PlanEditionService planEdition;
+    /** NCS-013: 统一修订请求（设定变更入口登记） */
+    private final com.writing.novel.service.RevisionRequestService revisionRequests;
     private final WritingTaskExecutor writingTaskExecutor;
     private final ChapterRevisionService chapterRevision;
     private final ProjectActionPolicy actionPolicy = new ProjectActionPolicy();
@@ -34,7 +36,8 @@ public class ContentController {
                              CanonPatchService canonPatch, WritingTaskExecutor writingTaskExecutor,
                              OutlineStructureService outlineStructure,
                              com.writing.novel.service.PlanEditionService planEdition,
-                             com.writing.novel.service.SupportWithdrawalService supportWithdrawal) {
+                             com.writing.novel.service.SupportWithdrawalService supportWithdrawal,
+                             com.writing.novel.service.RevisionRequestService revisionRequests) {
         this.repository = repository;
         this.orchestrator = orchestrator;
         this.canonPatch = canonPatch;
@@ -43,7 +46,8 @@ public class ContentController {
         this.planEdition = planEdition;
         this.chapterRevision = new ChapterRevisionService(repository, writingTaskExecutor,
                 orchestrator == null ? null : orchestrator::refreshChapterAfterRevisionAsync,
-                supportWithdrawal);
+                supportWithdrawal, revisionRequests);
+        this.revisionRequests = revisionRequests;
     }
 
     /** Unit-test compatibility for controller tests that do not exercise outline editing. */
@@ -52,7 +56,7 @@ public class ContentController {
         this(repository, orchestrator, canonPatch, writingTaskExecutor,
                 canonPatch == null ? null : new OutlineStructureService(
                         repository, canonPatch, writingTaskExecutor),
-                new com.writing.novel.service.PlanEditionService(repository), null);
+                new com.writing.novel.service.PlanEditionService(repository), null, null);
     }
 
     @GetMapping("/worldbuilding")
@@ -129,6 +133,13 @@ public class ContentController {
                 }
             }
             Character saved = (Character) canonPatch.patchCharacter(id, charId, patch, chapterOf(id)).entity();
+            // NCS-013: 设定变更登记为统一修订请求（作者确认即采纳，影响预览记录在案）
+            if (revisionRequests != null) {
+                revisionRequests.recordAndComplete(id, "SETTING_CHANGE",
+                        "修改人物设定：" + saved.getName(),
+                        "[{\"characterId\":\"" + charId + "\"}]", "{}", "[]",
+                        "作者确认修改（预览凭证校验通过）");
+            }
             java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
             result.put("persisted", true);
             result.put("character", saved);

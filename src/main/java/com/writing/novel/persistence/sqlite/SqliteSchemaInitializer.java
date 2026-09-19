@@ -200,6 +200,14 @@ public class SqliteSchemaInitializer {
             "created_at TEXT)",
         "CREATE INDEX IF NOT EXISTS idx_character_decisions ON character_decisions(project_id, character_name, chapter_index)",
 
+        // NCS-013: 统一修订请求——六类入口归一；范围批准与内容采纳分离记录
+        "CREATE TABLE IF NOT EXISTS revision_requests (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, origin TEXT, intent TEXT, " +
+            "target_anchors TEXT, base_versions TEXT, protect_anchors TEXT, " +
+            "status TEXT, scope_decision TEXT, acceptance TEXT, cancel_reason TEXT, " +
+            "created_at TEXT, updated_at TEXT)",
+        "CREATE INDEX IF NOT EXISTS idx_revision_requests ON revision_requests(project_id, status)",
+
         // p17-05: 自定义预设持久化（跨项目共享，name 主键 upsert）
         "CREATE TABLE IF NOT EXISTS custom_presets (" +
             "name TEXT PRIMARY KEY, content TEXT, updated_at TEXT)",

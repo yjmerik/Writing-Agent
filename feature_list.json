@@ -7368,11 +7368,13 @@
       "phase": 46,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/domain/RevisionRequest.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/RevisionRequestRepository.java",
         "src/main/java/com/writing/novel/service/RevisionRequestService.java",
-        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java"
+        "src/main/java/com/writing/novel/web/RevisionRequestController.java",
+        "src/main/java/com/writing/novel/service/ChapterRevisionService.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：六入口各产生 RevisionRequest 且字段正确；范围批准前不可生成修复；scopeDecision 与 acceptDecision 分开落库；mvn compile && mvn test 通过。",
@@ -7809,5 +7811,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-013"
 }

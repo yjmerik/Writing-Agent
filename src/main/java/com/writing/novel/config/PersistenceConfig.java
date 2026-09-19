@@ -129,6 +129,17 @@ public class PersistenceConfig {
                 impactAnalysisService, agentRevisionService, revisionRequestService, repository);
     }
 
+    // NCS-024: 选择性组合采纳
+    @Bean
+    public com.writing.novel.service.SelectiveAcceptService selectiveAcceptService(
+            NovelRepository repository,
+            com.writing.novel.service.RevisionRequestService revisionRequestService,
+            com.writing.novel.agent.ContinuityCheckerAgent continuityCheckerAgent,
+            com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository) {
+        return new com.writing.novel.service.SelectiveAcceptService(repository, revisionRequestService,
+                continuityCheckerAgent, checkResultRepository);
+    }
+
     // NCS-023: 三类信息分层
     @Bean
     public com.writing.novel.service.ReviewClassificationService reviewClassificationService(

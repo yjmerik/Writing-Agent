@@ -1,0 +1,31 @@
+{
+ "commit": "9fc0689aa7a911b358f51b52ffb28a13d0237345",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1059 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "npm --prefix frontend run build",
+   "result": "PASS（分支+干净检出）。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=ReviewClassificationTest",
+   "result": "PASS: 2 tests 0 failures（含干净检出）。三类分列：HIGH/MEDIUM+人审屏障→必须处理（问题卡含章稿版本+过期标注）；UNKNOWN/INVALID 检查→尚未查清（描述明确『不能当作无问题』）；LOW→文学建议；空类如实为空不显示『0 个问题』完成假象。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py",
+   "result": "PASS（只读聚合+前端，无管线影响）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "GET /review-classification 聚合（issues 分级+check_results 信封+review barriers）；ReviewClassificationView 三列（文字+图标+计数，列说明文案区分三类语义）；问题卡动作：我来编辑（跳章）/生成修订建议（跳修订工作区）/创作例外（跳章处置）/重新检查（未知类）；无『标记已解决』捷径。",
+ "feature_ids": [
+  "NCS-023"
+ ],
+ "branch": "codex/ncs-023-review-classes"
+}

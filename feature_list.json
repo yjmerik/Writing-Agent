@@ -7647,7 +7647,7 @@
       "dependencies": [
         "NCS-007"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/ReviewClassificationService.java",
         "src/main/java/com/writing/novel/web/ReviewClassificationController.java",
@@ -7657,12 +7657,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "npm --prefix frontend run build 通过；ego-browser 验证三列分列、问题卡字段与动作、例外流程。",
       "verify_cmd": "npm --prefix frontend run build",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: 9fc0689（ff-merge）; verify_cmd ReviewClassificationTest 2/0F; mvn test 1059/0F/0E/1S（分支+干净检出）; npm build PASS; e2e+baseline PASS; 证据 docs/harness/evidence/2026-09-19-ncs-023.json",
       "ui_impact": "high",
       "backend_impact": "low",
       "prompt_impact": "none",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-023-review-classes",
+      "completion_record": "ncs-023-verified"
     },
     {
       "id": "NCS-024",
@@ -7846,5 +7848,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-023"
+  "active_feature": null
 }

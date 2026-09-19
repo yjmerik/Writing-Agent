@@ -1771,6 +1771,17 @@
    "implementation_commit": "290c81bd355f5d8527d5a05441a842dae7e67dfc",
    "main_commit": "290c81bd355f5d8527d5a05441a842dae7e67dfc",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-022.json"
+  },
+  {
+   "id": "ncs-023-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-023"
+   ],
+   "branch": "codex/ncs-023-review-classes",
+   "implementation_commit": "9fc0689aa7a911b358f51b52ffb28a13d0237345",
+   "main_commit": "9fc0689aa7a911b358f51b52ffb28a13d0237345",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-023.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

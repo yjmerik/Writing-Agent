@@ -37,6 +37,7 @@ import type {
   VolumeReadbackItem,
   AestheticProfileData,
   ReviewClassification,
+  DelegationRules,
 } from '../types';
 
 const BASE = '/api';
@@ -322,6 +323,13 @@ export const api = {
   // NCS-010/011: 人物时点读取
   getCharacterAsOf: (id: string, charName: string, chapter: number) =>
     request<CharacterAsOf>(`/projects/${id}/characters/${encodeURIComponent(charName)}/as-of?chapter=${chapter}`),
+  // NCS-025: 委托策略
+  getDelegationPolicy: (id: string) =>
+    request<{ projectId: string; rules: DelegationRules }>(`/projects/${id}/delegation-policy`),
+  saveDelegationPolicy: (id: string, rules: DelegationRules) =>
+    request<{ projectId: string; rules: DelegationRules }>(`/projects/${id}/delegation-policy`,
+      { method: 'PUT', body: JSON.stringify({ rules }) }),
+
   // NCS-023: 三类信息分层
   getReviewClassification: (id: string) =>
     request<ReviewClassification>(`/projects/${id}/review-classification`),

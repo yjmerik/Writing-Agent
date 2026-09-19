@@ -2,9 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { Card, Button, Spin, Alert, Tag, Typography, Space, Form, Input, Collapse, Empty, message, Divider } from 'antd';
 import { AuditOutlined, BookOutlined, RocketOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
-import type { AuthorIntent, AestheticProfileData } from '../types';
+import type { AuthorIntent, AestheticProfileData, DelegationRules } from '../types';
 
 const { Paragraph, Text } = Typography;
+
+const DELEGATION_LABELS: Record<string, string> = {
+  WORDING: '措辞润色', FACT_LOCAL: '单章修复', MOTIVE: '人物动机与命运', CROSS_CHAPTER: '跨章改动',
+};
 
 /**
  * NCS-004（方案 §03/§05/§17）：创作约定工作区。
@@ -84,6 +88,24 @@ export default function IntentView({ projectId, currentChapter }: {
     } catch (e) {
       messageApi.error(e instanceof Error ? e.message : '保存失败');
     } finally { setAestheticSaving(false); }
+  };
+
+  // NCS-025: 委托策略
+  const [delegation, setDelegation] = useState<DelegationRules>({});
+  const [delegationSaving, setDelegationSaving] = useState(false);
+  useEffect(() => {
+    void api.getDelegationPolicy(projectId).then(r => setDelegation(r.rules ?? {})).catch(() => {});
+  }, [projectId]);
+  const toggleDelegation = async (changeClass: string) => {
+    setDelegationSaving(true);
+    try {
+      const next = { ...delegation, [changeClass]: delegation[changeClass] === 'AUTO' ? 'CONFIRM' : 'AUTO' };
+      const saved = await api.saveDelegationPolicy(projectId, next);
+      setDelegation(saved.rules ?? next);
+      messageApi.success('委托策略已更新');
+    } catch (e) {
+      messageApi.error(e instanceof Error ? e.message : '保存失败');
+    } finally { setDelegationSaving(false); }
   };
 
   const handleSave = async (values: Partial<AuthorIntent>) => {
@@ -221,6 +243,26 @@ export default function IntentView({ projectId, currentChapter }: {
           </Space>
           <Button htmlType="submit" loading={aestheticSaving}>保存审美档案</Button>
         </Form>
+      </Card>
+
+      <Card title="⚖ 委托策略" size="small" extra={
+        <Text type="secondary" style={{ fontSize: 11 }}>AUTO=自动处理留痕；CONFIRM=暂停等你确认</Text>
+      }>
+        <Typography.Paragraph type="secondary" style={{ fontSize: 12 }}>
+          哪些修改可以让 Agent 自动完成、哪些必须先问你。会暂停的条件：
+          {Object.entries(delegation).filter(([, v]) => v === 'CONFIRM')
+            .map(([k]) => DELEGATION_LABELS[k] ?? k).join('、') || '（无）'}。
+        </Typography.Paragraph>
+        <Space wrap>
+          {Object.entries(DELEGATION_LABELS).map(([key, label]) => (
+            <Button key={key} size="small"
+              type={delegation[key] === 'AUTO' ? 'primary' : 'default'}
+              loading={delegationSaving}
+              onClick={() => toggleDelegation(key)}>
+              {label}：{delegation[key] === 'AUTO' ? '自动' : '需确认'}
+            </Button>
+          ))}
+        </Space>
       </Card>
 
       <Card title="版本历史" size="small">

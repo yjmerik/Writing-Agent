@@ -7701,10 +7701,10 @@
       "dependencies": [
         "NCS-013"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
-        "src/main/java/com/writing/novel/domain/WritingPreferences.java",
-        "src/main/java/com/writing/novel/service/RevisionRequestService.java",
+        "src/main/java/com/writing/novel/service/DelegationPolicyService.java",
+        "src/main/java/com/writing/novel/web/DelegationPolicyController.java",
         "frontend/src/components/IntentView.tsx"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
@@ -7850,5 +7850,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-025"
 }

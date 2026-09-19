@@ -129,6 +129,20 @@ public class PersistenceConfig {
                 impactAnalysisService, agentRevisionService, revisionRequestService, repository);
     }
 
+    // NCS-025: 委托策略
+    @Bean
+    @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)
+    public com.writing.novel.persistence.sqlite.DelegationPolicyRepository delegationPolicyRepository(ConnectionProvider cp) {
+        return new com.writing.novel.persistence.sqlite.DelegationPolicyRepository(cp);
+    }
+
+    @Bean
+    public com.writing.novel.service.DelegationPolicyService delegationPolicyService(
+            com.writing.novel.persistence.sqlite.DelegationPolicyRepository delegationPolicyRepository,
+            NovelRepository repository) {
+        return new com.writing.novel.service.DelegationPolicyService(delegationPolicyRepository, repository);
+    }
+
     // NCS-024: 选择性组合采纳
     @Bean
     public com.writing.novel.service.SelectiveAcceptService selectiveAcceptService(

@@ -509,3 +509,6 @@ export interface ReviewClassification {
   unknown: ReviewCard[];
   suggestions: ReviewCard[];
 }
+
+// NCS-025: 委托策略
+export interface DelegationRules { [changeClass: string]: string }

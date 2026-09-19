@@ -211,6 +211,10 @@ public class SqliteSchemaInitializer {
             "humor_style TEXT, imagery_preference TEXT, updated_at TEXT)",
         "CREATE INDEX IF NOT EXISTS idx_aesthetic_profiles ON aesthetic_profiles(project_id, revision)",
 
+        // NCS-025: 委托策略——按变更类别的 AUTO/CONFIRM 规则
+        "CREATE TABLE IF NOT EXISTS delegation_policies (" +
+            "project_id TEXT PRIMARY KEY, rules_json TEXT, updated_at TEXT)",
+
         // NCS-012: 人物关键决策——绑定章号+稿版本，同章同稿同人物幂等
         "CREATE TABLE IF NOT EXISTS character_decisions (" +
             "id TEXT PRIMARY KEY, project_id TEXT, character_name TEXT, chapter_index INTEGER, " +

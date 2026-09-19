@@ -7170,7 +7170,7 @@
       "dependencies": [
         "NCS-005"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "frontend/src/components/IdentityBar.tsx",
         "frontend/src/pages/ProjectWorkspace.tsx",
@@ -7180,12 +7180,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "npm --prefix frontend run build 通过；ego-browser 验证身份栏随章节/稿号变化、任务条显示等待原因与继续入口。",
       "verify_cmd": "npm --prefix frontend run build",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: 4992d66（ff-merge）; npm build PASS; mvn test 991/0F/0E/1S（干净检出）; ego-browser 身份栏/任务条/受阻原因全过; 证据 docs/harness/evidence/2026-09-19-ncs-006.json",
       "ui_impact": "high",
       "backend_impact": "low",
       "prompt_impact": "none",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-006-identity-bar",
+      "completion_record": "ncs-006-verified"
     },
     {
       "id": "NCS-007",
@@ -7779,5 +7781,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-006"
+  "active_feature": null
 }

@@ -1,0 +1,26 @@
+{
+ "commit": "4992d66acde8b5e855102b46f79e0a666f77628e",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "npm --prefix frontend run build",
+   "result": "PASS（分支 + 干净检出各一次）。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 991 tests, 0 failures, 0 errors, 1 skipped（既有）。干净检出。",
+   "exitCode": 0
+  },
+  {
+   "command": "ego-browser 浏览器验证（隔离实例 18099）",
+   "result": "PASS：身份栏渲染『第 1 章 · 第一章 焚信 | 第 2 稿 | 已完成』+ 任务条『无进行中任务』+ 状态徽标『构思中/可继续/写作受阻』；悬停写作受阻显示服务端原因『写下一章不可用：尚未生成大纲，不能开始写作』（动作原因来自 workspace-view，前端不自判）；截图 docs/reports/ncs-006-identity-bar.png。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "IdentityBar 每 2s 从 workspace-view 单一读取源刷新（只读展示不覆盖输入）；运行中/正在停下/暂停原因三类任务态分列；需处理/待审/未查清/过期检查计数徽标；注释注明 zsh 缓存需 Network.setCacheDisabled 验证新 bundle。",
+ "feature_ids": [
+  "NCS-006"
+ ],
+ "branch": "codex/ncs-006-identity-bar"
+}

@@ -1584,6 +1584,17 @@
    "implementation_commit": "c6aa022c86c148a13374ced7468c642f5be4c95e",
    "main_commit": "c6aa022c86c148a13374ced7468c642f5be4c95e",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-005.json"
+  },
+  {
+   "id": "ncs-006-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-006"
+   ],
+   "branch": "codex/ncs-006-identity-bar",
+   "implementation_commit": "4992d66acde8b5e855102b46f79e0a666f77628e",
+   "main_commit": "4992d66acde8b5e855102b46f79e0a666f77628e",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-006.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

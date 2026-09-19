@@ -7752,7 +7752,7 @@
       "phase": 49,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "frontend/src/components/EditionsPanel.tsx",
         "frontend/src/components/BookReviewView.tsx",
@@ -7762,12 +7762,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "npm --prefix frontend run build 通过；ego-browser 走通创建→详情→确认定稿→导出固定版本，工作稿/定稿导出入口区分。",
       "verify_cmd": "npm --prefix frontend run build",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: 4864435（ff-merge）; npm build PASS; mvn test 1074/0F/0E/1S（干净检出）; ego-browser 创建/详情/定稿确认/固定版本导出全过; 证据 docs/harness/evidence/2026-09-19-ncs-027.json",
       "ui_impact": "high",
       "backend_impact": "low",
       "prompt_impact": "none",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-027-book-edition-ui",
+      "completion_record": "ncs-027-verified"
     },
     {
       "id": "NCS-028",
@@ -7854,5 +7856,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-027"
+  "active_feature": null
 }

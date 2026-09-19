@@ -1815,6 +1815,17 @@
    "implementation_commit": "ce32e45f72fffe7f6c223bbc5990262a8783fb7e",
    "main_commit": "ce32e45f72fffe7f6c223bbc5990262a8783fb7e",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-026.json"
+  },
+  {
+   "id": "ncs-027-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-027"
+   ],
+   "branch": "codex/ncs-027-book-edition-ui",
+   "implementation_commit": "4864435d4aa58a88388b4de0c93f192b32dcf3aa",
+   "main_commit": "4864435d4aa58a88388b4de0c93f192b32dcf3aa",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-027.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

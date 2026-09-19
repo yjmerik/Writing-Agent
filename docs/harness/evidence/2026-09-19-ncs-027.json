@@ -1,0 +1,26 @@
+{
+ "commit": "4864435d4aa58a88388b4de0c93f192b32dcf3aa",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1074 tests, 0 failures, 0 errors, 1 skipped（既有）。干净检出。",
+   "exitCode": 0
+  },
+  {
+   "command": "npm --prefix frontend run build",
+   "result": "PASS（分支 + 干净检出）。",
+   "exitCode": 0
+  },
+  {
+   "command": "ego-browser 浏览器验证（隔离实例，真实 API）",
+   "result": "PASS：成书审查页内『📚 成书版本（整书记录）』——创建整书记录（1 章/已批准1）→ 表格（记录号/待确认 Tag/manifest 指纹/创建时间/操作）→ 详情弹窗（逐章 v2/字数/已批准 Tag）→ 确认定稿对话框（绑定精确 manifestHash 前缀+批准覆盖说明+不可变提示）→ 确认成功（状态转 APPROVED/已定稿）→ 导出固定版本（markdown 含版本与 manifest 头）；与上方导出工作稿明确区分；截图 docs/reports/ncs-027-editions-panel.png。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "EditionsPanel 组件（创建/列表/详情/定稿确认/导出 URL）；复用既有 BookEditionController 全部端点（快照物化/manifestHash 绑定批准/固定字节导出）——本 feature 为前端闭环接入（后端在 p38 已建成但 UI 从未消费）。",
+ "feature_ids": [
+  "NCS-027"
+ ],
+ "branch": "codex/ncs-027-book-edition-ui"
+}

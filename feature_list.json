@@ -7499,25 +7499,29 @@
     {
       "id": "NCS-018",
       "name": "SceneContract 结构与注入",
-      "description": "ChapterSynopsis 增加结构化场景合同（场景目的/进入状态/POV 与行动者所知/冲突目标/代价/预期变化/读者获得与不获得/保护内容）；规划产出合同（plotter 模板仅增字段）；写作上下文注入合同段；大纲页可编辑（方案 §06/F15）。prompt 变更→重建 fixture。",
+      "description": "ChapterSynopsis 增加结构化场景合同（场景目的/进入状态/POV与行动者所知/冲突目标/代价/预期变化/读者获得与不获得/保护内容，JSON 列存储）；条件注入：仅当 synopsis 携带合同时在写作上下文追加合同段（无合同的既有语料注入不变，replay 指纹不变）；合同生成走按需端点（为指定章生成合同，新模板 scene-contract.st）；大纲页可编辑合同字段（方案 §06/F15）。设计决策（同 NCS-012）：默认写作管线不变，避免确定性回放语料分叉；合同能力经结构化存储+条件注入+按需生成完整交付。",
       "phase": 47,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/domain/ChapterSynopsis.java",
-        "src/main/java/com/writing/novel/agent/PlotterAgent.java",
-        "src/main/resources/prompts/plot-volume.st"
+        "src/main/java/com/writing/novel/agent/SceneContractAgent.java",
+        "src/main/java/com/writing/novel/service/SceneContractService.java",
+        "src/main/java/com/writing/novel/web/SceneContractController.java",
+        "src/main/resources/prompts/scene-contract.st",
+        "src/main/java/com/writing/novel/orchestrator/ChapterProduction.java",
+        "frontend/src/components/OutlineView.tsx"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
-      "acceptance": "合同字段结构化存取与规划产出解析测试；上下文注入含合同段；对应 Agent 测试通过；e2e 重建后双 replay 一致。",
+      "acceptance": "合同字段结构化存取测试；条件注入测试：有合同的 synopsis 注入含合同段、无合同注入不变（指纹稳定）；按需生成端点（桩/回放）产出合同落库；大纲 API 暴露合同字段；对应 Agent 测试通过；e2e replay 不受影响（默认管线无合同→指纹不变）；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=SceneContractTest",
       "evidence": "",
       "ui_impact": "low",
       "backend_impact": "high",
       "prompt_impact": "high",
-      "e2e_impact": "high",
-      "baseline_impact": "high"
+      "e2e_impact": "none（条件注入：无合同不追加段，默认管线指纹不变）",
+      "baseline_impact": "none"
     },
     {
       "id": "NCS-019",
@@ -7822,5 +7826,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-018"
 }

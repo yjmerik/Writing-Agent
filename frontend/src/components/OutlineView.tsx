@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Tree, Spin, Empty, Card, Typography, Button, Space, Input, InputNumber, Alert, Select, message } from 'antd';
+import { Tree, Spin, Empty, Card, Typography, Button, Space, Input, InputNumber, Alert, Select, Collapse, message } from 'antd';
 import {
   DeleteOutlined,
   DownOutlined,
@@ -10,6 +10,14 @@ import {
 } from '@ant-design/icons';
 import type { PlanTargetPreview, PromiseDecisionInput } from '../api/client';
 import type { DataNode } from 'antd/es/tree';
+
+const { Text } = Typography;
+
+const CONTRACT_FIELD_LABELS: Record<string, string> = {
+  purpose: '场景目的', entryState: '进入状态', actors: '行动者/POV', actorsKnow: '行动者所知',
+  conflictGoals: '冲突目标', cost: '代价', expectedChange: '预期变化', readerGains: '读者获得',
+  readerMustNotKnow: '读者不应知道', protectedContent: '保护内容',
+};
 import { api } from '../api/client';
 import type { AgentRevisionTarget } from '../api/client';
 import type { ChapterSynopsis, Outline, Volume } from '../types';
@@ -419,6 +427,7 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
           </Space>
           <OutlineTree
             outline={draft}
+            projectId={projectId}
             currentChapter={currentChapter}
             saving={saving}
             hasUnsavedStructure={hasUnsavedStructure}
@@ -453,6 +462,7 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
 
 function OutlineTree({
   outline,
+  projectId,
   currentChapter,
   saving,
   hasUnsavedStructure,
@@ -466,6 +476,7 @@ function OutlineTree({
   onReviseVolume,
 }: {
   outline: Outline;
+  projectId: string;
   currentChapter: number;
   saving: boolean;
   hasUnsavedStructure: boolean;
@@ -568,7 +579,8 @@ function OutlineTree({
             onUpdate={onUpdateSynopsis}
             onDelete={onDeleteChapter}
             onMove={onMoveChapter}
-          />
+            projectId={projectId}
+      />
         ),
         key: synopsis.id,
         selectable: false,
@@ -595,6 +607,7 @@ function SynopsisRow({
   onUpdate,
   onDelete,
   onMove,
+  projectId,
 }: {
   synopsis: ChapterSynopsis;
   synopsisPosition: number;
@@ -604,6 +617,7 @@ function SynopsisRow({
   onUpdate: (synopsisId: string, patch: Partial<Pick<ChapterSynopsis, 'title' | 'synopsis'>>) => void;
   onDelete: (synopsisId: string) => void;
   onMove: (volumeId: string, synopsisIndex: number, direction: -1 | 1) => void;
+  projectId: string;
 }) {
   const locked = synopsis.chapterIndex <= currentChapter;
   const previousLocked = synopsisPosition === 0 || volume.synopses[synopsisPosition - 1].chapterIndex <= currentChapter;
@@ -669,7 +683,75 @@ function SynopsisRow({
           onChange={(event) => onUpdate(synopsis.id, { synopsis: event.target.value })}
         />
       )}
+      <SceneContractBlock projectId={projectId} chapterIndex={synopsis.chapterIndex} />
     </div>
+  );
+}
+
+function SceneContractBlock({ projectId, chapterIndex }: { projectId: string; chapterIndex: number }) {
+  const [contract, setContract] = useState<Record<string, string> | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [draftJson, setDraftJson] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [messageApi, messageContextHolder] = message.useMessage();
+
+  useEffect(() => {
+    void api.getSceneContract(projectId, chapterIndex).then(r => setContract(r.contract)).catch(() => {});
+  }, [projectId, chapterIndex]);
+
+  const handleGenerate = async () => {
+    setBusy(true);
+    try {
+      const r = await api.generateSceneContract(projectId, chapterIndex);
+      if (r.generated) { setContract(r.contract); messageApi.success('合同已生成并保存'); }
+      else messageApi.warning('生成未完成（输出不可解析），未落库');
+    } catch (e) {
+      messageApi.error(e instanceof Error ? e.message : '生成失败');
+    } finally { setBusy(false); }
+  };
+
+  const handleSave = async () => {
+    setBusy(true);
+    try {
+      const r = await api.saveSceneContract(projectId, chapterIndex, draftJson);
+      setContract(r.contract); setEditing(false);
+      messageApi.success('合同已保存');
+    } catch (e) {
+      messageApi.error(e instanceof Error ? e.message : '保存失败（检查 JSON 格式）');
+    } finally { setBusy(false); }
+  };
+
+  const fields = contract ? Object.entries(contract) : [];
+  return (
+    <Collapse size="small" style={{ marginTop: 6 }} items={[{
+      key: 'contract',
+      label: <span style={{ fontSize: 12 }}>📋 场景合同{contract ? '（已定义）' : '（未定义）'}</span>,
+      children: (
+        <div>
+          {messageContextHolder}
+          {!editing ? (
+            fields.length > 0 ? (
+              <div style={{ fontSize: 12, lineHeight: 1.8 }}>
+                {fields.map(([k, v]) => (
+                  <div key={k}><Text type="secondary">{CONTRACT_FIELD_LABELS[k] ?? k}：</Text>{String(v)}</div>
+                ))}
+              </div>
+            ) : <Text type="secondary" style={{ fontSize: 12 }}>未定义——生成或手动编辑（写入后本章写作注入合同约束）</Text>
+          ) : (
+            <Input.TextArea rows={6} value={draftJson} onChange={e => setDraftJson(e.target.value)}
+              placeholder='{"purpose":"...","cost":"..."}' />
+          )}
+          <Space style={{ marginTop: 6 }}>
+            <Button size="small" loading={busy} onClick={handleGenerate}>AI 生成合同</Button>
+            {!editing ? (
+              <Button size="small" onClick={() => { setDraftJson(contract ? JSON.stringify(contract, null, 1) : '{}'); setEditing(true); }}>编辑</Button>
+            ) : (
+              <Button size="small" type="primary" loading={busy} onClick={handleSave}>保存合同</Button>
+            )}
+          </Space>
+        </div>
+      ),
+    }]} />
   );
 }
 

@@ -121,6 +121,12 @@ public class ChapterProduction {
                 orch.markQualityRisk(projectId, "PlanGate(章" + chapterIndex + ")", synGate.feedback());
             }
         }
+        // NCS-018: 场景合同条件注入——仅当梗概携带合同时追加【场景合同】段
+        // （无合同的既有大纲注入不变，写作管线指纹稳定）
+        if (synopsis.getSceneContract() != null && !synopsis.getSceneContract().isBlank()) {
+            enhancedNotes = (enhancedNotes != null ? enhancedNotes + "\n\n" : "")
+                    + "【场景合同（本章必须成立的因果约束）】\n" + synopsis.getSceneContract();
+        }
         return enhancedNotes;
     }
 

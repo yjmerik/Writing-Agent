@@ -452,3 +452,10 @@ export interface GroupAcceptResult {
   chapters: number[];
   message: string;
 }
+
+// NCS-018: 场景合同
+export interface SceneContractResult {
+  chapterIndex: number;
+  generated?: boolean;
+  contract: Record<string, string> | null;
+}

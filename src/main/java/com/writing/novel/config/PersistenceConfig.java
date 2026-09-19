@@ -129,6 +129,21 @@ public class PersistenceConfig {
                 impactAnalysisService, agentRevisionService, revisionRequestService, repository);
     }
 
+    // NCS-018: 场景合同
+    @Bean
+    public com.writing.novel.agent.SceneContractAgent sceneContractAgent(
+            com.writing.novel.llm.LlmGateway llmGateway,
+            com.writing.novel.llm.prompt.PromptTemplateService promptTemplateService) {
+        return new com.writing.novel.agent.SceneContractAgent(llmGateway, promptTemplateService);
+    }
+
+    @Bean
+    public com.writing.novel.service.SceneContractService sceneContractService(
+            NovelRepository repository,
+            com.writing.novel.agent.SceneContractAgent sceneContractAgent) {
+        return new com.writing.novel.service.SceneContractService(repository, sceneContractAgent);
+    }
+
     // NCS-010: 人物时点读取
     @Bean
     public com.writing.novel.service.CharacterAsOfService characterAsOfService(

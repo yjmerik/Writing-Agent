@@ -32,6 +32,7 @@ import type {
   ImpactAnalysisResult,
   RepairGenerationResult,
   GroupAcceptResult,
+  SceneContractResult,
 } from '../types';
 
 const BASE = '/api';
@@ -317,6 +318,15 @@ export const api = {
   // NCS-010/011: 人物时点读取
   getCharacterAsOf: (id: string, charName: string, chapter: number) =>
     request<CharacterAsOf>(`/projects/${id}/characters/${encodeURIComponent(charName)}/as-of?chapter=${chapter}`),
+  // NCS-018: 场景合同
+  getSceneContract: (id: string, chapter: number) =>
+    request<SceneContractResult>(`/projects/${id}/outline/scene-contract?chapter=${chapter}`),
+  generateSceneContract: (id: string, chapter: number) =>
+    request<SceneContractResult>(`/projects/${id}/outline/scene-contract?chapter=${chapter}`, { method: 'POST' }),
+  saveSceneContract: (id: string, chapter: number, contract: string) =>
+    request<SceneContractResult>(`/projects/${id}/outline/scene-contract?chapter=${chapter}`,
+      { method: 'PUT', body: JSON.stringify({ contract }) }),
+
   // NCS-013..017: 统一修订请求
   listRevisionRequests: (id: string) =>
     request<{ projectId: string; requests: RevisionRequestItem[] }>(`/projects/${id}/revision-requests`),

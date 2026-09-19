@@ -21,6 +21,9 @@ public class ChapterSynopsis {
     private String foreshadowingsToPlant;   // 本章应埋设的伏笔（分号分隔）
     private String foreshadowingsToResolve; // 本章应回收的伏笔描述（分号分隔）
 
+    /** NCS-018: 结构化场景合同（JSON；null=未定义——注入与显示均跳过，兼容既有大纲） */
+    private String sceneContract;
+
     public ChapterSynopsis(String projectId, int chapterIndex, String title, String synopsis) {
         this.id = UUID.randomUUID().toString();
         this.projectId = projectId;
@@ -71,4 +74,7 @@ public class ChapterSynopsis {
     public void setForeshadowingsToPlant(String f) { this.foreshadowingsToPlant = f; }
     public String getForeshadowingsToResolve() { return foreshadowingsToResolve; }
     public void setForeshadowingsToResolve(String f) { this.foreshadowingsToResolve = f; }
+
+    public String getSceneContract() { return sceneContract; }
+    public void setSceneContract(String sceneContract) { this.sceneContract = sceneContract; }
 }

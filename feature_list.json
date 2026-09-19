@@ -7339,7 +7339,7 @@
       "dependencies": [
         "NCS-008"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/domain/CharacterDecision.java",
         "src/main/java/com/writing/novel/persistence/sqlite/CharacterDecisionRepository.java",
@@ -7352,12 +7352,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "提取测试（桩网关）：决策字段完整落库、证据锚点可定位章稿；坏输出→UNKNOWN 不产生空决策；按需端点 POST /decisions/extract 触发单章提取并幂等（重复调用不重复落库）；管线阶段默认关闭时 e2e replay 不变（指纹无影响）；人物经历视图展示决策并附来源跳转；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=CharacterDecisionTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: bc6c539（ff-merge）; verify_cmd CharacterDecisionTest 4/0F; mvn test 1017/0F/0E/1S; npm build PASS; 真实 LLM 提取+浏览器视图全过; e2e+baseline PASS（管线默认不变）; 证据 docs/harness/evidence/2026-09-19-ncs-012.json",
       "ui_impact": "low",
       "backend_impact": "high",
       "prompt_impact": "high",
       "e2e_impact": "none（默认关闭管线阶段，按需端点不在 e2e 3 章流程）",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-012-character-decisions",
+      "completion_record": "ncs-012-verified"
     },
     {
       "id": "NCS-013",
@@ -7807,5 +7809,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-012"
+  "active_feature": null
 }

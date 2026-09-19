@@ -1,0 +1,36 @@
+{
+ "commit": "bc6c5392940562c5eaaf32872655e1c479ed16de",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1017 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "npm --prefix frontend run build",
+   "result": "PASS（分支 + 干净检出各一次）。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=CharacterDecisionTest",
+   "result": "PASS: 4 tests 0 failures（含干净检出）。提取落库字段完整+证据锚点+options 序列化；坏输出→UNKNOWN/INVALID 信封记录不产生空决策；按需幂等（同章同稿同人物跳过）；正文修订后新稿产生新版本决策且历史保留。",
+   "exitCode": 0
+  },
+  {
+   "command": "真实 LLM 提取 + ego-browser（隔离实例）",
+   "result": "PASS：POST /decisions/extract?chapter=1 真实调用（12s，SUCCESS，1 条决策：触发/当时所知/3 选项/选择/代价/证据引文完整，options 无分隔符残留——Jackson 序列化修复验证）；浏览器『🧭 经历与选择 · 关键决策』卡片完整渲染决策（人物/章稿标签/跳到来源章链接/触发/所知/可选/选择+代价/证据引文）+ 提取按钮；截图 docs/reports/ncs-012-decisions-view.png。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py",
+   "result": "PASS：3 章 COMPLETED/0 错误，baseline 未退化——管线默认不含决策提取（登记修订为按需/可选，避免确定性回放指纹分叉；设计决策记入 feature 描述）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "character_decisions 表 + 提取信封复用 check_results（checker=character-decision）；character-decision.st 新模板（仅 chapterContent 变量）；CharacterDecisionService 幂等（同章同稿同人物）；REST extract/list；CharacterDecisionsView 集成于世界观页。设计决策：管线自动提取默认关闭（可用按需端点/偏好开启路径），e2e 影响登记为 none。",
+ "feature_ids": [
+  "NCS-012"
+ ],
+ "branch": "codex/ncs-012-character-decisions"
+}

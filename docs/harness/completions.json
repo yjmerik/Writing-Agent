@@ -1650,6 +1650,17 @@
    "implementation_commit": "5c069cb946098d622fe786d37e2dbbba8dfb6220",
    "main_commit": "5c069cb946098d622fe786d37e2dbbba8dfb6220",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-011.json"
+  },
+  {
+   "id": "ncs-012-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-012"
+   ],
+   "branch": "codex/ncs-012-character-decisions",
+   "implementation_commit": "bc6c5392940562c5eaaf32872655e1c479ed16de",
+   "main_commit": "bc6c5392940562c5eaaf32872655e1c479ed16de",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-012.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

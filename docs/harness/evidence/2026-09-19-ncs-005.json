@@ -1,0 +1,21 @@
+{
+ "commit": "c6aa022c86c148a13374ced7468c642f5be4c95e",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 991 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=WorkspaceViewTest",
+   "result": "PASS: 3 tests 0 failures（含干净检出）。覆盖：空项目 identity/contentStatus(无当前章)/run(null)/review 全零/availableActions 4 项带 allowed+reason（ADVANCE 放行、WRITE_CHAPTER 阻止且原因非空）；有稿项目 currentChapter(index/version/status)、totalChapters/doneChapters/pendingCandidates、run 反映 RUNNING 任务、activeBarriers/pendingCheckpoints/staleIssues 计数、待审检查点阻止写作动作；项目不存在 400。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "staleIssues 按 p32-05 读时计算（绑定 chapter_version < 该章当前版本），ContinuityIssue.stale 布尔为运行时标志不持久化；unknownChecks 占位 0（NCS-007 检查信封接入后填实）。availableActions 复用 ProjectActionPolicy.evaluate 与 /status 同源。",
+ "feature_ids": [
+  "NCS-005"
+ ],
+ "branch": "codex/ncs-005-workspace-view"
+}

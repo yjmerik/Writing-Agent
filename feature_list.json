@@ -7143,7 +7143,7 @@
       "phase": 44,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/WorkspaceViewService.java",
         "src/main/java/com/writing/novel/web/WorkspaceViewController.java",
@@ -7152,12 +7152,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "API 测试：各状态组合（写作中/待审/已停/有未知检查）下字段正确、reason 非空；与既有端点数据一致；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=WorkspaceViewTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: c6aa022（ff-merge）; verify_cmd WorkspaceViewTest 3/0F（干净检出）; mvn test 991/0F/0E/1S（分支+干净检出）; 证据 docs/harness/evidence/2026-09-19-ncs-005.json",
       "ui_impact": "low",
       "backend_impact": "high",
       "prompt_impact": "none",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-005-workspace-view",
+      "completion_record": "ncs-005-verified"
     },
     {
       "id": "NCS-006",
@@ -7776,5 +7778,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-005"
+  "active_feature": null
 }

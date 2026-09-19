@@ -1,0 +1,26 @@
+{
+ "commit": "b93506beea59335b1c697a3077c11834e60a5db4",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 982 tests, 0 failures, 0 errors, 1 skipped（既有）。分支工作区与干净检出（worktree --detach）各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=FinalRequestBudgetTest",
+   "result": "PASS: 7 tests 0 failures（含干净检出）。覆盖：超窗请求不触达客户端+REQUEST_BUDGET_EXCEEDED 事件+失败信息含窗口；窗口内正常通过；小窗路由拒绝后落到大窗路由（切换后重核算）；全部路由超窗失败明确；legacy 未配置窗口不设防；流式路径超窗走 onError 不触达 provider；输出预留取请求与配置较大值。先红（5F+1E）后绿。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest='LlmProviderFallbackTest,LlmGatewayIntegrationTest,LlmRequestResponseTest'",
+   "result": "PASS: 15 tests 0 failures——既有网关/fallback 行为不受影响。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "实现：DefaultLlmGateway.guardFinalBudget（序列化输入=system+user+history 按 1.3 字符/token 保守折算 + 256 封装开销；输出预留=max(请求,配置) maxTokens；安全余量 5% 与 TokenBudget 口径一致）；complete 单路由超窗先尝试 defaultModel fallback（可能更大窗口）再失败；providers 链逐路由核算，超窗不触达 provider、不计健康熔断，全部超窗抛 RequestBudgetExceededException；stream 两条路径同样核算（providers 链可落大窗路由，单路由 onError）。无 prompt/上下文改动，e2e/baseline 不适用。",
+ "feature_ids": [
+  "NCS-002"
+ ],
+ "branch": "codex/ncs-002-final-request-budget"
+}

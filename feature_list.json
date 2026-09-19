@@ -7064,7 +7064,7 @@
       "phase": 44,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/llm/gateway/DefaultLlmGateway.java",
         "src/main/java/com/writing/novel/llm/gateway/RequestBudgetExceededException.java"
@@ -7072,12 +7072,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：构造超窗请求得到明确失败/缩减与事件，HARD 等强制段不被截断；fallback 至小窗模型触发重核算；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=FinalRequestBudgetTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: b93506b（ff-merge=main 提交）; verify_cmd FinalRequestBudgetTest 7/0F（干净检出）; mvn test 982/0F/0E/1S（分支+干净检出）; 既有 fallback/integration 套件 15/0F 不受影响; 无 prompt 改动 e2e/baseline 不适用; 证据 docs/harness/evidence/2026-09-19-ncs-002.json",
       "ui_impact": "none",
       "backend_impact": "high",
       "prompt_impact": "none",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-002-final-request-budget",
+      "completion_record": "ncs-002-verified"
     },
     {
       "id": "NCS-003",
@@ -7766,5 +7768,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-002"
+  "active_feature": null
 }

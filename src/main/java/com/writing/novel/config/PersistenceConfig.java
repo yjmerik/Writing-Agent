@@ -108,25 +108,41 @@ public class PersistenceConfig {
                 storyFactRepository);
     }
 
-    // NCS-015/016: 修订修复生成 + 依赖组整组接受
-    @Bean
-    public com.writing.novel.service.GroupAcceptanceService groupAcceptanceService(
-            NovelRepository repository,
-            com.writing.novel.service.RevisionRequestService revisionRequestService,
-            com.writing.novel.service.SupportWithdrawalService supportWithdrawalService) {
-        return new com.writing.novel.service.GroupAcceptanceService(repository, revisionRequestService,
-                new com.writing.novel.service.ChapterRevisionService(repository, null, null,
-                        supportWithdrawalService, revisionRequestService));
-    }
-
     @Bean
     public com.writing.novel.service.RevisionRepairService revisionRepairService(
             NovelRepository repository,
             com.writing.novel.service.ImpactAnalysisService impactAnalysisService,
             com.writing.novel.service.AgentRevisionService agentRevisionService,
-            com.writing.novel.service.RevisionRequestService revisionRequestService) {
+            com.writing.novel.service.RevisionRequestService revisionRequestService,
+            com.writing.novel.service.RevisionExperienceService revisionExperienceService) {
         return new com.writing.novel.service.RevisionRepairService(
-                impactAnalysisService, agentRevisionService, revisionRequestService, repository);
+                impactAnalysisService, agentRevisionService, revisionRequestService, repository,
+                revisionExperienceService);
+    }
+
+    // NCS-026: 运行经验
+    @Bean
+    @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)
+    public com.writing.novel.persistence.sqlite.RevisionOutcomeRepository revisionOutcomeRepository(ConnectionProvider cp) {
+        return new com.writing.novel.persistence.sqlite.RevisionOutcomeRepository(cp);
+    }
+
+    @Bean
+    public com.writing.novel.service.RevisionExperienceService revisionExperienceService(
+            com.writing.novel.persistence.sqlite.RevisionOutcomeRepository revisionOutcomeRepository) {
+        return new com.writing.novel.service.RevisionExperienceService(revisionOutcomeRepository);
+    }
+
+    @Bean
+    public com.writing.novel.service.GroupAcceptanceService groupAcceptanceServiceWithExperience(
+            NovelRepository repository,
+            com.writing.novel.service.RevisionRequestService revisionRequestService,
+            com.writing.novel.service.SupportWithdrawalService supportWithdrawalService,
+            com.writing.novel.service.RevisionExperienceService revisionExperienceService) {
+        return new com.writing.novel.service.GroupAcceptanceService(repository, revisionRequestService,
+                new com.writing.novel.service.ChapterRevisionService(repository, null, null,
+                        supportWithdrawalService, revisionRequestService),
+                revisionExperienceService);
     }
 
     // NCS-025: 委托策略

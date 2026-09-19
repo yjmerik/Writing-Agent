@@ -7728,11 +7728,10 @@
       "dependencies": [
         "NCS-013"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
-        "src/main/java/com/writing/novel/domain/RevisionOutcome.java",
         "src/main/java/com/writing/novel/service/RevisionExperienceService.java",
-        "src/main/java/com/writing/novel/agent/ContentRevisionAgent.java"
+        "src/main/java/com/writing/novel/web/RevisionOutcomeController.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "测试（回放/桩）：样本落库、同类任务注入、删除后不注入、经验不写入真典；mvn compile && mvn test 通过。",
@@ -7852,5 +7851,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-026"
 }

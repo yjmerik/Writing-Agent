@@ -23,15 +23,26 @@ public class RevisionRepairService {
     private final AgentRevisionService agentRevision;
     private final RevisionRequestService requests;
     private final com.writing.novel.spi.NovelRepository repository;
+    /** NCS-026: 运行经验注入；null 时不注入（旧装配/测试） */
+    private final RevisionExperienceService experience;
 
     public RevisionRepairService(ImpactAnalysisService impactAnalysis,
                                  AgentRevisionService agentRevision,
                                  RevisionRequestService requests,
                                  com.writing.novel.spi.NovelRepository repository) {
+        this(impactAnalysis, agentRevision, requests, repository, null);
+    }
+
+    public RevisionRepairService(ImpactAnalysisService impactAnalysis,
+                                 AgentRevisionService agentRevision,
+                                 RevisionRequestService requests,
+                                 com.writing.novel.spi.NovelRepository repository,
+                                 RevisionExperienceService experience) {
         this.impactAnalysis = impactAnalysis;
         this.agentRevision = agentRevision;
         this.requests = requests;
         this.repository = repository;
+        this.experience = experience;
     }
 
     public RepairGeneration generateRepairs(String projectId, String requestId,
@@ -81,6 +92,14 @@ public class RevisionRepairService {
         if (request.getProtectAnchorsJson() != null && !request.getProtectAnchorsJson().isBlank()
                 && !"[]".equals(request.getProtectAnchorsJson())) {
             sb.append("【保护项（不得修改）】").append(request.getProtectAnchorsJson()).append("\n");
+        }
+        // NCS-026: 同类修订经验注入（仅修订链路；拒绝理由优先）
+        if (experience != null) {
+            String experienceText = experience.buildInjection(request.getProjectId(),
+                    item.subjects().size() > 1 ? "CROSS_CHAPTER" : "FACT_LOCAL");
+            if (!experienceText.isBlank()) {
+                sb.append("\n").append(experienceText).append("\n");
+            }
         }
         sb.append("请生成与修订意图一致、化解上述依赖冲突的整章修复候选；保留无需改动的内容。");
         return sb.toString();

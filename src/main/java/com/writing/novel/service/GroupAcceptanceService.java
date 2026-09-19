@@ -25,13 +25,23 @@ public class GroupAcceptanceService {
     private final NovelRepository repository;
     private final RevisionRequestService requests;
     private final ChapterRevisionService chapterRevision;
+    /** NCS-026: 运行经验记录；null 时不记录（旧装配/测试） */
+    private final RevisionExperienceService experience;
 
     public GroupAcceptanceService(NovelRepository repository,
                                   RevisionRequestService requests,
                                   ChapterRevisionService chapterRevision) {
+        this(repository, requests, chapterRevision, null);
+    }
+
+    public GroupAcceptanceService(NovelRepository repository,
+                                  RevisionRequestService requests,
+                                  ChapterRevisionService chapterRevision,
+                                  RevisionExperienceService experience) {
         this.repository = repository;
         this.requests = requests;
         this.chapterRevision = chapterRevision;
+        this.experience = experience;
     }
 
     public Receipt acceptGroup(String projectId, String requestId, String commandId) {
@@ -116,6 +126,13 @@ public class GroupAcceptanceService {
         List<Integer> chapters = ready.stream().map(RevisionProposal::getChapterIndex).toList();
         requests.accept(projectId, requestId,
                 "{\"commandId\":\"" + commandId + "\",\"chapters\":" + chapters + "}");
+        // NCS-026: 接受样本入运行经验（同类后续修订可参考）
+        if (experience != null) {
+            String changeClass = chapters.size() > 1 ? "CROSS_CHAPTER" : "FACT_LOCAL";
+            experience.recordAccepted(projectId, changeClass,
+                    request.getIntent(),
+                    "整组接受 " + chapters.size() + " 章修订（" + chapters + "）");
+        }
         EventLog.emit("GROUP_REVISION_APPLIED", Map.of(
                 "projectId", projectId, "requestId", requestId,
                 "commandId", commandId, "chapters", chapters.size()));

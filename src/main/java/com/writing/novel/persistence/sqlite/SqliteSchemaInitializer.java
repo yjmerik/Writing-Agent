@@ -215,6 +215,11 @@ public class SqliteSchemaInitializer {
         "CREATE TABLE IF NOT EXISTS delegation_policies (" +
             "project_id TEXT PRIMARY KEY, rules_json TEXT, updated_at TEXT)",
 
+        // NCS-026: 运行经验——修订接受/拒绝样本（Reflexion/L4，非故事事实）
+        "CREATE TABLE IF NOT EXISTS revision_outcomes (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, change_class TEXT, decision TEXT, " +
+            "instructions TEXT, summary TEXT, reason TEXT, created_at TEXT)",
+
         // NCS-012: 人物关键决策——绑定章号+稿版本，同章同稿同人物幂等
         "CREATE TABLE IF NOT EXISTS character_decisions (" +
             "id TEXT PRIMARY KEY, project_id TEXT, character_name TEXT, chapter_index INTEGER, " +

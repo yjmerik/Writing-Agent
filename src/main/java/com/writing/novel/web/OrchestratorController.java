@@ -129,6 +129,13 @@ public class OrchestratorController {
         );
     }
 
+    /** NCS-029：作品的持久任务历史，包括已结束的任务。 */
+    @GetMapping("/writing-tasks")
+    public java.util.List<WritingTask> listWritingTasks(@PathVariable String id) {
+        projectService.find(id).orElseThrow();
+        return repository.findWritingTasksByProject(id);
+    }
+
     /** 查询写作任务进度 */
     @GetMapping("/writing-tasks/{taskId}")
     public Map<String, Object> getWritingTask(@PathVariable String id, @PathVariable String taskId) {

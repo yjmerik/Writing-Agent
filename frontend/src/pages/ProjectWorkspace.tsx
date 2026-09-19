@@ -13,6 +13,7 @@ import OutlineView from '../components/OutlineView';
 import InteractiveReview from '../components/InteractiveReview';
 import QualityView from '../components/QualityView';
 import CollaborationBar from '../components/CollaborationBar';
+import TasksView from '../components/TasksView';
 import BookReviewView from '../components/BookReviewView';
 
 const { Sider, Content } = Layout;
@@ -33,7 +34,7 @@ const STATE_COLOR: Record<string, string> = {
 };
 
 /** p36-08: 页签是路由权威的一部分——合法页签写入查询参数，非法/缺省回退 review */
-const VALID_TABS = ['review', 'world', 'outline', 'intent', 'revisions', 'book', 'quality', 'run'] as const;
+const VALID_TABS = ['review', 'world', 'outline', 'intent', 'revisions', 'book', 'quality', 'run', 'tasks'] as const;
 type WorkspaceTab = (typeof VALID_TABS)[number];
 
 const isWorkspaceTab = (value: string | null): value is WorkspaceTab =>
@@ -305,6 +306,7 @@ export default function ProjectWorkspace() {
           onChange={handleTabChange}
           destroyInactiveTabPane
           items={[
+            { key: 'tasks', label: '任务与版本', children: <TasksView key={project.id} projectId={project.id} onChanged={load} /> },
             { key: 'run', label: '创作工具', children: <RunConsole projectId={project.id} projectState={project.state} onChanged={load} /> },
             { key: 'world', label: '🌍 世界观与人物', children: <WorldbuildingView key={`world-${project.id}`} projectId={project.id} currentChapter={project.currentChapterIndex} /> },
             { key: 'outline', label: '📋 大纲', children: <OutlineView key={`outline-${project.id}`} projectId={project.id} currentChapter={project.currentChapterIndex} /> },

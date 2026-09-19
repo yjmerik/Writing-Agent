@@ -43,6 +43,17 @@ import type {
   EditionValidation,
 } from '../types';
 
+export interface PersistedWritingTask extends CollaborationTask {
+  projectId: string;
+  type: 'CONCEIVE' | 'WRITE_CHAPTER' | 'WRITE_ALL' | 'AUTO_RUN';
+  currentChapter: number;
+  totalChapters: number;
+  chaptersWritten: number;
+  totalWords: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const BASE = '/api';
 
 export class ApiError extends Error {
@@ -304,6 +315,7 @@ async function request<T>(url: string, options?: RequestInit, timeoutMs = 300000
 }
 
 export const api = {
+  listWritingTasks: (id: string) => request<PersistedWritingTask[]>(`/projects/${id}/writing-tasks`),
   collaboration: (id: string) => request<CollaborationStatus>(`/projects/${id}/collaboration`),
   startCollaboration: (id: string, instruction?: string) => request<CollaborationTask>(`/projects/${id}/collaboration/start`, {
     method: 'POST', body: JSON.stringify({ instruction }),

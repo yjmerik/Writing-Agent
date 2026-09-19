@@ -7807,7 +7807,7 @@
       "dependencies": [
         "NCS-005"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "frontend/src/components/TasksView.tsx",
         "frontend/src/pages/ProjectWorkspace.tsx",
@@ -7821,7 +7821,8 @@
       "backend_impact": "low",
       "prompt_impact": "none",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-029-task-version-center"
     },
     {
       "id": "NCS-030",
@@ -7858,5 +7859,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-029"
 }

@@ -1,0 +1,21 @@
+{
+ "commit": "6ed99b023b81ec2e970ac3114a8ecf56cb263536",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 988 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=AuthorIntentApiTest",
+   "result": "PASS: 6 tests 0 failures（含干净检出）。覆盖：新项目空契约合法（修订0）；PUT 全字段保存修订1并回读；二次保存修订2+历史两版；部分字段更新未提供字段沿用不清空；项目不存在 400；超长字段拒绝。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "AuthorIntent 契约字段：premise/genreExpectation/themes/pov/languageSamples/lengthRange/autonomy/unwantedPatterns（方案 §05）；author_intents 表 (project_id,revision) 主键 append-only；GET 无修订返回空契约（无正文合法状态）；未提供字段沿用上一修订（渐进保存，不以 null 覆盖）；字段长度上限 8000（样本 20000）。无 prompt/前端改动。",
+ "feature_ids": [
+  "NCS-003"
+ ],
+ "branch": "codex/ncs-003-author-intent"
+}

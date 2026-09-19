@@ -7088,7 +7088,7 @@
       "phase": 44,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/domain/AuthorIntent.java",
         "src/main/java/com/writing/novel/persistence/sqlite/AuthorIntentRepository.java",
@@ -7099,12 +7099,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "API 测试：创建项目后 intent 存在且为空合法；PUT 生成新修订并保留历史；未授权缺字段拒绝；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=AuthorIntentApiTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: 6ed99b0（ff-merge）; verify_cmd AuthorIntentApiTest 6/0F（干净检出）; mvn test 988/0F/0E/1S（分支+干净检出）; 证据 docs/harness/evidence/2026-09-19-ncs-003.json",
       "ui_impact": "none",
       "backend_impact": "high",
       "prompt_impact": "none",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-003-author-intent",
+      "completion_record": "ncs-003-verified"
     },
     {
       "id": "NCS-004",
@@ -7770,5 +7772,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-003"
+  "active_feature": null
 }

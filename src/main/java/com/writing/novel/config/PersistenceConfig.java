@@ -129,6 +129,24 @@ public class PersistenceConfig {
                 impactAnalysisService, agentRevisionService, revisionRequestService, repository);
     }
 
+    // NCS-019: 计划偏离
+    @Bean
+    @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)
+    public com.writing.novel.persistence.sqlite.PlanDeviationRepository planDeviationRepository(ConnectionProvider cp) {
+        return new com.writing.novel.persistence.sqlite.PlanDeviationRepository(cp);
+    }
+
+    @Bean
+    public com.writing.novel.service.PlanDeviationService planDeviationService(
+            NovelRepository repository,
+            com.writing.novel.service.RevisionRequestService revisionRequestService,
+            com.writing.novel.llm.LlmGateway llmGateway,
+            com.writing.novel.llm.prompt.PromptTemplateService promptTemplateService,
+            com.writing.novel.persistence.sqlite.PlanDeviationRepository planDeviationRepository) {
+        return new com.writing.novel.service.PlanDeviationService(repository, revisionRequestService,
+                llmGateway, promptTemplateService, planDeviationRepository);
+    }
+
     // NCS-018: 场景合同
     @Bean
     public com.writing.novel.agent.SceneContractAgent sceneContractAgent(

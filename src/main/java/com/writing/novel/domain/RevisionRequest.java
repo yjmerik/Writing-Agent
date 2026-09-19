@@ -12,7 +12,7 @@ import java.util.UUID;
 public class RevisionRequest {
 
     /** 六类修改入口（方案 §12 统一六类入口表） */
-    public enum Origin { DIRECT_EDIT, PASSAGE_POLISH, CHAPTER_REWRITE, SETTING_CHANGE, PLAN_ADJUST, RESTORE }
+    public enum Origin { DIRECT_EDIT, PASSAGE_POLISH, CHAPTER_REWRITE, SETTING_CHANGE, PLAN_ADJUST, PLAN_DEVIATION, RESTORE }
 
     /** OPEN → SCOPE_APPROVED → COMPLETED；另有 CANCELLED */
     public enum Status { OPEN, SCOPE_APPROVED, COMPLETED, CANCELLED }

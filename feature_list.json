@@ -7534,9 +7534,12 @@
       "dependencies": [
         "NCS-018"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
+        "src/main/java/com/writing/novel/domain/PlanDeviation.java",
         "src/main/java/com/writing/novel/service/PlanDeviationService.java",
+        "src/main/java/com/writing/novel/web/PlanDeviationController.java",
+        "src/main/resources/prompts/plan-deviation.st",
         "frontend/src/components/OutlineView.tsx"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
@@ -7828,5 +7831,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-019"
 }

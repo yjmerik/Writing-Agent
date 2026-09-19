@@ -33,6 +33,7 @@ import type {
   RepairGenerationResult,
   GroupAcceptResult,
   SceneContractResult,
+  PlanDeviationItem,
 } from '../types';
 
 const BASE = '/api';
@@ -318,6 +319,15 @@ export const api = {
   // NCS-010/011: 人物时点读取
   getCharacterAsOf: (id: string, charName: string, chapter: number) =>
     request<CharacterAsOf>(`/projects/${id}/characters/${encodeURIComponent(charName)}/as-of?chapter=${chapter}`),
+  // NCS-019: 计划偏离
+  listPlanDeviations: (id: string) =>
+    request<{ projectId: string; deviations: PlanDeviationItem[] }>(`/projects/${id}/plan-deviations`),
+  analyzePlanDeviation: (id: string, chapter: number) =>
+    request<{ chapterIndex: number; analyzed: boolean }>(`/projects/${id}/plan-deviations/analyze?chapter=${chapter}`, { method: 'POST' }),
+  decidePlanDeviation: (id: string, chapter: number, action: string) =>
+    request<PlanDeviationItem>(`/projects/${id}/plan-deviations/${chapter}/decide`,
+      { method: 'POST', body: JSON.stringify({ action }) }),
+
   // NCS-018: 场景合同
   getSceneContract: (id: string, chapter: number) =>
     request<SceneContractResult>(`/projects/${id}/outline/scene-contract?chapter=${chapter}`),

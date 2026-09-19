@@ -192,6 +192,12 @@ public class SqliteSchemaInitializer {
             "id TEXT PRIMARY KEY, project_id TEXT, chapter_index INTEGER, checker TEXT, " +
             "status TEXT, reason TEXT, created_at TEXT)",
 
+        // NCS-019: 计划偏离——每章最新偏离记录与决定
+        "CREATE TABLE IF NOT EXISTS plan_deviations (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, chapter_index INTEGER, chapter_version INTEGER, " +
+            "deviation_json TEXT, decision TEXT, decided_at TEXT, created_at TEXT)",
+        "CREATE INDEX IF NOT EXISTS idx_plan_deviations ON plan_deviations(project_id, chapter_index)",
+
         // NCS-012: 人物关键决策——绑定章号+稿版本，同章同稿同人物幂等
         "CREATE TABLE IF NOT EXISTS character_decisions (" +
             "id TEXT PRIMARY KEY, project_id TEXT, character_name TEXT, chapter_index INTEGER, " +
@@ -459,6 +465,7 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE fact_evidence ADD COLUMN stale INTEGER NOT NULL DEFAULT 0");
         // NCS-018: 结构化场景合同（JSON；NULL=未定义）
         safeAddColumn(st, "ALTER TABLE chapter_synopses ADD COLUMN scene_contract TEXT");
+
         // p32-05: 审核产物绑定产生时点的章节版本与正文指纹，旧行 NULL
         safeAddColumn(st, "ALTER TABLE continuity_issues ADD COLUMN chapter_version INTEGER");
         safeAddColumn(st, "ALTER TABLE continuity_issues ADD COLUMN content_hash TEXT");

@@ -459,3 +459,12 @@ export interface SceneContractResult {
   generated?: boolean;
   contract: Record<string, string> | null;
 }
+
+// NCS-019: 计划偏离
+export interface PlanDeviationItem {
+  chapterIndex: number;
+  chapterVersion: number;
+  deviation: string;
+  decision: string | null;
+  decidedAt: string | null;
+}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Tree, Spin, Empty, Card, Typography, Button, Space, Input, InputNumber, Alert, Select, Collapse, message } from 'antd';
+import { Tree, Spin, Empty, Card, Typography, Button, Space, Input, InputNumber, Alert, Select, Collapse, Tag, message } from 'antd';
 import {
   DeleteOutlined,
   DownOutlined,
@@ -20,7 +20,7 @@ const CONTRACT_FIELD_LABELS: Record<string, string> = {
 };
 import { api } from '../api/client';
 import type { AgentRevisionTarget } from '../api/client';
-import type { ChapterSynopsis, Outline, Volume } from '../types';
+import type { ChapterSynopsis, Outline, Volume, PlanDeviationItem } from '../types';
 import AgentRevisionDialog from './AgentRevisionDialog';
 
 let draftSequence = 0;
@@ -425,6 +425,7 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
               aria-label="保存未写大纲"
             >保存未写大纲</Button>
           </Space>
+          <PlanDeviationPanel projectId={projectId} currentChapter={currentChapter} />
           <OutlineTree
             outline={draft}
             projectId={projectId}
@@ -685,6 +686,81 @@ function SynopsisRow({
       )}
       <SceneContractBlock projectId={projectId} chapterIndex={synopsis.chapterIndex} />
     </div>
+  );
+}
+
+function PlanDeviationPanel({ projectId, currentChapter }: { projectId: string; currentChapter: number }) {
+  const [deviations, setDeviations] = useState<PlanDeviationItem[]>([]);
+  const [busy, setBusy] = useState<number | null>(null);
+  const [messageApi, messageContextHolder] = message.useMessage();
+
+  const load = () => {
+    void api.listPlanDeviations(projectId).then(r => setDeviations(r.deviations ?? [])).catch(() => {});
+  };
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [projectId]);
+
+  const handleAnalyze = async (chapter: number) => {
+    setBusy(chapter);
+    try {
+      const r = await api.analyzePlanDeviation(projectId, chapter);
+      if (r.analyzed) { messageApi.success(`第 ${chapter} 章偏离分析完成`); load(); }
+      else messageApi.warning('分析未完成（输出不可解析）');
+    } catch (e) {
+      messageApi.error(e instanceof Error ? e.message : '分析失败');
+    } finally { setBusy(null); }
+  };
+
+  const handleDecide = async (chapter: number, action: string) => {
+    setBusy(chapter);
+    try {
+      await api.decidePlanDeviation(projectId, chapter, action);
+      messageApi.success(action === 'UPDATE_PLAN_FROM_TEXT' ? '计划已按正文更新（已写章不动）'
+        : action === 'REVISE_TEXT' ? '已创建修订请求（到修订工作区继续）' : '已挂起（稍后可改）');
+      load();
+    } catch (e) {
+      messageApi.error(e instanceof Error ? e.message : '决定失败');
+    } finally { setBusy(null); }
+  };
+
+  if (currentChapter <= 0) return null;
+  return (
+    <Card size="small" title="🧭 计划偏离对照" style={{ marginBottom: 12 }}
+      extra={<Button size="small" loading={busy === currentChapter}
+        onClick={() => handleAnalyze(currentChapter)}>分析第 {currentChapter} 章</Button>}>
+      {messageContextHolder}
+      {deviations.length === 0 ? (
+        <Text type="secondary" style={{ fontSize: 12 }}>尚无偏离记录——对已写章节运行分析，比较计划与实际正文</Text>
+      ) : (
+        deviations.map(d => {
+          let dev: Record<string, string> = {};
+          try { dev = JSON.parse(d.deviation); } catch { /* keep empty */ }
+          return (
+            <div key={d.chapterIndex} style={{ padding: '6px 0', borderBottom: '1px dashed #eee', fontSize: 12 }}>
+              <Space size={6} wrap>
+                <Text strong>第 {d.chapterIndex} 章</Text>
+                <Tag style={{ fontSize: 10 }}>{d.decision ?? '待决定'}</Tag>
+                {dev.evidence && <Text type="secondary">证据："{
+                  String(dev.evidence).slice(0, 30)}{String(dev.evidence).length > 30 ? '…' : ''}"</Text>}
+              </Space>
+              <div style={{ marginTop: 4, lineHeight: 1.7 }}>
+                {dev.unrealized && <div><Text type="secondary">未实现：</Text>{String(dev.unrealized)}</div>}
+                {dev.replaced && <div><Text type="secondary">自然替代：</Text>{String(dev.replaced)}</div>}
+                {dev.newOpportunity && <div><Text type="secondary">新机会：</Text>{String(dev.newOpportunity)}</div>}
+              </div>
+              <Space style={{ marginTop: 6 }} size={6}>
+                <Button size="small" disabled={!!d.decision && d.decision !== 'DEFER'}
+                  loading={busy === d.chapterIndex}
+                  onClick={() => handleDecide(d.chapterIndex, 'UPDATE_PLAN_FROM_TEXT')}>按正文更新计划</Button>
+                <Button size="small" loading={busy === d.chapterIndex}
+                  onClick={() => handleDecide(d.chapterIndex, 'REVISE_TEXT')}>修订正文</Button>
+                <Button size="small" loading={busy === d.chapterIndex}
+                  onClick={() => handleDecide(d.chapterIndex, 'DEFER')}>稍后决定</Button>
+              </Space>
+            </div>
+          );
+        })
+      )}
+    </Card>
   );
 }
 

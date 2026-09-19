@@ -1,0 +1,33 @@
+{
+  "date": "2026-09-20",
+  "readOnly": true,
+  "source": "isolated UI acceptance SQLite; actual previous browser operations, not fabricated fixtures",
+  "hashConvention": "ChapterApproval.contentHash current implementation: UTF-8 fields with existing Java int-shift length prefix (4-byte big-endian length repeated twice)",
+  "T02": {
+    "proposalId": "0cdd6ba4-bce5-40c6-9dff-a0286fcd6766",
+    "baseVersion": 2,
+    "acceptedVersion": 3,
+    "sourceHashMatchesBaseSnapshot": true,
+    "beforeMatchesSelectedPassage": true,
+    "acceptedBodyExactlyCandidateSplicedIntoBase": true,
+    "outsideSelectionUnchanged": true,
+    "receiptMatchesAcceptedVersion": true,
+    "receiptHashMatchesAcceptedBody": true,
+    "acceptedContentHash": "f913e7426905c568143df86fd492d3fc0926183bd071965ec31fce9cd5dc0d34"
+  },
+  "T04": {
+    "proposalStatus": "STALE",
+    "noAcceptanceReceipt": true,
+    "authorV4PreservedInHistory": true
+  },
+  "T09": {
+    "currentVersion": 5,
+    "restoredTitleEqualsV2": true,
+    "restoredBodyEqualsV2": true,
+    "historyVersions": [
+      2,
+      3,
+      4
+    ]
+  }
+}

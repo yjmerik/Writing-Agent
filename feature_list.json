@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": 43,
+  "current_phase": 49,
   "features": [
     {
       "id": "p1-01",
@@ -7025,6 +7025,735 @@
       "branch": "codex/p43-01-llm-model-config-ui",
       "evidence": "2026-09-19 verified: 97dad38; mvn test 968/0F/0E（干净检出）; verify_cmd 33/0F; 前端 build PASS; ego-browser E2E 展示/编辑/新增(Anthropic)/删除回退全过（docs/reports/p43-01-e2e-model-config-page.png）; 正式服务已切 97dad38 jar",
       "completion_record": "p43-01-verified"
+    },
+    {
+      "id": "NCS-001",
+      "name": "持久写入门禁与 epoch 租约",
+      "description": "项目级持久写入门禁（epoch 租约表）：停止协作/接手/取消任务时递增 epoch；Agent 侧写入（修订候选 apply、后处理落库等）提交前校验 epoch，不匹配拒绝并记 LATE_WRITE_REJECTED 事件；作者直接保存不受门禁阻碍；重启后 epoch 仍生效（方案 §14/R08）。",
+      "phase": 44,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "persistence/sqlite/SqliteSchemaInitializer.java",
+        "service/WriteLeaseService.java",
+        "service/ChapterRevisionService.java"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "failing test：bump epoch 后晚到的候选 apply/后处理写入被拒且留事件、主稿不变；作者直存成功；重启后 epoch 语义保持；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=WriteLeaseEpochTest",
+      "evidence": "",
+      "ui_impact": "none",
+      "backend_impact": "high",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-002",
+      "name": "最终请求窗口核算",
+      "description": "LLM 发送前按目标模型 contextWindow/maxTokens 核算序列化输入+输出预留+安全余量：超限按策略缩减可裁段或失败并记 REQUEST_BUDGET_EXCEEDED 事件，不静默截断；provider fallback 切换模型后重新核算（方案 §10/R11/F12）。",
+      "phase": 44,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "llm/gateway/DefaultLlmGateway.java",
+        "memory/TokenBudget.java"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "failing test：构造超窗请求得到明确失败/缩减与事件，HARD 等强制段不被截断；fallback 至小窗模型触发重核算；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=FinalRequestBudgetTest",
+      "evidence": "",
+      "ui_impact": "none",
+      "backend_impact": "high",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-003",
+      "name": "AuthorIntent 创作约定聚合",
+      "description": "新增 AuthorIntent 领域对象与 author_intents 表：原旨、类型与读者预期、主题张力、叙述视角、语言样本、篇幅区间、自主程度、不想要模式；GET/PUT /api/projects/{id}/intent，修订号递增、历史可查；项目创建即有空契约（无正文合法）（方案 §05/J01-J02）。",
+      "phase": 44,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "domain/AuthorIntent.java",
+        "web/AuthorIntentController.java",
+        "persistence/sqlite/SqliteSchemaInitializer.java"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "API 测试：创建项目后 intent 存在且为空合法；PUT 生成新修订并保留历史；未授权缺字段拒绝；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=AuthorIntentApiTest",
+      "evidence": "",
+      "ui_impact": "none",
+      "backend_impact": "high",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-004",
+      "name": "创作约定工作区 UI 与空态指引",
+      "description": "工作区新增「创作约定」页签：编辑/保存 AuthorIntent、查看版本；空项目显示具体下一步指引（先确定故事方向/补充开篇人物/接受近期计划），替代空白列表（方案 §03/§05/§17）。",
+      "phase": 44,
+      "type": "feature",
+      "dependencies": [
+        "NCS-003"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/IntentView.tsx",
+        "frontend/src/pages/ProjectWorkspace.tsx",
+        "frontend/src/api/client.ts"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "npm --prefix frontend run build 通过；ego-browser 验证页签渲染、保存回显、空项目指引出现。",
+      "verify_cmd": "npm --prefix frontend run build",
+      "evidence": "",
+      "ui_impact": "high",
+      "backend_impact": "low",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-005",
+      "name": "WorkspaceView 统一读取协议",
+      "description": "GET /api/projects/{id}/workspace-view：identity/contentStatus（当前稿/候选/核对状态）/run（任务阶段与进度）/review（必须处理、尚未查清、过期计数）/availableActions（action、allowed、reason）/revisionOfView，聚合既有 status/workspace/run-details 为单一读取源（方案 §15）。",
+      "phase": 44,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "service/WorkspaceViewService.java",
+        "web/WorkspaceViewController.java"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "API 测试：各状态组合（写作中/待审/已停/有未知检查）下字段正确、reason 非空；与既有端点数据一致；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=WorkspaceViewTest",
+      "evidence": "",
+      "ui_impact": "low",
+      "backend_impact": "high",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-006",
+      "name": "稿件身份栏与任务条 UI",
+      "description": "工作台常驻稿件身份栏（当前对象/稿号/保存与核对状态/历史标记）与任务条（正在执行动作/等待原因/继续或接手入口），数据来自 workspace-view；不可用动作显示原因（方案 §03/§17 组件合同）。",
+      "phase": 44,
+      "type": "feature",
+      "dependencies": [
+        "NCS-005"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/IdentityBar.tsx",
+        "frontend/src/pages/ProjectWorkspace.tsx",
+        "frontend/src/api/client.ts"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "npm --prefix frontend run build 通过；ego-browser 验证身份栏随章节/稿号变化、任务条显示等待原因与继续入口。",
+      "verify_cmd": "npm --prefix frontend run build",
+      "evidence": "",
+      "ui_impact": "high",
+      "backend_impact": "low",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-007",
+      "name": "检查结果信封与「尚未查清」",
+      "description": "检查管线引入结果信封（SUCCESS/VALID_EMPTY/INVALID/UNKNOWN）：坏 JSON、空响应、截断、拒绝分别落库为非通过状态而非空问题列表；finalGate 将必查 UNKNOWN 视为阻塞；零重写预算不解除门禁（方案 §08/§13/R09/R10/F10）。",
+      "phase": 44,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "agent/ContinuityChecker.java",
+        "orchestrator/NovelOrchestrator.java",
+        "service/CheckResultService.java"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "failing test：坏响应→INVALID 记录不产生空 PASS；UNKNOWN 必查项阻断成书；重写预算 0 时严重问题仍不放行；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=CheckResultEnvelopeTest",
+      "evidence": "",
+      "ui_impact": "low",
+      "backend_impact": "high",
+      "prompt_impact": "none",
+      "e2e_impact": "low",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-008",
+      "name": "谓词化断言与否定冲突",
+      "description": "story_facts 扩列 predicate/object_value/polarity/valid_from_chapter/valid_to_chapter；FactHarvester 产出谓词化事实（fact-harvest.st 仅增输出字段不改既有变量名）；同主体+谓词+区间相反极性并存时不自动覆盖，产出冲突记录与事件（方案 §09/R02/F03）。prompt 变更→按规则重建 e2e fixture。",
+      "phase": 45,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "domain/StoryFact.java",
+        "agent/FactHarvesterAgent.java",
+        "src/main/resources/prompts/fact-harvest.st"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "failing test：ability.read=false 与 location=城门 并存；相反极性产出冲突记录不静默 supersede；旧数据无谓词字段兼容；对应 Agent 测试通过；e2e 重建后双 replay 一致。",
+      "verify_cmd": "mvn test -Dtest=PredicateAssertionTest",
+      "evidence": "",
+      "ui_impact": "none",
+      "backend_impact": "high",
+      "prompt_impact": "high",
+      "e2e_impact": "high",
+      "baseline_impact": "high"
+    },
+    {
+      "id": "NCS-009",
+      "name": "来源撤回与支持传播",
+      "description": "事实支持关系与撤回：证据锚定稿版本；唯一证据失效（来源稿被改/事实撤回）→ 事实转 UNSUPPORTED+事件+停止注入与派生使用；存在其他有效证据则保留并更新支持集（方案 §09/R03/F04）。",
+      "phase": 45,
+      "type": "feature",
+      "dependencies": [
+        "NCS-008"
+      ],
+      "status": "not-started",
+      "files": [
+        "service/FactEvidenceService.java",
+        "agent/FactHarvesterAgent.java"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "failing test：删唯一证据→UNSUPPORTED 且不注入；双证据删一→保留；事件与审计可查；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=SupportWithdrawalTest",
+      "evidence": "",
+      "ui_impact": "none",
+      "backend_impact": "high",
+      "prompt_impact": "low",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-010",
+      "name": "人物时点读取 API",
+      "description": "GET /api/projects/{id}/characters/{charId}/as-of?chapter=N：返回该时点的状态事实（validFrom≤N）、已知信息（observers learnedAt≤N 含来源）、所信（信念型记录，可与客观断言相反）、关系边（validAt N）；不含 N 之后内容（方案 §07/R01/R15）。",
+      "phase": 45,
+      "type": "feature",
+      "dependencies": [
+        "NCS-008"
+      ],
+      "status": "not-started",
+      "files": [
+        "service/CharacterAsOfService.java",
+        "web/CharacterAsOfController.java"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "API 测试：时点过滤正确（N 前发生/获知可见、N 后不可见）；信念与事实分列；来源可定位；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=CharacterAsOfTest",
+      "evidence": "",
+      "ui_impact": "none",
+      "backend_impact": "high",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-011",
+      "name": "人物时点知情视图 UI",
+      "description": "人物页新增时点视图：时点选择器（默认当前进度、可查历史、全书视角带后文提示）；「作者知道/角色知道/读者知道」分列；错误信念显示「X 相信：…（其不知道：…）」；资料不足显示「尚无可定位依据」（方案 §07/UX07）。",
+      "phase": 45,
+      "type": "feature",
+      "dependencies": [
+        "NCS-010"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/CharacterAsOfView.tsx",
+        "frontend/src/components/WorldbuildingView.tsx",
+        "frontend/src/api/client.ts"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "npm --prefix frontend run build 通过；ego-browser 验证时点切换、三类知识分列、错误信念标注、全书视角后文提示。",
+      "verify_cmd": "npm --prefix frontend run build",
+      "evidence": "",
+      "ui_impact": "high",
+      "backend_impact": "low",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-012",
+      "name": "CharacterDecision 决策记录",
+      "description": "character_decisions 表与提取：关键决策（触发事件、当时所知、可行选择、所选行动、代价、与旧承诺冲突、正文证据锚点）按章落库（新增提取模板，不动既有变量名）；人物经历视图展示并可跳转来源章；提取失败标 UNKNOWN 不伪装为空（方案 §07/F16）。",
+      "phase": 45,
+      "type": "feature",
+      "dependencies": [
+        "NCS-008"
+      ],
+      "status": "not-started",
+      "files": [
+        "domain/CharacterDecision.java",
+        "agent/CharacterDecisionExtractor.java",
+        "src/main/resources/prompts/character-decision.st"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "提取测试（回放/桩）：决策字段完整落库、证据锚点可定位；坏输出→UNKNOWN；e2e 管线纳入后重建 fixture 双 replay 一致；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=CharacterDecisionTest",
+      "evidence": "",
+      "ui_impact": "low",
+      "backend_impact": "high",
+      "prompt_impact": "high",
+      "e2e_impact": "high",
+      "baseline_impact": "high"
+    },
+    {
+      "id": "NCS-013",
+      "name": "统一修订请求与范围批准",
+      "description": "revision_requests 聚合：六类修改入口（直接编辑/选区润色/整章重写/设定变更/计划调整/恢复旧稿）统一登记（基准版本集、目标锚点、意图、可变范围、保护项、来源）；影响计划的范围批准（scopeDecision）与内容采纳分离记录（方案 §12/F07/F09）。",
+      "phase": 46,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "domain/RevisionRequest.java",
+        "service/RevisionRequestService.java",
+        "persistence/sqlite/SqliteSchemaInitializer.java"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "failing test：六入口各产生 RevisionRequest 且字段正确；范围批准前不可生成修复；scopeDecision 与 acceptDecision 分开落库；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=RevisionRequestTest",
+      "evidence": "",
+      "ui_impact": "low",
+      "backend_impact": "high",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-014",
+      "name": "文本变更影响分析",
+      "description": "章文本变更影响分析：扫描后文章节——事实证据锚定命中、实体/谓词词法命中、伏笔依赖——分类 MUST_REPAIR/RECHECK/UNAFFECTED_WITH_REASON，每项含理由与证据，附覆盖说明（已扫描范围/未知部分）；确定性实现可单测（方案 §12/R04/F01）。",
+      "phase": 46,
+      "type": "feature",
+      "dependencies": [
+        "NCS-013",
+        "NCS-008"
+      ],
+      "status": "not-started",
+      "files": [
+        "service/ImpactAnalysisService.java",
+        "domain/ImpactItem.java"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "确定性测试：改章后锚定事实的后文命中→MUST_REPAIR；仅名字出现→RECHECK；无关章→UNAFFECTED_WITH_REASON 且理由保留；覆盖说明非空；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=ImpactAnalysisTest",
+      "evidence": "",
+      "ui_impact": "low",
+      "backend_impact": "high",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-015",
+      "name": "影响修复候选生成",
+      "description": "为 MUST_REPAIR 章生成隔离修复候选（ContentRevisionAgent 带影响上下文：变更说明、理由、保护项），挂接修订请求；候选全部隔离于 revision_proposals，不动主稿（方案 §12）。",
+      "phase": 46,
+      "type": "feature",
+      "dependencies": [
+        "NCS-014"
+      ],
+      "status": "not-started",
+      "files": [
+        "service/RevisionRepairService.java",
+        "agent/ContentRevisionAgent.java"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "测试（回放/桩）：候选生成挂接请求、含影响上下文与保护项、主稿未变；生成失败→请求状态可恢复非半套；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=RevisionRepairTest",
+      "evidence": "",
+      "ui_impact": "low",
+      "backend_impact": "high",
+      "prompt_impact": "high",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-016",
+      "name": "依赖组整组接受与重基",
+      "description": "修订请求整组接受：全部候选基准与当前一致才可接受；逐章应用+失败补偿回滚（快照恢复，无半套）；commandId 幂等（重复接受同收据）；基准漂移→409+候选保留（REBASED）；保护锚点哈希核对（方案 §12/R14）。",
+      "phase": 46,
+      "type": "feature",
+      "dependencies": [
+        "NCS-015",
+        "NCS-001"
+      ],
+      "status": "not-started",
+      "files": [
+        "service/RevisionRequestService.java",
+        "service/ChapterRevisionService.java"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "failing test：中间章失败→已应用章回滚、版本/收据状态无半套；基准漂移 409 且候选保留；重复 commandId 幂等；保护段变更→拒绝；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=GroupAcceptanceTest",
+      "evidence": "",
+      "ui_impact": "low",
+      "backend_impact": "high",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-017",
+      "name": "修订工作区 UI",
+      "description": "新「修订」页签四步工作区：影响范围→修订建议→逐项审阅→采纳与核对；顶部固定作者原要求/基准整书记录/任务状态/返回正文；采纳摘要按钮「采纳 N 章修订」；每章可标已读/要求再改；已读≠已采纳（方案 §12/UX04/U3）。",
+      "phase": 46,
+      "type": "feature",
+      "dependencies": [
+        "NCS-016"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/RevisionWorkspace.tsx",
+        "frontend/src/pages/ProjectWorkspace.tsx",
+        "frontend/src/api/client.ts"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "npm --prefix frontend run build 通过；ego-browser 走通四步与整组采纳/重基提示。",
+      "verify_cmd": "npm --prefix frontend run build",
+      "evidence": "",
+      "ui_impact": "high",
+      "backend_impact": "low",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-018",
+      "name": "SceneContract 结构与注入",
+      "description": "ChapterSynopsis 增加结构化场景合同（场景目的/进入状态/POV 与行动者所知/冲突目标/代价/预期变化/读者获得与不获得/保护内容）；规划产出合同（plotter 模板仅增字段）；写作上下文注入合同段；大纲页可编辑（方案 §06/F15）。prompt 变更→重建 fixture。",
+      "phase": 47,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "domain/ChapterSynopsis.java",
+        "agent/PlotterAgent.java",
+        "src/main/resources/prompts/plot-volume.st"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "合同字段结构化存取与规划产出解析测试；上下文注入含合同段；对应 Agent 测试通过；e2e 重建后双 replay 一致。",
+      "verify_cmd": "mvn test -Dtest=SceneContractTest",
+      "evidence": "",
+      "ui_impact": "low",
+      "backend_impact": "high",
+      "prompt_impact": "high",
+      "e2e_impact": "high",
+      "baseline_impact": "high"
+    },
+    {
+      "id": "NCS-019",
+      "name": "计划偏离对照与双向校正",
+      "description": "每章生成后记录合同偏离（已实现/自然替代/未实现/新机会，含证据）；大纲页对偏离章显示三种选择：按正文更新计划（更新 synopsis 并留 PlanChange）/修订正文（建修订请求）/稍后决定；决定落库（方案 §06）。",
+      "phase": 47,
+      "type": "feature",
+      "dependencies": [
+        "NCS-018"
+      ],
+      "status": "not-started",
+      "files": [
+        "service/PlanDeviationService.java",
+        "frontend/src/components/OutlineView.tsx"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "failing test：偏离记录落库且区分四类；三种决定各自产生正确产物（synopsis 更新/修订请求/挂起）；已写章不被计划更新改写；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=PlanDeviationTest",
+      "evidence": "",
+      "ui_impact": "medium",
+      "backend_impact": "high",
+      "prompt_impact": "high",
+      "e2e_impact": "high",
+      "baseline_impact": "high"
+    },
+    {
+      "id": "NCS-020",
+      "name": "卷末回读报告",
+      "description": "VOLUME_DONE 生成卷末回读报告（人物变化、节奏与承诺状态、计划偏离汇总、卷级问题与建议）持久化 volume_readbacks 并进入审阅界面；存在未处理回读决定时阻断下一卷自动续写（可显式继续）（方案 §06/J08）。",
+      "phase": 47,
+      "type": "feature",
+      "dependencies": [
+        "NCS-018"
+      ],
+      "status": "not-started",
+      "files": [
+        "service/VolumeReadbackService.java",
+        "src/main/resources/prompts/volume-readback.st",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "测试（回放/桩）：卷末触发报告生成与持久化、界面可读；未决决定阻断自动续写且显式继续可用；报告绑定卷与稿版本；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=VolumeReadbackTest",
+      "evidence": "",
+      "ui_impact": "medium",
+      "backend_impact": "high",
+      "prompt_impact": "high",
+      "e2e_impact": "high",
+      "baseline_impact": "high"
+    },
+    {
+      "id": "NCS-021",
+      "name": "按正文更新计划",
+      "description": "「按正文更新计划」：以卷摘要+承诺状态+人物变化为输入再生成未写部分大纲（ProposeReplan 语义）；产生 PlanChange 记录；已写章不动（方案 §06/J08）。",
+      "phase": 47,
+      "type": "feature",
+      "dependencies": [
+        "NCS-020"
+      ],
+      "status": "not-started",
+      "files": [
+        "service/OutlineReplanner.java",
+        "service/VolumeReadbackService.java"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "测试（回放/桩）：再生成仅覆盖未写部分、输入包含回读结论、PlanChange 留痕、已写章版本不变；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=ReplanFromTextTest",
+      "evidence": "",
+      "ui_impact": "low",
+      "backend_impact": "high",
+      "prompt_impact": "high",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-022",
+      "name": "审美档案",
+      "description": "aesthetic_profiles：认可片段（含理由与出处）、希望减少的表达、叙述距离/语言密度/幽默/意象偏好；版本化存储；创作约定页维护；写作上下文 style 段注入（方案 §13/F17）。注入变更→重建 fixture。",
+      "phase": 48,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "domain/AestheticProfile.java",
+        "web/AestheticProfileController.java",
+        "memory/ContextAssembler.java"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "API 测试：增删改查与版本；注入测试：档案条目进入写作上下文且可裁剪优先级明确；对应 Agent 测试通过；e2e 重建后双 replay 一致。",
+      "verify_cmd": "mvn test -Dtest=AestheticProfileTest",
+      "evidence": "",
+      "ui_impact": "medium",
+      "backend_impact": "high",
+      "prompt_impact": "high",
+      "e2e_impact": "high",
+      "baseline_impact": "high"
+    },
+    {
+      "id": "NCS-023",
+      "name": "三类信息分层审阅 UI",
+      "description": "审阅界面分「必须处理 / 尚未查清 / 文学建议」三列（文字+图标不只靠颜色）；问题卡：一句问题/影响位置/为什么影响/两侧原文证据/当前检查版本/处理动作（让 Agent 调查/生成修订建议/我来编辑/作为创作例外保留）；不提供无证据的标记已解决（复核后关闭）（方案 §13/UX09）。",
+      "phase": 48,
+      "type": "feature",
+      "dependencies": [
+        "NCS-007"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/QualityView.tsx",
+        "frontend/src/components/InteractiveReview.tsx",
+        "frontend/src/api/client.ts"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "npm --prefix frontend run build 通过；ego-browser 验证三列分列、问题卡字段与动作、例外流程。",
+      "verify_cmd": "npm --prefix frontend run build",
+      "evidence": "",
+      "ui_impact": "high",
+      "backend_impact": "low",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-024",
+      "name": "选择性组合采纳",
+      "description": "从多份候选选择片段组合成新候选：生成新内容哈希、强制重新检查（不继承原候选通过状态）后方可采纳；组合记录来源片段（方案 §13/R18/UX10）。",
+      "phase": 48,
+      "type": "feature",
+      "dependencies": [
+        "NCS-016"
+      ],
+      "status": "not-started",
+      "files": [
+        "service/SelectiveAcceptService.java",
+        "frontend/src/components/AgentRevisionDialog.tsx"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "failing test：组合产生新哈希与重检记录、未重检不可采纳、采纳后不继承旧通过状态；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=SelectiveAcceptTest",
+      "evidence": "",
+      "ui_impact": "medium",
+      "backend_impact": "high",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-025",
+      "name": "委托策略分级",
+      "description": "WritingPreferences 增加按变更类别的委托规则（措辞/局部事实/人物动机与命运/跨章改动 → AUTO/CONFIRM）；接受路径按类别自动接受（留痕）或产生确认屏障；创作约定页展示「会暂停的条件」（方案 §05/DELEGATION）。",
+      "phase": 48,
+      "type": "feature",
+      "dependencies": [
+        "NCS-013"
+      ],
+      "status": "not-started",
+      "files": [
+        "domain/WritingPreferences.java",
+        "service/RevisionRequestService.java",
+        "frontend/src/components/IntentView.tsx"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "failing test：AUTO 类自动接受留痕、CONFIRM 类产生屏障；越界类别不自动；约定页展示规则；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=DelegationPolicyTest",
+      "evidence": "",
+      "ui_impact": "medium",
+      "backend_impact": "high",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-026",
+      "name": "运行经验库",
+      "description": "revision_outcomes：修订接受/拒绝样本+原因+语境类别存储；后续同类修订任务注入相关经验（仅修订链路，不进入故事事实）；作者可删除（方案 §13 Reflexion/L4）。",
+      "phase": 48,
+      "type": "feature",
+      "dependencies": [
+        "NCS-013"
+      ],
+      "status": "not-started",
+      "files": [
+        "domain/RevisionOutcome.java",
+        "service/RevisionExperienceService.java",
+        "agent/ContentRevisionAgent.java"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "测试（回放/桩）：样本落库、同类任务注入、删除后不注入、经验不写入真典；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=RevisionExperienceTest",
+      "evidence": "",
+      "ui_impact": "low",
+      "backend_impact": "high",
+      "prompt_impact": "high",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-027",
+      "name": "BookEdition 成书 UI 闭环",
+      "description": "版本记录视图接入 book-editions：创建整书记录（快照+manifestHash）、列表/详情（章覆盖、批准状态、未了承诺、例外）、确认定稿（哈希绑定）、导出固定版本；与「导出工作稿」明确区分（方案 §16/UX11/U6）。",
+      "phase": 49,
+      "type": "feature",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/EditionsView.tsx",
+        "frontend/src/pages/ProjectWorkspace.tsx",
+        "frontend/src/api/client.ts"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "npm --prefix frontend run build 通过；ego-browser 走通创建→详情→确认定稿→导出固定版本，工作稿/定稿导出入口区分。",
+      "verify_cmd": "npm --prefix frontend run build",
+      "evidence": "",
+      "ui_impact": "high",
+      "backend_impact": "low",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-028",
+      "name": "定稿校验绑定与门禁修正",
+      "description": "校验报告绑定 edition manifestHash（覆盖、必须处理项、尚未查清、例外、承诺处置）持久化；旧章节严重问题不因近期窗口在成书报告中消失；确认定稿需该 manifest 的有效报告；新稿不继承旧报告（方案 §16/R13/F14）。",
+      "phase": 49,
+      "type": "feature",
+      "dependencies": [
+        "NCS-027"
+      ],
+      "status": "not-started",
+      "files": [
+        "service/EditionValidationService.java",
+        "web/BookEditionController.java",
+        "orchestrator/NovelOrchestrator.java"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "failing test：报告绑定 manifestHash 且旧窗口外 HIGH 计入；无有效报告不可确认定稿；新稿产生后旧报告失效标识；mvn compile && mvn test 通过。",
+      "verify_cmd": "mvn test -Dtest=EditionValidationTest",
+      "evidence": "",
+      "ui_impact": "low",
+      "backend_impact": "high",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-029",
+      "name": "任务与版本中心 UI",
+      "description": "任务页：持久任务列表（目标、进度、等待原因、费用、继续/停止入口）与版本记录入口（章稿历史+整书记录聚合）（方案 §14/§16/U6）。",
+      "phase": 49,
+      "type": "feature",
+      "dependencies": [
+        "NCS-005"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/TasksView.tsx",
+        "frontend/src/pages/ProjectWorkspace.tsx",
+        "frontend/src/api/client.ts"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "npm --prefix frontend run build 通过；ego-browser 验证任务列表操作与版本入口聚合。",
+      "verify_cmd": "npm --prefix frontend run build",
+      "evidence": "",
+      "ui_impact": "high",
+      "backend_impact": "low",
+      "prompt_impact": "none",
+      "e2e_impact": "none",
+      "baseline_impact": "none"
+    },
+    {
+      "id": "NCS-030",
+      "name": "联合验收浏览器 Journey",
+      "description": "replay/确定性模式下以真实浏览器走通 T01–T11 联合场景（空作品起步、局部改文与保护、跨章改写、作者与 Agent 并发、停止恢复、人物时点、单次要求、未知不误报、恢复旧稿、组合候选、定稿导出）；console 无本次实现相关异常、Network 无非预期 4xx/5xx；报告与截图落 docs/reports/（方案 §20）。",
+      "phase": 49,
+      "type": "feature",
+      "dependencies": [
+        "NCS-001",
+        "NCS-004",
+        "NCS-006",
+        "NCS-011",
+        "NCS-017",
+        "NCS-023",
+        "NCS-024",
+        "NCS-027",
+        "NCS-028",
+        "NCS-029"
+      ],
+      "status": "not-started",
+      "files": [
+        "docs/reports/2026-09-19-ncs-journey/README.md"
+      ],
+      "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
+      "acceptance": "浏览器 journey 报告完成且全部场景通过；报告含场景清单、证据截图与 console/network 检查结论。",
+      "verify_cmd": "test -f docs/reports/2026-09-19-ncs-journey/README.md",
+      "evidence": "",
+      "ui_impact": "high",
+      "backend_impact": "none",
+      "prompt_impact": "none",
+      "e2e_impact": "high",
+      "baseline_impact": "none"
     }
   ],
   "schema_version": 2,

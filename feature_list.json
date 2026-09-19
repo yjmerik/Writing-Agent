@@ -7843,22 +7843,23 @@
         "NCS-028",
         "NCS-029"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "docs/reports/2026-09-19-ncs-journey/README.md"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "浏览器 journey 报告完成且全部场景通过；报告含场景清单、证据截图与 console/network 检查结论。",
       "verify_cmd": "test -f docs/reports/2026-09-19-ncs-journey/README.md",
-      "evidence": "",
+      "evidence": "2026-09-20 partial: 编译/1084测试/前端build/replay+baseline通过；T01–T11未全部通过，问题仅记录于 docs/reports/2026-09-19-ncs-journey/README.md；保持in-progress，不登记完成。",
       "ui_impact": "high",
       "backend_impact": "none",
       "prompt_impact": "none",
       "e2e_impact": "high",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-030-browser-journey"
     }
   ],
   "schema_version": 2,
-  "updated_at": "2026-09-19",
-  "active_feature": null
+  "updated_at": "2026-09-20",
+  "active_feature": "NCS-030"
 }

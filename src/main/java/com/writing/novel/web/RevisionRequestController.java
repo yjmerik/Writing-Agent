@@ -21,12 +21,18 @@ public class RevisionRequestController {
     private final NovelRepository repository;
     private final RevisionRequestService service;
     private final com.writing.novel.service.ImpactAnalysisService impactAnalysis;
+    private final com.writing.novel.service.RevisionRepairService repairService;
+    private final com.writing.novel.service.GroupAcceptanceService acceptanceService;
 
     public RevisionRequestController(NovelRepository repository, RevisionRequestService service,
-                                     com.writing.novel.service.ImpactAnalysisService impactAnalysis) {
+                                     com.writing.novel.service.ImpactAnalysisService impactAnalysis,
+                                     com.writing.novel.service.RevisionRepairService repairService,
+                                     com.writing.novel.service.GroupAcceptanceService acceptanceService) {
         this.repository = repository;
         this.service = service;
         this.impactAnalysis = impactAnalysis;
+        this.repairService = repairService;
+        this.acceptanceService = acceptanceService;
     }
 
     @GetMapping
@@ -104,6 +110,38 @@ public class RevisionRequestController {
             items.add(im);
         }
         m.put("items", items);
+        return m;
+    }
+
+    /** NCS-015: 为 MUST_REPAIR 章生成修复候选（需范围批准） */
+    @PostMapping("/{requestId}/generate-repairs")
+    public Map<String, Object> generateRepairs(@PathVariable String id, @PathVariable String requestId,
+                                               @RequestParam int chapter,
+                                               @RequestBody Map<String, Object> body) {
+        requireProject(id);
+        var result = repairService.generateRepairs(id, requestId, chapter,
+                String.valueOf(body.getOrDefault("intent", "")));
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("requestId", requestId);
+        m.put("generated", result.generated());
+        m.put("previewIds", result.previewIds());
+        m.put("chapters", result.chapters());
+        return m;
+    }
+
+    /** NCS-016: 依赖组整组接受（commandId 幂等） */
+    @PostMapping("/{requestId}/accept-group")
+    public Map<String, Object> acceptGroup(@PathVariable String id, @PathVariable String requestId,
+                                           @RequestBody Map<String, Object> body) {
+        requireProject(id);
+        String commandId = String.valueOf(body.get("commandId"));
+        var receipt = acceptanceService.acceptGroup(id, requestId, commandId);
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("commandId", receipt.commandId());
+        m.put("applied", receipt.applied());
+        m.put("replayed", receipt.replayed());
+        m.put("chapters", receipt.chapters());
+        m.put("message", receipt.message());
         return m;
     }
 

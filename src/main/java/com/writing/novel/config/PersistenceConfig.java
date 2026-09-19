@@ -108,6 +108,27 @@ public class PersistenceConfig {
                 storyFactRepository);
     }
 
+    // NCS-015/016: 修订修复生成 + 依赖组整组接受
+    @Bean
+    public com.writing.novel.service.GroupAcceptanceService groupAcceptanceService(
+            NovelRepository repository,
+            com.writing.novel.service.RevisionRequestService revisionRequestService,
+            com.writing.novel.service.SupportWithdrawalService supportWithdrawalService) {
+        return new com.writing.novel.service.GroupAcceptanceService(repository, revisionRequestService,
+                new com.writing.novel.service.ChapterRevisionService(repository, null, null,
+                        supportWithdrawalService, revisionRequestService));
+    }
+
+    @Bean
+    public com.writing.novel.service.RevisionRepairService revisionRepairService(
+            NovelRepository repository,
+            com.writing.novel.service.ImpactAnalysisService impactAnalysisService,
+            com.writing.novel.service.AgentRevisionService agentRevisionService,
+            com.writing.novel.service.RevisionRequestService revisionRequestService) {
+        return new com.writing.novel.service.RevisionRepairService(
+                impactAnalysisService, agentRevisionService, revisionRequestService, repository);
+    }
+
     // NCS-010: 人物时点读取
     @Bean
     public com.writing.novel.service.CharacterAsOfService characterAsOfService(

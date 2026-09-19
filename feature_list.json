@@ -7196,7 +7196,7 @@
       "phase": 44,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/agent/CheckResultEnvelope.java",
         "src/main/java/com/writing/novel/agent/ContinuityCheckerAgent.java",
@@ -7207,12 +7207,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：坏响应→INVALID 记录不产生空 PASS；UNKNOWN 必查项阻断成书；重写预算 0 时严重问题仍不放行；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=CheckResultEnvelopeTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: bc87d2d（ff-merge）; verify_cmd CheckResultEnvelopeTest 6/0F（干净检出）; mvn test 997/0F/0E/1S（分支+干净检出）; 无 prompt 改动 e2e/baseline 不适用; 证据 docs/harness/evidence/2026-09-19-ncs-007.json",
       "ui_impact": "low",
       "backend_impact": "high",
       "prompt_impact": "none",
       "e2e_impact": "low",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-007-check-envelope",
+      "completion_record": "ncs-007-verified"
     },
     {
       "id": "NCS-008",
@@ -7783,5 +7785,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-007"
+  "active_feature": null
 }

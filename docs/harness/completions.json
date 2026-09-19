@@ -1595,6 +1595,17 @@
    "implementation_commit": "4992d66acde8b5e855102b46f79e0a666f77628e",
    "main_commit": "4992d66acde8b5e855102b46f79e0a666f77628e",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-006.json"
+  },
+  {
+   "id": "ncs-007-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-007"
+   ],
+   "branch": "codex/ncs-007-check-envelope",
+   "implementation_commit": "bc87d2d1c2f6ba24a6a6bca6062b38bd9e9ef540",
+   "main_commit": "bc87d2d1c2f6ba24a6a6bca6062b38bd9e9ef540",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-007.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

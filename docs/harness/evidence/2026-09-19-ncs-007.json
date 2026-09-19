@@ -1,0 +1,21 @@
+{
+ "commit": "bc87d2d1c2f6ba24a6a6bca6062b38bd9e9ef540",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 997 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次（干净检出需绝对路径 source env 与 load-env）。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=CheckResultEnvelopeTest",
+   "result": "PASS: 6 tests 0 failures（含干净检出）。覆盖：信封分类（空→UNKNOWN/明确无问题→VALID_EMPTY/可解析→SUCCESS 带问题/截断拒绝→INVALID）；检查器坏输出落库 INVALID 且不产生空问题列表，unknownChecks 进入统一读取视图；正常无问题落库 VALID_EMPTY；后续 SUCCESS 覆盖旧 UNKNOWN（最新为准）；成书门禁：仅凭一项 UNKNOWN 必查即阻塞 NEEDS_REVISION、清除后放行；零重写预算+11 条严重未解决仍阻塞（预算不解除质量约束）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "check_results 表 (章×检查器) 逐次追加、读取取最新；ContinuityCheckerAgent.check 经信封分类后仅 SUCCESS 落问题条目；finalGate 先查 unknownCount>0 即 FAIL(reason=unknown_mandatory_check)；WorkspaceViewService.unknownChecks 接实。无 prompt 模板改动（continuity-check.st 未动，replay 指纹不变）。",
+ "feature_ids": [
+  "NCS-007"
+ ],
+ "branch": "codex/ncs-007-check-envelope"
+}

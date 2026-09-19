@@ -28,6 +28,10 @@ import type {
   CharacterAsOf,
   CharacterDecisionItem,
   CharacterDecisionExtractResult,
+  RevisionRequestItem,
+  ImpactAnalysisResult,
+  RepairGenerationResult,
+  GroupAcceptResult,
 } from '../types';
 
 const BASE = '/api';
@@ -313,6 +317,24 @@ export const api = {
   // NCS-010/011: 人物时点读取
   getCharacterAsOf: (id: string, charName: string, chapter: number) =>
     request<CharacterAsOf>(`/projects/${id}/characters/${encodeURIComponent(charName)}/as-of?chapter=${chapter}`),
+  // NCS-013..017: 统一修订请求
+  listRevisionRequests: (id: string) =>
+    request<{ projectId: string; requests: RevisionRequestItem[] }>(`/projects/${id}/revision-requests`),
+  createRevisionRequest: (id: string, body: Record<string, unknown>) =>
+    request<RevisionRequestItem>(`/projects/${id}/revision-requests`, { method: 'POST', body: JSON.stringify(body) }),
+  approveRevisionScope: (id: string, requestId: string, decision: string) =>
+    request<RevisionRequestItem>(`/projects/${id}/revision-requests/${requestId}/approve-scope`,
+      { method: 'POST', body: JSON.stringify({ decision }) }),
+  analyzeImpact: (id: string, requestId: string, chapter: number) =>
+    request<ImpactAnalysisResult>(`/projects/${id}/revision-requests/${requestId}/analyze-impact?chapter=${chapter}`,
+      { method: 'POST' }),
+  generateRepairs: (id: string, requestId: string, chapter: number, intent: string) =>
+    request<RepairGenerationResult>(`/projects/${id}/revision-requests/${requestId}/generate-repairs?chapter=${chapter}`,
+      { method: 'POST', body: JSON.stringify({ intent }) }),
+  acceptRevisionGroup: (id: string, requestId: string, commandId: string) =>
+    request<GroupAcceptResult>(`/projects/${id}/revision-requests/${requestId}/accept-group`,
+      { method: 'POST', body: JSON.stringify({ commandId }) }),
+
   // NCS-012: 关键决策
   getCharacterDecisions: (id: string) =>
     request<{ projectId: string; decisions: CharacterDecisionItem[] }>(`/projects/${id}/decisions`),

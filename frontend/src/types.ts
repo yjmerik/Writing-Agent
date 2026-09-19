@@ -407,3 +407,48 @@ export interface CharacterDecisionExtractResult {
   status: string;
   decisions: CharacterDecisionItem[];
 }
+
+// NCS-013..017: 统一修订请求与修订工作区
+export interface RevisionRequestItem {
+  id: string;
+  origin: string;
+  intent: string;
+  targetAnchors: string;
+  baseVersions: string;
+  protectAnchors: string;
+  status: string;
+  scopeDecision: string | null;
+  acceptance: string | null;
+  cancelReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ImpactAnalysisResult {
+  requestId: string;
+  revisedChapterIndex: number;
+  revisedToVersion: number;
+  coverageNote: string;
+  items: {
+    chapterIndex: number;
+    classification: string;
+    reasons: string[];
+    factIds: string[];
+    subjects: string[];
+  }[];
+}
+
+export interface RepairGenerationResult {
+  requestId: string;
+  generated: number;
+  previewIds: string[];
+  chapters: number[];
+}
+
+export interface GroupAcceptResult {
+  commandId: string;
+  applied: boolean;
+  replayed: boolean;
+  chapters: number[];
+  message: string;
+}

@@ -7477,11 +7477,12 @@
       "dependencies": [
         "NCS-016"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "frontend/src/components/RevisionWorkspace.tsx",
         "frontend/src/pages/ProjectWorkspace.tsx",
-        "frontend/src/api/client.ts"
+        "frontend/src/api/client.ts",
+        "frontend/src/types.ts"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "npm --prefix frontend run build 通过；ego-browser 走通四步与整组采纳/重基提示。",
@@ -7819,5 +7820,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-017"
 }

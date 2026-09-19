@@ -7593,10 +7593,11 @@
       "dependencies": [
         "NCS-020"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
-        "src/main/java/com/writing/novel/service/OutlineReplanner.java",
-        "src/main/java/com/writing/novel/service/VolumeReadbackService.java"
+        "src/main/java/com/writing/novel/service/ReplanFromTextService.java",
+        "src/main/java/com/writing/novel/service/VolumeReadbackService.java",
+        "src/main/java/com/writing/novel/web/VolumeReadbackController.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "测试（回放/桩）：再生成仅覆盖未写部分、输入包含回读结论、PlanChange 留痕、已写章版本不变；mvn compile && mvn test 通过。",
@@ -7838,5 +7839,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-021"
 }

@@ -18,10 +18,13 @@ public class VolumeReadbackController {
 
     private final NovelRepository repository;
     private final VolumeReadbackService service;
+    private final com.writing.novel.service.ReplanFromTextService replanFromText;
 
-    public VolumeReadbackController(NovelRepository repository, VolumeReadbackService service) {
+    public VolumeReadbackController(NovelRepository repository, VolumeReadbackService service,
+                                    com.writing.novel.service.ReplanFromTextService replanFromText) {
         this.repository = repository;
         this.service = service;
+        this.replanFromText = replanFromText;
     }
 
     @PostMapping("/generate")
@@ -59,6 +62,17 @@ public class VolumeReadbackController {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("volumeIndex", r.getVolumeIndex());
         m.put("status", r.getStatus());
+        return m;
+    }
+
+    /** NCS-021: 按正文更新计划（回读确认后触发未写部分再规划） */
+    @PostMapping("/{volumeIndex}/replan-from-text")
+    public Map<String, Object> replanFromText(@PathVariable String id, @PathVariable int volumeIndex) {
+        requireProject(id);
+        var result = replanFromText.replanFromText(id, volumeIndex);
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("volumeIndex", result.volumeIndex());
+        m.put("replanned", result.replanned());
         return m;
     }
 

@@ -2127,6 +2127,14 @@ public class NovelOrchestrator {
                 }
             }
 
+            // NCS-021: 已确认回读结论注入再规划输入（按正文更新计划的语义）
+            if (volumeReadbackService != null) {
+                String readbackContext = volumeReadbackService.buildReadbackContext(projectId);
+                if (!readbackContext.isBlank()) {
+                    writtenSummary.append("\n").append(readbackContext);
+                }
+            }
+
             if (plotter != null) {
                 int nextStart = currentChapter + 1;
                 var replanGenre = repository.findProject(projectId)

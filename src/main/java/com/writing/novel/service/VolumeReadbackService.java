@@ -119,6 +119,35 @@ public class VolumeReadbackService {
         return readbacks().findByProject(projectId);
     }
 
+    /**
+     * NCS-021: 已确认回读的结论文本（人物变化+建议+承诺状态）——
+     * 供再规划注入；无确认回读返回空串（既有再规划输入不变）。
+     */
+    public String buildReadbackContext(String projectId) {
+        StringBuilder sb = new StringBuilder();
+        for (VolumeReadback r : readbacks().findByProject(projectId)) {
+            if (!VolumeReadback.ACKNOWLEDGED.equals(r.getStatus()) || r.getReportJson() == null) continue;
+            sb.append("【卷 ").append(r.getVolumeIndex()).append(" 回读结论（按实际正文）】\n");
+            try {
+                var node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(r.getReportJson());
+                appendIfPresent(sb, node, "characterChanges", "人物变化");
+                appendIfPresent(sb, node, "promiseStatus", "承诺状态");
+                appendIfPresent(sb, node, "deviationSummary", "偏离汇总");
+                appendIfPresent(sb, node, "suggestions", "对后续的建议");
+            } catch (Exception ignored) {
+            }
+        }
+        return sb.toString();
+    }
+
+    private void appendIfPresent(StringBuilder sb, com.fasterxml.jackson.databind.JsonNode node,
+                                 String field, String label) {
+        String value = node.path(field).asText("");
+        if (!value.isBlank()) {
+            sb.append(label).append("：").append(value).append("\n");
+        }
+    }
+
     /** 是否存在未确认回读（供卷过渡阻断检查） */
     public boolean hasPending(String projectId) {
         return readbacks().findByProject(projectId).stream()

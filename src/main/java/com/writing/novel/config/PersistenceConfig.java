@@ -129,6 +129,16 @@ public class PersistenceConfig {
                 impactAnalysisService, agentRevisionService, revisionRequestService, repository);
     }
 
+    // NCS-021: 按正文更新计划
+    @Bean
+    public com.writing.novel.service.ReplanFromTextService replanFromTextService(
+            com.writing.novel.orchestrator.NovelOrchestrator orchestrator,
+            com.writing.novel.service.RevisionRequestService revisionRequestService,
+            com.writing.novel.service.VolumeReadbackService volumeReadbackService) {
+        return new com.writing.novel.service.ReplanFromTextService(orchestrator,
+                revisionRequestService, volumeReadbackService);
+    }
+
     // NCS-020: 卷末回读
     @Bean
     @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)

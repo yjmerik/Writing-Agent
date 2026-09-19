@@ -4,39 +4,32 @@ Last Updated: 2026-09-20
 
 ## Current
 
-NCS-001..029 completed（29/30）；NCS-030 in-progress，分支 codex/ncs-030-browser-journey。
-NCS-029 实现9565132、完成回执6480704均在main，干净main复验1084/0F/0E/1S与build通过。
-NCS-030 仅验收报告及状态记录，未改业务代码；联合场景未全部通过，尚未合入main、不登记完成。
-用户约束：仅完成feature规定特性，其他发现只记录，不修复或重构。
+NCS-001..029 completed；NCS-030 in-progress，codex/ncs-030-browser-journey。
+用户已授权补齐原计划内验收缺口；T01–T11确定性功能旅程已通过，待合并后验证。
+仅完成feature规定特性，无关发现记录，不重构。
 
 ## Files
 
-- docs/reports/2026-09-19-ncs-journey/README.md：T01–T11逐项实测、限制和阻塞。
-- 同目录截图及browser-events.jsonl：局部采纳、并发409、单次要求阻断、恢复v5、固定整书报告。
-- feature_list.json、progress.md、session-handoff.md：当前状态。
+- docs/reports/2026-09-19-ncs-journey/README.md：最终旅程矩阵、证据边界和已修复缺口。
+- journey-results.json、persisted-audit.json、browser-events.jsonl、截图与实际下载样本。
+- 组合候选、冲突对照、审阅恢复、版本证据确认、时点读者信息及连续性补查界面。
+- 组合检查/原子整组提交、人物ID读取/来源/关系影响和对应回归测试。
 
 ## Verification
 
-- NCS-030 串行 ./init.sh PASS：1084/0F/0E/1S，编译及前端构建通过。
-- replay E2E+baseline PASS：3章9730字、0章节失败、0LLM错误。
-- 初次并发运行Maven/E2E共享target导致36项类加载错误；串行复验恢复，未改代码。
-- 浏览器局部路径：停止/继续及历史保留、未选区保护、旧候选409拒绝并保留作者输入、历史恢复为新稿且保留旧记录、报告不跨版本继承。
-- 采集26条响应，唯一HTTP错误为预期409；采集窗口未见console异常。不冒充完整HAR。
-- 日志 /tmp/ncs030-serial.log、/tmp/ncs030-e2e.log。
-
-- 续验只读核对持久候选/回执/快照：T02来源与接受hash、精确候选落稿全部匹配；T04持久STALE且无回执；T09恢复内容精确相等且历史完整。见 persisted-audit.json。
+- 分支 ./init.sh PASS：1093 tests / 0 failures / 0 errors / 1 skipped；编译与前端build通过。
+- 定向34项回归通过；新增读者已知专项6项通过；均保留先失败后修复记录。
+- 浏览器三作品最后采样40响应、0非预期HTTP错误、0console异常。
+- T05真实丢弃成功响应后同命令重试，章节只增加一版；T11真实文件下载3185字节。
+- replay E2E PASS：3章9730字、0章节失败/0LLM错误；baseline PASS。合并后干净main验证待完成。
 
 ## Blockers
 
-- NCS-030 未达到全部场景通过：T10缺组合候选UI；T04冲突后按钮仍可点击且无三方比较。
-- T03/T06/T07样本缺完整依赖、知情来源和单次要求证据，不能据局部结果判通过。
-- T05跨章恢复/丢响应重试、T08补查/零预算、T11真实下载等证据未完整。
-- 以上仅记录，详见报告；NCS-028既有额外发现也未修复。
-- p40-05/06继续deferred，属于本方案非目标。
+无实现阻塞。Scenario只证明确定性功能，不证明文学质量；连续性补查不升级旧ReaderReview。
+p40-05/06继续deferred（真实长篇/人工实验），不在本轮范围。
 
 ## Next Steps
 
-1. 保留NCS-030分支和未完成状态；已澄清用户“问题只记录”的边界是否包含原计划内缺失实现，未获回答前不扩大修改。
-2. 后续安排验收数据与相关缺口后，续做同一feature并完整重跑T01–T11；全通过才能合并和登记完成。
-3. 浏览器space23仅p1，p2已关闭；验收数据库 /tmp/writingagent-ncs-browser/novel.db；本任务验收服务结束时停止。
-4. 原有未跟踪ZCode计划与2026-09-05-ui-experience报告原样保留。
+1. 完成replay+baseline，提交NCS-030并ff合并main。
+2. 干净main导出重新跑init/E2E/baseline，记录verified后登记完成。
+3. 收尾隔离浏览器/服务，保留原有未跟踪ZCode计划与旧UI体验报告。

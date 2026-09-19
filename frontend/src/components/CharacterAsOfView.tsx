@@ -190,10 +190,17 @@ export default function CharacterAsOfView({ projectId, currentChapter }: {
             )}
           </div>
 
-          <Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 0 }}>
-            「读者知道」= 上述时点状态的正文呈现（读者随叙事位置逐步获知）；
-            写作旧章时请以该章时点为准，后文信息不进入人物决策。
-          </Paragraph>
+          <div>
+            <Text strong>读者知道 · 已呈现的来源</Text>
+            {(view.readerKnows ?? []).length === 0 ? <Paragraph type="secondary">该叙述位置尚无可定位的正文证据</Paragraph>
+              : view.readerKnows.map((k, i) => <Paragraph key={i} style={{ marginBottom: 6 }}>
+                “{k.quote}” —— <Typography.Link href={`#/project/${projectId}/chapter/${k.sourceChapter}`}>
+                  来源：第 {k.sourceChapter} 章第 {k.sourceVersion} 稿
+                </Typography.Link>
+                {k.evidenceStale && <Tag color="orange">来源稿已更新，请在版本记录核对</Tag>}
+              </Paragraph>)}
+            <Text type="secondary">读者见过的线索不等于角色已经获知，也不代表该线索已证实为客观事实。</Text>
+          </div>
         </Space>
       )}
     </Card>

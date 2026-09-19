@@ -149,7 +149,7 @@ public class ScenarioLlmGateway implements LlmGateway {
                 if (harsh && n <= 2) {
                     yield "【人物|高】主角的行为超出能力设定（harsh 注入）";
                 }
-                yield "[]";
+                yield "检查完成：未发现连续性问题。";
             }
             case STYLE_GUARDIAN -> "风格一致性评分：90/100。本章与基线风格保持一致。";
             case MEMORY_SUMMARY -> "章节摘要：第%d章确立的事件与人物变化已按序记录。".formatted(chapter);
@@ -208,6 +208,29 @@ public class ScenarioLlmGateway implements LlmGateway {
                     .put("content", content)
                     .put("structuredJson", OBJECT_MAPPER.writeValueAsString(after))
                     .put("summary", "仅修改当前选中的 " + targetType + " 对象");
+            // 场景模式仅执行可确定验证的逐字写入；其余要求如实报告 UNMET。
+            String instructions = prompt.substring(sourceEnd + REVISION_SOURCE_END.length())
+                    .split("必须遵守：", 2)[0];
+            Matcher directives = Pattern.compile("\\[([^\\]\\s]+)\\s+rev(\\d+)\\]([^\\r\\n]*)")
+                    .matcher(instructions);
+            var results = candidate.putArray("directiveResults");
+            while (directives.find()) {
+                String instruction = directives.group(3).trim();
+                var result = results.addObject().put("directiveId", directives.group(1))
+                        .put("directiveRevision", Integer.parseInt(directives.group(2)));
+                if ((targetType.equals("CHAPTER") || targetType.equals("PASSAGE"))
+                        && instruction.startsWith("原文写入：") && instruction.length() > 5) {
+                    String quote = instruction.substring(5).trim();
+                    content += "\n" + quote;
+                    after.put("content", content);
+                    result.put("status", "APPLIED_SYSTEM").put("quote", quote)
+                            .put("anchor", "content").put("reason", "");
+                } else {
+                    result.put("status", "UNMET").put("quote", "").put("anchor", "")
+                            .put("reason", "确定性场景仅支持原文写入，未执行此要求");
+                }
+            }
+            candidate.put("content", content).put("structuredJson", OBJECT_MAPPER.writeValueAsString(after));
             return OBJECT_MAPPER.writeValueAsString(candidate);
         } catch (JsonProcessingException | IllegalStateException e) {
             return "[]";

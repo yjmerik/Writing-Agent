@@ -381,6 +381,7 @@ export interface CharacterAsOf {
   asOfChapter: number;
   facts: CharacterAsOfFact[];
   knows: CharacterAsOfLearned[];
+  readerKnows: Pick<CharacterAsOfLearned, 'factId' | 'quote' | 'sourceChapter' | 'sourceVersion' | 'evidenceStale'>[];
   believes: CharacterAsOfLearned[];
   relationships: CharacterAsOfRelationship[];
 }

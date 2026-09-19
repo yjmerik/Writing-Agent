@@ -53,7 +53,10 @@ public class ImpactAnalysisService {
         Map<String, StoryFact> factsById = new LinkedHashMap<>();
         for (StoryFact fact : canon.findAll(projectId)) {
             factsById.put(fact.getId(), fact);
-            if (fact.getChapterEstablished() == revisedChapterIndex) {
+            boolean oldSource = factRepository != null && factRepository.findByFactId(projectId, fact.getId()).stream()
+                    .anyMatch(e -> ((Number) e.get("chapterIndex")).intValue() == revisedChapterIndex
+                            && ((Number) e.get("chapterVersion")).intValue() < newVersion);
+            if (fact.getChapterEstablished() == revisedChapterIndex || oldSource) {
                 affectedFactIds.add(fact.getId());
             }
         }
@@ -83,6 +86,8 @@ public class ImpactAnalysisService {
         revisedEntities.addAll(affectedSubjects);
 
         // ③ 扫描后文章节
+        var entities = repository.findEntitiesByProject(projectId);
+        var edges = repository.findEdgesByProject(projectId);
         List<Chapter> chapters = repository.findChaptersByProject(projectId);
         List<ImpactItem> items = new ArrayList<>();
         int scanned = 0;
@@ -111,6 +116,28 @@ public class ImpactAnalysisService {
                         reasons, new ArrayList<>(hitFacts), new ArrayList<>(hitSubjects)));
                 continue;
             }
+            // 显式关系闭包补足未点名原事实的间接依赖；只列待复核，不假定一定需要改写。
+            Set<String> connected = new HashSet<>();
+            for (var entity : entities) if (affectedSubjects.contains(entity.getName())) connected.add(entity.getId());
+            boolean expanded;
+            do {
+                expanded = false;
+                for (var edge : edges) {
+                    if (!edge.isValidAt(ch.getChapterIndex())) continue;
+                    if (connected.contains(edge.getSourceId())) expanded |= connected.add(edge.getTargetId());
+                    if (connected.contains(edge.getTargetId())) expanded |= connected.add(edge.getSourceId());
+                }
+            } while (expanded);
+            List<String> related = entities.stream()
+                    .filter(e -> connected.contains(e.getId()) && e.getName() != null && !e.getName().isBlank()
+                            && content.contains(e.getName()) && !affectedSubjects.contains(e.getName()))
+                    .map(com.writing.novel.domain.Entity::getName).toList();
+            if (!related.isEmpty()) {
+                items.add(new ImpactItem(ch.getChapterIndex(), ImpactItem.Classification.RECHECK,
+                        List.of("本章涉及事实主体的有效关系链：" + String.join("、", related) + "，需复核间接依赖"),
+                        new ArrayList<>(affectedFactIds), related));
+                continue;
+            }
             // 无锚定事实命中：检查实体名出现 → RECHECK
             List<String> mentioned = new ArrayList<>();
             for (String entity : revisedEntities) {
@@ -130,7 +157,7 @@ public class ImpactAnalysisService {
             }
         }
         String coverageNote = "已扫描第 " + (revisedChapterIndex + 1) + " 章之后共 " + scanned
-                + " 章（词法级扫描：锚定事实主体与实体名命中）；词法扫描无法证明语义无影响——"
+                + " 章（词法级扫描：旧稿证据、锚定事实主体、实体名及有效关系闭包）；词法扫描无法证明语义无影响——"
                 + "隐含依赖（未点名实体的一致性）属未知部分，需按需扩查";
         return new ImpactPlan(revisedChapterIndex, newVersion, items, coverageNote);
     }

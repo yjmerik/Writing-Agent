@@ -75,7 +75,7 @@ class CharacterAsOfTest {
         String evidenceId = java.util.UUID.randomUUID().toString();
         factRepo.saveFactEvidence(evidenceId, letterId, projectId, 8, 1,
                 "hash-8", "江砚把信塞进沈昭袖中", 3, "anchor-8", 8, null);
-        factRepo.saveObserver(evidenceId, "沈昭", 10, 1);
+        factRepo.saveObserver(evidenceId, shen.getId(), 10, 1);
 
         // 关系边：沈昭—江砚（第 9 章起信任；第 16 章破裂）
         Entity shenEntity = new Entity(projectId, "沈昭", EntityType.CHARACTER);
@@ -139,6 +139,26 @@ class CharacterAsOfTest {
                 .andExpect(jsonPath("$.believes.length()").value(1))
                 .andExpect(jsonPath("$.believes[0].quote").value("江砚把信塞进沈昭袖中"))
                 .andExpect(jsonPath("$.knows.length()").value(0));
+    }
+
+    @Test
+    void 读者已看到来源但角色尚未知情_不得混为同一知识() throws Exception {
+        mvc.perform(get("/api/projects/" + projectId + "/characters/沈昭/as-of?chapter=8"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.knows.length()").value(0))
+                .andExpect(jsonPath("$.readerKnows.length()").value(1))
+                .andExpect(jsonPath("$.readerKnows[0].quote").value("江砚把信塞进沈昭袖中"))
+                .andExpect(jsonPath("$.readerKnows[0].sourceChapter").value(8));
+        mvc.perform(get("/api/projects/" + projectId + "/characters/沈昭/as-of?chapter=7"))
+                .andExpect(jsonPath("$.readerKnows.length()").value(0));
+    }
+
+    @Test
+    void 时点8不提前泄露第10章才获知的证据() throws Exception {
+        mvc.perform(get("/api/projects/" + projectId + "/characters/沈昭/as-of?chapter=8"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.knows.length()").value(0))
+                .andExpect(jsonPath("$.believes.length()").value(0));
     }
 
     @Test

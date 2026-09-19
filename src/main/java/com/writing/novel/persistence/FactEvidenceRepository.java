@@ -29,6 +29,7 @@ public class FactEvidenceRepository {
                     var m = new java.util.LinkedHashMap<String, Object>();
                     m.put("id", rs.getString("id"));
                     m.put("factId", rs.getString("fact_id"));
+                    m.put("evidenceStale", rs.getInt("stale") != 0);
                     m.put("chapterIndex", rs.getInt("chapter_index"));
                     m.put("chapterVersion", rs.getInt("chapter_version"));
                     m.put("contentHash", rs.getString("content_hash"));

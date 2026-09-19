@@ -33,9 +33,17 @@ public class SelectiveAcceptService {
     private final RevisionRequestService requests;
     private final ContinuityCheckerAgent checker;
     private final CheckResultRepository checkResults;
+    private final ChapterRevisionService revisions;
 
     public SelectiveAcceptService(NovelRepository repository, RevisionRequestService requests,
                                   ContinuityCheckerAgent checker, CheckResultRepository checkResults) {
+        this(repository, requests, checker, checkResults, new ChapterRevisionService(repository));
+    }
+
+    public SelectiveAcceptService(NovelRepository repository, RevisionRequestService requests,
+                                  ContinuityCheckerAgent checker, CheckResultRepository checkResults,
+                                  ChapterRevisionService revisions) {
+        this.revisions = revisions;
         this.repository = repository;
         this.requests = requests;
         this.checker = checker;
@@ -90,14 +98,12 @@ public class SelectiveAcceptService {
     public void recheck(String projectId, String previewId) {
         RevisionProposal proposal = requireCombined(projectId, previewId);
         String content = contentOf(proposal);
-        var issues = checker.check(projectId, proposal.getChapterIndex(), content, "");
-        boolean hasHigh = issues.stream()
+        var result = checker.checkWithEnvelope(projectId, proposal.getChapterIndex(), content, "");
+        boolean hasHigh = result.issues().stream()
                 .anyMatch(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH);
-        if (!hasHigh) {
-            checkResults.save(projectId, proposal.getChapterIndex(), COMBINE_CHECKER,
-                    CheckResultEnvelope.Status.SUCCESS, "");
-        }
-        // HIGH 时 checker 的 check 已落 issue（信封 SUCCESS+问题并存）——needsRecheck 由高严重问题判定
+        checkResults.save(projectId, proposal.getChapterIndex(), checkKey(proposal),
+                hasHigh ? CheckResultEnvelope.Status.INVALID : result.status(),
+                hasHigh ? "存在严重未决问题" : result.reason(), content);
     }
 
     /** 是否仍需（或不可）采纳：未重检或重检存在未决 HIGH */
@@ -105,7 +111,9 @@ public class SelectiveAcceptService {
         RevisionProposal proposal = requireCombined(projectId, previewId);
         boolean rechecked = checkResults.latestStatuses(projectId).stream()
                 .anyMatch(c -> c.chapterIndex() == proposal.getChapterIndex()
-                        && COMBINE_CHECKER.equals(c.checker()));
+                        && checkKey(proposal).equals(c.checker())
+                        && (c.status() == CheckResultEnvelope.Status.SUCCESS
+                            || c.status() == CheckResultEnvelope.Status.VALID_EMPTY));
         if (!rechecked) return true;
         return repository.findUnresolvedIssues(projectId).stream()
                 .anyMatch(i -> i.getDetectedAtChapter() == proposal.getChapterIndex()
@@ -115,33 +123,11 @@ public class SelectiveAcceptService {
     /** 采纳组合候选（前置：重检通过）；原候选不动 */
     public boolean accept(String projectId, String previewId) {
         RevisionProposal proposal = requireCombined(projectId, previewId);
+        if (proposal.getStatus() == RevisionProposal.Status.APPLIED) return true;
         if (needsRecheck(projectId, previewId)) {
             throw new IllegalStateException("组合候选未完成重检或重检存在严重未决问题——不继承原候选通过状态");
         }
-        Chapter chapter = repository.findChapterByIndex(projectId, proposal.getChapterIndex())
-                .orElseThrow(() -> new IllegalStateException("章节不存在"));
-        var currentIdentity = com.writing.novel.domain.ChapterApproval.Identity.of(chapter);
-        if (currentIdentity.version() != proposal.getBaseVersion()
-                || !currentIdentity.contentHash().equals(proposal.getSourceHash())) {
-            repository.markProposalStale(projectId, proposal.getId());
-            throw new IllegalStateException("章节已有新稿，组合候选过期（STALE）");
-        }
-        String content = contentOf(proposal);
-        if (content.length() < 500 && chapter.getStatus() != Chapter.Status.DRAFTING) {
-            throw new IllegalStateException("组合内容少于 500 字门槛");
-        }
-        var before = new com.writing.novel.domain.ChapterVersion(UUID.randomUUID().toString(), projectId,
-                chapter.getChapterIndex(), chapter.getVersion(), chapter.getTitle(), chapter.getContent(),
-                "SELECTIVE_COMBINE", java.time.Instant.now());
-        chapter.setContent(content);
-        if (chapter.getStatus() == Chapter.Status.DRAFTING && content.length() >= 500) {
-            chapter.setStatus(Chapter.Status.DONE);
-        }
-        if (!repository.saveChapterRevision(before, chapter, proposal.getBaseVersion())) {
-            throw new IllegalStateException("章节版本已变化");
-        }
-        // 消费组合候选（原候选不动）
-        repository.markProposalStale(projectId, proposal.getId());
+        revisions.applyProposal(projectId, previewId);
         EventLog.emit("SELECTIVE_COMBINE_ACCEPTED", Map.of(
                 "projectId", projectId, "previewId", previewId,
                 "chapterIndex", proposal.getChapterIndex()));
@@ -155,6 +141,11 @@ public class SelectiveAcceptService {
             throw new IllegalArgumentException("不是组合候选: " + previewId);
         }
         return proposal;
+    }
+
+    private String checkKey(RevisionProposal proposal) {
+        return COMBINE_CHECKER + ":" + proposal.getId() + ":"
+                + com.writing.novel.domain.ChapterApproval.contentHash("", contentOf(proposal));
     }
 
     private String contentOf(RevisionProposal proposal) {

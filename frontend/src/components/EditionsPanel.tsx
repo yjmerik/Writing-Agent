@@ -108,7 +108,7 @@ export default function EditionsPanel({ projectId }: { projectId: string }) {
                     )}
                     <Button size="small" icon={<ExportOutlined />}
                       href={api.exportBookEditionUrl(projectId, record.editionId)}
-                      target="_blank">导出此版本</Button>
+                      download={`book-edition-${record.editionId}.md`}>导出此版本</Button>
                   </Space>) },
             ]} />
         )}

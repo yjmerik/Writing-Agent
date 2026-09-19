@@ -1923,6 +1923,69 @@ public class SqliteNovelRepository implements NovelRepository {
         }
     }
 
+    @Override
+    public GroupProposalCommit commitProposalGroup(String projectId, String requestId,
+                                                   String commandId, List<String> proposalIds) {
+        if (commandId == null || commandId.isBlank() || proposalIds == null || proposalIds.isEmpty()) {
+            throw new IllegalArgumentException("整组采纳需要命令编号及候选");
+        }
+        return runInTransaction(conn -> {
+            try {
+                var mapper = new ObjectMapper();
+                try (var ps = conn.prepareStatement("SELECT status, acceptance FROM revision_requests WHERE project_id=? AND id=?")) {
+                    ps.setString(1, projectId); ps.setString(2, requestId);
+                    try (var rs = ps.executeQuery()) {
+                        if (!rs.next()) throw new IllegalArgumentException("修订请求不存在");
+                        if ("COMPLETED".equals(rs.getString("status"))) {
+                            var receipt = mapper.readTree(rs.getString("acceptance"));
+                            if (!commandId.equals(receipt.path("commandId").asText()))
+                                throw new IllegalStateException("请求已由另一命令采纳");
+                            List<Integer> chapters = new ArrayList<>();
+                            receipt.path("chapters").forEach(n -> chapters.add(n.asInt()));
+                            return new GroupProposalCommit(true, chapters);
+                        }
+                        if (!"SCOPE_APPROVED".equals(rs.getString("status")))
+                            throw new IllegalStateException("修订范围尚未批准");
+                    }
+                }
+                List<Integer> chapters = new ArrayList<>();
+                Set<Integer> seen = new HashSet<>();
+                for (String proposalId : proposalIds) {
+                    RevisionProposal proposal = selectProposal(conn, projectId, proposalId);
+                    if (proposal == null || proposal.getTargetType() != RevisionProposal.TargetType.CHAPTER
+                            || proposal.getRequestKey() == null || !proposal.getRequestKey().startsWith("rr:" + requestId + ":")
+                            || proposal.getStatus() != RevisionProposal.Status.READY
+                            || !seen.add(proposal.getChapterIndex())) {
+                        throw new IllegalStateException("整组候选不完整、重复或已变化");
+                    }
+                    Chapter current = selectChapterByIndex(conn, projectId, proposal.getChapterIndex());
+                    if (current == null) throw new IllegalStateException("候选章节不存在");
+                    var identity = ChapterApproval.Identity.of(current);
+                    var after = mapper.readTree(proposal.getAfterJson());
+                    String title = after.path("title").asText("").trim();
+                    String content = after.path("content").asText("").trim();
+                    if (title.isBlank() || content.isBlank()
+                            || (content.length() < 500 && current.getStatus() != Chapter.Status.DRAFTING)) {
+                        throw new IllegalStateException("候选标题/正文为空或低于500字门槛");
+                    }
+                    ChapterVersion snapshot = new ChapterVersion(UUID.randomUUID().toString(), projectId,
+                            current.getChapterIndex(), current.getVersion(), current.getTitle(), current.getContent(),
+                            "GROUP_PROPOSAL", Instant.now());
+                    current.setTitle(title); current.setContent(content);
+                    if (current.getStatus() == Chapter.Status.DRAFTING && content.length() >= 500) current.setStatus(Chapter.Status.DONE);
+                    doCommitProposalChapter(conn, projectId, proposalId, snapshot, current, identity);
+                    chapters.add(proposal.getChapterIndex());
+                }
+                try (var ps = conn.prepareStatement("UPDATE revision_requests SET status='COMPLETED', acceptance=?, updated_at=? WHERE project_id=? AND id=? AND status='SCOPE_APPROVED'")) {
+                    ps.setString(1, mapper.writeValueAsString(Map.of("commandId", commandId, "chapters", chapters)));
+                    ps.setString(2, Instant.now().toString()); ps.setString(3, projectId); ps.setString(4, requestId);
+                    if (ps.executeUpdate() != 1) throw new IllegalStateException("请求已变化，整组采纳回滚");
+                }
+                return new GroupProposalCommit(false, chapters);
+            } catch (SQLException | JsonProcessingException e) { throw new RuntimeException(e); }
+        });
+    }
+
     private ProposalCommitResult doCommitProposalChapter(Connection conn, String projectId,
                                                          String proposalId, ChapterVersion snapshot,
                                                          Chapter revised,

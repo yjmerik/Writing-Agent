@@ -76,7 +76,7 @@ public class CharacterAsOfService {
         List<Map<String, Object>> knows = new ArrayList<>();
         List<Map<String, Object>> believes = new ArrayList<>();
         for (Map<String, Object> learned : evidenceRepository.findLearnedByCharacter(
-                projectId, characterName, atChapter)) {
+                projectId, character.getId(), atChapter)) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("factId", learned.get("factId"));
             m.put("quote", learned.get("quote"));
@@ -96,6 +96,22 @@ public class CharacterAsOfService {
         }
         result.put("knows", knows);
         result.put("believes", believes);
+
+        // 读者依据正文已呈现的来源获知；不以角色获知时间代替叙述位置。
+        List<Map<String, Object>> readerKnows = new ArrayList<>();
+        for (StoryFact fact : canon.findAll(projectId)) {
+            for (var source : evidenceRepository.findByFact(projectId, fact.getId())) {
+                if (((Number) source.get("chapterIndex")).intValue() > atChapter) continue;
+                if (source.get("quote") == null || source.get("quote").toString().isBlank()) continue;
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("factId", fact.getId()); row.put("quote", source.get("quote"));
+                row.put("sourceChapter", source.get("chapterIndex"));
+                row.put("sourceVersion", source.get("chapterVersion"));
+                row.put("evidenceStale", source.get("evidenceStale"));
+                readerKnows.add(row);
+            }
+        }
+        result.put("readerKnows", readerKnows);
 
         // 4. 关系边：N 时点有效（validFrom<=N<=validTo）；target 以实体名呈现
         Map<String, String> entityNames = new HashMap<>();

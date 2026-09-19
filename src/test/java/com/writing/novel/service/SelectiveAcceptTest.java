@@ -75,6 +75,45 @@ class SelectiveAcceptTest {
                 "候选B第一段：官差的火把逼近栈桥。\n候选B第二段：江砚握紧了信。\n候选B第三段：雾更浓了。");
     }
 
+    @Test
+    void 同章第二份组合不能继承第一份的重检() {
+        var first = service.combine(projectId, requestId, 8, List.of(
+                new SelectiveAcceptService.Fragment(proposalA, List.of(0, 1, 2))));
+        service.recheck(projectId, first.previewId());
+        var second = service.combine(projectId, requestId, 8, List.of(
+                new SelectiveAcceptService.Fragment(proposalA, List.of(0, 2))));
+        assertTrue(service.needsRecheck(projectId, second.previewId()));
+        assertThrows(IllegalStateException.class, () -> service.accept(projectId, second.previewId()));
+    }
+
+    @Test
+    void 无效检查输出不能允许组合采纳() {
+        var results = new CheckResultRepository(new ConnectionProvider(tempDir.resolve("selective.db").toString()));
+        LlmGateway invalid = new LlmGateway() {
+            @Override public LlmResponse complete(LlmRequest req) { return new LlmResponse("[]", 10, 10); }
+            @Override public void streamComplete(LlmRequest req, com.writing.novel.llm.client.StreamHandler h) {}
+        };
+        var invalidService = new SelectiveAcceptService(repo, requests, new ContinuityCheckerAgent(
+                invalid, repo, com.writing.novel.agent.TestPromptHelper.create(), null, results), results);
+        var combined = invalidService.combine(projectId, requestId, 8, List.of(
+                new SelectiveAcceptService.Fragment(proposalA, List.of(0, 1, 2))));
+        invalidService.recheck(projectId, combined.previewId());
+        assertTrue(invalidService.needsRecheck(projectId, combined.previewId()));
+        assertThrows(IllegalStateException.class, () -> invalidService.accept(projectId, combined.previewId()));
+    }
+
+    @Test
+    void 组合采纳重试重放同一回执不再次写稿() {
+        var combined = service.combine(projectId, requestId, 8, List.of(
+                new SelectiveAcceptService.Fragment(proposalA, List.of(0, 1, 2))));
+        service.recheck(projectId, combined.previewId());
+        service.accept(projectId, combined.previewId());
+        int acceptedVersion = repo.findChapterByIndex(projectId, 8).orElseThrow().getVersion();
+        assertTrue(service.accept(projectId, combined.previewId()));
+        assertEquals(acceptedVersion, repo.findChapterByIndex(projectId, 8).orElseThrow().getVersion());
+        assertEquals(RevisionProposal.Status.APPLIED, repo.findProposal(projectId, combined.previewId()).orElseThrow().getStatus());
+    }
+
     private String saveProposal(String requestKey, int baseVersion, String content) {
         var identity = com.writing.novel.domain.ChapterApproval.Identity.of(
                 repo.findChapterByIndex(projectId, 8).orElseThrow());

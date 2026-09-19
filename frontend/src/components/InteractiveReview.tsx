@@ -5,7 +5,7 @@ import {
   contentHashHex, localStorageAdapter,
 } from '../lib/draftStore';
 import type { StoredDraft } from '../lib/draftStore';
-import type { AuthorDirectiveView, ForeshadowCandidateView, ReviewContext } from '../api/client';
+import type { AuthorDirectiveView, DirectiveEvidenceView, ForeshadowCandidateView, ReviewContext } from '../api/client';
 import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, HistoryOutlined, PlusOutlined, ReloadOutlined, TrophyOutlined } from '@ant-design/icons';
 import { ApiError, api } from '../api/client';
 import type { AgentRevisionTarget, CheckpointRevision } from '../api/client';
@@ -497,9 +497,20 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
     } catch (err) { message.error((err as Error).message); }
     finally { setDirectiveBusy(false); }
   };
-  const confirmDirective = async (id: string) => {
-    try { await api.confirmDirective(projectId, id); await loadDirectives(); }
-    catch (err) { message.error((err as Error).message); }
+  const isDirectiveConfirmed = (d: AuthorDirectiveView) => d.status === 'CONFIRMED'
+    || (d.evidence ?? []).some(e => e.status === 'CONFIRMED' && e.directiveRevision === d.revision
+      && (d.kind === 'ONCE' || (e.chapterIndex === currentChapter?.chapterIndex
+        && e.chapterVersion === currentBody?.version)));
+  const confirmEvidence = async (d: AuthorDirectiveView, e: DirectiveEvidenceView) => {
+    const context = reviewContexts[e.chapterIndex];
+    if (!context || context.identity.version !== e.chapterVersion || context.identity.contentHash !== e.contentHash) return;
+    setDirectiveBusy(true);
+    try {
+      await api.confirmDirectiveEvidence(projectId, d.id, e.id, context.identity, d.revision);
+      await loadDirectives(); await loadReviewContext(e.chapterIndex); onChanged();
+      message.success('已确认此稿证据，单次要求不会重复消费');
+    } catch (err) { message.error((err as Error).message); }
+    finally { setDirectiveBusy(false); }
   };
   const dismissDirective = async (id: string) => {
     try { await api.dismissDirective(projectId, id); await loadDirectives(); }
@@ -691,6 +702,22 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
 
   // p36-05: 统一「批准当前稿」——章节卡、章节类检查点卡与窄屏抽屉共用同一 handler；
   // 服务端做原子比较提交（身份 + 待审集合指纹 + 幂等键），409 时保留草稿强制重读。
+  const [rechecking, setRechecking] = useState(false);
+  const recheckCurrentDraft = async () => {
+    if (!currentChapter || !currentBody || rechecking) return;
+    const context = reviewContexts[currentChapter.chapterIndex];
+    if (!context || context.identity.version !== currentBody.version) return;
+    setRechecking(true);
+    try {
+      await api.recheckChapter(projectId, currentChapter.chapterIndex, context.identity);
+      await refresh(true, currentChapter.chapterIndex);
+      await loadReviewContext(currentChapter.chapterIndex);
+      onChanged();
+      message.success('当前稿连续性补查完成；其他报告仍按各自稿号显示');
+    } catch (e) { message.error(`补查未完成：${(e as Error).message}`); }
+    finally { setRechecking(false); }
+  };
+
   const approveChapterDraft = async (chapterIndex: number) => {
     if (approving) return;
     const meta = chapters.find(c => c.chapterIndex === chapterIndex);
@@ -1103,7 +1130,9 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                     <Tag color="blue">{currentChapter.wordCount} 字</Tag>
                     <Tag color="purple">v{currentChapter.version}</Tag>
                     <Button size="small" onClick={() => setReviewPanelOpen(true)}>审查</Button>
-                    {currentChapter.status === 'NEEDS_MANUAL_REVIEW' && (
+                    <Button size="small" loading={rechecking} disabled={!currentApproveReady}
+                      onClick={() => void recheckCurrentDraft()}>补查当前稿连续性</Button>
+                    {['DONE', 'NEEDS_MANUAL_REVIEW'].includes(currentChapter.status ?? '') && (
                       <Button size="small" type="primary" loading={approving}
                         disabled={!currentApproveReady}
                         title={currentApproveReady ? '批准当前加载的稿件' : '正文或审阅上下文尚未就绪'}
@@ -1240,7 +1269,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                 style={{ marginBottom: 12 }}
                 items={[{
                   key: 'directives',
-                  label: `📝 意见（${directives.filter(d => d.status === 'OPEN' || d.status === 'APPLIED_SYSTEM').length} 项待办）`,
+                  label: `📝 意见（${directives.filter(d => !isDirectiveConfirmed(d) && (d.status === 'OPEN' || d.status === 'APPLIED_SYSTEM')).length} 项待办）`,
                   children: (
                     <div>
                       <Input.TextArea
@@ -1277,11 +1306,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                         renderItem={d => (
                           <List.Item style={{ flexDirection: 'column', alignItems: 'stretch', gap: 8 }}
                             actions={[
-                              d.status === 'APPLIED_SYSTEM' ? (
-                                <Button key="c" size="small" type="primary"
-                                  onClick={() => void confirmDirective(d.id)}>确认已落实</Button>
-                              ) : null,
-                              d.status !== 'CONFIRMED' && d.kind !== 'HARD' ? (
+                              !isDirectiveConfirmed(d) && d.kind !== 'HARD' ? (
                                 <Button key="d" size="small" onClick={() => void dismissDirective(d.id)}>撤销</Button>
                               ) : null,
                             ].filter(Boolean) as JSX.Element[]}
@@ -1293,10 +1318,10 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                                     {d.kind === 'HARD' ? '硬性' : d.kind === 'ONCE' ? '单次' : '偏好'}
                                   </Tag>
                                   {d.chapterIndex != null && <Tag>第 {d.chapterIndex} 章</Tag>}
-                                  <Tag color={d.status === 'CONFIRMED' ? 'green'
+                                  <Tag color={isDirectiveConfirmed(d) ? 'green'
                                     : d.status === 'APPLIED_SYSTEM' ? 'gold'
                                     : d.status === 'DISMISSED' ? 'default' : 'processing'}>
-                                    {d.status === 'OPEN' ? '待处理'
+                                    {isDirectiveConfirmed(d) ? '已确认' : d.status === 'OPEN' ? '待处理'
                                       : d.status === 'APPLIED_SYSTEM' ? '系统已落实，待你确认'
                                       : d.status === 'CONFIRMED' ? '已确认' : '已撤销'}
                                   </Tag>
@@ -1305,6 +1330,16 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                               description={
                                 <div>
                                   <div style={{ fontSize: 12 }}>{d.content}</div>
+                                  {(d.evidence ?? []).map(e => <div key={e.id} style={{ padding: '6px 0' }}>
+                                    <Text>第 {e.chapterIndex} 章 v{e.chapterVersion} · {e.status === 'CONFIRMED' ? '已确认此稿' : e.status === 'APPLIED_SYSTEM' ? '系统证据，待核对' : e.status === 'STALE' ? '旧稿证据' : '尚未核实'}</Text>
+                                    <div>{e.quote ? `“${e.quote}”` : e.reason || '没有可定位引文'}</div>
+                                    {e.status === 'APPLIED_SYSTEM' && <Button size="small" loading={directiveBusy}
+                                      disabled={!currentApproveReady || e.chapterIndex !== currentChapter?.chapterIndex
+                                        || e.chapterVersion !== currentBody?.version
+                                        || e.contentHash !== currentReviewContext?.identity.contentHash
+                                        || e.directiveRevision !== d.revision}
+                                      onClick={() => void confirmEvidence(d, e)}>确认此稿证据</Button>}
+                                  </div>)}
                                   {d.systemEvidence && (
                                     <div style={{ fontSize: 12, color: '#999' }}>落实证据：{d.systemEvidence}</div>
                                   )}
@@ -1442,7 +1477,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                 currentChapter && <Text type="secondary">本章暂无质量报告。</Text>
               )}
 
-            {currentChapter?.status === 'NEEDS_MANUAL_REVIEW' && (
+            {currentChapter && ['DONE', 'NEEDS_MANUAL_REVIEW'].includes(currentChapter.status ?? '') && (
               <Button type="primary" block loading={approving} disabled={!currentApproveReady}
                 onClick={() => void approveChapterDraft(currentChapter.chapterIndex)}>批准当前稿</Button>
             )}

@@ -51,6 +51,12 @@ public class ContinuityCheckerAgent {
 
     public List<ContinuityIssue> check(String projectId, int chapterIndex,
                                         String chapterContent, String relevantSettings) {
+        return checkWithEnvelope(projectId, chapterIndex, chapterContent, relevantSettings).issues();
+    }
+
+    /** 返回本次调用的完整结果，避免空问题列表被误认为检查成功。 */
+    public CheckResultEnvelope checkWithEnvelope(String projectId, int chapterIndex,
+                                                String chapterContent, String relevantSettings) {
         String systemPrompt = promptService.render("continuity-check", Map.of());
 
         StringBuilder msg = new StringBuilder("新章节内容：\n").append(chapterContent)
@@ -108,7 +114,7 @@ public class ContinuityCheckerAgent {
                 repository.saveContinuityIssue(issue);
             }
         }
-        return issues;
+        return new CheckResultEnvelope(envelope.status(), issues, envelope.reason());
     }
 
     /**

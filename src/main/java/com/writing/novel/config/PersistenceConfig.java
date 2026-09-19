@@ -165,9 +165,15 @@ public class PersistenceConfig {
             NovelRepository repository,
             com.writing.novel.service.RevisionRequestService revisionRequestService,
             com.writing.novel.agent.ContinuityCheckerAgent continuityCheckerAgent,
-            com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository) {
+            com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository,
+            com.writing.novel.service.WritingTaskExecutor writingTaskExecutor,
+            com.writing.novel.orchestrator.NovelOrchestrator orchestrator,
+            com.writing.novel.service.SupportWithdrawalService supportWithdrawalService) {
         return new com.writing.novel.service.SelectiveAcceptService(repository, revisionRequestService,
-                continuityCheckerAgent, checkResultRepository);
+                continuityCheckerAgent, checkResultRepository,
+                new com.writing.novel.service.ChapterRevisionService(repository, writingTaskExecutor,
+                        orchestrator::refreshChapterAfterRevisionAsync, supportWithdrawalService,
+                        revisionRequestService));
     }
 
     // NCS-023: 三类信息分层

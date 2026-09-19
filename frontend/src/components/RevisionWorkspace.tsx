@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Card, Steps, Button, Input, Select, Space, Tag, Typography, Empty, Spin, Alert, List, message, Tooltip } from 'antd';
 import { CheckCircleOutlined, EyeOutlined, ForkOutlined, SafetyOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
+import type { RevisionCandidateRecord } from '../api/client';
+import SelectiveAcceptPanel from './SelectiveAcceptPanel';
 import type { RevisionRequestItem, ImpactAnalysisResult } from '../types';
 
 const { Text, Paragraph } = Typography;
@@ -29,12 +31,13 @@ export default function RevisionWorkspace({ projectId, currentChapter }: {
   currentChapter: number;
 }) {
   const [requests, setRequests] = useState<RevisionRequestItem[]>([]);
-  const [selectedId, setSelectedId] = useState<string>('');
+  const [selectedId, setSelectedId] = useState<string>(() => { try { return localStorage.getItem(`revision-selected:${projectId}`) ?? ''; } catch { return ''; } });
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [impact, setImpact] = useState<ImpactAnalysisResult | null>(null);
   const [readChapters, setReadChapters] = useState<Set<number>>(new Set());
   const [acceptMessage, setAcceptMessage] = useState<string>('');
+  const [reviewCandidates, setReviewCandidates] = useState<RevisionCandidateRecord[]>([]);
   const [messageApi, messageContextHolder] = message.useMessage();
   // 新建表单
   const [newOrigin, setNewOrigin] = useState('CHAPTER_REWRITE');
@@ -53,6 +56,27 @@ export default function RevisionWorkspace({ projectId, currentChapter }: {
     });
   };
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [projectId]);
+
+  const savePosition = (analysis: ImpactAnalysisResult | null, read: Set<number>) => {
+    try { localStorage.setItem(`revision-review:${projectId}:${selectedId}`, JSON.stringify({ impact: analysis, read: [...read] })); }
+    catch { messageApi.warning('审阅位置未能暂存，刷新后需要重新核对'); }
+  };
+  const loadCandidates = async () => {
+    const rows = await api.listRevisionCandidates(projectId);
+    setReviewCandidates(rows.filter(c => c.requestKey?.startsWith(`rr:${selectedId}:`)));
+  };
+  useEffect(() => {
+    setImpact(null); setReadChapters(new Set()); setAcceptMessage(''); setReviewCandidates([]);
+    if (!selectedId) return;
+    try {
+      localStorage.setItem(`revision-selected:${projectId}`, selectedId);
+      const stored = JSON.parse(localStorage.getItem(`revision-review:${projectId}:${selectedId}`) ?? 'null');
+      if (stored?.impact?.requestId === selectedId) {
+        setImpact(stored.impact); setReadChapters(new Set(stored.read ?? []));
+      }
+    } catch { /* 暂存不可用时仍可重新分析 */ }
+    void loadCandidates().catch(() => {});
+  }, [projectId, selectedId]);
 
   const selected = requests.find(r => r.id === selectedId) ?? null;
   const step = !selected ? 0
@@ -97,7 +121,7 @@ export default function RevisionWorkspace({ projectId, currentChapter }: {
       const anchors = JSON.parse(selected.targetAnchors || '[]');
       const chapter = anchors[0]?.chapterIndex ?? newChapter;
       const result = await api.analyzeImpact(projectId, selected.id, chapter);
-      setImpact(result);
+      setImpact(result); savePosition(result, readChapters);
       messageApi.success(`影响分析完成：${result.items.length} 个后续章节`);
     } catch (e) {
       messageApi.error(e instanceof Error ? e.message : '分析失败');
@@ -113,7 +137,8 @@ export default function RevisionWorkspace({ projectId, currentChapter }: {
       const result = await api.generateRepairs(projectId, selected.id, chapter, selected.intent);
       messageApi.success(`已生成 ${result.generated} 个修复候选（第 ${result.chapters.join('/')} 章）——候选不动主稿`);
       const re = await api.analyzeImpact(projectId, selected.id, chapter);
-      setImpact(re);
+      setImpact(re); setReadChapters(new Set()); savePosition(re, new Set());
+      await loadCandidates();
     } catch (e) {
       messageApi.error(e instanceof Error ? e.message : '生成失败');
     } finally { setBusy(false); }
@@ -125,11 +150,14 @@ export default function RevisionWorkspace({ projectId, currentChapter }: {
     const unread = must.filter(i => !readChapters.has(i.chapterIndex));
     setBusy(true);
     try {
-      const commandId = `ui-${selected.id.slice(0, 8)}-${Date.now()}`;
+      // 结果未知时沿用同一命令；刷新也不会生成第二次采纳意图。
+      const commandKey = `revision-accept:${projectId}:${selected.id}`;
+      let commandId = localStorage.getItem(commandKey);
+      if (!commandId) { commandId = crypto.randomUUID(); localStorage.setItem(commandKey, commandId); }
       const receipt = await api.acceptRevisionGroup(projectId, selected.id, commandId);
       setAcceptMessage(receipt.message);
       messageApi.success(receipt.message);
-      load();
+      load(); await loadCandidates();
     } catch (e) {
       messageApi.error(e instanceof Error ? e.message : '采纳失败（候选保留）');
     } finally { setBusy(false); }
@@ -204,6 +232,7 @@ export default function RevisionWorkspace({ projectId, currentChapter }: {
             {impact && selected.status === 'SCOPE_APPROVED' &&
               impact.items.some(i => i.classification === 'MUST_REPAIR') && (
               <Button type="primary" icon={<CheckCircleOutlined />} loading={busy}
+                disabled={reviewCandidates.length === 0 || reviewCandidates.some(c => c.status !== 'READY' || !readChapters.has(c.chapterIndex!))}
                 onClick={handleAccept}>
                 采纳 {impact.items.filter(i => i.classification === 'MUST_REPAIR').length} 章修订
               </Button>
@@ -213,6 +242,20 @@ export default function RevisionWorkspace({ projectId, currentChapter }: {
         </Card>
       )}
 
+      {reviewCandidates.map(candidate => <Card key={candidate.id} size="small"
+        title={`第 ${candidate.chapterIndex} 章修订候选 · ${candidate.status}`}>
+        <Paragraph type="secondary">{candidate.summary} · 基于 v{candidate.baseVersion}</Paragraph>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div><Text strong>原稿</Text><pre style={{ whiteSpace: 'pre-wrap', maxHeight: 280, overflow: 'auto' }}>{candidateText(candidate.beforeJson)}</pre></div>
+          <div><Text strong>候选</Text><pre style={{ whiteSpace: 'pre-wrap', maxHeight: 280, overflow: 'auto' }}>{candidateText(candidate.afterJson)}</pre></div>
+        </div>
+        <Button onClick={() => { const next = new Set([...readChapters, candidate.chapterIndex!]); setReadChapters(next); savePosition(impact, next); }}>
+          {readChapters.has(candidate.chapterIndex!) ? '已读此候选' : '已对照此候选'}
+        </Button>
+      </Card>)}
+
+      {selected?.status === 'SCOPE_APPROVED' && <SelectiveAcceptPanel key={selected.id} projectId={projectId} requestId={selected.id} />}
+
       {impact && (
         <Card title={`影响范围 · ${impact.items.length} 个后续章节`} size="small"
           extra={<Tooltip title={impact.coverageNote}><Tag style={{ cursor: 'help' }}>覆盖说明</Tag></Tooltip>}>
@@ -220,7 +263,7 @@ export default function RevisionWorkspace({ projectId, currentChapter }: {
           <List size="small" dataSource={impact.items} renderItem={item => (
             <List.Item actions={[
               <Button key="read" size="small" type={readChapters.has(item.chapterIndex) ? 'primary' : 'default'}
-                onClick={() => setReadChapters(prev => new Set([...prev, item.chapterIndex]))}
+                onClick={() => { const next = new Set([...readChapters, item.chapterIndex]); setReadChapters(next); savePosition(impact, next); }}
                 icon={<EyeOutlined />}>
                 {readChapters.has(item.chapterIndex) ? '已读' : '标记已读'}
               </Button>,
@@ -249,4 +292,9 @@ export default function RevisionWorkspace({ projectId, currentChapter }: {
 function InputNumberish({ value, min, onChange }: { value: number; min: number; onChange: (v: number | null) => void }) {
   return <Input type="number" value={value} min={min} style={{ width: 72 }}
     onChange={e => onChange(Number(e.target.value) || min)} />;
+}
+
+function candidateText(json: string): string {
+  try { const value = JSON.parse(json); return value.content ?? JSON.stringify(value, null, 2); }
+  catch { return '候选内容无法解析，请重新生成'; }
 }

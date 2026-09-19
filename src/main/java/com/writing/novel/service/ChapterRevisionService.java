@@ -355,6 +355,13 @@ public class ChapterRevisionService {
         return new ProposalApplyResult(commit, applied);
     }
 
+    /** 整组正文事务成功后的来源撤回与派生刷新；不再写一版正文。 */
+    public void refreshAfterGroupCommit(String projectId, int chapterIndex) {
+        Chapter chapter = requireChapter(projectId, chapterIndex);
+        withdrawStaleEvidence(projectId, chapterIndex, chapter.getVersion());
+        refreshIsolated(projectId, chapter);
+    }
+
     private com.fasterxml.jackson.databind.node.ObjectNode parseProposalAfter(RevisionProposal proposal) {
         try {
             com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper()

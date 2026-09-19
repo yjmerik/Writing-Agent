@@ -240,6 +240,12 @@ export interface BookReviewData {
   }>;
 }
 
+export interface DirectiveEvidenceView {
+  id: string; directiveRevision: number; chapterIndex: number; chapterVersion: number;
+  contentHash: string; quote: string | null; reason: string | null;
+  status: 'APPLIED_SYSTEM' | 'CONFIRMED' | 'UNMET' | 'STALE';
+}
+
 export interface AuthorDirectiveView {
   id: string;
   kind: 'HARD' | 'ONCE' | 'PREFERENCE';
@@ -248,6 +254,8 @@ export interface AuthorDirectiveView {
   status: 'OPEN' | 'APPLIED_SYSTEM' | 'CONFIRMED' | 'DISMISSED';
   systemEvidence: string | null;
   systemEvidenceVersion: number | null;
+  revision: number;
+  evidence: DirectiveEvidenceView[];
   createdAt: string;
   confirmedAt?: string;
 }
@@ -560,6 +568,17 @@ export const api = {
       `/projects/${projectId}/revisions${qs ? `?${qs}` : ''}`);
   },
 
+  combineRevisionCandidates: (projectId: string, body: {
+    requestId: string; chapterIndex: number; fragments: { previewId: string; paragraphs: number[] }[];
+  }) => request<{ previewId: string; content: string; sources: string[]; needsRecheck: boolean }>(
+    `/projects/${projectId}/selective-accept/combine`, { method: 'POST', body: JSON.stringify(body) }),
+
+  recheckCombinedCandidate: (projectId: string, previewId: string) =>
+    request<{ needsRecheck: boolean }>(`/projects/${projectId}/selective-accept/${previewId}/recheck`, { method: 'POST' }, 300000),
+
+  acceptCombinedCandidate: (projectId: string, previewId: string) =>
+    request<{ accepted: boolean }>(`/projects/${projectId}/selective-accept/${previewId}/accept`, { method: 'POST' }, 300000),
+
   cancelRevisionCandidate: (projectId: string, candidateId: string) =>
     request<RevisionCandidateRecord>(`/projects/${projectId}/revisions/${candidateId}/cancel`, {
       method: 'POST',
@@ -603,6 +622,11 @@ export const api = {
     request<ReviewContext>(`/projects/${id}/chapters/${chapterIndex}/review-context`),
 
   /** p36-05: 版本化批准——identity/reviewSetHash 必须与作者已读内容一致，服务端不补填 */
+  recheckChapter: (id: string, chapterIndex: number, identity: ReviewIdentity) =>
+    request<{ reportCurrent: boolean }>(`/projects/${id}/chapters/${chapterIndex}/recheck`, {
+      method: 'POST', body: JSON.stringify({ identity }),
+    }, 300000),
+
   approveChapterRevision: (id: string, chapterIndex: number, body: {
     identity: ReviewIdentity;
     reviewSetHash: string;
@@ -800,6 +824,12 @@ export const api = {
     request<{ promoted: boolean }>(`/projects/${id}/foreshadow-candidates/${candidateId}/promote`, { method: 'POST' }),
   rejectForeshadowCandidate: (id: string, candidateId: string) =>
     request<{ rejected: boolean }>(`/projects/${id}/foreshadow-candidates/${candidateId}/reject`, { method: 'POST' }),
+
+  confirmDirectiveEvidence: (id: string, directiveId: string, evidenceId: string,
+    identity: ReviewIdentity, directiveRevision: number) =>
+    request<DirectiveEvidenceView>(`/projects/${id}/directives/${directiveId}/evidence/${evidenceId}/confirm`, {
+      method: 'POST', body: JSON.stringify({ identity, directiveRevision }),
+    }),
 
   confirmDirective: (id: string, directiveId: string) =>
     request<AuthorDirectiveView>(`/projects/${id}/directives/${directiveId}/confirm`, { method: 'POST' }),

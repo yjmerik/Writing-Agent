@@ -181,6 +181,23 @@ class GroupAcceptanceTest {
     }
 
     @Test
+    void 第二章提交中断不得留下第一章新稿或已采纳回执() throws Exception {
+        String requestId = prepareRequest();
+        var before12 = repo.findChapterByIndex(projectId, 12).orElseThrow();
+        try (var conn = new ConnectionProvider(tempDir.resolve("group.db").toString()).getConnection();
+             var st = conn.createStatement()) {
+            st.execute("CREATE TRIGGER fail_second BEFORE UPDATE ON chapters WHEN EXISTS (SELECT 1 FROM revision_proposals WHERE project_id=NEW.project_id AND status='APPLIED') BEGIN SELECT RAISE(ABORT, '模拟第二章提交中断'); END");
+        }
+        assertThrows(RuntimeException.class, () -> acceptance.acceptGroup(projectId, requestId, "interrupted"));
+        var after12 = repo.findChapterByIndex(projectId, 12).orElseThrow();
+        assertEquals(before12.getContent(), after12.getContent());
+        assertEquals(before12.getVersion(), after12.getVersion());
+        assertTrue(repo.listProposals(projectId).stream().filter(p -> p.getRequestKey().startsWith("rr:" + requestId))
+                .allMatch(p -> p.getStatus() == RevisionProposal.Status.READY && p.getResultJson() == null));
+        assertEquals("SCOPE_APPROVED", requests.get(projectId, requestId).getStatus().name());
+    }
+
+    @Test
     void 保护锚点被候选改动时拒绝() {
         String requestId = prepareRequest();
         // 把保护 span 放进第 20 章候选章：候选内容不含"结尾原句保持不变"→ 若保护锚点声明于该章则拒绝

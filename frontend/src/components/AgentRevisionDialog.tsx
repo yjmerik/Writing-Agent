@@ -80,6 +80,8 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
   const [generating, setGenerating] = useState(false);
   const [applying, setApplying] = useState(false);
   const [error, setError] = useState('');
+  const [stale, setStale] = useState(false);
+  const [latest, setLatest] = useState<Record<string, unknown> | null>(null);
   // p37-04: 持久候选恢复入口（刷新/重启后候选仍在 DB）
   const [candidates, setCandidates] = useState<RevisionCandidateRecord[]>([]);
   const requestSequence = useRef(0);
@@ -92,6 +94,7 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
   useEffect(() => {
     requestSequence.current += 1;
     setPreview(null);
+    setStale(false); setLatest(null);
     setGenerating(false);
     setApplying(false);
     setError('');
@@ -112,6 +115,7 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
     if (applying) return;
     requestSequence.current += 1;
     setPreview(null);
+    setStale(false); setLatest(null);
     setError('');
     onCancel();
   };
@@ -121,6 +125,7 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
     const requestId = ++requestSequence.current;
     setGenerating(true);
     setPreview(null);
+    setStale(false); setLatest(null);
     setError('');
     try {
       const result = await api.previewAgentRevision(target, instructions.trim());
@@ -159,6 +164,7 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
       const before = JSON.parse(record.beforeJson) as Record<string, unknown>;
       const after = JSON.parse(record.afterJson) as Record<string, unknown>;
       setInstructions(record.instructions ?? '');
+      setStale(false); setLatest(null);
       setPreview({
         previewId: record.id,
         targetType: record.targetType,
@@ -176,7 +182,7 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
   };
 
   const applyPreview = async () => {
-    if (!target || !preview) return;
+    if (!target || !preview || stale) return;
     setApplying(true);
     setError('');
     let result: AgentRevisionApplyResult;
@@ -188,8 +194,17 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
       setError(conflict && (cause as ApiError).code === 'WORK_OWNERSHIP_CONFLICT'
         ? `Agent 正在处理本项目，请等待当前步骤完成或先接手编辑：${(cause as Error).message}`
         : conflict
-        ? `当前内容已变化，请关闭后刷新并重新生成预览：${(cause as Error).message}`
+        ? `当前内容已变化，此候选不可应用。请对照最新稿并重新生成预览：${(cause as Error).message}`
         : `应用失败：${(cause as Error).message}`);
+      if (conflict && (cause as ApiError).code !== 'WORK_OWNERSHIP_CONFLICT') {
+        setStale(true);
+        if (target.chapterIndex != null) {
+          try {
+            const current = await api.getChapter(target.projectId, target.chapterIndex);
+            if (current) setLatest({ title: current.title, content: current.content, version: current.version });
+          } catch { /* 保留旧候选与错误；重新生成会从服务端读取最新稿。 */ }
+        }
+      }
       setApplying(false);
       return;
     }
@@ -230,7 +245,7 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
           >重新生成预览</Button>
         ) : null,
         preview ? (
-          <Button key="apply" type="primary" loading={applying} onClick={() => void applyPreview()}>
+          <Button key="apply" type="primary" loading={applying} disabled={stale || generating} onClick={() => void applyPreview()}>
             确认应用
           </Button>
         ) : (
@@ -328,6 +343,11 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
               </Card>
             </Col>
           </Row>
+          {stale && <Card size="small" title="最新主稿（旧候选已失效）" style={{ marginTop: 12 }}>
+            <pre data-revision-side="latest" style={{ margin: 0, maxHeight: 320, overflow: 'auto', whiteSpace: 'pre-wrap' }}>
+              {latest ? renderSnapshot('CHAPTER', latest) : '最新稿读取失败，请重新生成预览。旧候选不会覆盖主稿。'}
+            </pre>
+          </Card>}
           <Space style={{ marginTop: 10 }}>
             <Text type="secondary">来源指纹</Text>
             <Text code>{preview.sourceVersion.slice(0, 12)}</Text>

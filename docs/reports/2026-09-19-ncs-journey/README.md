@@ -2,78 +2,63 @@
 
 Last Updated: 2026-09-20
 
-**结论：未达到全部场景通过；NCS-030 保持 in-progress，不登记完成、不合入 main。**
-本轮只做 feature 列表规定的实现和验收。发现的其他问题记录如下，未修改相关业务实现或重构。
-NCS-001..029 已完成；NCS-029 实现 9565132、完成回执 6480704 已在 main。
+**T01–T11 的确定性功能旅程已走通。** 本报告验证版本、操作、恢复、门禁和导出，不把合成模型输出当作文学质量或全书语义修复的证明。分支 `codex/ncs-030-browser-journey`；基线 main `6480704`。合并及干净主分支的验证证据见 `docs/harness/evidence/2026-09-20-ncs-030.json`（完成登记时生成）。
 
-## 环境与证据边界
+用户于 2026-09-20 授权补齐验收所需的原计划实现。仅补齐该范围；首次失败与旧阻塞保留在 [before-repairs.md](before-repairs.md)，不代表修复后的状态。
 
-- 源码基线：main 6480704；当前分支 codex/ncs-030-browser-journey，仅报告和状态文件改动。
-- Java 21；前端生产构建；ego-browser TaskSpace 23，p1。T04 临时增加 p2 模拟作者编辑，结束后已关闭。
-- UI 服务：localhost:18097，ScenarioLlmGateway + stub embedding，独立 SQLite `/tmp/writingagent-ncs-browser/novel.db`。没有真实模型费用。
-- 作品 A：`114381af-52ce-43a1-8a0e-6b96248619f0`，本轮从 UI 创建；场景网关生成了 19 章，用于任务、候选、时点、单次要求。
-- 作品 B：`f48efcbf-ea03-4eb5-9efa-b1faa9c7bc5b`，NCS-028 创建的隔离样本；用于历史、并发和成书报告。它的旧报告通过前置由 API 准备，不能冒充完整 UI 定稿旅程。
-- 模型样本为合成内容，不能证明文学质量、真实模型可靠性、真实长期审阅负担。T12 不在本 feature 中。
-- 下表“局部通过”只表示实测子路径通过，不等于整个联合场景通过。
+## 环境与样本
 
-## T01–T11 场景矩阵
+- Java 21，前端生产构建，ego-browser TaskSpace 23；真实浏览器操作。
+- localhost:18097，ScenarioLlmGateway + stub embedding，独立 SQLite `/tmp/writingagent-ncs-browser/novel.db`；没有调用真实模型。
+- A：`114381af-52ce-43a1-8a0e-6b96248619f0`，通过 UI 新建并生成19章，用于起步、任务、局部改文、人物时点与恢复。
+- B：`f48efcbf-ea03-4eb5-9efa-b1faa9c7bc5b`，隔离成书样本，用于并发、单次要求与冻结版本导出。旧版通过报告的前置由 API 准备。
+- C：`7bc6ca3a-aae4-4cda-91d4-b4f3cb2e2e7d`，通过 API 准备四章及密信来源证据。修改起点为焚信，后两章分别引用名单和原件，第四章为无关支线。范围批准、影响分析、候选比较、整组采纳和组合采纳均通过 UI 操作。
+- A 的来源证据与第10章获知记录通过 API 准备；第8/12章时点选择、查看和恢复通过 UI 操作。没有把数据准备冒充自然模型抽取。
 
-| 场景 | 实测 | 结论 / 尚缺证据 |
+## T01–T11 结果
+
+| 场景 | 实际观察与断言 | 证据 |
 |---|---|---|
-| T01 空作品到第一章 | UI 新建 A，仅填标题/构思，选填项留空；任务中心继续、停止，再继续后生成正文至第19章，世界观/人物/计划可见。见 NCS-029 截图。 | 局部通过：空作品起步无死锁。未逐项核对初始快照及设定/计划来源，也未验证构思多候选比较；不能标全场景通过。 |
-| T02 局部改文与保护 | A 第1章第1段→生成预览→前后比较→确认应用；v2→v3；首行之外的所有字节一致。`t02-preview.png`。 | 本次结构闭环通过：候选原文匹配来源段落；接受正文精确等于候选替换选区后的正文，未选区不变；来源指纹、接受回执版本与正文指纹全部匹配。见 persisted-audit.json；合成文本不证明文学效果。 |
-| T03 跨章改写 | A 第1章登记“交信改焚信”→批准范围→影响分析，列出18个后续章节和理由→生成候选，结果0个。`t03-impact.png`。 | 未覆盖完整闭环：样本没有建立真实交信/焚信依赖，18章均“未受影响”；无法据此验证隐含关系依赖、逐章修复及整组原子接受。不得把零候选当成通过。 |
-| T04 作者与 Agent 并发 | B 的 p1 生成 v3 候选；p2 作者保存补记形成 v4；p1 采纳旧候选返回409并提示来源变化；v4及作者补记保留。`t04-conflict.png`。 | 后端拒绝覆盖通过；**UI 未通过**：冲突后“确认应用”仍 enabled，且只展示旧基准与候选，没有三方比较。未覆盖实际长耗时 Agent 的全部晚到写入场景。 |
-| T05 停止、重启与重试 | A 任务中心停止→刷新保留暂停原因→继续保留旧记录。跨章请求刷新后仍 SCOPE_APPROVED，但影响列表回到“运行影响分析”。 | 局部通过：任务历史持久。未验证跨章已读位置与确认响应丢失恢复；继续协作新建 taskId 是现有 API 语义，不能冒充同一跨章任务恢复。 |
-| T06 人物早期时点 | A 世界观页主角001滑块切换第8/12章；作者状态可见，角色知情显示“尚无可定位依据”。`t06-chapter8.png`。 | 局部通过：时点选择与缺证据提示。样本无分时知情记录，未证明角色/读者/作者完整区分、POV及来源跳转。 |
-| T07 单次要求 | A 审查面板登记 ONCE 铜铃意见→待处理；生成含该要求的预览被拒绝：“候选遗漏要求编号…未实现必须给出 UNMET 与原因”。要求查询仍 OPEN。`t07-t08-review.png`、`t07-directive-block.png`。 | 安全阻断通过；**完整流程阻塞**：Scenario 返回未提供要求证据，不能验证采纳后的精确消费绑定。未绕过门禁。 |
-| T08 未知与坏输出 | A 页头“未查清19”，审查面板明确显示 v2 旧报告不能代表 v3；B 新整书报告显示待批准/审查屏障，未误显示通过。 | 局部通过：旧报告/未查清没有冒充通过。Scenario 的连续性 `[]` 被检查协议判为 INVALID（见 NCS-028 报告）；完整补查 UI、零预算不放行未全部走通。 |
-| T09 恢复旧内容 | 从版本中心只读比较 v2；B 确认恢复 v2，当前形成 v5；历史仍含 v2/v3/v4，v4作者补记完整保留；出现重审屏障。`t09-restored.png`。 | 局部通过：历史只读、恢复形成新稿、不丢后续记录。未逐条核对来源映射、所有故事影响重查及撤回恢复。 |
-| T10 组合候选 | 检查候选对话框和修订工作区；源码核对 `SelectiveAcceptController` 有 combine/recheck/accept，而 frontend/src 无 selective-accept 或组合采纳调用。 | **UI 入口缺失，未执行**：无法通过真实 UI 选择多候选片段并生成、重检、接受新候选。已有 SelectiveAcceptTest 4项通过只能证明后端专项，不能替代本场景。 |
-| T11 同一份全书定稿 | B 旧 edition 731cb264 显示 v2 通过报告，并提示当前稿已变化；恢复后创建 c819f620，v5报告必须处理2项（未作者批准、重审屏障），不继承旧批准。`t11-fixed-report.png`、`t11-new-report.png`。 | 局部通过：报告与版本绑定。NCS-028 导出端点200但 download事件未捕获；本轮 Browser.setDownloadBehavior 不受浏览器支持，在点击前失败。未证明真实文件下载；旧问题跨窗口由 EditionValidationTest 覆盖，未在此 UI 场景补造结论。 |
+| T01 空作品起步 | UI 仅填标题/构思，选填约定合法为空；6条世界设定、8人物和大纲均属于本作品；第一章已持久化。planRef 与当前章纲 SHA-256 前12位精确匹配。 | journey-results.json/startup；NCS-029 起步截图 |
+| T02 局部改文与保护 | 第一章 v2→v3，候选前文与来源段落匹配；落稿精确等于候选替换首段，未选区逐字不变；来源与接受回执指纹匹配。 | persisted-audit.json；t02-preview.png |
+| T03 跨章修订 | C 第2/3章 MUST_REPAIR、第4章不受影响；范围批准与接受独立；生成候选不改变主稿，逐章对照后整组接受。关系闭包、旧稿来源锚点及事务中断另由真实 SQLite 专项覆盖。 | t03-t05-group-retry.png；journey-results.json/group；ImpactAnalysisTest、GroupAcceptanceTest |
+| T04 并发与旧候选 | B 候选基于v5，另一浏览器页作者保存为v6；采纳旧候选返回预期409，按钮禁用，原基准/候选/最新稿均保留；作者补记未丢失。 | t04-stale-three-way.png；journey-results.json/stale |
+| T05 恢复与结果未知 | 任务停止/继续保留历史；跨章刷新恢复同一请求的影响列表与已读位置。CDP 在整组采纳服务端返回200后故意丢弃响应，再点采纳得到同commandId幂等收据；两章仅v2→v3。 | t03-t05-group-retry.png；journey-results.json/group；NCS-029 任务报告 |
+| T06 人物时点 | 第8章读者可见正文引文，人物尚无知情；第12章人物显示第10章获知及来源第8章v3；作者状态独立显示，来源可定位。按人物ID读取，避免姓名误配。 | t06-reader-before-character.png、t06-character-knows-later.png；journey-results.json/asof |
+| T07 单次要求 | UI 登记ONCE逐字写入要求；预览时仍OPEN，采纳为v7后证据绑定章/稿/hash/原句；作者确认该证据后显示已确认。核对器另有UNMET记录仍如实展示，未伪装通过。 | t07-version-evidence-confirmed.png；journey-results.json/directive |
+| T08 未知不误报 | 旧报告明确标旧稿、INVALID不当通过；DONE章可手动补查连续性。恢复后v4的补查得到VALID_EMPTY且正文指纹相符，其他读者报告仍保留原稿号。坏输出与零重写预算不放行由全量中的CheckResultEnvelopeTest等覆盖，未声称浏览器演练了全部模型故障。 | t07-t08-review.png；journey-results.json/recheck；SelectiveAcceptTest |
+| T09 恢复旧稿 | A第8章恢复v2形成v4，正文精确相等、v3及其新增引文仍在历史；撤回旧来源支持后，不再是人物当前已知事实，旧信念仍保留。随后实际补查当前连续性。B先前恢复v2形成v5亦有持久证据。 | t09-history-preserved.png、t09-restored.png；journey-results.json/restore；persisted-audit.json |
+| T10 组合候选 | UI从两份同章候选各选一段，形成新组合；检查前禁止采纳，独立重检后允许；落稿精确等于组合且v2→v3，原两份候选仍READY。第二组合不继承第一组合检查；INVALID阻断，重复接受幂等。 | t10-combined-accepted.png；journey-results.json/combo；SelectiveAcceptTest 7项 |
+| T11 同一份全书定稿 | 旧v2报告与新v5报告分离，新稿未继承批准；真实浏览器download事件取得3185字节文件，含冻结manifest及v2，不含当前v7新增要求和v6作者补记。 | t11-fixed-report.png、t11-new-report.png；t11-downloaded-book.md；journey-results.json/download |
 
-## 已验证的具体数据
+## 必需修复与先失败后通过
 
-- T02：A 第1章 v2→v3。按 UI `content.split('\n')` 的首行选区比较，`before.slice(firstNewline) === after.slice(firstNewline)` 为 true。
-  初次检测误用双换行边界，已纠正为真实 UI 的单换行边界；不能将该检测脚本误差写成产品缺陷。
-- T04：旧 preview `3bb54044-832d-4449-8a19-b15774f8f8c9` apply 返回409。作者 v4 仍以“作者补记：铜铃在案边，只响了一次。”结尾。冲突后按钮 DOM `disabled=false`。
-- T07：directive `d52c2233-6405-429d-92c2-8dc35dccceed` 为 ONCE / OPEN，预览失败没有消费它。
-- T09：当前 v5，历史版本集合包含4、3、2；v4正文含作者补记。
-- T11：旧 manifest `e2091cedf529288f8c81b30d2aee2615b2d7b82b2f0fe3fe039f6260732d6e2e`；新记录 `c819f620-f136-4966-a2cf-65686165ccdf`，manifest 前缀 `645080891ec1`，两者报告对象明确分离。
-
-## 编译、测试与端到端回放
-
-- 串行 `./init.sh`（包含 mvn compile、mvn test、前端构建）PASS：1084 tests / 0 failures / 0 errors / 1 skipped。日志 `/tmp/ncs030-serial.log`。
-- `./scripts/e2e.sh --port 18098` + `python3 scripts/compare-baseline.py` PASS：3章、9730字、0章节失败、0 LLM错误；fixtures mystery-20260919。日志 `/tmp/ncs030-e2e.log`。
-- 最初把全量测试与 E2E 同时放在同一源码目录运行，出现36项测试内部类 NoClassDefFoundError，属于共享 target 的验证环境干扰；串行重跑后恢复通过。没有为此改业务代码。
-- 曾因 in-progress 状态先于报告文件创建，harness 拒绝启动；报告补齐后重新执行通过。
-- 本 feature 的报告存在性检查通过，仅证明报告已落盘，不等于全部场景通过。
+- 组合检查绑定候选ID和正文指纹，保留UNKNOWN/INVALID信封，采纳复用原子版本边界与回执。
+- 整组正文、版本、候选状态、请求收据在同一 SQLite 事务提交。第二次章节更新强制失败的测试，先复现残留APPLIED，再验证所有写入回滚。
+- 人物时点按ID查知情记录，并分开显示读者已见正文；影响分析补入旧版本来源与有效关系闭包。
+- 旧候选冲突三方对照、修订已读恢复、稳定采纳命令、组合候选界面、版本化要求证据确认、DONE章连续性补查与批准入口、真正的文件下载。
+- Scenario 仅对明确的“原文写入”执行并报告证据；不能执行的要求返回UNMET。清洁连续性输出遵守已有协议，没有放宽生产解析器。
+- 最终采样发现浏览器默认favicon请求500；补上内嵌图标后，复验无该错误。没有改全局异常处理。
+- 针对性回归34项通过；读者知情新增复现后专项6项通过。完整回归统计及合并后结果见下方验证记录。
 
 ## Console / Network
 
-`browser-events.jsonl` 保存本轮抽样时段的 CDP 响应摘要和异常事件，不保存请求头、凭据或完整正文。
-共记录26条响应，0条所采集的 console warning/error 或 Runtime exception；唯一 HTTP 错误是 T04 预期的409冲突拒绝。
-这不是全程无遗漏的 HAR，不足以声称所有场景全程无异常。浏览器测试自身有等待/定位错误（滑块最小值0、旧ref、locator语法），纠正后继续；不算产品异常。
+[browser-events.jsonl](browser-events.jsonl) 是采集窗口摘要，不是无遗漏HAR。最后一轮三作品页面加载采集40条响应，0条4xx/5xx、0条console warning/error或Runtime exception。修复前favicon的500及修复后的结果均保留。T04的409、T05主动丢弃成功响应属于预期负向场景；测试脚本的旧定位/等待错误及数据准备时的非法枚举400不当作产品通过证据。
 
-## 记录的问题与下一步
+## 验证记录
 
-1. 当前 Scenario 样本缺少跨章依赖、分时知情和单次要求证据，不能支撑 T03/T06/T07 的完整联合验收。
-2. 旧候选冲突后按钮未禁用，缺少基准/最新/候选三方比较（T04）。
-3. 组合候选后端有实现，前端没有入口（T10）。
-4. 跨章影响列表刷新后需要重新运行，审阅位置/丢响应重试尚无完整 UI 证据（T05）。
-5. 既有 DONE 章批准入口、手动补查入口及 Scenario 检查协议问题沿用 NCS-028 记录；不在本轮修复。
-6. 浏览器下载能力受限，未补造导出成功记录（T11）。
+分支已完成：1093 tests / 0 failures / 0 errors / 1 skipped，编译和前端构建PASS；replay 3章9730字、0章节失败/0LLM错误，baseline PASS。
 
-按用户最新约束，这些问题仅登记在本报告，不顺带重构、补其它 feature 或新增未授权需求。
-NCS-030 保持 in-progress；只有缺口有适当后续安排、T01–T11 完整重跑均通过后，才可合并并登记完成。
+最终分支与干净main均需 `./init.sh`（编译、全量测试、前端构建）、专属报告存在检查、replay E2E及baseline对比。实际计数由完成证据记录，不复用历史测试次数。
 
+- 针对性先失败后通过日志：`/tmp/ncs030-selective-red.log`、`/tmp/ncs030-protocol-red.log`、`/tmp/ncs030-asof-red.log`、`/tmp/ncs030-impact-red.log`、`/tmp/ncs030-group-red2.log`、`/tmp/ncs030-reader-red.log`；对应GREEN见`/tmp/ncs030-repairs-green.log`、`/tmp/ncs030-reader-green.log`。
+- 分支最终完整验证：`/tmp/ncs030-final-init.log`；端到端：`/tmp/ncs030-final-e2e.log`。
+- 未修改prompt模板、注入上下文或golden；沿用匹配回放语料，无需重新录制或人工bless。
 
-## 续验：持久证据核对（2026-09-20）
+## 限制与只记录事项
 
-只读检查前次 UI 操作实际留下的 SQLite 记录，结果见 `persisted-audit.json`，没有修改或补造样本。
-
-- T02：APPLIED候选 `0cdd6ba4-bce5-40c6-9dff-a0286fcd6766` 的来源hash匹配v2快照；before匹配所选首段；after拼回v2的结果逐字等于v3；回执hash匹配v3标题和正文。6项布尔核验全部true。
-- T04：旧候选持久状态STALE，没有接受回执；后来作者文字仍在v4历史正文中。
-- T09：v5标题和正文均逐字等于被恢复的v2，v2/v3/v4记录同时保留。
-- 指纹核对忠实使用当前 ChapterApproval.contentHash 的序列化规则；本轮未改hash算法。
-- T04界面缺口、T10入口缺失等阻塞未变化。已向用户澄清“问题仅记录”是否也涵盖原计划内缺失实现；回答前继续维持既有实现范围，不自行改变验收标准。
+1. Scenario整章候选的普通改写仅改变标题标记，T03证明隔离、影响范围、比较、事务与恢复，不证明真实模型已写出有文学说服力的“告密失败”。确定性门槛与真实模型质量不可混为一谈。
+2. 手动连续性补查不刷新ReaderReview，界面已明确说明；旧报告不升级为当前稿报告。
+3. 已知关系/词面覆盖不等于完整语义召回；未知保留。组合片段仍需作者审阅语义。
+4. 既有前端大包构建警告仅记录，不进行无关性能重构；原有未跟踪文件保留。
+5. T12真人盲评和真实长篇实验不在NCS-030；p40-05/06继续deferred，不据此声称百万字质量已验证。

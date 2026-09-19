@@ -1,0 +1,147 @@
+{
+  "startup": {
+    "project": "114381af-52ce-43a1-8a0e-6b96248619f0",
+    "intent": {
+      "projectId": "114381af-52ce-43a1-8a0e-6b96248619f0",
+      "revision": 0,
+      "premise": "",
+      "genreExpectation": "",
+      "themes": "",
+      "pov": "",
+      "languageSamples": "",
+      "lengthRange": "",
+      "autonomy": "",
+      "unwantedPatterns": "",
+      "updatedAt": ""
+    },
+    "worldCount": 6,
+    "characterCount": 8,
+    "planRef": "volume=1;synopsis=84359543682b",
+    "firstChapterPersisted": true,
+    "sourcesOwnedByProject": true,
+    "expectedPlanRef": "volume=1;synopsis=84359543682b",
+    "planRefMatches": true
+  },
+  "group": {
+    "project": "7bc6ca3a-aae4-4cda-91d4-b4f3cb2e2e7d",
+    "rows": [
+      {
+        "chapter": 2,
+        "version": 3
+      },
+      {
+        "chapter": 3,
+        "version": 3
+      }
+    ],
+    "responseStatusBeforeLoss": 200,
+    "responseLost": true,
+    "replayed": true
+  },
+  "combo": {
+    "project": "7bc6ca3a-aae4-4cda-91d4-b4f3cb2e2e7d",
+    "sources": [
+      "73bdad46-eff2-447e-ab09-a6d4ef035088",
+      "cebea3f4-415a-4092-9d84-abd69cddc5d5"
+    ],
+    "version": 3,
+    "previewEqualsSaved": true,
+    "newContent": true,
+    "originalsRetained": true
+  },
+  "stale": {
+    "version": 6,
+    "disabled": true,
+    "threeWay": true,
+    "authorInputPreserved": true
+  },
+  "directive": {
+    "directive": {
+      "id": "f6bad183-5388-46bc-9e42-c872b6da8575",
+      "kind": "ONCE",
+      "chapterIndex": 1,
+      "content": "原文写入：掌柜把铜铃放回木匣，合上了盖子。",
+      "status": "OPEN",
+      "systemEvidence": null,
+      "systemEvidenceVersion": null,
+      "createdAt": "2026-09-19T17:02:59.367897Z",
+      "revision": 1,
+      "fromChapter": null,
+      "enabled": true,
+      "evidence": [
+        {
+          "id": "0a0cb4e6-75dc-4085-94ff-058f39626457",
+          "directiveRevision": 1,
+          "chapterIndex": 1,
+          "chapterVersion": 7,
+          "contentHash": "add33b154496c2756e08b97231e29ae0b446c89bc39193b480fcbbc58236ad61",
+          "proposalId": null,
+          "quote": "掌柜把铜铃放回木匣，合上了盖子。",
+          "anchor": "content",
+          "status": "CONFIRMED",
+          "reason": ""
+        },
+        {
+          "id": "dcc0fc52-a167-4177-a694-0788cb0a523c",
+          "directiveRevision": 1,
+          "chapterIndex": 1,
+          "chapterVersion": 7,
+          "contentHash": "add33b154496c2756e08b97231e29ae0b446c89bc39193b480fcbbc58236ad61",
+          "proposalId": null,
+          "quote": null,
+          "anchor": null,
+          "status": "UNMET",
+          "reason": "核对器未覆盖该要求"
+        }
+      ]
+    },
+    "identity": {
+      "projectId": "f48efcbf-ea03-4eb5-9efa-b1faa9c7bc5b",
+      "chapterIndex": 1,
+      "version": 7,
+      "contentHash": "add33b154496c2756e08b97231e29ae0b446c89bc39193b480fcbbc58236ad61"
+    },
+    "previewWasOpen": true,
+    "exactEvidence": true
+  },
+  "asof": {
+    "project": "114381af-52ce-43a1-8a0e-6b96248619f0",
+    "fact": "6c6fa9e1-5c6a-49be-8616-c6170d8c1d98",
+    "at8": {
+      "readerKnows": true,
+      "characterKnows": false
+    },
+    "at12": {
+      "characterKnows": true,
+      "learnedAtChapter": 10,
+      "sourceChapter": 8,
+      "sourceVersion": 3
+    }
+  },
+  "restore": {
+    "version": 4,
+    "restoredVersion": 2,
+    "preservedVersion": 3,
+    "contentExact": true,
+    "sourceWithdrawn": true,
+    "beliefRetained": true
+  },
+  "recheck": {
+    "id": "bdac6901-358a-4066-8cd9-b2aeca39e49e",
+    "project_id": "114381af-52ce-43a1-8a0e-6b96248619f0",
+    "chapter_index": 8,
+    "checker": "continuity",
+    "status": "VALID_EMPTY",
+    "reason": "",
+    "created_at": "2026-09-19T17:12:18.480596Z",
+    "content_fingerprint": "be1691d5d23ae4f40964c64ea62f21d26d92f65609a902757c9818298ef6d7d0",
+    "matchesCurrentContent": true
+  },
+  "download": {
+    "file": "t11-downloaded-book.md",
+    "bytes": 3185,
+    "manifest": "e2091cedf529288f8c81b30d2aee2615b2d7b82b2f0fe3fe039f6260732d6e2e",
+    "frozenVersion": 2,
+    "excludesLaterAuthorEdits": true
+  }
+}

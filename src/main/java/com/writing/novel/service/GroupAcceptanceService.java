@@ -12,8 +12,8 @@ import java.util.Map;
 /**
  * NCS-016（方案 §12/R14/F01）：依赖组整组接受与重基。
  *
- * <p>整组接受：全部候选的基准与当前一致才可接受；逐章应用，任一章失败对已应用章
- * 补偿回滚（快照恢复）——有效版本不呈现半套已接受修复。基准漂移：候选标 STALE 保留
+ * <p>整组接受：全部候选的基准与当前一致才可接受；正文、版本、候选与请求回执
+ * 在同一事务中提交，任一章失败整体回滚，不呈现半套已接受修复。基准漂移：候选标 STALE 保留
  * （可比较、可重基），请求不落入半完成。commandId 幂等：重复同一 commandId 重放同一收据，
  * 不再写正文。保护锚点：候选内容必须保留声明于候选章的原文 span。
  */
@@ -89,43 +89,11 @@ public class GroupAcceptanceService {
             throw new IllegalStateException("没有可接受的新候选（可能已全部应用）");
         }
 
-        // ② 逐章应用 + 失败补偿回滚（无半套）
-        record Applied(int chapterIndex, int newVersion, String oldTitle, String oldContent) {}
-        List<Applied> appliedChapters = new ArrayList<>();
-        try {
-            for (RevisionProposal proposal : ready) {
-                Chapter before = repository.findChapterByIndex(projectId, proposal.getChapterIndex()).orElseThrow();
-                appliedChapters.add(new Applied(proposal.getChapterIndex(), before.getVersion(),
-                        before.getTitle(), before.getContent()));
-                chapterRevision.applyProposalInOwnedWork(projectId, proposal.getId());
-            }
-        } catch (Exception failure) {
-            // 补偿回滚：已应用章恢复应用前内容（版本照常推进，内容回到旧文——半套状态消除）
-            for (Applied applied : appliedChapters) {
-                try {
-                    Chapter now = repository.findChapterByIndex(projectId, applied.chapterIndex()).orElse(null);
-                    if (now != null && !applied.oldContent().equals(now.getContent())) {
-                        chapterRevision.editInOwnedWork(projectId, applied.chapterIndex(), now.getVersion(),
-                                applied.oldTitle(), applied.oldContent(), "GROUP_ACCEPT_ROLLBACK");
-                    }
-                } catch (Exception rollbackFailure) {
-                    EventLog.emit("GROUP_REVISION_ROLLBACK_FAILED", Map.of(
-                            "projectId", projectId, "requestId", requestId,
-                            "chapterIndex", applied.chapterIndex(),
-                            "error", EventLog.truncate(rollbackFailure.getMessage(), 120)));
-                }
-            }
-            EventLog.emit("GROUP_REVISION_FAILED", Map.of(
-                    "projectId", projectId, "requestId", requestId,
-                    "commandId", commandId,
-                    "error", EventLog.truncate(failure.getMessage(), 150)));
-            throw new IllegalStateException("整组接受失败，已回滚到无半套状态: "
-                    + failure.getMessage(), failure);
-        }
-
-        List<Integer> chapters = ready.stream().map(RevisionProposal::getChapterIndex).toList();
-        requests.accept(projectId, requestId,
-                "{\"commandId\":\"" + commandId + "\",\"chapters\":" + chapters + "}");
+        // ② 正文、版本、候选状态及请求回执在同一事务中落盘。
+        var commit = repository.commitProposalGroup(projectId, requestId, commandId,
+                ready.stream().map(RevisionProposal::getId).toList());
+        List<Integer> chapters = commit.chapters();
+        for (int chapter : chapters) chapterRevision.refreshAfterGroupCommit(projectId, chapter);
         // NCS-026: 接受样本入运行经验（同类后续修订可参考）
         if (experience != null) {
             String changeClass = chapters.size() > 1 ? "CROSS_CHAPTER" : "FACT_LOCAL";
@@ -136,7 +104,7 @@ public class GroupAcceptanceService {
         EventLog.emit("GROUP_REVISION_APPLIED", Map.of(
                 "projectId", projectId, "requestId", requestId,
                 "commandId", commandId, "chapters", chapters.size()));
-        return new Receipt(commandId, true, false, chapters,
+        return new Receipt(commandId, true, commit.replayed(), chapters,
                 "已采纳 " + chapters.size() + " 章修订");
     }
 

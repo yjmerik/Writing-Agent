@@ -57,7 +57,8 @@ class ScenarioLlmGatewayTest {
     @Test
     void 校验收割类任务返回可解析JSON数组() {
         String continuity = gateway.complete(req(LlmTaskType.CONTINUITY_CHECK, "检查")).getContent();
-        assertTrue(continuity.trim().startsWith("["), "一致性检查应返回 JSON 数组（零问题）");
+        assertEquals(com.writing.novel.agent.CheckResultEnvelope.Status.VALID_EMPTY,
+                com.writing.novel.agent.CheckResultEnvelope.of(continuity).status());
 
         String general = gateway.complete(req(LlmTaskType.GENERAL, "收割/抽取")).getContent();
         assertTrue(general.trim().startsWith("["), "GENERAL（收割/抽取族）应返回 JSON 数组");
@@ -92,6 +93,21 @@ class ScenarioLlmGatewayTest {
     }
 
     @Test
+    void 场景候选逐项说明登记要求且不伪造落实() {
+        var agent = new com.writing.novel.agent.ContentRevisionAgent(gateway,
+                com.writing.novel.agent.TestPromptHelper.create());
+        var candidate = agent.preview(com.writing.novel.agent.ContentRevisionAgent.TargetType.CHAPTER,
+                "{\"id\":\"c1\",\"title\":\"旧标题\",\"content\":\"旧正文\"}",
+                "[D-1 rev2] 原文写入：铜铃只响了一次。\n[D-2 rev1] 改善全部人物动机");
+        assertEquals(2, candidate.directiveResults().size());
+        assertEquals("APPLIED_SYSTEM", candidate.directiveResults().get(0).status());
+        assertTrue(candidate.content().contains("铜铃只响了一次。"));
+        assertEquals("铜铃只响了一次。", candidate.directiveResults().get(0).quote());
+        assertEquals("UNMET", candidate.directiveResults().get(1).status());
+        assertFalse(candidate.directiveResults().get(1).reason().isBlank());
+    }
+
+    @Test
     void 卷大纲请求按章节范围生成逐章行() {
         LlmRequest volumeReq = LlmRequest.builder()
                 .taskType(LlmTaskType.PLOTTING)
@@ -123,6 +139,7 @@ class ScenarioLlmGatewayTest {
                 .build();
         assertTrue(harsh.complete(check).getContent().contains("【人物|高】"), "第1次检查（初检）应报 HIGH");
         assertTrue(harsh.complete(check).getContent().contains("【人物|高】"), "第2次检查（复检）应报 HIGH");
-        assertEquals("[]", harsh.complete(check).getContent(), "第3次起不再注入");
+        assertEquals(com.writing.novel.agent.CheckResultEnvelope.Status.VALID_EMPTY,
+                com.writing.novel.agent.CheckResultEnvelope.of(harsh.complete(check).getContent()).status());
     }
 }

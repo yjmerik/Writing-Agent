@@ -173,6 +173,14 @@ public interface NovelRepository {
         throw new UnsupportedOperationException("commitProposalChapter 未实现：仓储不支持持久候选");
     }
 
+    /** 同一事务接受整组章节候选及请求回执，中断时不留下任何部分应用。 */
+    default GroupProposalCommit commitProposalGroup(String projectId, String requestId,
+                                                     String commandId, List<String> proposalIds) {
+        throw new UnsupportedOperationException("仓储不支持原子整组采纳");
+    }
+
+    record GroupProposalCommit(boolean replayed, List<Integer> chapters) {}
+
     /** 候选应用结果：replayed=true 表示同候选重复应用返回已持久结果。 */
     record ProposalCommitResult(boolean replayed, String proposalId,
                                 String resultJson, int chapterVersion) {

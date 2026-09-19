@@ -35,7 +35,7 @@ class ImpactAnalysisTest {
         repo = new SqliteNovelRepository(cp);
         factRepo = new StoryFactRepository(cp);
         canon = new SqliteStoryCanon(factRepo, repo);
-        service = new ImpactAnalysisService(repo, canon);
+        service = new ImpactAnalysisService(repo, canon, factRepo);
         Project project = new Project("影响项目", "构思", "武侠");
         repo.saveProject(project);
         projectId = project.getId();
@@ -143,6 +143,32 @@ class ImpactAnalysisTest {
         assertTrue(plan.coverageNote().contains("词法"), "覆盖说明必须声明扫描方式（词法级）");
         assertTrue(plan.coverageNote().contains("未知") || plan.coverageNote().contains("语义"),
                 "必须声明词法扫描不能证明语义无影响（不能把未检查改标为无影响）");
+    }
+
+    @Test
+    void 事实建立在别章但证据锚定修订章也须传播() {
+        chapter(8, "密信落款得到核实。"); chapter(12, "密信被呈上公堂。");
+        StoryFact fact = new StoryFact(projectId, StoryFact.FactType.OBJECT_STATE, "密信", "密信属实", 3);
+        canon.harvest(fact);
+        factRepo.saveFactEvidence("e8", fact.getId(), projectId, 8, 1, "hash", "密信落款", 0, "anchor", 8, null);
+        var plan = service.analyze(projectId, 8, 2);
+        assertEquals(ImpactItem.Classification.MUST_REPAIR, plan.items().get(0).classification());
+        assertTrue(plan.items().get(0).factIds().contains(fact.getId()));
+    }
+
+    @Test
+    void 经关系链关联的未点名依赖不能判为无影响() {
+        chapter(8, "密信被焚毁。"); chapter(12, "官府开始追捕告密者。");
+        canon.harvest(new StoryFact(projectId, StoryFact.FactType.OBJECT_STATE, "密信", "密信已焚毁", 8));
+        Entity letter = new Entity(projectId, "密信", EntityType.ITEM);
+        Entity witness = new Entity(projectId, "证人", EntityType.CHARACTER);
+        Entity office = new Entity(projectId, "官府", EntityType.FACTION);
+        repo.saveEntity(letter); repo.saveEntity(witness); repo.saveEntity(office);
+        repo.saveEntityEdge(new EntityEdge(projectId, witness.getId(), letter.getId(), RelationshipType.USES));
+        repo.saveEntityEdge(new EntityEdge(projectId, witness.getId(), office.getId(), RelationshipType.SERVES));
+        var item = service.analyze(projectId, 8, 2).items().get(0);
+        assertEquals(ImpactItem.Classification.RECHECK, item.classification());
+        assertTrue(item.reasons().stream().anyMatch(r -> r.contains("关系")));
     }
 
     @Test

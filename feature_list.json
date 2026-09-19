@@ -7398,10 +7398,11 @@
         "NCS-013",
         "NCS-008"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/service/ImpactAnalysisService.java",
-        "src/main/java/com/writing/novel/domain/ImpactItem.java"
+        "src/main/java/com/writing/novel/domain/ImpactItem.java",
+        "src/main/java/com/writing/novel/web/RevisionRequestController.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "确定性测试：改章后锚定事实的后文命中→MUST_REPAIR；仅名字出现→RECHECK；无关章→UNAFFECTED_WITH_REASON 且理由保留；覆盖说明非空；mvn compile && mvn test 通过。",
@@ -7813,5 +7814,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-014"
 }

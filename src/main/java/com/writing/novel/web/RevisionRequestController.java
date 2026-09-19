@@ -20,10 +20,13 @@ public class RevisionRequestController {
 
     private final NovelRepository repository;
     private final RevisionRequestService service;
+    private final com.writing.novel.service.ImpactAnalysisService impactAnalysis;
 
-    public RevisionRequestController(NovelRepository repository, RevisionRequestService service) {
+    public RevisionRequestController(NovelRepository repository, RevisionRequestService service,
+                                     com.writing.novel.service.ImpactAnalysisService impactAnalysis) {
         this.repository = repository;
         this.service = service;
+        this.impactAnalysis = impactAnalysis;
     }
 
     @GetMapping
@@ -73,6 +76,35 @@ public class RevisionRequestController {
         requireProject(id);
         return toMap(service.cancel(id, requestId,
                 String.valueOf(body.getOrDefault("reason", ""))));
+    }
+
+    /** NCS-014: 对指定章的文本变更运行影响分析（确定性；范围批准后使用） */
+    @PostMapping("/{requestId}/analyze-impact")
+    public Map<String, Object> analyzeImpact(@PathVariable String id, @PathVariable String requestId,
+                                             @RequestParam int chapter) {
+        requireProject(id);
+        var request = service.get(id, requestId);
+        var chapterEntity = repository.findChapterByIndex(id, chapter)
+                .orElseThrow(() -> new IllegalArgumentException("章节不存在: " + chapter));
+        var plan = impactAnalysis.analyze(id, chapter, chapterEntity.getVersion());
+        service.requireScopeApproved(id, requestId); // 影响分析消耗探索范围——需先批准
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("requestId", request.getId());
+        m.put("revisedChapterIndex", plan.revisedChapterIndex());
+        m.put("revisedToVersion", plan.revisedToVersion());
+        m.put("coverageNote", plan.coverageNote());
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (var item : plan.items()) {
+            Map<String, Object> im = new LinkedHashMap<>();
+            im.put("chapterIndex", item.chapterIndex());
+            im.put("classification", item.classification().name());
+            im.put("reasons", item.reasons());
+            im.put("factIds", item.factIds());
+            im.put("subjects", item.subjects());
+            items.add(im);
+        }
+        m.put("items", items);
+        return m;
     }
 
     private void requireProject(String projectId) {

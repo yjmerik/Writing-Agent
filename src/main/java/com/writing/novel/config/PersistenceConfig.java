@@ -98,6 +98,16 @@ public class PersistenceConfig {
         return new com.writing.novel.service.CharacterDecisionService(characterDecisionRepository, characterDecisionExtractor);
     }
 
+    // NCS-014: 文本变更影响分析（确定性）
+    @Bean
+    public com.writing.novel.service.ImpactAnalysisService impactAnalysisService(
+            NovelRepository repository,
+            com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository) {
+        return new com.writing.novel.service.ImpactAnalysisService(repository,
+                new com.writing.novel.persistence.sqlite.SqliteStoryCanon(storyFactRepository, repository),
+                storyFactRepository);
+    }
+
     // NCS-010: 人物时点读取
     @Bean
     public com.writing.novel.service.CharacterAsOfService characterAsOfService(

@@ -1,0 +1,29 @@
+{
+ "commit": "abc2ccb76957a632128ec3a460ca0c7c1f23523b",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: Tests run: 975, Failures: 0, Errors: 0, Skipped: 1（既有 RealLlmSmokeTest）。分支工作区与 git worktree --detach abc2ccb 干净检出各跑一次全绿（干净检出需先复制 frontend/node_modules 并 npm build 生成 static——p42-01 已知约束的补充说明）。环境密钥：set -a; source data/.prod-env-keys; set +a; source scripts/load-env.sh。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest='WriteLeaseEpochTest,PostProcessLeaseGuardTest'",
+   "result": "PASS: 7 tests, 0 failures, 0 errors（含干净检出复验）。覆盖：epoch 持久化单调递增且新实例（模拟重启）不回退+WRITE_LEASE_EPOCH_BUMPED 事件；cancel 递增 epoch 后晚到正文写入抛 WriteLeaseStaleException、零写入、LATE_WRITE_REJECTED 事件；epoch 一致时正常写作通过；晚到纠偏重写返回 null 保留原稿；作者 DIRECT_EDIT 直存不受门禁影响；停止协作（接手）递增 epoch 恰一次且 stop_requested 落库；后处理 process/resume 入口在 epoch 失效时被拒。先以无逻辑骨架观察到 5 项 RED 后实现转 GREEN。",
+   "exitCode": 0
+  },
+  {
+   "command": "npm --prefix frontend run build",
+   "result": "不适用（本 feature 无前端改动）",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py",
+   "result": "不适用（未改 .st 模板/ContextAssembler/Agent 输出逻辑，replay 指纹不受影响；注册 e2e_impact=none）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "实现要点：project_write_leases 表（epoch UPSERT 自增，SQLite RETURNING）+ writing_tasks.lease_epoch 列（safeAddColumn，旧任务默认 0 与无租约行匹配，向后兼容）；WriteLeaseService.guardAgentWrite 在 ChapterWriterAgent.write 落库前、rewriteForCorrection 返回前（null 语义）、ChapterPostProcessor.run 入口三处生效；WritingTaskExecutor 四个启动路径捕获 epoch，cancel/stopCollaborative 经 cancel 统一 bump；作者直存/无活动任务路径按设计放行（作者为新的写入权威，既有版本 CAS 保护）。生产接线：PersistenceConfig/AgentConfig/MemoryConfig/OrchestratorConfig（沿 setDirectiveEvidenceService late-set 模式）。",
+ "feature_ids": ["NCS-001"],
+ "branch": "codex/ncs-001-write-lease-epoch"
+}

@@ -1,47 +1,42 @@
-# LLM 模型配置页面完成 — 2026-09-19
+# NCS 方案落地进行中 — 2026-09-19
 
 Last Updated: 2026-09-19
 
 ## Current
 
-p43-01「LLM 模型配置界面化」已完成并合入本地 main（实现提交 97dad38 = 当前 main HEAD，ff-merge）。
-完成记录 p43-01-verified（docs/harness/evidence/2026-09-19-p43-01.json），active_feature=null。
-8080 正式服务已切换为 main 构建的 target/manual-review/writing-agent-p43-01-97dad38.jar，
-以 start_new_session 脱离进程组启动；验证后模型配置零残留（data/config/llm-models.json entries 为空，
-运行时 9×YML 与 yml 完全一致）。
-主目录两处未跟踪材料（.zcode/plans/plan-sess_8dbf5c3f*.md、docs/reports/2026-09-05-ui-experience/）
-按此前约定保留不动。
+novel-complete-solution 方案（docs/specs/2026-09-19-novel-complete-solution.md）拆解为 30 个 NCS feature
+（phase 44–49 对应方案 M1–M6），逐个走完整特性闭环。NCS-001「持久写入门禁与 epoch 租约」已完成合入 main
+（实现提交 abc2ccb = main HEAD，ff-merge，完成记录 ncs-001-verified）。active_feature=null，
+下一特性按依赖序为 NCS-002（最终请求窗口核算）。
 
 ## Files
 
-- 后端新增：llm/config/LlmProtocol、LlmModelConfigStore；llm/client/AnthropicMessagesClient、
-  OpenAiResponsesClient、ProtocolRoutingLlmClient；web/ModelConfigController
-- 后端修改：llm/config/ModelConfig（protocol 字段）、LlmConfig（协议分发装配 + store 依赖先于启动校验）、
-  gateway/DefaultLlmGateway（cloneConfig 带协议）
-- 前端：pages/ModelConfigPage.tsx（新增）、App.tsx（/models 路由 + Header 导航）、api/client.ts、types.ts
-- 测试：6 个新测试类（store/controller/校验/两协议客户端/分发）+ LlmConfigTest/LlmGatewayWiringTest 适配
-- 文档：docs/specs/2026-09-19-llm-model-config-ui.md、docs/reports/p43-01-e2e-model-config-page.png
-- 本轮归档：docs/harness/archive/2026-09-18-p42-01-progress.md、2026-09-18-p42-01-session-handoff.md
+- 本轮新增：persistence/sqlite/WriteLeaseRepository、service/{WriteLeaseService,WriteLeaseStaleException}、
+  测试 WriteLeaseEpochTest/PostProcessLeaseGuardTest
+- 本轮修改：SqliteSchemaInitializer（project_write_leases 表 + writing_tasks.lease_epoch 列）、
+  SqliteNovelRepository（任务 lease_epoch 持久化）、WritingTaskExecutor（启动捕获/取消递增）、
+  ChapterWriterAgent（write 落库前 + rewriteForCorrection 返回前门禁）、ChapterPostProcessor（run 入口门禁）、
+  NovelOrchestrator（late-set writeLeaseRef）、AgentConfig/MemoryConfig/PersistenceConfig/OrchestratorConfig 接线
+- 规划：docs/specs/2026-09-19-novel-complete-solution.md、feature_list.json（361 项，NCS-001 completed）
+- 归档：docs/harness/archive/2026-09-19-p43-01-{progress,session-handoff}.md
 
 ## Verification
 
-干净检出（git worktree --detach 97dad38）复验，均为本轮实际执行：
-- mvn compile && mvn test：968 项，0 失败 / 0 错误 / 1 跳过（既有）（/tmp/p43-01-clean-main-test.log）
-- verify_cmd（6 个测试类）：33 项 0 失败（/tmp/p43-01-verifycmd-clean.log）
-- npm --prefix frontend run build：通过（干净检出 + 主工作区各一次）
-- ego-browser 浏览器 E2E（8080 服务）：现有 yml 配置 9 范围正确展示（含掩码 key、
-  章节写作 0.8/20000 等差异值）；编辑 GENERAL 生效并落盘；新增风格守护 Anthropic Messages
-  协议配置完整落盘；删除后两处均回退「配置文件」来源且 JSON 清空、运行时恢复原状
-- python3 scripts/check-harness.py --check-git：PASS（见交接 Verification）
+NCS-001（git worktree --detach abc2ccb 干净检出 + 分支工作区各一次，本轮实际执行）：
+- mvn compile PASS；mvn test 975 项 0 失败 / 0 错误 / 1 跳过（既有）
+- verify_cmd（WriteLeaseEpochTest+PostProcessLeaseGuardTest）7 项 0 失败；先骨架 RED 5 项后转绿
+- 无前端/prompt 改动：e2e 与 baseline 不适用（未触碰 replay 指纹）
+- 证据 docs/harness/evidence/2026-09-19-ncs-001.json；check-harness 见回执提交
 
 ## Blockers
 
-无。已知环境注记：
-- mvn test 需 DASHSCOPE_TOKEN_PLAN_API_KEY（scripts/load-env.sh 从 shell 配置提取；本轮该变量
-  仅存在于生产进程环境，已提取到 data/.prod-env-keys 供本地复用，gitignore）
-- 全新检出需先 npm build 生成 static（p42-01 已知约束，本轮照做）
+无。环境注记：
+- mvn test 需 `set -a; source data/.prod-env-keys; set +a; source scripts/load-env.sh`（DASHSCOPE_TOKEN_PLAN_API_KEY）
+- 干净检出需先复制 frontend/node_modules 再 npm build 生成 static（p42-01 约束 + node_modules 补充）
+- 主目录两处未跟踪材料（.zcode/plans/*、docs/reports/2026-09-05-ui-experience/）按约定保留不动
 
 ## Next Steps
 
-- 下一特性从 main 新建分支；backlog 无 not-started 项，新需求按需求拆分协议入口
-- 模型配置页后续可选增强（未登记）：连通性测试按钮、embedding 配置管理、providers/routing 路由管理
+- 下一特性 NCS-002「最终请求窗口核算」（deps 无，从 main 新建 codex/ncs-002-final-request-budget）
+- 之后按 DAG 序：NCS-003/005/007 → 004/006 → phase45 起 M2
+- prompt 类 feature（NCS-008/012/018/019/020/022）触发 fixture 重建 + 人工 bless gate

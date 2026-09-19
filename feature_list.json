@@ -7033,21 +7033,29 @@
       "phase": 44,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
-        "persistence/sqlite/SqliteSchemaInitializer.java",
-        "service/WriteLeaseService.java",
-        "service/ChapterRevisionService.java"
+        "src/main/java/com/writing/novel/persistence/sqlite/WriteLeaseRepository.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/main/java/com/writing/novel/service/WriteLeaseService.java",
+        "src/main/java/com/writing/novel/service/WriteLeaseStaleException.java",
+        "src/main/java/com/writing/novel/service/WritingTaskExecutor.java",
+        "src/main/java/com/writing/novel/agent/ChapterWriterAgent.java",
+        "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java",
+        "src/main/java/com/writing/novel/domain/WritingTask.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：bump epoch 后晚到的候选 apply/后处理写入被拒且留事件、主稿不变；作者直存成功；重启后 epoch 语义保持；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=WriteLeaseEpochTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: abc2ccb（ff-merge=main 提交）; verify_cmd 7/0F（干净检出）; mvn compile PASS; mvn test 975/0F/0E/1S（分支+干净 main 检出各一次）; 无前端/prompt 改动，e2e/baseline 不适用（未触碰 replay 指纹）; 证据 docs/harness/evidence/2026-09-19-ncs-001.json",
       "ui_impact": "none",
       "backend_impact": "high",
       "prompt_impact": "none",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-001-write-lease-epoch",
+      "completion_record": "ncs-001-verified"
     },
     {
       "id": "NCS-002",
@@ -7058,8 +7066,8 @@
       "dependencies": [],
       "status": "not-started",
       "files": [
-        "llm/gateway/DefaultLlmGateway.java",
-        "memory/TokenBudget.java"
+        "src/main/java/com/writing/novel/llm/gateway/DefaultLlmGateway.java",
+        "src/main/java/com/writing/novel/memory/TokenBudget.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：构造超窗请求得到明确失败/缩减与事件，HARD 等强制段不被截断；fallback 至小窗模型触发重核算；mvn compile && mvn test 通过。",
@@ -7080,9 +7088,9 @@
       "dependencies": [],
       "status": "not-started",
       "files": [
-        "domain/AuthorIntent.java",
-        "web/AuthorIntentController.java",
-        "persistence/sqlite/SqliteSchemaInitializer.java"
+        "src/main/java/com/writing/novel/domain/AuthorIntent.java",
+        "src/main/java/com/writing/novel/web/AuthorIntentController.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "API 测试：创建项目后 intent 存在且为空合法；PUT 生成新修订并保留历史；未授权缺字段拒绝；mvn compile && mvn test 通过。",
@@ -7128,8 +7136,8 @@
       "dependencies": [],
       "status": "not-started",
       "files": [
-        "service/WorkspaceViewService.java",
-        "web/WorkspaceViewController.java"
+        "src/main/java/com/writing/novel/service/WorkspaceViewService.java",
+        "src/main/java/com/writing/novel/web/WorkspaceViewController.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "API 测试：各状态组合（写作中/待审/已停/有未知检查）下字段正确、reason 非空；与既有端点数据一致；mvn compile && mvn test 通过。",
@@ -7175,9 +7183,9 @@
       "dependencies": [],
       "status": "not-started",
       "files": [
-        "agent/ContinuityChecker.java",
-        "orchestrator/NovelOrchestrator.java",
-        "service/CheckResultService.java"
+        "src/main/java/com/writing/novel/agent/ContinuityChecker.java",
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+        "src/main/java/com/writing/novel/service/CheckResultService.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：坏响应→INVALID 记录不产生空 PASS；UNKNOWN 必查项阻断成书；重写预算 0 时严重问题仍不放行；mvn compile && mvn test 通过。",
@@ -7198,8 +7206,8 @@
       "dependencies": [],
       "status": "not-started",
       "files": [
-        "domain/StoryFact.java",
-        "agent/FactHarvesterAgent.java",
+        "src/main/java/com/writing/novel/domain/StoryFact.java",
+        "src/main/java/com/writing/novel/agent/FactHarvesterAgent.java",
         "src/main/resources/prompts/fact-harvest.st"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
@@ -7223,8 +7231,8 @@
       ],
       "status": "not-started",
       "files": [
-        "service/FactEvidenceService.java",
-        "agent/FactHarvesterAgent.java"
+        "src/main/java/com/writing/novel/service/FactEvidenceService.java",
+        "src/main/java/com/writing/novel/agent/FactHarvesterAgent.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：删唯一证据→UNSUPPORTED 且不注入；双证据删一→保留；事件与审计可查；mvn compile && mvn test 通过。",
@@ -7247,8 +7255,8 @@
       ],
       "status": "not-started",
       "files": [
-        "service/CharacterAsOfService.java",
-        "web/CharacterAsOfController.java"
+        "src/main/java/com/writing/novel/service/CharacterAsOfService.java",
+        "src/main/java/com/writing/novel/web/CharacterAsOfController.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "API 测试：时点过滤正确（N 前发生/获知可见、N 后不可见）；信念与事实分列；来源可定位；mvn compile && mvn test 通过。",
@@ -7296,8 +7304,8 @@
       ],
       "status": "not-started",
       "files": [
-        "domain/CharacterDecision.java",
-        "agent/CharacterDecisionExtractor.java",
+        "src/main/java/com/writing/novel/domain/CharacterDecision.java",
+        "src/main/java/com/writing/novel/agent/CharacterDecisionExtractor.java",
         "src/main/resources/prompts/character-decision.st"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
@@ -7319,9 +7327,9 @@
       "dependencies": [],
       "status": "not-started",
       "files": [
-        "domain/RevisionRequest.java",
-        "service/RevisionRequestService.java",
-        "persistence/sqlite/SqliteSchemaInitializer.java"
+        "src/main/java/com/writing/novel/domain/RevisionRequest.java",
+        "src/main/java/com/writing/novel/service/RevisionRequestService.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：六入口各产生 RevisionRequest 且字段正确；范围批准前不可生成修复；scopeDecision 与 acceptDecision 分开落库；mvn compile && mvn test 通过。",
@@ -7345,8 +7353,8 @@
       ],
       "status": "not-started",
       "files": [
-        "service/ImpactAnalysisService.java",
-        "domain/ImpactItem.java"
+        "src/main/java/com/writing/novel/service/ImpactAnalysisService.java",
+        "src/main/java/com/writing/novel/domain/ImpactItem.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "确定性测试：改章后锚定事实的后文命中→MUST_REPAIR；仅名字出现→RECHECK；无关章→UNAFFECTED_WITH_REASON 且理由保留；覆盖说明非空；mvn compile && mvn test 通过。",
@@ -7369,8 +7377,8 @@
       ],
       "status": "not-started",
       "files": [
-        "service/RevisionRepairService.java",
-        "agent/ContentRevisionAgent.java"
+        "src/main/java/com/writing/novel/service/RevisionRepairService.java",
+        "src/main/java/com/writing/novel/agent/ContentRevisionAgent.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "测试（回放/桩）：候选生成挂接请求、含影响上下文与保护项、主稿未变；生成失败→请求状态可恢复非半套；mvn compile && mvn test 通过。",
@@ -7394,8 +7402,8 @@
       ],
       "status": "not-started",
       "files": [
-        "service/RevisionRequestService.java",
-        "service/ChapterRevisionService.java"
+        "src/main/java/com/writing/novel/service/RevisionRequestService.java",
+        "src/main/java/com/writing/novel/service/ChapterRevisionService.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：中间章失败→已应用章回滚、版本/收据状态无半套；基准漂移 409 且候选保留；重复 commandId 幂等；保护段变更→拒绝；mvn compile && mvn test 通过。",
@@ -7441,8 +7449,8 @@
       "dependencies": [],
       "status": "not-started",
       "files": [
-        "domain/ChapterSynopsis.java",
-        "agent/PlotterAgent.java",
+        "src/main/java/com/writing/novel/domain/ChapterSynopsis.java",
+        "src/main/java/com/writing/novel/agent/PlotterAgent.java",
         "src/main/resources/prompts/plot-volume.st"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
@@ -7466,7 +7474,7 @@
       ],
       "status": "not-started",
       "files": [
-        "service/PlanDeviationService.java",
+        "src/main/java/com/writing/novel/service/PlanDeviationService.java",
         "frontend/src/components/OutlineView.tsx"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
@@ -7490,9 +7498,9 @@
       ],
       "status": "not-started",
       "files": [
-        "service/VolumeReadbackService.java",
+        "src/main/java/com/writing/novel/service/VolumeReadbackService.java",
         "src/main/resources/prompts/volume-readback.st",
-        "orchestrator/NovelOrchestrator.java"
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "测试（回放/桩）：卷末触发报告生成与持久化、界面可读；未决决定阻断自动续写且显式继续可用；报告绑定卷与稿版本；mvn compile && mvn test 通过。",
@@ -7515,8 +7523,8 @@
       ],
       "status": "not-started",
       "files": [
-        "service/OutlineReplanner.java",
-        "service/VolumeReadbackService.java"
+        "src/main/java/com/writing/novel/service/OutlineReplanner.java",
+        "src/main/java/com/writing/novel/service/VolumeReadbackService.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "测试（回放/桩）：再生成仅覆盖未写部分、输入包含回读结论、PlanChange 留痕、已写章版本不变；mvn compile && mvn test 通过。",
@@ -7537,9 +7545,9 @@
       "dependencies": [],
       "status": "not-started",
       "files": [
-        "domain/AestheticProfile.java",
-        "web/AestheticProfileController.java",
-        "memory/ContextAssembler.java"
+        "src/main/java/com/writing/novel/domain/AestheticProfile.java",
+        "src/main/java/com/writing/novel/web/AestheticProfileController.java",
+        "src/main/java/com/writing/novel/memory/ContextAssembler.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "API 测试：增删改查与版本；注入测试：档案条目进入写作上下文且可裁剪优先级明确；对应 Agent 测试通过；e2e 重建后双 replay 一致。",
@@ -7587,7 +7595,7 @@
       ],
       "status": "not-started",
       "files": [
-        "service/SelectiveAcceptService.java",
+        "src/main/java/com/writing/novel/service/SelectiveAcceptService.java",
         "frontend/src/components/AgentRevisionDialog.tsx"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
@@ -7611,8 +7619,8 @@
       ],
       "status": "not-started",
       "files": [
-        "domain/WritingPreferences.java",
-        "service/RevisionRequestService.java",
+        "src/main/java/com/writing/novel/domain/WritingPreferences.java",
+        "src/main/java/com/writing/novel/service/RevisionRequestService.java",
         "frontend/src/components/IntentView.tsx"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
@@ -7636,9 +7644,9 @@
       ],
       "status": "not-started",
       "files": [
-        "domain/RevisionOutcome.java",
-        "service/RevisionExperienceService.java",
-        "agent/ContentRevisionAgent.java"
+        "src/main/java/com/writing/novel/domain/RevisionOutcome.java",
+        "src/main/java/com/writing/novel/service/RevisionExperienceService.java",
+        "src/main/java/com/writing/novel/agent/ContentRevisionAgent.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "测试（回放/桩）：样本落库、同类任务注入、删除后不注入、经验不写入真典；mvn compile && mvn test 通过。",
@@ -7684,9 +7692,9 @@
       ],
       "status": "not-started",
       "files": [
-        "service/EditionValidationService.java",
-        "web/BookEditionController.java",
-        "orchestrator/NovelOrchestrator.java"
+        "src/main/java/com/writing/novel/service/EditionValidationService.java",
+        "src/main/java/com/writing/novel/web/BookEditionController.java",
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：报告绑定 manifestHash 且旧窗口外 HIGH 计入；无有效报告不可确认定稿；新稿产生后旧报告失效标识；mvn compile && mvn test 通过。",
@@ -7758,5 +7766,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-001"
+  "active_feature": null
 }

@@ -7675,7 +7675,7 @@
       "dependencies": [
         "NCS-016"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/SelectiveAcceptService.java",
         "src/main/java/com/writing/novel/web/SelectiveAcceptController.java"
@@ -7683,12 +7683,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：组合产生新哈希与重检记录、未重检不可采纳、采纳后不继承旧通过状态；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=SelectiveAcceptTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: 41b89fc（ff-merge）; verify_cmd SelectiveAcceptTest 4/0F; mvn test 1063/0F/0E/1S（分支+干净检出）; e2e+baseline PASS; 证据 docs/harness/evidence/2026-09-19-ncs-024.json",
       "ui_impact": "medium",
       "backend_impact": "high",
       "prompt_impact": "none",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-024-selective-accept",
+      "completion_record": "ncs-024-verified"
     },
     {
       "id": "NCS-025",
@@ -7848,5 +7850,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-024"
+  "active_feature": null
 }

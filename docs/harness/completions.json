@@ -1782,6 +1782,17 @@
    "implementation_commit": "9fc0689aa7a911b358f51b52ffb28a13d0237345",
    "main_commit": "9fc0689aa7a911b358f51b52ffb28a13d0237345",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-023.json"
+  },
+  {
+   "id": "ncs-024-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-024"
+   ],
+   "branch": "codex/ncs-024-selective-accept",
+   "implementation_commit": "41b89fc44c0bc4c21539107b478df6c8d343bb73",
+   "main_commit": "41b89fc44c0bc4c21539107b478df6c8d343bb73",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-024.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

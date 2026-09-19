@@ -1,0 +1,26 @@
+{
+ "commit": "41b89fc44c0bc4c21539107b478df6c8d343bb73",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1063 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=SelectiveAcceptTest",
+   "result": "PASS: 4 tests 0 failures（含干净检出）。组合产生新候选（新 previewId/内容=所选段落拼接/未选段不进入/来源记录/产生即需重检）；未重检不可采纳→重检通过后采纳且正文=组合内容；重检发现 HIGH 问题保持不可采纳（正文不被覆盖）；采纳后原候选保持 READY（不继承通过状态、仍可比较）。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py",
+   "result": "PASS（按需 API，无管线影响）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "SelectiveAcceptService：combine（requestKey=combine:{requestId}:{uuid}，独立哈希与身份）/recheck（连续性检查+信封 combine-recheck）/accept（前置：已重检且无未决 HIGH；版本 CAS；500 字门槛；组合候选消费 STALE，原候选不动）。REST combine/recheck/accept。事件 SELECTIVE_COMBINE_CREATED/ACCEPTED。",
+ "feature_ids": [
+  "NCS-024"
+ ],
+ "branch": "codex/ncs-024-selective-accept"
+}

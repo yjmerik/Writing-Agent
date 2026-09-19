@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Alert, Button, Card, List, Space, Spin, Tag, Typography } from 'antd';
 import { api } from '../api/client';
+import EditionsPanel from './EditionsPanel';
 import type { VolumeReadbackItem } from '../types';
 import type { BookReviewData } from '../api/client';
 
@@ -158,6 +159,7 @@ export default function BookReviewView({ projectId }: { projectId: string }) {
           )}
         />
       </Space>
+      <EditionsPanel projectId={projectId} />
     </Card>
   );
 }

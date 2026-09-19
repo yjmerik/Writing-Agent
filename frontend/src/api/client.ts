@@ -38,6 +38,8 @@ import type {
   AestheticProfileData,
   ReviewClassification,
   DelegationRules,
+  BookEditionSummary,
+  BookEditionDetail,
 } from '../types';
 
 const BASE = '/api';
@@ -323,6 +325,20 @@ export const api = {
   // NCS-010/011: 人物时点读取
   getCharacterAsOf: (id: string, charName: string, chapter: number) =>
     request<CharacterAsOf>(`/projects/${id}/characters/${encodeURIComponent(charName)}/as-of?chapter=${chapter}`),
+  // NCS-027: 成书版本
+  listBookEditions: (id: string) =>
+    request<BookEditionSummary[]>(`/projects/${id}/book-editions`),
+  createBookEdition: (id: string) =>
+    request<{ editionId: string; manifestHash: string; state: string; chapterCount: number; approvedChapters: number }>(
+      `/projects/${id}/book-editions`, { method: 'POST' }),
+  getBookEditionDetail: (id: string, editionId: string) =>
+    request<BookEditionDetail>(`/projects/${id}/book-editions/${editionId}`),
+  approveBookEdition: (id: string, editionId: string, manifestHash: string) =>
+    request<Record<string, unknown>>(`/projects/${id}/book-editions/${editionId}/approve`,
+      { method: 'POST', body: JSON.stringify({ manifestHash }) }),
+  exportBookEditionUrl: (id: string, editionId: string) =>
+    `/api/projects/${id}/book-editions/${editionId}/export`,
+
   // NCS-025: 委托策略
   getDelegationPolicy: (id: string) =>
     request<{ projectId: string; rules: DelegationRules }>(`/projects/${id}/delegation-policy`),

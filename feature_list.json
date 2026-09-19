@@ -7752,11 +7752,12 @@
       "phase": 49,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
-        "frontend/src/components/EditionsView.tsx",
-        "frontend/src/pages/ProjectWorkspace.tsx",
-        "frontend/src/api/client.ts"
+        "frontend/src/components/EditionsPanel.tsx",
+        "frontend/src/components/BookReviewView.tsx",
+        "frontend/src/api/client.ts",
+        "frontend/src/types.ts"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "npm --prefix frontend run build 通过；ego-browser 走通创建→详情→确认定稿→导出固定版本，工作稿/定稿导出入口区分。",
@@ -7853,5 +7854,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-027"
 }

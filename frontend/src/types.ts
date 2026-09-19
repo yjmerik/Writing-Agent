@@ -512,3 +512,23 @@ export interface ReviewClassification {
 
 // NCS-025: 委托策略
 export interface DelegationRules { [changeClass: string]: string }
+
+// NCS-027: 成书版本（BookEdition）
+export interface BookEditionSummary {
+  editionId: string;
+  manifestHash: string;
+  state: string;
+  createdAt: string;
+  approvedAt?: string;
+}
+
+export interface BookEditionDetail extends BookEditionSummary {
+  chapters: {
+    chapterIndex: number;
+    version: number;
+    title: string;
+    contentHash: string;
+    approvalId: string | null;
+    wordCount: number;
+  }[];
+}

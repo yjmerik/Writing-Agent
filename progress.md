@@ -4,39 +4,34 @@ Last Updated: 2026-09-19
 
 ## Current
 
-novel-complete-solution 方案（docs/specs/2026-09-19-novel-complete-solution.md）拆解为 30 个 NCS feature
-（phase 44–49 对应方案 M1–M6），逐个走完整特性闭环。NCS-001「持久写入门禁与 epoch 租约」已完成合入 main
-（实现提交 abc2ccb = main HEAD，ff-merge，完成记录 ncs-001-verified）。active_feature=null，
-下一特性按依赖序为 NCS-002（最终请求窗口核算）。
+novel-complete-solution 方案（docs/specs/2026-09-19-novel-complete-solution.md）30 个 NCS feature
+按 M1–M6 逐个闭环。**M1（001-007）与 M2（008-012）已全部完成合入 main**。
+active_feature=null；下一特性 NCS-013（统一修订请求与范围批准，M3 起点）。
 
 ## Files
 
-- 本轮新增：persistence/sqlite/WriteLeaseRepository、service/{WriteLeaseService,WriteLeaseStaleException}、
-  测试 WriteLeaseEpochTest/PostProcessLeaseGuardTest
-- 本轮修改：SqliteSchemaInitializer（project_write_leases 表 + writing_tasks.lease_epoch 列）、
-  SqliteNovelRepository（任务 lease_epoch 持久化）、WritingTaskExecutor（启动捕获/取消递增）、
-  ChapterWriterAgent（write 落库前 + rewriteForCorrection 返回前门禁）、ChapterPostProcessor（run 入口门禁）、
-  NovelOrchestrator（late-set writeLeaseRef）、AgentConfig/MemoryConfig/PersistenceConfig/OrchestratorConfig 接线
-- 规划：docs/specs/2026-09-19-novel-complete-solution.md、feature_list.json（361 项，NCS-001 completed）
-- 归档：docs/harness/archive/2026-09-19-p43-01-{progress,session-handoff}.md
+- M1：WriteLease（epoch 租约）、FinalRequestBudget（窗口核算）、AuthorIntent（创作约定）、
+  IntentView/IdentityBar（UI）、WorkspaceView（统一读取）、CheckResultEnvelope（检查信封）
+- M2：谓词化断言（StoryFact+SqliteStoryCanon+fact-harvest.st）、SupportWithdrawal（撤回传播）、
+  CharacterAsOf（时点 API+视图）、CharacterDecision（决策记录+经历视图）
+- e2e 语料重建：data/e2e-fixtures/mystery-20260919（record 3章/9730字/双 replay 一致/baseline PASS）
 
 ## Verification
 
-NCS-001（git worktree --detach abc2ccb 干净检出 + 分支工作区各一次，本轮实际执行）：
-- mvn compile PASS；mvn test 975 项 0 失败 / 0 错误 / 1 跳过（既有）
-- verify_cmd（WriteLeaseEpochTest+PostProcessLeaseGuardTest）7 项 0 失败；先骨架 RED 5 项后转绿
-- 无前端/prompt 改动：e2e 与 baseline 不适用（未触碰 replay 指纹）
-- 证据 docs/harness/evidence/2026-09-19-ncs-001.json；check-harness 见回执提交
+至 NCS-012（各 feature 均含分支+干净 main 检出双验证）：
+- mvn test 1017 项 0 失败 / 0 错误 / 1 跳过（既有）
+- e2e replay 3 章 COMPLETED/0 错误；compare-baseline PASS（NCS-008 语料重建后未退化，未触发 bless）
+- npm build PASS；浏览器验证（创作约定/身份栏/时点视图/决策视图）全过
+- 证据 docs/harness/evidence/2026-09-19-ncs-00{1..9}.json、-ncs-01{0,1,2}.json
 
 ## Blockers
 
 无。环境注记：
-- mvn test 需 `set -a; source data/.prod-env-keys; set +a; source scripts/load-env.sh`（DASHSCOPE_TOKEN_PLAN_API_KEY）
-- 干净检出需先复制 frontend/node_modules 再 npm build 生成 static（p42-01 约束 + node_modules 补充）
-- 主目录两处未跟踪材料（.zcode/plans/*、docs/reports/2026-09-05-ui-experience/）按约定保留不动
+- mvn test 需 set -a; source data/.prod-env-keys; set +a; source scripts/load-env.sh
+- 干净检出：cp -R frontend/node_modules → npm build → mvn test；e2e 需复制 data/e2e-fixtures（gitignore）
+- prompt 类 feature 触发语料重建（NCS-008 已重建一次；后续 NCS-018/019/020/022 若改 e2e 管线 prompt 需再重建）
 
 ## Next Steps
 
-- 下一特性 NCS-002「最终请求窗口核算」（deps 无，从 main 新建 codex/ncs-002-final-request-budget）
-- 之后按 DAG 序：NCS-003/005/007 → 004/006 → phase45 起 M2
-- prompt 类 feature（NCS-008/012/018/019/020/022）触发 fixture 重建 + 人工 bless gate
+- NCS-013 统一修订请求（deps: []，从 main 新建 codex/ncs-013-revision-requests）
+- 之后 NCS-014/015/016/017（M3 修订闭环）→ M4（018-021）→ M5（022-026）→ M6（027-030）

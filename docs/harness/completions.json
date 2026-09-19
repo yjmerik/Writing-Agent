@@ -1628,6 +1628,17 @@
    "implementation_commit": "1f0bb4d6e12871c261ebaea704c45813873984dd",
    "main_commit": "1f0bb4d6e12871c261ebaea704c45813873984dd",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-009.json"
+  },
+  {
+   "id": "ncs-010-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-010"
+   ],
+   "branch": "codex/ncs-010-character-as-of",
+   "implementation_commit": "70787cf47cce6378cc337e11b7620b28c869ad97",
+   "main_commit": "70787cf47cce6378cc337e11b7620b28c869ad97",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-010.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

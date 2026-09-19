@@ -7282,7 +7282,7 @@
       "dependencies": [
         "NCS-008"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/CharacterAsOfService.java",
         "src/main/java/com/writing/novel/web/CharacterAsOfController.java",
@@ -7292,12 +7292,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "API 测试：时点过滤正确（N 前发生/获知可见、N 后不可见）；信念与事实分列；来源可定位；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=CharacterAsOfTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: 70787cf（ff-merge）; verify_cmd CharacterAsOfTest 4/0F; mvn test 1013/0F/0E/1S（分支+干净检出）; e2e+baseline PASS; 证据 docs/harness/evidence/2026-09-19-ncs-010.json",
       "ui_impact": "none",
       "backend_impact": "high",
       "prompt_impact": "none",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-010-character-as-of",
+      "completion_record": "ncs-010-verified"
     },
     {
       "id": "NCS-011",
@@ -7797,5 +7799,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-010"
+  "active_feature": null
 }

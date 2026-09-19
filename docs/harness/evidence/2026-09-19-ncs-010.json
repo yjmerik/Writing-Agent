@@ -1,0 +1,26 @@
+{
+ "commit": "70787cf47cce6378cc337e11b7620b28c869ad97",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1013 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=CharacterAsOfTest",
+   "result": "PASS: 4 tests 0 failures（含干净检出）。时点12：只见第12章前事实（第15章识字记录 validFrom 过滤）、密信引文知情（含来源章/稿）、KNOWS 关系边有效；时点20：validTo=16 的过期关系不可见；NCS-009 撤回联动：证据失效后知情转入 believes（所信，附 beliefStatus）与 knows 分离；人物不存在 400。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py",
+   "result": "PASS：3 章 COMPLETED/0 错误，baseline 未退化（无 prompt 改动）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "ReadContext(project, subject, narrativePosition=N) 落地为 as-of 端点；时点过滤=story_facts validFrom/validTo + entity_edges isValidAt；知情/所信按（事实 ACTIVE 且证据非 stale）分流——信念可以是错的，不与事实合并（方案 §07 读取合同）。findLearnedByCharacter join 查询带 stale 标记；saveObserver 公开化。",
+ "feature_ids": [
+  "NCS-010"
+ ],
+ "branch": "codex/ncs-010-character-as-of"
+}

@@ -175,6 +175,11 @@ public class SqliteSchemaInitializer {
             "status TEXT DEFAULT 'ACTIVE', superseded_by TEXT, " +
             "last_validated_chapter INTEGER, created_at TEXT, updated_at TEXT)",
 
+        // NCS-001: 项目级写入门禁租约——epoch 单调递增，跨重启保持
+        "CREATE TABLE IF NOT EXISTS project_write_leases (" +
+            "project_id TEXT PRIMARY KEY, epoch INTEGER NOT NULL DEFAULT 0, " +
+            "reason TEXT, updated_at TEXT)",
+
         // p17-05: 自定义预设持久化（跨项目共享，name 主键 upsert）
         "CREATE TABLE IF NOT EXISTS custom_presets (" +
             "name TEXT PRIMARY KEY, content TEXT, updated_at TEXT)",
@@ -410,6 +415,8 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE writing_tasks ADD COLUMN task_type TEXT DEFAULT 'WRITE_ALL'");
         safeAddColumn(st, "ALTER TABLE writing_tasks ADD COLUMN instruction TEXT");
         safeAddColumn(st, "ALTER TABLE writing_tasks ADD COLUMN stop_requested INTEGER NOT NULL DEFAULT 0");
+        // NCS-001: 任务启动时捕获的写入门禁 epoch（旧任务默认 0 与无租约行匹配）
+        safeAddColumn(st, "ALTER TABLE writing_tasks ADD COLUMN lease_epoch INTEGER NOT NULL DEFAULT 0");
         // p32-04: 章节写作采用的计划出处（卷号+梗概指纹），旧行 NULL
         safeAddColumn(st, "ALTER TABLE chapters ADD COLUMN plan_ref TEXT");
         // p32-06: 真典事实证据分级（机器收割的世界铁律=UNVERIFIED），旧行默认 CONFIRMED

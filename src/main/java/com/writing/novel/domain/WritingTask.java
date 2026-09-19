@@ -13,12 +13,16 @@ public class WritingTask {
     /** p18-03: 作者创作指令，随任务持久化；持续协作恢复时沿用 */
     private String instruction;
     private boolean stopRequested;
+    /** NCS-001: 任务启动时捕获的写入门禁 epoch（停止/取消递增后晚到写入被拒） */
+    private int leaseEpoch;
 
     public boolean isStopRequested() { return stopRequested; }
     public void setStopRequested(boolean value) { stopRequested = value; updatedAt = Instant.now(); }
 
     public String getInstruction() { return instruction; }
     public void setInstruction(String instruction) { this.instruction = instruction; }
+    public int getLeaseEpoch() { return leaseEpoch; }
+    public void setLeaseEpoch(int epoch) { this.leaseEpoch = epoch; }
     public enum Status { RUNNING, PAUSED, COMPLETED, FAILED, CANCELLED }
     public enum Type { CONCEIVE, WRITE_CHAPTER, WRITE_ALL, AUTO_RUN }
 

@@ -3067,13 +3067,14 @@ public class SqliteNovelRepository implements NovelRepository {
     @Override
     public void saveWritingTask(WritingTask t) {
         String sql = "INSERT INTO writing_tasks (id,project_id,status,task_type,current_chapter,total_chapters," +
-                "chapters_written,total_words,error_message,created_at,updated_at,instruction,stop_requested) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
+                "chapters_written,total_words,error_message,created_at,updated_at,instruction,stop_requested,lease_epoch) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET " +
                 "status=excluded.status, task_type=excluded.task_type, " +
                 "current_chapter=excluded.current_chapter, " +
                 "total_chapters=excluded.total_chapters, chapters_written=excluded.chapters_written, " +
                 "total_words=excluded.total_words, error_message=excluded.error_message, " +
-                "updated_at=excluded.updated_at, instruction=excluded.instruction, stop_requested=excluded.stop_requested";
+                "updated_at=excluded.updated_at, instruction=excluded.instruction, " +
+                "stop_requested=excluded.stop_requested, lease_epoch=excluded.lease_epoch";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, t.getId()); ps.setString(2, t.getProjectId());
@@ -3086,6 +3087,7 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setString(11, t.getUpdatedAt().toString());
             ps.setString(12, t.getInstruction());
             ps.setInt(13, t.isStopRequested() ? 1 : 0);
+            ps.setInt(14, t.getLeaseEpoch());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
@@ -3138,6 +3140,7 @@ public class SqliteNovelRepository implements NovelRepository {
         t.setErrorMessage(err != null ? err : "");
         t.setInstruction(rs.getString("instruction"));
         t.setStopRequested(rs.getInt("stop_requested") != 0);
+        try { t.setLeaseEpoch(rs.getInt("lease_epoch")); } catch (SQLException ignored) {}
         setField(t, "createdAt", java.time.Instant.parse(rs.getString("created_at")));
         setField(t, "updatedAt", java.time.Instant.parse(rs.getString("updated_at")));
         return t;

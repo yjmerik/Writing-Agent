@@ -32,11 +32,22 @@ public class ChapterWriterAgent {
     private final GenreRuleProvider genreRuleProvider;
     /** mc-p2-03: 模型配置（用于推导上下文组装预算），可为 null（回退默认预算） */
     private final com.writing.novel.llm.config.LlmProperties llmProperties;
+    /** NCS-001: 写入门禁（epoch 租约）；null 时不设防（测试/兼容装配） */
+    private final com.writing.novel.service.WriteLeaseService writeLease;
 
     public ChapterWriterAgent(LlmGateway gateway, ContextAssembler contextAssembler,
                                NovelRepository repository, VectorRetrievalService vectorRetrieval,
                                PromptTemplateService promptService, GenreRuleProvider genreRuleProvider,
                                com.writing.novel.llm.config.LlmProperties llmProperties) {
+        this(gateway, contextAssembler, repository, vectorRetrieval, promptService, genreRuleProvider, llmProperties, null);
+    }
+
+    /** NCS-001: 生产装配——带写入门禁的完整构造 */
+    public ChapterWriterAgent(LlmGateway gateway, ContextAssembler contextAssembler,
+                               NovelRepository repository, VectorRetrievalService vectorRetrieval,
+                               PromptTemplateService promptService, GenreRuleProvider genreRuleProvider,
+                               com.writing.novel.llm.config.LlmProperties llmProperties,
+                               com.writing.novel.service.WriteLeaseService writeLease) {
         this.gateway = gateway;
         this.contextAssembler = contextAssembler;
         this.repository = repository;
@@ -44,6 +55,7 @@ public class ChapterWriterAgent {
         this.promptService = promptService;
         this.genreRuleProvider = genreRuleProvider;
         this.llmProperties = llmProperties;
+        this.writeLease = writeLease;
     }
 
     /** 兼容测试的六参构造（vectorRetrieval 为 null 时跳过索引） */
@@ -173,6 +185,8 @@ public class ChapterWriterAgent {
 
         // 5. 构建 Chapter 并保存（纠正错误的章节号）
         // p9-4: 复用已存在的同索引章节（避免重复行）
+        // NCS-001: LLM 返回后、落库前校验写入门禁——取消/接手后晚到的正文不得进入主稿
+        guardWriteLease(projectId, chapterIndex, "chapter-write");
         String cleanContent = sanitizeChapterNumbers(resp.getContent(), chapterIndex);
         Chapter chapter = repository.findChapterByIndex(projectId, chapterIndex)
                 .orElse(new Chapter(projectId, chapterIndex, chapterTitle));
@@ -246,12 +260,34 @@ public class ChapterWriterAgent {
         if (resp.getContent() == null || resp.getContent().length() < minLen) {
             return null; // 重写也失败，保留原版本
         }
+        // NCS-001: epoch 失效后的晚到纠偏不产生新内容（返回 null=保留原版本），也不重建向量投影
+        if (writeLeaseStale(projectId)) {
+            return null;
+        }
 
         String cleanContent = sanitizeChapterNumbers(resp.getContent(), chapterIndex);
         // p16-05: 重写改变了正文——立即按章重建向量索引（清旧 chunk + 新正文入库）。
         // 调用方若拒收该重写（长度保护等），需用保留的原正文重放 reindexChapter 恢复一致。
         reindexChapter(projectId, chapterIndex, cleanContent);
         return cleanContent;
+    }
+
+    /**
+     * NCS-001: 正文落库前的写入门禁——活动任务的 epoch 必须仍是当前值。
+     * 无门禁（测试装配）或无活动任务（作者同步流程）时放行。
+     */
+    private void guardWriteLease(String projectId, int chapterIndex, String context) {
+        if (writeLease == null || repository == null) return;
+        var activeTask = repository.findActiveWritingTask(projectId).orElse(null);
+        writeLease.guardAgentWrite(projectId, activeTask, context + ":" + chapterIndex);
+    }
+
+    /** NCS-001: 判断当前是否 epoch 失效（供返回 null 语义的纠偏路径，不抛异常） */
+    private boolean writeLeaseStale(String projectId) {
+        if (writeLease == null || repository == null) return false;
+        var activeTask = repository.findActiveWritingTask(projectId).orElse(null);
+        if (activeTask == null) return false;
+        return activeTask.getLeaseEpoch() != writeLease.currentEpoch(projectId);
     }
 
     /**

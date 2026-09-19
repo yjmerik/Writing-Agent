@@ -70,7 +70,8 @@ public class OrchestratorConfig {
                                                   com.writing.novel.service.QualityCouncil qualityCouncil,
                                                   com.writing.novel.service.Arbiter arbiter,
                                                   com.writing.novel.persistence.sqlite.PostProcessLedgerRepository postProcessLedger,
-                                                  com.writing.novel.agent.DirectiveEvidenceAgent directiveEvidenceAgent) {
+                                                  com.writing.novel.agent.DirectiveEvidenceAgent directiveEvidenceAgent,
+                                                  com.writing.novel.service.WriteLeaseService writeLease) {
         NovelOrchestrator orchestrator = new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
@@ -95,6 +96,8 @@ public class OrchestratorConfig {
                         requirePolicy(postProcessLedger, "PostProcessLedgerRepository")));
         // p37-16: 章节完成后作者要求逐章核对
         orchestrator.setDirectiveEvidenceService(new com.writing.novel.service.DirectiveEvidenceService(repo, directiveEvidenceAgent));
+        // NCS-001: 写入门禁（epoch 租约）——后处理等生产模块经此读取
+        orchestrator.setWriteLeaseService(writeLease);
         return orchestrator;
     }
 

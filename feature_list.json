@@ -7033,7 +7033,7 @@
       "phase": 44,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "persistence/sqlite/SqliteSchemaInitializer.java",
         "service/WriteLeaseService.java",
@@ -7758,5 +7758,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-001"
 }

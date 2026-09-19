@@ -37,6 +37,19 @@ public class PersistenceConfig {
         return new SqliteNovelRepository(cp);
     }
 
+    // NCS-001: 项目级写入门禁（epoch 租约）——持久化与门禁服务
+    @Bean
+    @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)
+    public com.writing.novel.persistence.sqlite.WriteLeaseRepository writeLeaseRepository(ConnectionProvider cp) {
+        return new com.writing.novel.persistence.sqlite.WriteLeaseRepository(cp);
+    }
+
+    @Bean
+    public com.writing.novel.service.WriteLeaseService writeLeaseService(
+            com.writing.novel.persistence.sqlite.WriteLeaseRepository writeLeaseRepository) {
+        return new com.writing.novel.service.WriteLeaseService(writeLeaseRepository);
+    }
+
     // --- Embedded VectorStore ---
     @Bean
     @ConditionalOnProperty(name = "persistence.vector", havingValue = "embedded", matchIfMissing = true)

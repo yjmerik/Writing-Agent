@@ -43,8 +43,10 @@ public class AgentConfig {
                                                    NovelRepository repo, VectorRetrievalService vector,
                                                    PromptTemplateService promptService,
                                                    com.writing.novel.service.GenreRuleProvider genreRuleProvider,
-                                                   com.writing.novel.llm.config.LlmProperties llmProperties) {
-        return new ChapterWriterAgent(gateway, assembler, repo, vector, promptService, genreRuleProvider, llmProperties);
+                                                   com.writing.novel.llm.config.LlmProperties llmProperties,
+                                                   com.writing.novel.service.WriteLeaseService writeLease) {
+        return new ChapterWriterAgent(gateway, assembler, repo, vector, promptService,
+                genreRuleProvider, llmProperties, writeLease);
     }
 
     @Bean

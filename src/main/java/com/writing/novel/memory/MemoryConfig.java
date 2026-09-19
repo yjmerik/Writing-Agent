@@ -61,8 +61,9 @@ public class MemoryConfig {
     public com.writing.novel.service.WritingTaskExecutor writingTaskExecutor(
             com.writing.novel.orchestrator.NovelOrchestrator orchestrator,
             NovelRepository repository,
-            com.writing.novel.telemetry.CostBudgetMonitor costBudgetMonitor) {
-        return new com.writing.novel.service.WritingTaskExecutor(orchestrator, repository, costBudgetMonitor);
+            com.writing.novel.telemetry.CostBudgetMonitor costBudgetMonitor,
+            com.writing.novel.service.WriteLeaseService writeLease) {
+        return new com.writing.novel.service.WritingTaskExecutor(orchestrator, repository, costBudgetMonitor, writeLease);
     }
 
     @Bean

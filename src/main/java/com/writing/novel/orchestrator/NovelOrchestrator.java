@@ -95,6 +95,17 @@ public class NovelOrchestrator {
     // p37-16: 章节完成后作者要求证据服务（可选注入；未注入不调用额外模型）
     private volatile com.writing.novel.service.DirectiveEvidenceService directiveEvidenceService;
 
+    // NCS-001: 写入门禁（epoch 租约）——可选注入；未注入不设防（测试装配）
+    private volatile com.writing.novel.service.WriteLeaseService writeLease;
+
+    /** NCS-001: 注入写入门禁（生产装配用）。 */
+    public void setWriteLeaseService(com.writing.novel.service.WriteLeaseService s) {
+        this.writeLease = s;
+    }
+
+    /** NCS-001: 后处理等生产模块读取写入门禁。 */
+    com.writing.novel.service.WriteLeaseService writeLeaseRef() { return writeLease; }
+
     /** p37-16: 注入意见证据服务（生产装配用）。 */
     public void setDirectiveEvidenceService(com.writing.novel.service.DirectiveEvidenceService s) {
         this.directiveEvidenceService = s;

@@ -119,6 +119,13 @@ public class ChapterPostProcessor {
 
     private Chapter run(String projectId, Chapter chapter, int chapterIndex,
                         ChapterSynopsis synopsis, Outline outline, java.util.List<Stage> only) {
+        // NCS-001: 后处理入口同样受写入门禁——取消/接手后旧任务的投影/派生写入不得继续落库
+        var lease = orch.writeLeaseRef();
+        if (lease != null) {
+            lease.guardAgentWrite(projectId,
+                    repository.findActiveWritingTask(projectId).orElse(null),
+                    "post-process:" + chapterIndex);
+        }
         boolean rewrittenByContinuity = false;
         for (Stage stage : Stage.values()) {
             if (only != null && !only.contains(stage)) continue;

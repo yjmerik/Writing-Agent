@@ -42,6 +42,9 @@ public class WritingTaskExecutor {
     /** p20-05: 项目工作权协调器——每项目至多一个 live worker 的唯一裁决点 */
     private final ProjectWorkCoordinator coordinator = new ProjectWorkCoordinator();
 
+    /** NCS-001: 写入门禁（epoch 租约）；null 时不启用 */
+    private final com.writing.novel.service.WriteLeaseService writeLease;
+
     public WritingTaskExecutor(NovelOrchestrator orchestrator, NovelRepository repository) {
         this(orchestrator, repository, null);
     }
@@ -49,10 +52,25 @@ public class WritingTaskExecutor {
     /** p10-w1-04: 带成本预算监控的构造器（生产装配用） */
     public WritingTaskExecutor(NovelOrchestrator orchestrator, NovelRepository repository,
                                CostBudgetMonitor costBudgetMonitor) {
+        this(orchestrator, repository, costBudgetMonitor, null);
+    }
+
+    /** NCS-001: 带写入门禁的生产构造——任务启动捕获 epoch，取消/停止递增 */
+    public WritingTaskExecutor(NovelOrchestrator orchestrator, NovelRepository repository,
+                               CostBudgetMonitor costBudgetMonitor,
+                               com.writing.novel.service.WriteLeaseService writeLease) {
         this.orchestrator = orchestrator;
         this.repository = repository;
         this.costBudgetMonitor = costBudgetMonitor;
+        this.writeLease = writeLease;
         sweepOrphanedTasks();
+    }
+
+    /** NCS-001: 任务启动时捕获当前写入门禁 epoch */
+    private void captureLeaseEpoch(WritingTask task) {
+        if (writeLease != null) {
+            task.setLeaseEpoch(writeLease.currentEpoch(task.getProjectId()));
+        }
     }
 
     /**
@@ -101,6 +119,7 @@ public class WritingTaskExecutor {
         }
         try {
             task.setInstruction(instruction);
+            captureLeaseEpoch(task);
             repository.saveWritingTask(task);
         } catch (RuntimeException e) {
             coordinator.release(token.get());
@@ -131,6 +150,7 @@ public class WritingTaskExecutor {
             throw new IllegalStateException("项目已有进行中的工作，请等待其完成");
         }
         try {
+            captureLeaseEpoch(task);
             repository.saveWritingTask(task);
         } catch (RuntimeException e) {
             coordinator.release(token.get());
@@ -162,6 +182,7 @@ public class WritingTaskExecutor {
         }
         try {
             actionGate.run();
+            captureLeaseEpoch(task);
             repository.saveWritingTask(task);
         } catch (RuntimeException e) {
             coordinator.release(token.get());
@@ -318,9 +339,14 @@ public class WritingTaskExecutor {
     /**
      * 取消写作任务。
      * mc-p0-01: 只设内存标志，不立即写 DB——循环退出后才写 CANCELLED。
+     * NCS-001: 同时递增持久写入门禁 epoch——晚到的正文/投影写入按旧 epoch 一律拒绝。
      */
     public boolean cancel(String taskId) {
         cancelFlags.put(taskId, true);
+        if (writeLease != null) {
+            repository.findWritingTask(taskId).ifPresent(t ->
+                    writeLease.bump(t.getProjectId(), "cancel:" + taskId));
+        }
         log.info("取消信号已发送: taskId={}（循环将在当前章完成后退出）", taskId);
         return true;
     }
@@ -355,6 +381,7 @@ public class WritingTaskExecutor {
             WritingTask previous = latestCollaborativeTask(projectId);
             task.setInstruction(instruction != null ? instruction.trim()
                     : previous == null ? null : previous.getInstruction());
+            captureLeaseEpoch(task);
             repository.saveWritingTask(task);
             executor.submit(() -> executeCollaborative(task));
             return task;
@@ -394,6 +421,7 @@ public class WritingTaskExecutor {
         if (task == null) return; // A synchronous edit finishes normally; never release its owner early.
         task.setStopRequested(true);
         repository.saveWritingTask(task);
+        // NCS-001: cancel 内部递增持久写入门禁 epoch——旧任务的晚到写入不得再落库
         cancel(owner);
     }
 

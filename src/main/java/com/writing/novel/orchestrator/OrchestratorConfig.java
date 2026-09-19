@@ -72,7 +72,8 @@ public class OrchestratorConfig {
                                                   com.writing.novel.persistence.sqlite.PostProcessLedgerRepository postProcessLedger,
                                                   com.writing.novel.agent.DirectiveEvidenceAgent directiveEvidenceAgent,
                                                   com.writing.novel.service.WriteLeaseService writeLease,
-                                                  com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository) {
+                                                  com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository,
+                                                  com.writing.novel.service.VolumeReadbackService volumeReadbackService) {
         NovelOrchestrator orchestrator = new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
@@ -101,6 +102,8 @@ public class OrchestratorConfig {
         orchestrator.setWriteLeaseService(writeLease);
         // NCS-007: 检查结果信封——成书门禁"尚未查清"阻塞
         orchestrator.setCheckResultRepository(checkResultRepository);
+        // NCS-020: 卷末回读——未确认阻断下一卷自动续写
+        orchestrator.setVolumeReadbackService(volumeReadbackService);
         return orchestrator;
     }
 

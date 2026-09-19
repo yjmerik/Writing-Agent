@@ -198,6 +198,12 @@ public class SqliteSchemaInitializer {
             "deviation_json TEXT, decision TEXT, decided_at TEXT, created_at TEXT)",
         "CREATE INDEX IF NOT EXISTS idx_plan_deviations ON plan_deviations(project_id, chapter_index)",
 
+        // NCS-020: 卷末回读——每卷最新报告；PENDING_REVIEW 阻断下一卷
+        "CREATE TABLE IF NOT EXISTS volume_readbacks (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, volume_index INTEGER, report_json TEXT, " +
+            "status TEXT, acknowledged_at TEXT, created_at TEXT)",
+        "CREATE INDEX IF NOT EXISTS idx_volume_readbacks ON volume_readbacks(project_id, volume_index)",
+
         // NCS-012: 人物关键决策——绑定章号+稿版本，同章同稿同人物幂等
         "CREATE TABLE IF NOT EXISTS character_decisions (" +
             "id TEXT PRIMARY KEY, project_id TEXT, character_name TEXT, chapter_index INTEGER, " +

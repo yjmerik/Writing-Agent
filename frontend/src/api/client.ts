@@ -34,6 +34,7 @@ import type {
   GroupAcceptResult,
   SceneContractResult,
   PlanDeviationItem,
+  VolumeReadbackItem,
 } from '../types';
 
 const BASE = '/api';
@@ -319,6 +320,14 @@ export const api = {
   // NCS-010/011: 人物时点读取
   getCharacterAsOf: (id: string, charName: string, chapter: number) =>
     request<CharacterAsOf>(`/projects/${id}/characters/${encodeURIComponent(charName)}/as-of?chapter=${chapter}`),
+  // NCS-020: 卷末回读
+  listVolumeReadbacks: (id: string) =>
+    request<{ projectId: string; readbacks: VolumeReadbackItem[] }>(`/projects/${id}/volume-readbacks`),
+  generateVolumeReadback: (id: string, volume: number) =>
+    request<{ volumeIndex: number; generated: boolean }>(`/projects/${id}/volume-readbacks/generate?volume=${volume}`, { method: 'POST' }),
+  acknowledgeVolumeReadback: (id: string, volume: number) =>
+    request<{ volumeIndex: number; status: string }>(`/projects/${id}/volume-readbacks/${volume}/acknowledge`, { method: 'POST' }),
+
   // NCS-019: 计划偏离
   listPlanDeviations: (id: string) =>
     request<{ projectId: string; deviations: PlanDeviationItem[] }>(`/projects/${id}/plan-deviations`),

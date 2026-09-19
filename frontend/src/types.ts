@@ -468,3 +468,11 @@ export interface PlanDeviationItem {
   decision: string | null;
   decidedAt: string | null;
 }
+
+// NCS-020: 卷末回读
+export interface VolumeReadbackItem {
+  volumeIndex: number;
+  report: string;
+  status: string;
+  acknowledgedAt: string | null;
+}

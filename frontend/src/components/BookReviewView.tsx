@@ -1,12 +1,39 @@
 import { useEffect, useState } from 'react';
 import { Alert, Button, Card, List, Space, Spin, Tag, Typography } from 'antd';
 import { api } from '../api/client';
+import type { VolumeReadbackItem } from '../types';
 import type { BookReviewData } from '../api/client';
 
 const { Text } = Typography;
 
 /** p35-05（设计 5.7 第一版）：成书审查覆盖清单与导出。 */
 export default function BookReviewView({ projectId }: { projectId: string }) {
+  // NCS-020: 卷末回读
+  const [readbacks, setReadbacks] = useState<VolumeReadbackItem[]>([]);
+  const [readbackBusy, setReadbackBusy] = useState(false);
+  useEffect(() => {
+    void api.listVolumeReadbacks(projectId).then(r => setReadbacks(r.readbacks ?? [])).catch(() => {});
+  }, [projectId]);
+  const handleGenerateReadback = async (volume: number) => {
+    setReadbackBusy(true);
+    try {
+      const r = await api.generateVolumeReadback(projectId, volume);
+      if (r.generated) {
+        const list = await api.listVolumeReadbacks(projectId);
+        setReadbacks(list.readbacks ?? []);
+      } else { window.alert('生成未完成（输出不可解析），可重试'); }
+    } catch (e) { window.alert(e instanceof Error ? e.message : '生成失败'); }
+    finally { setReadbackBusy(false); }
+  };
+  const handleAckReadback = async (volume: number) => {
+    setReadbackBusy(true);
+    try {
+      await api.acknowledgeVolumeReadback(projectId, volume);
+      const list = await api.listVolumeReadbacks(projectId);
+      setReadbacks(list.readbacks ?? []);
+    } finally { setReadbackBusy(false); }
+  };
+
   const [data, setData] = useState<BookReviewData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -29,6 +56,41 @@ export default function BookReviewView({ projectId }: { projectId: string }) {
 
   return (
     <Card title="📕 成书审查（覆盖清单 · 基于当前稿）">
+    <Card size="small" title="📖 卷末回读" style={{ marginBottom: 12 }}>
+      {readbacks.length === 0 ? (
+        <div style={{ fontSize: 12, color: '#888' }}>
+          尚无回读报告——卷完成后生成回读（人物变化/节奏/承诺/偏离/建议），未确认的回读会暂停下一卷自动续写。
+          <Button size="small" style={{ marginLeft: 8 }} loading={readbackBusy}
+            onClick={() => handleGenerateReadback(1)}>生成第 1 卷回读</Button>
+        </div>
+      ) : readbacks.map(rb => {
+        let report: Record<string, string> = {};
+        try { report = JSON.parse(rb.report); } catch { /* ignore */ }
+        return (
+          <div key={rb.volumeIndex} style={{ padding: '6px 0', borderBottom: '1px dashed #eee', fontSize: 12 }}>
+            <Space size={6} wrap>
+              <Text strong>第 {rb.volumeIndex} 卷回读</Text>
+              <Tag color={rb.status === 'PENDING_REVIEW' ? 'orange' : 'green'}
+                style={{ fontSize: 10 }}>{rb.status === 'PENDING_REVIEW' ? '待确认（下一卷已暂停）' : '已确认'}</Tag>
+              {rb.status === 'PENDING_REVIEW' && (
+                <Button size="small" loading={readbackBusy} onClick={() => handleAckReadback(rb.volumeIndex)}>
+                  确认并继续下一卷
+                </Button>
+              )}
+              <Button size="small" loading={readbackBusy} onClick={() => handleGenerateReadback(rb.volumeIndex)}>
+                重新生成
+              </Button>
+            </Space>
+            <div style={{ marginTop: 4, lineHeight: 1.7 }}>
+              {Object.entries(report).map(([k, v]) => (
+                <div key={k}><Text type="secondary">{k}：</Text>{String(v)}</div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </Card>
+
       <Space direction="vertical" style={{ width: '100%' }} size={12}>
         <Space wrap>
           <Button type="primary" href={api.getBookExportUrl(projectId)} target="_blank">

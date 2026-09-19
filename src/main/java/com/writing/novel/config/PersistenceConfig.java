@@ -129,6 +129,24 @@ public class PersistenceConfig {
                 impactAnalysisService, agentRevisionService, revisionRequestService, repository);
     }
 
+    // NCS-020: 卷末回读
+    @Bean
+    @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)
+    public com.writing.novel.persistence.sqlite.VolumeReadbackRepository volumeReadbackRepository(ConnectionProvider cp) {
+        return new com.writing.novel.persistence.sqlite.VolumeReadbackRepository(cp);
+    }
+
+    @Bean
+    public com.writing.novel.service.VolumeReadbackService volumeReadbackService(
+            NovelRepository repository,
+            com.writing.novel.llm.LlmGateway llmGateway,
+            com.writing.novel.llm.prompt.PromptTemplateService promptTemplateService,
+            com.writing.novel.persistence.sqlite.PlanDeviationRepository planDeviationRepository,
+            com.writing.novel.persistence.sqlite.VolumeReadbackRepository volumeReadbackRepository) {
+        return new com.writing.novel.service.VolumeReadbackService(repository, llmGateway,
+                promptTemplateService, planDeviationRepository, volumeReadbackRepository);
+    }
+
     // NCS-019: 计划偏离
     @Bean
     @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)

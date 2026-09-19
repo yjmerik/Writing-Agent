@@ -7563,11 +7563,14 @@
       "dependencies": [
         "NCS-018"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
+        "src/main/java/com/writing/novel/domain/VolumeReadback.java",
         "src/main/java/com/writing/novel/service/VolumeReadbackService.java",
+        "src/main/java/com/writing/novel/web/VolumeReadbackController.java",
         "src/main/resources/prompts/volume-readback.st",
-        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+        "frontend/src/components/BookReviewView.tsx"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "测试（回放/桩）：卷末触发报告生成与持久化、界面可读；未决决定阻断自动续写且显式继续可用；报告绑定卷与稿版本；mvn compile && mvn test 通过。",
@@ -7833,5 +7836,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-020"
 }

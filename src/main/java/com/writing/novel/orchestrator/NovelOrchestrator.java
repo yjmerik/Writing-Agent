@@ -109,6 +109,14 @@ public class NovelOrchestrator {
     // NCS-007: 检查结果信封（成书门禁"尚未查清"阻塞）；可选注入
     private volatile com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository;
 
+    // NCS-020: 卷末回读（未确认阻断下一卷自动续写）；可选注入
+    private volatile com.writing.novel.service.VolumeReadbackService volumeReadbackService;
+
+    /** NCS-020: 注入卷末回读服务（生产装配用）。 */
+    public void setVolumeReadbackService(com.writing.novel.service.VolumeReadbackService s) {
+        this.volumeReadbackService = s;
+    }
+
     /** NCS-007: 注入检查结果信封仓储（生产装配用）。 */
     public void setCheckResultRepository(com.writing.novel.persistence.sqlite.CheckResultRepository repo) {
         this.checkResultRepository = repo;
@@ -2047,6 +2055,14 @@ public class NovelOrchestrator {
         Project p = loadProject(projectId);
         Outline outline = repository.findOutlineByProject(projectId).orElse(null);
         if (outline != null && hasNextChapter(outline, p.getCurrentChapterIndex())) {
+            // NCS-020/J08: 未确认的卷末回读阻断下一卷自动续写（显式确认后继续）
+            if (volumeReadbackService != null && volumeReadbackService.hasPending(projectId)) {
+                EventLog.emit("VOLUME_READBACK_PENDING", Map.of(
+                        "projectId", projectId,
+                        "currentChapter", p.getCurrentChapterIndex()));
+                log.info("卷末回读待确认，暂停下一卷自动续写(项目{}, 章{})", projectId, p.getCurrentChapterIndex());
+                return; // 保持 VOLUME_DONE
+            }
             p.setState(NovelState.WRITING);
         } else {
             // mc-p3-02: 统一走门禁——不能绕过直接置 FINAL

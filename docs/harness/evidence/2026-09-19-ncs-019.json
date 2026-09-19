@@ -1,0 +1,31 @@
+{
+ "commit": "61490119cbc0702baaadb99f4bbf6a530bb391f2",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1047 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "npm --prefix frontend run build",
+   "result": "PASS（分支+干净检出）。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=PlanDeviationTest",
+   "result": "PASS: 6 tests 0 failures（含干净检出）。分析落库（四类偏离+证据引文）；按正文更新计划（synopsis 更新为实际发生、已写章正文不动）；修订正文决定创建 PLAN_DEVIATION 修订请求（进入修订工作区闭环）；稍后决定挂起可再决定；坏输出不落库；无大纲/无正文明确失败。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py",
+   "result": "PASS（按需分析不在管线，指纹不变）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "plan_deviations 表（每章最新）；plan-deviation.st 新模板（synopsis/sceneContract/chapterContent）；决定 UPDATE_PLAN_FROM_TEXT 只改 synopsis（实际发生+自然替代写入），REVISE_TEXT 复用统一修订请求（PLAN_DEVIATION origin），DEFER 挂起；OutlineView 计划偏离面板（分析按钮+偏离展示+三决定）。设计决策同 NCS-018：按需分析不进默认管线。",
+ "feature_ids": [
+  "NCS-019"
+ ],
+ "branch": "codex/ncs-019-plan-deviation"
+}

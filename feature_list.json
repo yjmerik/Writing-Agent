@@ -7534,7 +7534,7 @@
       "dependencies": [
         "NCS-018"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/domain/PlanDeviation.java",
         "src/main/java/com/writing/novel/service/PlanDeviationService.java",
@@ -7545,12 +7545,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：偏离记录落库且区分四类；三种决定各自产生正确产物（synopsis 更新/修订请求/挂起）；已写章不被计划更新改写；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=PlanDeviationTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: 6149011（ff-merge）; verify_cmd PlanDeviationTest 6/0F; mvn test 1047/0F/0E/1S; npm build PASS; e2e+baseline PASS; 证据 docs/harness/evidence/2026-09-19-ncs-019.json",
       "ui_impact": "medium",
       "backend_impact": "high",
       "prompt_impact": "high",
       "e2e_impact": "high",
-      "baseline_impact": "high"
+      "baseline_impact": "high",
+      "branch": "codex/ncs-019-plan-deviation",
+      "completion_record": "ncs-019-verified"
     },
     {
       "id": "NCS-020",
@@ -7831,5 +7833,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-019"
+  "active_feature": null
 }

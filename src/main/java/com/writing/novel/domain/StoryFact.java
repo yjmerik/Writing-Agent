@@ -22,8 +22,8 @@ public class StoryFact {
         OBJECT_STATE       // 物品状态（归属/位置）
     }
 
-    /** 事实状态：ACTIVE 有效 / SUPERSEDED 被新事实取代 / RETIRED 归档 */
-    public enum Status { ACTIVE, SUPERSEDED, RETIRED }
+    /** 事实状态：ACTIVE 有效 / SUPERSEDED 被新事实取代 / RETIRED 归档 / UNSUPPORTED 失去全部有效证据（NCS-009） */
+    public enum Status { ACTIVE, SUPERSEDED, RETIRED, UNSUPPORTED }
 
     /**
      * p32-06（体验报告 #4/P1）: 证据分级——CONFIRMED 已确认（人工补丁/播种/状态类收割），

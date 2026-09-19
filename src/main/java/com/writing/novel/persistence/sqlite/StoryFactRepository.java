@@ -195,6 +195,87 @@ public class StoryFactRepository {
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
+    // --- NCS-009: 来源撤回与支持传播 ---
+
+    /** 公开单条证据写入（供测试与新证据补充路径） */
+    public void saveFactEvidence(String id, String factId, String projectId,
+                                 int chapterIndex, int chapterVersion, String contentHash,
+                                 String quote, int paragraphIndex, String anchorHash,
+                                 int validFrom, Integer validTo) {
+        try (Connection conn = cp.getConnection()) {
+            saveFactEvidence(conn, id, factId, projectId, chapterIndex, chapterVersion,
+                    contentHash, quote, paragraphIndex, anchorHash, validFrom, validTo);
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** 按 factId 查证据行（map 形式，含 stale 标记） */
+    public List<java.util.Map<String, Object>> findByFactId(String projectId, String factId) {
+        String sql = "SELECT id, chapter_index, chapter_version, stale FROM fact_evidence " +
+                "WHERE project_id=? AND fact_id=? ORDER BY chapter_index";
+        List<java.util.Map<String, Object>> out = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            ps.setString(2, factId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                var m = new java.util.LinkedHashMap<String, Object>();
+                m.put("id", rs.getString("id"));
+                m.put("chapterIndex", rs.getInt("chapter_index"));
+                m.put("chapterVersion", rs.getInt("chapter_version"));
+                m.put("stale", rs.getInt("stale"));
+                out.add(m);
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return out;
+    }
+
+    /**
+     * NCS-009/R03: 章节修订传播——绑定该章旧稿版本（< currentVersion）的证据全部标失效，
+     * 返回受影响（仍有未失效证据需复核，或已无有效证据）的 factId 集合。
+     */
+    public List<String> markEvidenceStaleForRevisedChapter(String projectId, int chapterIndex, int currentVersion) {
+        List<String> affected = new ArrayList<>();
+        try (Connection conn = cp.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement find = conn.prepareStatement(
+                        "SELECT DISTINCT fact_id FROM fact_evidence WHERE project_id=? AND chapter_index=? AND chapter_version<? AND stale=0")) {
+                    find.setString(1, projectId);
+                    find.setInt(2, chapterIndex);
+                    find.setInt(3, currentVersion);
+                    ResultSet rs = find.executeQuery();
+                    while (rs.next()) affected.add(rs.getString(1));
+                }
+                try (PreparedStatement upd = conn.prepareStatement(
+                        "UPDATE fact_evidence SET stale=1 WHERE project_id=? AND chapter_index=? AND chapter_version<?")) {
+                    upd.setString(1, projectId);
+                    upd.setInt(2, chapterIndex);
+                    upd.setInt(3, currentVersion);
+                    upd.executeUpdate();
+                }
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return affected;
+    }
+
+    /** 该事实当前是否仍有未失效证据 */
+    public boolean hasActiveEvidence(String factId) {
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                     "SELECT COUNT(*) FROM fact_evidence WHERE fact_id=? AND stale=0")) {
+            ps.setString(1, factId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() && rs.getInt(1) > 0;
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
     private List<StoryFact> queryList(String projectId, String suffix) {
         String sql = "SELECT * FROM story_facts WHERE project_id=? " + suffix;
         List<StoryFact> out = new ArrayList<>();

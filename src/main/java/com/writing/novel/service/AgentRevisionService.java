@@ -51,13 +51,14 @@ public class AgentRevisionService {
                                 CanonPatchService canonPatch,
                                 WritingTaskExecutor writingTaskExecutor,
                                 NovelOrchestrator orchestrator,
-                                ObjectMapper objectMapper) {
+                                ObjectMapper objectMapper,
+                                SupportWithdrawalService supportWithdrawal) {
         this.repository = repository;
         this.revisionAgent = revisionAgent;
         this.canonPatch = canonPatch;
         this.writingTaskExecutor = writingTaskExecutor;
         this.chapterRevision = new ChapterRevisionService(repository, writingTaskExecutor,
-                orchestrator::refreshChapterAfterRevisionAsync);
+                orchestrator::refreshChapterAfterRevisionAsync, supportWithdrawal);
         this.objectMapper = objectMapper;
     }
 

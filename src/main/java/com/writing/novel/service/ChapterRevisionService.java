@@ -27,17 +27,28 @@ public class ChapterRevisionService {
     private final NovelRepository repository;
     private final WritingTaskExecutor writingTaskExecutor;
     private final RevisionEffects effects;
+    /** NCS-009: 来源撤回传播；null 时不触发（旧装配/测试） */
+    private final SupportWithdrawalService supportWithdrawal;
 
     public ChapterRevisionService(NovelRepository repository) {
-        this(repository, null, null);
+        this(repository, null, null, null);
     }
 
     public ChapterRevisionService(NovelRepository repository,
                                   WritingTaskExecutor writingTaskExecutor,
                                   RevisionEffects effects) {
+        this(repository, writingTaskExecutor, effects, null);
+    }
+
+    /** NCS-009: 带支持撤回传播的构造 */
+    public ChapterRevisionService(NovelRepository repository,
+                                  WritingTaskExecutor writingTaskExecutor,
+                                  RevisionEffects effects,
+                                  SupportWithdrawalService supportWithdrawal) {
         this.repository = repository;
         this.writingTaskExecutor = writingTaskExecutor;
         this.effects = effects;
+        this.supportWithdrawal = supportWithdrawal;
     }
 
     public Chapter createDraft(String projectId, String title, String content) {
@@ -109,8 +120,27 @@ public class ChapterRevisionService {
         }
         // p36-07: 屏障重绑/批准失效历史已在 saveChapterRevision 同一事务内原子完成——
         // 事务后吞异常的 rebind 已删除，避免"正文已推进而屏障仍绑旧稿号"的半套状态。
+        withdrawStaleEvidence(projectId, chapterIndex, current.getVersion());
         refreshIsolated(projectId, current);
         return current;
+    }
+
+    /**
+     * NCS-009: 正文版本推进后传播证据失效（同 p32-01 容错模式——
+     * 传播失败不回滚已保存正文，留事件待重试；方法幂等可重入）。
+     */
+    private void withdrawStaleEvidence(String projectId, int chapterIndex, int newVersion) {
+        if (supportWithdrawal == null) return;
+        try {
+            supportWithdrawal.onChapterRevised(projectId, chapterIndex, newVersion);
+        } catch (Exception e) {
+            EventLog.emit("SUPPORT_WITHDRAWAL_FAILED", Map.of(
+                    "projectId", projectId,
+                    "chapterIndex", chapterIndex,
+                    "newVersion", newVersion,
+                    "errorClass", e.getClass().getSimpleName(),
+                    "message", EventLog.truncate(e.getMessage(), 150)));
+        }
     }
 
     /**
@@ -284,6 +314,7 @@ public class ChapterRevisionService {
                 projectId, proposal.getId(), snapshot, revised, currentIdentity);
         Chapter applied = repository.findChapterByIndex(projectId, proposal.getChapterIndex())
                 .orElseThrow(() -> new IllegalStateException("候选应用后章节不存在"));
+        withdrawStaleEvidence(projectId, proposal.getChapterIndex(), applied.getVersion());
         // 派生刷新在提交后执行：失败标 pending，不得再次写一版正文
         refreshIsolated(projectId, applied);
         return new ProposalApplyResult(commit, applied);

@@ -33,7 +33,8 @@ public class ContentController {
     public ContentController(NovelRepository repository, NovelOrchestrator orchestrator,
                              CanonPatchService canonPatch, WritingTaskExecutor writingTaskExecutor,
                              OutlineStructureService outlineStructure,
-                             com.writing.novel.service.PlanEditionService planEdition) {
+                             com.writing.novel.service.PlanEditionService planEdition,
+                             com.writing.novel.service.SupportWithdrawalService supportWithdrawal) {
         this.repository = repository;
         this.orchestrator = orchestrator;
         this.canonPatch = canonPatch;
@@ -41,7 +42,8 @@ public class ContentController {
         this.outlineStructure = outlineStructure;
         this.planEdition = planEdition;
         this.chapterRevision = new ChapterRevisionService(repository, writingTaskExecutor,
-                orchestrator == null ? null : orchestrator::refreshChapterAfterRevisionAsync);
+                orchestrator == null ? null : orchestrator::refreshChapterAfterRevisionAsync,
+                supportWithdrawal);
     }
 
     /** Unit-test compatibility for controller tests that do not exercise outline editing. */
@@ -50,7 +52,7 @@ public class ContentController {
         this(repository, orchestrator, canonPatch, writingTaskExecutor,
                 canonPatch == null ? null : new OutlineStructureService(
                         repository, canonPatch, writingTaskExecutor),
-                new com.writing.novel.service.PlanEditionService(repository));
+                new com.writing.novel.service.PlanEditionService(repository), null);
     }
 
     @GetMapping("/worldbuilding")

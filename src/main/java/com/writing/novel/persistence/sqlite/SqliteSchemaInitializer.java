@@ -439,6 +439,8 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE story_facts ADD COLUMN polarity TEXT");
         safeAddColumn(st, "ALTER TABLE story_facts ADD COLUMN valid_from INTEGER");
         safeAddColumn(st, "ALTER TABLE story_facts ADD COLUMN valid_to INTEGER");
+        // NCS-009: 证据失效标记——来源稿被修订后旧版本证据不再支持事实
+        safeAddColumn(st, "ALTER TABLE fact_evidence ADD COLUMN stale INTEGER NOT NULL DEFAULT 0");
         // p32-05: 审核产物绑定产生时点的章节版本与正文指纹，旧行 NULL
         safeAddColumn(st, "ALTER TABLE continuity_issues ADD COLUMN chapter_version INTEGER");
         safeAddColumn(st, "ALTER TABLE continuity_issues ADD COLUMN content_hash TEXT");

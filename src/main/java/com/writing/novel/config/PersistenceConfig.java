@@ -57,6 +57,13 @@ public class PersistenceConfig {
         return new com.writing.novel.persistence.sqlite.AuthorIntentRepository(cp);
     }
 
+    // NCS-009: 来源撤回与支持传播
+    @Bean
+    public com.writing.novel.service.SupportWithdrawalService supportWithdrawalService(
+            com.writing.novel.persistence.sqlite.StoryFactRepository storyFactRepository) {
+        return new com.writing.novel.service.SupportWithdrawalService(storyFactRepository);
+    }
+
     // NCS-007: 检查结果信封持久化
     @Bean
     @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)

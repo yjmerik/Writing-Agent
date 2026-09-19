@@ -7253,10 +7253,13 @@
       "dependencies": [
         "NCS-008"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
-        "src/main/java/com/writing/novel/service/FactEvidenceService.java",
-        "src/main/java/com/writing/novel/agent/FactHarvesterAgent.java"
+        "src/main/java/com/writing/novel/service/SupportWithdrawalService.java",
+        "src/main/java/com/writing/novel/service/ChapterRevisionService.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/StoryFactRepository.java",
+        "src/main/java/com/writing/novel/domain/StoryFact.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：删唯一证据→UNSUPPORTED 且不注入；双证据删一→保留；事件与审计可查；mvn compile && mvn test 通过。",
@@ -7790,5 +7793,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-009"
 }

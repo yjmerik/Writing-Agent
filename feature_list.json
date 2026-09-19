@@ -7310,7 +7310,7 @@
       "dependencies": [
         "NCS-010"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "frontend/src/components/CharacterAsOfView.tsx",
         "frontend/src/components/WorldbuildingView.tsx",
@@ -7321,12 +7321,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "npm --prefix frontend run build 通过；ego-browser 验证时点切换、三类知识分列、错误信念标注、全书视角后文提示。",
       "verify_cmd": "npm --prefix frontend run build",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: 5c069cb（ff-merge）; npm build PASS; mvn test 1013/0F/0E/1S（干净检出）; ego-browser 时点视图/分列/空态/全书视角警告全过; 证据 docs/harness/evidence/2026-09-19-ncs-011.json",
       "ui_impact": "high",
       "backend_impact": "low",
       "prompt_impact": "none",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-011-as-of-view",
+      "completion_record": "ncs-011-verified"
     },
     {
       "id": "NCS-012",
@@ -7801,5 +7803,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-011"
+  "active_feature": null
 }

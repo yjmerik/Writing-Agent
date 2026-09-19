@@ -1,0 +1,26 @@
+{
+ "commit": "5c069cb946098d622fe786d37e2dbbba8dfb6220",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "npm --prefix frontend run build",
+   "result": "PASS（分支 + 干净检出各一次）。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1013 tests, 0 failures, 0 errors, 1 skipped（既有）。干净检出。",
+   "exitCode": 0
+  },
+  {
+   "command": "ego-browser 浏览器验证（隔离实例 18099）",
+   "result": "PASS：世界观页人物区顶部渲染『🕰 人物时点知情视图』卡片——人物选择器/时点滑块/全书视角开关；『作者知道 · 第 N 章时点状态』区块显示事实+谓词/极性标签+生效章；『沈昭 知道』空态显示『尚无可定位依据』；关系区块空态提示；全书视角开即显示后文剧透警告、关即恢复；截图 docs/reports/ncs-011-as-of-view.png。as-of API 数据驱动（facts 正确呈现）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "CharacterAsOfView 组件（人物选择+时点滑块 0..当前进度+全书视角开关带 warning Alert）；作者知道=facts、角色知道=knows、所信=believes（含 beliefStatus 解释文案『其不知道客观情况已变』）、关系=isValidAt 边（方向+有效期）；读者知道以文案说明（正文呈现=时点状态）；集成于 WorldbuildingView 人物区顶部（currentChapter 透传）。",
+ "feature_ids": [
+  "NCS-011"
+ ],
+ "branch": "codex/ncs-011-as-of-view"
+}

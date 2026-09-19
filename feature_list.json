@@ -7368,7 +7368,7 @@
       "phase": 46,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/domain/RevisionRequest.java",
         "src/main/java/com/writing/novel/persistence/sqlite/RevisionRequestRepository.java",
@@ -7379,12 +7379,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：六入口各产生 RevisionRequest 且字段正确；范围批准前不可生成修复；scopeDecision 与 acceptDecision 分开落库；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=RevisionRequestTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: c9e0b19（ff-merge）; verify_cmd RevisionRequestTest 6/0F; mvn test 1023/0F/0E/1S（分支+干净检出）; e2e+baseline PASS; 证据 docs/harness/evidence/2026-09-19-ncs-013.json",
       "ui_impact": "low",
       "backend_impact": "high",
       "prompt_impact": "none",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-013-revision-requests",
+      "completion_record": "ncs-013-verified"
     },
     {
       "id": "NCS-014",
@@ -7811,5 +7813,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-013"
+  "active_feature": null
 }

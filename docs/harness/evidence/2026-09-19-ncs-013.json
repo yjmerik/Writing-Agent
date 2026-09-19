@@ -1,0 +1,26 @@
+{
+ "commit": "c9e0b1916fe6b147da30f8e48a6734627faed724",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1023 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=RevisionRequestTest",
+   "result": "PASS: 6 tests 0 failures（含干净检出）。六类入口均可登记字段完整；范围批准与内容采纳分离（scopeDecision/acceptance 各自独立可追溯）；OPEN 不可进入修复流程（requireScopeApproved）；作者直存自动登记并完成（基准版本绑定）；恢复旧稿登记 RESTORE；取消保留记录。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py",
+   "result": "PASS：3 章 COMPLETED/0 错误，baseline 未退化（无 prompt 改动）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "revision_requests 表 + RevisionRequest 域（Origin 六类/Status 四态/scopeDecision 与 acceptance 分离）；REST API（record/approve-scope/accept/cancel/list）；挂钩：ChapterRevisionService doEdit（DIRECT_EDIT）、restore（RESTORE）、doApplyProposal（PASSAGE_POLISH/CHAPTER_REWRITE）、ContentController 人物确认（SETTING_CHANGE）、PlanEditionService.confirmTarget（PLAN_ADJUST）；同步入口登记即完成（作者本人即采纳决定），探索类入口 OPEN→批准范围→采纳。事件 REVISION_REQUEST_RECORDED/COMPLETED/SCOPE_APPROVED。",
+ "feature_ids": [
+  "NCS-013"
+ ],
+ "branch": "codex/ncs-013-revision-requests"
+}

@@ -187,6 +187,11 @@ public class SqliteSchemaInitializer {
             "autonomy TEXT, unwanted_patterns TEXT, updated_at TEXT, " +
             "PRIMARY KEY (project_id, revision))",
 
+        // NCS-007: 检查结果信封——(章×检查器) 逐次追加，读取取最新；UNKNOWN/INVALID=尚未查清
+        "CREATE TABLE IF NOT EXISTS check_results (" +
+            "id TEXT PRIMARY KEY, project_id TEXT, chapter_index INTEGER, checker TEXT, " +
+            "status TEXT, reason TEXT, created_at TEXT)",
+
         // p17-05: 自定义预设持久化（跨项目共享，name 主键 upsert）
         "CREATE TABLE IF NOT EXISTS custom_presets (" +
             "name TEXT PRIMARY KEY, content TEXT, updated_at TEXT)",

@@ -24,6 +24,8 @@ public class ContinuityCheckerAgent {
     private final NovelRepository repository;
     private final PromptTemplateService promptService;
     private final RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面
+    /** NCS-007: 检查结果信封持久化；null 时不落库（旧装配/测试） */
+    private final com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository;
 
     public ContinuityCheckerAgent(LlmGateway gateway, NovelRepository repository,
                                   PromptTemplateService promptService) {
@@ -33,10 +35,18 @@ public class ContinuityCheckerAgent {
     /** p11-q0-01: 注入 RelevanceGateway，按相关性收窄查找（如主角定位） */
     public ContinuityCheckerAgent(LlmGateway gateway, NovelRepository repository,
                                   PromptTemplateService promptService, RelevanceGateway relevanceGateway) {
+        this(gateway, repository, promptService, relevanceGateway, null);
+    }
+
+    /** NCS-007: 带检查结果信封持久化的生产装配 */
+    public ContinuityCheckerAgent(LlmGateway gateway, NovelRepository repository,
+                                  PromptTemplateService promptService, RelevanceGateway relevanceGateway,
+                                  com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository) {
         this.gateway = gateway;
         this.repository = repository;
         this.promptService = promptService;
         this.relevanceGateway = relevanceGateway;
+        this.checkResultRepository = checkResultRepository;
     }
 
     public List<ContinuityIssue> check(String projectId, int chapterIndex,
@@ -79,7 +89,19 @@ public class ContinuityCheckerAgent {
                 .build();
 
         var resp = gateway.complete(req);
-        List<ContinuityIssue> issues = parseIssues(resp.getContent(), projectId, chapterIndex);
+        // NCS-007: 结果信封——坏输出/空响应/截断落库为 INVALID/UNKNOWN，绝不伪装成"无问题"
+        CheckResultEnvelope envelope = CheckResultEnvelope.of(resp.getContent());
+        List<ContinuityIssue> issues = new ArrayList<>();
+        if (envelope.status() == CheckResultEnvelope.Status.SUCCESS) {
+            for (ContinuityIssue parsed : envelope.issues()) {
+                issues.add(new ContinuityIssue(projectId, chapterIndex,
+                        parsed.getType(), parsed.getSeverity(), parsed.getDescription()));
+            }
+        }
+        if (checkResultRepository != null) {
+            checkResultRepository.save(projectId, chapterIndex, "continuity",
+                    envelope.status(), envelope.reason());
+        }
 
         if (repository != null) {
             for (ContinuityIssue issue : issues) {
@@ -196,21 +218,6 @@ public class ContinuityCheckerAgent {
                     .append("）：").append(f.getAssertion()).append("\n");
         }
         return sb.toString().trim();
-    }
-
-    private List<ContinuityIssue> parseIssues(String text, String projectId, int chapterIndex) {
-        List<ContinuityIssue> issues = new ArrayList<>();
-        if (text == null || text.contains("未发现")) return issues;
-
-        Pattern p = Pattern.compile("【([^|]+)\\|([^】]+)】(.+)");
-        Matcher m = p.matcher(text);
-        while (m.find()) {
-            ContinuityIssue.Type type = parseType(m.group(1).trim());
-            ContinuityIssue.Severity severity = parseSeverity(m.group(2).trim());
-            String desc = m.group(3).trim();
-            issues.add(new ContinuityIssue(projectId, chapterIndex, type, severity, desc));
-        }
-        return issues;
     }
 
     private ContinuityIssue.Type parseType(String s) {

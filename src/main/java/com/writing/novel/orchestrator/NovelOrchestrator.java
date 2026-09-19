@@ -106,6 +106,14 @@ public class NovelOrchestrator {
     /** NCS-001: 后处理等生产模块读取写入门禁。 */
     com.writing.novel.service.WriteLeaseService writeLeaseRef() { return writeLease; }
 
+    // NCS-007: 检查结果信封（成书门禁"尚未查清"阻塞）；可选注入
+    private volatile com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository;
+
+    /** NCS-007: 注入检查结果信封仓储（生产装配用）。 */
+    public void setCheckResultRepository(com.writing.novel.persistence.sqlite.CheckResultRepository repo) {
+        this.checkResultRepository = repo;
+    }
+
     /** p37-16: 注入意见证据服务（生产装配用）。 */
     public void setDirectiveEvidenceService(com.writing.novel.service.DirectiveEvidenceService s) {
         this.directiveEvidenceService = s;
@@ -2227,6 +2235,15 @@ public class NovelOrchestrator {
      */
     private boolean runFinalAuditGate(String projectId, Project p) {
         try {
+            // NCS-007/R09: 必查项"尚未查清"（最新状态 UNKNOWN/INVALID）阻塞成书——
+            // 未执行、解析失败、截断不能自动成为 PASS
+            if (checkResultRepository != null
+                    && checkResultRepository.unknownCount(projectId) > 0) {
+                long unknown = checkResultRepository.unknownCount(projectId);
+                log.warn("成书门禁 FAIL: {} 项必查检查尚未查清（UNKNOWN/INVALID）", unknown);
+                EventLog.emit("FINAL_GATE", Map.of("passed", false, "reason", "unknown_mandatory_check", "count", unknown));
+                return false;
+            }
             // 硬性：mustResolve 伏笔
             var unresolved = repository.findUnresolvedForeshadowings(projectId);
             var criticalUnresolved = unresolved.stream()

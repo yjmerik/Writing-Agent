@@ -52,8 +52,9 @@ public class AgentConfig {
     @Bean
     public ContinuityCheckerAgent continuityCheckerAgent(LlmGateway gateway, NovelRepository repo,
                                                           PromptTemplateService promptService,
-                                                          RelevanceGateway relevanceGateway) {
-        return new ContinuityCheckerAgent(gateway, repo, promptService, relevanceGateway);
+                                                          RelevanceGateway relevanceGateway,
+                                                          com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository) {
+        return new ContinuityCheckerAgent(gateway, repo, promptService, relevanceGateway, checkResultRepository);
     }
 
     @Bean

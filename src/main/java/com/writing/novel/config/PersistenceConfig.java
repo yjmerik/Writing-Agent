@@ -57,10 +57,19 @@ public class PersistenceConfig {
         return new com.writing.novel.persistence.sqlite.AuthorIntentRepository(cp);
     }
 
-    // NCS-005: 统一工作台读取模型
+    // NCS-007: 检查结果信封持久化
     @Bean
-    public com.writing.novel.service.WorkspaceViewService workspaceViewService(NovelRepository repository) {
-        return new com.writing.novel.service.WorkspaceViewService(repository);
+    @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)
+    public com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository(ConnectionProvider cp) {
+        return new com.writing.novel.persistence.sqlite.CheckResultRepository(cp);
+    }
+
+    // NCS-005: 统一工作台读取模型（NCS-007 起接入 unknownChecks）
+    @Bean
+    public com.writing.novel.service.WorkspaceViewService workspaceViewService(
+            NovelRepository repository,
+            com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository) {
+        return new com.writing.novel.service.WorkspaceViewService(repository, checkResultRepository);
     }
 
     // --- Embedded VectorStore ---

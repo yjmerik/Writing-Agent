@@ -22,10 +22,18 @@ import java.util.Map;
 public class WorkspaceViewService {
 
     private final NovelRepository repository;
+    /** NCS-007: 检查信封（unknownChecks）；null 时以 0 占位 */
+    private final com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository;
     private final ProjectActionPolicy actionPolicy = new ProjectActionPolicy();
 
     public WorkspaceViewService(NovelRepository repository) {
+        this(repository, null);
+    }
+
+    public WorkspaceViewService(NovelRepository repository,
+                                com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository) {
         this.repository = repository;
+        this.checkResultRepository = checkResultRepository;
     }
 
     public Map<String, Object> view(String projectId) {
@@ -100,8 +108,8 @@ public class WorkspaceViewService {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("activeBarriers", repository.findActiveReviewBarriers(projectId).size());
         m.put("pendingCheckpoints", repository.findPendingCheckpoints(projectId).size());
-        // NCS-007 将接入检查信封的 UNKNOWN 计数；当前以既有数据为准（无信封=0）
-        m.put("unknownChecks", 0);
+        // NCS-007: 尚未查清（最新状态 UNKNOWN/INVALID）的检查数
+        m.put("unknownChecks", checkResultRepository == null ? 0 : checkResultRepository.unknownCount(projectId));
         // 绑定旧稿版本且未解决的检查问题（正文已推进，检查结论过期）——
         // p32-05 的 stale 是读时计算：绑定版本 < 该章当前版本即过期
         java.util.Map<Integer, Integer> currentVersions = new java.util.HashMap<>();

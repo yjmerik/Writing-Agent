@@ -7701,7 +7701,7 @@
       "dependencies": [
         "NCS-013"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/DelegationPolicyService.java",
         "src/main/java/com/writing/novel/web/DelegationPolicyController.java",
@@ -7710,12 +7710,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：AUTO 类自动接受留痕、CONFIRM 类产生屏障；越界类别不自动；约定页展示规则；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=DelegationPolicyTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: 66a697d（ff-merge）; verify_cmd DelegationPolicyTest 6/0F; mvn test 1069/0F/0E/1S（分支+干净检出）; npm build PASS; e2e+baseline PASS; 证据 docs/harness/evidence/2026-09-19-ncs-025.json",
       "ui_impact": "medium",
       "backend_impact": "high",
       "prompt_impact": "none",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-025-delegation-policy",
+      "completion_record": "ncs-025-verified"
     },
     {
       "id": "NCS-026",
@@ -7850,5 +7852,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-025"
+  "active_feature": null
 }

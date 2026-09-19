@@ -1,0 +1,31 @@
+{
+ "commit": "66a697dd4be022eff4efdd387891f7d9f657b4ff",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1069 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "npm --prefix frontend run build",
+   "result": "PASS（分支+干净检出）。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=DelegationPolicyTest",
+   "result": "PASS: 6 tests 0 failures（含干净检出）。默认规则（措辞/单章事实=AUTO；动机命运/跨章=CONFIRM）；自定义翻转生效+无效值拒绝；请求分类（多章候选→CROSS_CHAPTER；origin 映射）；单章修复在 AUTO 内自动接受留痕（正文更新+请求 COMPLETED）；跨章默认 CONFIRM 不自动（保持 SCOPE_APPROVED）；显式授权跨章 AUTO 后生效。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py",
+   "result": "PASS（策略与自动接受为按需路径，无管线影响）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "delegation_policies 表（项目单行 rules_json）；四类 WORDING/FACT_LOCAL/MOTIVE/CROSS_CHAPTER × AUTO/CONFIRM；autoAcceptIfDelegated 组合 GroupAcceptanceService（commandId=auto-delegation-*，DELEGATION_AUTO_ACCEPTED 事件）；REST GET/PUT /delegation-policy；创作约定页 ⚖ 委托策略卡（四类切换+『会暂停的条件』汇总）。",
+ "feature_ids": [
+  "NCS-025"
+ ],
+ "branch": "codex/ncs-025-delegation-policy"
+}

@@ -1793,6 +1793,17 @@
    "implementation_commit": "41b89fc44c0bc4c21539107b478df6c8d343bb73",
    "main_commit": "41b89fc44c0bc4c21539107b478df6c8d343bb73",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-024.json"
+  },
+  {
+   "id": "ncs-025-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-025"
+   ],
+   "branch": "codex/ncs-025-delegation-policy",
+   "implementation_commit": "66a697dd4be022eff4efdd387891f7d9f657b4ff",
+   "main_commit": "66a697dd4be022eff4efdd387891f7d9f657b4ff",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-025.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

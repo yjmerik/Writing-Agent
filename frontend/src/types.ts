@@ -489,3 +489,23 @@ export interface AestheticProfileData {
   imageryPreference: string;
   updatedAt: string;
 }
+
+// NCS-023: 三类信息分层
+export interface ReviewCard {
+  kind: string;
+  issueId?: string;
+  chapterIndex: number;
+  severity?: string;
+  description: string;
+  chapterVersion?: number;
+  stale?: boolean;
+  checker?: string;
+  reason?: string;
+}
+
+export interface ReviewClassification {
+  projectId: string;
+  mustFix: ReviewCard[];
+  unknown: ReviewCard[];
+  suggestions: ReviewCard[];
+}

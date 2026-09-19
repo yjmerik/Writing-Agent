@@ -7647,11 +7647,12 @@
       "dependencies": [
         "NCS-007"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
-        "frontend/src/components/QualityView.tsx",
-        "frontend/src/components/InteractiveReview.tsx",
-        "frontend/src/api/client.ts"
+        "src/main/java/com/writing/novel/service/ReviewClassificationService.java",
+        "src/main/java/com/writing/novel/web/ReviewClassificationController.java",
+        "frontend/src/components/ReviewClassificationView.tsx",
+        "frontend/src/components/QualityView.tsx"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "npm --prefix frontend run build 通过；ego-browser 验证三列分列、问题卡字段与动作、例外流程。",
@@ -7845,5 +7846,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-023"
 }

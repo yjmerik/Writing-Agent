@@ -129,6 +129,14 @@ public class PersistenceConfig {
                 impactAnalysisService, agentRevisionService, revisionRequestService, repository);
     }
 
+    // NCS-023: 三类信息分层
+    @Bean
+    public com.writing.novel.service.ReviewClassificationService reviewClassificationService(
+            NovelRepository repository,
+            com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository) {
+        return new com.writing.novel.service.ReviewClassificationService(repository, checkResultRepository);
+    }
+
     // NCS-022: 审美档案
     @Bean
     @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)

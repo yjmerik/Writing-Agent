@@ -36,6 +36,7 @@ import type {
   PlanDeviationItem,
   VolumeReadbackItem,
   AestheticProfileData,
+  ReviewClassification,
 } from '../types';
 
 const BASE = '/api';
@@ -321,6 +322,10 @@ export const api = {
   // NCS-010/011: 人物时点读取
   getCharacterAsOf: (id: string, charName: string, chapter: number) =>
     request<CharacterAsOf>(`/projects/${id}/characters/${encodeURIComponent(charName)}/as-of?chapter=${chapter}`),
+  // NCS-023: 三类信息分层
+  getReviewClassification: (id: string) =>
+    request<ReviewClassification>(`/projects/${id}/review-classification`),
+
   // NCS-022: 审美档案
   getAestheticProfile: (id: string) =>
     request<AestheticProfileData>(`/projects/${id}/aesthetic-profile`),

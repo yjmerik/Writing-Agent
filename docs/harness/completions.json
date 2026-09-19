@@ -1749,6 +1749,17 @@
    "implementation_commit": "0f49a1983aa7f89020a0d31d240a2d6c509b04cb",
    "main_commit": "0f49a1983aa7f89020a0d31d240a2d6c509b04cb",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-020.json"
+  },
+  {
+   "id": "ncs-021-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-021"
+   ],
+   "branch": "codex/ncs-021-replan-from-text",
+   "implementation_commit": "3ccf7695454471c114ab1e025bf1a4703eea430b",
+   "main_commit": "3ccf7695454471c114ab1e025bf1a4703eea430b",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-021.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

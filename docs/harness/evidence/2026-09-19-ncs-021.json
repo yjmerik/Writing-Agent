@@ -1,0 +1,26 @@
+{
+ "commit": "3ccf7695454471c114ab1e025bf1a4703eea430b",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1053 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=ReplanFromTextTest",
+   "result": "PASS: 3 tests 0 failures（含干净检出）。回读结论（人物变化/建议/承诺状态）进入再规划输入、无确认回读时空上下文（既有输入不变）；按正文更新计划触发 replanRemaining+登记 PLAN_ADJUST 修订请求留痕+已写章梗概不动；回读未确认时拒绝（先读先确认）。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py（干净检出）",
+   "result": "PASS：3 章 COMPLETED/0 错误，baseline 未退化（注入条件化：无回读项目 replan 输入不变；e2e 不触达回读）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "VolumeReadbackService.buildReadbackContext（已确认回读→人物变化/承诺状态/偏离汇总/建议文本）；replanRemainingOutline 条件注入（late-set service）；ReplanFromTextService：确认前置→replanRemaining→PLAN_ADJUST recordAndComplete 留痕→REPLAN_FROM_TEXT 事件；REST POST /volume-readbacks/{vol}/replan-from-text。",
+ "feature_ids": [
+  "NCS-021"
+ ],
+ "branch": "codex/ncs-021-replan-from-text"
+}

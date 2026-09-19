@@ -7593,7 +7593,7 @@
       "dependencies": [
         "NCS-020"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/ReplanFromTextService.java",
         "src/main/java/com/writing/novel/service/VolumeReadbackService.java",
@@ -7602,12 +7602,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "测试（回放/桩）：再生成仅覆盖未写部分、输入包含回读结论、PlanChange 留痕、已写章版本不变；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=ReplanFromTextTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: 3ccf769（ff-merge）; verify_cmd ReplanFromTextTest 3/0F; mvn test 1053/0F/0E/1S（分支+干净检出）; e2e+baseline PASS; 证据 docs/harness/evidence/2026-09-19-ncs-021.json",
       "ui_impact": "low",
       "backend_impact": "high",
       "prompt_impact": "high",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-021-replan-from-text",
+      "completion_record": "ncs-021-verified"
     },
     {
       "id": "NCS-022",
@@ -7839,5 +7841,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-021"
+  "active_feature": null
 }

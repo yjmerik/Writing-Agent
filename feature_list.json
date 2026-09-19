@@ -7223,7 +7223,7 @@
       "phase": 45,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/domain/StoryFact.java",
         "src/main/java/com/writing/novel/persistence/sqlite/StoryFactRepository.java",
@@ -7235,12 +7235,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：ability.read=false 与 location=城门 并存；相反极性产出冲突记录不静默 supersede；旧数据无谓词字段兼容；对应 Agent 测试通过；e2e 重建后双 replay 一致。",
       "verify_cmd": "mvn test -Dtest=PredicateAssertionTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: cd7e310（ff-merge）; verify_cmd PredicateAssertionTest 7/0F; mvn test 1004/0F/0E/1S（分支+干净检出）; e2e 语料重建 mystery-20260919（record 3章COMPLETED/0错/9730字）+双 replay 一致+baseline PASS（未触发 bless gate）; 证据 docs/harness/evidence/2026-09-19-ncs-008.json",
       "ui_impact": "none",
       "backend_impact": "high",
       "prompt_impact": "high",
       "e2e_impact": "high",
-      "baseline_impact": "high"
+      "baseline_impact": "high",
+      "branch": "codex/ncs-008-predicate-assertions",
+      "completion_record": "ncs-008-verified"
     },
     {
       "id": "NCS-009",
@@ -7788,5 +7790,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-008"
+  "active_feature": null
 }

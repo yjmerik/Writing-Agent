@@ -1,0 +1,26 @@
+{
+ "commit": "cd7e310245e6ce60c8d53195b1c4963f0ba3176b",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1004 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出各一次（SqliteStoryCanon 双构造器 @Autowired 修复后）。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=PredicateAssertionTest",
+   "result": "PASS: 7 tests 0 failures（含干净检出）。覆盖：R02 不同谓词并存（ability.read/location）；同谓词相反极性 CONFLICT+双方 ACTIVE+FACT_CONFLICT 事件+HIGH 问题；同谓词同极性取值变化正常取代；同取值复述 VALIDATED；无谓词旧数据沿用旧语义；收割器解析新字段（predicate/object/polarity/validFrom）落库；旧格式 JSON 缺省兼容。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh（新语料 mystery-20260919）+ 连续两次 replay + compare-baseline.py",
+   "result": "fact-harvest.st 增输出字段→旧语料必然分叉（第2章 CHAPTER_WRITING 指纹 miss 确认）。record 真实调用 3 章 COMPLETED/0 错误/9730 字/avg 3243；两次 replay 完全一致（9730/3243/54 调用）；compare-baseline PASS（章节数 3≥1、总字数 9730≥3144、avg 3243≥2751、0 失败、0 LLM 错误）——质量未退化，未触发 --bless 人工 Gate（bless 仅 FAIL 时需要）。干净检出复制语料后 replay 同样 PASS。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "实现：story_facts 扩列 predicate/object_value/polarity/valid_from/valid_to（safeAddColumn 旧行 NULL 兼容）；SqliteStoryCanon.harvest 谓词化三路（不同谓词并存/同谓词反极性冲突/同谓词同极性按值取代），冲突落 FACT_CONFLICT 事件+HIGH ContinuityIssue 待裁决，绝不静默覆盖；FactHarvesterAgent 解析新字段+CONFLICT 分支；fact-harvest.st 仅增输出说明与示例（变量名未动）。新语料 data/e2e-fixtures/mystery-20260919（gitignore 本地保留，与既有约定一致）。",
+ "feature_ids": [
+  "NCS-008"
+ ],
+ "branch": "codex/ncs-008-predicate-assertions"
+}

@@ -4,8 +4,8 @@ Last Updated: 2026-09-19
 
 ## Current
 
-NCS-028 进行中，分支 codex/ncs-028-edition-validation，基于 main 02b23d3。
-NCS-001..027 已合入；NCS-028 实现与分支验证通过，待提交、合并及干净主分支复验。
+NCS-028 已完成，分支 codex/ncs-028-edition-validation；实现 cf9b3f1 已快进合入 main。
+NCS-001..028 完成（28/30），active_feature=null；下一项 NCS-029。
 用户最新约束：仅完成 feature 列表规定的特性；其他发现只记录，不顺带修复或重构。
 
 ## Files
@@ -18,6 +18,8 @@ NCS-001..027 已合入；NCS-028 实现与分支验证通过，待提交、合�
 - docs/reports/2026-09-19-ncs-028/README.md 与截图；额外发现仅记录于报告。
 
 ## Verification
+
+- 合并后干净 main 导出 /tmp/writingagent-ncs028-main：./init.sh、专项8项、前端构建、replay+baseline 全 PASS；证据 docs/harness/evidence/2026-09-19-ncs-028.json。
 
 - 基线 ./init.sh PASS：1074/0F/0E/1S（Java 21）。
 - 新专项先 RED 8F/0E，再 GREEN 8/0F/0E。
@@ -34,7 +36,7 @@ NCS-001..027 已合入；NCS-028 实现与分支验证通过，待提交、合�
 
 ## Next Steps
 
-1. 完成 NCS-028 本地提交、合并、干净 main 导出验证及完成证据登记。
+1. NCS-028 闭环完成。后续仅按 feature 列表推进，不修复额外发现。
 2. NCS-029：任务与版本中心 UI，严格按已登记范围。
 3. NCS-030：T01–T11 浏览器联合验收；遇既有缺口如实记录，不扩大修改范围。
 4. 浏览器 space 23 / p1；隔离服务 localhost:18097，数据库 /tmp/writingagent-ncs-browser/novel.db。

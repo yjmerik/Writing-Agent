@@ -1,0 +1,36 @@
+{
+  "commit": "cf9b3f1e5baca7f4913c0a411195d46d0670b56f",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-028"
+  ],
+  "branch": "codex/ncs-028-edition-validation",
+  "checks": [
+    {
+      "command": "mvn compile && mvn test (via ./init.sh, Java 21)",
+      "result": "PASS: 1082 tests, 0 failures, 0 errors, 1 skipped. 分支与 main 的 git archive 干净导出各通过。",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=EditionValidationTest",
+      "result": "PASS: 8/0F/0E. 无报告批准、65章早期HIGH、未知/缺失检查、持久化、版本分离、证据过期、例外、未决承诺。",
+      "exitCode": 0
+    },
+    {
+      "command": "npm --prefix frontend run build",
+      "result": "PASS: 分支与干净 main 导出。既有 bundle 大小提示。",
+      "exitCode": 0
+    },
+    {
+      "command": "./scripts/e2e.sh --port 18098 && python3 scripts/compare-baseline.py",
+      "result": "PASS: mystery-20260919 replay, 3 chapters, 9730 words, 0 chapter failures, 0 LLM errors; baseline PASS.",
+      "exitCode": 0
+    },
+    {
+      "command": "ego-browser NCS-028 UI spot check",
+      "result": "PASS (限定范围): 创建记录→阻断报告→预置合法检查/批准样本→通过报告→确认定稿。章节前置由真实API准备；不证明全UI Journey。导出端点200；download事件捕获超时单独记录。",
+      "exitCode": 0
+    }
+  ],
+  "notes": "干净导出 /tmp/writingagent-ncs028-main，仅复用 node_modules 与只读 replay fixtures；原工作区未跟踪材料不参与验证。scope: NCS-028；不改 prompt/写作循环门禁。场景网关及章节UI发现只记录，尝试修复已撤回。详见 docs/reports/2026-09-19-ncs-028/README.md。"
+}

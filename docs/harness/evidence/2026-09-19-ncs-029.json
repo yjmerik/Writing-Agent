@@ -1,0 +1,31 @@
+{
+  "commit": "9565132a37ed6319e0672049d7306eb268100dee",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-029"
+  ],
+  "branch": "codex/ncs-029-task-version-center",
+  "checks": [
+    {
+      "command": "mvn compile && mvn test (./init.sh, Java 21)",
+      "result": "PASS: 1084 tests, 0 failures, 0 errors, 1 skipped; 分支及合并后干净 main 导出均通过。",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=WritingTaskListTest",
+      "result": "PASS: 2 tests; 先 RED 2F/0E，后 GREEN；包含在干净 main 全量验证。",
+      "exitCode": 0
+    },
+    {
+      "command": "npm --prefix frontend run build",
+      "result": "PASS: 分支及干净 main 构建。",
+      "exitCode": 0
+    },
+    {
+      "command": "ego-browser task/version center",
+      "result": "PASS: 实际 UI 创建/启动/停止/继续、刷新记录保留、历史章稿只读入口、整书聚合；报告 docs/reports/2026-09-19-ncs-029/README.md。",
+      "exitCode": 0
+    }
+  ],
+  "notes": "干净 main 导出 /tmp/writingagent-ncs029-main，仅复用 node_modules；日志 /tmp/ncs029-clean-main.log。费用无任务级持久数据，显示未记录；不新增计费系统，不修范围外问题。"
+}

@@ -7807,7 +7807,7 @@
       "dependencies": [
         "NCS-005"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "frontend/src/components/TasksView.tsx",
         "frontend/src/pages/ProjectWorkspace.tsx",
@@ -7816,13 +7816,14 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "npm --prefix frontend run build 通过；ego-browser 验证任务列表操作与版本入口聚合。",
       "verify_cmd": "npm --prefix frontend run build",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: 9565132a37ed6319e0672049d7306eb268100dee; 干净 main 1084/0F/0E/1S、前端 build 与浏览器专项通过。",
       "ui_impact": "high",
       "backend_impact": "low",
       "prompt_impact": "none",
       "e2e_impact": "none",
       "baseline_impact": "none",
-      "branch": "codex/ncs-029-task-version-center"
+      "branch": "codex/ncs-029-task-version-center",
+      "completion_record": "ncs-029-verified"
     },
     {
       "id": "NCS-030",
@@ -7859,5 +7860,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-029"
+  "active_feature": null
 }

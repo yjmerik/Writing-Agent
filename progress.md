@@ -4,8 +4,8 @@ Last Updated: 2026-09-19
 
 ## Current
 
-NCS-001..028 completed（28/30）。NCS-029 in-progress，分支 codex/ncs-029-task-version-center。
-实现与分支验证通过，待提交、合入 main 和干净主分支验证。
+NCS-001..029 completed（29/30）；active_feature=null。
+NCS-029 实现 9565132 已合入 main，干净 main 复验 PASS；完成证据 docs/harness/evidence/2026-09-19-ncs-029.json。
 仅推进 feature 列表；额外发现只记录，不重构。
 
 ## Files
@@ -30,7 +30,7 @@ NCS-001..028 completed（28/30）。NCS-029 in-progress，分支 codex/ncs-029-t
 
 ## Next Steps
 
-1. 完成 NCS-029 本地合并及干净 main 验证，再登记 completed。
+1. NCS-029 闭环完成；干净导出 /tmp/writingagent-ncs029-main 验证1084/0F/0E/1S及build通过。
 2. 按计划进入 NCS-030 T01–T11 浏览器联合验收；发现问题记录，不扩大实现范围。
 3. 浏览器 space 23 / p1；独立服务 localhost:18097。
 4. 原有未跟踪 ZCode 计划与 2026-09-05-ui-experience 报告保留。

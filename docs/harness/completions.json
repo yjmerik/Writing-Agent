@@ -1837,6 +1837,17 @@
    "implementation_commit": "cf9b3f1e5baca7f4913c0a411195d46d0670b56f",
    "main_commit": "cf9b3f1e5baca7f4913c0a411195d46d0670b56f",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-028.json"
+  },
+  {
+   "id": "ncs-029-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-029"
+   ],
+   "branch": "codex/ncs-029-task-version-center",
+   "implementation_commit": "9565132a37ed6319e0672049d7306eb268100dee",
+   "main_commit": "9565132a37ed6319e0672049d7306eb268100dee",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-029.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

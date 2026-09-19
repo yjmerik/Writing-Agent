@@ -57,6 +57,12 @@ public class PersistenceConfig {
         return new com.writing.novel.persistence.sqlite.AuthorIntentRepository(cp);
     }
 
+    // NCS-005: 统一工作台读取模型
+    @Bean
+    public com.writing.novel.service.WorkspaceViewService workspaceViewService(NovelRepository repository) {
+        return new com.writing.novel.service.WorkspaceViewService(repository);
+    }
+
     // --- Embedded VectorStore ---
     @Bean
     @ConditionalOnProperty(name = "persistence.vector", havingValue = "embedded", matchIfMissing = true)

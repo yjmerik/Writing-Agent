@@ -7004,7 +7004,7 @@
       "phase": 43,
       "type": "feature",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/llm/config/LlmProtocol.java",
         "src/main/java/com/writing/novel/llm/config/ModelConfig.java",
@@ -7022,10 +7022,12 @@
       "spec": "docs/specs/2026-09-19-llm-model-config-ui.md",
       "acceptance": "页面展示现有 yml 模型配置；通过页面新增/修改/删除模型配置即时生效并持久化到 data/config/llm-models.json，重启后保持，删除后回退 yml；三种协议客户端按规范构造请求与解析响应；mvn compile && mvn test 与前端 npm run build 通过；ego-browser 端到端验证通过。",
       "verify_cmd": "mvn test -Dtest='LlmModelConfigStoreTest,ModelConfigControllerTest,AnthropicMessagesClientTest,OpenAiResponsesClientTest,ProtocolRoutingLlmClientTest'",
-      "branch": "codex/p43-01-llm-model-config-ui"
+      "branch": "codex/p43-01-llm-model-config-ui",
+      "evidence": "2026-09-19 verified: 97dad38; mvn test 968/0F/0E（干净检出）; verify_cmd 33/0F; 前端 build PASS; ego-browser E2E 展示/编辑/新增(Anthropic)/删除回退全过（docs/reports/p43-01-e2e-model-config-page.png）; 正式服务已切 97dad38 jar",
+      "completion_record": "p43-01-verified"
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "p43-01"
+  "active_feature": null
 }

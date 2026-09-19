@@ -1,0 +1,34 @@
+{
+ "commit": "97dad381f911c2165fa39f86be5649623b26d81d",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: Tests run: 968, Failures: 0, Errors: 0, Skipped: 1（1 skipped 为既有 RealLlmSmokeTest）。在 git worktree --detach 97dad38 干净检出复验（/tmp/p43-01-clean-main-test.log）；先 npm build 生成 gitignore 的 src/main/resources/static 再全量（p42-01 已知约束），前端构建 PASS（/tmp/p43-01-frontend-clean.log）。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest='LlmModelConfigStoreTest,ModelConfigControllerTest,ModelConfigControllerValidationTest,AnthropicMessagesClientTest,OpenAiResponsesClientTest,ProtocolRoutingLlmClientTest'",
+   "result": "PASS: 33 tests, 0 failures, 0 errors（干净检出，/tmp/p43-01-verifycmd-clean.log）。store 持久化/启动合并/删除回退/空路径禁用；controller 总览展示 yml 现有配置/PAGE 来源切换/api_key 空值保留与掩码回传/409/400；校验（远程缺 key 拒绝、本地端点免 key、context_window>max_tokens、掩码规则）；Anthropic/Responses 请求形状（URL/头/体）与流式聚合解析；协议分发路由。",
+   "exitCode": 0
+  },
+  {
+   "command": "npm --prefix frontend run build",
+   "result": "PASS（干净检出与主工作区各一次；既有 chunk-size advisory）",
+   "exitCode": 0
+  },
+  {
+   "command": "ego-browser 浏览器端到端验证（8080 正式服务，分支构建 jar 与 main 97dad38 jar 各验证一轮的 API 面）",
+   "result": "PASS：1) 首页→模型配置导航，表格完整展示 9 个范围（DEFAULT+8 任务类型）现有 yml 配置（协议 OpenAI Chat、qwen3.8-flash、token-plan base_url、掩码 sk-s...kQEg、章节写作 0.8/20000、情节规划 0.7/16000，来源=配置文件）；2) 编辑 GENERAL 改 model_id→qwen3.9-flash-e2e 保存，行即时更新、来源→页面配置、api_key 留空保留（data/config/llm-models.json 落盘含保留 key）；3) 新增配置：范围选风格守护、协议 Anthropic Messages API、base_url https://api.anthropic.com、model claude-sonnet-4-5、新 api_key，行显示 Anthropic Messages/新掩码 sk-a...7890/来源=页面配置，JSON 落盘含 ANTHROPIC_MESSAGES；4) 删除两个覆盖→均回退「配置文件」来源、模型/key 恢复原值，JSON entries 清空，运行时 9×YML 恢复原状；截图 docs/reports/p43-01-e2e-model-config-page.png。",
+   "exitCode": 0
+  },
+  {
+   "command": "python3 scripts/check-harness.py --check-git",
+   "result": "PASS（见完成回执提交后的运行记录）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "测试环境密钥：shell 需 DASHSCOPE_TOKEN_PLAN_API_KEY（scripts/load-env.sh 或等效来源）供启动校验；本轮从既有生产进程环境提取到 data/.prod-env-keys（gitignore）。8080 正式服务已切换为 main 97dad38 构建的 target/manual-review/writing-agent-p43-01-97dad38.jar，以 start_new_session 脱离进程组启动（p42-01 会话回收教训），验证后模型配置零残留覆盖。",
+ "feature_ids": ["p43-01"],
+ "branch": "codex/p43-01-llm-model-config-ui"
+}

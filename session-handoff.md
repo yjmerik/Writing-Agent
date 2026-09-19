@@ -1,27 +1,37 @@
-# 审阅体验修复交接 — 2026-09-18
+# LLM 模型配置页面交接 — 2026-09-19
 
 Last Updated: 2026-09-19
 
 ## Current
 
-无进行中特性（active_feature=null）。p42-01 已完成合入 main：实现 879c90b + 测试门禁修复 a64d13a，完成记录 p42-01-p42（docs/harness/evidence/2026-09-18-p42-01.json）。
+无进行中特性（active_feature=null）。p43-01「LLM 模型配置界面化」已完成合入 main：实现提交 97dad38（当前 main HEAD，ff-merge，无夹带），
+完成记录 p43-01-verified（docs/harness/evidence/2026-09-19-p43-01.json）。
 恢复入口：从 main 为下一特性新建独立分支；一轮只推进一个 feature。
 
 ## Files
 
-- 特性实现：frontend/src/pages/ProjectWorkspace.tsx、frontend/src/components/InteractiveReview.tsx
-- 测试：qa/collaboration/review-workspace.spec.ts（6 项）、src/test/java/com/writing/novel/agent/VectorCleanupOnRewritePathsTest.java
-- 文档：docs/specs/2026-09-18-review-workspace-usability.md、docs/superpowers/plans/2026-09-18-review-workspace-usability.md
-- 历史状态：docs/harness/archive/2026-09-18-pre-p42-01-*.md、2026-09-18-mid-p42-01-*.md
+- 特性实现：llm/config/{LlmProtocol,LlmModelConfigStore,ModelConfig,LlmConfig}、
+  llm/client/{AnthropicMessagesClient,OpenAiResponsesClient,ProtocolRoutingLlmClient}、
+  gateway/DefaultLlmGateway、web/ModelConfigController、
+  frontend/src/{pages/ModelConfigPage.tsx,App.tsx,api/client.ts,types.ts}
+- 测试：LlmModelConfigStoreTest、ModelConfigControllerTest、ModelConfigControllerValidationTest、
+  AnthropicMessagesClientTest、OpenAiResponsesClientTest、ProtocolRoutingLlmClientTest（新增）；
+  LlmConfigTest/LlmGatewayWiringTest（适配：model-config-file 置空 + 协议分发装配断言）
+- 文档：docs/specs/2026-09-19-llm-model-config-ui.md、docs/reports/p43-01-e2e-model-config-page.png
+- 历史状态：docs/harness/archive/2026-09-18-p42-01-progress.md、2026-09-18-p42-01-session-handoff.md
 
 ## Verification
 
-干净检出（worktree --detach a64d13a）复验全部通过：mvn compile && mvn test 935 项 0 失败/0 错误/1 跳过；verify_cmd 6 项 Playwright（隔离 18089 服务）6/6；前端构建通过；check-harness --check-git PASS。
-8080 正式服务是 a64d13a 构建的 jar，凤鸣九州数据完好；本轮验证只读，未改小说内容与审批状态。
-服务运维注记：工具会话挂起会连带回收其派生的 java 子进程（09-19 晨两次复现）；重启需 `bash -c 'source scripts/load-env.sh && …'`（提供 DASHSCOPE_TOKEN_PLAN_API_KEY 等），并以 start_new_session/setsid 脱离进程组启动，否则会被再次回收。生产冒烟脚本 /tmp/p42-01-prod-smoke2.mjs 可复用。
-环境注记：全新检出需先构建前端（生成 gitignore 的 src/main/resources/static）再跑全量测试，否则 ApiCacheControlTest 因缺首页 500；详见 evidence。
-遗留 worktree /tmp/writing-agent-audit3-design（codex 上会话工作目录）已确认其登记草稿无独有信息、4 项自跑检查补入 evidence 后于 2026-09-19 移除；现仅剩主工作区。
-日志 /tmp/p42-01-*.log；QA 产物 /tmp/p42-01-qa-clean-main/。
+干净检出（worktree --detach 97dad38）复验全部通过：mvn compile && mvn test 968 项 0 失败/0 错误/1 跳过
+（既有）；verify_cmd 33 项 0 失败；前端构建通过；check-harness --check-git PASS。
+ego-browser E2E 全过：现有 yml 配置展示（9 范围/掩码 key/差异参数）、编辑即时生效并落盘、
+新增 Anthropic 协议配置、删除回退且 JSON 清空、运行时恢复原状；截图入 docs/reports/。
+8080 正式服务运行 main 97dad38 构建的 target/manual-review/writing-agent-p43-01-97dad38.jar（pid 37302），
+模型配置零残留（/api/llm/models 9×YML，data/config/llm-models.json entries 空）。
+服务运维注记（沿 p42-01）：重启须 `source scripts/load-env.sh`（或叠加 data/.prod-env-keys）并以
+start_new_session 脱离进程组，否则工具会话回收连带 java 进程。
+环境注记：shell 缺 DASHSCOPE_TOKEN_PLAN_API_KEY 时全量测试因启动校验失败（本轮从生产进程环境提取到
+data/.prod-env-keys，gitignore）；全新检出先 npm build 再 mvn test。
 
 ## Blockers
 
@@ -30,5 +40,6 @@ p40-05/p40-06 保持 deferred：缺真实严重错误计数、回放等待人工
 
 ## Next Steps
 
-用户人工复核已通过（2026-09-19，凤鸣九州第 63 章），p42-01 闭环，无进行中特性。
-新需求按需求拆分协议登记后另开分支；启动新会话时先跑 ./init.sh 确认基线健康。
+新需求按需求拆分协议登记后另开分支；启动新会话先跑 ./init.sh 确认基线健康。
+模型配置页可选增强（未登记）：连通性测试按钮、embedding 配置管理、providers/routing 多级路由管理。
+日志 /tmp/p43-01-*.log。

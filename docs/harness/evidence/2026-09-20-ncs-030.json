@@ -1,0 +1,37 @@
+{
+  "commit": "fe104351ff296ea9287507fa0edcfd7f990856aa",
+  "main_commit": "fe104351ff296ea9287507fa0edcfd7f990856aa",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-030"
+  ],
+  "branch": "codex/ncs-030-browser-journey",
+  "checks": [
+    {
+      "command": "npm --prefix frontend run build && ./init.sh (mvn compile + mvn test, Java 21)",
+      "result": "PASS: 分支与干净main导出均1093 tests / 0 failures / 0 errors / 1 skipped；编译及前端构建通过。",
+      "exitCode": 0
+    },
+    {
+      "command": "test -f docs/reports/2026-09-19-ncs-journey/README.md",
+      "result": "PASS: T01–T11确定性功能旅程、截图、机器断言、实际下载文件与console/network采样已提交。",
+      "exitCode": 0
+    },
+    {
+      "command": "./scripts/e2e.sh --port 18098 && python3 scripts/compare-baseline.py",
+      "result": "PASS: 分支及干净main导出均3章9730字，0章节失败/0LLM错误，baseline PASS；mystery-20260919固定语料。",
+      "exitCode": 0
+    },
+    {
+      "command": "ego-browser TaskSpace 23; final-three-project-loads-after-icon",
+      "result": "PASS: 并发409保留作者稿且禁用旧采纳、丢成功响应幂等重试、组合强制重检、时点信息、版本证据确认、恢复来源撤回与真实下载；最后采样40响应，0 HTTP 4xx/5xx和0控制台异常。合成模型能力边界见报告。",
+      "exitCode": 0
+    },
+    {
+      "command": "SelectiveAcceptTest + ScenarioLlmGatewayTest + CharacterAsOfTest + ImpactAnalysisTest + GroupAcceptanceTest",
+      "result": "PASS: 35项包含于最终1093项全量测试。先失败后修复：组合逐份检查与INVALID、原子整组回滚、ID知情与读者已见、旧来源及关系依赖。",
+      "exitCode": 0
+    }
+  ],
+  "notes": "干净main由git archive导出至/tmp/writingagent-ncs030-main，先在导出目录构建静态资源，再运行init；仅链接frontend/node_modules依赖并显式使用只读固定E2E语料；没有复制target、工作区正文数据库或未提交业务源码。首次clean init因前端静态资源尚未生成导致ApiCacheControlTest 1项失败，按先构建前端再init的顺序复验；仅记录现有启动脚本顺序限制，未改业务代码。日志/tmp/ncs030-clean-main.log、/tmp/ncs030-clean-main-e2e.log。未改prompt/注入上下文或golden，无需record/bless。真实模型文学质量与T12不在范围；p40-05/06保留deferred。原始下载文件末尾空行保留，不为diff空白检查改动取证字节。"
+}

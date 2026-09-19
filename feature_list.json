@@ -7843,7 +7843,7 @@
         "NCS-028",
         "NCS-029"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "docs/reports/2026-09-19-ncs-journey/README.md",
         "docs/reports/2026-09-19-ncs-journey/browser-events.jsonl",
@@ -7877,16 +7877,17 @@
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "浏览器 journey 报告完成且全部场景通过；报告含场景清单、证据截图与 console/network 检查结论。",
       "verify_cmd": "test -f docs/reports/2026-09-19-ncs-journey/README.md",
-      "evidence": "2026-09-20 in-progress: 用户授权补齐原计划验收缺口；T01–T11确定性功能旅程通过，详见 docs/reports/2026-09-19-ncs-journey/README.md；分支编译/1093 tests 0F 0E 1S/前端构建通过，replay 3章9730字及baseline PASS，等待合并后干净main验证。",
+      "evidence": "2026-09-20 verified: fe104351ff296ea9287507fa0edcfd7f990856aa 已合入main；分支及干净main编译/1093 tests 0F 0E 1S/前端build/replay 3章9730字+baseline PASS；T01–T11确定性功能旅程通过，证据 docs/harness/evidence/2026-09-20-ncs-030.json。",
       "ui_impact": "high",
       "backend_impact": "high",
       "prompt_impact": "none",
       "e2e_impact": "high",
       "baseline_impact": "none",
-      "branch": "codex/ncs-030-browser-journey"
+      "branch": "codex/ncs-030-browser-journey",
+      "completion_record": "ncs-030-verified"
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-09-20",
-  "active_feature": "NCS-030"
+  "active_feature": null
 }

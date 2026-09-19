@@ -1848,6 +1848,17 @@
    "implementation_commit": "9565132a37ed6319e0672049d7306eb268100dee",
    "main_commit": "9565132a37ed6319e0672049d7306eb268100dee",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-029.json"
+  },
+  {
+   "id": "ncs-030-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-030"
+   ],
+   "branch": "codex/ncs-030-browser-journey",
+   "implementation_commit": "fe104351ff296ea9287507fa0edcfd7f990856aa",
+   "main_commit": "fe104351ff296ea9287507fa0edcfd7f990856aa",
+   "evidence": "docs/harness/evidence/2026-09-20-ncs-030.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

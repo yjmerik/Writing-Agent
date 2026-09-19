@@ -2,7 +2,7 @@
 
 Last Updated: 2026-09-20
 
-**T01–T11 的确定性功能旅程已走通。** 本报告验证版本、操作、恢复、门禁和导出，不把合成模型输出当作文学质量或全书语义修复的证明。分支 `codex/ncs-030-browser-journey`；基线 main `6480704`。合并及干净主分支的验证证据见 `docs/harness/evidence/2026-09-20-ncs-030.json`（完成登记时生成）。
+**T01–T11 的确定性功能旅程已走通。** 本报告验证版本、操作、恢复、门禁和导出，不把合成模型输出当作文学质量或全书语义修复的证明。分支 `codex/ncs-030-browser-journey`；基线 main `6480704`。合并及干净主分支的验证证据见 `docs/harness/evidence/2026-09-20-ncs-030.json`。
 
 用户于 2026-09-20 授权补齐验收所需的原计划实现。仅补齐该范围；首次失败与旧阻塞保留在 [before-repairs.md](before-repairs.md)，不代表修复后的状态。
 
@@ -49,10 +49,10 @@ Last Updated: 2026-09-20
 
 分支已完成：1093 tests / 0 failures / 0 errors / 1 skipped，编译和前端构建PASS；replay 3章9730字、0章节失败/0LLM错误，baseline PASS。
 
-最终分支与干净main均需 `./init.sh`（编译、全量测试、前端构建）、专属报告存在检查、replay E2E及baseline对比。实际计数由完成证据记录，不复用历史测试次数。
+分支与合并后干净main均已通过 `./init.sh`（编译、全量测试、前端构建）、专属报告存在检查、replay E2E及baseline对比。实际计数见完成证据：两处均1093项、0失败/0错误/1跳过；回放两处均3章9730字，基线PASS。
 
 - 针对性先失败后通过日志：`/tmp/ncs030-selective-red.log`、`/tmp/ncs030-protocol-red.log`、`/tmp/ncs030-asof-red.log`、`/tmp/ncs030-impact-red.log`、`/tmp/ncs030-group-red2.log`、`/tmp/ncs030-reader-red.log`；对应GREEN见`/tmp/ncs030-repairs-green.log`、`/tmp/ncs030-reader-green.log`。
-- 分支最终完整验证：`/tmp/ncs030-final-init.log`；端到端：`/tmp/ncs030-final-e2e.log`。
+- 分支最终完整验证：`/tmp/ncs030-final-init.log`；端到端：`/tmp/ncs030-final-e2e.log`。合并后：`/tmp/ncs030-clean-main.log`、`/tmp/ncs030-clean-main-e2e.log`。
 - 未修改prompt模板、注入上下文或golden；沿用匹配回放语料，无需重新录制或人工bless。
 
 ## 限制与只记录事项
@@ -62,3 +62,5 @@ Last Updated: 2026-09-20
 3. 已知关系/词面覆盖不等于完整语义召回；未知保留。组合片段仍需作者审阅语义。
 4. 既有前端大包构建警告仅记录，不进行无关性能重构；原有未跟踪文件保留。
 5. T12真人盲评和真实长篇实验不在NCS-030；p40-05/06继续deferred，不据此声称百万字质量已验证。
+
+干净main首次直接init因静态页面尚未生成，ApiCacheControlTest出现1项500断言失败；先在该干净目录执行前端构建，再完整init复验通过。此为已有构建顺序限制，仅记录，未复制工作区静态输出或修改无关实现。

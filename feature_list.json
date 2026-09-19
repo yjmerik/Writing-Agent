@@ -7117,11 +7117,12 @@
       "dependencies": [
         "NCS-003"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "frontend/src/components/IntentView.tsx",
         "frontend/src/pages/ProjectWorkspace.tsx",
-        "frontend/src/api/client.ts"
+        "frontend/src/api/client.ts",
+        "frontend/src/types.ts"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "npm --prefix frontend run build 通过；ego-browser 验证页签渲染、保存回显、空项目指引出现。",
@@ -7772,5 +7773,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-004"
 }

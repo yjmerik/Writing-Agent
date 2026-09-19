@@ -283,3 +283,23 @@ export interface LlmModelUpdateRequest {
   streaming?: boolean;
   requestTimeoutSeconds?: number;
 }
+
+// NCS-003/004: 创作约定（AuthorIntent）——作者与 Agent 的版本化创作契约
+export interface AuthorIntent {
+  projectId: string;
+  revision: number;
+  premise: string;
+  genreExpectation: string;
+  themes: string;
+  pov: string;
+  languageSamples: string;
+  lengthRange: string;
+  autonomy: string;
+  unwantedPatterns: string;
+  updatedAt: string;
+}
+
+export interface AuthorIntentHistory {
+  projectId: string;
+  revisions: AuthorIntent[];
+}

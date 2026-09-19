@@ -22,6 +22,8 @@ import type {
   LlmModelEntry,
   LlmModelOverview,
   LlmModelUpdateRequest,
+  AuthorIntent,
+  AuthorIntentHistory,
 } from '../types';
 
 const BASE = '/api';
@@ -297,6 +299,11 @@ export const api = {
   listProjects: () => request<ProjectListItem[]>('/projects'),
 
   getProject: (id: string) => request<Project>(`/projects/${id}`),
+  // NCS-003/004: 创作约定
+  getIntent: (id: string) => request<AuthorIntent>(`/projects/${id}/intent`),
+  saveIntent: (id: string, intent: Partial<AuthorIntent>) =>
+    request<AuthorIntent>(`/projects/${id}/intent`, { method: 'PUT', body: JSON.stringify(intent) }),
+  getIntentHistory: (id: string) => request<AuthorIntentHistory>(`/projects/${id}/intent/history`),
 
   createProject: (req: CreateProjectRequest) =>
     request<Project>('/projects', {

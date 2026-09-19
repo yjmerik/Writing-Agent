@@ -5,6 +5,7 @@ import { ArrowLeftOutlined, CloseOutlined, MenuUnfoldOutlined, PlusOutlined, Set
 import { api } from '../api/client';
 import type { Project } from '../types';
 import RunConsole from '../components/RunConsole';
+import IntentView from '../components/IntentView';
 import WorldbuildingView from '../components/WorldbuildingView';
 import OutlineView from '../components/OutlineView';
 import InteractiveReview from '../components/InteractiveReview';
@@ -30,7 +31,7 @@ const STATE_COLOR: Record<string, string> = {
 };
 
 /** p36-08: 页签是路由权威的一部分——合法页签写入查询参数，非法/缺省回退 review */
-const VALID_TABS = ['review', 'world', 'outline', 'book', 'quality', 'run'] as const;
+const VALID_TABS = ['review', 'world', 'outline', 'intent', 'book', 'quality', 'run'] as const;
 type WorkspaceTab = (typeof VALID_TABS)[number];
 
 const isWorkspaceTab = (value: string | null): value is WorkspaceTab =>
@@ -306,7 +307,8 @@ export default function ProjectWorkspace() {
             { key: 'outline', label: '📋 大纲', children: <OutlineView key={`outline-${project.id}`} projectId={project.id} currentChapter={project.currentChapterIndex} /> },
             { key: 'review', label: '📖 章节管理', children: <InteractiveReview key={`review-${project.id}`} refreshSignal={refreshSignal} projectId={project.id} onChanged={load} onNavigateTab={handleTabChange} focusChapter={focusChapter} onSelectChapter={handleSelectChapter} historyView={historyView} reviewPanelOpen={reviewPanelOpen} onReviewPanelChange={setReviewPanelOpen} readingMode={readingMode} onReadingModeChange={setReadingMode} /> },
             { key: 'quality', label: '🔍 质量评价', children: <QualityView projectId={project.id} /> },
-            { key: 'book', label: '📕 成书审查', children: <BookReviewView projectId={project.id} /> },
+            { key: 'intent', label: '📜 创作约定', children: <IntentView key={`intent-${project.id}`} projectId={project.id} projectState={project.state} currentChapter={project.currentChapterIndex} /> },
+                        { key: 'book', label: '📕 成书审查', children: <BookReviewView projectId={project.id} /> },
           ]}
         />
       </Content>

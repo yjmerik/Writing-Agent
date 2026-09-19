@@ -21,6 +21,11 @@ import com.writing.novel.llm.config.ModelConfig;
  */
 public class DefaultLlmGateway implements LlmGateway {
 
+    /** NCS-002: 保守 token 估算——中文叙事文本按 1.3 字符/token 上折算（宁高估不低估） */
+    static final double CHARS_PER_TOKEN = 1.3;
+    /** NCS-002: 消息封装/模板开销的保守常量预留（tokens） */
+    static final int ENVELOPE_OVERHEAD_TOKENS = 256;
+
     private final LlmProperties properties;
     private final LlmClient client;
     private final ProviderHealthTracker health;
@@ -42,11 +47,21 @@ public class DefaultLlmGateway implements LlmGateway {
         if (!ids.isEmpty()) return completeWithProviders(request, ids);
         ModelConfig config = resolveConfig(request);
         try {
+            guardFinalBudget(request, config);
             return client.complete(config, request);
+        } catch (RequestBudgetExceededException budget) {
+            // NCS-002/R11: 主路由超窗 → 尝试 defaultModel fallback（可能窗口更大），仍超窗才失败
+            ModelConfig fallback = resolveFallbackConfig(request);
+            if (fallback != null) {
+                guardFinalBudget(request, fallback);
+                return client.complete(fallback, request);
+            }
+            throw budget;
         } catch (RateLimitException e) {
             // p10-w1-05: 主模型限流 → 降级到 fallback（defaultModel），若配置了不同端点则重试一次
             ModelConfig fallback = resolveFallbackConfig(request);
             if (fallback != null) {
+                guardFinalBudget(request, fallback);
                 return client.complete(fallback, request);
             }
             throw e; // 无可用 fallback，向上抛限流异常
@@ -57,6 +72,7 @@ public class DefaultLlmGateway implements LlmGateway {
         List<String> failures = new ArrayList<>();
         String previous = null;
         LlmUnavailableException previousFailure = null;
+        RequestBudgetExceededException budgetFailure = null;
         for (int index = 0; index < ids.size(); index++) {
             checkCancelled();
             String id = ids.get(index);
@@ -68,6 +84,8 @@ public class DefaultLlmGateway implements LlmGateway {
             long start = System.nanoTime();
             try {
                 ModelConfig config = resolveNamedConfig(request, id);
+                // NCS-002: 发送前按该路由模型窗口核算；超窗不触达 provider，尝试下一路由（可能更大窗口）
+                guardFinalBudget(request, config);
                 if (previous != null) emitSwitch(request, previous, id, config, previousFailure, index + 1);
                 LlmResponse response = client.complete(config, request);
                 checkCancelled();
@@ -76,6 +94,10 @@ public class DefaultLlmGateway implements LlmGateway {
                 }
                 recordSuccess(request, id, config, lease);
                 return withExecution(response, id, config);
+            } catch (RequestBudgetExceededException budget) {
+                // 非 provider 故障——不计入健康熔断；收集后继续尝试更大窗口路由
+                budgetFailure = budget;
+                failures.add(id + ": request-budget-exceeded");
             } catch (LlmUnavailableException e) {
                 checkCancelled();
                 recordFailure(request, id, lease, e, index + 1, start);
@@ -85,6 +107,7 @@ public class DefaultLlmGateway implements LlmGateway {
                 health.release(lease);
             }
         }
+        if (budgetFailure != null) throw budgetFailure;
         throw exhausted(failures);
     }
 
@@ -142,6 +165,12 @@ public class DefaultLlmGateway implements LlmGateway {
         }
         List<String> ids = properties.providerIdsForTask(request.getTaskType().name());
         if (ids.isEmpty()) {
+            try {
+                guardFinalBudget(request, resolveConfig(request));
+            } catch (RequestBudgetExceededException e) {
+                handler.onError(e);
+                return;
+            }
             client.streamComplete(resolveConfig(request), request, handler);
             return;
         }
@@ -152,6 +181,7 @@ public class DefaultLlmGateway implements LlmGateway {
         List<String> failures = new ArrayList<>();
         String previous = null;
         LlmUnavailableException previousFailure = null;
+        RequestBudgetExceededException budgetFailure = null;
         for (int index = 0; index < ids.size(); index++) {
             if (Thread.currentThread().isInterrupted()) {
                 handler.onError(new CancellationException("LLM request interrupted"));
@@ -168,8 +198,14 @@ public class DefaultLlmGateway implements LlmGateway {
             try {
                 try {
                     ModelConfig config = resolveNamedConfig(request, id);
+                    // NCS-002: 流式路径同样在发送前核算；超窗不触达 provider
+                    guardFinalBudget(request, config);
                     if (previous != null) emitSwitch(request, previous, id, config, previousFailure, index + 1);
                     client.streamComplete(config, request, attempt);
+                } catch (RequestBudgetExceededException budget) {
+                    budgetFailure = budget;
+                    failures.add(id + ": request-budget-exceeded");
+                    continue;
                 } catch (RuntimeException e) {
                     attempt.onError(e);
                 }
@@ -199,7 +235,8 @@ public class DefaultLlmGateway implements LlmGateway {
                     : new LlmResponse(attempt.content.toString(), 0, 0), id, properties.getProviders().get(id)));
             return;
         }
-        handler.onError(exhausted(failures));
+        if (budgetFailure != null) handler.onError(budgetFailure);
+        else handler.onError(exhausted(failures));
     }
 
     /** Client callbacks are synchronous; capture terminal events until the attempt returns. */
@@ -234,6 +271,46 @@ public class DefaultLlmGateway implements LlmGateway {
                 failure = e;
             }
         }
+    }
+
+    /**
+     * NCS-002（方案 §10/R11/F12）: 最终请求窗口核算。
+     * 序列化输入（system+user+history）+ 输出预留（请求与配置较大者的 maxTokens）+ 安全余量（5%）
+     * 必须不超过目标模型 contextWindow；超限记 REQUEST_BUDGET_EXCEEDED 事件并确定性失败——
+     * 不静默截断、不触达 provider。contextWindow 未配置（<=0）时不设防（向后兼容）。
+     * 估算采用保守折算（中文叙事 1.3 字符/token + 常量封装开销），宁高估不低估。
+     */
+    void guardFinalBudget(LlmRequest request, ModelConfig config) {
+        int window = config.getContextWindow();
+        if (window <= 0) return;
+        int outputReserve = Math.max(0, config.getMaxTokens());
+        int safety = Math.max(1, (int) (window * 0.05));
+        long inputTokens = estimatedInputTokens(request);
+        if (inputTokens + outputReserve + safety > window) {
+            EventLog.emit("REQUEST_BUDGET_EXCEEDED", Map.of(
+                    "taskType", request.getTaskType().name(),
+                    "model", String.valueOf(config.getModel()),
+                    "inputTokens", inputTokens,
+                    "outputReserve", outputReserve,
+                    "safetyMargin", safety,
+                    "contextWindow", window));
+            throw new RequestBudgetExceededException("最终请求超出模型窗口: 输入约 " + inputTokens
+                    + " + 输出预留 " + outputReserve + " + 安全余量 " + safety + " > contextWindow " + window
+                    + "（model=" + config.getModel() + "）——请缩小任务范围、拆分材料或改用更大窗口路由，不做静默截断");
+        }
+    }
+
+    /** NCS-002: 序列化输入 token 保守估算（system+user+history，含封装开销常量） */
+    static long estimatedInputTokens(LlmRequest request) {
+        long chars = 0;
+        if (request.getSystemPrompt() != null) chars += request.getSystemPrompt().length();
+        if (request.getUserMessage() != null) chars += request.getUserMessage().length();
+        if (request.getHistory() != null) {
+            for (var msg : request.getHistory()) {
+                chars += msg.content() == null ? 0 : msg.content().length();
+            }
+        }
+        return (long) Math.ceil(chars / CHARS_PER_TOKEN) + ENVELOPE_OVERHEAD_TOKENS;
     }
 
     /**

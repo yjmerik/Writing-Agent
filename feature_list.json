@@ -7064,10 +7064,10 @@
       "phase": 44,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/llm/gateway/DefaultLlmGateway.java",
-        "src/main/java/com/writing/novel/memory/TokenBudget.java"
+        "src/main/java/com/writing/novel/llm/gateway/RequestBudgetExceededException.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "failing test：构造超窗请求得到明确失败/缩减与事件，HARD 等强制段不被截断；fallback 至小窗模型触发重核算；mvn compile && mvn test 通过。",
@@ -7766,5 +7766,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-002"
 }

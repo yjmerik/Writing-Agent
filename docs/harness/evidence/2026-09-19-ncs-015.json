@@ -1,0 +1,26 @@
+{
+ "commit": "68ed44137bc34ecd4cf98ad18e7df59c5e3fc529",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn compile && mvn test",
+   "result": "PASS: 1031 tests, 0 failures, 0 errors, 1 skipped（既有）。分支+干净检出（含 npm build）各一次。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn test -Dtest=RevisionRepairTest",
+   "result": "PASS: 3 tests 0 failures（含干净检出）。MUST_REPAIR 章生成隔离候选（挂 rr:{requestId} 前缀、影响上下文与保护项进入指令、事件 REVISION_REPAIR_GENERATED、主稿不变）；范围未批准不可生成（零候选零消耗）；无 MUST_REPAIR 命中零候选正常返回。",
+   "exitCode": 0
+  },
+  {
+   "command": "./scripts/e2e.sh + compare-baseline.py",
+   "result": "PASS（无 prompt 改动）。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "RevisionRepairService 组合 ImpactAnalysisService（判定）+ AgentRevisionService.preview（隔离候选生成，复用既有身份校验/STALE 机制）；requestKey=rr:{requestId}:{chapterIndex} 挂接可查；修复候选不动主稿——采纳是 NCS-016 的独立决定。",
+ "feature_ids": [
+  "NCS-015"
+ ],
+ "branch": "codex/ncs-015-revision-repair"
+}

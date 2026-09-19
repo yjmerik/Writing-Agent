@@ -7425,19 +7425,21 @@
       "dependencies": [
         "NCS-014"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/RevisionRepairService.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "测试（回放/桩）：候选生成挂接请求、含影响上下文与保护项、主稿未变；生成失败→请求状态可恢复非半套；mvn compile && mvn test 通过。",
       "verify_cmd": "mvn test -Dtest=RevisionRepairTest",
-      "evidence": "",
+      "evidence": "2026-09-19 verified: 68ed441（ff-merge）; verify_cmd RevisionRepairTest 3/0F; mvn test 1031/0F/0E/1S（分支+干净检出）; e2e+baseline PASS; 证据 docs/harness/evidence/2026-09-19-ncs-015.json",
       "ui_impact": "low",
       "backend_impact": "high",
       "prompt_impact": "high",
       "e2e_impact": "none",
-      "baseline_impact": "none"
+      "baseline_impact": "none",
+      "branch": "codex/ncs-015-revision-repair",
+      "completion_record": "ncs-015-verified"
     },
     {
       "id": "NCS-016",
@@ -7815,5 +7817,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": "NCS-015"
+  "active_feature": null
 }

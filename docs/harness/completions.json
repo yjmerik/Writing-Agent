@@ -1683,6 +1683,17 @@
    "implementation_commit": "2430a6a6b714e2abef731afd90eb822212c0b509",
    "main_commit": "2430a6a6b714e2abef731afd90eb822212c0b509",
    "evidence": "docs/harness/evidence/2026-09-19-ncs-014.json"
+  },
+  {
+   "id": "ncs-015-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-015"
+   ],
+   "branch": "codex/ncs-015-revision-repair",
+   "implementation_commit": "68ed44137bc34ecd4cf98ad18e7df59c5e3fc529",
+   "main_commit": "68ed44137bc34ecd4cf98ad18e7df59c5e3fc529",
+   "evidence": "docs/harness/evidence/2026-09-19-ncs-015.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

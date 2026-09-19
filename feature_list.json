@@ -7088,11 +7088,13 @@
       "phase": 44,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/domain/AuthorIntent.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/AuthorIntentRepository.java",
         "src/main/java/com/writing/novel/web/AuthorIntentController.java",
-        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java"
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
+        "src/main/java/com/writing/novel/config/PersistenceConfig.java"
       ],
       "spec": "docs/specs/2026-09-19-novel-complete-solution.md",
       "acceptance": "API 测试：创建项目后 intent 存在且为空合法；PUT 生成新修订并保留历史；未授权缺字段拒绝；mvn compile && mvn test 通过。",
@@ -7768,5 +7770,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-19",
-  "active_feature": null
+  "active_feature": "NCS-003"
 }

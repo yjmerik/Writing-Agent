@@ -50,6 +50,13 @@ public class PersistenceConfig {
         return new com.writing.novel.service.WriteLeaseService(writeLeaseRepository);
     }
 
+    // NCS-003: 创作约定（AuthorIntent）版本化持久化
+    @Bean
+    @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)
+    public com.writing.novel.persistence.sqlite.AuthorIntentRepository authorIntentRepository(ConnectionProvider cp) {
+        return new com.writing.novel.persistence.sqlite.AuthorIntentRepository(cp);
+    }
+
     // --- Embedded VectorStore ---
     @Bean
     @ConditionalOnProperty(name = "persistence.vector", havingValue = "embedded", matchIfMissing = true)

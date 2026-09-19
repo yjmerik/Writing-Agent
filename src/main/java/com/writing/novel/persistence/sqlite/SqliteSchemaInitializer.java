@@ -180,6 +180,13 @@ public class SqliteSchemaInitializer {
             "project_id TEXT PRIMARY KEY, epoch INTEGER NOT NULL DEFAULT 0, " +
             "reason TEXT, updated_at TEXT)",
 
+        // NCS-003: 创作约定——append-only 版本化（(project_id, revision) 主键，历史不可变）
+        "CREATE TABLE IF NOT EXISTS author_intents (" +
+            "project_id TEXT, revision INTEGER, premise TEXT, genre_expectation TEXT, " +
+            "themes TEXT, pov TEXT, language_samples TEXT, length_range TEXT, " +
+            "autonomy TEXT, unwanted_patterns TEXT, updated_at TEXT, " +
+            "PRIMARY KEY (project_id, revision))",
+
         // p17-05: 自定义预设持久化（跨项目共享，name 主键 upsert）
         "CREATE TABLE IF NOT EXISTS custom_presets (" +
             "name TEXT PRIMARY KEY, content TEXT, updated_at TEXT)",

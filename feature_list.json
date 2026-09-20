@@ -7895,7 +7895,7 @@
       "dependencies": [
         "NCS-003"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/spi/NovelRepository.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
@@ -7904,8 +7904,9 @@
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：SPI读取空约定、最新版本与项目隔离；重建仓储后仍读取相同版本。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=IntentRuntimeReadTest",
-      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。",
-      "branch": "codex/ncs-031-intent-runtime-read"
+      "evidence": "2026-09-20 verified: 256d05fdb3bd2f1c94869160f19bce2b938e84e3; 分支及干净main init PASS，1094 tests / 0F / 0E / 1S；专项通过。证据 docs/harness/evidence/2026-09-20-ncs-031.json",
+      "branch": "codex/ncs-031-intent-runtime-read",
+      "completion_record": "ncs-031-verified"
     },
     {
       "id": "NCS-032",
@@ -8453,5 +8454,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-20",
-  "active_feature": "NCS-031"
+  "active_feature": null
 }

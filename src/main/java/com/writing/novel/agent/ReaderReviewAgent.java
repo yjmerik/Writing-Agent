@@ -68,6 +68,13 @@ public class ReaderReviewAgent {
                 clean = clean.replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
             }
             JsonNode root = MAPPER.readTree(clean);
+            if (root == null || !root.isObject() || !root.path("summary").isTextual()
+                    || root.path("summary").asText().isBlank()) throw new IllegalArgumentException("缺少评价说明");
+            for (String key : List.of("engagement", "coherence", "character", "hook", "overall")) {
+                JsonNode score = "overall".equals(key) ? root.path(key) : root.path("scores").path(key);
+                if (!score.isIntegralNumber() || score.asInt() < 1 || score.asInt() > 10)
+                    throw new IllegalArgumentException("评分字段无效：" + key);
+            }
 
             int engagement = root.path("scores").path("engagement").asInt(5);
             int coherence = root.path("scores").path("coherence").asInt(5);

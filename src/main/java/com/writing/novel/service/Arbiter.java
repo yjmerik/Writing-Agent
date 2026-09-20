@@ -22,7 +22,7 @@ public class Arbiter {
      * @param alreadyRewritten 本章是否已重写过
      */
     public Arbitration arbitrate(CouncilReport report, int rewriteBudget, boolean alreadyRewritten) {
-        if (report == null) return new Arbitration(Action.PASS, "");
+        if (report == null) return new Arbitration(Action.BLOCK, "缺少质量检查报告");
         // 重写后仍有 HIGH → 质量熔断信号（BLOCK，上层据此暂停/标 NEEDS_MANUAL_REVIEW）
         if (report.hasHigh() && alreadyRewritten) {
             return new Arbitration(Action.BLOCK, report.combinedFeedback());
@@ -33,6 +33,7 @@ public class Arbiter {
         if (needRewrite && rewriteBudget > 0 && !alreadyRewritten) {
             return new Arbitration(Action.REWRITE, report.combinedFeedback());
         }
+        if (needRewrite) return new Arbitration(Action.BLOCK, report.combinedFeedback());
         return new Arbitration(Action.PASS, "");
     }
 }

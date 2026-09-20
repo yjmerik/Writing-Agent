@@ -31,6 +31,7 @@ public class ConsistencyGuard {
     private final LlmGateway gateway;
     private final NovelRepository repository;
     private final PromptTemplateService promptService;
+    private final com.writing.novel.persistence.sqlite.CheckResultRepository checkResults;
     private final RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ConsistencyGuard.class);
@@ -43,6 +44,13 @@ public class ConsistencyGuard {
     /** p11-q0-01: 注入 RelevanceGateway 后按 cast 收窄角色，不再全量 findAll* */
     public ConsistencyGuard(LlmGateway gateway, NovelRepository repository,
                             PromptTemplateService promptService, RelevanceGateway relevanceGateway) {
+        this(gateway, repository, promptService, relevanceGateway, null);
+    }
+
+    public ConsistencyGuard(LlmGateway gateway, NovelRepository repository,
+                            PromptTemplateService promptService, RelevanceGateway relevanceGateway,
+                            com.writing.novel.persistence.sqlite.CheckResultRepository checkResults) {
+        this.checkResults = checkResults;
         this.gateway = gateway;
         this.repository = repository;
         this.promptService = promptService;
@@ -63,7 +71,7 @@ public class ConsistencyGuard {
      */
     public List<ContinuityIssue> check(String projectId, int chapterIndex, String chapterContent, List<String> cast) {
         List<ContinuityIssue> issues = new ArrayList<>();
-        if (chapterContent == null || chapterContent.length() < 200) return issues;
+        if (chapterContent == null || chapterContent.length() < 200) throw new IllegalArgumentException("正文不足，未执行一致性检查");
 
         // p11-q0-01: 经 RelevanceGateway 按 cast 收窄（百万字下避免全量角色进 LLM 失明）
         var characters = relevanceGateway != null
@@ -99,8 +107,13 @@ public class ConsistencyGuard {
         try {
             var resp = gateway.complete(req);
             issues.addAll(parseIssues(resp.getContent(), projectId, chapterIndex));
+            recordCheck(projectId, chapterIndex, "consistency-guard", issues.isEmpty()
+                    ? CheckResultEnvelope.Status.VALID_EMPTY : CheckResultEnvelope.Status.SUCCESS,
+                    resp.getContent(), chapterContent);
         } catch (Exception e) {
-            log.warn("一致性守卫处理异常（p11-q3-03 fail-loud，不再静默吞）: {}", e.getMessage());
+            recordCheck(projectId, chapterIndex, "consistency-guard", CheckResultEnvelope.Status.UNKNOWN,
+                    e.getMessage(), chapterContent);
+            throw new IllegalStateException("一致性守卫未完成，不能视为无问题", e);
         }
         return issues;
     }
@@ -121,11 +134,16 @@ public class ConsistencyGuard {
                 clean = clean.replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
             }
             JsonNode root = MAPPER.readTree(clean);
+            for (String field : List.of("abilityViolations", "evidenceProblems", "anachronisms")) {
+                if (root == null || !root.path(field).isArray())
+                    throw new IllegalArgumentException("缺少问题数组：" + field);
+            }
 
             // 能力越界
             JsonNode abilityArr = root.path("abilityViolations");
             if (abilityArr.isArray()) {
                 for (JsonNode node : abilityArr) {
+                    requireText(node, "character", "violation", "setting");
                     String character = node.path("character").asText("");
                     String violation = node.path("violation").asText("");
                     String setting = node.path("setting").asText("");
@@ -143,6 +161,7 @@ public class ConsistencyGuard {
             JsonNode evidenceArr = root.path("evidenceProblems");
             if (evidenceArr.isArray()) {
                 for (JsonNode node : evidenceArr) {
+                    requireText(node, "evidence", "reason");
                     String evidence = node.path("evidence").asText("");
                     String reason = node.path("reason").asText("");
                     if (!evidence.isBlank()) {
@@ -159,6 +178,7 @@ public class ConsistencyGuard {
             JsonNode anachArr = root.path("anachronisms");
             if (anachArr.isArray()) {
                 for (JsonNode node : anachArr) {
+                    requireText(node, "word", "context", "suggestion");
                     String word = node.path("word").asText("");
                     String context = node.path("context").asText("");
                     String suggestion = node.path("suggestion").asText("");
@@ -174,8 +194,82 @@ public class ConsistencyGuard {
                 }
             }
         } catch (Exception e) {
-            log.warn("一致性守卫处理异常（p11-q3-03 fail-loud，不再静默吞）: {}", e.getMessage());
+            throw new IllegalArgumentException("一致性检查输出无效", e);
         }
         return issues;
+    }
+
+    private static void requireText(JsonNode node, String... fields) {
+        for (String field : fields) {
+            if (!node.path(field).isTextual() || node.path(field).asText().isBlank())
+                throw new IllegalArgumentException("缺少有效文本：" + field);
+        }
+    }
+
+    public record CorrectionVerdict(String issueId, String status, String evidence, String reason) {
+        public boolean resolved() { return "RESOLVED".equals(status); }
+    }
+
+    /** Stable ordinal IDs keep recording fingerprints independent of generated database UUIDs. */
+    public List<CorrectionVerdict> verifyCorrections(String projectId, int chapterIndex, int chapterVersion,
+            String chapterContent, List<ContinuityIssue> findings, String settings) {
+        if (findings.isEmpty()) return List.of();
+        var input = MAPPER.createObjectNode();
+        input.put("chapterVersion", chapterVersion);
+        input.put("settings", settings);
+        input.put("chapterContent", chapterContent);
+        var originals = input.putArray("findings");
+        for (int i = 0; i < findings.size(); i++) {
+            var finding = originals.addObject();
+            finding.put("issueId", String.valueOf(i + 1));
+            finding.put("description", findings.get(i).getDescription());
+        }
+        try {
+            var request = LlmRequest.builder().taskType(LlmTaskType.GENERAL)
+                    .systemPrompt(promptService.render("correction-verification", Map.of()))
+                    .userMessage(input.toString()).temperature(0.0).maxTokens(3072).build();
+            String raw = gateway.complete(request).getContent();
+            String clean = raw == null ? "" : raw.trim().replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
+            JsonNode result = MAPPER.readTree(clean);
+            if (result == null || !result.path("chapterVersion").isIntegralNumber()
+                    || result.path("chapterVersion").asInt() != chapterVersion
+                    || !result.path("results").isArray() || result.path("results").size() != findings.size())
+                throw new IllegalArgumentException("复验稿号不匹配或问题覆盖不完整");
+            var verdicts = new java.util.HashMap<String, CorrectionVerdict>();
+            for (JsonNode item : result.path("results")) {
+                requireText(item, "issueId", "status", "reason");
+                String id = item.path("issueId").asText();
+                String status = item.path("status").asText();
+                String evidence = item.path("evidence").asText("");
+                if (!List.of("RESOLVED", "UNRESOLVED", "UNKNOWN").contains(status))
+                    throw new IllegalArgumentException("未知复验结论");
+                if ("RESOLVED".equals(status) && (evidence.strip().length() < 4 || !chapterContent.contains(evidence)))
+                    throw new IllegalArgumentException("已解决结论缺少当前正文原文证据");
+                if (verdicts.putIfAbsent(id, new CorrectionVerdict(id, status, evidence, item.path("reason").asText())) != null)
+                    throw new IllegalArgumentException("复验问题编号重复");
+            }
+            var ordered = new ArrayList<CorrectionVerdict>();
+            for (int i = 1; i <= findings.size(); i++) {
+                var verdict = verdicts.get(String.valueOf(i));
+                if (verdict == null) throw new IllegalArgumentException("缺少原问题复验结论：" + i);
+                ordered.add(verdict);
+            }
+            var receipt = MAPPER.createObjectNode();
+            receipt.put("chapterVersion", chapterVersion);
+            receipt.set("findings", originals);
+            receipt.set("results", result.path("results"));
+            recordCheck(projectId, chapterIndex, "correction-verification", CheckResultEnvelope.Status.SUCCESS,
+                    receipt.toString(), chapterContent);
+            return List.copyOf(ordered);
+        } catch (Exception e) {
+            recordCheck(projectId, chapterIndex, "correction-verification", CheckResultEnvelope.Status.UNKNOWN,
+                    e.getMessage(), chapterContent);
+            throw new IllegalStateException("原问题逐项复验未完成", e);
+        }
+    }
+
+    private void recordCheck(String projectId, int chapterIndex, String checker,
+            CheckResultEnvelope.Status status, String reason, String content) {
+        if (checkResults != null) checkResults.save(projectId, chapterIndex, checker, status, reason, content);
     }
 }

@@ -203,69 +203,9 @@ public class ChapterPostProcessor {
     private void stageReaderReview(String projectId, Chapter chapter, int chapterIndex,
                                    ChapterSynopsis synopsis, Outline outline,
                                    boolean rewrittenByContinuity) {
-        if (readerReviewAgent == null || orch.hasArbiter()) {
-            return;
-        }
-        try {
-            var review = readerReviewAgent.review(chapterIndex, chapter.getContent());
-            log.info("读者检验(章{}): {}/10 — {}", chapterIndex, review.getScore(), review.getSummary());
-            // p11-q3-01: 质量事件遥测——读者检验评分可观测
-            com.writing.novel.telemetry.EventLog.emit("QUALITY_REVIEW", Map.of("score", review.getScore(),
-                    "passed", review.isPassed(),
-                    "summary", com.writing.novel.telemetry.EventLog.truncate(review.getSummary(), 150)));
-            // p10-w1-07: continuity 已重写则互斥跳过（单章最多 1 次重写，避免最坏情况成本翻倍）
-            if (!rewrittenByContinuity && !review.isPassed()) {
-                log.info("章节评分 {} < {}，自动重写", review.getScore(), readerReviewAgent.getPassThreshold());
-                var reviewSynopsis = orch.findSynopsis(outline, chapterIndex);
-                int originalLength = chapter.getContent().length();
-                // p32-02: LLM 重写前记录版本基线——处理期间作者保存新稿时拒绝覆盖
-                int revisionBase = chapter.getVersion();
-                String newContent = chapterWriter.rewriteForCorrection(
-                        projectId, chapterIndex, chapter.getTitle(),
-                        reviewSynopsis != null ? reviewSynopsis.getSynopsis() : "",
-                        reviewSynopsis != null ? reviewSynopsis.getWritingNotes() : "",
-                        "读者检验改进建议：" + review.getImprovementSuggestion());
-                // p9-1: 长度保护——重写不能比原版短太多（≥70%）
-                if (newContent != null && newContent.length() >= originalLength * 0.7) {
-                    if (orch.autoRewriteIfCurrent(projectId, chapterIndex, revisionBase,
-                            chapter.getTitle(), newContent, "REWRITE")) {
-                        // p33-05: 以 DB 权威状态回填（修订边界可能幂等跳过版本自增）
-                        repository.findChapterByIndex(projectId, chapterIndex)
-                                .ifPresent(chapter::adoptStateFrom);
-                        log.info("章节重写完成(章{}): {}字→{}字", chapterIndex, originalLength, newContent.length());
-                        var reReview = readerReviewAgent.review(chapterIndex, chapter.getContent());
-                        log.info("重写后检验(章{}): {}/10", chapterIndex, reReview.getScore());
-                        // p11-I1: 持久化重写后的最终评价
-                        review = reReview;
-                        // p11-q3-01: 质量事件遥测——重写决策可观测
-                        com.writing.novel.telemetry.EventLog.emit("REWRITE_TRIGGERED", Map.of(
-                                "reason", "reader_review", "afterScore", reReview.getScore()));
-                    } else {
-                        repository.findChapterByIndex(projectId, chapterIndex)
-                                .ifPresent(chapter::adoptStateFrom);
-                        log.warn("章{}: 自动重写遇作者保存新稿，弃用重写稿并同步内存至作者稿", chapterIndex);
-                    }
-                } else if (newContent != null) {
-                    log.warn("重写内容过短({}字 < 原版{}字的70%)，保留原版", newContent.length(), originalLength);
-                    // p16-05: 拒收重写——rewriteForCorrection 已把向量切到被拒版本，
-                    // 用保留的原正文重放向量索引，恢复向量库与 DB 一致
-                    try { chapterWriter.reindexChapter(projectId, chapterIndex, chapter.getContent()); }
-                    catch (Exception re) {
-                        log.warn("拒收重写后向量重放失败(章{}): {}", chapterIndex, re.getMessage());
-                    }
-                }
-            }
-            // p11-I1: 持久化章节评价报告
-            try {
-                repository.saveChapterReview(
-                        com.writing.novel.domain.ChapterReview.from(projectId, review));
-                orch.enrichChapterCheckpointPayload(projectId, review.getChapterIndex());
-            } catch (Exception pe) {
-                log.warn("章节评价持久化失败(章{}): {}", chapterIndex, pe.getMessage());
-            }
-        } catch (Exception e) {
-            log.warn("读者检验失败(章{}): {}", chapterIndex, e.getMessage());
-        }
+        // Reader review and its rewrite/recheck now belong to ChapterProduction's unified gate.
+        // Recover older ledgers if they have no current review; never resample a current report.
+        orch.production().completeReaderReview(projectId, chapterIndex, chapter);
     }
 
     /** p5-c2: 伏笔动态提取——从正文中识别新埋下的伏笔 */

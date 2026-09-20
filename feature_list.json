@@ -7939,7 +7939,7 @@
       "dependencies": [
         "NCS-032"
       ],
-      "status": "deferred",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/memory/ContextAssembler.java",
         "src/main/java/com/writing/novel/memory/MemoryConfig.java",
@@ -7947,14 +7947,27 @@
         "src/main/java/com/writing/novel/agent/ChapterWriterAgent.java",
         "src/main/resources/prompts/chapter-correction.st",
         "src/main/java/com/writing/novel/orchestrator/ChapterProduction.java",
-        "src/test/java/com/writing/novel/orchestrator/GuardFindingRetentionTest.java"
+        "src/test/java/com/writing/novel/orchestrator/GuardFindingRetentionTest.java",
+        "src/main/java/com/writing/novel/agent/ConsistencyGuard.java",
+        "src/main/java/com/writing/novel/agent/AgentConfig.java",
+        "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java",
+        "src/main/resources/prompts/correction-verification.st",
+        "src/test/java/com/writing/novel/orchestrator/QualityClosureTest.java",
+        "src/test/java/com/writing/novel/orchestrator/ManualReviewLifecycleTestHarnessSupport.java",
+        "src/main/java/com/writing/novel/agent/ReaderReviewAgent.java",
+        "src/test/java/com/writing/novel/agent/QualityResponseValidityTest.java",
+        "src/test/java/com/writing/novel/orchestrator/FailLoudTest.java",
+        "src/test/java/com/writing/novel/orchestrator/NovelOrchestratorWritingTest.java",
+        "src/test/java/com/writing/novel/orchestrator/PostProcessingRecoveryTest.java",
+        "src/test/java/com/writing/novel/web/UnifiedRevisionCommitTest.java",
+        "src/main/java/com/writing/novel/service/Arbiter.java",
+        "src/test/java/com/writing/novel/service/ArbiterTest.java"
       ],
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：作者修改视角和样本后实际写作请求包含新版本；旧缓存不污染；空契约兼容。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
-      "verify_cmd": "mvn test -Dtest=AuthorIntentWritingTest,GuardFindingRetentionTest",
-      "evidence": "约定接入4cb8f7c、纠偏原稿4c26c55、守卫问题保留4f2f2aeb14595f90421d848ca97d3003b2171256均已合main。漏传回归RED 1失败0错误；相关GREEN 10项；分支及独立main init 1105/0F/0E/1S，main专属7项通过。授权录制主动中断，27调用、首章4470字，不算3章通过；新纠偏指令使旧语料分叉，回放和baseline FAIL。新录制、双replay及人工质量确认待授权/完成，未bless。证据 docs/harness/evidence/ncs033/guard-retention-validation.json",
-      "branch": "codex/ncs-033-intent-writing",
-      "deferred_reason": "暂停质量验收，先独立修复NCS-059/060验收和诊断，再恢复质量失败拦截；用户2026-09-20已授权修复后重录。"
+      "verify_cmd": "mvn test -Dtest=AuthorIntentWritingTest,GuardFindingRetentionTest,QualityClosureTest,ConsistencyGuardTest,QualityResponseValidityTest,ArbiterTest",
+      "evidence": "原实现已合main；第二轮首章DONE及10项后处理完成，但整轮主动中断。当前恢复质量失败拦截与逐项复验；用户已授权修复后一次3章重录，尚未启动、未bless。",
+      "branch": "codex/ncs-033-quality-closure"
     },
     {
       "id": "NCS-034",
@@ -8501,5 +8514,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-20",
-  "active_feature": null
+  "active_feature": "NCS-033"
 }

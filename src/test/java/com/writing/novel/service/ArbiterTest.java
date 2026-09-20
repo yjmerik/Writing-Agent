@@ -43,9 +43,19 @@ class ArbiterTest {
     }
 
     @Test
-    void 预算耗尽_判PASS不再重写() {
+    void 预算耗尽仍有HIGH_判BLOCK不再重写() {
         var a = arbiter.arbitrate(report(true, 8), 0, false);
-        assertEquals(Arbiter.Action.PASS, a.action());
+        assertEquals(Arbiter.Action.BLOCK, a.action());
+    }
+
+    @Test
+    void 重写后读者仍低分_判BLOCK() {
+        assertEquals(Arbiter.Action.BLOCK, arbiter.arbitrate(report(false, 4), 1, true).action());
+    }
+
+    @Test
+    void 缺少检查报告_不得放行() {
+        assertEquals(Arbiter.Action.BLOCK, arbiter.arbitrate(null, 1, false).action());
     }
 
     @Test

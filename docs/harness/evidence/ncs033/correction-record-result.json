@@ -2,7 +2,7 @@
   "label": "correction-record",
   "status": "INTERRUPTED_BY_AGENT_AFTER_REPRODUCED_BUG",
   "targetChapters": 3,
-  "completedChapters": 0,
+  "completedChapters": 1,
   "storedChapters": 1,
   "chapters": [
     {
@@ -20,5 +20,7 @@
     "FACT_UNVERIFIED_RULE": 1,
     "WRITE_LEASE_EPOCH_BUMPED": 1
   },
-  "reason": "First consistency-guard finding was replaced by redundant scan before arbitration. Cancellation requested during chapter-1 postprocessing; remaining calls stopped to avoid unnecessary costs. Not a completed E2E run."
+  "reason": "First guard finding was replaced by redundant scan. Agent interrupted the run after discovering the bug. Saved chapter 1 is DONE and all 10 post-processing stages completed; task counter was stale until the writing loop returned. Exact in-flight call at cancellation is unknown. Not a completed 3-chapter E2E run.",
+  "taskReportedChaptersWritten": 0,
+  "postProcessStagesCompleted": 10
 }

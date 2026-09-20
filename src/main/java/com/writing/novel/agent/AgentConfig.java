@@ -172,8 +172,9 @@ public class AgentConfig {
     @Bean
     public ConsistencyGuard consistencyGuard(LlmGateway gateway, NovelRepository repo,
                                               PromptTemplateService promptService,
-                                              RelevanceGateway relevanceGateway) {
-        return new ConsistencyGuard(gateway, repo, promptService, relevanceGateway);
+                                              RelevanceGateway relevanceGateway,
+                                              com.writing.novel.persistence.sqlite.CheckResultRepository checkResults) {
+        return new ConsistencyGuard(gateway, repo, promptService, relevanceGateway, checkResults);
     }
 
     @Bean

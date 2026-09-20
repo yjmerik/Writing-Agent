@@ -1,0 +1,48 @@
+{
+  "feature": "NCS-033",
+  "branch": "codex/ncs-033-quality-closure",
+  "base": "9f2f127",
+  "status": "OFFLINE_BRANCH_VERIFIED_PENDING_MAIN_AND_RECORD",
+  "red": [
+    {
+      "command": "mvn test -Dtest=QualityClosureTest",
+      "result": "17 tests, 16 failures, 0 errors",
+      "log": "/tmp/ncs033-closure-red.log"
+    },
+    {
+      "command": "mvn test -Dtest=QualityResponseValidityTest",
+      "result": "11 tests, 5 failures, 0 errors",
+      "log": "/tmp/ncs033-reader-schema-red.log"
+    },
+    {
+      "command": "mvn test -Dtest=QualityClosureTest",
+      "result": "19 tests, 2 rule-gate failures, 0 errors",
+      "log": "/tmp/ncs033-rule-red.log"
+    },
+    {
+      "command": "mvn test -Dtest=ArbiterTest",
+      "result": "8 tests, 3 failures, 0 errors",
+      "log": "/tmp/ncs033-arbiter-red.log"
+    }
+  ],
+  "checks": [
+    {
+      "command": "feature.verify_cmd",
+      "result": "47 tests, 0 failures, 0 errors",
+      "exitCode": 0,
+      "log": "/tmp/ncs033-closure-targeted.log"
+    },
+    {
+      "command": "JAVA_HOME=openjdk@21 ./init.sh",
+      "result": "[WARNING] Tests run: 1138, Failures: 0, Errors: 0, Skipped: 1; compile/frontend build PASS",
+      "exitCode": 0,
+      "log": "/tmp/ncs033-closure-branch-final.log"
+    }
+  ],
+  "notes": [
+    "全量首轮暴露旧测试替身返回ok/不匹配检查协议；已改为合法协议，未降低生产验证。",
+    "旧FailLoud结构字符串检查替换为运行期屏障/草稿保存断言。",
+    "专项Spring启动曾因未加载环境与错误使用zsh source失败；最终按load-env.sh要求用Bash加载后通过。",
+    "端到端文学质量尚未验证；不得据此bless或标completed。"
+  ]
+}

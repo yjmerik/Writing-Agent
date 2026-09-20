@@ -78,6 +78,12 @@ class UnifiedRevisionCommitTest {
                                     Thread.currentThread().interrupt();
                                 }
                             }
+                            if (req.getTaskType() == com.writing.novel.llm.LlmTaskType.CONTINUITY_CHECK)
+                                return new LlmResponse("未发现连续性问题。", 20, 20);
+                            if (req.getSystemPrompt().startsWith("你是小说一致性审查专家"))
+                                return new LlmResponse("{\"abilityViolations\":[],\"evidenceProblems\":[],\"anachronisms\":[]}", 20, 20);
+                            if (req.getSystemPrompt().startsWith("你是一位资深网络小说读者"))
+                                return new LlmResponse("{\"scores\":{\"engagement\":8,\"coherence\":8,\"character\":8,\"hook\":8},\"overall\":8,\"summary\":\"通过\"}", 20, 20);
                             return new LlmResponse("{\"issues\":[],\"score\":8}", 20, 20);
                         }
                         default -> {

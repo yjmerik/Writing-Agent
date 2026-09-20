@@ -2,7 +2,7 @@
   "feature": "NCS-033",
   "branch": "codex/ncs-033-quality-closure",
   "base": "9f2f127",
-  "status": "OFFLINE_BRANCH_VERIFIED_PENDING_MAIN_AND_RECORD",
+  "status": "MAIN_OFFLINE_VERIFIED_RECORD_AUTHORIZED",
   "red": [
     {
       "command": "mvn test -Dtest=QualityClosureTest",
@@ -37,6 +37,18 @@
       "result": "[WARNING] Tests run: 1138, Failures: 0, Errors: 0, Skipped: 1; compile/frontend build PASS",
       "exitCode": 0,
       "log": "/tmp/ncs033-closure-branch-final.log"
+    },
+    {
+      "command": "JAVA_HOME=openjdk@21 ./init.sh (git archive main)",
+      "result": "1138 tests / 0 failures / 0 errors / 1 skipped; compile/frontend build PASS",
+      "exitCode": 0,
+      "log": "/tmp/ncs033-closure-main-init.log"
+    },
+    {
+      "command": "feature.verify_cmd (clean main)",
+      "result": "47 tests / 0 failures / 0 errors",
+      "exitCode": 0,
+      "log": "/tmp/ncs033-closure-main-targeted.log"
     }
   ],
   "notes": [
@@ -44,5 +56,18 @@
     "旧FailLoud结构字符串检查替换为运行期屏障/草稿保存断言。",
     "专项Spring启动曾因未加载环境与错误使用zsh source失败；最终按load-env.sh要求用Bash加载后通过。",
     "端到端文学质量尚未验证；不得据此bless或标completed。"
-  ]
+  ],
+  "commit": "8160ef37fabb792f4f48cbdff521f721265e9b74",
+  "main_commit": "8160ef37fabb792f4f48cbdff521f721265e9b74",
+  "cleanCheckout": true,
+  "oldReplay": {
+    "exitCode": 1,
+    "taskStatus": "PAUSED",
+    "chapters": 1,
+    "chapterFailures": 0,
+    "llmErrors": 9,
+    "activeReviewBarriers": 1,
+    "note": "9 errors are missing legacy fixtures, no real network calls. Current draft stays NEEDS_MANUAL_REVIEW, no chapter 2 attempt. Expected mismatch is not quality acceptance.",
+    "report": "docs/harness/evidence/ncs033/closure-old-replay-result.json"
+  }
 }

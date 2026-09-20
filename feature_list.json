@@ -8510,9 +8510,46 @@
       "evidence": "docs/harness/evidence/2026-09-20-ncs-060.json",
       "branch": "codex/ncs-060-quality-diagnosis",
       "completion_record": "ncs-060-verified"
+    },
+    {
+      "id": "NCS-061",
+      "name": "保留大纲伏笔时间信息",
+      "description": "大纲抽取不得将所有伏笔写成第1章，保留来源章号与计划回收节点，回收行不重复建未回收条目",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+        "src/test/java/com/writing/novel/orchestrator/ForeshadowOutlineChronologyTest.java"
+      ],
+      "spec": "docs/specs/2026-09-21-foreshadow-chronology.md",
+      "acceptance": "先失败测试复现，再修复；运行 mvn test -Dtest=ForeshadowOutlineChronologyTest 通过；编译/全量测试及匹配E2E符合门禁。",
+      "verify_cmd": "mvn test -Dtest=ForeshadowOutlineChronologyTest",
+      "evidence": "NCS-033真实录制过程中代码+DB+模型报告交叉定位，见docs/harness/evidence/ncs033/foreshadow-chronology-discovery.json。仅登记，未实现。"
+    },
+    {
+      "id": "NCS-062",
+      "name": "排除被冒充当前事实的未来伏笔",
+      "description": "当前写作与连续性检查不得把未来章节伏笔当作已埋设事实或当前必须回收事项",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-061"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/memory/ContextAssembler.java",
+        "src/main/java/com/writing/novel/orchestrator/ChapterProduction.java",
+        "src/test/java/com/writing/novel/orchestrator/FutureForeshadowContextTest.java"
+      ],
+      "spec": "docs/specs/2026-09-21-foreshadow-chronology.md",
+      "acceptance": "先失败测试复现，再修复；运行 mvn test -Dtest=FutureForeshadowContextTest 通过；编译/全量测试及匹配E2E符合门禁。",
+      "verify_cmd": "mvn test -Dtest=FutureForeshadowContextTest",
+      "evidence": "NCS-033真实录制过程中代码+DB+模型报告交叉定位，见docs/harness/evidence/ncs033/foreshadow-chronology-discovery.json。仅登记，未实现。"
     }
   ],
   "schema_version": 2,
-  "updated_at": "2026-09-20",
+  "updated_at": "2026-09-21",
   "active_feature": "NCS-033"
 }

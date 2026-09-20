@@ -1,0 +1,38 @@
+{
+  "implementationCommit": "8160ef37fabb792f4f48cbdff521f721265e9b74",
+  "recordingInProgress": true,
+  "synopses": [
+    {
+      "chapter_index": 2,
+      "title": "水碗无齿算盘",
+      "synopsis": "场景节拍：门前清水无齿算盘→陆验井尸→沈记涂阿四粮债→簿触离奇清偿，粮行得银而伙计失忆→陆称死者非溺亡。爽点：规则利用，欠账自动撮合。人物：沈、陆、涂九斤。目的：引出“押命纸”死因。张力：4。伏笔：埋设-陆三行墓志铭收一文（MEDIUM，预计第5章回收）。"
+    },
+    {
+      "chapter_index": 5,
+      "title": "假无漏",
+      "synopsis": "场景节拍：沈借“无人敢认债主唯一”认领匿名债→井口浮第二尸→裴撕欠条求沈别记名→陆以墓志唤醒小满记忆→小满喊“伞骨湿纸是裴封的”。爽点：规则利用，以簿反制簿。人物：沈、裴、陆、小满。目的：沈姓名变淡，却逼出假无漏案。张力：7。伏笔：回收-陆三行墓志铭。"
+    }
+  ],
+  "foreshadowings": [
+    {
+      "description": "伏笔：埋设-陆三行墓志铭收一文（MEDIUM，预计第5章回收）",
+      "planted_context": "从大纲自动抽取",
+      "planted_at_chapter": 1,
+      "expected_resolve_chapter": null
+    },
+    {
+      "description": "伏笔：回收-陆三行墓志铭",
+      "planted_context": "从大纲自动抽取",
+      "planted_at_chapter": 1,
+      "expected_resolve_chapter": null
+    }
+  ],
+  "issues": [
+    {
+      "severity": "HIGH",
+      "description": "待回收伏笔“陆三行墓志铭”未在本章出现或回收，存在遗忘/迟回收风险。",
+      "chapter_version": 2
+    }
+  ],
+  "source": "NovelOrchestrator.extractForeshadowingsFromOutline: flattens synopsis text and constructs every Foreshadowing with plantedAtChapter=1; expectedResolveChapter unset. ChapterProduction.collectSettingsForCheck injects all unresolved entries without current-chapter bound."
+}

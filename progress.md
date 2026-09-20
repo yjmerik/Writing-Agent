@@ -1,6 +1,6 @@
-# 质量闭环修复 — 2026-09-20
+# 质量闭环修复 — 2026-09-21
 
-Last Updated: 2026-09-20
+Last Updated: 2026-09-21
 
 ## Current
 NCS-059/060已completed，均已独立合并与干净main验证。唯一active_feature=NCS-033。
@@ -19,6 +19,7 @@ NCS-033 RED：16个质量闭环失败、5个评分协议失败、2个规则门�
 分支与独立干净main均专项47项通过、init编译/测试/前端build通过：1138tests、0F/0E/1S。证据docs/harness/evidence/ncs033/quality-closure-validation.json。
 
 ## Blockers
+录制中新发现大纲伏笔统一写成第1章，误触发首章HIGH；已登记独立NCS-061/062，尚未实施。证据foreshadow-chronology-discovery.json。
 业务修复离线通过；真实质量验收仍未完成，不标completed。
 旧语料回放预期FAIL：9个语料缺失，首章NMR、1个屏障、task PAUSED；chapterFailures=0，不再尝试第2章，拦截生效。人工质量确认仍是bless前独立门禁。
 

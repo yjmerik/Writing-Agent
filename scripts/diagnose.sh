@@ -81,7 +81,7 @@ for e in chapters[-10:]:
 
 # p11-q3-02: 质量诊断分类——解析质量事件（重写成功率/根因/熔断/FINAL/quality_risk）
 quality_events = [e for e in events if e["event"] in
-    ("QUALITY_REVIEW", "REWRITE_TRIGGERED", "CONSISTENCY_ISSUE", "QUALITY_CIRCUIT_BREAKER", "FINAL_GATE", "QUALITY_GATE")]
+    ("QUALITY_REVIEW", "REWRITE_TRIGGERED", "CONSISTENCY_ISSUE", "QUALITY_CIRCUIT_BREAKER", "FINAL_GATE", "QUALITY_GATE", "REVIEW_BARRIER_RAISED", "WRITING_PAUSED")]
 print(f"\n## 质量诊断（共 {len(quality_events)} 条质量事件）")
 if quality_events:
     reviews = [e for e in quality_events if e["event"] == "QUALITY_REVIEW"]
@@ -110,13 +110,26 @@ if quality_events:
 else:
     print("无质量事件记录（质检闭环未触发或事件未启用）")
 
+quality_alerts = [e for e in quality_events if
+    e["event"] in ("CONSISTENCY_ISSUE", "QUALITY_CIRCUIT_BREAKER", "QUALITY_GATE",
+                   "REVIEW_BARRIER_RAISED", "WRITING_PAUSED")
+    or (e["event"] in ("QUALITY_REVIEW", "FINAL_GATE") and not e.get("passed", True))]
+barriers = sum(e["event"] == "REVIEW_BARRIER_RAISED" for e in quality_events)
+pauses = sum(e["event"] == "WRITING_PAUSED" for e in quality_events)
+if barriers or pauses:
+    print(f"- 质量阻断信号：人审屏障 {barriers} 次，写作暂停 {pauses} 次")
+
 print("\n## 结论建议")
 if failures:
     top = max(by_class.items(), key=lambda kv: len(kv[1]))
     print(f"- 最高频失败: {top[0][0]}/{top[0][1]} ×{len(top[1])} — 建议以此为修复起点")
     print("- 修复流程: 先写 failing test 复现 → 修复 → mvn test → 重跑 e2e")
-else:
-    print("- 系统运行正常，无需修复动作")
+if quality_alerts:
+    print(f"- 存在 {len(quality_alerts)} 条质量问题或阻断信号；调用无错误不代表质量验收通过")
+    print("- 需要人工复核当前稿、未解决问题和人审屏障；逐项确认修复证据后再继续，不自动放行")
+    print("- 日志为历史事件，不能据此断言屏障仍有效；以当前工作区状态确认是否已经解除")
+elif not failures:
+    print("- 本次日志未发现运行失败或质量阻断信号，无需修复动作（不替代完整验收）")
 PYEOF
 
 APP_LOG="data/logs/app.log"

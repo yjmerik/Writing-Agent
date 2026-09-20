@@ -7948,7 +7948,7 @@
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：作者修改视角和样本后实际写作请求包含新版本；旧缓存不污染；空契约兼容。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=AuthorIntentWritingTest",
-      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。",
+      "evidence": "实现4cb8f7ccd9759de37f8598fae8f663dc69a91f22已合main；专项先失败后通过；分支及干净main init 1101/0F/0E/1S、旧replay+baseline PASS。非空约定record被自动审批拒绝，待用户授权与双replay/人工质量确认；未bless，保持in-progress。证据 docs/harness/evidence/2026-09-20-ncs-033-pending.json",
       "branch": "codex/ncs-033-intent-writing"
     },
     {

@@ -26,3 +26,7 @@ Interface: `setAuthorIntentContextService(AuthorIntentContextService service)`�
 ## Branch verification
 
 RED AuthorIntentWritingTest 3项2失败（约定未进请求、超限不拒绝）；GREEN及相关回归15项通过。init 1101/0F/0E/1S，编译及build通过。旧语料replay 3章9730字、54次LLM回放、0错误、baseline PASS。日志/tmp/ncs033-red.log、/tmp/ncs033-green.log、/tmp/ncs033-final.log、/tmp/ncs033-old-replay.log。接下来按AGENTS.md合入后录制非空约定语料、双replay；人工质量确认前保持in-progress，不bless。
+
+## Main verification / pending authorization
+
+实现4cb8f7ccd9759de37f8598fae8f663dc69a91f22已合main，干净main init 1101/0F/0E/1S，旧replay及baseline PASS。真实record被自动审批拒绝，已准备并提交recording-scope，等待用户授权。不得bless或登记完成。验证摘要见docs/harness/evidence/2026-09-20-ncs-033-pending.json。

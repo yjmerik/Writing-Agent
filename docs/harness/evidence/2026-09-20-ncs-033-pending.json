@@ -1,0 +1,33 @@
+{
+  "commit": "4cb8f7ccd9759de37f8598fae8f663dc69a91f22",
+  "main_commit": "4cb8f7ccd9759de37f8598fae8f663dc69a91f22",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-033"
+  ],
+  "branch": "codex/ncs-033-intent-writing",
+  "status": "in-progress",
+  "checks": [
+    {
+      "command": "mvn test -Dtest=AuthorIntentWritingTest",
+      "result": "RED: 3 tests / 2 assertion failures / 0 errors before integration; GREEN included in 15 targeted tests",
+      "exitCode": 0
+    },
+    {
+      "command": "JAVA_HOME=openjdk@21 ./init.sh",
+      "result": "PASS: branch and clean main export; 1101 tests / 0 failures / 0 errors / 1 skipped; compile and frontend build passed",
+      "exitCode": 0
+    },
+    {
+      "command": "E2E_FIXTURE_DIR=mystery-20260919 ./scripts/e2e.sh --mode replay && python3 scripts/compare-baseline.py",
+      "result": "PASS: branch and clean main, 3 chapters / 9730 characters / 0 chapter failures / 0 LLM errors",
+      "exitCode": 0
+    }
+  ],
+  "pending": [
+    "Nonempty author-contract real-model recording: automatic approval rejected outbound data and cost authorization. No recording run started.",
+    "Two matching replay runs after new recording",
+    "Human quality review before baseline bless"
+  ],
+  "notes": "Not a verified completion record. No golden update. Existing fixture only verifies empty-contract compatibility; meaningful nonempty input is verified by real API + writer request integration tests, not yet real-model quality."
+}

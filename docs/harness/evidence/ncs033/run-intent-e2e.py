@@ -5,6 +5,7 @@ No product script is changed. The temporary script lives beside e2e.sh so its
 repository-root resolution remains identical. Record/replay use the same input.
 """
 from pathlib import Path
+import os
 import subprocess
 import sys
 import tempfile
@@ -18,11 +19,16 @@ curl --noproxy '*' -sf -X PUT "$BASE/api/projects/$PROJECT_ID/intent" \\
   -H 'Content-Type: application/json' \\
   --data-binary @docs/harness/evidence/ncs033/author-intent.json > "$E2E_DIR/saved-intent.json"
 ''')
+# Pin the reviewed destination and ignore user-interface provider overrides.
+source = source.replace("--server.port=$PORT --llm.replay.mode=", "--server.port=$PORT --llm.model-config-file= --llm.replay.mode=", 1)
+environment = dict(os.environ,
+    DASHSCOPE_TOKEN_PLAN_BASE_URL="https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
+    DASHSCOPE_TOKEN_PLAN_MODEL="qwen3.8-flash")
 with tempfile.NamedTemporaryFile(mode="w", prefix=".ncs033-", suffix=".sh", dir=root / "scripts", delete=False) as f:
     f.write(source)
     temporary = Path(f.name)
 try:
-    result = subprocess.run(["bash", str(temporary), *sys.argv[1:]], cwd=root)
+    result = subprocess.run(["bash", str(temporary), *sys.argv[1:]], cwd=root, env=environment)
     sys.exit(result.returncode)
 finally:
     temporary.unlink(missing_ok=True)

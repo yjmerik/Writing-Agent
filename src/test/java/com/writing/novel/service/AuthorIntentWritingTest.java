@@ -2,6 +2,8 @@ package com.writing.novel.service;
 
 import com.writing.novel.agent.ChapterWriterAgent;
 import com.writing.novel.domain.Project;
+import com.writing.novel.domain.Chapter;
+import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.llm.LlmGateway;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmResponse;
@@ -40,6 +42,7 @@ class AuthorIntentWritingTest {
     @Autowired NovelRepository repository;
     @Autowired ContextAssembler assembler;
     @Autowired ChapterWriterAgent writer;
+    @Autowired PromptTemplateService prompts;
     @MockBean LlmGateway gateway;
     private final AtomicReference<LlmRequest> sent=new AtomicReference<>();
     private String id;
@@ -84,5 +87,46 @@ class AuthorIntentWritingTest {
         assertThrows(IllegalStateException.class,()->assembler.assemble(id,1,"入巷","寻找证人",null,200));
         assertNull(sent.get());
         assertTrue(repository.findChaptersByProject(id).isEmpty());
+    }
+    @Test void correctionReceivesCompleteCurrentDraftWithLiteralSamplesAndReviewEvidence() throws Exception {
+        save("{\"pov\":\"第三人称限制视角\",\"languageSamples\":\"雨沿檐角滴进缺口的瓦盆。\"}");
+        var chapter = new Chapter(id, 1, "入巷");
+        chapter.setContent("旧稿不可用于本次纠偏。".repeat(220));
+        repository.saveChapter(chapter);
+        String current = "原稿起点{{literal}}：纸在门外，尚未拾取。\n"
+                + "账房只会算学，不会改写命债。".repeat(220) + "\n原稿终点：巡夜人还没有交付凭牌。";
+        chapter.setContent(current);
+        repository.saveChapter(chapter);
+        var other = new Project("另一本", "不同作品", "武侠"); repository.saveProject(other);
+        var otherChapter = new Chapter(other.getId(), 1, "入巷");
+        otherChapter.setContent("其他作品不得进入纠偏".repeat(200)); repository.saveChapter(otherChapter);
+        String findings = "纸张转移缺失；主角越界改写命债；凭牌来源不明。";
+        String candidate = writer.rewriteForCorrection(id, 1, "入巷", "保留查证债务的目的", null, findings);
+        assertNotNull(candidate);
+        String request = sent.get().getSystemPrompt() + "\n" + sent.get().getUserMessage();
+        assertTrue(request.contains(current), "纠偏必须看到完整的当前原稿，不能仅按计划另写一章");
+        assertTrue(request.contains("原稿版本：3"));
+        assertTrue(request.contains(findings));
+        assertTrue(request.contains("第三人称限制视角"));
+        assertFalse(request.contains("旧稿不可用于本次纠偏"));
+        assertFalse(request.contains("其他作品不得进入纠偏"));
+        assertEquals(current, repository.findChapterByIndex(id, 1).orElseThrow().getContent(),
+                "返回候选不能自行覆盖原稿");
+    }
+    @Test void correctionWithoutSourceDraftDoesNotSendPaidRequest() {
+        assertThrows(IllegalStateException.class, () -> writer.rewriteForCorrection(
+                id, 1, "入巷", "寻找证人", null, "补足凭牌来源"));
+        assertNull(sent.get());
+        assertTrue(repository.findChaptersByProject(id).isEmpty());
+    }
+    @Test void correctionRejectsOversizedDraftInsteadOfTruncatingIt() {
+        var chapter = new Chapter(id, 1, "入巷");
+        String original = "不能丢失的证据交接过程".repeat(4000);
+        chapter.setContent(original); repository.saveChapter(chapter);
+        var boundedWriter = new ChapterWriterAgent(gateway, assembler, repository, prompts);
+        assertThrows(IllegalStateException.class, () -> boundedWriter.rewriteForCorrection(
+                id, 1, "入巷", "寻找证人", null, "补足凭牌来源"));
+        assertNull(sent.get());
+        assertEquals(original, repository.findChapterByIndex(id, 1).orElseThrow().getContent());
     }
 }

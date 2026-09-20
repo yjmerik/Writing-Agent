@@ -1,0 +1,41 @@
+{
+  "date": "2026-09-20",
+  "feature": "NCS-033",
+  "status": "in-progress",
+  "rootCause": "The correction request omitted the current full draft and its revision. Existing task constraints still required every beat including actions that review had identified as invalid.",
+  "scope": [
+    "Current draft/revision provided to correction",
+    "Missing source and over-budget requests rejected before model call",
+    "External correction template defines current abilities vs potential, evidence transitions and style-sample isolation"
+  ],
+  "red": {
+    "tests": 6,
+    "failures": 3,
+    "errors": 0,
+    "log": "/tmp/ncs033-correction-red.log"
+  },
+  "targetedGreen": {
+    "tests": 15,
+    "failures": 0,
+    "errors": 0,
+    "log": "/tmp/ncs033-correction-green.log"
+  },
+  "fullGreen": {
+    "tests": 1104,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "compile": "PASS",
+    "frontendBuild": "PASS",
+    "log": "/tmp/ncs033-correction-init.log"
+  },
+  "oldReplay": {
+    "result": "Expected incompatibility: first changed correction fingerprint CHAPTER_WRITING-e079faeab2f39ac1-1.json missing; subsequent pipeline diverges. Not a passing E2E.",
+    "log": "/tmp/ncs033-correction-old-replay.log"
+  },
+  "pending": [
+    "Clean main verification",
+    "Matching real-model re-record and two replays",
+    "Human quality review; no baseline bless"
+  ]
+}

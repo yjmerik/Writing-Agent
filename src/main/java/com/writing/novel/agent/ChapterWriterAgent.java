@@ -214,10 +214,21 @@ public class ChapterWriterAgent {
      */
     public String rewriteForCorrection(String projectId, int chapterIndex, String chapterTitle,
                            String chapterSynopsis, String writingNotes, String correctionInstructions) {
+        Chapter source = repository.findChapterByIndex(projectId, chapterIndex)
+                .filter(chapter -> chapter.getContent() != null && !chapter.getContent().isBlank())
+                .orElseThrow(() -> new IllegalStateException("纠偏缺少当前章节原稿，未发送模型请求"));
+        String correctionContext = promptService.render("chapter-correction", Map.of(
+                "chapterIndex", chapterIndex,
+                "sourceVersion", source.getVersion(),
+                "sourceContent", source.getContent(),
+                "correctionInstructions", correctionInstructions != null ? correctionInstructions : ""));
+        int requestBudget = chapterWritingBudget();
+        int contextBudget = requestBudget - TokenBudget.estimateTokens(correctionContext);
+        if (contextBudget <= 0) {
+            throw new IllegalStateException("完整纠偏原稿与问题清单超出上下文预算，未截断、未发送模型请求");
+        }
         WritingContext ctx = contextAssembler.assemble(
-                projectId, chapterIndex, chapterTitle,
-                chapterSynopsis + "\n\n【纠偏要求】" + correctionInstructions,
-                writingNotes, chapterWritingBudget());
+                projectId, chapterIndex, chapterTitle, chapterSynopsis, writingNotes, contextBudget);
 
         // 修复：rewrite 也传全部模板变量（之前只传 styleGuide=""）
         String dynamicStyleGuide = extractStyleGuide(projectId);
@@ -243,12 +254,16 @@ public class ChapterWriterAgent {
                 : "你是网络小说写作高手。";
 
         String systemPrompt = ctx.toSystemPrompt() + "\n\n" + chapterWritingPrompt
-                + "\n\n特别提醒：上一版本存在严重问题，本次必须修正：" + correctionInstructions;
+                + "\n\n" + correctionContext;
+        String userPrompt = ctx.toUserPrompt();
+        if (TokenBudget.estimateTokens(systemPrompt) + TokenBudget.estimateTokens(userPrompt) > requestBudget) {
+            throw new IllegalStateException("完整纠偏请求超出模型输入预算，原稿与创作约定未截断，未发送模型请求");
+        }
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.CHAPTER_WRITING)
                 .systemPrompt(systemPrompt)
-                .userMessage(ctx.toUserPrompt())
+                .userMessage(userPrompt)
                 .temperature(0.7)
                 .maxTokens(chapterWritingMaxTokens())
                 .build();

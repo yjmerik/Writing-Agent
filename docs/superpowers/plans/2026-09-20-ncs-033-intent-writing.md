@@ -30,3 +30,13 @@ RED AuthorIntentWritingTest 3项2失败（约定未进请求、超限不拒绝�
 ## Main verification / pending authorization
 
 实现4cb8f7ccd9759de37f8598fae8f663dc69a91f22已合main，干净main init 1101/0F/0E/1S，旧replay及baseline PASS。真实record被自动审批拒绝，已准备并提交recording-scope，等待用户授权。不得bless或登记完成。验证摘要见docs/harness/evidence/2026-09-20-ncs-033-pending.json。
+
+## 2026-09-20 质量验收失败后的修复（用户要求先修复）
+
+根因证据：27条真实语料中，纠偏请求没有当前完整原稿；任务仍强制覆盖含越界动作的旧beats。不是约定字段漏注入。当前feature验收失败的必要修复留在NCS-033原分支，不启动新feature。
+
+本次增量3文件：ChapterWriterAgent.java、chapter-correction.st、AuthorIntentWritingTest.java。
+- 读取当前项目/章节完整原稿与版本，外置纠偏模板逐项限定能力/潜力、知识来源、物件交接与语言样本隔离。纠偏须保留剧情目的但不照写已被指出违规的计划动作。
+- 原稿缺失或请求超预算时阻断，既不截断原稿也不发模型请求；候选结果仍由既有修订边界采纳。
+- RED：6测试3失败（完整原稿缺失、缺原稿未拒绝、超预算未拒绝），无测试错误。GREEN：相关15项通过。
+- 尚不能由本地测试断言模型语义问题均已解决：需匹配新prompt的真实录制、双replay、新旧质量比较与人工质量确认。保留旧失败语料，不替换旧输入或降低审查门槛。

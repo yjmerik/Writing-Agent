@@ -19,9 +19,13 @@ NCS-033实现4cb8f7ccd9759de37f8598fae8f663dc69a91f22已合main；分支codex/nc
 - docs/harness/evidence/ncs033/{record,replay1,replay2}-result.json：正文摘要与状态（无正文）。
 - docs/specs/2026-09-20-e2e-quality-gates.md：NCS-059/060只登记未实施。
 
+本次增量：ChapterWriterAgent.java、chapter-correction.st、AuthorIntentWritingTest.java。
+
 ## Verification
 
-分支及干净main init PASS：1101 tests / 0 failures / 0 errors / 1 skipped，编译与frontend build通过。
+本次RED 6项3失败；GREEN及相关回归15项通过；分支init 1104/0F/0E/1S，编译与build通过。
+旧非空语料在新纠偏指纹处分叉并失败（预期不兼容，不冒充通过），待新录制。
+前次分支及干净main init PASS：1101 tests / 0 failures / 0 errors / 1 skipped，编译与frontend build通过。
 旧空约定replay PASS：3章9730字，54调用/0错误，baseline PASS。
 新record：约57分钟，27调用/0错误，1章2706字，PAUSED / NEEDS_MANUAL_REVIEW。
 双replay与record正文哈希、版本、状态及归一化报告完全一致；请求含第1版及全部8字段。
@@ -30,13 +34,14 @@ NCS-033实现4cb8f7ccd9759de37f8598fae8f663dc69a91f22已合main；分支codex/nc
 
 ## Blockers
 
-质量待人工复核：能力越界1项、证据铺垫3项；开头另有语言样本复用现象。
+用户已要求先修复：能力越界1项、证据铺垫3项，另有语言样本复用。
+已复现纠偏缺当前原稿与版本、旧计划动作压过修复要求；本地修复后待新录制验证。
 不建议接受本次样本或降低golden。必须先解决质量问题，再完成目标样本及人工质量确认。
 本次授权不等于放行审查或bless授权；T12长篇费用上限与真人评阅安排仍未确认。
 
 ## Next Steps
 
-1. 先读quality-review.md，完成现有质量门禁要求的人工评阅；不得用双replay一致代替质量通过。
+1. 完成本次纠偏修复的主分支验证，再运行匹配新prompt的录制和双replay；新样本仍需人工质量确认。
 2. 保留当前27条语料用于回归；不得擅自清除人审屏障，或换模型重复收费采样直到通过。
 3. NCS-033未闭环前不启动NCS-034或NCS-059/060实现。
 4. 隔离worktree /Users/erik/.codex/worktrees/ncs-completion/WritingAgent；语料data/e2e-fixtures/ncs033/mystery-20260920-intent。

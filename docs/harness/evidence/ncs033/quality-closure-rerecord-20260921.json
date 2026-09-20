@@ -1,0 +1,29 @@
+{
+  "feature": "NCS-033",
+  "implementationCommit": "3ce8cd6",
+  "recording": {
+    "mode": "record",
+    "fixtureDirectory": "/tmp/ncs033-closure-main/data/e2e-fixtures/ncs033/mystery-20260920-quality-closure",
+    "requestedChapters": 3,
+    "chaptersWritten": 2,
+    "totalWords": 7606,
+    "llmCalls": 44,
+    "llmErrors": 0,
+    "chapterFailures": 0,
+    "taskStatus": "PAUSED",
+    "acceptancePassed": false,
+    "barrier": "第2章纠偏后复验未完成：校验模型对2个原问题只返回1个results项，严格协议拒绝不完整复验并建立人审屏障"
+  },
+  "replays": [
+    {"label":"replay1","chaptersWritten":2,"totalWords":7606,"llmCalls":44,"llmErrors":0,"taskStatus":"PAUSED","activeReviewBarriers":1,"pendingReviewChapters":1,"acceptancePassed":false},
+    {"label":"replay2","chaptersWritten":2,"totalWords":7606,"llmCalls":44,"llmErrors":0,"taskStatus":"PAUSED","activeReviewBarriers":1,"pendingReviewChapters":1,"acceptancePassed":false}
+  ],
+  "diagnosis": {
+    "command": "./scripts/diagnose.sh data/e2e/events.jsonl",
+    "failureCategories": 0,
+    "qualitySignals": ["读者检验通过率100%", "重写2次", "人审屏障1次", "写作暂停1次"],
+    "baselineComparison": "PASS（指标未退化；E2E验收仍因未完成3章和人审屏障失败）"
+  },
+  "status": "in-progress",
+  "recordedAt": "2026-09-21"
+}

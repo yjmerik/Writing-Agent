@@ -7966,7 +7966,7 @@
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：作者修改视角和样本后实际写作请求包含新版本；旧缓存不污染；空契约兼容。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=AuthorIntentWritingTest,GuardFindingRetentionTest,QualityClosureTest,ConsistencyGuardTest,QualityResponseValidityTest,ArbiterTest",
-      "evidence": "质量闭环修复8160ef37fabb792f4f48cbdff521f721265e9b74已合main；分支/干净main 1138tests 0F/0E/1S，专项47通过。旧语料缺失时首章NMR/task PAUSED，不再推进第二章。按用户“先修复问题，再重录”授权，已启动一次3章真实录制，尚待结果、双回放和人工质量确认；未bless。证据docs/harness/evidence/ncs033/quality-closure-validation.json。",
+      "evidence": "质量闭环修复已合main（3ce8cd6）；分支/干净main编译、全量测试和专项验证通过。修复伏笔时间线后完成一次3章真实录制及两次回放；三次结果均为2章/7606字、44次调用、0错误，并在第2章同一纠偏复验屏障暂停。基线指标对比PASS，但E2E验收未通过且尚需人工复核，未bless、未completed。证据docs/harness/evidence/ncs033/quality-closure-rerecord-20260921.json。",
       "branch": "codex/ncs-033-quality-closure"
     },
     {

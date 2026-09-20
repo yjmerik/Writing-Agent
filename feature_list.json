@@ -8486,7 +8486,7 @@
       "phase": 50,
       "type": "bug",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "scripts/diagnose.sh",
         "scripts/test_diagnose_quality.py"
@@ -8494,11 +8494,12 @@
       "spec": "docs/specs/2026-09-20-e2e-quality-gates.md",
       "acceptance": "运行 python3 scripts/test_diagnose_quality.py 通过：存在质量阻断时不得建议无需修复；区分调用错误与质量未通过；先失败测试再修复；完整编译和测试通过。",
       "verify_cmd": "python3 scripts/test_diagnose_quality.py",
-      "evidence": "原诊断4测试8失败；修复后专项4测试通过。待主分支复验。",
-      "branch": "codex/ncs-060-quality-diagnosis"
+      "evidence": "docs/harness/evidence/2026-09-20-ncs-060.json",
+      "branch": "codex/ncs-060-quality-diagnosis",
+      "completion_record": "ncs-060-verified"
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-09-20",
-  "active_feature": "NCS-060"
+  "active_feature": null
 }

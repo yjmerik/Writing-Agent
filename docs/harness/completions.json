@@ -1892,6 +1892,17 @@
    "implementation_commit": "efc87d0c104fccc3a04d83a404765fdb5c9c2e84",
    "main_commit": "efc87d0c104fccc3a04d83a404765fdb5c9c2e84",
    "evidence": "docs/harness/evidence/2026-09-20-ncs-059.json"
+  },
+  {
+   "id": "ncs-060-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-060"
+   ],
+   "branch": "codex/ncs-060-quality-diagnosis",
+   "implementation_commit": "d98a242bd6c88159c36ade7e55d6efc9f0cdc4e9",
+   "main_commit": "d98a242bd6c88159c36ade7e55d6efc9f0cdc4e9",
+   "evidence": "docs/harness/evidence/2026-09-20-ncs-060.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

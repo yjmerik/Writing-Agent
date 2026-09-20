@@ -1,0 +1,22 @@
+{
+  "commit": "d98a242bd6c88159c36ade7e55d6efc9f0cdc4e9",
+  "main_commit": "d98a242bd6c88159c36ade7e55d6efc9f0cdc4e9",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-060"
+  ],
+  "branch": "codex/ncs-060-quality-diagnosis",
+  "checks": [
+    {
+      "command": "JAVA_HOME=openjdk@21 ./init.sh",
+      "result": "PASS: branch + clean main; 1105 tests / 0 failures / 0 errors / 1 skipped; frontend build PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/test_diagnose_quality.py",
+      "result": "PASS on clean main",
+      "exitCode": 0
+    }
+  ],
+  "notes": "git archive main导出干净源码，先从源码构建前端；未复用target或数据库。日志/tmp/ncs060-branch.log、/tmp/ncs060-main.log、/tmp/ncs060-main-targeted.log。RED证据/tmp/ncs060-red.log。"
+}

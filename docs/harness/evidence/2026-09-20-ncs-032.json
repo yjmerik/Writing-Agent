@@ -1,0 +1,22 @@
+{
+  "commit": "2a94645a570856fcb06a089df440dcd64dee7cd7",
+  "main_commit": "2a94645a570856fcb06a089df440dcd64dee7cd7",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-032"
+  ],
+  "branch": "codex/ncs-032-intent-context",
+  "checks": [
+    {
+      "command": "mvn test -Dtest=AuthorIntentContextTest",
+      "result": "PASS（包含于分支与干净main全量回归）",
+      "exitCode": 0
+    },
+    {
+      "command": "JAVA_HOME=openjdk@21 ./init.sh",
+      "result": "PASS: 分支与干净main compile/test/frontend build；1098 tests, 0 failures, 0 errors, 1 skipped",
+      "exitCode": 0
+    }
+  ],
+  "notes": "独立临时目录由git archive main导出；只复用node_modules，不拷贝target或业务数据库。日志/tmp/ncs032-main-init.log。本项尚未改变运行请求，原方案整体仍有未完成项。"
+}

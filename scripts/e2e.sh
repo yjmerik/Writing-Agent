@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 端到端测试：启动服务 → 建项目 → 构思 → 写 N 章 → 产出 e2e-report.json。
-# 用法: ./scripts/e2e.sh [--mode replay|record|live] [--chapters N] [--port P] [--evaluate] [--preset mystery|wuxia|...]
+# 用法: ./scripts/e2e.sh [--mode replay|record|live] [--chapters N] [--port P] [--evaluate] [--preset mystery|wuxia|...] [--acceptance full|smoke]
 #   replay: 功能冒烟——用 data/fixtures/llm 回放 3 章，验证管道完整性（确定性、零成本）
 #   record: 真实调用 LLM 并录制 fixture + 生成完整长篇（建基线/长篇验证用）
 #   live:   真实调用，不录制
@@ -11,10 +11,12 @@ MODE="replay"
 CHAPTERS=""
 PORT=8090
 EVALUATE=false
+ACCEPTANCE="full"
 PRESET="mystery"
 PRESET_TAGS="悬疑,古代"
 while [ $# -gt 0 ]; do
   case "$1" in
+    --acceptance) ACCEPTANCE="$2"; shift 2 ;;
     --mode) MODE="$2"; shift 2 ;;
     --chapters) CHAPTERS="$2"; shift 2 ;;
     --port) PORT="$2"; shift 2 ;;
@@ -28,10 +30,12 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+case "$ACCEPTANCE" in full|smoke) ;; *) echo "非法 acceptance: $ACCEPTANCE"; exit 1 ;; esac
+
 # replay 模式固定 3 章（功能冒烟，不重跑完整长篇）；record/live 按 --chapters（默认 3）
 if [ "$MODE" = "replay" ]; then
   CHAPTERS=3
-  echo "ℹ️ replay 模式：固定 3 章功能冒烟（不重跑完整长篇，避免 evolving-state 发散）"
+  echo "ℹ️ replay 模式：固定 3 章回放，验收模式=$ACCEPTANCE"
 else
   CHAPTERS="${CHAPTERS:-3}"
 fi
@@ -175,11 +179,14 @@ if [ "$EVALUATE" = "true" ]; then
 fi
 
 echo "▶ 生成报告..."
-curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/chapters" > "$E2E_DIR/chapters.json"
+curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/chapters?size=1000" > "$E2E_DIR/chapters.json"
 curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/status" > "$E2E_DIR/status.json"
 
+set +e
 python3 - "$E2E_DIR" "$MODE" <<PYEOF
-import json, sys, datetime
+import json, sys, datetime, urllib.request
+sys.path.insert(0, "scripts")
+from e2e_acceptance import assess, quality_counts
 
 e2e_dir, mode = sys.argv[1], sys.argv[2]
 _payload = json.load(open(f"{e2e_dir}/chapters.json", encoding="utf-8"))
@@ -204,8 +211,22 @@ try:
 except FileNotFoundError:
     pass
 
+quality = dict(activeReviewBarriers=None, pendingReviewChapters=None, unresolvedHighIssues=None)
+try:
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    def get_json(path):
+        with opener.open("$BASE/api/projects/$PROJECT_ID/" + path, timeout=30) as response:
+            return json.load(response)
+    quality = quality_counts(get_json("workspace"),
+        [get_json("chapters/" + str(c["chapterIndex"]) + "/quality") for c in chapters])
+except (OSError, KeyError, TypeError, ValueError) as exc:
+    print("质量证据读取失败: " + str(exc), file=sys.stderr)
+
 word_counts = [c.get("wordCount", 0) for c in chapters]
 report = {
+    **quality,
+    "requestedChapters": $CHAPTERS,
+    "acceptanceMode": "$ACCEPTANCE",
     "generatedAt": datetime.datetime.now().isoformat(),
     "mode": mode,
     "projectId": status["projectId"],
@@ -225,18 +246,24 @@ report = {
     "chapterFailures": len(chapter_failures),
     "evaluation": evaluation,
 }
+ok, reasons = assess(report, "$ACCEPTANCE")
+report["acceptancePassed"] = ok
+report["acceptanceReasons"] = reasons
 with open("e2e-report.json", "w", encoding="utf-8") as f:
     json.dump(report, f, ensure_ascii=False, indent=2)
 print(json.dumps(report, ensure_ascii=False, indent=2))
 
-ok = report["totalChapters"] > 0 and report["chapterFailures"] == 0 and report["llmErrors"] == 0 \
-    and report.get("taskStatus") != "FAILED"
 sys.exit(0 if ok else 1)
 PYEOF
 E2E_EXIT=$?
+set -e
 
 if [ $E2E_EXIT -eq 0 ]; then
-  echo "✅ E2E 通过 — 报告: e2e-report.json"
+  if [ "$ACCEPTANCE" = "smoke" ]; then
+    echo "✅ E2E 管道冒烟通过（不代表完整质量验收）— 报告: e2e-report.json"
+  else
+    echo "✅ E2E 完整流程及自动质量门禁通过 — 报告: e2e-report.json"
+  fi
   echo "   下一步: python3 scripts/compare-baseline.py 对比基线"
 else
   echo "❌ E2E 失败 — 运行 ./scripts/diagnose.sh $E2E_DIR/events.jsonl 查看诊断"

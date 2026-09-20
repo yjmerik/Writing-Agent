@@ -7939,7 +7939,7 @@
       "dependencies": [
         "NCS-032"
       ],
-      "status": "in-progress",
+      "status": "deferred",
       "files": [
         "src/main/java/com/writing/novel/memory/ContextAssembler.java",
         "src/main/java/com/writing/novel/memory/MemoryConfig.java",
@@ -7953,7 +7953,8 @@
       "acceptance": "运行 verify_cmd 通过：作者修改视角和样本后实际写作请求包含新版本；旧缓存不污染；空契约兼容。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=AuthorIntentWritingTest,GuardFindingRetentionTest",
       "evidence": "约定接入4cb8f7c、纠偏原稿4c26c55、守卫问题保留4f2f2aeb14595f90421d848ca97d3003b2171256均已合main。漏传回归RED 1失败0错误；相关GREEN 10项；分支及独立main init 1105/0F/0E/1S，main专属7项通过。授权录制主动中断，27调用、首章4470字，不算3章通过；新纠偏指令使旧语料分叉，回放和baseline FAIL。新录制、双replay及人工质量确认待授权/完成，未bless。证据 docs/harness/evidence/ncs033/guard-retention-validation.json",
-      "branch": "codex/ncs-033-intent-writing"
+      "branch": "codex/ncs-033-intent-writing",
+      "deferred_reason": "暂停质量验收，先独立修复NCS-059/060验收和诊断，再恢复质量失败拦截；用户2026-09-20已授权修复后重录。"
     },
     {
       "id": "NCS-034",
@@ -8465,15 +8466,17 @@
       "phase": 50,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "scripts/e2e.sh",
-        "scripts/test_e2e_acceptance.py"
+        "scripts/test_e2e_acceptance.py",
+        "scripts/e2e_acceptance.py"
       ],
       "spec": "docs/specs/2026-09-20-e2e-quality-gates.md",
       "acceptance": "运行 python3 scripts/test_e2e_acceptance.py 通过：请求3章但仅1章PAUSED不得宣告完整验收通过；明确保留管道smoke语义；先失败测试再修复；完整编译和测试通过。",
       "verify_cmd": "python3 scripts/test_e2e_acceptance.py",
-      "evidence": "NCS-033真实录制及双replay稳定复现，见 docs/harness/evidence/ncs033/recording-verification.json 和 record-diagnosis.txt；仅登记未实现。"
+      "evidence": "RED: 原生产谓词5测试16失败；修复后6测试通过。日志/tmp/ncs059-red.log；待合并后验证。",
+      "branch": "codex/ncs-059-e2e-acceptance"
     },
     {
       "id": "NCS-060",
@@ -8495,5 +8498,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-20",
-  "active_feature": "NCS-033"
+  "active_feature": "NCS-059"
 }

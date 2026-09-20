@@ -3,16 +3,17 @@
 Last Updated: 2026-09-20
 
 ## Current
-NCS-059为唯一in-progress，分支codex/ncs-059-e2e-acceptance；NCS-033暂deferred。
-用户已授权先修复问题再重录，模型/端点及3章样本沿用原范围；人工确认仍在bless前单独进行。
-更正：第二轮首章4470字、version3、DONE，10项后处理全部COMPLETED；任务0/3为循环结束前未更新计数。录制由助手主动中断，非首章后处理未完成。
+NCS-059已合入main（efc87d0）并完成干净主分支验证；active_feature=null。NCS-033暂deferred。
+用户已授权修复后3章重录；尚未启动新录制、未bless。
+更正：第二轮首章4470字、version3、DONE，10项后处理完成；0/3是延迟计数，整轮由助手主动中断。
 
 ## Files
 scripts/e2e.sh、scripts/e2e_acceptance.py、scripts/test_e2e_acceptance.py。
 诊断依据：/Users/erik/.codex/visualizations/2026/09/20/01a0bc26-4a49-7ab0-a686-e8baa470bc97/ncs033-diagnosis/quality-diagnosis.md。
 
 ## Verification
-基线init通过（1105tests，0F/0E/1S）；原判定RED16失败，新判定专项通过。尚待分支全量与合并后验证。
+分支与干净main init PASS：1105tests，0F/0E/1S，编译/前端构建通过；专项PASS。
+证据：docs/harness/evidence/2026-09-20-ncs-059.json。
 
 ## Blockers
 NCS-033质量验收尚未通过；已确认质检异常放行、纠偏成功状态不准确、原问题未逐项复验。旧语料不能证明新流程通过，未bless。

@@ -1881,6 +1881,17 @@
    "implementation_commit": "2a94645a570856fcb06a089df440dcd64dee7cd7",
    "main_commit": "2a94645a570856fcb06a089df440dcd64dee7cd7",
    "evidence": "docs/harness/evidence/2026-09-20-ncs-032.json"
+  },
+  {
+   "id": "ncs-059-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-059"
+   ],
+   "branch": "codex/ncs-059-e2e-acceptance",
+   "implementation_commit": "efc87d0c104fccc3a04d83a404765fdb5c9c2e84",
+   "main_commit": "efc87d0c104fccc3a04d83a404765fdb5c9c2e84",
+   "evidence": "docs/harness/evidence/2026-09-20-ncs-059.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

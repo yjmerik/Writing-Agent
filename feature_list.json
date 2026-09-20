@@ -8466,7 +8466,7 @@
       "phase": 50,
       "type": "bug",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "scripts/e2e.sh",
         "scripts/test_e2e_acceptance.py",
@@ -8475,8 +8475,9 @@
       "spec": "docs/specs/2026-09-20-e2e-quality-gates.md",
       "acceptance": "运行 python3 scripts/test_e2e_acceptance.py 通过：请求3章但仅1章PAUSED不得宣告完整验收通过；明确保留管道smoke语义；先失败测试再修复；完整编译和测试通过。",
       "verify_cmd": "python3 scripts/test_e2e_acceptance.py",
-      "evidence": "RED: 原生产谓词5测试16失败；修复后6测试通过。日志/tmp/ncs059-red.log；待合并后验证。",
-      "branch": "codex/ncs-059-e2e-acceptance"
+      "evidence": "docs/harness/evidence/2026-09-20-ncs-059.json",
+      "branch": "codex/ncs-059-e2e-acceptance",
+      "completion_record": "ncs-059-verified"
     },
     {
       "id": "NCS-060",
@@ -8498,5 +8499,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-20",
-  "active_feature": "NCS-059"
+  "active_feature": null
 }

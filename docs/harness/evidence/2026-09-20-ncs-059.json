@@ -1,0 +1,22 @@
+{
+  "commit": "efc87d0c104fccc3a04d83a404765fdb5c9c2e84",
+  "main_commit": "efc87d0c104fccc3a04d83a404765fdb5c9c2e84",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-059"
+  ],
+  "branch": "codex/ncs-059-e2e-acceptance",
+  "checks": [
+    {
+      "command": "JAVA_HOME=openjdk@21 ./init.sh",
+      "result": "PASS: branch + clean main; 1105 tests / 0 failures / 0 errors / 1 skipped; frontend build PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/test_e2e_acceptance.py",
+      "result": "PASS on clean main",
+      "exitCode": 0
+    }
+  ],
+  "notes": "git archive main导出干净源码，先从源码构建前端；未复用target或数据库。日志/tmp/ncs059-branch.log、/tmp/ncs059-main.log、/tmp/ncs059-main-targeted.log。RED证据/tmp/ncs059-red.log。"
+}

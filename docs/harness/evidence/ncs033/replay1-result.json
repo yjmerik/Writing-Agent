@@ -1,0 +1,33 @@
+{
+  "label": "replay1",
+  "report": {
+    "generatedAt": "2026-09-20T09:52:04.180194",
+    "mode": "replay",
+    "projectId": "26ce75bc-f77e-4bf7-8271-5ea401126918",
+    "finalState": "WRITING",
+    "chaptersWritten": 1,
+    "taskStatus": "PAUSED",
+    "taskError": "第 1 章待人工复核，处理后再续写",
+    "totalChapters": 1,
+    "totalWords": 2706,
+    "wordCount": {
+      "min": 2706,
+      "max": 2706,
+      "avg": 2706
+    },
+    "llmCalls": 27,
+    "llmErrors": 0,
+    "chapterFailures": 0,
+    "evaluation": null
+  },
+  "chapters": [
+    {
+      "chapter": 1,
+      "title": "还灯灭",
+      "wordCount": 2706,
+      "version": 3,
+      "status": "NEEDS_MANUAL_REVIEW",
+      "sha256": "cc2f2a34475443ef0f0909841802f11fb2925ea78886d12ea7c44fcc07747641"
+    }
+  ]
+}

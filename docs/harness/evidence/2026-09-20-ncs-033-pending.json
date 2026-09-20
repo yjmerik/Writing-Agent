@@ -22,12 +22,27 @@
       "command": "E2E_FIXTURE_DIR=mystery-20260919 ./scripts/e2e.sh --mode replay && python3 scripts/compare-baseline.py",
       "result": "PASS: branch and clean main, 3 chapters / 9730 characters / 0 chapter failures / 0 LLM errors",
       "exitCode": 0
+    },
+    {
+      "command": "E2E_FIXTURE_DIR=data/e2e-fixtures/ncs033/mystery-20260920-intent python3 docs/harness/evidence/ncs033/run-intent-e2e.py --mode record --port 18102",
+      "result": "Script exit 0 is NOT acceptance: 1/3 chapters, 2706 characters, 27 calls, 0 LLM errors; PAUSED / NEEDS_MANUAL_REVIEW with 4 issues. User explicitly authorized reviewed single sample.",
+      "exitCode": 0
+    },
+    {
+      "command": "Same fixture and launcher --mode replay twice",
+      "result": "PASS reproducibility only: both replays equal record chapter content SHA-256/version/status and all report fields except generatedAt/mode/projectId. See recording-verification.json.",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/compare-baseline.py",
+      "result": "FAIL: total words 2706 < 3144; average 2706 < 2751. No bless.",
+      "exitCode": 1
     }
   ],
   "pending": [
-    "Nonempty author-contract real-model recording: automatic approval rejected outbound data and cost authorization. No recording run started.",
-    "Two matching replay runs after new recording",
-    "Human quality review before baseline bless"
+    "Human quality review of the 1-chapter sample and four review barriers; do not accept or bless automatically.",
+    "Resolve quality blockers and achieve the intended complete sample; current recording is not a successful 3-chapter acceptance.",
+    "Human confirmation required before any golden update."
   ],
-  "notes": "Not a verified completion record. No golden update. Existing fixture only verifies empty-contract compatibility; meaningful nonempty input is verified by real API + writer request integration tests, not yet real-model quality."
+  "notes": "Not a verified completion record. Real initial and rewrite requests include revision 1 and all eight author-contract fields. Reproducibility is proven; quality completion is not. NCS-059/060 registered for misleading E2E/diagnosis success messages, not implemented."
 }

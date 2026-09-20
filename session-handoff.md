@@ -5,35 +5,38 @@ Last Updated: 2026-09-20
 ## Current
 
 NCS-031/032已合本地main且verified。唯一active_feature=NCS-033，in-progress。
-NCS-033业务实现4cb8f7ccd9759de37f8598fae8f663dc69a91f22已合main；分支codex/ncs-033-intent-writing。
-原方案整体未完成；NCS-034..058待逐项执行，不能跳过当前质量验收闭环。
+NCS-033实现4cb8f7ccd9759de37f8598fae8f663dc69a91f22已合main；分支codex/ncs-033-intent-writing。
+用户本次“允许使用”授权单次3章百炼qwen3.8-flash录制及潜在费用，已执行结束。
+录制仅完成1章2706字后PAUSED，4项人审问题；不能登记completed或更新golden。
+原方案NCS-034..058待执行；本次另登记NCS-059/060验收诊断误报，未实施。
 
 ## Files
 
-- ContextAssembler.java / MemoryConfig.java：生产写作上下文接入约定，不使用旧约定缓存。
-- AuthorIntentWritingTest.java：保存接口→实际写作请求、更新版本、作品隔离、预算阻断。
-- docs/harness/evidence/2026-09-20-ncs-033-pending.json：合入及干净main验证，明确待验收。
-- docs/harness/evidence/ncs033/recording-scope.md：待授权录制的目的地、输入、规模和费用边界。
-- docs/harness/evidence/ncs033/run-intent-e2e.py：固定百炼目的地和模型的非空约定验收启动器。
+- docs/harness/evidence/2026-09-20-ncs-033-pending.json：实现及验证状态，明确质量未通过。
+- docs/harness/evidence/ncs033/quality-review.md：新旧对比、样本链接、人审问题。
+- docs/harness/evidence/ncs033/recording-verification.json：27语料哈希、请求8字段、双replay一致证据。
+- docs/harness/evidence/ncs033/{record,replay1,replay2}-result.json：正文摘要与状态（无正文）。
+- docs/specs/2026-09-20-e2e-quality-gates.md：NCS-059/060只登记未实施。
 
 ## Verification
 
-基线1098/0F/0E/1S；RED 3项2失败；GREEN及相关回归15项通过。
-分支及干净main init PASS：1101 tests / 0 failures / 0 errors / 1 skipped，编译、前端build通过。
-分支及干净main旧replay PASS：3章9730字，0章节失败/LLM错误；baseline PASS。
-日志/tmp/ncs033-final.log、/tmp/ncs033-main-init.log、/tmp/ncs033-main-replay.log、/tmp/ncs033-main-compare.log。
+分支及干净main init PASS：1101 tests / 0 failures / 0 errors / 1 skipped，编译与frontend build通过。
+旧空约定replay PASS：3章9730字，54调用/0错误，baseline PASS。
+新record：约57分钟，27调用/0错误，1章2706字，PAUSED / NEEDS_MANUAL_REVIEW。
+双replay与record正文哈希、版本、状态及归一化报告完全一致；请求含第1版及全部8字段。
+新baseline FAIL：总字数2706<3144，平均2706<2751。脚本退出0仅表示运行未出错，不代表质量通过。
+原始日志/tmp/ncs033-{record,replay1,replay2}.log；完整正文仅在任务visualizations/ncs033-quality/record.md。
 
 ## Blockers
 
-真实录制命令被自动审批拒绝：外发约定/正文及潜在费用缺明确授权。未启动record，未改golden。
-已向用户请求仅本次3章样本授权：百炼Token Plan，qwen3.8-flash，隔离验收作品，无已有用户作品数据。
-授权后仍须record、连续两次replay、新旧质量对比和人工确认，再bless；当前不得completed。
-另已询问T12真实长篇费用上限与真人评阅安排，尚无答复，不混同于本次3章授权。
+质量待人工复核：能力越界1项、证据铺垫3项；开头另有语言样本复用现象。
+不建议接受本次样本或降低golden。必须先解决质量问题，再完成目标样本及人工质量确认。
+本次授权不等于放行审查或bless授权；T12长篇费用上限与真人评阅安排仍未确认。
 
 ## Next Steps
 
-1. 用户同意本次录制后，在隔离worktree source scripts/load-env.sh，使用Java21，E2E_FIXTURE_DIR=data/e2e-fixtures/mystery-20260920-intent，运行python3 docs/harness/evidence/ncs033/run-intent-e2e.py --mode record --port 18102。
-2. 同一启动器双replay，展示新旧结果；用户质量确认后bless，再完成NCS-033证据与状态。
-3. 之后从main新建NCS-034分支，接通构思/规划；不推送远端。
-4. 隔离worktree /Users/erik/.codex/worktrees/ncs-completion/WritingAgent；干净main导出/tmp/ncs033-clean-main。
-5. 主目录原有两个未跟踪路径保留。E2E服务已退出；录制未执行。旧样本位于本任务ncs033-quality/before.md。
+1. 先读quality-review.md，完成现有质量门禁要求的人工评阅；不得用双replay一致代替质量通过。
+2. 保留当前27条语料用于回归；不得擅自清除人审屏障，或换模型重复收费采样直到通过。
+3. NCS-033未闭环前不启动NCS-034或NCS-059/060实现。
+4. 隔离worktree /Users/erik/.codex/worktrees/ncs-completion/WritingAgent；语料data/e2e-fixtures/ncs033/mystery-20260920-intent。
+5. 嵌套语料不影响普通E2E自动选择旧mystery语料。E2E服务均已退出。主目录原有两个未跟踪路径保留。

@@ -1,0 +1,182 @@
+{
+  "date": "2026-09-20",
+  "fixtureDirectory": "data/e2e-fixtures/ncs033/mystery-20260920-intent",
+  "fixtureCount": 27,
+  "recordAndTwoReplaysIdentical": true,
+  "normalization": "Ignore generatedAt, mode, projectId; compare all remaining report fields and chapter index/title/count/version/status/content SHA-256.",
+  "acceptance": "FAIL: requested 3 chapters, obtained 1 with NEEDS_MANUAL_REVIEW; baseline total/average word counts fail.",
+  "writerChecks": [
+    {
+      "file": "CHAPTER_WRITING-33fa9edeacb29013-1.json",
+      "revision1": true,
+      "fields": {
+        "premise": true,
+        "genreExpectation": true,
+        "themes": true,
+        "pov": true,
+        "languageSamples": true,
+        "lengthRange": true,
+        "autonomy": true,
+        "unwantedPatterns": true
+      }
+    },
+    {
+      "file": "CHAPTER_WRITING-e1e5133385923a29-1.json",
+      "revision1": true,
+      "fields": {
+        "premise": true,
+        "genreExpectation": true,
+        "themes": true,
+        "pov": true,
+        "languageSamples": true,
+        "lengthRange": true,
+        "autonomy": true,
+        "unwantedPatterns": true
+      }
+    }
+  ],
+  "qualityIssues": [
+    {
+      "event": "CONSISTENCY_ISSUE",
+      "chapter": 1,
+      "type": "CHARACTER",
+      "severity": "HIGH",
+      "action": "MANUAL_REVIEW",
+      "desc": "能力越界：沈持筹的「在雨夜主动拿笔于无名账册旁补写命债，并引灯口青烟入账页触发“物债折油，抵三十二”，随后账册按他改写的债务另写“沈持筹欠哑叔三十七文”，表现出阴账执笔人的补写与折价能力。」超出其设定（当前能力仅有算学、辨墨鉴纸、底层债务规则；“以契墨补写散页，令真实欠债以因果方式清偿”属于潜力上限…"
+    },
+    {
+      "event": "CONSISTENCY_ISSUE",
+      "chapter": 1,
+      "type": "PLOT",
+      "severity": "HIGH",
+      "action": "MANUAL_REVIEW",
+      "desc": "凭空证据：「“父亲死在书肆旧案里，书肆欠沈家一条命”」无前文铺垫。前文只交代父亲被清账司拖走、尸骨无存并留下焦页，未铺垫父亲死于书肆旧案或书肆欠沈家命债的凭据，沈持筹却据此补写命债。。需要补充获取场景。"
+    },
+    {
+      "event": "CONSISTENCY_ISSUE",
+      "chapter": 1,
+      "type": "PLOT",
+      "severity": "HIGH",
+      "action": "MANUAL_REVIEW",
+      "desc": "凭空证据：「无字账纸从门缝塞入后突然出现在账册旁并最后被灯下人捏着」无前文铺垫。正文明确写沈持筹“没碰”，后文却写“无字账纸被雨淋过，纸背水渍算珠正压住‘三十七’”，结尾又由灯下人持有，缺少拾取、移动或交接的获取场景。。需要补充获取场景。"
+    },
+    {
+      "event": "CONSISTENCY_ISSUE",
+      "chapter": 1,
+      "type": "PLOT",
+      "severity": "HIGH",
+      "action": "MANUAL_REVIEW",
+      "desc": "凭空证据：「苏半诺袖中巡夜牌」无前文铺垫。巡夜牌作为官凭编号的关键道具首次出现即用于证明“官写”“不是阴账”，前文未交代其来源或随身持有，证据链略显突兀。。需要补充获取场景。"
+    }
+  ],
+  "fixtures": [
+    {
+      "file": "CHAPTER_WRITING-33fa9edeacb29013-1.json",
+      "sha256": "fbc94d577be61068046bf15cde4a591b0da0c7747b823a57901117bd53093e77"
+    },
+    {
+      "file": "CHAPTER_WRITING-e1e5133385923a29-1.json",
+      "sha256": "12fe21f1385f95efd96c4d39f59a078e6c8cb5e65205336bed1af15ef8a8133a"
+    },
+    {
+      "file": "CHARACTER_DESIGN-368d002f1280ed02-1.json",
+      "sha256": "662915ac81ff1d55c270ac2fd01c41d4223b3edab9dcce85f8c2288c7fa03194"
+    },
+    {
+      "file": "CHARACTER_DESIGN-3972653a9bc25dce-1.json",
+      "sha256": "778ef194c7d1c2b5200b71560ced4c66a292b4dec3489b7eeec67edd5f6d8d2c"
+    },
+    {
+      "file": "CHARACTER_DESIGN-443d633cc2162bf4-1.json",
+      "sha256": "03e4ca5bad6632e0f9890a0ce4697286842826e5ba3aab405ee1e933fd1f72be"
+    },
+    {
+      "file": "CHARACTER_DESIGN-46f2cd59da16550e-1.json",
+      "sha256": "8088a7cdb65052db79b86c05638b58dd1f15294846c94f67fb764dc947c503db"
+    },
+    {
+      "file": "CHARACTER_DESIGN-c688c3549607bdc1-1.json",
+      "sha256": "dade14136a3716f722327752aed460d51f5cbf77716993ceaf3336b9a24a1d69"
+    },
+    {
+      "file": "CHARACTER_DESIGN-de4412ef1eaa6ff6-1.json",
+      "sha256": "fcbf4cf19a38152236a352153b7ac17a2f2c42478dd96e3b83cf44cb13cc412d"
+    },
+    {
+      "file": "CHARACTER_DESIGN-eb3d2385885acbfc-1.json",
+      "sha256": "0b4e7db8209d6ae172c470e6909527fe4a224b3e9de336d937f02ece9575f593"
+    },
+    {
+      "file": "CHARACTER_DESIGN-f51c3c180a412313-1.json",
+      "sha256": "67515d977c40bebcfbd593ac0853df373d3c400c0b00156c3fa269e69de6d2a1"
+    },
+    {
+      "file": "CONTINUITY_CHECK-3f2bd22684fe29e0-1.json",
+      "sha256": "2c3065c692bb5d7b324608c8f68e4ee837d3f7b352c9a9c1eb5137adfd3fef47"
+    },
+    {
+      "file": "CONTINUITY_CHECK-4068ac365e1b14f3-1.json",
+      "sha256": "796ff4befe35ee55639a4409dd7d68133cd99c6ef7a77b8da8dab8e59fab139f"
+    },
+    {
+      "file": "GENERAL-07e3b03dae015882-1.json",
+      "sha256": "8c3950f40a22b72ba1e98ced483abc26fd1cb8614b75f0ba60413b2597215a2b"
+    },
+    {
+      "file": "GENERAL-07e3b03dae015882-2.json",
+      "sha256": "fac2ac8f21da75c2b34dadda9bf64b595f01f64f9606b419c85ac64efb0a0017"
+    },
+    {
+      "file": "GENERAL-3dfb1a8b015c1368-1.json",
+      "sha256": "b9101ad2377a597e4218d0269d3edae2b518991670afef36c09b7f36c9d05f4e"
+    },
+    {
+      "file": "GENERAL-40fa590079b91616-1.json",
+      "sha256": "fad7c1aef5e64f7fca1884049ea29dfad4f57eba368179388421659b11c9872a"
+    },
+    {
+      "file": "GENERAL-58340b08d7199a57-1.json",
+      "sha256": "51488d6b1b6759a503517c781e956e229886baf6b2b8a18dfb8cec05bada4131"
+    },
+    {
+      "file": "GENERAL-77f8bc255b3a9181-1.json",
+      "sha256": "533908f41687a465dd918259ef74efe5c9160ccc196a95f17a76a3acfeed95d8"
+    },
+    {
+      "file": "GENERAL-8172d87f96872967-1.json",
+      "sha256": "db1dbae96ff24f8f57238aa4d41cfe3473953cbebcb04585b754667cd97d285f"
+    },
+    {
+      "file": "GENERAL-89c06f6314ddde41-1.json",
+      "sha256": "297fe16f0dd9e6eb8d681830bf7e29079557cab53cb8edaa89a286697f68f9d5"
+    },
+    {
+      "file": "GENERAL-ae9fb1073cf12877-1.json",
+      "sha256": "de6f61961e43796c6fd9155a87a7633b235a28ba7e32597182a0fcf7ba161951"
+    },
+    {
+      "file": "GENERAL-c0f9f2abb64b341b-1.json",
+      "sha256": "67d58f268d22b12d1953f8360038af1b2314a695a67eb3701b0ff7f0a0ecfcbd"
+    },
+    {
+      "file": "GENERAL-cce70dbd3dfc4afc-1.json",
+      "sha256": "c87c2719279479de942e7512a5de74d32c9082f3f7212a02c7b67f231c6fe229"
+    },
+    {
+      "file": "GENERAL-ee154923ccb15975-1.json",
+      "sha256": "4453c4618421c27a8fd205a5cde279bdaddd519b0d462d6a13e92239603cbfb2"
+    },
+    {
+      "file": "GENERAL-f1dacd6a9f4c27da-1.json",
+      "sha256": "c30c093dcb80bc97bde695a0f7a8248efc0e73c20b2d7a9408686327b157e498"
+    },
+    {
+      "file": "PLOTTING-15e67cd749682af9-1.json",
+      "sha256": "00d87ed0b4493adcdb8294ed4a6ac7c8575befcb2f15a1f9af53fe5b35da21b6"
+    },
+    {
+      "file": "WORLDBUILDING-830f8b27f42223e8-1.json",
+      "sha256": "c72c4a9b15c8432c18d85b9056d2c3c466cdd5786ed95d22c48cbd3e5391c602"
+    }
+  ]
+}

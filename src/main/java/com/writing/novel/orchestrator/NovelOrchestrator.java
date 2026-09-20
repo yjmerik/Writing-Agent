@@ -1547,35 +1547,136 @@ public class NovelOrchestrator {
         };
     }
 
-    /** 从大纲文本中抽取伏笔条目存入 Foreshadowing 表（p3-03） */    private void extractForeshadowingsFromOutline(String projectId) {
+    /**
+     * 从章节梗概抽取伏笔规划（p3-03）。
+     *
+     * 规划必须保留来源章和预计回收章；大纲中的“回收”行只是对已有规划的
+     * 引用，不能再创建一条新的未回收记录。总纲、卷摘要没有可靠的章节来源，
+     * 因而不再被伪装成第 1 章写入台账。
+     */
+    private void extractForeshadowingsFromOutline(String projectId) {
         try {
-            // 已有伏笔则跳过（幂等）
             if (!repository.findForeshadowingsByProject(projectId).isEmpty()) return;
             var outlineOpt = repository.findOutlineByProject(projectId);
             if (outlineOpt.isEmpty()) return;
-            String fullText = outlineOpt.get().getPremise();
-            for (var v : outlineOpt.get().getVolumes()) {
-                fullText += "\n" + v.getTitle() + " " + v.getSummary();
-                for (var s : v.getSynopses()) {
-                    fullText += "\n" + s.getSynopsis();
+
+            java.util.Map<String, OutlineForeshadowPlan> plants = new java.util.LinkedHashMap<>();
+            java.util.List<OutlineForeshadowReference> resolves = new java.util.ArrayList<>();
+            var synopses = outlineOpt.get().getVolumes().stream()
+                    .flatMap(v -> v.getSynopses().stream())
+                    .sorted(java.util.Comparator.comparingInt(ChapterSynopsis::getChapterIndex))
+                    .toList();
+            for (ChapterSynopsis synopsis : synopses) {
+                for (String item : outlineForeshadowItems(synopsis.getSynopsis())) {
+                    String trimmed = item.trim();
+                    if (trimmed.isEmpty() || "无".equals(trimmed)) continue;
+                    if (startsWithForeshadowResolve(trimmed)) {
+                        resolves.add(new OutlineForeshadowReference(
+                                foreshadowKey(trimmed), synopsis.getChapterIndex()));
+                        continue;
+                    }
+                    String description = stripForeshadowPrefix(trimmed);
+                    if (description.length() < 2) continue;
+                    String key = foreshadowKey(description);
+                    if (key.length() < 2) continue;
+                    OutlineForeshadowPlan existing = plants.get(key);
+                    Integer expected = parseExpectedResolveChapter(trimmed);
+                    if (existing == null) {
+                        plants.put(key, new OutlineForeshadowPlan(
+                                description, synopsis.getChapterIndex(), expected, trimmed));
+                    } else if (existing.expectedResolveChapter() == null && expected != null) {
+                        plants.put(key, existing.withExpectedResolveChapter(expected));
+                    }
                 }
             }
-            // 用正则找含"伏笔/暗示/暗藏/埋下/秘密/真相"的段落
-            var pattern = java.util.regex.Pattern.compile(
-                    "[^\\n。]*(?:伏笔|暗示|暗藏|埋下|秘密|真相|隐情|未解)[^\\n。]*");
-            var matcher = pattern.matcher(fullText);
+
+            // “回收-xxx” 只补充规划的回收节点；它不代表正文已经完成回收。
+            for (OutlineForeshadowReference reference : resolves) {
+                plants.values().stream()
+                        .filter(plan -> foreshadowKeysMatch(plan.key(), reference.key()))
+                        .findFirst()
+                        .ifPresent(plan -> {
+                            if (plan.expectedResolveChapter() == null) {
+                                plants.put(plan.key(), plan.withExpectedResolveChapter(reference.chapterIndex()));
+                            }
+                        });
+            }
+
             int count = 0;
-            while (matcher.find() && count < 5) {
-                String desc = matcher.group().trim();
-                if (desc.length() > 5) {
-                    repository.saveForeshadowing(new Foreshadowing(
-                            projectId, desc, "从大纲自动抽取", 1));
-                    count++;
-                }
+            for (OutlineForeshadowPlan plan : plants.values()) {
+                if (count >= 20) break;
+                Foreshadowing saved = new Foreshadowing(
+                        projectId, plan.description(), "从第" + plan.plantedAtChapter() + "章大纲自动抽取",
+                        plan.plantedAtChapter());
+                saved.setExpectedResolveChapter(plan.expectedResolveChapter());
+                saved.setPriority(parseForeshadowPriority(plan.raw()));
+                saved.setMustResolve(saved.getPriority() == Foreshadowing.Priority.HIGH);
+                repository.saveForeshadowing(saved);
+                count++;
             }
         } catch (Exception e) {
             log.warn("伏笔抽取失败: {}", e.getMessage());
         }
+    }
+
+    private record OutlineForeshadowPlan(String description, int plantedAtChapter,
+                                         Integer expectedResolveChapter, String raw) {
+        String key() { return foreshadowKey(description); }
+        OutlineForeshadowPlan withExpectedResolveChapter(Integer chapter) {
+            return new OutlineForeshadowPlan(description, plantedAtChapter, chapter, raw);
+        }
+    }
+
+    private record OutlineForeshadowReference(String key, int chapterIndex) {}
+
+    private static List<String> outlineForeshadowItems(String synopsis) {
+        if (synopsis == null || synopsis.isBlank()) return List.of();
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(
+                "伏笔[：:]\\s*(.+?)(?=(?:\\n|。\\s*)(?:场景节拍|爽点|人物|目的|张力|伏笔)[：:]|$)",
+                java.util.regex.Pattern.DOTALL).matcher(synopsis);
+        if (!matcher.find()) return List.of();
+        return java.util.Arrays.stream(matcher.group(1).split("[;；\\n]"))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+    }
+
+    private static boolean startsWithForeshadowResolve(String value) {
+        return value.startsWith("回收") || value.startsWith("兑现") || value.startsWith("揭示");
+    }
+
+    private static String stripForeshadowPrefix(String value) {
+        return value.replaceFirst("^(?:埋设|埋下|伏笔)[：:\\-—]?\\s*", "").trim();
+    }
+
+    private static String foreshadowKey(String value) {
+        if (value == null) return "";
+        String key = value.replaceFirst("^(?:回收|兑现|揭示)[：:\\-—]?\\s*", "")
+                .replaceFirst("^(?:埋设|埋下|伏笔)[：:\\-—]?\\s*", "")
+                .replaceAll("[（(].*?[）)]", "")
+                .replaceAll("(?:预计|计划)第?\\s*\\d+章(?:回收|揭示|兑现)?", "")
+                .replaceAll("[。；;：:]", "")
+                .trim();
+        return key;
+    }
+
+    private static boolean foreshadowKeysMatch(String left, String right) {
+        if (left == null || right == null || left.isBlank() || right.isBlank()) return false;
+        return left.equals(right) || (left.length() >= 4 && right.length() >= 4
+                && (left.contains(right) || right.contains(left)));
+    }
+
+    private static Integer parseExpectedResolveChapter(String value) {
+        if (value == null) return null;
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(
+                "(?:预计|计划)?\\s*第\\s*(\\d+)\\s*章\\s*(?:回收|揭示|兑现)?").matcher(value);
+        return matcher.find() ? Integer.valueOf(matcher.group(1)) : null;
+    }
+
+    private static Foreshadowing.Priority parseForeshadowPriority(String value) {
+        if (value != null && value.contains("HIGH")) return Foreshadowing.Priority.HIGH;
+        if (value != null && value.contains("LOW")) return Foreshadowing.Priority.LOW;
+        return Foreshadowing.Priority.MEDIUM;
     }
 
     /** 收集世界观摘要（供 CharacterDesigner/Plotter 注入用） */

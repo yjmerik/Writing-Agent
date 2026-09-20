@@ -323,7 +323,7 @@ public class ChapterProduction {
     private List<ContinuityIssue> checkedContinuity(String projectId, int chapterIndex,
                                                    Chapter chapter, List<String> cast) {
         var result = continuityChecker.checkWithEnvelope(projectId, chapterIndex, chapter.getContent(),
-                collectSettingsForCheck(projectId, cast));
+                collectSettingsForCheck(projectId, chapterIndex, cast));
         if (result.status() != com.writing.novel.agent.CheckResultEnvelope.Status.SUCCESS
                 && result.status() != com.writing.novel.agent.CheckResultEnvelope.Status.VALID_EMPTY)
             throw new IllegalStateException(result.reason());
@@ -409,7 +409,7 @@ public class ChapterProduction {
             if (!originalHigh.isEmpty()) {
                 if (consistencyGuard == null) throw new IllegalStateException("缺少原问题逐项复验能力");
                 var verdicts = consistencyGuard.verifyCorrections(projectId, chapterIndex, chapter.getVersion(),
-                        chapter.getContent(), originalHigh, collectSettingsForCheck(projectId, cast));
+                        chapter.getContent(), originalHigh, collectSettingsForCheck(projectId, chapterIndex, cast));
                 var current = repository.findChapterByIndex(projectId, chapterIndex).orElseThrow();
                 if (current.getVersion() != chapter.getVersion())
                     throw new IllegalStateException("复验期间出现新稿，需要重新检查");
@@ -452,7 +452,7 @@ public class ChapterProduction {
     }
 
     /** 收集设定摘要供连续性检查参考。p11-q0-01: 经 RelevanceGateway 按本章 cast 收窄角色 */
-    private String collectSettingsForCheck(String projectId, List<String> cast) {
+    private String collectSettingsForCheck(String projectId, int chapterIndex, List<String> cast) {
         StringBuilder sb = new StringBuilder();
         var characters = orch.relevanceGateway() != null
                 ? orch.relevanceGateway().relevantCharacters(projectId, cast, 10)
@@ -469,6 +469,7 @@ public class ChapterProduction {
         // p5-c1: 注入未回收伏笔台账，供连续性检查器参考
         // p16-04: cap 20——mustResolve 恒在，其余按埋设先后（早埋优先），防全量注入随章节无界增长
         var foreshadowings = repository.findUnresolvedForeshadowings(projectId).stream()
+                .filter(f -> f.getPlantedAtChapter() <= chapterIndex)
                 .sorted(java.util.Comparator
                         .comparing(Foreshadowing::isMustResolve).reversed()
                         .thenComparing(Foreshadowing::getPlantedAtChapter))

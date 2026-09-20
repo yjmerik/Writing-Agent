@@ -1,0 +1,139 @@
+{
+  "date": "2026-09-20",
+  "implementationCommit": "4c26c5524a9cd25d9c068a133fd6a6f3efbbf572",
+  "fixtureDirectory": "data/e2e-fixtures/ncs033/mystery-20260920-correction",
+  "fixtureCount": 27,
+  "targetChapters": 3,
+  "acceptance": "NOT COMPLETE: agent stopped after reproduced finding-retention bug; one stored chapter, zero task-completed chapters. No matching double replay or baseline bless claimed.",
+  "correctionChecks": {
+    "fullCurrentDraftIncluded": true,
+    "sourceRevision2Included": true,
+    "authorFields": {
+      "premise": true,
+      "genreExpectation": true,
+      "themes": true,
+      "pov": true,
+      "languageSamples": true,
+      "lengthRange": true,
+      "autonomy": true,
+      "unwantedPatterns": true
+    }
+  },
+  "findingEvidence": {
+    "firstGuard": "GENERAL-e0e3156a32b64545-1.json",
+    "redundantGuard": "GENERAL-e0e3156a32b64545-2.json",
+    "firstFinding": "半枚官印现形前，主角已使用该证据，缺少获取过程",
+    "secondFinding": "父亲与官印的关联缺少铺垫",
+    "result": "Correction feedback includes only second finding; first persisted HIGH omitted. Deterministic integration test reproduces dropped-first-finding behavior."
+  },
+  "fixtures": [
+    {
+      "file": "CHAPTER_WRITING-6de94b8cb9da6f17-1.json",
+      "sha256": "53a88f118020f9d4a4d272df7dd15ab99cb90c59025ab4a96ddb3f30c3c332ac"
+    },
+    {
+      "file": "CHAPTER_WRITING-88c1777240e919c2-1.json",
+      "sha256": "d7947b1146ed2a3e71f30395cf0102a7cf00f7c0335649480f6fdc3e30d5a08a"
+    },
+    {
+      "file": "CHARACTER_DESIGN-14cf4a49903bb16b-1.json",
+      "sha256": "3859764770db8091f1216be24639737a2a00779b3aa5b1e21f953c250920bdef"
+    },
+    {
+      "file": "CHARACTER_DESIGN-1cd3d5b6e2cf58df-1.json",
+      "sha256": "931244f6b8593ec5c05d0ce0eb37d305b28e9ac673a7e375be8253c4fee006a2"
+    },
+    {
+      "file": "CHARACTER_DESIGN-319ef7bcc0d9e25a-1.json",
+      "sha256": "75b518ac0a84344711c9bcf5b0ed6efeb5aef4e3685946c7a1502dfa3dc7ce32"
+    },
+    {
+      "file": "CHARACTER_DESIGN-34241ced68cc299b-1.json",
+      "sha256": "2c59a131e04639ca7d297c6ee89674159a687dd7a53ff7870088a2d9e1813876"
+    },
+    {
+      "file": "CHARACTER_DESIGN-3a19cb0a1be73e6c-1.json",
+      "sha256": "69e362f861a703fbb7be555700a204d4e0736a0938c57a9d1e6f33e7df974f60"
+    },
+    {
+      "file": "CHARACTER_DESIGN-641ffee59e45a216-1.json",
+      "sha256": "053538f33475b8c1b5a20a16515de861637fc1067df86bec4dad941800514932"
+    },
+    {
+      "file": "CHARACTER_DESIGN-d33b5789379459c5-1.json",
+      "sha256": "c7e7ca9c08f6df92b4a3ccbf4e9aee4cc2435997f57af83c4c836f22bb995e2c"
+    },
+    {
+      "file": "CHARACTER_DESIGN-e6c8724393914b2d-1.json",
+      "sha256": "311646c04b61c1cc5fd7cdeb750b522b6e48db055d2a040be5ea2a01d4a1399b"
+    },
+    {
+      "file": "CONTINUITY_CHECK-2b5ed01148541afe-1.json",
+      "sha256": "ee636bcbda5095ffdf108bf45040f05d5ebae70946d72bf05f6340784ae9fed9"
+    },
+    {
+      "file": "CONTINUITY_CHECK-454bd9249dbb2046-1.json",
+      "sha256": "1e5df09ea37eb725f880103c046f5197e7ed57c4741436fdb3f4f2505616e4d0"
+    },
+    {
+      "file": "GENERAL-1c6fadc8ffb6f50f-1.json",
+      "sha256": "a6d87a6b59767a3ccb6549a475613d68b560e13c0351ee9404edf3ff245b178e"
+    },
+    {
+      "file": "GENERAL-2d5b9f739cf7e28c-1.json",
+      "sha256": "fba5f66dc3faad4a9db62b254e61a1167fef120d27d257071042d94bc96f318e"
+    },
+    {
+      "file": "GENERAL-49dc66a06cf1e1be-1.json",
+      "sha256": "532af18403dc28648735eb324484bab815f86c99ba807e3250b1ad02b542b127"
+    },
+    {
+      "file": "GENERAL-5a2323e081713955-1.json",
+      "sha256": "c03e1a22da832676f7038e9df4a1dcef01d722f8495b5b8e88ecfa173f5b4249"
+    },
+    {
+      "file": "GENERAL-8ba8b1ae8e13b5df-1.json",
+      "sha256": "06a626cd258e4f136331abdd52b1a6c03bcc22a2d9bcb47a84a039acf51fe84f"
+    },
+    {
+      "file": "GENERAL-b68fb0a32e655103-1.json",
+      "sha256": "a7842df14d0b5a272af0e1789b64ae50674dc9f0a4e35f4053a78bfba6fea426"
+    },
+    {
+      "file": "GENERAL-bdf07a0dc98d150f-1.json",
+      "sha256": "30d62e3bd4dcb950c0dee9292881704d3ad22876e02e6571ef341e7bfc5c9d74"
+    },
+    {
+      "file": "GENERAL-c9d8b09f82e9554a-1.json",
+      "sha256": "ba9fceb645bf4309a526e3bf5a92a41fae8d54fda4043b8b3014baf71a04fd56"
+    },
+    {
+      "file": "GENERAL-cd5d4f05cc0cd2c2-1.json",
+      "sha256": "801f9e4cdc47fa667f1cdfc6404d23bdaff69e6e750a08c10adf4b5afb037d20"
+    },
+    {
+      "file": "GENERAL-d17f81c740cc3e1f-1.json",
+      "sha256": "c9a2f73e667d431283c33209f4de424f2fa644267fbe7d34a4adda2f8bc29ee5"
+    },
+    {
+      "file": "GENERAL-e0e3156a32b64545-1.json",
+      "sha256": "99d20c6647b6a84622e7a2899f766b3b2ee4f9728f044859e8c5018687f41f40"
+    },
+    {
+      "file": "GENERAL-e0e3156a32b64545-2.json",
+      "sha256": "8e01f6c3208151a4ff1ed93ef5293214f3bfd0dcb3de536b6fcc7b7a697dbaf3"
+    },
+    {
+      "file": "GENERAL-f8419f0e2966f16b-1.json",
+      "sha256": "7a89d3a17890b526681b4dc3857e4e2dc710880db62c165b078f0851f88e3f28"
+    },
+    {
+      "file": "PLOTTING-3ac7ff06d4e38be4-1.json",
+      "sha256": "f4fc5d56f19e6da220c930e796d44a8d0a84daceded20c13d3e8df7599f8ade8"
+    },
+    {
+      "file": "WORLDBUILDING-830f8b27f42223e8-1.json",
+      "sha256": "dcf4ad4ff8ea64c61c2ffdd06f1cb83e7e3d3e38a5e41b73b785ec15af969ae1"
+    }
+  ]
+}

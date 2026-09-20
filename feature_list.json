@@ -7945,12 +7945,14 @@
         "src/main/java/com/writing/novel/memory/MemoryConfig.java",
         "src/test/java/com/writing/novel/service/AuthorIntentWritingTest.java",
         "src/main/java/com/writing/novel/agent/ChapterWriterAgent.java",
-        "src/main/resources/prompts/chapter-correction.st"
+        "src/main/resources/prompts/chapter-correction.st",
+        "src/main/java/com/writing/novel/orchestrator/ChapterProduction.java",
+        "src/test/java/com/writing/novel/orchestrator/GuardFindingRetentionTest.java"
       ],
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：作者修改视角和样本后实际写作请求包含新版本；旧缓存不污染；空契约兼容。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
-      "verify_cmd": "mvn test -Dtest=AuthorIntentWritingTest",
-      "evidence": "初始接入4cb8f7c、纠偏修复4c26c5524a9cd25d9c068a133fd6a6f3efbbf572已合main。新增测试RED 6项3失败，相关15项GREEN；分支及干净main init 1104/0F/0E/1S，编译/build通过。旧真实样本1章人审阻断；新纠偏请求导致旧语料失配，必须重录。修复后record自动审批拒绝，待本次外发/重复费用授权；未运行、未bless，保持in-progress。证据 docs/harness/evidence/ncs033/correction-validation.json",
+      "verify_cmd": "mvn test -Dtest=AuthorIntentWritingTest,GuardFindingRetentionTest",
+      "evidence": "初始接入4cb8f7c、纠偏原稿修复4c26c55已合main。本轮授权录制确认完整原稿/版本及8字段进入纠偏，但暴露首轮守卫问题被重复扫描覆盖；主动中断，保留27调用及1章4470字，不算3章通过。漏传回归RED 1项1失败0错误，相关GREEN 10项通过；分支init 1105/0F/0E/1S，编译及build通过，待本地主分支复验。匹配新录制、双replay、人工质量确认未完成，未bless；保持in-progress。证据 docs/harness/evidence/ncs033/correction-recording-verification.json",
       "branch": "codex/ncs-033-intent-writing"
     },
     {

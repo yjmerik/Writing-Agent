@@ -1,0 +1,35 @@
+{
+  "date": "2026-09-20",
+  "feature": "NCS-033",
+  "status": "in-progress",
+  "branch": "codex/ncs-033-intent-writing",
+  "rootCause": "ChapterProduction discarded the first persisted consistency-guard findings and re-ran the same guard before arbitration. Model variation could replace HIGH findings or return empty, bypassing correction.",
+  "scope": [
+    "Reuse the first report in arbitration",
+    "Keep checking the new draft after correction",
+    "Integration regression verifies actual saved corrected draft and original finding in correction request"
+  ],
+  "red": {
+    "tests": 1,
+    "failures": 1,
+    "errors": 0,
+    "log": "/tmp/ncs033-guard-red.log"
+  },
+  "targetedGreen": {
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "log": "/tmp/ncs033-guard-green.log"
+  },
+  "fullGreen": {
+    "tests": 1105,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "compile": "PASS",
+    "frontendBuild": "PASS",
+    "log": "/tmp/ncs033-guard-init.log"
+  },
+  "liveEvidence": "correction-recording-verification.json",
+  "qualityGate": "Not complete: authorized recording stopped early after reproduced defect. Matching new recording, double replay and human quality approval pending. No golden bless."
+}

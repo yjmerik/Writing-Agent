@@ -4,44 +4,41 @@ Last Updated: 2026-09-20
 
 ## Current
 
-NCS-031/032已完成且verified。唯一active_feature=NCS-033，in-progress。
-用户要求先修复真实样本问题；纠偏修复4c26c5524a9cd25d9c068a133fd6a6f3efbbf572已合本地main。
-分支codex/ncs-033-intent-writing，初始约定接入提交4cb8f7ccd9759de37f8598fae8f663dc69a91f22。
-纠偏现在携带当前完整原稿及版本；缺稿/预算不足时拒绝模型请求。
-外置规则区分当前能力与潜力、已知与猜测、道具交接、语言样本和故事事实；允许修正违规的计划动作。
-尚不能断言4项模型语义问题都已消失：修复后真实验收未运行。NCS-034..060未启动。
+NCS-031/032已完成且verified；唯一active_feature=NCS-033，in-progress。
+分支codex/ncs-033-intent-writing，约定接入4cb8f7c、纠偏原稿修复4c26c55已合本地main。
+用户允许后真实录制确认完整原稿/版本及8字段已注入；另发现首轮守卫问题被重复扫描覆盖。
+本轮主动中断以避免对已知缺陷继续消耗：27条已完成调用、1章4470字；首章后处理未完成，任务计数0，目标3章未达。
+漏传修复只复用首轮报告，保留纠偏后新稿复检；分支完整验证通过，准备合入。
+NCS-034..060未启动，未放行人审、未bless。
 
 ## Files
 
-- src/main/java/com/writing/novel/agent/ChapterWriterAgent.java：纠偏原稿/版本/预算。
-- src/main/resources/prompts/chapter-correction.st：有边界的纠偏要求，旧模板变量未改。
-- src/test/java/com/writing/novel/service/AuthorIntentWritingTest.java：新增3项行为回归。
-- docs/harness/evidence/ncs033/correction-validation.json：RED/GREEN、主分支验证与阻塞证据。
-- docs/harness/evidence/ncs033/correction-recording-scope.md：再次录制的具体范围与审批状态。
-- docs/harness/evidence/ncs033/quality-review.md：修复前真实样本和4项人审问题。
+- src/main/java/com/writing/novel/orchestrator/ChapterProduction.java：保留首轮守卫报告。
+- src/test/java/com/writing/novel/orchestrator/GuardFindingRetentionTest.java：真实编排/SQLite行为回归。
+- docs/harness/evidence/ncs033/guard-retention-validation.json：RED/GREEN及合并证据。
+- docs/harness/evidence/ncs033/correction-recording-verification.json：本轮27语料指纹、原稿/约定注入。
+- docs/harness/evidence/ncs033/correction-record-result.json：中断快照，非完整E2E报告。
+- docs/harness/evidence/ncs033/correction-quality-review.md：质量结论和全文链接。
 
 ## Verification
 
-本轮基线init PASS（1101项）；新增RED 6项3失败0错误；相关GREEN 15项通过。
-修复分支与独立main导出init PASS：1104 tests / 0 failures / 0 errors / 1 skipped，编译/build通过。
-修复后旧非空语料在CHAPTER_WRITING-e079faeab2f39ac1-1.json处分叉，最终E2E FAIL（预期不兼容）。
-日志/tmp/ncs033-correction-{red,green,init,main-init,old-replay}.log；harness --check-git PASS。
-修复前record1章2706字、27调用0错误，双replay一致，但4项人审屏障且baseline FAIL。
-所有旧失败语料保留，未降低检查门槛、未更新golden、未手工放行人审。
+原稿修复分支与干净main init 1104/0F/0E/1S已通过。
+本次漏传测试RED 1项1失败0错误；相关GREEN 10项通过；分支init 1105/0F/0E/1S，编译和前端build通过。
+本次真实录制约63分钟；27次调用无最终错误，初次写作有一次EOF重试。
+录制因主动停止退出56，遗留e2e-report.json不能作为本轮结果；未运行本轮双replay。
+/tmp/ncs033-clean-main当前含候选修复，不再是干净导出；合并后使用新的独立main导出复验。
 
 ## Blockers
 
-BROKEN（E2E语料兼容性）：新纠偏prompt需要匹配录制，旧回放不能代表修复后验收；编译/单测绿。
-修复后真实record自动审批拒绝：上一轮授权未明确覆盖新增完整原稿/问题描述与再次支出。命令未启动。
-已向用户请求同百炼Token Plan/qwen3.8-flash、独立测试作品、一次3章目标授权；可能再耗额度/API费用。
-等待授权，不得通过其他入口绕过拒绝。人工质量确认仍是bless前的独立门禁。
-T12真实长篇费用上限与真人评阅安排仍未确认。
+BROKEN（质量验收/匹配语料）：新代码尚无完整匹配录制，不能宣称最终3章或模型语义问题通过。
+本次单轮录制授权已使用；新一轮真实调用需另外明确授权，尚未启动。
+人工质量确认仍是bless前的独立门禁。T12真实长篇费用和真人评阅安排也未确认。
+NCS-059/060验收/诊断误报只登记，不借当前特性顺带实现。
 
 ## Next Steps
 
-1. 若获本次录制授权，在隔离worktree使用Java21，source scripts/load-env.sh后执行下项；否则保留本地修复。
-2. E2E_FIXTURE_DIR=data/e2e-fixtures/ncs033/mystery-20260920-correction python3 docs/harness/evidence/ncs033/run-intent-e2e.py --mode record --chapters 3 --port 18102。
-3. 固定目的地/模型已由启动器锁定；遇人审暂停不自动放行，不重复采样刷过；记录新旧语义差异并双replay。
-4. 质量达标且人工确认后才能bless并完成NCS-033；NCS-059/060验收诊断误报仍只登记。
-5. worktree=/Users/erik/.codex/worktrees/ncs-completion/WritingAgent；干净main导出=/tmp/ncs033-clean-main。
-6. 原主目录两个未跟踪路径保留，E2E服务已退出。完整小说正文不进入Git证据。
+1. 完成漏传修复的分支验证、提交、本地main合并和新的干净main复验，状态保持in-progress。
+2. 最终代码需要新语料录制、两次一致replay、新旧质量比较；人工质量确认后才能bless及完成NCS-033。
+3. 保留两轮失败/中断样本；不重采样刷过，不降低门槛。
+4. worktree=/Users/erik/.codex/worktrees/ncs-completion/WritingAgent；测试服务已关闭。
+5. 原主目录两个未跟踪路径保留；无远端推送；完整小说正文不进入Git。

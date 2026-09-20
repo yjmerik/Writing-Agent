@@ -236,9 +236,11 @@ public class ChapterProduction {
         // A3: 已删除冗余的风格检查块（原 p10-d1，只 log 不持久化）——保留下方 p3-02 块（含评分+持久化）
 
         // p10-a3+c2: 一致性守卫——能力越界 + 凭空证据检测
+        java.util.List<ContinuityIssue> guardIssuesRef = java.util.List.of();
         try {
             if (consistencyGuard != null) {
                 var guardIssues = consistencyGuard.check(projectId, chapterIndex, chapter.getContent(), cast);
+                guardIssuesRef = guardIssues;
                 for (var issue : guardIssues) {
                     repository.saveContinuityIssue(issue);
                     log.warn("一致性守卫(章{}): {}", chapterIndex, issue.getDescription());
@@ -289,7 +291,7 @@ public class ChapterProduction {
 
         if (orch.arbiterRef() != null) {
             rewritten = applyArbiterDecision(projectId, chapterIndex, chapter, cast,
-                    continuityIssuesRef, rewritten);
+                    continuityIssuesRef, guardIssuesRef, rewritten);
         }
 
         // p10-d2: 一致性门禁——章号/时代用语检查（纯规则）
@@ -415,17 +417,9 @@ public class ChapterProduction {
     private boolean applyArbiterDecision(String projectId, int chapterIndex, Chapter chapter,
                                          List<String> cast,
                                          java.util.List<ContinuityIssue> continuityIssues,
+                                         java.util.List<ContinuityIssue> guardIssues,
                                          boolean alreadyRewritten) {
-        java.util.List<ContinuityIssue> guardIssues = java.util.List.of();
-        try {
-            if (consistencyGuard != null) {
-                guardIssues = consistencyGuard.check(projectId, chapterIndex, chapter.getContent(), cast);
-            }
-        } catch (Exception e) {
-            log.warn("仲裁前守卫失败(章{}): {}", chapterIndex, e.getMessage());
-            EventLog.emit("CONSISTENCY_ISSUE", Map.of(
-                    "severity", "DETECT_FAILED", "desc", EventLog.truncate(e.getMessage(), 150)));
-        }
+        // 同一稿使用已持久化的守卫报告；只在重写后检查新稿，避免再次采样覆盖已发现的问题。
         int readerOverall = 10;
         String suggestion = null;
         if (readerReviewAgent != null) {

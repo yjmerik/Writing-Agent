@@ -34,9 +34,9 @@
     "log": "/tmp/ncs033-correction-old-replay.log"
   },
   "pending": [
-    "Fresh recording was rejected by automatic approval review: previous authorization did not explicitly cover this new full-draft payload and repeat expenditure. No new recording process started.",
-    "User approval requested for one three-chapter post-fix recording at the same fixed Bailian endpoint/model, then matching replay twice.",
-    "Human quality review before any baseline bless."
+    "Authorized recording ended early after additional finding-retention defect was confirmed; see correction-record-result.json.",
+    "A fresh matching recording and two replays are still required after the finding-retention fix.",
+    "Human quality review remains required before any baseline bless."
   ],
   "commit": "4c26c5524a9cd25d9c068a133fd6a6f3efbbf572",
   "main_commit": "4c26c5524a9cd25d9c068a133fd6a6f3efbbf572",

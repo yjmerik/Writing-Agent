@@ -1,0 +1,24 @@
+{
+  "label": "correction-record",
+  "status": "INTERRUPTED_BY_AGENT_AFTER_REPRODUCED_BUG",
+  "targetChapters": 3,
+  "completedChapters": 0,
+  "storedChapters": 1,
+  "chapters": [
+    {
+      "chapter": 1,
+      "title": "半文钱的债",
+      "wordCount": 4470,
+      "version": 3,
+      "status": "DONE",
+      "sha256": "1ecce485bcfc63310838ef62a889fbc879d7f28a09890625e1a757441e316ece"
+    }
+  ],
+  "eventCounts": {
+    "LLM_CALL": 27,
+    "CHAPTER_WRITTEN": 1,
+    "FACT_UNVERIFIED_RULE": 1,
+    "WRITE_LEASE_EPOCH_BUMPED": 1
+  },
+  "reason": "First consistency-guard finding was replaced by redundant scan before arbitration. Cancellation requested during chapter-1 postprocessing; remaining calls stopped to avoid unnecessary costs. Not a completed E2E run."
+}

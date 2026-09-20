@@ -50,5 +50,6 @@
     "Human confirmation required before any golden update."
   ],
   "notes": "Not a verified completion record. Real initial and rewrite requests include revision 1 and all eight author-contract fields. Reproducibility is proven; quality completion is not. NCS-059/060 registered for misleading E2E/diagnosis success messages, not implemented.",
-  "evidence_commit": "c40e1a18c25412f444066f63aaafcfc59977dc7d"
+  "evidence_commit": "c40e1a18c25412f444066f63aaafcfc59977dc7d",
+  "latestFollowUp": "User requested fixes; correction implementation 4c26c5524a9cd25d9c068a133fd6a6f3efbbf572 merged. Current verification and fresh-record approval blocker: docs/harness/evidence/ncs033/correction-validation.json"
 }

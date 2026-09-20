@@ -7950,7 +7950,7 @@
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：作者修改视角和样本后实际写作请求包含新版本；旧缓存不污染；空契约兼容。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=AuthorIntentWritingTest",
-      "evidence": "实现4cb8f7ccd9759de37f8598fae8f663dc69a91f22已合main；分支及干净main init 1101/0F/0E/1S，旧replay+baseline PASS。用户授权真实录制后，27调用/0错误，1章2706字，4项人审阻断；两次replay与record正文/状态一致。新baseline FAIL，未bless，保持in-progress待人工质量复核。证据 docs/harness/evidence/2026-09-20-ncs-033-pending.json 用户要求先修复质量问题：纠偏补全当前原稿/版本与预算保护，外置纠偏约束；新增3项测试先失败后通过，相关15项GREEN；待修复后主分支验证、新录制和人工质量确认。",
+      "evidence": "初始接入4cb8f7c、纠偏修复4c26c5524a9cd25d9c068a133fd6a6f3efbbf572已合main。新增测试RED 6项3失败，相关15项GREEN；分支及干净main init 1104/0F/0E/1S，编译/build通过。旧真实样本1章人审阻断；新纠偏请求导致旧语料失配，必须重录。修复后record自动审批拒绝，待本次外发/重复费用授权；未运行、未bless，保持in-progress。证据 docs/harness/evidence/ncs033/correction-validation.json",
       "branch": "codex/ncs-033-intent-writing"
     },
     {

@@ -7917,7 +7917,7 @@
       "dependencies": [
         "NCS-031"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/service/AuthorIntentContextService.java",
         "src/main/resources/prompts/author-intent.st",
@@ -7926,7 +7926,8 @@
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：外置模板完整渲染八字段与修订号；空约定不追加；预算不足阻塞且不截断。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=AuthorIntentContextTest",
-      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。",
+      "branch": "codex/ncs-032-intent-context"
     },
     {
       "id": "NCS-033",
@@ -8454,5 +8455,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-20",
-  "active_feature": null
+  "active_feature": "NCS-032"
 }

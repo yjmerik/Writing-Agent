@@ -4,7 +4,7 @@ Last Updated: 2026-09-20
 
 ## Current
 
-NCS-031已合入本地main并完成干净主分支复验。active_feature=null。
+NCS-031已合入本地main并完成干净主分支复验。active_feature=NCS-032（版本化创作约定渲染，in-progress）。
 分支codex/ncs-031-intent-runtime-read；实现提交256d05fdb3bd2f1c94869160f19bce2b938e84e3。原方案整体尚未完成，剩余项见feature_list.json。
 
 ## Files
@@ -24,6 +24,6 @@ NCS-031已合入本地main并完成干净主分支复验。active_feature=null�
 
 ## Next Steps
 
-1. 从main创建下一特性独立分支，核对依赖与验收命令；一次推进一项。
+1. 当前分支codex/ncs-032-intent-context；基线init PASS 1094/0F/0E/1S；专项4项先失败后通过，分支init PASS 1098/0F/0E/1S；待合main复验。
 2. 继续完成原方案补实施，不把本次局部完成表述为整体完成。
 3. 保留主工作区两个原有未跟踪路径；未推送远端。隔离worktree用于下一项新分支。

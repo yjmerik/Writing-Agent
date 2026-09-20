@@ -4,7 +4,7 @@
   "fixtureDirectory": "data/e2e-fixtures/ncs033/mystery-20260920-correction",
   "fixtureCount": 27,
   "targetChapters": 3,
-  "acceptance": "NOT COMPLETE: agent stopped after reproduced finding-retention bug; one stored chapter, zero task-completed chapters. No matching double replay or baseline bless claimed.",
+  "acceptance": "NOT COMPLETE: agent interrupted the 3-chapter run after reproducing finding-retention bug. Saved chapter 1 is DONE, all 10 post-processing stages completed. Task-reported chaptersWritten=0 was a delayed counter, not proof of incomplete chapter processing. No matching double replay or baseline bless claimed.",
   "correctionChecks": {
     "fullCurrentDraftIncluded": true,
     "sourceRevision2Included": true,

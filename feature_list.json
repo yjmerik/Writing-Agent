@@ -7966,7 +7966,7 @@
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：作者修改视角和样本后实际写作请求包含新版本；旧缓存不污染；空契约兼容。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=AuthorIntentWritingTest,GuardFindingRetentionTest,QualityClosureTest,ConsistencyGuardTest,QualityResponseValidityTest,ArbiterTest",
-      "evidence": "原实现已合main；第二轮首章DONE及10项后处理完成，但整轮主动中断。当前恢复质量失败拦截与逐项复验；用户已授权修复后一次3章重录，尚未启动、未bless。",
+      "evidence": "质量闭环修复8160ef37fabb792f4f48cbdff521f721265e9b74已合main；分支/干净main 1138tests 0F/0E/1S，专项47通过。旧语料缺失时首章NMR/task PAUSED，不再推进第二章。按用户“先修复问题，再重录”授权，已启动一次3章真实录制，尚待结果、双回放和人工质量确认；未bless。证据docs/harness/evidence/ncs033/quality-closure-validation.json。",
       "branch": "codex/ncs-033-quality-closure"
     },
     {

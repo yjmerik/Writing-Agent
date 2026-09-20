@@ -8,6 +8,7 @@ NCS-031/032已合本地main且verified。唯一active_feature=NCS-033，in-progr
 NCS-033实现4cb8f7ccd9759de37f8598fae8f663dc69a91f22已合main；分支codex/ncs-033-intent-writing。
 用户本次“允许使用”授权单次3章百炼qwen3.8-flash录制及潜在费用，已执行结束。
 录制仅完成1章2706字后PAUSED，4项人审问题；不能登记completed或更新golden。
+本次证据提交c40e1a18c25412f444066f63aaafcfc59977dc7d已合main；合并后独立init与harness检查通过。
 原方案NCS-034..058待执行；本次另登记NCS-059/060验收诊断误报，未实施。
 
 ## Files

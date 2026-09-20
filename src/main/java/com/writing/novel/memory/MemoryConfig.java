@@ -78,12 +78,14 @@ public class MemoryConfig {
                                               ClicheDetector clicheDetector,
                                               MemoryRevision memoryRevision,
                                               com.writing.novel.spi.StoryCanon storyCanon,
-                                              RelevanceGateway relevanceGateway) {
+                                              RelevanceGateway relevanceGateway,
+                                              com.writing.novel.service.AuthorIntentContextService authorIntentContextService) {
         ContextAssembler assembler = new ContextAssembler(repository, knowledgeBase, summaryService,
                 vectorRetrieval, entityGraphService, climaxDiversityTracker,
                 narrativeThreadTracker, diversityTracker, clicheDetector, memoryRevision);
         // p37-10: 有效作者要求注入生成上下文
         assembler.setDirectiveContextService(new com.writing.novel.service.DirectiveContextService(repository));
+        assembler.setAuthorIntentContextService(authorIntentContextService);
         assembler.setStoryCanon(storyCanon);
         assembler.setRelevanceGateway(relevanceGateway);
         return assembler;

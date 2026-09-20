@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-09-20T08:39:13.686597",
+  "mode": "replay",
+  "projectId": "c3cdae31-bc07-4166-820c-699d87c9cca8",
+  "finalState": "WRITING",
+  "chaptersWritten": 3,
+  "taskStatus": "COMPLETED",
+  "taskError": "",
+  "totalChapters": 3,
+  "totalWords": 9730,
+  "wordCount": {
+    "min": 2818,
+    "max": 3560,
+    "avg": 3243
+  },
+  "llmCalls": 54,
+  "llmErrors": 0,
+  "chapterFailures": 0,
+  "evaluation": null
+}

@@ -41,6 +41,12 @@ public class ContextAssembler {
     private com.writing.novel.spi.StoryCanon storyCanon;
     /** p10-w2-05: 检索收窄门面——null 时回退全量（向后兼容旧构造器/测试） */
     private RelevanceGateway relevanceGateway;
+    private com.writing.novel.service.AuthorIntentContextService authorIntentContextService;
+
+    public void setAuthorIntentContextService(com.writing.novel.service.AuthorIntentContextService service) {
+        this.authorIntentContextService = service;
+    }
+
 
     public ContextAssembler(NovelRepository repository,
                             KnowledgeBaseService knowledgeBase,
@@ -140,6 +146,20 @@ public class ContextAssembler {
             }
             if (!selected.isEmpty()) {
                 ctx.setAuthorDirectiveSection(selected.section());
+            }
+        }
+
+        // Read the current contract for each request, outside the cached story-premise section.
+        if (authorIntentContextService != null) {
+            String contract = authorIntentContextService.render(projectId, maxContextTokens);
+            if (!contract.isBlank()) {
+                String directives = ctx.getAuthorDirectiveSection();
+                String protectedContext = contract + (directives == null || directives.isBlank()
+                        ? "" : "\n\n" + directives);
+                if (TokenBudget.estimateTokens(protectedContext) > maxContextTokens) {
+                    throw new IllegalStateException("创作约定与作者要求合计超出上下文预算，不能静默截断");
+                }
+                ctx.setAuthorDirectiveSection(protectedContext);
             }
         }
 

@@ -7939,7 +7939,7 @@
       "dependencies": [
         "NCS-032"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/memory/ContextAssembler.java",
         "src/main/java/com/writing/novel/memory/MemoryConfig.java",
@@ -7948,7 +7948,8 @@
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：作者修改视角和样本后实际写作请求包含新版本；旧缓存不污染；空契约兼容。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=AuthorIntentWritingTest",
-      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。",
+      "branch": "codex/ncs-033-intent-writing"
     },
     {
       "id": "NCS-034",
@@ -8456,5 +8457,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-20",
-  "active_feature": null
+  "active_feature": "NCS-033"
 }

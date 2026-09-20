@@ -4,26 +4,29 @@ Last Updated: 2026-09-20
 
 ## Current
 
-NCS-032已合入本地main并完成干净主分支复验。active_feature=null。
-分支codex/ncs-032-intent-context；实现提交2a94645。原方案整体尚未完成，剩余项见feature_list.json。
+NCS-031/032完成闭环。NCS-033（写作上下文接入创作约定）in-progress，分支codex/ncs-033-intent-writing。
+业务已实现且分支测试通过，待按AGENTS.md合入后record、双replay、人工质量确认与干净main复验。
+原方案整体仍未完成；NCS-034..058按依赖后续执行。
 
 ## Files
 
-- docs/specs/2026-09-20-ncs-completion.md：NCS-031..058补实施拆分。
-- docs/harness/evidence/2026-09-20-ncs-032.json：本特性验证回执。
-- docs/reports/2026-09-20-ncs-completeness-audit.md：需求缺口依据。
+- ContextAssembler.java / MemoryConfig.java：生产上下文显式接入约定。
+- AuthorIntentWritingTest.java：真实装配+现有保存API+实际写作请求断言。
+- docs/harness/evidence/ncs033/：非空约定输入、可复现E2E启动器、旧回放报告。
+- docs/superpowers/plans/2026-09-20-ncs-033-intent-writing.md：先失败后通过记录。
 
 ## Verification
 
-分支及干净main ./init.sh PASS：1098 tests / 0 failures / 0 errors / 1 skipped；编译、前端build通过。
-专项 mvn test -Dtest=AuthorIntentContextTest PASS；合入祖先关系已检查。先失败后通过证据见本特性plan/branch-verification。
+基线1098/0F/0E/1S；RED 3项2失败；专项15项通过；分支init 1101/0F/0E/1S，编译build通过。
+旧replay 3章9730字，0章节失败/LLM错误；baseline PASS。
 
 ## Blockers
 
-本项无阻塞。后续prompt注入改变需record+双replay+人工质量确认再bless；T12真人评价不可由合成数据替代。
+非空约定录制、双回放和质量对比待执行。人工确认前不bless，状态不得completed。
+T12真实长篇预算与真人评阅安排已询问用户，不阻塞当前小规模代码验收。
 
 ## Next Steps
 
-1. 从main创建下一特性独立分支，核对依赖与验收命令；一次推进一项。
-2. 继续完成原方案补实施，不把本次局部完成表述为整体完成。
-3. 保留主工作区两个原有未跟踪路径；未推送远端。隔离worktree用于下一项新分支。
+1. 本地合入NCS-033后，运行docs/harness/evidence/ncs033/run-intent-e2e.py --mode record --port 18102，使用独立日期语料目录。
+2. 双replay、展示新旧指标及正文样本，人工确认后bless；干净main完整复验后登记完成。
+3. 不开始下一特性直至当前闭环；保留主工作区已有未跟踪路径；不推送远端。

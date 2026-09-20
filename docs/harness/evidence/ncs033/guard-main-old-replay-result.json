@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-09-20T22:10:18.203004",
+  "mode": "replay",
+  "projectId": "cfbcfca2-84b2-476a-9935-be961809112f",
+  "finalState": "WRITING",
+  "chaptersWritten": 1,
+  "taskStatus": "FAILED",
+  "taskError": "写作未完成: 写了1/3章",
+  "totalChapters": 1,
+  "totalWords": 4270,
+  "wordCount": {
+    "min": 4270,
+    "max": 4270,
+    "avg": 4270
+  },
+  "llmCalls": 15,
+  "llmErrors": 13,
+  "chapterFailures": 3,
+  "evaluation": null
+}

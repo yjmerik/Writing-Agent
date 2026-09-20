@@ -7952,7 +7952,7 @@
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：作者修改视角和样本后实际写作请求包含新版本；旧缓存不污染；空契约兼容。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=AuthorIntentWritingTest,GuardFindingRetentionTest",
-      "evidence": "初始接入4cb8f7c、纠偏原稿修复4c26c55已合main。本轮授权录制确认完整原稿/版本及8字段进入纠偏，但暴露首轮守卫问题被重复扫描覆盖；主动中断，保留27调用及1章4470字，不算3章通过。漏传回归RED 1项1失败0错误，相关GREEN 10项通过；分支init 1105/0F/0E/1S，编译及build通过，待本地主分支复验。匹配新录制、双replay、人工质量确认未完成，未bless；保持in-progress。证据 docs/harness/evidence/ncs033/correction-recording-verification.json",
+      "evidence": "约定接入4cb8f7c、纠偏原稿4c26c55、守卫问题保留4f2f2aeb14595f90421d848ca97d3003b2171256均已合main。漏传回归RED 1失败0错误；相关GREEN 10项；分支及独立main init 1105/0F/0E/1S，main专属7项通过。授权录制主动中断，27调用、首章4470字，不算3章通过；新纠偏指令使旧语料分叉，回放和baseline FAIL。新录制、双replay及人工质量确认待授权/完成，未bless。证据 docs/harness/evidence/ncs033/guard-retention-validation.json",
       "branch": "codex/ncs-033-intent-writing"
     },
     {

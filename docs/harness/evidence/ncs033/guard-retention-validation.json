@@ -31,5 +31,45 @@
     "log": "/tmp/ncs033-guard-init.log"
   },
   "liveEvidence": "correction-recording-verification.json",
-  "qualityGate": "Not complete: authorized recording stopped early after reproduced defect. Matching new recording, double replay and human quality approval pending. No golden bless."
+  "qualityGate": "Not complete: authorized recording stopped early after reproduced defect. Matching new recording, double replay and human quality approval pending. No golden bless.",
+  "commit": "4f2f2aeb14595f90421d848ca97d3003b2171256",
+  "main_commit": "4f2f2aeb14595f90421d848ca97d3003b2171256",
+  "cleanCheckout": true,
+  "mainExport": "/tmp/ncs033-guard-main",
+  "sourceVerification": "1025 tracked files match main blobs; frontend assets built from these sources before final init.",
+  "mainGreen": {
+    "tests": 1105,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "compile": "PASS",
+    "frontendBuild": "PASS",
+    "log": "/tmp/ncs033-guard-main-final.log"
+  },
+  "mainVerifyCommand": {
+    "command": "mvn test -Dtest=AuthorIntentWritingTest,GuardFindingRetentionTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "log": "/tmp/ncs033-guard-main-targeted-final.log"
+  },
+  "discardedMainAttempts": [
+    {
+      "log": "/tmp/ncs033-guard-main-init.log",
+      "reason": "Operator started a second Maven check before init had exited; shared target test classes were rebuilt during the first suite, causing class-loading errors. No source change; stopped overlap and cleaned target."
+    },
+    {
+      "log": "/tmp/ncs033-guard-main-rerun.log",
+      "reason": "Clean export lacked ignored frontend static resources; ApiCacheControlTest home-page request failed. Built assets from main source, then final full init passed."
+    }
+  ],
+  "oldReplay": {
+    "status": "FAIL: incompatible/incomplete fixture, not a passing quality test",
+    "firstMissingFixture": "CHAPTER_WRITING-6391b145cf472c17-1.json",
+    "llmErrors": 13,
+    "chapterFailures": 3,
+    "log": "/tmp/ncs033-guard-main-replay.log",
+    "baseline": "FAIL due replay misses; no bless",
+    "report": "guard-main-old-replay-result.json"
+  }
 }

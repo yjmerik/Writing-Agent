@@ -30,6 +30,11 @@ import java.util.Optional;
  */
 public interface NovelRepository {
 
+    /** Latest immutable author contract; absent for projects without a saved contract. */
+    default Optional<com.writing.novel.domain.AuthorIntent> findAuthorIntent(String projectId) {
+        return Optional.empty();
+    }
+
     // --- Project ---
     String saveProject(Project project);
     Optional<Project> findProject(String id);

@@ -45,6 +45,11 @@ public class SqliteNovelRepository implements NovelRepository {
     }
 
     @Override
+    public Optional<AuthorIntent> findAuthorIntent(String projectId) {
+        return new AuthorIntentRepository(cp).findLatest(projectId);
+    }
+
+    @Override
     public String saveProject(Project p) {
         String sql = "INSERT INTO projects (id,title,concept,tags,mode,state,current_chapter_index,genre,created_at,updated_at,book_summary,book_snapshot) " +
                 "VALUES (?,?,?,?,?,?,?,?,?,?,?,?) " +

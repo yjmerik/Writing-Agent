@@ -1,6 +1,6 @@
 {
   "project": "WritingAgent — 长篇小说自动写作系统",
-  "current_phase": 49,
+  "current_phase": 50,
   "features": [
     {
       "id": "p1-01",
@@ -7885,9 +7885,573 @@
       "baseline_impact": "none",
       "branch": "codex/ncs-030-browser-journey",
       "completion_record": "ncs-030-verified"
+    },
+    {
+      "id": "NCS-031",
+      "name": "创作约定运行时读取",
+      "description": "SPI读取空约定、最新版本与项目隔离；重建仓储后仍读取相同版本",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-003"
+      ],
+      "status": "in-progress",
+      "files": [
+        "src/main/java/com/writing/novel/spi/NovelRepository.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/test/java/com/writing/novel/service/IntentRuntimeReadTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：SPI读取空约定、最新版本与项目隔离；重建仓储后仍读取相同版本。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=IntentRuntimeReadTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。",
+      "branch": "codex/ncs-031-intent-runtime-read"
+    },
+    {
+      "id": "NCS-032",
+      "name": "版本化创作约定渲染",
+      "description": "外置模板完整渲染八字段与修订号；空约定不追加；预算不足阻塞且不截断",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-031"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/AuthorIntentContextService.java",
+        "src/main/resources/prompts/author-intent.st",
+        "src/test/java/com/writing/novel/service/AuthorIntentContextTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：外置模板完整渲染八字段与修订号；空约定不追加；预算不足阻塞且不截断。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=AuthorIntentContextTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-033",
+      "name": "写作上下文接入创作约定",
+      "description": "作者修改视角和样本后实际写作请求包含新版本；旧缓存不污染；空契约兼容",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-032"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/memory/ContextAssembler.java",
+        "src/main/java/com/writing/novel/memory/MemoryConfig.java",
+        "src/test/java/com/writing/novel/service/AuthorIntentWritingTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：作者修改视角和样本后实际写作请求包含新版本；旧缓存不污染；空契约兼容。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=AuthorIntentWritingTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-034",
+      "name": "规划与构思接入创作约定",
+      "description": "世界人物和全书卷计划请求带精确契约版本及内容",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-032"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+        "src/main/java/com/writing/novel/orchestrator/OrchestratorConfig.java",
+        "src/test/java/com/writing/novel/service/AuthorIntentPlanningTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：世界人物和全书卷计划请求带精确契约版本及内容。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=AuthorIntentPlanningTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-035",
+      "name": "修订审校接入创作约定",
+      "description": "生成修订和核查遵从约定并记录所用修订；不以自由文本提升委托权限",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-032"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/AgentRevisionService.java",
+        "src/main/java/com/writing/novel/agent/ContinuityCheckerAgent.java",
+        "src/test/java/com/writing/novel/service/AuthorIntentRevisionTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：生成修订和核查遵从约定并记录所用修订；不以自由文本提升委托权限。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=AuthorIntentRevisionTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-036",
+      "name": "固定执行任务租约身份",
+      "description": "模型调用期间取消并结束旧任务或启新任务，旧结果仍被拒",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-001"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/WriteLeaseService.java",
+        "src/main/java/com/writing/novel/agent/ChapterWriterAgent.java",
+        "src/test/java/com/writing/novel/service/WriteLeaseIdentityTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：模型调用期间取消并结束旧任务或启新任务，旧结果仍被拒。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=WriteLeaseIdentityTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-037",
+      "name": "持久租约所有者与有效期",
+      "description": "owner和到期时间跨重启有效；原子校验失效租约不得写入",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-036"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/persistence/sqlite/WriteLeaseRepository.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
+        "src/test/java/com/writing/novel/service/WriteLeaseOwnershipTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：owner和到期时间跨重启有效；原子校验失效租约不得写入。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=WriteLeaseOwnershipTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-038",
+      "name": "后处理逐阶段租约门禁",
+      "description": "后处理模型晚返回不写真典、摘要或投影；不能借用新任务身份",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-037"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java",
+        "src/main/java/com/writing/novel/service/WriteLeaseService.java",
+        "src/test/java/com/writing/novel/service/PostProcessLeaseTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：后处理模型晚返回不写真典、摘要或投影；不能借用新任务身份。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=PostProcessLeaseTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-039",
+      "name": "纠偏候选索引隔离",
+      "description": "拒收候选不改变当前检索；接受后才建索引",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-001"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/agent/ChapterWriterAgent.java",
+        "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java",
+        "src/test/java/com/writing/novel/service/CorrectionIndexIsolationTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：拒收候选不改变当前检索；接受后才建索引。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=CorrectionIndexIsolationTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-040",
+      "name": "向量索引先构建后替换",
+      "description": "embedding失败时原索引完整；成功后原子替换匹配来源的投影",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-039"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/memory/VectorRetrievalService.java",
+        "src/main/java/com/writing/novel/persistence/embedding/EmbeddedVectorStore.java",
+        "src/test/java/com/writing/novel/service/AtomicVectorProjectionTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：embedding失败时原索引完整；成功后原子替换匹配来源的投影。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=AtomicVectorProjectionTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-041",
+      "name": "派生任务持久模型与迁移",
+      "description": "来源章稿与投影类型唯一；重启保持待执行项；旧数据迁移可重复",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-016"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/ProjectionOutboxRepository.java",
+        "src/test/java/com/writing/novel/service/ProjectionOutboxTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：来源章稿与投影类型唯一；重启保持待执行项；旧数据迁移可重复。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=ProjectionOutboxTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-042",
+      "name": "正文提交原子登记派生任务",
+      "description": "单章和整组事务同时写正文及outbox；任一失败一起回滚",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-041"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+        "src/main/java/com/writing/novel/spi/NovelRepository.java",
+        "src/test/java/com/writing/novel/service/RevisionOutboxCommitTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：单章和整组事务同时写正文及outbox；任一失败一起回滚。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=RevisionOutboxCommitTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-043",
+      "name": "派生任务重试与就绪证书",
+      "description": "失败持久待重试；旧来源不得完成新稿；重启能重建全部必需投影",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-042"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/ChapterRevisionService.java",
+        "src/main/java/com/writing/novel/service/ProjectionReadinessService.java",
+        "src/test/java/com/writing/novel/service/ProjectionReadinessTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：失败持久待重试；旧来源不得完成新稿；重启能重建全部必需投影。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=ProjectionReadinessTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-044",
+      "name": "快照就绪阻断续写与读取",
+      "description": "正文领先就绪时阻断受影响续写；工作台返回同源身份和原因",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-043"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+        "src/main/java/com/writing/novel/service/WorkspaceViewService.java",
+        "src/test/java/com/writing/novel/service/ReadySnapshotAdmissionTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：正文领先就绪时阻断受影响续写；工作台返回同源身份和原因。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=ReadySnapshotAdmissionTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-045",
+      "name": "影响证据与未知持久化",
+      "description": "未命中归未知而非无影响；分析绑定基准版本并持久保存检查范围",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-014"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/ImpactAnalysisService.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/RevisionRequestRepository.java",
+        "src/test/java/com/writing/novel/service/ImpactEvidenceTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：未命中归未知而非无影响；分析绑定基准版本并持久保存检查范围。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=ImpactEvidenceTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-046",
+      "name": "依赖补查与修复闭包",
+      "description": "隐含后果和关系链进入补查；修复产生新影响时扩展闭包，预算停止保留未知",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-045"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/RevisionRepairService.java",
+        "src/main/java/com/writing/novel/service/ImpactAnalysisService.java",
+        "src/test/java/com/writing/novel/service/ImpactClosureTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：隐含后果和关系链进入补查；修复产生新影响时扩展闭包，预算停止保留未知。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=ImpactClosureTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-047",
+      "name": "整组采纳检查覆盖门禁",
+      "description": "缺必需检查或未处置UNKNOWN禁止接受；报告绑定精确候选hash",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-046"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/GroupAcceptanceService.java",
+        "src/main/java/com/writing/novel/web/RevisionRequestController.java",
+        "src/test/java/com/writing/novel/service/GroupCoverageGateTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：缺必需检查或未处置UNKNOWN禁止接受；报告绑定精确候选hash。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=GroupCoverageGateTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-048",
+      "name": "正常规划生成场景合同",
+      "description": "近期规划完成前生成合同；无效输出不伪装就绪；重复调度不重建有效合同",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-018"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+        "src/main/java/com/writing/novel/orchestrator/OrchestratorConfig.java",
+        "src/test/java/com/writing/novel/service/SceneContractPipelineTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：近期规划完成前生成合同；无效输出不伪装就绪；重复调度不重建有效合同。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=SceneContractPipelineTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-049",
+      "name": "章后自动偏离分析",
+      "description": "章后自动分析且结果绑定版本；失败可恢复；旧分析不覆盖新稿",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-019"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java",
+        "src/main/java/com/writing/novel/service/PlanDeviationService.java",
+        "src/test/java/com/writing/novel/service/PlanDeviationPipelineTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：章后自动分析且结果绑定版本；失败可恢复；旧分析不覆盖新稿。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=PlanDeviationPipelineTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-050",
+      "name": "卷末报告来源版本绑定",
+      "description": "回读绑定全部来源章稿；改任一来源使旧批准失效",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-020"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/VolumeReadbackService.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/VolumeReadbackRepository.java",
+        "src/test/java/com/writing/novel/service/VolumeReadbackManifestTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：回读绑定全部来源章稿；改任一来源使旧批准失效。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=VolumeReadbackManifestTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-051",
+      "name": "卷末自动回读和准入",
+      "description": "到卷末自动生成回读；缺失失败或未确认均不得自动进入下卷",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-050"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+        "src/main/java/com/writing/novel/service/VolumeReadbackService.java",
+        "src/test/java/com/writing/novel/service/VolumeReadbackPipelineTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：到卷末自动生成回读；缺失失败或未确认均不得自动进入下卷。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=VolumeReadbackPipelineTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-052",
+      "name": "事实支持组与断言修订存储",
+      "description": "保存AND前提OR来源及快照归属；支持历史不可变",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-009"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/AssertionSupportRepository.java",
+        "src/test/java/com/writing/novel/service/AssertionSupportGroupTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：保存AND前提OR来源及快照归属；支持历史不可变。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=AssertionSupportGroupTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-053",
+      "name": "来源撤回的依赖传播",
+      "description": "AND缺一失效OR余一保留；无外根循环不自证；传播至全部依赖者",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-052"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/SupportWithdrawalService.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/AssertionSupportRepository.java",
+        "src/test/java/com/writing/novel/service/SupportPropagationTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：AND缺一失效OR余一保留；无外根循环不自证；传播至全部依赖者。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=SupportPropagationTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-054",
+      "name": "持久预算预约和结算",
+      "description": "并发预约不越上限；未知费用不清零；重启保持项目运行步骤账本",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-030"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/telemetry/CostBudgetMonitor.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/BudgetLedgerRepository.java",
+        "src/test/java/com/writing/novel/service/BudgetReservationTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：并发预约不越上限；未知费用不清零；重启保持项目运行步骤账本。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=BudgetReservationTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-055",
+      "name": "模型调用预算准入与对账",
+      "description": "调用前预约返回后结算；失败未知费用保留；取消不再派发收费请求",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-054"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/llm/gateway/ObservedLlmGateway.java",
+        "src/main/java/com/writing/novel/service/WritingTaskExecutor.java",
+        "src/test/java/com/writing/novel/service/LlmBudgetAdmissionTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：调用前预约返回后结算；失败未知费用保留；取消不再派发收费请求。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=LlmBudgetAdmissionTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-056",
+      "name": "原方案联合功能复验",
+      "description": "R01-R18真实SQLite故障注入通过，T01-T11浏览器证据绑定当前提交，键盘中文输入法窄屏与读屏关键路径逐项记录",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [
+        "NCS-035",
+        "NCS-038",
+        "NCS-040",
+        "NCS-044",
+        "NCS-047",
+        "NCS-048",
+        "NCS-049",
+        "NCS-051",
+        "NCS-053",
+        "NCS-055"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/test/java/com/writing/novel/acceptance/NcsRuntimeAcceptanceTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：R01-R18真实SQLite故障注入通过，T01-T11浏览器证据绑定当前提交，键盘中文输入法窄屏与读屏关键路径逐项记录。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=NcsRuntimeAcceptanceTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-057",
+      "name": "检索语义标注评测",
+      "description": "分题材标注集报告召回正确版本引用定位UNKNOWN和修订保留率，报告样本数置信区间失败例",
+      "phase": 50,
+      "type": "feature",
+      "dependencies": [
+        "NCS-056"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/test/java/com/writing/novel/acceptance/RetrievalSemanticEvaluationTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：分题材标注集报告召回正确版本引用定位UNKNOWN和修订保留率，报告样本数置信区间失败例。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=RetrievalSemanticEvaluationTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+    },
+    {
+      "id": "NCS-058",
+      "name": "真实长篇与真人艺术验收",
+      "description": "两题材20章对照后100-200章及百万字分阶段运行；收集真实读者盲评费用耗时和消融，缺真人评价不标完成",
+      "phase": 50,
+      "type": "feature",
+      "dependencies": [
+        "NCS-057"
+      ],
+      "status": "not-started",
+      "files": [
+        "src/test/java/com/writing/novel/acceptance/LongFormExperimentTest.java"
+      ],
+      "spec": "docs/specs/2026-09-20-ncs-completion.md",
+      "acceptance": "运行 verify_cmd 通过：两题材20章对照后100-200章及百万字分阶段运行；收集真实读者盲评费用耗时和消融，缺真人评价不标完成。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
+      "verify_cmd": "mvn test -Dtest=LongFormExperimentTest",
+      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-09-20",
-  "active_feature": null
+  "active_feature": "NCS-031"
 }

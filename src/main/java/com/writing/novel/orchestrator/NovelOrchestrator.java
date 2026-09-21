@@ -1425,10 +1425,14 @@ public class NovelOrchestrator {
         var plantedInVolume = allForeshadowings.stream()
                 .filter(f -> f.getPlantedAtChapter() >= fromChapter && f.getPlantedAtChapter() <= toChapter)
                 .toList();
-        // 本卷埋下但仍未回收的
+        // 尚未到预计回收章的跨卷规划不属于本卷遗漏；未定期限的只作提醒。
         var unresolved = plantedInVolume.stream()
                 .filter(f -> !f.isResolved())
+                .filter(f -> f.getExpectedResolveChapter() == null || f.getExpectedResolveChapter() <= toChapter)
                 .toList();
+        long dueCount = unresolved.stream()
+                .filter(f -> f.getExpectedResolveChapter() != null)
+                .count();
 
         if (!unresolved.isEmpty()) {
             StringBuilder desc = new StringBuilder();
@@ -1438,9 +1442,10 @@ public class NovelOrchestrator {
                 desc.append("- ").append(f.getDescription())
                     .append("（埋于第").append(f.getPlantedAtChapter()).append("章）\n");
             }
+            desc.append("其中 ").append(dueCount).append(" 条已到预计回收章；未设期限的条目仅作提醒。");
             desc.append("建议在后续章节中回收这些伏笔。");
-            // p9-2: 未回收 > 5 条时升级为 HIGH，触发重写路径
-            var severity = unresolved.size() > 5
+            // 保留 > 5 条的 HIGH 门槛，但只统计已有明确到期依据的条目。
+            var severity = dueCount > 5
                     ? ContinuityIssue.Severity.HIGH
                     : ContinuityIssue.Severity.MEDIUM;
             repository.saveContinuityIssue(new ContinuityIssue(

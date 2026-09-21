@@ -1,21 +1,19 @@
-# 遗留问题定点修复 — 2026-09-21
+# NCS-062 定点修复 — 2026-09-21
 
 Last Updated: 2026-09-21
 
 ## Current
-NCS-061代码修复已completed，codex/ncs-061-foreshadow-time以959d6cd合入main；active_feature=null。
-伏笔抽取保留括号内分号元数据，回收章只匹配回收计划；不再产生时间碎片，也不把埋设章当作回收章。
-按用户要求，仅修遗留代码缺陷，LLM输出不稳定独立登记，不扩展架构。
+NCS-062 in-progress；分支codex/ncs-062-foreshadow-scope。写作上下文过滤未来章伏笔；卷末只以明确到期的未回收条目计算HIGH，未来计划排除、未定期限保留提醒。
+按用户本轮限定范围，仅修代码缺陷，LLM输出不稳定登记，不扩展架构。
 
 ## Files
-docs/harness/evidence/2026-09-21-ncs-061-focused.json
-模型遗留：docs/harness/evidence/ncs033/llm-residuals-20260921.md
+feature_list.json, docs/specs/2026-09-21-foreshadow-chronology.md, src/main/java/com/writing/novel/memory/ContextAssembler.java, src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java, src/test/java/com/writing/novel/orchestrator/FutureForeshadowContextTest.java, docs/harness/archive/2026-09-21-before-ncs-062-focused-progress.md, progress.md, docs/harness/archive/2026-09-21-before-ncs-062-focused-session-handoff.md
 
 ## Verification
-分支{'tests': 1156, 'failures': 0, 'errors': 0, 'skipped': 1}；干净main{'tests': 1156, 'failures': 0, 'errors': 0, 'skipped': 1}；编译与专项均通过。
+分支全量 {'tests': 1161, 'failures': 0, 'errors': 0, 'skipped': 1}；RED/GREEN日志见本轮证据。等待合并后验证。
 
 ## Blockers
-原真实E2E/文学验收未通过，已保留原语料和屏障；未bless。代码修复完成不代表真实LLM文学质量通过。
+真实LLM质量风险独立登记，未bless、未解除旧稿屏障。
 
 ## Next Steps
-按单特性协议继续本报告剩余问题；不扩展原优化方案的其他待办。
+合并本特性、主分支复验、登记代码修复完成，再推进本报告其余缺陷。

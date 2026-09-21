@@ -530,7 +530,9 @@ public class ContextAssembler {
     }
 
     private String buildForeshadowings(String projectId, int chapterIndex) {
-        List<Foreshadowing> unresolved = repository.findUnresolvedForeshadowings(projectId);
+        List<Foreshadowing> unresolved = repository.findUnresolvedForeshadowings(projectId).stream()
+                .filter(f -> f.getPlantedAtChapter() <= chapterIndex)
+                .toList();
         if (unresolved.isEmpty()) return "";
 
         final int currentChapter = chapterIndex;

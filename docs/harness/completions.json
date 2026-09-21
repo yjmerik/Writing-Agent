@@ -1980,6 +1980,17 @@
       "implementation_commit": "46b2aef",
       "main_commit": "1e52b13",
       "evidence": "docs/harness/evidence/2026-09-21-ncs-066-focused.json"
+    },
+    {
+      "id": "ncs-067-focused-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-067"
+      ],
+      "branch": "codex/ncs-067-entity-split",
+      "implementation_commit": "9a7fd55",
+      "main_commit": "3513452",
+      "evidence": "docs/harness/evidence/2026-09-21-ncs-067-focused.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

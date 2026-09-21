@@ -8654,7 +8654,7 @@
       "dependencies": [
         "NCS-066"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/agent/EntityExtractorAgent.java",
         "src/main/resources/prompts/entity-extraction.st",
@@ -8663,7 +8663,9 @@
       "spec": "docs/specs/2026-09-21-llm-output-stabilization.md",
       "acceptance": "先失败测试复现单次全量输出超预算场景；运行 mvn test -Dtest=EntityExtractorSplitTest 通过：实体与关系两次调用独立预算与紧凑schema；任一步失败可恢复、不部分标记、恢复不重复；模板变量名兼容。编译、全量测试、对应Agent测试及e2e门禁通过。",
       "verify_cmd": "mvn test -Dtest=EntityExtractorSplitTest",
-      "evidence": "来源：spec输出经济学分析——单次实体+关系+description全量输出需求约9.4k字符必然超预算。待实现验证。"
+      "evidence": "代码修复已合main 9a7fd55，分支及干净main全量1178/0/0/1通过；EntityExtractorSplitTest 4项先RED后GREEN，恢复不重复经真实SQLite验证。证据docs/harness/evidence/2026-09-21-ncs-067-focused.json。prompt变化待NCS-070统一重录。",
+      "branch": "codex/ncs-067-entity-split",
+      "completion_record": "ncs-067-focused-verified"
     },
     {
       "id": "NCS-068",

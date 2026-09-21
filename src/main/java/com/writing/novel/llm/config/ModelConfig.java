@@ -34,6 +34,17 @@ public class ModelConfig {
     /** 思考模式开关（GLM 系列 thinking 参数）：false 时请求体注入 thinking.type=disabled，
      *  消除 reasoning_content 的分钟级延迟与输出 token 消耗（写作流水线 5000+ 调用必需） */
     private boolean thinkingEnabled = true;
+    /** NCS-066: 关思考请求参数形态——AUTO 按端点推断（aliyuncs/dashscope→DASHSCOPE，其余→GLM），
+     *  显式指定则不再推断。默认 AUTO 保持现状兼容。 */
+    private ThinkingParamStyle thinkingParamStyle = ThinkingParamStyle.AUTO;
+
+    /** NCS-066: 关思考参数的 provider 形态 */
+    public enum ThinkingParamStyle { AUTO, GLM, DASHSCOPE }
+
+    public ThinkingParamStyle getThinkingParamStyle() {
+        return thinkingParamStyle == null ? ThinkingParamStyle.AUTO : thinkingParamStyle;
+    }
+    public void setThinkingParamStyle(ThinkingParamStyle thinkingParamStyle) { this.thinkingParamStyle = thinkingParamStyle; }
 
     public String getBaseUrl() { return baseUrl; }
     public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }

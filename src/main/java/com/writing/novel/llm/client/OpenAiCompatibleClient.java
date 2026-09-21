@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmResponse;
 import com.writing.novel.llm.config.ModelConfig;
+import com.writing.novel.llm.config.ModelConfig.ThinkingParamStyle;
 import okhttp3.*;
 
 import java.io.BufferedReader;
@@ -462,6 +463,14 @@ public class OpenAiCompatibleClient implements LlmClient {
         return new IllegalArgumentException("LLM request rejected (HTTP " + status + ")");
     }
 
+    /** NCS-066: 解析关思考参数形态——显式指定优先，AUTO 按端点推断 */
+    public static ThinkingParamStyle resolveThinkingStyle(ModelConfig config) {
+        if (config.getThinkingParamStyle() != ThinkingParamStyle.AUTO) return config.getThinkingParamStyle();
+        String baseUrl = config.getBaseUrl() == null ? "" : config.getBaseUrl().toLowerCase(java.util.Locale.ROOT);
+        return baseUrl.contains("aliyuncs.com") || baseUrl.contains("dashscope")
+                ? ThinkingParamStyle.DASHSCOPE : ThinkingParamStyle.GLM;
+    }
+
     /** 组装 OpenAI 兼容的请求体：messages = [system] + history + [user] */
     private ObjectNode buildRequestBody(ModelConfig config, LlmRequest request, boolean stream) {
         ObjectNode body = MAPPER.createObjectNode();
@@ -469,10 +478,16 @@ public class OpenAiCompatibleClient implements LlmClient {
         body.put("temperature", config.getTemperature());
         body.put("max_tokens", config.getMaxTokens());
         body.put("stream", stream);
-        // 思考模式开关（GLM thinking 参数）：关闭后无 reasoning_content，秒级返回；
-        // 非 GLM 端点（DeepSeek/本地）不会设置 thinking-enabled: false，不注入该字段
+        // 思考模式开关：关闭后无 reasoning_content，秒级返回且不占输出预算。
+        // NCS-066: 参数形态按端点适配——GLM 系 thinking.type=disabled；DashScope 兼容端点
+        // （qwen3 思考模型）enable_thinking:false；未关闭时不注入任何字段
         if (!config.isThinkingEnabled()) {
-            body.putObject("thinking").put("type", "disabled");
+            ThinkingParamStyle style = resolveThinkingStyle(config);
+            if (style == ModelConfig.ThinkingParamStyle.DASHSCOPE) {
+                body.put("enable_thinking", false);
+            } else {
+                body.putObject("thinking").put("type", "disabled");
+            }
         }
 
         ArrayNode messages = body.putArray("messages");

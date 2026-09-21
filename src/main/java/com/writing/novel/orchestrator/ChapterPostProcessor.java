@@ -171,7 +171,7 @@ public class ChapterPostProcessor {
             log.warn("实体提取失败(章{}): {}", chapterIndex, e.getMessage());
             com.writing.novel.telemetry.EventLog.emit("LLM_ERROR", Map.of(
                     "projectId", projectId, "chapterIndex", chapterIndex,
-                    "taskType", "GENERAL", "phase", "entity-extraction",
+                    "taskType", "EXTRACTION", "phase", "entity-extraction",
                     "errorClass", e.getClass().getSimpleName(),
                     "message", com.writing.novel.telemetry.EventLog.truncate(e.getMessage(), 200)));
             throw new IllegalStateException("实体提取失败，第" + chapterIndex + "章待恢复", e);

@@ -12,5 +12,7 @@ public enum LlmTaskType {
     CONTINUITY_CHECK,
     STYLE_GUARDIAN,
     MEMORY_SUMMARY,
-    GENERAL
+    GENERAL,
+    /** NCS-066: 结构化提取（实体/事实/校验类 JSON 输出）——独立预算/温度/思考开关路由 */
+    EXTRACTION
 }

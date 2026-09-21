@@ -86,7 +86,7 @@ public class EntityExtractorAgent {
         String userMessage = "请提取第" + chapter.getChapterIndex() + "章中的实体和关系。";
 
         var req = LlmRequest.builder()
-                .taskType(LlmTaskType.GENERAL)
+                .taskType(LlmTaskType.EXTRACTION)
                 .systemPrompt(systemPrompt)
                 .userMessage(userMessage)
                 .temperature(0.3)

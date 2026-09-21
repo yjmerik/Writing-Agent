@@ -39,7 +39,7 @@ class TokenPlanModelConfigurationTest {
         var env = environment(Map.of("DASHSCOPE_TOKEN_PLAN_API_KEY", "test-plan-key"));
         var properties = Binder.get(env).bind("llm", LlmProperties.class).get();
         properties.validateKeys();
-        assertEquals(8, properties.getModels().size());
+        assertEquals(9, properties.getModels().size());
         var configs = new java.util.ArrayList<>(properties.getModels().values());
         configs.add(properties.getDefaultModel());
         for (var config : configs) {
@@ -50,6 +50,11 @@ class TokenPlanModelConfigurationTest {
             assertTrue(config.isStreaming());
         }
         assertEquals(20000, properties.forTaskType("CHAPTER_WRITING").getMaxTokens());
+        // NCS-066: 提取路由独立预算且关思考（输出不被 reasoning 挤占）
+        var extraction = properties.forTaskType("EXTRACTION");
+        assertEquals(16000, extraction.getMaxTokens());
+        assertEquals(0.1, extraction.getTemperature());
+        assertFalse(extraction.isThinkingEnabled());
     }
 
     @Test

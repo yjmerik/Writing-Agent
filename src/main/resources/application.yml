@@ -93,5 +93,16 @@ llm:
       temperature: 0.3
       max-tokens: 4096
       context-window: 64000
+    # NCS-066: 结构化提取（实体/事实/校验 JSON 输出）独立路由——输出需求远超 GENERAL 4096
+    # （实体图谱实测 ~9.4k 字符截断）；提取不需要创意推理，关思考（DashScope enable_thinking:false，
+    # AUTO 按端点推断）既释放输出预算又提速。实测质量劣化时可先调回 thinking-enabled: true。
+    EXTRACTION:
+      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
+      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
+      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
+      temperature: 0.1
+      max-tokens: 16000
+      context-window: 64000
+      thinking-enabled: false
 
 

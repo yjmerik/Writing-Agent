@@ -376,6 +376,7 @@ public class DefaultLlmGateway implements LlmGateway {
         c.setContextWindow(src.getContextWindow());
         c.setStyleGuide(src.getStyleGuide());
         c.setThinkingEnabled(src.isThinkingEnabled());
+        c.setThinkingParamStyle(src.getThinkingParamStyle());
         c.setInputPriceYuanPerKTokens(src.getInputPriceYuanPerKTokens());
         c.setOutputPriceYuanPerKTokens(src.getOutputPriceYuanPerKTokens());
         c.setRequestTimeoutSeconds(src.getRequestTimeoutSeconds());

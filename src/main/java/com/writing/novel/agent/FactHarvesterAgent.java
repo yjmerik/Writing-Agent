@@ -118,7 +118,7 @@ public class FactHarvesterAgent {
                 "chapterContent", chapterContent));
 
         var req = LlmRequest.builder()
-                .taskType(LlmTaskType.GENERAL)
+                .taskType(LlmTaskType.EXTRACTION)
                 .systemPrompt(systemPrompt)
                 .userMessage("请提取第" + chapter.getChapterIndex() + "章确立的事实。")
                 .temperature(0.2)
@@ -135,7 +135,7 @@ public class FactHarvesterAgent {
             // p16-03: fail-loud——真典停止生长必须可观测，不再静默吞掉
             log.warn("真典收割 LLM 调用失败(项目{}, 第{}章): {}", projectId, chapter.getChapterIndex(), e.getMessage());
             com.writing.novel.telemetry.EventLog.emit("LLM_ERROR", Map.of(
-                    "taskType", LlmTaskType.GENERAL.name(),
+                    "taskType", LlmTaskType.EXTRACTION.name(),
                     "errorClass", e.getClass().getSimpleName(),
                     "message", com.writing.novel.telemetry.EventLog.truncate(e.getMessage(), 200),
                     "phase", "fact-harvest"));

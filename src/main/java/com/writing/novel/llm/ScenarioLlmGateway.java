@@ -154,6 +154,8 @@ public class ScenarioLlmGateway implements LlmGateway {
             case STYLE_GUARDIAN -> "风格一致性评分：90/100。本章与基线风格保持一致。";
             case MEMORY_SUMMARY -> "章节摘要：第%d章确立的事件与人物变化已按序记录。".formatted(chapter);
             case GENERAL -> contentRevisionCandidate(req);
+            // NCS-066: 提取类请求默认给合法空结果（实体/事实空数组不触发业务失败）
+            case EXTRACTION -> "[]";
         };
         return new LlmResponse(content, Math.max(10, content.length() / 3), Math.max(10, content.length() / 6));
     }

@@ -4,9 +4,9 @@ Last Updated: 2026-09-21
 
 ## Current
 唯一 active_feature=NCS-033，保持 in-progress。业务修复3ce8cd6已合main。
-本轮文档分支codex/docs-ncs033-e2e-20260921；代码从main 9aa15db干净导出，未改业务代码。
+文档分支codex/docs-ncs033-e2e-20260921已以62b6cd2快进合main；当前main，未改业务代码。
 一次3章真实录制和两次离线回放已结束；三次正文哈希、版本、状态和完整归一化报告一致。
-3章/9209字/60次调用/0最终调用错误；1个复核屏障、1章待复核、4项当前稿HIGH，完整验收三次FAIL。
+质量验收BROKEN：3章/9209字/60次调用/0最终调用错误；1个屏障、1章待复核、4项当前稿HIGH，三次完整验收FAIL。
 任务生成计数COMPLETED不代表质量完成；第3章NEEDS_MANUAL_REVIEW。未bless、未人工放行。
 
 ## Files
@@ -20,7 +20,8 @@ Last Updated: 2026-09-21
 本轮init：编译成功；1141tests/0F/0E/1S；前端build成功。NCS-033专项47项通过。
 三次完整E2E FAIL；三次数值基线PASS；diagnose识别人审屏障和写作暂停。
 5条写作/纠偏请求均包含全部8项创作约定；60条语料已生成哈希清单。
-合并后验证与提交回执：docs/harness/evidence/ncs033/continued-main-validation-20260921.json。
+合并后62b6cd2干净导出：自行构建前端，编译/1141tests（0F/0E/1S）/专项47项通过；另一次离线E2E复验与录制完全一致，仍FAIL。
+回执：docs/harness/evidence/ncs033/continued-main-validation-20260921.json。
 
 ## Blockers
 守卫只获选取的真典/本章，遗漏第2章已存在的取票、盐霜及画指证据，至少会票问题确定误报；其余判断仍需核验。

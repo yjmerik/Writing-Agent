@@ -1,0 +1,121 @@
+{
+  "date": "2026-09-21",
+  "feature": "NCS-033",
+  "branch": "codex/docs-ncs033-e2e-20260921",
+  "documentationCommit": "62b6cd25daa5e4c7a705bcda87088870cc2377a5",
+  "mainCommit": "62b6cd25daa5e4c7a705bcda87088870cc2377a5",
+  "implementationCommit": "3ce8cd6",
+  "cleanSourceExport": true,
+  "directory": "/tmp/ncs033-acceptance-main-verification",
+  "runtimeSourcesUnchangedFromRecording": true,
+  "qualityAcceptance": "BROKEN",
+  "featureStatus": "in-progress",
+  "goldenUpdated": false,
+  "checks": [
+    {
+      "command": "npm ci --offline && npm run build (frontend)",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile -q && mvn test -q",
+      "result": "PASS",
+      "exitCode": 0,
+      "tests": 1141,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    {
+      "command": "mvn -q test -Dtest=AuthorIntentWritingTest,GuardFindingRetentionTest,QualityClosureTest,ConsistencyGuardTest,QualityResponseValidityTest,ArbiterTest",
+      "result": "PASS",
+      "exitCode": 0,
+      "tests": 47,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "command": "E2E_FIXTURE_DIR=/Users/erik/ZCodeProject/WritingAgent/data/e2e-fixtures/ncs033/mystery-20260921-acceptance python3 docs/harness/evidence/ncs033/run-intent-e2e.py --mode replay --chapters 3 --port 18104",
+      "result": "FAIL; reproduces recorded quality barriers exactly",
+      "exitCode": 1
+    },
+    {
+      "command": "python3 scripts/compare-baseline.py",
+      "exitCode": 0,
+      "result": "PASS (numeric baseline only)"
+    },
+    {
+      "command": "bash scripts/diagnose.sh data/e2e/events.jsonl",
+      "exitCode": 0,
+      "result": "Quality barrier detected"
+    }
+  ],
+  "initialCleanExportAttempt": {
+    "exitCode": 1,
+    "tests": 1141,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 1,
+    "cause": "ApiCacheControlTest requested / before static frontend build existed; NoResourceFoundException. Built frontend from this same exported source, reran compile and all tests successfully; no production code changes."
+  },
+  "postmergeReport": {
+    "activeReviewBarriers": 1,
+    "pendingReviewChapters": 1,
+    "unresolvedHighIssues": 4,
+    "requestedChapters": 3,
+    "acceptanceMode": "full",
+    "generatedAt": "2026-09-21T10:24:33.886963",
+    "mode": "replay",
+    "projectId": "d6e2bda8-eb66-4336-87ac-6d7f8c17d15c",
+    "finalState": "WRITING",
+    "chaptersWritten": 3,
+    "taskStatus": "COMPLETED",
+    "taskError": "",
+    "totalChapters": 3,
+    "totalWords": 9209,
+    "wordCount": {
+      "min": 2713,
+      "max": 3467,
+      "avg": 3069
+    },
+    "llmCalls": 60,
+    "llmErrors": 0,
+    "chapterFailures": 0,
+    "evaluation": null,
+    "acceptancePassed": false,
+    "acceptanceReasons": [
+      "activeReviewBarriers 非零或未取得质量证据",
+      "pendingReviewChapters 非零或未取得质量证据",
+      "unresolvedHighIssues 非零或未取得质量证据"
+    ]
+  },
+  "postmergeChapters": [
+    {
+      "chapter": 1,
+      "title": "雨巷空碗",
+      "version": 2,
+      "status": "DONE",
+      "wordCount": 2713,
+      "sha256": "0a0aeb848792a2c7a210c0458be832963d52853fd07cc650d2434b094c836698"
+    },
+    {
+      "chapter": 2,
+      "title": "糖纸活债",
+      "version": 3,
+      "status": "DONE",
+      "wordCount": 3467,
+      "sha256": "a1168f3017ef62b7c5916f8bd84144f3c6786816d9c657f88fed53caa19deda3"
+    },
+    {
+      "chapter": 3,
+      "title": "无契人画指",
+      "version": 3,
+      "status": "NEEDS_MANUAL_REVIEW",
+      "wordCount": 3029,
+      "sha256": "bcb4f32473669e92f754a4e33d6c7209f8454dac56879102be70dd46aa09bbc2"
+    }
+  ],
+  "sameReportAndChapterHashesAsRecord": true,
+  "rawEvidence": "/Users/erik/ZCodeProject/WritingAgent/data/e2e-evidence/ncs033/acceptance-20260921/postmerge-main"
+}

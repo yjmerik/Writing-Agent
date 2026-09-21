@@ -7961,13 +7961,15 @@
         "src/test/java/com/writing/novel/orchestrator/PostProcessingRecoveryTest.java",
         "src/test/java/com/writing/novel/web/UnifiedRevisionCommitTest.java",
         "src/main/java/com/writing/novel/service/Arbiter.java",
-        "src/test/java/com/writing/novel/service/ArbiterTest.java"
+        "src/test/java/com/writing/novel/service/ArbiterTest.java",
+        "src/main/resources/prompts/consistency-guard.st",
+        "src/test/java/com/writing/novel/agent/ConsistencyGuardContextTest.java"
       ],
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
-      "acceptance": "运行 verify_cmd 通过：作者修改视角和样本后实际写作请求包含新版本；旧缓存不污染；空契约兼容。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
-      "verify_cmd": "mvn test -Dtest=AuthorIntentWritingTest,GuardFindingRetentionTest,QualityClosureTest,ConsistencyGuardTest,QualityResponseValidityTest,ArbiterTest",
+      "acceptance": "运行 verify_cmd 通过：作者修改视角和样本后实际写作请求包含新版本；旧缓存不污染；空契约兼容。编译、全量回归及适用E2E通过；按原方案证据分层验收。 本轮按2026-09-21用户定点修复要求及docs/specs/2026-09-21-ncs-focused-fixes.md验收代码；LLM不稳定单独登记，不冒充文学质量通过。",
+      "verify_cmd": "mvn test -Dtest=AuthorIntentWritingTest,GuardFindingRetentionTest,QualityClosureTest,ConsistencyGuardTest,QualityResponseValidityTest,ArbiterTest,ConsistencyGuardContextTest",
       "evidence": "业务修复3ce8cd6已合main。本轮从main 9aa15db干净导出完成一次3章真实录制及两次回放，正文哈希和完整归一化报告一致：3章/9209字/60次调用/0最终调用错误，但1个屏障、1章待复核、4项当前稿HIGH，三次完整验收FAIL。已证实守卫遗漏已有前文/真典导致误报；无效真典输出和实体提取错误被静默接受，独立登记NCS-063/064。init编译/1141tests（0F/0E/1S）/前端build、专项47项通过；数值基线PASS不代表质量通过，未bless、未completed。证据docs/harness/evidence/ncs033/continued-e2e-20260921.json。",
-      "branch": "codex/ncs-033-quality-closure"
+      "branch": "codex/ncs-033-guard-evidence"
     },
     {
       "id": "NCS-034",

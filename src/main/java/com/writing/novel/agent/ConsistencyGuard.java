@@ -94,6 +94,7 @@ public class ConsistencyGuard {
         String systemPrompt = promptService.render("consistency-guard", Map.of(
                 "characterAbilities", abilities,
                 "storyCanon", formatCanon(facts),
+                "recentChapters", recentChapterEvidence(projectId, chapterIndex),
                 "chapterContent", content));
 
         var req = LlmRequest.builder()
@@ -116,6 +117,20 @@ public class ConsistencyGuard {
             throw new IllegalStateException("一致性守卫未完成，不能视为无问题", e);
         }
         return issues;
+    }
+
+    /** 最近两章的取证场景不能因为真典切片遗漏而消失；查询范围排除当前/未来稿件。 */
+    private String recentChapterEvidence(String projectId, int chapterIndex) {
+        if (chapterIndex <= 1) return "（无前章）";
+        return repository.findChaptersByIndexRange(projectId, Math.max(1, chapterIndex - 2), chapterIndex - 1)
+                .stream().filter(c -> c.getChapterIndex() < chapterIndex && c.getContent() != null)
+                .sorted(java.util.Comparator.comparingInt(com.writing.novel.domain.Chapter::getChapterIndex))
+                .map(c -> {
+                    String text = c.getContent();
+                    if (text.length() > 5000)
+                        text = text.substring(0, 2500) + "\n（中段省略）\n" + text.substring(text.length() - 2500);
+                    return "第" + c.getChapterIndex() + "章：\n" + text;
+                }).collect(Collectors.joining("\n\n"));
     }
 
     /** p11-q0-02: 格式化真典事实为校验依据文本 */

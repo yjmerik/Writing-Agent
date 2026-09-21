@@ -77,10 +77,12 @@ public class OpenAiCompatibleClient implements LlmClient {
             try (Response response = httpClient.newCall(httpRequest).execute()) {
                 if (response.isSuccessful()) {
                     JsonNode root = MAPPER.readTree(response.body().string());
-                    String content = root.path("choices").path(0)
-                            .path("message").path("content").asText();
+                    JsonNode choice = root.path("choices").path(0);
+                    String content = choice.path("message").path("content").asText();
                     int promptTokens = root.path("usage").path("prompt_tokens").asInt();
                     int completionTokens = root.path("usage").path("completion_tokens").asInt();
+                    // NCS-065: 透传 finish_reason——length 截断对调用方可见
+                    String finishReason = choice.path("finish_reason").asText("");
                     // p16-replay-fix: 空响应是服务端故障（瞬时空响应会覆盖非空 fixture、
                     // 使后处理产出漂移）——视为可重试失败，与 ChapterWriter 空内容重试同语义
                     if (content.isBlank() && attempt < 2) {
@@ -89,7 +91,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                         attempt++;
                         continue;
                     }
-                    return new LlmResponse(content, promptTokens, completionTokens);
+                    return new LlmResponse(content, promptTokens, completionTokens, finishReason, null);
                 }
                 // 400/401/403 等客户端错误
                 if (response.code() >= 400 && response.code() < 500 && response.code() != 429) {
@@ -180,16 +182,22 @@ public class OpenAiCompatibleClient implements LlmClient {
                 }
                 StringBuilder content = new StringBuilder();
                 int promptTokens = 0, completionTokens = 0;
-                try (BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(response.body().byteStream()))) {
+                // NCS-065: 终止校验——流必须见到 [DONE] 或非空 finish_reason 才算成功；
+                // 被干净掐断的流（EOF 无异常）此前会把半截内容当成功返回（真典收割单字符 "[" 根因）
+                boolean terminated = false;
+                String finishReason = "";
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                        response.body().byteStream()))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
                         if (line.startsWith("data: ")) {
                             String data = line.substring(6).trim();
-                            if ("[DONE]".equals(data)) break;
+                            if ("[DONE]".equals(data)) { terminated = true; break; }
                             JsonNode chunk = MAPPER.readTree(data);
                             JsonNode delta = chunk.path("choices").path(0).path("delta");
                             content.append(delta.path("content").asText(""));
+                            String finish = chunk.path("choices").path(0).path("finish_reason").asText("");
+                            if (!finish.isEmpty()) { terminated = true; finishReason = finish; }
                             // usage 可能在最后一个 chunk（stream_options）或 [DONE] 帧携带
                             JsonNode usage = chunk.path("usage");
                             if (usage.isObject()) {
@@ -199,6 +207,18 @@ public class OpenAiCompatibleClient implements LlmClient {
                         }
                     }
                 }
+                // NCS-065: 未终止流与空聚合同语义——可重试的服务端故障，重试耗尽必须显式失败
+                if (!terminated) {
+                    if (attempt < 2) {
+                        log.warn("LLM 流式未正常终止(尝试{}/3, 已收{}字符): {}，重试",
+                                attempt + 1, content.length(), request.getTaskType());
+                        sleepBackoff(attempt, false);
+                        attempt++;
+                        continue;
+                    }
+                    throw new RuntimeException("LLM 流式未正常终止（无 [DONE]/finish_reason 即 EOF）: "
+                            + request.getTaskType());
+                }
                 // p16-replay-fix: 流式空聚合同样重试——瞬时空响应是服务端故障
                 if (content.isEmpty() && attempt < 2) {
                     log.warn("LLM 流式空聚合(尝试{}/3): {}，重试", attempt + 1, request.getTaskType());
@@ -206,7 +226,11 @@ public class OpenAiCompatibleClient implements LlmClient {
                     attempt++;
                     continue;
                 }
-                return new LlmResponse(content.toString(), promptTokens, completionTokens);
+                if ("length".equals(finishReason)) {
+                    log.warn("LLM 流式输出被 max_tokens 截断: {} (completionTokens={})",
+                            request.getTaskType(), completionTokens);
+                }
+                return new LlmResponse(content.toString(), promptTokens, completionTokens, finishReason, null);
             } catch (java.io.IOException e) {
                 long elapsed = System.currentTimeMillis() - attemptStart;
                 log.warn("LLM 流式调用 IOException(尝试{}/3, {}ms): {} — {}: {}",
@@ -279,14 +303,19 @@ public class OpenAiCompatibleClient implements LlmClient {
             if (!response.isSuccessful()) {
                 throw new RuntimeException("LLM 流式调用失败: HTTP " + response.code());
             }
+            // NCS-065: 终止校验——未见 [DONE]/finish_reason 即 EOF 的流不得回调 onComplete
+            boolean terminated = false;
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(response.body().byteStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     if (line.startsWith("data: ")) {
                         String data = line.substring(6).trim();
-                        if ("[DONE]".equals(data)) break;
+                        if ("[DONE]".equals(data)) { terminated = true; break; }
                         JsonNode chunk = MAPPER.readTree(data);
+                        if (!chunk.path("choices").path(0).path("finish_reason").asText("").isEmpty()) {
+                            terminated = true;
+                        }
                         String delta = chunk.path("choices").path(0)
                                 .path("delta").path("content").asText("");
                         if (!delta.isEmpty()) {
@@ -294,6 +323,10 @@ public class OpenAiCompatibleClient implements LlmClient {
                         }
                     }
                 }
+            }
+            if (!terminated) {
+                throw new RuntimeException("LLM 流式未正常终止（无 [DONE]/finish_reason 即 EOF）: "
+                        + request.getTaskType());
             }
             handler.onComplete();
         } catch (Exception e) {
@@ -339,12 +372,15 @@ public class OpenAiCompatibleClient implements LlmClient {
                 String content = choice.path("message").path("content").asText("");
                 if (content.isBlank()) throw unavailable(LlmUnavailableException.Reason.EMPTY_RESPONSE, 0);
                 checkCancelled();
+                // NCS-065: 透传 finish_reason（length = 输出截断）
                 return new LlmResponse(content, root.path("usage").path("prompt_tokens").asInt(),
-                        root.path("usage").path("completion_tokens").asInt());
+                        root.path("usage").path("completion_tokens").asInt(),
+                        choice.path("finish_reason").asText(""), null);
             }
             StringBuilder content = new StringBuilder();
             int promptTokens = 0, completionTokens = 0;
             boolean terminated = false;
+            String finishReason = "";
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(
                     response.body().byteStream(), java.nio.charset.StandardCharsets.UTF_8))) {
                 String line;
@@ -359,7 +395,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                     JsonNode choice = chunk.path("choices").path(0);
                     String finish = choice.path("finish_reason").asText("");
                     if ("content_filter".equals(finish)) throw new ContentFilterException("LLM content filtered");
-                    if (!finish.isEmpty()) terminated = true;
+                    if (!finish.isEmpty()) { terminated = true; finishReason = finish; }
                     String token = choice.path("delta").path("content").asText("");
                     content.append(token);
                     if (handler != null && !token.isEmpty()) {
@@ -374,7 +410,7 @@ public class OpenAiCompatibleClient implements LlmClient {
             checkCancelled();
             if (!terminated) throw unavailable(LlmUnavailableException.Reason.PROTOCOL, 0);
             if (content.toString().isBlank()) throw unavailable(LlmUnavailableException.Reason.EMPTY_RESPONSE, 0);
-            return new LlmResponse(content.toString(), promptTokens, completionTokens);
+            return new LlmResponse(content.toString(), promptTokens, completionTokens, finishReason, null);
         } catch (IOException e) {
             checkCancelled();
             // Do not attach the raw exception: transport diagnostics can include request URLs.

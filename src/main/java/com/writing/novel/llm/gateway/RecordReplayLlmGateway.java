@@ -147,6 +147,8 @@ public class RecordReplayLlmGateway implements LlmGateway {
                     node.path("content").asText(),
                     node.path("promptTokens").asInt(0),
                     node.path("completionTokens").asInt(0),
+                    // NCS-065: 旧 fixture 无 finishReason 字段默认 stop
+                    node.path("finishReason").asText("stop"),
                     node.hasNonNull("execution")
                             ? MAPPER.treeToValue(node.get("execution"), LlmResponse.Execution.class) : null);
         } catch (IOException e) {
@@ -192,6 +194,8 @@ public class RecordReplayLlmGateway implements LlmGateway {
             node.put("content", response.getContent());
             node.put("promptTokens", response.getPromptTokens());
             node.put("completionTokens", response.getCompletionTokens());
+            // NCS-065: 截断信号随 fixture 落盘，回放保留
+            node.put("finishReason", response.getFinishReason());
             if (response.getExecution() != null) node.set("execution", MAPPER.valueToTree(response.getExecution()));
             Files.writeString(fixture, MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(node),
                     StandardCharsets.UTF_8);

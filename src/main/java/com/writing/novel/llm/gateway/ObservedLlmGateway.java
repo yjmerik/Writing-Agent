@@ -102,12 +102,23 @@ public class ObservedLlmGateway implements LlmGateway {
         fields.put("promptTokens", response.getPromptTokens());
         fields.put("completionTokens", response.getCompletionTokens());
         fields.put("estimatedCostCny", Math.round(cost * 10000) / 10000.0);
+        // NCS-065: 截断可观测——finish_reason=length 独立事件 + CALL 事件携带信号
+        if (!"stop".equals(response.getFinishReason())) {
+            fields.put("finishReason", response.getFinishReason());
+        }
         if (streaming) fields.put("streaming", true);
         if (execution != null) {
             fields.put("provider", execution.providerId());
             fields.put("model", execution.model());
         }
         EventLog.emit("LLM_CALL", fields);
+        if (response.isTruncated()) {
+            EventLog.emit("LLM_TRUNCATED", Map.of(
+                    "taskType", request.getTaskType().name(),
+                    "finishReason", response.getFinishReason(),
+                    "completionTokens", response.getCompletionTokens(),
+                    "durationMs", System.currentTimeMillis() - start));
+        }
         if (costBudgetMonitor != null) costBudgetMonitor.add(EventContext.projectId(), cost);
     }
 

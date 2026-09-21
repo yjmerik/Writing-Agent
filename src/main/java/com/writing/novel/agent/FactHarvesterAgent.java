@@ -139,7 +139,8 @@ public class FactHarvesterAgent {
                     "errorClass", e.getClass().getSimpleName(),
                     "message", com.writing.novel.telemetry.EventLog.truncate(e.getMessage(), 200),
                     "phase", "fact-harvest"));
-            return new HarvestResult(0, 0, 0);
+            throw new IllegalStateException("真典收割失败(项目" + projectId + ", 第"
+                    + chapter.getChapterIndex() + "章): " + e.getMessage(), e);
         }
     }
 
@@ -149,15 +150,22 @@ public class FactHarvesterAgent {
         try {
             int start = json.indexOf('[');
             int end = json.lastIndexOf(']');
-            if (start < 0 || end < 0) return new HarvestResult(0, 0, 0);
+            if (start < 0 || end < start) throw new IllegalArgumentException("缺少完整事实数组");
             JsonNode arr = MAPPER.readTree(json.substring(start, end + 1));
+            if (!arr.isArray()) throw new IllegalArgumentException("事实响应必须为数组");
+            // 先校验整批响应，避免前半批落库后才发现后面的条目无效。
             for (JsonNode item : arr) {
-                StoryFact.FactType type;
-                try { type = StoryFact.FactType.valueOf(item.path("type").asText()); }
-                catch (IllegalArgumentException badType) { continue; }
+                if (!item.isObject() || !item.path("type").isTextual()
+                        || !item.path("subject").isTextual() || item.path("subject").asText().isBlank()
+                        || !item.path("assertion").isTextual() || item.path("assertion").asText().isBlank()) {
+                    throw new IllegalArgumentException("事实条目缺少有效 type/subject/assertion");
+                }
+                StoryFact.FactType.valueOf(item.path("type").asText());
+            }
+            for (JsonNode item : arr) {
+                StoryFact.FactType type = StoryFact.FactType.valueOf(item.path("type").asText());
                 String subject = item.path("subject").asText();
                 String assertion = item.path("assertion").asText();
-                if (subject.isBlank() || assertion.isBlank()) continue;
                 // p19-02: 别名先解析为规范名再比对/落库，防止「林公子/林凡」分裂成平行 ACTIVE 事实
                 subject = canonicalSubject(projectId, subject);
 
@@ -208,7 +216,9 @@ public class FactHarvesterAgent {
                                 chapterIndex, subject);
                 }
             }
-        } catch (Exception ignored) { }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("事实响应解析或入库失败", e);
+        }
         return new HarvestResult(added, validated, superseded);
     }
 

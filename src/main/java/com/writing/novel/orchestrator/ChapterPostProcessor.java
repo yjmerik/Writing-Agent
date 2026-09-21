@@ -21,7 +21,7 @@ import java.util.Map;
  *
  * <p>约定：
  * <ul>
- *   <li>所有阶段失败不中断写作（阶段内 try/catch 记日志），与旧行为一致</li>
+ *   <li>必需的派生数据失败保留未完成账本，交由已有续跑入口恢复</li>
  *   <li>模块不推进项目状态、不改章节 status——POST_PROCESSING→DONE 的裁决留在 Orchestrator</li>
  *   <li>p20-01: CONTINUITY 阶段可能产出 NEEDS_MANUAL_REVIEW，模块原样返回章节由上游裁决</li>
  * </ul>
@@ -182,6 +182,7 @@ public class ChapterPostProcessor {
             }
         } catch (Exception e) {
             log.warn("真典收割失败(章{}): {}", chapterIndex, e.getMessage());
+            throw new IllegalStateException("真典收割失败，第" + chapterIndex + "章待恢复", e);
         }
     }
 

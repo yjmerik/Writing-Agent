@@ -8558,16 +8558,20 @@
       "phase": 50,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/agent/FactHarvesterAgent.java",
         "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java",
-        "src/test/java/com/writing/novel/orchestrator/FactHarvestValidityTest.java"
+        "src/test/java/com/writing/novel/orchestrator/FactHarvestValidityTest.java",
+        "src/test/java/com/writing/novel/agent/FactHarvesterTest.java",
+        "src/test/java/com/writing/novel/agent/FactHarvesterScopedTest.java",
+        "src/test/java/com/writing/novel/web/StubLlmGatewayTestConfig.java"
       ],
       "spec": "docs/specs/2026-09-21-fact-harvest-validity.md",
-      "acceptance": "运行 verify_cmd 通过：无效 JSON/非法条目不成功、不部分写入、不完成 FACT_HARVEST；合法 [] 兼容；失败可定位且恢复不重复。编译、全量测试及适用 E2E 通过。",
+      "acceptance": "运行 verify_cmd 通过：无效 JSON/非法条目不成功、不部分写入、不完成 FACT_HARVEST；合法 [] 兼容；失败可定位且恢复不重复。编译、全量测试及适用 E2E 通过。 本次按2026-09-21-ncs-focused-fixes.md的用户限定范围验收代码；真实模型质量遗留登记。",
       "verify_cmd": "mvn test -Dtest=FactHarvestValidityTest,FactHarvesterTest,PostProcessingRecoveryTest",
-      "evidence": "2026-09-21 NCS-033 真实录制响应仅为 [，FACT_HARVEST 却 COMPLETED，零新增事实且未报错。只登记，未实现；证据 docs/harness/evidence/ncs033/continued-fact-harvest-diagnosis-20260921.json。"
+      "evidence": "2026-09-21 NCS-033 真实录制响应仅为 [，FACT_HARVEST 却 COMPLETED，零新增事实且未报错。只登记，未实现；证据 docs/harness/evidence/ncs033/continued-fact-harvest-diagnosis-20260921.json。",
+      "branch": "codex/ncs-063-fact-validity"
     },
     {
       "id": "NCS-064",
@@ -8590,5 +8594,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-21",
-  "active_feature": null
+  "active_feature": "NCS-063"
 }

@@ -93,19 +93,19 @@ class FactHarvesterTest {
     }
 
     @Test
-    void LLM返回空数组或非法JSON时不报错() {
+    void 合法空数组成功而非法JSON报错() {
         FactHarvesterAgent agent = agentReturning("[]");
         var result = agent.harvest(pid, chapter("正文"));
         assertEquals(0, result.total());
-        agentReturning("无 JSON 内容").harvest(pid, chapter("正文")); // 不抛异常
+        assertThrows(IllegalStateException.class,
+                () -> agentReturning("无 JSON 内容").harvest(pid, chapter("正文")));
     }
 
     @Test
-    void 无效事实类型被跳过() {
+    void 无效事实类型拒绝整批响应() {
         FactHarvesterAgent agent = agentReturning(
                 "[{\"type\":\"INVALID_TYPE\",\"subject\":\"x\",\"assertion\":\"y\"}]");
-        var result = agent.harvest(pid, chapter("正文"));
-        assertEquals(0, result.total());
+        assertThrows(IllegalStateException.class, () -> agent.harvest(pid, chapter("正文")));
         assertEquals(0, factRepo.findActive(pid).size());
     }
 }

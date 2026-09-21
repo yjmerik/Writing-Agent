@@ -94,9 +94,7 @@ class FactHarvesterScopedTest {
 
         Chapter ch = new Chapter(projectId, 5, "第5章");
         ch.setContent("内容");
-        var result = agent.harvest(projectId, ch);
-
-        assertEquals(0, result.total());
+        assertThrows(IllegalStateException.class, () -> agent.harvest(projectId, ch));
         long after = Files.lines(eventsFile).count();
         assertTrue(after > before, "LLM 失败应产生新事件行");
         String last = Files.lines(eventsFile).reduce((a, b) -> b).orElse("");

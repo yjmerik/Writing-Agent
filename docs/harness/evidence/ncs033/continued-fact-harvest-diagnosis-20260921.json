@@ -1,0 +1,13 @@
+{
+  "date": "2026-09-21",
+  "classification": "INVALID_FACT_HARVEST_ACCEPTED",
+  "fixture": "GENERAL-fa35535cdc2b9611-1.json",
+  "fixtureSha256": "561cac49f3af08927ebc3436cd809b4dabe57c39493e36a1df2b6dc0f986ad59",
+  "content": "[",
+  "reportedCompletionTokens": 83863,
+  "chapter": 3,
+  "ledgerStatus": "COMPLETED",
+  "factsEstablishedAtChapter3": 0,
+  "rootCause": "FactHarvesterAgent.merge returns a zero HarvestResult when closing bracket is absent and suppresses parse exceptions; ChapterPostProcessor.stageFactHarvest catches errors and run then marks the stage COMPLETED. Transport-success telemetry cannot detect this invalid business output.",
+  "scope": "Independent defect registered as NCS-063; no fix in this acceptance-only run."
+}

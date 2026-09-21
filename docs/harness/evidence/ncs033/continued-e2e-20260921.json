@@ -1,0 +1,383 @@
+{
+  "date": "2026-09-21",
+  "feature": "NCS-033",
+  "codeCommit": "9aa15db",
+  "implementationCommit": "3ce8cd6",
+  "cleanSourceExport": true,
+  "consistent": true,
+  "results": [
+    {
+      "label": "record",
+      "exitCode": 1,
+      "report": {
+        "activeReviewBarriers": 1,
+        "pendingReviewChapters": 1,
+        "unresolvedHighIssues": 4,
+        "requestedChapters": 3,
+        "acceptanceMode": "full",
+        "generatedAt": "2026-09-21T10:11:17.825025",
+        "mode": "record",
+        "projectId": "750faf9e-b62c-48cc-9c12-50cce49811fa",
+        "finalState": "WRITING",
+        "chaptersWritten": 3,
+        "taskStatus": "COMPLETED",
+        "taskError": "",
+        "totalChapters": 3,
+        "totalWords": 9209,
+        "wordCount": {
+          "min": 2713,
+          "max": 3467,
+          "avg": 3069
+        },
+        "llmCalls": 60,
+        "llmErrors": 0,
+        "chapterFailures": 0,
+        "evaluation": null,
+        "acceptancePassed": false,
+        "acceptanceReasons": [
+          "activeReviewBarriers 非零或未取得质量证据",
+          "pendingReviewChapters 非零或未取得质量证据",
+          "unresolvedHighIssues 非零或未取得质量证据"
+        ]
+      },
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "雨巷空碗",
+          "version": 2,
+          "status": "DONE",
+          "wordCount": 2713,
+          "sha256": "0a0aeb848792a2c7a210c0458be832963d52853fd07cc650d2434b094c836698"
+        },
+        {
+          "chapter": 2,
+          "title": "糖纸活债",
+          "version": 3,
+          "status": "DONE",
+          "wordCount": 3467,
+          "sha256": "a1168f3017ef62b7c5916f8bd84144f3c6786816d9c657f88fed53caa19deda3"
+        },
+        {
+          "chapter": 3,
+          "title": "无契人画指",
+          "version": 3,
+          "status": "NEEDS_MANUAL_REVIEW",
+          "wordCount": 3029,
+          "sha256": "bcb4f32473669e92f754a4e33d6c7209f8454dac56879102be70dd46aa09bbc2"
+        }
+      ]
+    },
+    {
+      "label": "replay1",
+      "exitCode": 1,
+      "report": {
+        "activeReviewBarriers": 1,
+        "pendingReviewChapters": 1,
+        "unresolvedHighIssues": 4,
+        "requestedChapters": 3,
+        "acceptanceMode": "full",
+        "generatedAt": "2026-09-21T10:11:39.859763",
+        "mode": "replay",
+        "projectId": "46ffe5f7-b301-4113-95f9-cc5e8f27b6d4",
+        "finalState": "WRITING",
+        "chaptersWritten": 3,
+        "taskStatus": "COMPLETED",
+        "taskError": "",
+        "totalChapters": 3,
+        "totalWords": 9209,
+        "wordCount": {
+          "min": 2713,
+          "max": 3467,
+          "avg": 3069
+        },
+        "llmCalls": 60,
+        "llmErrors": 0,
+        "chapterFailures": 0,
+        "evaluation": null,
+        "acceptancePassed": false,
+        "acceptanceReasons": [
+          "activeReviewBarriers 非零或未取得质量证据",
+          "pendingReviewChapters 非零或未取得质量证据",
+          "unresolvedHighIssues 非零或未取得质量证据"
+        ]
+      },
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "雨巷空碗",
+          "version": 2,
+          "status": "DONE",
+          "wordCount": 2713,
+          "sha256": "0a0aeb848792a2c7a210c0458be832963d52853fd07cc650d2434b094c836698"
+        },
+        {
+          "chapter": 2,
+          "title": "糖纸活债",
+          "version": 3,
+          "status": "DONE",
+          "wordCount": 3467,
+          "sha256": "a1168f3017ef62b7c5916f8bd84144f3c6786816d9c657f88fed53caa19deda3"
+        },
+        {
+          "chapter": 3,
+          "title": "无契人画指",
+          "version": 3,
+          "status": "NEEDS_MANUAL_REVIEW",
+          "wordCount": 3029,
+          "sha256": "bcb4f32473669e92f754a4e33d6c7209f8454dac56879102be70dd46aa09bbc2"
+        }
+      ]
+    },
+    {
+      "label": "replay2",
+      "exitCode": 1,
+      "report": {
+        "activeReviewBarriers": 1,
+        "pendingReviewChapters": 1,
+        "unresolvedHighIssues": 4,
+        "requestedChapters": 3,
+        "acceptanceMode": "full",
+        "generatedAt": "2026-09-21T10:11:58.657278",
+        "mode": "replay",
+        "projectId": "b6482878-a663-4aa0-902b-74a697370f3b",
+        "finalState": "WRITING",
+        "chaptersWritten": 3,
+        "taskStatus": "COMPLETED",
+        "taskError": "",
+        "totalChapters": 3,
+        "totalWords": 9209,
+        "wordCount": {
+          "min": 2713,
+          "max": 3467,
+          "avg": 3069
+        },
+        "llmCalls": 60,
+        "llmErrors": 0,
+        "chapterFailures": 0,
+        "evaluation": null,
+        "acceptancePassed": false,
+        "acceptanceReasons": [
+          "activeReviewBarriers 非零或未取得质量证据",
+          "pendingReviewChapters 非零或未取得质量证据",
+          "unresolvedHighIssues 非零或未取得质量证据"
+        ]
+      },
+      "chapters": [
+        {
+          "chapter": 1,
+          "title": "雨巷空碗",
+          "version": 2,
+          "status": "DONE",
+          "wordCount": 2713,
+          "sha256": "0a0aeb848792a2c7a210c0458be832963d52853fd07cc650d2434b094c836698"
+        },
+        {
+          "chapter": 2,
+          "title": "糖纸活债",
+          "version": 3,
+          "status": "DONE",
+          "wordCount": 3467,
+          "sha256": "a1168f3017ef62b7c5916f8bd84144f3c6786816d9c657f88fed53caa19deda3"
+        },
+        {
+          "chapter": 3,
+          "title": "无契人画指",
+          "version": 3,
+          "status": "NEEDS_MANUAL_REVIEW",
+          "wordCount": 3029,
+          "sha256": "bcb4f32473669e92f754a4e33d6c7209f8454dac56879102be70dd46aa09bbc2"
+        }
+      ]
+    }
+  ],
+  "recordStreamIOExceptionRetries": 3,
+  "fixtureCount": 60,
+  "intentCoverage": [
+    {
+      "fixture": "CHAPTER_WRITING-0d9e466bcfcdaf17-1.json",
+      "presentFields": [
+        "premise",
+        "genreExpectation",
+        "themes",
+        "pov",
+        "languageSamples",
+        "lengthRange",
+        "autonomy",
+        "unwantedPatterns"
+      ],
+      "missingFields": []
+    },
+    {
+      "fixture": "CHAPTER_WRITING-968d2139612a77c4-1.json",
+      "presentFields": [
+        "premise",
+        "genreExpectation",
+        "themes",
+        "pov",
+        "languageSamples",
+        "lengthRange",
+        "autonomy",
+        "unwantedPatterns"
+      ],
+      "missingFields": []
+    },
+    {
+      "fixture": "CHAPTER_WRITING-ce80c59cdb3adba5-1.json",
+      "presentFields": [
+        "premise",
+        "genreExpectation",
+        "themes",
+        "pov",
+        "languageSamples",
+        "lengthRange",
+        "autonomy",
+        "unwantedPatterns"
+      ],
+      "missingFields": []
+    },
+    {
+      "fixture": "CHAPTER_WRITING-ed16c18e2d7f7a5e-1.json",
+      "presentFields": [
+        "premise",
+        "genreExpectation",
+        "themes",
+        "pov",
+        "languageSamples",
+        "lengthRange",
+        "autonomy",
+        "unwantedPatterns"
+      ],
+      "missingFields": []
+    },
+    {
+      "fixture": "CHAPTER_WRITING-f740b9d32c8b9947-1.json",
+      "presentFields": [
+        "premise",
+        "genreExpectation",
+        "themes",
+        "pov",
+        "languageSamples",
+        "lengthRange",
+        "autonomy",
+        "unwantedPatterns"
+      ],
+      "missingFields": []
+    }
+  ],
+  "rawEvidencePath": "/Users/erik/ZCodeProject/WritingAgent/data/e2e-evidence/ncs033/acceptance-20260921",
+  "diagnoses": [
+    "continued-guard-diagnosis-20260921.json",
+    "continued-fact-harvest-diagnosis-20260921.json",
+    "continued-entity-diagnosis-20260921.json"
+  ],
+  "goldenUpdated": false,
+  "humanQualityApproval": false,
+  "checks": [
+    {
+      "command": "./init.sh",
+      "result": "PASS; compile, 1141 tests / 0 failures / 0 errors / 1 skipped, frontend build",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=AuthorIntentWritingTest,GuardFindingRetentionTest,QualityClosureTest,ConsistencyGuardTest,QualityResponseValidityTest,ArbiterTest",
+      "result": "PASS; 47 tests / 0 failures / 0 errors",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/compare-baseline.py acceptance-evidence/record/report.json",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "bash scripts/diagnose.sh acceptance-evidence/record/run/events.jsonl",
+      "result": "Produced diagnosis; review barrier and writing pause detected",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/compare-baseline.py acceptance-evidence/replay1/report.json",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "bash scripts/diagnose.sh acceptance-evidence/replay1/run/events.jsonl",
+      "result": "Produced diagnosis; review barrier and writing pause detected",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/compare-baseline.py acceptance-evidence/replay2/report.json",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "bash scripts/diagnose.sh acceptance-evidence/replay2/run/events.jsonl",
+      "result": "Produced diagnosis; review barrier and writing pause detected",
+      "exitCode": 0
+    }
+  ],
+  "fullNormalizedReportsIdentical": true,
+  "postProcessEvidence": [
+    {
+      "run": "record",
+      "entities": 0,
+      "edges": 0,
+      "chapter3Facts": 0,
+      "entityStages": [
+        [
+          1,
+          "COMPLETED"
+        ],
+        [
+          2,
+          "COMPLETED"
+        ],
+        [
+          3,
+          "COMPLETED"
+        ]
+      ],
+      "chapter3FactStage": "COMPLETED"
+    },
+    {
+      "run": "replay1",
+      "entities": 0,
+      "edges": 0,
+      "chapter3Facts": 0,
+      "entityStages": [
+        [
+          1,
+          "COMPLETED"
+        ],
+        [
+          2,
+          "COMPLETED"
+        ],
+        [
+          3,
+          "COMPLETED"
+        ]
+      ],
+      "chapter3FactStage": "COMPLETED"
+    },
+    {
+      "run": "replay2",
+      "entities": 0,
+      "edges": 0,
+      "chapter3Facts": 0,
+      "entityStages": [
+        [
+          1,
+          "COMPLETED"
+        ],
+        [
+          2,
+          "COMPLETED"
+        ],
+        [
+          3,
+          "COMPLETED"
+        ]
+      ],
+      "chapter3FactStage": "COMPLETED"
+    }
+  ]
+}

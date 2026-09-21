@@ -1,0 +1,32 @@
+{
+  "date": "2026-09-21",
+  "classification": "ENTITY_EXTRACTION_ERROR_IGNORED",
+  "responses": [
+    {
+      "chapter": 1,
+      "fixture": "GENERAL-973b46bad44ab13e-1.json",
+      "sha256": "973993b62f4db3110fd9c2cf27fcea0054e476ffb64cd2f8089a82177abde6a9",
+      "contentLength": 9420,
+      "parseError": "Expecting property name enclosed in double quotes: line 474 column 22 (char 9420)"
+    },
+    {
+      "chapter": 2,
+      "fixture": "GENERAL-3a3a9c51eb05b2db-1.json",
+      "sha256": "4774be8222ff58ac4c16fd0a407ca0ae509110573b3b53949299aef43330b02c",
+      "contentLength": 9387,
+      "parseError": "Expecting value: line 345 column 42 (char 9387)"
+    },
+    {
+      "chapter": 3,
+      "fixture": "GENERAL-9487b28c002cb556-1.json",
+      "sha256": "36aa9cbda059da69efa73f6e791f8522f2f54ed746f5405a5f06c8de735dedb5",
+      "contentLength": 9434,
+      "parseError": "Unterminated string starting at: line 488 column 17 (char 9433)"
+    }
+  ],
+  "entityCount": 0,
+  "edgeCount": 0,
+  "allThreeLedgerStages": "COMPLETED",
+  "rootCause": "EntityExtractorAgent returns ExtractionResult.error on JSON parsing failure; ChapterPostProcessor.stageEntityGraph ignores the returned result, and run marks the stage COMPLETED. All three malformed responses were discarded without LLM_ERROR.",
+  "scope": "Registered as independent NCS-064; no production fix this round."
+}

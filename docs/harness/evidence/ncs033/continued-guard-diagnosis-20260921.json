@@ -1,0 +1,37 @@
+{
+  "fixture": "GENERAL-ca7d1d93f2143413-1.json",
+  "fixtureSha256": "71576a648a917a9ee0f3a1cbd69636bc2e8b120d931e17c22cdcbdcb941da85f",
+  "chapter2ContentSha256": "a1168f3017ef62b7c5916f8bd84144f3c6786816d9c657f88fed53caa19deda3",
+  "previousChapterEvidence": [
+    {
+      "quote": "裴照微用竹钩挑起船板缝里半张湿会票，又夹出一只缺耳空碗。",
+      "presentInChapter2": true,
+      "presentInGuardReferenceContext": false
+    },
+    {
+      "quote": "旧册纸页又翻，露出半枚画指。画指旁，写着“无契人”。",
+      "presentInChapter2": true,
+      "presentInGuardReferenceContext": false
+    }
+  ],
+  "canonEvidence": [
+    {
+      "assertion": "会票夹层有雨墨盐霜",
+      "activeInDatabase": true,
+      "presentInGuardReferenceContext": false
+    },
+    {
+      "assertion": "船板缝里的半张湿会票雨浸后显出“柳无契，续粮”及小字“抵寿”",
+      "activeInDatabase": true,
+      "presentInGuardReferenceContext": false
+    },
+    {
+      "assertion": "义庄旧簿露出半枚画指，旁写“无契人”",
+      "activeInDatabase": true,
+      "presentInGuardReferenceContext": false
+    }
+  ],
+  "finding": "At least the first HIGH is a confirmed false positive: prior retrieval and salt evidence exist but were omitted from the guard request. Second HIGH also makes an incorrect claim that the earlier ledger fingerprint was never shown. Third HIGH (new seal text) remains unadjudicated; no human override or baseline bless.",
+  "scope": "Read-only evidence; no production fixes in this acceptance round.",
+  "capturedAt": "2026-09-21T01:35:15.780029+00:00"
+}

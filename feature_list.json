@@ -7966,7 +7966,7 @@
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：作者修改视角和样本后实际写作请求包含新版本；旧缓存不污染；空契约兼容。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=AuthorIntentWritingTest,GuardFindingRetentionTest,QualityClosureTest,ConsistencyGuardTest,QualityResponseValidityTest,ArbiterTest",
-      "evidence": "质量闭环修复已合main（3ce8cd6）；分支/干净main编译、全量测试和专项验证通过。修复伏笔时间线后完成一次3章真实录制及两次回放；三次结果均为2章/7606字、44次调用、0错误，并在第2章同一纠偏复验屏障暂停。基线指标对比PASS，但E2E验收未通过且尚需人工复核，未bless、未completed。证据docs/harness/evidence/ncs033/quality-closure-rerecord-20260921.json。",
+      "evidence": "业务修复3ce8cd6已合main。本轮从main 9aa15db干净导出完成一次3章真实录制及两次回放，正文哈希和完整归一化报告一致：3章/9209字/60次调用/0最终调用错误，但1个屏障、1章待复核、4项当前稿HIGH，三次完整验收FAIL。已证实守卫遗漏已有前文/真典导致误报；无效真典输出和实体提取错误被静默接受，独立登记NCS-063/064。init编译/1141tests（0F/0E/1S）/前端build、专项47项通过；数值基线PASS不代表质量通过，未bless、未completed。证据docs/harness/evidence/ncs033/continued-e2e-20260921.json。",
       "branch": "codex/ncs-033-quality-closure"
     },
     {
@@ -8547,6 +8547,42 @@
       "acceptance": "先失败测试复现，再修复；运行 mvn test -Dtest=FutureForeshadowContextTest 通过；编译/全量测试及匹配E2E符合门禁。",
       "verify_cmd": "mvn test -Dtest=FutureForeshadowContextTest",
       "evidence": "NCS-033真实录制过程中代码+DB+模型报告交叉定位，见docs/harness/evidence/ncs033/foreshadow-chronology-discovery.json。仅登记，未实现。"
+    },
+    {
+      "id": "NCS-063",
+      "name": "真典提取无效输出不得完成后处理",
+      "description": "无效或不完整事实提取输出必须显式失败并保留可恢复状态，不能等同合法空数组或把账本标为完成",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/agent/FactHarvesterAgent.java",
+        "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java",
+        "src/test/java/com/writing/novel/orchestrator/FactHarvestValidityTest.java"
+      ],
+      "spec": "docs/specs/2026-09-21-fact-harvest-validity.md",
+      "acceptance": "运行 verify_cmd 通过：无效 JSON/非法条目不成功、不部分写入、不完成 FACT_HARVEST；合法 [] 兼容；失败可定位且恢复不重复。编译、全量测试及适用 E2E 通过。",
+      "verify_cmd": "mvn test -Dtest=FactHarvestValidityTest,FactHarvesterTest,PostProcessingRecoveryTest",
+      "evidence": "2026-09-21 NCS-033 真实录制响应仅为 [，FACT_HARVEST 却 COMPLETED，零新增事实且未报错。只登记，未实现；证据 docs/harness/evidence/ncs033/continued-fact-harvest-diagnosis-20260921.json。"
+    },
+    {
+      "id": "NCS-064",
+      "name": "实体提取失败结果不得被忽略",
+      "description": "调用方检查实体提取错误结果，无效响应不得标记ENTITY_GRAPH完成；可恢复且不重复实体或关系",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/agent/EntityExtractorAgent.java",
+        "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java",
+        "src/test/java/com/writing/novel/orchestrator/EntityGraphValidityTest.java"
+      ],
+      "spec": "docs/specs/2026-09-21-entity-extraction-validity.md",
+      "acceptance": "运行 verify_cmd 通过：截断 JSON 或 error 非空不得完成 ENTITY_GRAPH；错误可定位；有效空图兼容；恢复无重复。编译、全量测试及适用 E2E 通过。",
+      "verify_cmd": "mvn test -Dtest=EntityGraphValidityTest,PostProcessingRecoveryTest",
+      "evidence": "2026-09-21 NCS-033 真实录制中三章实体响应均为截断 JSON，三个阶段均COMPLETED而实体/关系表均为零；只登记，未实现。证据 docs/harness/evidence/ncs033/continued-entity-diagnosis-20260921.json。"
     }
   ],
   "schema_version": 2,

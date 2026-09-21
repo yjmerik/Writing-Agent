@@ -8628,7 +8628,7 @@
       "phase": 50,
       "type": "feature",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/llm/LlmTaskType.java",
         "src/main/java/com/writing/novel/llm/config/ModelConfig.java",
@@ -8641,7 +8641,9 @@
       "spec": "docs/specs/2026-09-21-llm-output-stabilization.md",
       "acceptance": "运行 mvn test -Dtest=ExtractionRoutingTest 通过：EXTRACTION路由预算/温度/思考开关独立于GENERAL；thinking-enabled=false时DashScope端点请求体注入enable_thinking:false、GLM端点保持thinking.type=disabled且互不误发；实体与事实提取请求走EXTRACTION任务类型。编译、全量测试通过；请求参数变化按DoD在NCS-070统一重录验收。",
       "verify_cmd": "mvn test -Dtest=ExtractionRoutingTest",
-      "evidence": "来源：continued-entity-diagnosis-20260921.json三章9.4k字符截断；有效预算max(4000,4096)=4096 vs 输出需求，且qwen3.8-flash思考计入输出预算。待实现验证。"
+      "evidence": "代码修复已合main 46b2aef，分支及干净main全量1174/0/0/1通过；ExtractionRoutingTest 5项先RED后GREEN。证据docs/harness/evidence/2026-09-21-ncs-066-focused.json。参数变化待NCS-070统一重录。",
+      "branch": "codex/ncs-066-extraction-routing",
+      "completion_record": "ncs-066-focused-verified"
     },
     {
       "id": "NCS-067",

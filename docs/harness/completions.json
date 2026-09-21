@@ -1969,6 +1969,17 @@
       "implementation_commit": "c149912",
       "main_commit": "00ad0dc",
       "evidence": "docs/harness/evidence/2026-09-21-ncs-065-focused.json"
+    },
+    {
+      "id": "ncs-066-focused-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-066"
+      ],
+      "branch": "codex/ncs-066-extraction-routing",
+      "implementation_commit": "46b2aef",
+      "main_commit": "1e52b13",
+      "evidence": "docs/harness/evidence/2026-09-21-ncs-066-focused.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

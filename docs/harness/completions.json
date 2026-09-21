@@ -1925,6 +1925,17 @@
    "implementation_commit": "4aeafdf7dd6c6143ed581c70eebd248b105a9e4f",
    "main_commit": "4aeafdf7dd6c6143ed581c70eebd248b105a9e4f",
    "evidence": "docs/harness/evidence/2026-09-21-ncs-063-focused.json"
+  },
+  {
+   "id": "ncs-064-focused-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-064"
+   ],
+   "branch": "codex/ncs-064-entity-validity",
+   "implementation_commit": "15880286a63aeb6e5c9adaa7d856eee44dc44fef",
+   "main_commit": "15880286a63aeb6e5c9adaa7d856eee44dc44fef",
+   "evidence": "docs/harness/evidence/2026-09-21-ncs-064-focused.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

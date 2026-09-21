@@ -8581,7 +8581,7 @@
       "phase": 50,
       "type": "bug",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java",
         "src/test/java/com/writing/novel/orchestrator/EntityGraphValidityTest.java",
@@ -8590,11 +8590,12 @@
       "spec": "docs/specs/2026-09-21-entity-extraction-validity.md",
       "acceptance": "运行 verify_cmd 通过：截断 JSON 或 error 非空不得完成 ENTITY_GRAPH；错误可定位；有效空图兼容；恢复无重复。编译、全量测试及适用 E2E 通过。 本次按2026-09-21-ncs-focused-fixes.md的用户限定范围验收代码；模型截断遗留登记。",
       "verify_cmd": "mvn test -Dtest=EntityGraphValidityTest,PostProcessingRecoveryTest",
-      "evidence": "2026-09-21 NCS-033 真实录制中三章实体响应均为截断 JSON，三个阶段均COMPLETED而实体/关系表均为零；只登记，未实现。证据 docs/harness/evidence/ncs033/continued-entity-diagnosis-20260921.json。",
-      "branch": "codex/ncs-064-entity-validity"
+      "evidence": "代码定点修复已合main 1588028，分支及干净main全量/专项通过。按用户2026-09-21限定验收范围完成；LLM不稳定及文学质量登记保留，未bless。证据docs/harness/evidence/2026-09-21-ncs-064-focused.json。",
+      "branch": "codex/ncs-064-entity-validity",
+      "completion_record": "ncs-064-focused-verified"
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-09-21",
-  "active_feature": "NCS-064"
+  "active_feature": null
 }

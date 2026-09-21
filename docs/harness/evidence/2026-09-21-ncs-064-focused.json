@@ -1,0 +1,46 @@
+{
+  "commit": "15880286a63aeb6e5c9adaa7d856eee44dc44fef",
+  "main_commit": "15880286a63aeb6e5c9adaa7d856eee44dc44fef",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-064"
+  ],
+  "branch": "codex/ncs-064-entity-validity",
+  "scope": "User-requested code fixes only; unstable LLM output logged, no architecture expansion, no golden bless or literary-quality acceptance",
+  "summary": "后处理检查实体提取错误结果并记录可定位事件；失败账本保留可恢复状态，有效空图与去重保持兼容。",
+  "red": "EntityGraphValidityTest: 3 tests, 2 failures / 0 errors before fix. Truncated JSON and explicit error results incorrectly completed the ledger.",
+  "branchTests": {
+    "tests": 1154,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "mainTests": {
+    "tests": 1154,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "checks": [
+    {
+      "command": "mvn compile && mvn test (branch)",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn clean compile && mvn test (clean detached main checkout)",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=EntityGraphValidityTest,PostProcessingRecoveryTest",
+      "result": "PASS (branch and main)",
+      "exitCode": 0
+    }
+  ],
+  "limitations": [
+    "Truncated model output remains a registered LLM residual, not repaired by automatic resampling.",
+    "No real LLM E2E rerun or golden update; preserved original fixtures diverge after NCS-033 input fix. Deterministic stage/recovery integration tests validate the scoped code behavior."
+  ],
+  "llmResiduals": "docs/harness/evidence/ncs033/llm-residuals-20260921.md"
+}

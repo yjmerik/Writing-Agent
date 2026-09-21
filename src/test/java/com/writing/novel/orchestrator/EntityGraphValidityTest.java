@@ -63,7 +63,8 @@ class EntityGraphValidityTest {
         assertEquals(PostProcessLedgerRepository.StageStatus.COMPLETED, ledger.statusOf("p", 3, stage).orElseThrow());
         assertEquals(2, repo.findEntitiesByProject("p").size());
         assertEquals(1, repo.findEdgesByProject("p").size());
-        verify(gateway, times(2)).complete(any());
+        // NCS-067 拆分后：失败1次（实体截断）+ 成功1轮（实体+关系各1次）= 3 次调用
+        verify(gateway, times(3)).complete(any());
     }
 
     @Test void 有效空图完成账本() {

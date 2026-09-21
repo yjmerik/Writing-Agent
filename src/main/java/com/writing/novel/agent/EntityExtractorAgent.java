@@ -45,7 +45,10 @@ public class EntityExtractorAgent {
 
     /**
      * 从章节正文中提取实体和关系。
-     * 调用 LLM → 解析 JSON → 去重合并 → 持久化。
+     * NCS-067: 拆为两阶段调用——「紧凑实体」「关系（仅引用第一步规范名）」。
+     * 单次全量输出（实体+关系+描述）需求约 9.4k 字符，必然撞输出预算截断；
+     * 拆分后各自输出体量可控。任一阶段失败返回 error（上游保持账本可恢复），
+     * 恢复重跑时实体按 name/aliases 去重、边按同类当前边去重，不产生重复数据。
      *
      * @return 提取结果统计
      */
@@ -62,7 +65,7 @@ public class EntityExtractorAgent {
                 ? relevanceGateway.relevantEntities(projectId, null, 40)
                 : existingEntities;
         String existingJson = formatExistingEntities(llmReference);
-        // p11-q0-02: 附加真典已确立的角色/物品事实（避免重复提取已确立内容）
+        // p9-5-02: 附加真典已确立的角色/物品事实（避免重复提取已确立内容）
         if (relevanceGateway != null) {
             String canon = relevanceGateway.relevantFacts(projectId, null, 20).stream()
                     .filter(f -> f.getFactType() == StoryFact.FactType.OBJECT_STATE
@@ -78,43 +81,65 @@ public class EntityExtractorAgent {
             chapterContent = chapterContent.substring(0, 3000);
         }
 
-        String systemPrompt = promptService.render("entity-extraction", Map.of(
+        // ---- 阶段一：紧凑实体（无 description，输出体量受控）----
+        String entityPrompt = promptService.render("entity-extraction", Map.of(
                 "existingEntities", existingJson,
                 "chapterContent", chapterContent != null ? chapterContent : ""));
-
-        // p9-5: 不在 userMessage 中重复正文（已在 systemPrompt 模板中注入）
-        String userMessage = "请提取第" + chapter.getChapterIndex() + "章中的实体和关系。";
-
-        var req = LlmRequest.builder()
+        var entityReq = LlmRequest.builder()
                 .taskType(LlmTaskType.EXTRACTION)
-                .systemPrompt(systemPrompt)
-                .userMessage(userMessage)
-                .temperature(0.3)
-                .maxTokens(4000)
+                .systemPrompt(entityPrompt)
+                .userMessage("请提取第" + chapter.getChapterIndex() + "章中的实体。")
+                .temperature(0.1)
+                .maxTokens(8000)
                 .build();
+        var entityResp = gateway.complete(entityReq);
+        var entityWrite = (java.util.function.Supplier<EntityStage>) () ->
+                parseAndSaveEntities(entityResp.getContent(), projectId, chapter.getChapterIndex(), existingEntities);
+        EntityStage entityStage = boundary == null ? entityWrite.get()
+                : boundary.apply(entityWrite, new EntityStage(List.of(), 0, 0, "stale chapter version"));
+        if (entityStage.error() != null) {
+            return new ExtractionResult(entityStage.newEntities(), entityStage.updatedEntities(), 0, entityStage.error());
+        }
+        if (entityStage.chapterEntityNames().isEmpty()) {
+            // 本章无实体则无从建边；有效空结果直接成功
+            return new ExtractionResult(0, entityStage.updatedEntities(), 0, null);
+        }
 
-        var resp = gateway.complete(req);
-        var write = (java.util.function.Supplier<ExtractionResult>) () ->
-                parseAndSave(resp.getContent(), projectId, chapter.getChapterIndex(), existingEntities);
-        return boundary == null ? write.get()
-                : boundary.apply(write, new ExtractionResult(0, 0, 0, "stale chapter version"));
+        // ---- 阶段二：关系（只引用阶段一的规范名清单）----
+        String entityNames = String.join("、", entityStage.chapterEntityNames());
+        String edgePrompt = promptService.render("entity-edges", Map.of(
+                "entityNames", entityNames,
+                "chapterContent", chapterContent != null ? chapterContent : ""));
+        var edgeReq = LlmRequest.builder()
+                .taskType(LlmTaskType.EXTRACTION)
+                .systemPrompt(edgePrompt)
+                .userMessage("请提取第" + chapter.getChapterIndex() + "章中实体之间的关系。")
+                .temperature(0.1)
+                .maxTokens(8000)
+                .build();
+        var edgeResp = gateway.complete(edgeReq);
+        var edgeWrite = (java.util.function.Supplier<EdgeStage>) () ->
+                parseAndSaveEdges(edgeResp.getContent(), projectId, chapter.getChapterIndex());
+        EdgeStage edgeStage = boundary == null ? edgeWrite.get()
+                : boundary.apply(edgeWrite, new EdgeStage(0, "stale chapter version"));
+        return new ExtractionResult(entityStage.newEntities(), entityStage.updatedEntities(),
+                edgeStage.newEdges(), edgeStage.error());
     }
 
-    private ExtractionResult parseAndSave(String json, String projectId,
-                                          int chapterIndex, List<Entity> existingEntities) {
+    /** 阶段一结果：本章出现过的实体规范名（新+更新，供阶段二引用）与计数 */
+    private record EntityStage(List<String> chapterEntityNames, int newEntities, int updatedEntities, String error) {}
+
+    /** 阶段二结果 */
+    private record EdgeStage(int newEdges, String error) {}
+
+    /** 解析阶段一实体 JSON 并落库；无效响应不落库并返回 error */
+    private EntityStage parseAndSaveEntities(String json, String projectId,
+                                             int chapterIndex, List<Entity> existingEntities) {
         int newEntities = 0;
         int updatedEntities = 0;
-        int newEdges = 0;
-
+        List<String> chapterNames = new ArrayList<>();
         try {
-            // 解析 JSON（LLM 可能包了 ```json 标记）
-            String clean = json.trim();
-            if (clean.startsWith("```")) {
-                clean = clean.replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
-            }
-            JsonNode root = MAPPER.readTree(clean);
-
-            // 处理实体
+            JsonNode root = parseJson(json);
             JsonNode entitiesNode = root.path("entities");
             if (entitiesNode.isArray()) {
                 for (JsonNode en : entitiesNode) {
@@ -149,16 +174,29 @@ public class EntityExtractorAgent {
                         entity.addAliases(aliases);
                         entity.seenAt(chapterIndex);
                         repository.saveEntity(entity);
-                        existingEntities.add(entity); // 供后续边匹配
+                        existingEntities.add(entity); // 供边匹配
                         newEntities++;
                     }
+                    chapterNames.add(name);
                 }
             }
+        } catch (Exception e) {
+            // 解析失败不落库，返回可定位错误（NCS-064：调用方据此不标记完成）
+            return new EntityStage(List.of(), newEntities, updatedEntities,
+                    "实体 JSON 解析失败: " + e.getMessage() + "\n原始响应:\n"
+                            + json.substring(0, Math.min(500, json.length())));
+        }
+        return new EntityStage(chapterNames, newEntities, updatedEntities, null);
+    }
 
-            // 重新加载实体列表（含新创建的）
+    /** 解析阶段二关系 JSON 并落库；无效响应返回 error（实体已落库，恢复时去重） */
+    private EdgeStage parseAndSaveEdges(String json, String projectId, int chapterIndex) {
+        int newEdges = 0;
+        try {
+            JsonNode root = parseJson(json);
+            // 重新加载实体列表（含阶段一新建的）
             final List<Entity> allEntities = repository.findEntitiesByProject(projectId);
 
-            // 处理关系边
             JsonNode edgesNode = root.path("edges");
             if (edgesNode.isArray()) {
                 for (JsonNode edgeNode : edgesNode) {
@@ -225,12 +263,19 @@ public class EntityExtractorAgent {
                 }
             }
         } catch (Exception e) {
-            // 解析失败不阻断流程，静默返回统计
-            return new ExtractionResult(0, 0, 0,
-                    "JSON 解析失败: " + e.getMessage() + "\n原始响应:\n" + json.substring(0, Math.min(500, json.length())));
+            return new EdgeStage(newEdges, "关系 JSON 解析失败: " + e.getMessage() + "\n原始响应:\n"
+                    + json.substring(0, Math.min(500, json.length())));
         }
+        return new EdgeStage(newEdges, null);
+    }
 
-        return new ExtractionResult(newEntities, updatedEntities, newEdges, null);
+    /** 剥离 ```json 包裹后解析；截断的 JSON 在此抛出异常 */
+    private static JsonNode parseJson(String json) throws Exception {
+        String clean = json.trim();
+        if (clean.startsWith("```")) {
+            clean = clean.replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
+        }
+        return MAPPER.readTree(clean);
     }
 
     /** 按规范名或别名匹配已有实体 */

@@ -1,9 +1,9 @@
 {
-  "blessedAt": "2026-09-12T01:57:16.420871",
-  "blessedFrom": "e2e-report.json",
-  "minChapters": 1,
-  "minTotalWords": 3144,
-  "minAvgWordCount": 2751,
+  "blessedAt": "2026-09-22T06:03:58.567676",
+  "blessedFrom": "data/e2e-evidence/ncs065-070-20260921/record2-replay/e2e-report-record.json",
+  "minChapters": 2,
+  "minTotalWords": 5865,
+  "minAvgWordCount": 2566,
   "maxChapterFailures": 0,
   "maxLlmErrors": 0,
   "minEvaluationScore": null

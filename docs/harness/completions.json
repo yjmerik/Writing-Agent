@@ -2013,6 +2013,17 @@
       "implementation_commit": "5a016c6",
       "main_commit": "7446bac",
       "evidence": "docs/harness/evidence/2026-09-21-ncs-069-focused.json"
+    },
+    {
+      "id": "ncs-070-e2e-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-070"
+      ],
+      "branch": "main(e2e-acceptance)",
+      "implementation_commit": "5a016c6",
+      "main_commit": "aa2cc09",
+      "evidence": "docs/harness/evidence/2026-09-21-ncs-070-e2e.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

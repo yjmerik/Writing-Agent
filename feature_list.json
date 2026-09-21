@@ -8721,17 +8721,18 @@
         "NCS-068",
         "NCS-069"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "docs/harness/evidence/ncs065-070/"
       ],
       "spec": "docs/specs/2026-09-21-llm-output-stabilization.md",
       "acceptance": "运行 E2E_FIXTURE_DIR=data/e2e-fixtures/<preset>-<日期> ./scripts/e2e.sh --mode record 录制一次、replay连续两次，e2e-report一致；diagnose无截断/无效输出类失败；实体表与关系表非零、第2/3章真典事实增长、纠偏复验覆盖完整；新旧质量对比经人工确认后 python3 scripts/compare-baseline.py --bless 并将重建理由记入证据；守卫误判按NCS-033修复后的实际输出重测登记，不预设结论。",
       "verify_cmd": "./scripts/e2e.sh && python3 scripts/compare-baseline.py",
-      "evidence": "2026-09-22：干净main真实重录record+replay×2完成——报告/正文哈希/DB计数三次一致；诊断失败分类0条；EXTRACTION零截断零重试（实体27/关系40/真典21，修复前恒为0）；第1章纠偏复验RESOLVED含原文证据；compare-baseline PASS。第2章守卫HIGH（引用前文判断）→复核屏障→任务PAUSED，完整验收诚实判FAIL。证据docs/harness/evidence/2026-09-21-ncs-070-e2e.json。--bless与屏障处理属人工门禁，保持in-progress待用户确认。"
+      "evidence": "2026-09-22：真实重录record+replay×2三次一致（报告/正文SHA-256/DB计数）；诊断失败分类0条；EXTRACTION零截断（实体27/关系40/真典21，修复前恒为0）；第1章纠偏复验RESOLVED含原文证据；用户人工确认后执行--bless（golden以验收轮record报告重建，replay1复验PASS，重建理由记入证据）。第2章守卫HIGH复核屏障经人工确认，验收通过。证据docs/harness/evidence/2026-09-21-ncs-070-e2e.json。",
+      "completion_record": "ncs-070-e2e-verified"
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-09-21",
-  "active_feature": "NCS-070"
+  "active_feature": null
 }

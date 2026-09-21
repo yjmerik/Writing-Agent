@@ -1,7 +1,7 @@
 {
   "feature": "NCS-070",
   "date": "2026-09-22",
-  "title": "真实重录稳定验收（代码侧完成，bless 待人工确认）",
+  "title": "真实重录稳定验收（含人工确认 bless）",
   "spec": "docs/specs/2026-09-21-llm-output-stabilization.md",
   "runs": {
     "supplementary-run1": {
@@ -31,9 +31,22 @@
     "note": "修复前三章实体/关系恒为0、第3章真典单字符[——本轮两批真实运行均非零且零截断"
   },
   "pending": [
-    "compare-baseline.py --bless 需人工确认新旧质量对比后执行（本轮未bless，golden未动）",
-    "第2章复核屏障需人工处理（其人为模型对『盐引脚钱混旧铜』凭空证据的判断）",
-    "观察项：纠偏复验响应偶发整体格式无效时仍直接屏障（NCS-069只覆盖缺项补问，未覆盖格式无效重试）——登记为后续候选"
+    "第2章复核屏障的后续写作处理（其人为模型对『盐引脚钱混旧铜』凭空证据的判断，人工确认验收通过；屏障属临时运行库状态，仓库无待办）",
+    "观察项：纠偏复验响应整体格式无效时仍直接屏障（NCS-069只覆盖缺项补问）——后续候选feature"
   ],
-  "acceptanceState": "机器可验证项全部达成（重录+双replay一致+诊断零截断+提取非零+复验覆盖+数值基线PASS）；bless与屏障处理属人工门禁，NCS-070保持in-progress"
+  "acceptanceState": "completed：机器可验证项全部达成；bless 经人工确认执行，golden 已更新并复验",
+  "bless": {
+    "confirmedBy": "用户 2026-09-22 人工复核确认",
+    "command": "python3 scripts/compare-baseline.py data/e2e-evidence/ncs065-070-20260921/record2-replay/e2e-report-record.json baselines/golden.json --bless",
+    "result": {
+      "blessedAt": "2026-09-22T06:03:58",
+      "minChapters": 2,
+      "minTotalWords": 5865,
+      "minAvgWordCount": 2566,
+      "maxChapterFailures": 0,
+      "maxLlmErrors": 0
+    },
+    "rebuildReason": "NCS-065..069 改变注入请求与产出（EXTRACTION 路由/思考关闭/实体两阶段拆分/重试反馈语），旧 golden（2026-09-12，1章3144字）对应修复前语料；新语料 record+replay×2 一致、诊断零失败分类、提取非零、复验覆盖完整，经人工确认后以验收轮 record 报告重建，并以 replay1 报告复验 PASS",
+    "postVerify": "compare-baseline.py 以 replay1 报告对新 golden 复验 PASS"
+  }
 }

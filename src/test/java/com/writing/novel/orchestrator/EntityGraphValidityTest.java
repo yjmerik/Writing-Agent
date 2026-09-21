@@ -47,7 +47,9 @@ class EntityGraphValidityTest {
                 {"entities":[{"name":"裴照微","type":"CHARACTER"},{"name":"会票","type":"ITEM"}],
                  "edges":[{"source":"裴照微","target":"会票","relationship":"RELATED_TO"}]}
                 """;
+        // NCS-068: 首次截断 → 带因重试仍截断 → 才失败保留账本；恢复轮拿到合法响应
         when(gateway.complete(any())).thenReturn(
+                new LlmResponse("{\"entities\":[{\"name\":\"会票\",\"type\":\"ITEM\"}],\"edges\":[", 1, 1),
                 new LlmResponse("{\"entities\":[{\"name\":\"会票\",\"type\":\"ITEM\"}],\"edges\":[", 1, 1),
                 new LlmResponse(valid, 1, 1));
         var processor = processor(service);
@@ -63,8 +65,8 @@ class EntityGraphValidityTest {
         assertEquals(PostProcessLedgerRepository.StageStatus.COMPLETED, ledger.statusOf("p", 3, stage).orElseThrow());
         assertEquals(2, repo.findEntitiesByProject("p").size());
         assertEquals(1, repo.findEdgesByProject("p").size());
-        // NCS-067 拆分后：失败1次（实体截断）+ 成功1轮（实体+关系各1次）= 3 次调用
-        verify(gateway, times(3)).complete(any());
+        // NCS-068 重试后：失败轮2次（首次+重试）+ 恢复轮2次（实体+关系）= 4 次调用
+        verify(gateway, times(4)).complete(any());
     }
 
     @Test void 有效空图完成账本() {

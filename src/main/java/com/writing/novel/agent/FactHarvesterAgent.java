@@ -127,8 +127,36 @@ public class FactHarvesterAgent {
 
         try {
             var resp = gateway.complete(req);
+            // NCS-068: 先整批校验（不写库），可判定无效输出单次带因重试
+            java.util.List<com.fasterxml.jackson.databind.JsonNode> facts;
+            try {
+                facts = validatedFacts(resp.getContent());
+            } catch (IllegalArgumentException invalid) {
+                com.writing.novel.telemetry.EventLog.emit("STRUCTURED_OUTPUT_RETRY", java.util.Map.of(
+                        "taskType", LlmTaskType.EXTRACTION.name(),
+                        "phase", "fact-harvest",
+                        "attempt", 1,
+                        "reason", com.writing.novel.telemetry.EventLog.truncate(invalid.getMessage(), 200)));
+                var retryReq = LlmRequest.builder()
+                        .taskType(LlmTaskType.EXTRACTION)
+                        .systemPrompt(systemPrompt)
+                        .userMessage("请提取第" + chapter.getChapterIndex()
+                                + "章确立的事实。\n上一次输出不是合法的事实JSON数组（可能被截断）。"
+                                + "请只输出JSON数组本体，每条含 type/subject/assertion，至多30条。")
+                        .temperature(0.2)
+                        .maxTokens(2000)
+                        .build();
+                var retryResp = gateway.complete(retryReq);
+                try {
+                    facts = validatedFacts(retryResp.getContent());
+                } catch (IllegalArgumentException stillInvalid) {
+                    throw new IllegalArgumentException(
+                            "事实响应重试后仍无效: " + stillInvalid.getMessage(), stillInvalid);
+                }
+            }
+            final var batch = facts;
             var write = (java.util.function.Supplier<HarvestResult>) () ->
-                    merge(resp.getContent(), projectId, chapter.getChapterIndex());
+                    applyFacts(batch, projectId, chapter.getChapterIndex());
             return boundary == null ? write.get()
                     : boundary.apply(write, new HarvestResult(0, 0, 0));
         } catch (Exception e) {
@@ -144,9 +172,8 @@ public class FactHarvesterAgent {
         }
     }
 
-    /** 解析 LLM 输出的 JSON 数组，与真典比对后落库 */
-    private HarvestResult merge(String json, String projectId, int chapterIndex) {
-        int added = 0, validated = 0, superseded = 0;
+    /** NCS-068: 整批校验（无写库）——无效输出抛 IllegalArgumentException，供有界重试判定 */
+    private java.util.List<JsonNode> validatedFacts(String json) {
         try {
             int start = json.indexOf('[');
             int end = json.lastIndexOf(']');
@@ -162,6 +189,20 @@ public class FactHarvesterAgent {
                 }
                 StoryFact.FactType.valueOf(item.path("type").asText());
             }
+            java.util.List<JsonNode> out = new java.util.ArrayList<>();
+            arr.forEach(out::add);
+            return out;
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("事实响应解析失败: " + e.getMessage(), e);
+        }
+    }
+
+    /** 校验通过后的事实批次与真典比对落库 */
+    private HarvestResult applyFacts(java.util.List<JsonNode> arr, String projectId, int chapterIndex) {
+        int added = 0, validated = 0, superseded = 0;
+        try {
             for (JsonNode item : arr) {
                 StoryFact.FactType type = StoryFact.FactType.valueOf(item.path("type").asText());
                 String subject = item.path("subject").asText();

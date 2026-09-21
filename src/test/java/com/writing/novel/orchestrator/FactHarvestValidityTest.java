@@ -59,7 +59,9 @@ class FactHarvestValidityTest {
         when(orch.factHarvester()).thenReturn(agent);
         var processor = new ChapterPostProcessor(orch, repo, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, ledger);
+        // NCS-068: 首次无效 → 带因重试仍无效 → 才失败保留账本；恢复轮拿到合法响应
         when(gateway.complete(any())).thenReturn(new LlmResponse("[", 1, 1),
+                new LlmResponse("[", 1, 1),
                 new LlmResponse("[{\"type\":\"CHARACTER_STATE\",\"subject\":\"裴照微\",\"assertion\":\"取得会票\"}]", 1, 1));
         var error = assertThrows(IllegalStateException.class,
                 () -> processor.resume("p", chapter, 3, null, null));
@@ -71,6 +73,7 @@ class FactHarvestValidityTest {
         processor.resume("p", chapter, 3, null, null);
         assertEquals(PostProcessLedgerRepository.StageStatus.COMPLETED, ledger.statusOf("p", 3, stage).orElseThrow());
         assertEquals(1, facts.findAll("p").size());
-        verify(gateway, times(2)).complete(any());
+        // 失败轮2次（首次+重试）+ 恢复轮1次
+        verify(gateway, times(3)).complete(any());
     }
 }

@@ -86,9 +86,9 @@ class EntityExtractorSplitTest {
 
         var result = agent.extract("p", chapter);
 
-        assertNotNull(result.error(), "截断的实体响应必须显式失败");
-        // 实体失败后不得发起关系调用
-        verify(gateway, times(1)).complete(any());
+        assertNotNull(result.error(), "截断的实体响应经一次带因重试后仍必须显式失败");
+        // NCS-068: 首次 + 有界重试1次 = 2次调用；实体失败后不得发起关系调用
+        verify(gateway, times(2)).complete(any());
         assertTrue(repo.findEntitiesByProject("p").isEmpty(), "截断响应不得部分落库");
     }
 

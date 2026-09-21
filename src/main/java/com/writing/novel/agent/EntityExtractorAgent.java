@@ -85,16 +85,34 @@ public class EntityExtractorAgent {
         String entityPrompt = promptService.render("entity-extraction", Map.of(
                 "existingEntities", existingJson,
                 "chapterContent", chapterContent != null ? chapterContent : ""));
+        String entityUser = "请提取第" + chapter.getChapterIndex() + "章中的实体。";
         var entityReq = LlmRequest.builder()
                 .taskType(LlmTaskType.EXTRACTION)
                 .systemPrompt(entityPrompt)
-                .userMessage("请提取第" + chapter.getChapterIndex() + "章中的实体。")
+                .userMessage(entityUser)
                 .temperature(0.1)
                 .maxTokens(8000)
                 .build();
-        var entityResp = gateway.complete(entityReq);
-        var entityWrite = (java.util.function.Supplier<EntityStage>) () ->
-                parseAndSaveEntities(entityResp.getContent(), projectId, chapter.getChapterIndex(), existingEntities);
+        final String entityRetryUser = entityUser
+                + "\n上一次输出不是合法 JSON（可能被截断）。请只输出 JSON 本体，实体至多40个，不要输出任何解释。";
+        var entityWrite = (java.util.function.Supplier<EntityStage>) () -> {
+            EntityStage stage = parseAndSaveEntities(gateway.complete(entityReq).getContent(),
+                    projectId, chapter.getChapterIndex(), existingEntities);
+            if (stage.error() != null) {
+                // NCS-068: 可判定无效输出（JSON 解析失败）单次带因重试；失败终态不变
+                emitStructuredRetry("entity-extraction.entities", stage.error());
+                var retryReq = LlmRequest.builder()
+                        .taskType(LlmTaskType.EXTRACTION)
+                        .systemPrompt(entityPrompt)
+                        .userMessage(entityRetryUser)
+                        .temperature(0.1)
+                        .maxTokens(8000)
+                        .build();
+                stage = parseAndSaveEntities(gateway.complete(retryReq).getContent(),
+                        projectId, chapter.getChapterIndex(), existingEntities);
+            }
+            return stage;
+        };
         EntityStage entityStage = boundary == null ? entityWrite.get()
                 : boundary.apply(entityWrite, new EntityStage(List.of(), 0, 0, "stale chapter version"));
         if (entityStage.error() != null) {
@@ -110,16 +128,33 @@ public class EntityExtractorAgent {
         String edgePrompt = promptService.render("entity-edges", Map.of(
                 "entityNames", entityNames,
                 "chapterContent", chapterContent != null ? chapterContent : ""));
+        String edgeUser = "请提取第" + chapter.getChapterIndex() + "章中实体之间的关系。";
         var edgeReq = LlmRequest.builder()
                 .taskType(LlmTaskType.EXTRACTION)
                 .systemPrompt(edgePrompt)
-                .userMessage("请提取第" + chapter.getChapterIndex() + "章中实体之间的关系。")
+                .userMessage(edgeUser)
                 .temperature(0.1)
                 .maxTokens(8000)
                 .build();
-        var edgeResp = gateway.complete(edgeReq);
-        var edgeWrite = (java.util.function.Supplier<EdgeStage>) () ->
-                parseAndSaveEdges(edgeResp.getContent(), projectId, chapter.getChapterIndex());
+        final String edgeRetryUser = edgeUser
+                + "\n上一次输出不是合法 JSON（可能被截断）。请只输出 JSON 本体，只保留正文明确支持的关系，不要输出任何解释。";
+        var edgeWrite = (java.util.function.Supplier<EdgeStage>) () -> {
+            EdgeStage stage = parseAndSaveEdges(gateway.complete(edgeReq).getContent(),
+                    projectId, chapter.getChapterIndex());
+            if (stage.error() != null) {
+                emitStructuredRetry("entity-extraction.edges", stage.error());
+                var retryReq = LlmRequest.builder()
+                        .taskType(LlmTaskType.EXTRACTION)
+                        .systemPrompt(edgePrompt)
+                        .userMessage(edgeRetryUser)
+                        .temperature(0.1)
+                        .maxTokens(8000)
+                        .build();
+                stage = parseAndSaveEdges(gateway.complete(retryReq).getContent(),
+                        projectId, chapter.getChapterIndex());
+            }
+            return stage;
+        };
         EdgeStage edgeStage = boundary == null ? edgeWrite.get()
                 : boundary.apply(edgeWrite, new EdgeStage(0, "stale chapter version"));
         return new ExtractionResult(entityStage.newEntities(), entityStage.updatedEntities(),
@@ -131,6 +166,15 @@ public class EntityExtractorAgent {
 
     /** 阶段二结果 */
     private record EdgeStage(int newEdges, String error) {}
+
+    /** NCS-068: 有界重试事件——attempt 恒为 1，重试失败走原有可恢复终态 */
+    private static void emitStructuredRetry(String phase, String reason) {
+        com.writing.novel.telemetry.EventLog.emit("STRUCTURED_OUTPUT_RETRY", java.util.Map.of(
+                "taskType", LlmTaskType.EXTRACTION.name(),
+                "phase", phase,
+                "attempt", 1,
+                "reason", com.writing.novel.telemetry.EventLog.truncate(reason, 200)));
+    }
 
     /** 解析阶段一实体 JSON 并落库；无效响应不落库并返回 error */
     private EntityStage parseAndSaveEntities(String json, String projectId,

@@ -1,0 +1,24 @@
+{
+  "feature": "NCS-068",
+  "date": "2026-09-21",
+  "title": "结构化输出有界重试",
+  "branch": "codex/ncs-068-structured-retry",
+  "implementation_commit": "5dd167d",
+  "root_cause": "NCS-063/064后无效输出显式失败并保留可恢复账本——正确但瞬态故障每次中断流水线，需人工恢复",
+  "changes": [
+    "EntityExtractorAgent：两阶段各自对JSON解析失败做单次带因重试（userMessage附失败反馈+压缩要求），emitStructuredRetry发STRUCTURED_OUTPUT_RETRY事件（taskType/phase/attempt=1/reason截断200字）",
+    "FactHarvesterAgent：merge拆为validatedFacts（整批校验不写库）+applyFacts（写库）；校验失败先重试一次（附合法JSON数组要求），重试仍无效才走原有LLM_ERROR+IllegalStateException终态",
+    "合法空结果（[]与{\"entities\":[]}）不触发重试；重试成功不遗留错误",
+    "三个旧测试按重试语义更新桩与计数（失败需两次无效；断言强度不变）"
+  ],
+  "failing_first": {
+    "tests": "StructuredOutputRetryTest（6项）",
+    "red": "3失败+1错误（重试不存在）",
+    "green": "6/6；相关FactHarvestValidityTest/EntityGraphValidityTest/EntityExtractorSplitTest全过"
+  },
+  "verification": {
+    "verify_cmd": "mvn test -Dtest=StructuredOutputRetryTest → 6/0/0",
+    "full": "分支 mvn test → 1184 tests / 0 failures / 0 errors / 1 skipped"
+  },
+  "boundary": "重试上限恒为1且事件全量落盘；不伪完成（COMPLETED仍只认有效输出）；与客户端空响应/未终止流重试同语义"
+}

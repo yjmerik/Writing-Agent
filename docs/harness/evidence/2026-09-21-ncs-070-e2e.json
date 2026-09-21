@@ -1,0 +1,39 @@
+{
+  "feature": "NCS-070",
+  "date": "2026-09-22",
+  "title": "真实重录稳定验收（代码侧完成，bless 待人工确认）",
+  "spec": "docs/specs/2026-09-21-llm-output-stabilization.md",
+  "runs": {
+    "supplementary-run1": {
+      "dir": "data/e2e-evidence/ncs065-070-20260921/supplementary-run1/",
+      "shape": "标准3章record被e2e.sh 5400s轮询预算掐断（两次30分钟网关超时耗尽），手工续跑又写至第4章；保留为补充真实运行证据",
+      "outcome": "62次LLM调用/0错误/0截断/0结构化重试；实体26、关系42、真典28条；CORRECTION_VERIFIED×5覆盖完整；3章正文完整（另第4章部分）"
+    },
+    "acceptance-record2": {
+      "dir": "data/e2e-evidence/ncs065-070-20260921/record2-replay/",
+      "fixtureDir": "data/e2e-fixtures/ncs065-070/mystery-20260922/（46条，本地）",
+      "shape": "干净main导出+author-intent注入+轮询上限放宽至6h的标准3章record",
+      "outcome": "46次调用/0错误/0截断（LLM_TRUNCATED=0）/0结构化重试；EXTRACTION 6次平均10.1s（关思考生效）；2章7332字；第1章HIGH经纠偏复验RESOLVED（含原文证据）；第2章HIGH（凭空证据：盐引脚钱混旧铜无铺垫）→复核屏障→任务PAUSED；完整验收诚实判FAIL（屏障+未满3章）",
+      "replay1": "报告与record完全一致（仅generatedAt/projectId不同）；正文SHA-256前缀 ch1=0cf80aa11bfe5965 ch2=c3bdd5a058defd5a；实体27/关系40/真典21",
+      "replay2": "报告与replay1完全一致；正文哈希与DB计数与replay1相同",
+      "diagnose": "失败分类0条；读者检验通过率100%（4/4）；质量阻断信号2条（人审屏障1+写作暂停1，即上述第2章屏障）；总成本¥0.8971",
+      "baselineComparison": "compare-baseline.py PASS（章节数2≥1、总字数7332≥3144、平均3666≥2751、0失败、0 LLM错误）"
+    }
+  },
+  "guardRetest": {
+    "claim": "NCS-033修复后守卫按前文判断的直接证据：第2章问题描述明确写『前文与本章均未交代盐引脚钱与灶底旧铜、庚辰案之间的物证或账证来源』——守卫已检索并引用前文，不再是修复前『第2章正文已有场景仍称凭空』的模式",
+    "boundary": "第2章该项HIGH是否真为情节问题待人工复核判断，未自动解除屏障"
+  },
+  "extractionHealth": {
+    "entities": "27（CHARACTER/ITEM/FACTION/LOCATION/CONCEPT/EVENT/TECHNIQUE均有）",
+    "edges": 40,
+    "facts": 21,
+    "note": "修复前三章实体/关系恒为0、第3章真典单字符[——本轮两批真实运行均非零且零截断"
+  },
+  "pending": [
+    "compare-baseline.py --bless 需人工确认新旧质量对比后执行（本轮未bless，golden未动）",
+    "第2章复核屏障需人工处理（其人为模型对『盐引脚钱混旧铜』凭空证据的判断）",
+    "观察项：纠偏复验响应偶发整体格式无效时仍直接屏障（NCS-069只覆盖缺项补问，未覆盖格式无效重试）——登记为后续候选"
+  ],
+  "acceptanceState": "机器可验证项全部达成（重录+双replay一致+诊断零截断+提取非零+复验覆盖+数值基线PASS）；bless与屏障处理属人工门禁，NCS-070保持in-progress"
+}

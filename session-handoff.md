@@ -1,28 +1,33 @@
-# LLM输出稳定化方案设计与backlog登记 — 2026-09-21
+# LLM输出稳定化实现与真实重录验收 — 2026-09-22
 
-Last Updated: 2026-09-21
+Last Updated: 2026-09-22
 
 ## Current
-NCS-033/063/064/061/062修复已在main（1161 tests 0F/0E/1S）。
-本轮针对llm-residuals-20260921.md五项模型侧遗留完成方案设计并登记backlog：NCS-065..070。
-纯文档维护（spec+backlog+状态入口），未改业务代码，active_feature=null。
+NCS-065..069 已逐项按协议实现、合入本地 main 并登记完成（active_feature=NCS-070 in-progress）。
+NCS-070 真实重录验收的机器可验证项全部完成：record+replay×2 三次一致、诊断零失败分类、
+EXTRACTION 零截断（实体27/关系40/真典21，修复前恒为0）、数值基线 PASS。
+第2章守卫 HIGH（正确引用前文）→ 复核屏障 → 任务 PAUSED，完整验收诚实判 FAIL。
 
 ## Files
-docs/specs/2026-09-21-llm-output-stabilization.md：设计方案（根因取证+分层修复+验收）。
-feature_list.json：新增NCS-065..070（not-started，含acceptance/verify_cmd/依赖）。
-关键取证：completeViaStream无终止校验（真典单字符[的传输层根因）；实体提取有效预算4096
-vs约9.4k字符输出需求（截断根因）；finish_reason全链路缺失；复验缺项无补问路径。
+实现提交（均已ff-only合入main）：c149912(065) 46b2aef(066) 9a7fd55(067) 5dd167d(068) 5a016c6(069)；
+各配套docs证据与登记提交见 git log。NCS-070 证据：docs/harness/evidence/2026-09-21-ncs-070-e2e.json；
+可回放语料：data/e2e-fixtures/ncs065-070/mystery-20260922/（46条，本地）；
+原始产物：data/e2e-evidence/ncs065-070-20260921/（record2-replay/ 与 supplementary-run1/）。
 
 ## Verification
-纯文档改动；JSON经python3解析校验（401项feature，末6项为新登记）。
-分支：codex/docs-llm-output-stabilization，独立提交后ff-only合入main；
-合并提交与合并后main门禁结果（mvn compile && mvn test）以git log与本文件提交时的运行为准。
-无关未提交文件（.zcode/plans、docs/reports/2026-09-05-ui-experience）未纳入提交。
+每项先RED后GREEN；分支与干净main各自 mvn compile && mvn test 通过；
+最终 main 全量 1187 tests / 0 failures / 0 errors / 1 skipped（新增26项：
+Termination 8 + Routing 5 + Split 4 + Retry 6 + GapRefill 3）。
+E2E record 复现命令（隔离导出目录内）：
+E2E_FIXTURE_DIR=data/e2e-fixtures/ncs065-070/mystery-20260922 python3 run-record.py --mode replay
+（run-record.py 为 docs/harness/evidence/ncs033/run-intent-e2e.py 的等价包装器+轮询上限放宽，
+未改动仓库内 scripts/e2e.sh）。golden未更新、未bless、无远端推送。
 
 ## Blockers
-无。方案已登记待用户授权实现；golden未动、未重录、未解除人工屏障（与上轮边界一致）。
+NCS-070 剩两个人工门禁：--bless 需用户确认新旧质量对比；第2章复核屏障需人工处理
+（守卫对『盐引脚钱混旧铜』凭空证据的判断，引用了前文，非NCS-033修复前的召回缺失模式）。
+补充登记：纠偏复验整体格式无效时仍直接屏障（NCS-069只补缺项）——后续候选feature。
 
 ## Next Steps
-实现顺序：NCS-065（流终止+截断信号）→066（EXTRACTION路由预算）→067（实体拆分瘦身）
-→068（有界重试）→069（复验补问）→070（真实重录+bless门禁）。
-每项走特性分支闭环；NCS-058真人文学验收依赖链不变。
+用户确认后：compare-baseline.py --bless（重建理由已记入证据）→ NCS-070 完成；
+人工处理第2章屏障后可续写。文学质量真人验收仍归 NCS-058。

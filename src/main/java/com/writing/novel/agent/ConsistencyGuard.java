@@ -244,25 +244,43 @@ public class ConsistencyGuard {
                     .systemPrompt(promptService.render("correction-verification", Map.of()))
                     .userMessage(input.toString()).temperature(0.0).maxTokens(3072).build();
             String raw = gateway.complete(request).getContent();
-            String clean = raw == null ? "" : raw.trim().replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
-            JsonNode result = MAPPER.readTree(clean);
-            if (result == null || !result.path("chapterVersion").isIntegralNumber()
-                    || result.path("chapterVersion").asInt() != chapterVersion
-                    || !result.path("results").isArray() || result.path("results").size() != findings.size())
-                throw new IllegalArgumentException("复验稿号不匹配或问题覆盖不完整");
+            JsonNode result = parseVerificationResponse(raw, chapterVersion);
             var verdicts = new java.util.HashMap<String, CorrectionVerdict>();
-            for (JsonNode item : result.path("results")) {
-                requireText(item, "issueId", "status", "reason");
-                String id = item.path("issueId").asText();
-                String status = item.path("status").asText();
-                String evidence = item.path("evidence").asText("");
-                if (!List.of("RESOLVED", "UNRESOLVED", "UNKNOWN").contains(status))
-                    throw new IllegalArgumentException("未知复验结论");
-                if ("RESOLVED".equals(status) && (evidence.strip().length() < 4 || !chapterContent.contains(evidence)))
-                    throw new IllegalArgumentException("已解决结论缺少当前正文原文证据");
-                if (verdicts.putIfAbsent(id, new CorrectionVerdict(id, status, evidence, item.path("reason").asText())) != null)
-                    throw new IllegalArgumentException("复验问题编号重复");
+            consumeVerdictItems(result.path("results"), chapterContent, verdicts);
+            JsonNode refillResults = null;
+
+            // NCS-069: 缺项一次补问——模型偶发回答缺项（2项只回1项），严格校验保留；
+            // 对缺失 issueId 单独补问一轮并合并，补问后仍缺才失败（屏障）。
+            var missing = new ArrayList<Integer>();
+            for (int i = 1; i <= findings.size(); i++) {
+                if (!verdicts.containsKey(String.valueOf(i))) missing.add(i);
             }
+            if (!missing.isEmpty()) {
+                String missingIds = missing.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
+                com.writing.novel.telemetry.EventLog.emit("CORRECTION_GAP_REFILL", Map.of(
+                        "projectId", projectId, "chapterIndex", chapterIndex, "chapterVersion", chapterVersion,
+                        "missing", missingIds, "count", missing.size()));
+                var refillInput = MAPPER.createObjectNode();
+                refillInput.put("chapterVersion", chapterVersion);
+                refillInput.put("settings", settings);
+                refillInput.put("chapterContent", chapterContent);
+                var refillFindings = refillInput.putArray("findings");
+                for (int id : missing) {
+                    var finding = refillFindings.addObject();
+                    finding.put("issueId", String.valueOf(id));
+                    finding.put("description", findings.get(id - 1).getDescription());
+                }
+                var refillRequest = LlmRequest.builder().taskType(LlmTaskType.GENERAL)
+                        .systemPrompt(promptService.render("correction-verification", Map.of()))
+                        .userMessage(refillInput.toString()
+                                + "\n上一次回答缺少问题 " + missingIds + " 的结论。请只输出这些问题编号的结论。")
+                        .temperature(0.0).maxTokens(3072).build();
+                String refillRaw = gateway.complete(refillRequest).getContent();
+                JsonNode refillResult = parseVerificationResponse(refillRaw, chapterVersion);
+                consumeVerdictItems(refillResult.path("results"), chapterContent, verdicts);
+                refillResults = refillResult.path("results");
+            }
+
             var ordered = new ArrayList<CorrectionVerdict>();
             for (int i = 1; i <= findings.size(); i++) {
                 var verdict = verdicts.get(String.valueOf(i));
@@ -273,6 +291,7 @@ public class ConsistencyGuard {
             receipt.put("chapterVersion", chapterVersion);
             receipt.set("findings", originals);
             receipt.set("results", result.path("results"));
+            if (refillResults != null) receipt.set("refillResults", refillResults);
             recordCheck(projectId, chapterIndex, "correction-verification", CheckResultEnvelope.Status.SUCCESS,
                     receipt.toString(), chapterContent);
             return List.copyOf(ordered);
@@ -280,6 +299,34 @@ public class ConsistencyGuard {
             recordCheck(projectId, chapterIndex, "correction-verification", CheckResultEnvelope.Status.UNKNOWN,
                     e.getMessage(), chapterContent);
             throw new IllegalStateException("原问题逐项复验未完成", e);
+        }
+    }
+
+    /** 剥离代码围栏并校验稿号；结果数组存在性在此保证 */
+    private JsonNode parseVerificationResponse(String raw, int chapterVersion) throws Exception {
+        String clean = raw == null ? "" : raw.trim().replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
+        JsonNode result = MAPPER.readTree(clean);
+        if (result == null || !result.path("chapterVersion").isIntegralNumber()
+                || result.path("chapterVersion").asInt() != chapterVersion
+                || !result.path("results").isArray())
+            throw new IllegalArgumentException("复验稿号不匹配或结果格式无效");
+        return result;
+    }
+
+    /** 逐条严格校验并入集：编号必填、结论枚举、RESOLVED 需正文原文证据、编号不得重复 */
+    private void consumeVerdictItems(JsonNode results, String chapterContent,
+                                     java.util.HashMap<String, CorrectionVerdict> verdicts) {
+        for (JsonNode item : results) {
+            requireText(item, "issueId", "status", "reason");
+            String id = item.path("issueId").asText();
+            String status = item.path("status").asText();
+            String evidence = item.path("evidence").asText("");
+            if (!List.of("RESOLVED", "UNRESOLVED", "UNKNOWN").contains(status))
+                throw new IllegalArgumentException("未知复验结论");
+            if ("RESOLVED".equals(status) && (evidence.strip().length() < 4 || !chapterContent.contains(evidence)))
+                throw new IllegalArgumentException("已解决结论缺少当前正文原文证据");
+            if (verdicts.putIfAbsent(id, new CorrectionVerdict(id, status, evidence, item.path("reason").asText())) != null)
+                throw new IllegalArgumentException("复验问题编号重复");
         }
     }
 

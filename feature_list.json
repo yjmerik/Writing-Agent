@@ -8558,7 +8558,7 @@
       "phase": 50,
       "type": "bug",
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/agent/FactHarvesterAgent.java",
         "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java",
@@ -8570,8 +8570,9 @@
       "spec": "docs/specs/2026-09-21-fact-harvest-validity.md",
       "acceptance": "运行 verify_cmd 通过：无效 JSON/非法条目不成功、不部分写入、不完成 FACT_HARVEST；合法 [] 兼容；失败可定位且恢复不重复。编译、全量测试及适用 E2E 通过。 本次按2026-09-21-ncs-focused-fixes.md的用户限定范围验收代码；真实模型质量遗留登记。",
       "verify_cmd": "mvn test -Dtest=FactHarvestValidityTest,FactHarvesterTest,PostProcessingRecoveryTest",
-      "evidence": "2026-09-21 NCS-033 真实录制响应仅为 [，FACT_HARVEST 却 COMPLETED，零新增事实且未报错。只登记，未实现；证据 docs/harness/evidence/ncs033/continued-fact-harvest-diagnosis-20260921.json。",
-      "branch": "codex/ncs-063-fact-validity"
+      "evidence": "代码定点修复已合main 4aeafdf，分支及干净main全量/专项通过。按用户2026-09-21限定验收范围完成；LLM不稳定及文学质量登记保留，未bless。证据docs/harness/evidence/2026-09-21-ncs-063-focused.json。",
+      "branch": "codex/ncs-063-fact-validity",
+      "completion_record": "ncs-063-focused-verified"
     },
     {
       "id": "NCS-064",
@@ -8594,5 +8595,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-21",
-  "active_feature": "NCS-063"
+  "active_feature": null
 }

@@ -1,0 +1,46 @@
+{
+  "commit": "4aeafdf7dd6c6143ed581c70eebd248b105a9e4f",
+  "main_commit": "4aeafdf7dd6c6143ed581c70eebd248b105a9e4f",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-063"
+  ],
+  "branch": "codex/ncs-063-fact-validity",
+  "scope": "User-requested code fixes only; unstable LLM output logged, no architecture expansion, no golden bless or literary-quality acceptance",
+  "summary": "事实提取先校验整批数据；无效响应明确失败，FACT_HARVEST保留可恢复账本，合法空数组兼容。",
+  "red": "FactHarvestValidityTest: 8 tests, 7 failures / 0 errors before fix; invalid batch and ledger completion reproduced.",
+  "branchTests": {
+    "tests": 1151,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "mainTests": {
+    "tests": 1151,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "checks": [
+    {
+      "command": "mvn compile && mvn test (branch)",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn clean compile && mvn test (clean detached main checkout)",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=FactHarvestValidityTest,FactHarvesterTest,PostProcessingRecoveryTest",
+      "result": "PASS (branch and main)",
+      "exitCode": 0
+    }
+  ],
+  "limitations": [
+    "LLM malformed output remains registered; no new real LLM recording or golden update.",
+    "Original E2E fixtures no longer match NCS-033 guard input; use preserved invalid-response integration tests for this scoped fix, not a literary-quality PASS."
+  ],
+  "llmResiduals": "docs/harness/evidence/ncs033/llm-residuals-20260921.md"
+}

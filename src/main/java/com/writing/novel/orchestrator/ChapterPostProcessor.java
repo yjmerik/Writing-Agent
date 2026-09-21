@@ -161,10 +161,20 @@ public class ChapterPostProcessor {
 
     /** 图数据库：LLM 提取本章实体和关系 */
     private void stageEntityGraph(String projectId, Chapter chapter, int chapterIndex) {
+        if (entityGraphService == null) return;
         try {
-            entityGraphService.extractFromChapter(projectId, chapter);
+            var result = entityGraphService.extractFromChapter(projectId, chapter);
+            if (result == null || (result.error() != null && !result.error().isBlank())) {
+                throw new IllegalStateException(result == null ? "实体提取没有返回结果" : result.error());
+            }
         } catch (Exception e) {
             log.warn("实体提取失败(章{}): {}", chapterIndex, e.getMessage());
+            com.writing.novel.telemetry.EventLog.emit("LLM_ERROR", Map.of(
+                    "projectId", projectId, "chapterIndex", chapterIndex,
+                    "taskType", "GENERAL", "phase", "entity-extraction",
+                    "errorClass", e.getClass().getSimpleName(),
+                    "message", com.writing.novel.telemetry.EventLog.truncate(e.getMessage(), 200)));
+            throw new IllegalStateException("实体提取失败，第" + chapterIndex + "章待恢复", e);
         }
     }
 

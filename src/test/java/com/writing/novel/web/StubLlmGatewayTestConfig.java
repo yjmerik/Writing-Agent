@@ -25,6 +25,9 @@ public class StubLlmGatewayTestConfig {
                 if (req.getUserMessage().startsWith("请提取第") && req.getUserMessage().endsWith("章确立的事实。")) {
                     return new LlmResponse("[]", 1, 1);
                 }
+                if (req.getUserMessage().startsWith("请提取第") && req.getUserMessage().endsWith("章中的实体和关系。")) {
+                    return new LlmResponse("{\"entities\":[],\"edges\":[]}", 1, 1);
+                }
                 String content = switch (req.getTaskType()) {
                     case WORLDBUILDING ->
                             "【地理】玄黄大陆：东方主大陆。\n【力量体系】灵气：修炼九重。";

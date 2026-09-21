@@ -2,7 +2,7 @@
 
 ## 背景与动机
 
-NCS-033 的 2026-09-21 真实录制中，三章实体提取均返回截断 JSON。EntityExtractorAgent 返回携带 error 的结果，但调用方忽略该结果，将三次 ENTITY_GRAPH 均记为 COMPLETED；实体和关系表均为零。诊断：`docs/harness/evidence/ncs033/continued-entity-diagnosis-20260921.json`。本轮仅登记，不扩展实现范围。
+NCS-033 的 2026-09-21 真实录制中，三章实体提取均返回截断 JSON。EntityExtractorAgent 返回携带 error 的结果，但调用方忽略该结果，将三次 ENTITY_GRAPH 均记为 COMPLETED；实体和关系表均为零。诊断：`docs/harness/evidence/ncs033/continued-entity-diagnosis-20260921.json`。按用户2026-09-21后续要求定点修复，只检查已有错误结果并沿用后处理账本。
 
 ## 目标
 
@@ -34,3 +34,7 @@ NCS-033 的 2026-09-21 真实录制中，三章实体提取均返回截断 JSON�
 ## 风险与备选方案
 
 与 NCS-063 均涉及 ChapterPostProcessor，须按单特性分支协议逐项合并；保持人工复核状态，不将业务解析失败冒充网络成功。
+
+## 本轮验收范围
+
+采用 `2026-09-21-ncs-focused-fixes.md` 中的代码限定验收。原实体解析器已能返回错误，本轮仅修改调用方并补充真实SQLite回归；Web共享测试桩返回有效空图，不改业务断言。截断JSON继续登记为LLM遗留，未重录或bless。

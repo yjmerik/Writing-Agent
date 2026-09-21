@@ -1936,6 +1936,17 @@
    "implementation_commit": "15880286a63aeb6e5c9adaa7d856eee44dc44fef",
    "main_commit": "15880286a63aeb6e5c9adaa7d856eee44dc44fef",
    "evidence": "docs/harness/evidence/2026-09-21-ncs-064-focused.json"
+  },
+  {
+   "id": "ncs-061-focused-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-061"
+   ],
+   "branch": "codex/ncs-061-foreshadow-time",
+   "implementation_commit": "959d6cd33c1ac99c1e1372367d8d84751736aeb7",
+   "main_commit": "959d6cd33c1ac99c1e1372367d8d84751736aeb7",
+   "evidence": "docs/harness/evidence/2026-09-21-ncs-061-focused.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

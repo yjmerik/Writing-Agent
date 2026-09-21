@@ -1,0 +1,46 @@
+{
+  "commit": "959d6cd33c1ac99c1e1372367d8d84751736aeb7",
+  "main_commit": "959d6cd33c1ac99c1e1372367d8d84751736aeb7",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-061"
+  ],
+  "branch": "codex/ncs-061-foreshadow-time",
+  "scope": "User-requested code fixes only; unstable LLM output logged, no architecture expansion, no golden bless or literary-quality acceptance",
+  "summary": "伏笔抽取保留括号内分号元数据，回收章只匹配回收计划；不再产生时间碎片，也不把埋设章当作回收章。",
+  "red": "ForeshadowOutlineChronologyTest: 4 tests, 2 failures / 0 errors before fix (3 plans became 5 entries; expected chapter 5 became 2).",
+  "branchTests": {
+    "tests": 1156,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "mainTests": {
+    "tests": 1156,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "checks": [
+    {
+      "command": "mvn compile && mvn test (branch)",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn clean compile && mvn test (clean detached main checkout)",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=ForeshadowOutlineChronologyTest",
+      "result": "PASS (branch and main)",
+      "exitCode": 0
+    }
+  ],
+  "limitations": [
+    "Old failed E2E databases and fixtures remain unchanged as evidence. No speculative data migration or re-recording.",
+    "This completes the code-only scope authorized by user; real literary E2E remains unaccepted and golden unchanged."
+  ],
+  "llmResiduals": "docs/harness/evidence/ncs033/llm-residuals-20260921.md"
+}

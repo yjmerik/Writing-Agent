@@ -1,0 +1,47 @@
+{
+  "commit": "330ce0609e3549bd2f87651f1824cae9ab948b28",
+  "main_commit": "330ce0609e3549bd2f87651f1824cae9ab948b28",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-062"
+  ],
+  "branch": "codex/ncs-062-foreshadow-scope",
+  "scope": "User-requested code fixes only; unstable LLM output logged, no architecture expansion, no golden bless or literary-quality acceptance",
+  "summary": "写作上下文过滤未来章伏笔；卷末只以明确到期的未回收条目计算HIGH，未来计划排除、未定期限保留提醒。",
+  "red": "FutureForeshadowContextTest: 6 tests, 4 failures / 0 errors before fix; writing leaked future plans and volume audit wrongly counted future/unscheduled clues.",
+  "branchTests": {
+    "tests": 1161,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "mainTests": {
+    "tests": 1161,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "checks": [
+    {
+      "command": "mvn compile && mvn test (branch)",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn clean compile && mvn test (clean detached main checkout)",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest=FutureForeshadowContextTest",
+      "result": "PASS (branch and main)",
+      "exitCode": 0
+    }
+  ],
+  "limitations": [
+    "No new real recording, golden bless, historical DB mutation or manual barrier approval.",
+    "Context changes invalidate old fixtures; deterministic tests verify scoped code behavior, not new real literary E2E quality.",
+    "No extra retries, model tuning, new services, tables or agent architecture."
+  ],
+  "llmResiduals": "docs/harness/evidence/ncs033/llm-residuals-20260921.md"
+}

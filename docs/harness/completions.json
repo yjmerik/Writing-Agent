@@ -1947,6 +1947,17 @@
    "implementation_commit": "959d6cd33c1ac99c1e1372367d8d84751736aeb7",
    "main_commit": "959d6cd33c1ac99c1e1372367d8d84751736aeb7",
    "evidence": "docs/harness/evidence/2026-09-21-ncs-061-focused.json"
+  },
+  {
+   "id": "ncs-062-focused-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-062"
+   ],
+   "branch": "codex/ncs-062-foreshadow-scope",
+   "implementation_commit": "330ce0609e3549bd2f87651f1824cae9ab948b28",
+   "main_commit": "330ce0609e3549bd2f87651f1824cae9ab948b28",
+   "evidence": "docs/harness/evidence/2026-09-21-ncs-062-focused.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

@@ -8542,7 +8542,7 @@
       "dependencies": [
         "NCS-061"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/memory/ContextAssembler.java",
         "src/main/java/com/writing/novel/orchestrator/ChapterProduction.java",
@@ -8552,8 +8552,9 @@
       "spec": "docs/specs/2026-09-21-foreshadow-chronology.md",
       "acceptance": "先失败测试复现，再修复；运行 mvn test -Dtest=FutureForeshadowContextTest 通过；编译/全量测试及匹配E2E符合门禁。 2026-09-21补充：卷末不计尚未到期规划；未定期限仅提醒，明确到期>5条仍HIGH。按本轮用户限定范围验收代码，LLM质量单独登记。",
       "verify_cmd": "mvn test -Dtest=FutureForeshadowContextTest",
-      "evidence": "NCS-033真实录制过程中代码+DB+模型报告交叉定位，见docs/harness/evidence/ncs033/foreshadow-chronology-discovery.json。仅登记，未实现。",
-      "branch": "codex/ncs-062-foreshadow-scope"
+      "evidence": "代码定点修复已合main 330ce06，分支及干净main全量/专项通过。按用户2026-09-21限定验收范围完成；LLM不稳定及文学质量登记保留，未bless。证据docs/harness/evidence/2026-09-21-ncs-062-focused.json。",
+      "branch": "codex/ncs-062-foreshadow-scope",
+      "completion_record": "ncs-062-focused-verified"
     },
     {
       "id": "NCS-063",
@@ -8601,5 +8602,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-09-21",
-  "active_feature": "NCS-062"
+  "active_feature": null
 }

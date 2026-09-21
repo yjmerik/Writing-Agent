@@ -1635,10 +1635,24 @@ public class NovelOrchestrator {
                 "伏笔[：:]\\s*(.+?)(?=(?:\\n|。\\s*)(?:场景节拍|爽点|人物|目的|张力|伏笔)[：:]|$)",
                 java.util.regex.Pattern.DOTALL).matcher(synopsis);
         if (!matcher.find()) return List.of();
-        return java.util.Arrays.stream(matcher.group(1).split("[;；\\n]"))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .toList();
+        // 括号中的 HIGH；埋第N章→预计第M章 是同一条目的元数据。
+        var items = new java.util.ArrayList<String>();
+        String text = matcher.group(1);
+        int depth = 0;
+        int start = 0;
+        for (int i = 0; i < text.length(); i++) {
+            char ch = text.charAt(i);
+            if (ch == '(' || ch == '（') depth++;
+            else if (ch == ')' || ch == '）') depth = Math.max(0, depth - 1);
+            else if (depth == 0 && (ch == ';' || ch == '；' || ch == '\n')) {
+                String item = text.substring(start, i).trim();
+                if (!item.isEmpty()) items.add(item);
+                start = i + 1;
+            }
+        }
+        String last = text.substring(start).trim();
+        if (!last.isEmpty()) items.add(last);
+        return items;
     }
 
     private static boolean startsWithForeshadowResolve(String value) {
@@ -1669,8 +1683,9 @@ public class NovelOrchestrator {
     private static Integer parseExpectedResolveChapter(String value) {
         if (value == null) return null;
         java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(
-                "(?:预计|计划)?\\s*第\\s*(\\d+)\\s*章\\s*(?:回收|揭示|兑现)?").matcher(value);
-        return matcher.find() ? Integer.valueOf(matcher.group(1)) : null;
+                "(?:预计|计划)\\s*第?\\s*(\\d+)\\s*章|第\\s*(\\d+)\\s*章\\s*(?:回收|揭示|兑现)").matcher(value);
+        if (!matcher.find()) return null;
+        return Integer.valueOf(matcher.group(1) != null ? matcher.group(1) : matcher.group(2));
     }
 
     private static Foreshadowing.Priority parseForeshadowPriority(String value) {

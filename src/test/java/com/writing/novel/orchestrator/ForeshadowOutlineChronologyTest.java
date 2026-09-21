@@ -79,4 +79,43 @@ class ForeshadowOutlineChronologyTest {
         method.setAccessible(true);
         method.invoke(orchestrator, id);
     }
+
+    @Test
+    void 真实大纲括号内分号不拆成时间碎片() throws Exception {
+        Outline outline = new Outline(projectId, "雨账");
+        Volume volume = new Volume(projectId, 1, "卷一", "");
+        volume.addSynopsis(new ChapterSynopsis(projectId, 1, "雨账",
+                "伏笔：埋设-地窖景元九年残账（HIGH；埋第1章→预计第3章回收）；"
+                        + "埋设-账册续写欠一雨（HIGH；埋第1章→预计第3章回收）。"));
+        volume.addSynopsis(new ChapterSynopsis(projectId, 3, "阴账",
+                "伏笔：埋设-平准司内部有阴账（MEDIUM；埋第3章→预计后续卷回收）。"));
+        outline.addVolume(volume);
+        repo.saveOutline(outline);
+        invokeExtract(projectId);
+        var saved = repo.findForeshadowingsByProject(projectId);
+        assertEquals(3, saved.size(), "时间信息不能被当作新的伏笔条目");
+        for (var f : saved) {
+            assertFalse(f.getDescription().startsWith("埋第"));
+            if (f.getPlantedAtChapter() == 1) {
+                assertEquals(3, f.getExpectedResolveChapter());
+                assertEquals(Foreshadowing.Priority.HIGH, f.getPriority());
+            } else {
+                assertNull(f.getExpectedResolveChapter(), "后续卷不能被误记成本章到期");
+            }
+        }
+    }
+
+    @Test
+    void 回收时间不能匹配到较早的埋设章号() throws Exception {
+        Outline outline = new Outline(projectId, "时间解析");
+        Volume volume = new Volume(projectId, 1, "卷一", "");
+        volume.addSynopsis(new ChapterSynopsis(projectId, 2, "纸债",
+                "伏笔：埋设-旧册画指（HIGH，埋第2章→第5章回收）。"));
+        outline.addVolume(volume);
+        repo.saveOutline(outline);
+        invokeExtract(projectId);
+        var saved = repo.findForeshadowingsByProject(projectId);
+        assertEquals(1, saved.size());
+        assertEquals(5, saved.get(0).getExpectedResolveChapter());
+    }
 }

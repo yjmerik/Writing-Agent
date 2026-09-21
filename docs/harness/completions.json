@@ -2002,6 +2002,17 @@
       "implementation_commit": "5dd167d",
       "main_commit": "99cb485",
       "evidence": "docs/harness/evidence/2026-09-21-ncs-068-focused.json"
+    },
+    {
+      "id": "ncs-069-focused-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-069"
+      ],
+      "branch": "codex/ncs-069-verification-gap",
+      "implementation_commit": "5a016c6",
+      "main_commit": "7446bac",
+      "evidence": "docs/harness/evidence/2026-09-21-ncs-069-focused.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

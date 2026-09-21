@@ -1,0 +1,27 @@
+{
+  "feature": "NCS-066",
+  "date": "2026-09-21",
+  "title": "结构化提取独立路由与输出预算",
+  "branch": "codex/ncs-066-extraction-routing",
+  "implementation_commit": "46b2aef",
+  "root_cause": "实体/事实提取走 GENERAL 路由，有效预算 max(请求,配置)=4096 token，输出需求约9.4k字符且思考模型 reasoning 计入输出预算——必然截断",
+  "changes": [
+    "LlmTaskType 新增 EXTRACTION",
+    "application.yml 新增 EXTRACTION 路由：max-tokens 16000 / temperature 0.1 / thinking-enabled false（注释说明劣化时可回开）",
+    "ModelConfig 新增 ThinkingParamStyle（AUTO/GLM/DASHSCOPE），AUTO 按端点推断；DefaultLlmGateway 克隆时保留",
+    "OpenAiCompatibleClient.buildRequestBody 关思考参数按形态注入：DashScope→enable_thinking:false，GLM→thinking.type=disabled，互不误发；resolveThinkingStyle 公开可测",
+    "EntityExtractorAgent/FactHarvesterAgent 切至 EXTRACTION；两处 LLM_ERROR 事件 taskType 同步",
+    "ScenarioLlmGateway 补 EXTRACTION 分支（合法空数组）",
+    "TokenPlanModelConfigurationTest 更新路由计数9并断言 EXTRACTION 预算/温度/思考开关"
+  ],
+  "failing_first": {
+    "tests": "ExtractionRoutingTest（5项）",
+    "red": "编译失败——EXTRACTION/ThinkingParamStyle/resolveThinkingStyle 不存在",
+    "green": "5/5 通过"
+  },
+  "verification": {
+    "verify_cmd": "mvn test -Dtest=ExtractionRoutingTest → 5/0/0",
+    "full": "分支 mvn test → 1174 tests / 0 failures / 0 errors / 1 skipped"
+  },
+  "e2e_note": "请求参数变化（任务类型/预算/思考关闭）按 DoD 在 NCS-070 统一重录验收；旧语料 EXTRACTION 前缀分叉为预期"
+}

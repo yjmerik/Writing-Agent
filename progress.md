@@ -1,21 +1,25 @@
-# 遗留问题定点修复 — 2026-09-21
+# E2E遗留问题定点修复 — 2026-09-21
 
 Last Updated: 2026-09-21
 
 ## Current
-NCS-062代码修复已completed，codex/ncs-062-foreshadow-scope以330ce06合入main；active_feature=null。
-写作上下文过滤未来章伏笔；卷末只以明确到期的未回收条目计算HIGH，未来计划排除、未定期限保留提醒。
-按用户要求，仅修遗留代码缺陷，LLM输出不稳定独立登记，不扩展架构。
+NCS-033/063/064/061/062已按独立分支协议完成并合入本地main，active_feature=null。
+本轮只修守卫证据、提取伪完成、伏笔时间解析及时间范围；未扩展架构。
 
 ## Files
-docs/harness/evidence/2026-09-21-ncs-062-focused.json
-模型遗留：docs/harness/evidence/ncs033/llm-residuals-20260921.md
+docs/harness/evidence/ncs033/focused-fixes-20260921.md：完成报告。
+docs/harness/evidence/ncs033/focused-fixes-20260921.json：分支、提交、main包含证明、测试数和文件指纹。
+docs/harness/evidence/ncs033/llm-residuals-20260921.md：模型遗留。
 
 ## Verification
-分支{'tests': 1161, 'failures': 0, 'errors': 0, 'skipped': 1}；干净main{'tests': 1161, 'failures': 0, 'errors': 0, 'skipped': 1}；编译与专项均通过。
+五项均先RED后GREEN，逐项编译/全量/专项通过并合入main，干净main再次验证通过。
+最终main：1161 tests / 0 failures / 0 errors / 1 skipped。
+各init通过；原始60条语料及失败数据库保留，golden未更新，无远端推送。
 
 ## Blockers
-原真实E2E/文学验收未通过，已保留原语料和屏障；未bless。代码修复完成不代表真实LLM文学质量通过。
+本轮代码范围已闭环；模型输出不稳定及真实文学质量未验收，按用户要求登记。
+旧语料因输入修正发生指纹分叉；本轮未重录，不能声称真实E2E通过，未解除人工屏障。
 
 ## Next Steps
-按单特性协议继续本报告剩余问题；不扩展原优化方案的其他待办。
+本次任务已完成，无继续自动推进的特性。
+用户另行要求真实质量验收时，从NCS-058及模型遗留清单恢复；其他方案待办保持原状态。

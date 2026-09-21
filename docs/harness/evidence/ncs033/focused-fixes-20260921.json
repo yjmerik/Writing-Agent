@@ -1,0 +1,86 @@
+{
+  "date": "2026-09-21",
+  "verifiedAt": "2026-09-21T21:43:49.341153+08:00",
+  "baseCommit": "54558d8",
+  "mainBeforeFinalReceipt": "1dad3596e2e15964b670da5af7ba2c1378502c8e",
+  "implementationCommit": "330ce0609e3549bd2f87651f1824cae9ab948b28",
+  "scope": "continued-e2e-20260921.md reported code defects only; user permits unstable LLM residuals",
+  "features": [
+    {
+      "id": "NCS-033",
+      "evidence": "docs/harness/evidence/2026-09-21-ncs-033-focused.json",
+      "commit": "4aeef1e5848e3857b780359d76e3541342051b7d",
+      "branch": "codex/ncs-033-guard-evidence",
+      "mainTests": {
+        "tests": 1143,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1
+      }
+    },
+    {
+      "id": "NCS-063",
+      "evidence": "docs/harness/evidence/2026-09-21-ncs-063-focused.json",
+      "commit": "4aeafdf7dd6c6143ed581c70eebd248b105a9e4f",
+      "branch": "codex/ncs-063-fact-validity",
+      "mainTests": {
+        "tests": 1151,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1
+      }
+    },
+    {
+      "id": "NCS-064",
+      "evidence": "docs/harness/evidence/2026-09-21-ncs-064-focused.json",
+      "commit": "15880286a63aeb6e5c9adaa7d856eee44dc44fef",
+      "branch": "codex/ncs-064-entity-validity",
+      "mainTests": {
+        "tests": 1154,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1
+      }
+    },
+    {
+      "id": "NCS-061",
+      "evidence": "docs/harness/evidence/2026-09-21-ncs-061-focused.json",
+      "commit": "959d6cd33c1ac99c1e1372367d8d84751736aeb7",
+      "branch": "codex/ncs-061-foreshadow-time",
+      "mainTests": {
+        "tests": 1156,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1
+      }
+    },
+    {
+      "id": "NCS-062",
+      "evidence": "docs/harness/evidence/2026-09-21-ncs-062-focused.json",
+      "commit": "330ce0609e3549bd2f87651f1824cae9ab948b28",
+      "branch": "codex/ncs-062-foreshadow-scope",
+      "mainTests": {
+        "tests": 1161,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1
+      }
+    }
+  ],
+  "sourceSha256": {
+    "src/main/java/com/writing/novel/agent/ConsistencyGuard.java": "8ba45e33937a1494935dd663d07495af9f270347bb4950342853c38dda21afbe",
+    "src/main/java/com/writing/novel/agent/FactHarvesterAgent.java": "7f5cc1e863b4471d65f5a675a082f5ca4bb324f382a57d8751d072aa06e8a878",
+    "src/main/java/com/writing/novel/memory/ContextAssembler.java": "3b76c6d786d8250ee187d89cb1a18fd87822cb08155d9bc525776bdb9e313b59",
+    "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java": "3ba9c9ccd1e684aa5b696e8b8178697e4896199438ea6e54825bf1aae5fb35ed",
+    "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java": "67efe7c125bd4f7b9bb622a4cf2aa7670e51740245c8b810bbbaff7cd00ad0c3",
+    "src/main/resources/prompts/consistency-guard.st": "956204452a46ed3ed36a24fc2352a65b200d69ab151b23748dbfeb348038cb87",
+    "pom.xml": "dff30f5eed3af286ff8096922a41635143b425bfdab6593bd5a95cd47d1f3326",
+    "frontend/package-lock.json": "5cb6a42a43ff59aa93e07b0a71962cab06eda02542196e0ddc970362c7ce6303",
+    "src/main/resources/application.yml": "56e854d8d2c2c0f0706efebaee1c48bbd2ee411b653eb2ef55e92a9b447506ec"
+  },
+  "javaHome": "/opt/homebrew/opt/openjdk@21",
+  "goldenChanged": false,
+  "realLlmQualityAccepted": false,
+  "llmResiduals": "docs/harness/evidence/ncs033/llm-residuals-20260921.md",
+  "logs": "data/e2e-evidence/ncs-focused-20260921/"
+}

@@ -1991,6 +1991,17 @@
       "implementation_commit": "9a7fd55",
       "main_commit": "3513452",
       "evidence": "docs/harness/evidence/2026-09-21-ncs-067-focused.json"
+    },
+    {
+      "id": "ncs-068-focused-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-068"
+      ],
+      "branch": "codex/ncs-068-structured-retry",
+      "implementation_commit": "5dd167d",
+      "main_commit": "99cb485",
+      "evidence": "docs/harness/evidence/2026-09-21-ncs-068-focused.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

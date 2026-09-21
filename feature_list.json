@@ -8676,7 +8676,7 @@
       "dependencies": [
         "NCS-065"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/agent/EntityExtractorAgent.java",
         "src/main/java/com/writing/novel/agent/FactHarvesterAgent.java",
@@ -8685,7 +8685,9 @@
       "spec": "docs/specs/2026-09-21-llm-output-stabilization.md",
       "acceptance": "先失败测试复现；运行 mvn test -Dtest=StructuredOutputRetryTest 通过：无效输出恰好重试1次且事件含原因与attempt；重试成功正常完成账本；二次失败保持未完成可恢复且不伪完成；合法空结果不重试。编译、全量测试通过。",
       "verify_cmd": "mvn test -Dtest=StructuredOutputRetryTest",
-      "evidence": "来源：llm-residuals-20260921.md模型无效输出登记与NCS-063/064修复后的可恢复终态；与客户端空响应重试同语义上移到可判定业务无效。待实现验证。"
+      "evidence": "代码修复已合main 5dd167d，分支及干净main全量1184/0/0/1通过；StructuredOutputRetryTest 6项先RED后GREEN；重试上限1且事件全量落盘，不伪完成。证据docs/harness/evidence/2026-09-21-ncs-068-focused.json。",
+      "branch": "codex/ncs-068-structured-retry",
+      "completion_record": "ncs-068-focused-verified"
     },
     {
       "id": "NCS-069",

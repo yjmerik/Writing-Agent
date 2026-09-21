@@ -1,0 +1,46 @@
+{
+  "commit": "4aeef1e5848e3857b780359d76e3541342051b7d",
+  "main_commit": "4aeef1e5848e3857b780359d76e3541342051b7d",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-033"
+  ],
+  "branch": "codex/ncs-033-guard-evidence",
+  "scope": "User-requested code fixes only; unstable LLM output logged, no architecture expansion, no golden bless or literary-quality acceptance",
+  "summary": "现有守卫补充最近两章有界正文，保留首尾取证证据并排除当前/未来稿件；不改检索架构。",
+  "red": "ConsistencyGuardContextTest: 2 failures / 0 errors before fix; both pass after fix.",
+  "branchTests": {
+    "tests": 1143,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "mainTests": {
+    "tests": 1143,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "checks": [
+    {
+      "command": "mvn compile && mvn test (branch)",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn clean compile && mvn test (clean detached main checkout)",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn -q test -Dtest=ConsistencyGuardContextTest,AuthorIntentWritingTest,GuardFindingRetentionTest,QualityClosureTest,ConsistencyGuardTest,QualityResponseValidityTest,ArbiterTest",
+      "result": "PASS (branch and main)",
+      "exitCode": 0
+    }
+  ],
+  "limitations": [
+    "按2026-09-21用户限定范围，仅以代码回归验收完成；LLM不稳定登记。",
+    "实际执行旧语料E2E：新检查输入导致fixture miss，exit1；数值基线exit1。未重绑定旧回答、未新录制或bless；非文学质量PASS。"
+  ],
+  "llmResiduals": "docs/harness/evidence/ncs033/llm-residuals-20260921.md"
+}

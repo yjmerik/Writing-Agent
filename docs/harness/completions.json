@@ -1903,6 +1903,17 @@
    "implementation_commit": "d98a242bd6c88159c36ade7e55d6efc9f0cdc4e9",
    "main_commit": "d98a242bd6c88159c36ade7e55d6efc9f0cdc4e9",
    "evidence": "docs/harness/evidence/2026-09-20-ncs-060.json"
+  },
+  {
+   "id": "ncs-033-focused-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-033"
+   ],
+   "branch": "codex/ncs-033-guard-evidence",
+   "implementation_commit": "4aeef1e5848e3857b780359d76e3541342051b7d",
+   "main_commit": "4aeef1e5848e3857b780359d76e3541342051b7d",
+   "evidence": "docs/harness/evidence/2026-09-21-ncs-033-focused.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

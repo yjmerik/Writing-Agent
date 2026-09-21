@@ -8606,7 +8606,7 @@
       "phase": 50,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/llm/LlmResponse.java",
         "src/main/java/com/writing/novel/llm/client/OpenAiCompatibleClient.java",
@@ -8617,7 +8617,9 @@
       "spec": "docs/specs/2026-09-21-llm-output-stabilization.md",
       "acceptance": "先失败测试复现（无[DONE]且无finish_reason即EOF的流返回半截内容如单个[）；运行 mvn test -Dtest=LlmClientTerminationTest 通过：未终止流不得作为成功返回，按可重试失败处理且重试耗尽显式失败；finish_reason=length时getFinishReason()=length且发LLM_TRUNCATED；stop路径行为与事件不变；fixture缺finishReason默认stop。编译、全量测试通过。",
       "verify_cmd": "mvn test -Dtest=LlmClientTerminationTest",
-      "evidence": "来源：llm-residuals-20260921.md真典单字符[与continued-fact-harvest-diagnosis-20260921.json；根因取证见spec。待实现验证。"
+      "evidence": "代码修复已合main c149912（证据提交00ad0dc），分支及干净main全量1169/0/0/1通过；LlmClientTerminationTest 8项先RED（编译缺API+半截流返回）后GREEN。证据docs/harness/evidence/2026-09-21-ncs-065-focused.json。",
+      "branch": "codex/ncs-065-stream-termination",
+      "completion_record": "ncs-065-focused-verified"
     },
     {
       "id": "NCS-066",

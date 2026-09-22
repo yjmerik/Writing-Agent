@@ -1,26 +1,27 @@
-# UI全动线验证与EXTRACTION配置修复 — 2026-09-22
+# F1修复方案设计与特性拆分 — 2026-09-22
 
 Last Updated: 2026-09-22
 
 ## Current
-按用户要求完成前端打包启动（独立实例18099/隔离数据目录）+ ego-browser 全动线验证：
-20项用户动线通过（含真实生成第1章、作者编辑逐字保留、批准门禁、篇幅调整承诺处置、
-导出等）；发现3项，F2（模型配置页缺EXTRACTION路由）已当场修复合main（6d3a242）；
-F1（HIGH裁决UI缺失+暂停任务占坑死锁）登记为NCS-071待办。active_feature=null。
+针对UI验证F1死锁完成修复方案设计并按需求拆分协议登记：spec
+docs/specs/2026-09-22-high-adjudication-unblock.md；NCS-071收敛为裁决表单（前端）、
+新增NCS-072（暂停任务终止语义/后端）、NCS-073（终止入口与409指引/前端）。
+纯文档变更，active_feature=null。
 
 ## Files
-docs/reports/2026-09-22-ui-walkthrough/UI全动线验证报告.md：完整验证报告。
-feature_list.json：新增NCS-071（not-started）。
-src/main/java/com/writing/novel/web/ModelConfigController.java：+EXTRACTION scope（修复）。
-data/ui-verify-20260922/：验证实例数据（本地）。
+docs/specs/2026-09-22-high-adjudication-unblock.md：根因取证（裁决API完备但无提交UI；
+cancel对PAUSED仅设标志不终态转移不释放owner）+两出路设计+验收标准。
+feature_list.json：NCS-071重新收敛+072/073登记（含verify_cmd与依赖）。
 
 ## Verification
-修复走RED→GREEN：ModelConfigControllerTest 断言10条路由+提取任务条目；
-干净main全量1187/0/0/1通过；实例重启后UI显示「提取任务 EXTRACTION 16000」。
-真实运行触发NCS-065（LLM_TRUNCATED诚实屏障）与NCS-068（重试成功）新机制，均正确工作。
+纯文档；干净main全量1187/0/0/1通过；提交b512d7f ff-only合入main。
+方案关键取证：批准门禁（SqliteNovelRepository审计P1-2）认绑定当前稿的
+FALSE_POSITIVE/EXCEPTION裁决；dispositions API强制理由+实时身份校验；
+cancel(taskId)仅设cancelFlags，对PAUSED无终态转移不释放coordinator owner。
 
 ## Blockers
-F1死锁待实现（NCS-071）：HIGH未决+PAUSED任务占坑时界面无出路；裁决提交UI缺失。
+无。方案待用户授权实现。
 
 ## Next Steps
-授权后实现NCS-071（先失败测试复现死锁场景）。实例保留运行于18099供用户查看。
+授权后按顺序实现：NCS-071（主链路裁决→批准→继续）与NCS-072→073（占坑兜底）可并行，
+各走特性分支闭环；端到端两条出路各留证一次。

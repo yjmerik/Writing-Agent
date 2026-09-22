@@ -8791,6 +8791,40 @@
       "evidence": "已合main 58801be，干净main全量1190/0/0/1通过；前端构建通过。真实UI验证：任务与版本对PAUSED任务显示「终止任务」→点击后任务记录变「已停止」（CANCELLED），坑位释放经单测（新任务立即可占坑）与后续继续协作无409双重证明；拒绝重写409指引文案已实现（含终止任务跳转建议）。",
       "branch": "codex/ncs-073-task-exit-ui",
       "completion_record": "ncs-073-verified"
+    },
+    {
+      "id": "NCS-074",
+      "name": "同步检查占坑可观测可取消",
+      "description": "补查/推进等同步操作占坑期间在界面显示进度与取消入口；LLM挂起不再让作者面对无解释的409（实测一次20分钟后重试耗尽）",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/WritingTaskExecutor.java",
+        "frontend/src/components/InteractiveReview.tsx"
+      ],
+      "spec": "docs/reports/2026-09-22-ui-walkthrough/UI全动线回归验证报告.md",
+      "acceptance": "先失败测试复现同步操作占坑期间第二个操作409且无进度；修复后界面显示进行中状态并可取消；编译全量通过。",
+      "verify_cmd": "mvn test -Dtest=WritingTaskExecutorPausedCancelTest",
+      "evidence": "来源：2026-09-22回归验证F4。待实现验证。"
+    },
+    {
+      "id": "NCS-075",
+      "name": "worker收尾窗口批准排队或提示",
+      "description": "每章审阅下检查点出现时若worker仍在收尾检查，批准请求提示『Agent正在收尾，稍候再试』或排队等待，不再裸409",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/web/ContentController.java",
+        "frontend/src/components/InteractiveReview.tsx"
+      ],
+      "spec": "docs/reports/2026-09-22-ui-walkthrough/UI全动线回归验证报告.md",
+      "acceptance": "先失败测试复现收尾窗口批准409；修复后返回可理解的排队/等待语义；编译全量与前端构建通过。",
+      "verify_cmd": "cd frontend && npm run build",
+      "evidence": "来源：2026-09-22回归验证F5。待实现验证。"
     }
   ],
   "schema_version": 2,

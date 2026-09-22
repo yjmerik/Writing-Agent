@@ -1,0 +1,30 @@
+{
+ "commit": "eba271cab3f3ad78e1456fe63937121466ee039c",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-074"
+ ],
+ "checks": [
+  {
+   "command": "mvn test -Dtest=WritingTaskExecutorSyncWorkTest,WorkspaceStatusApiTest",
+   "result": "PASS: 11/0F/0E。先失败（SyncWorkInfo/activeSyncWork 不存在编译期 RED）后 GREEN：登记/kind 前缀/取消释放/任务型不误伤/非持有者 endWork 不清登记/无占坑取消 false + workspace activeWork 暴露与取消端点。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（分支 eba271c 与合并后干净 main 各一次）",
+   "result": "PASS: 1202 tests, 0 failures, 0 errors, 1 skipped（两次）。",
+   "exitCode": 0
+  },
+  {
+   "command": "cd frontend && npm run build",
+   "result": "PASS: 协作栏 activeWork 标签+取消该操作；补查按钮旁已用时+取消等待。",
+   "exitCode": 0
+  },
+  {
+   "command": "ego-browser 真实 UI 走查（真实 LLM 补查占坑）",
+   "result": "PASS: 按钮旁「补查进行中（已 6 秒）」+协作栏「连续性补查中 · 已 4 秒」+「取消该操作」；点「取消等待」→ toast「已取消等待并释放项目工作权…」→ workspace busy=false。诚实边界（取消不中断在途调用）在 UI 文案如实说明。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-074 匿名同步占坑可观测可取消；取消语义为释放工作权而非中断调用，写路径由事务/版本CAS/身份绑定保护。"
+}

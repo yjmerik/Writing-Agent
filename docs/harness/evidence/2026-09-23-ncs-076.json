@@ -1,0 +1,25 @@
+{
+ "commit": "e9ca928430443c456b31c762a318a0ecefeeafd9",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-076"
+ ],
+ "checks": [
+  {
+   "command": "mvn compile && mvn test（合并 e9ca928 后的 main 检出，bash source scripts/load-env.sh）",
+   "result": "PASS: 1190 tests, 0 failures, 0 errors, 1 skipped。",
+   "exitCode": 0
+  },
+  {
+   "command": "cd frontend && npm run build",
+   "result": "PASS: tsc -b && vite build；屏障引导 Alert、确认已复核并批准按钮、检查点卡片打开正直达按钮均编译通过。",
+   "exitCode": 0
+  },
+  {
+   "command": "ego-browser 真实 UI 走查（18099 重建实例）",
+   "result": "PASS: 第2章屏障场景显示引导Alert与「确认已复核并批准」；点击后 toast「已批准第2章 v2」；barrier RESOLVED、两个 AFTER_CHAPTER 检查点 APPROVED、项目 WRITING/canContinue=true。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-076 仅前端 InteractiveReview.tsx；后端 approveChapter 既有能力（解除屏障+批准同章检查点）零改动。"
+}

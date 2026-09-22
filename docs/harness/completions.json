@@ -1966,8 +1966,8 @@
         "NCS-065"
       ],
       "branch": "codex/ncs-065-stream-termination",
-      "implementation_commit": "c149912",
-      "main_commit": "00ad0dc",
+      "implementation_commit": "c1499125d15602b6ca4a0728f5d804ff8cb43744",
+      "main_commit": "00ad0dc7c18918de2e16d5a17911de389abc7203",
       "evidence": "docs/harness/evidence/2026-09-21-ncs-065-focused.json"
     },
     {
@@ -1977,8 +1977,8 @@
         "NCS-066"
       ],
       "branch": "codex/ncs-066-extraction-routing",
-      "implementation_commit": "46b2aef",
-      "main_commit": "1e52b13",
+      "implementation_commit": "46b2aeff82210e9e02b35b61e6aa49c754bb87c4",
+      "main_commit": "1e52b1362f747e3d7e5e676b5b6fc942f4a60df1",
       "evidence": "docs/harness/evidence/2026-09-21-ncs-066-focused.json"
     },
     {
@@ -1988,8 +1988,8 @@
         "NCS-067"
       ],
       "branch": "codex/ncs-067-entity-split",
-      "implementation_commit": "9a7fd55",
-      "main_commit": "3513452",
+      "implementation_commit": "9a7fd5576886b798767b7cd210e828fec3cb52ec",
+      "main_commit": "351345293fdb35fd706d3ca3e32fe99ea72267dc",
       "evidence": "docs/harness/evidence/2026-09-21-ncs-067-focused.json"
     },
     {
@@ -1999,8 +1999,8 @@
         "NCS-068"
       ],
       "branch": "codex/ncs-068-structured-retry",
-      "implementation_commit": "5dd167d",
-      "main_commit": "99cb485",
+      "implementation_commit": "5dd167d4ffe03c5d3dd17e5c1ba0c3aa5b9aebb8",
+      "main_commit": "99cb485bc7fc1c5c7bfe41461a23e1099788c3bc",
       "evidence": "docs/harness/evidence/2026-09-21-ncs-068-focused.json"
     },
     {
@@ -2010,8 +2010,8 @@
         "NCS-069"
       ],
       "branch": "codex/ncs-069-verification-gap",
-      "implementation_commit": "5a016c6",
-      "main_commit": "7446bac",
+      "implementation_commit": "5a016c67d03d5e5a22e896e908ed8bb8bed30a20",
+      "main_commit": "7446bac1131b7d9085d112af68fa82e8c06f9c4e",
       "evidence": "docs/harness/evidence/2026-09-21-ncs-069-focused.json"
     },
     {
@@ -2032,9 +2032,9 @@
         "NCS-071"
       ],
       "branch": "codex/ncs-071-adjudication-form",
-      "implementation_commit": "3c28791",
-      "main_commit": "3c28791",
-      "evidence": "docs/reports/2026-09-22-ui-walkthrough/UI全动线验证报告.md（裁决出路验证记录）"
+      "implementation_commit": "3c287910474bd7ef70b09993b8574ffd73884eb1",
+      "main_commit": "3c287910474bd7ef70b09993b8574ffd73884eb1",
+      "evidence": "docs/harness/evidence/2026-09-22-ncs-071.json"
     },
     {
       "id": "ncs-072-verified",
@@ -2043,8 +2043,8 @@
         "NCS-072"
       ],
       "branch": "codex/ncs-072-paused-cancel",
-      "implementation_commit": "5624fce",
-      "main_commit": "9227687",
+      "implementation_commit": "5624fcebb60e1c8c702c256992ffb4c3ac68f1ca",
+      "main_commit": "9227687217f69d8a1c8eeff8fdd873fef03ec103",
       "evidence": "docs/harness/evidence/2026-09-22-ncs-072-focused.json"
     },
     {
@@ -2054,9 +2054,42 @@
         "NCS-073"
       ],
       "branch": "codex/ncs-073-task-exit-ui",
-      "implementation_commit": "58801be",
-      "main_commit": "58801be",
-      "evidence": "docs/reports/2026-09-22-ui-walkthrough/UI全动线验证报告.md（追加F1修复验证）"
+      "implementation_commit": "58801befcf373d0c99a4ad1d0f9556c212ea4d9f",
+      "main_commit": "58801befcf373d0c99a4ad1d0f9556c212ea4d9f",
+      "evidence": "docs/harness/evidence/2026-09-22-ncs-073.json"
+    },
+    {
+      "id": "ncs-076-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-076"
+      ],
+      "branch": "codex/ncs-076-manual-review-confirm-entry",
+      "implementation_commit": "e9ca928430443c456b31c762a318a0ecefeeafd9",
+      "main_commit": "e9ca928430443c456b31c762a318a0ecefeeafd9",
+      "evidence": "docs/harness/evidence/2026-09-23-ncs-076.json"
+    },
+    {
+      "id": "ncs-075-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-075"
+      ],
+      "branch": "codex/ncs-075-finalizing-approve-guidance",
+      "implementation_commit": "647daa9ed29519b865eff65a3fe5bc219d36c4fc",
+      "main_commit": "647daa9ed29519b865eff65a3fe5bc219d36c4fc",
+      "evidence": "docs/harness/evidence/2026-09-23-ncs-075.json"
+    },
+    {
+      "id": "ncs-074-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-074"
+      ],
+      "branch": "codex/ncs-074-sync-work-observability",
+      "implementation_commit": "eba271cab3f3ad78e1456fe63937121466ee039c",
+      "main_commit": "eba271cab3f3ad78e1456fe63937121466ee039c",
+      "evidence": "docs/harness/evidence/2026-09-23-ncs-074.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

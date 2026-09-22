@@ -1,0 +1,30 @@
+{
+ "commit": "647daa9ed29519b865eff65a3fe5bc219d36c4fc",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-075"
+ ],
+ "checks": [
+  {
+   "command": "mvn test -Dtest=WritingTaskExecutorBeginWorkConflictTest",
+   "result": "PASS: 4/0F/0E。先失败（code() 未定义编译期 RED）后 GREEN：RUNNING 任务→WORKER_FINALIZING、匿名→SYNC_WORK_BUSY、非运行任务→无细分码保持暂停/取消指引。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（分支 647daa9 与合并后干净 main 各一次）",
+   "result": "PASS: 1194 tests, 0 failures, 0 errors, 1 skipped（两次）。ChapterDirectEdit/RestoreOwnershipMessage/ManualReviewResolution 三个既有工权测试断言随细分语义更新为 SYNC_WORK_BUSY。",
+   "exitCode": 0
+  },
+  {
+   "command": "cd frontend && npm run build",
+   "result": "PASS: 批准 409 按 code 分支 + WORKER_FINALIZING 同幂等键自动重试（≤3次×15s）。",
+   "exitCode": 0
+  },
+  {
+   "command": "ego-browser 真实 UI 走查（补查占坑期间批准）",
+   "result": "PASS: toast「批准未生效：同步内容处理进行中，请等待其完成或取消该操作」——不再误报「请确认新稿」。WORKER_FINALIZING 自然窗口竞态未在真实 UI 复现，由单测覆盖。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-075 冲突分类与前端提示；GlobalExceptionHandler 透传细分码、通用冲突回退 WORK_OWNERSHIP_CONFLICT。"
+}

@@ -8825,6 +8825,22 @@
       "acceptance": "先失败测试复现收尾窗口批准409；修复后返回可理解的排队/等待语义；编译全量与前端构建通过。",
       "verify_cmd": "cd frontend && npm run build",
       "evidence": "来源：2026-09-22回归验证F5。待实现验证。"
+    },
+    {
+      "id": "NCS-076",
+      "name": "人工复核确认前端入口",
+      "description": "NEEDS_MANUAL_REVIEW 章节显示屏障引导（原因+操作路径），按钮文案「确认已复核并批准」，检查点卡片提供打开正文直达按钮；走既有版本化 review-decisions 批准解除屏障",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/InteractiveReview.tsx"
+      ],
+      "spec": "docs/specs/2026-09-23-ui-interaction-fixes.md",
+      "acceptance": "npm run build 通过；真实 UI 走通屏障章节「确认已复核并批准」→章节 DONE、屏障 RESOLVED（以《铜壶漏断》第2章现场验收）。",
+      "verify_cmd": "cd frontend && npm run build",
+      "evidence": "来源：2026-09-22回归验证F3二次实证（resolve-review人工复核确认前端无入口）。待实现验证。"
     }
   ],
   "schema_version": 2,

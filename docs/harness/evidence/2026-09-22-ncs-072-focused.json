@@ -1,0 +1,22 @@
+{
+  "feature": "NCS-072",
+  "date": "2026-09-22",
+  "title": "暂停任务终止语义",
+  "branch": "codex/ncs-072-paused-cancel",
+  "implementation_commit": "5624fce",
+  "root_cause": "cancel(taskId)只设置取消标志，对PAUSED任务（无活跃worker检查标志）不终态转移不释放coordinator工作权→占坑死锁",
+  "changes": [
+    "cancel对PAUSED任务：PAUSED→CANCELLED终态转移+saveWritingTask+endWork条件释放工作权",
+    "释放安全性：cancel时bump写租约epoch（NCS-001），残存worker写路径被拒；RUNNING任务语义不变（worker自行退出）",
+    "测试3项：PAUSED终态+释放+新任务立即可占坑；RUNNING不抢释放；未知任务不抛异常"
+  ],
+  "failing_first": {
+    "tests": "WritingTaskExecutorPausedCancelTest",
+    "red": "1失败（PAUSED取消无终态转移）",
+    "green": "3/3"
+  },
+  "verification": {
+    "verify_cmd": "mvn test -Dtest=WritingTaskExecutorPausedCancelTest → 3/0/0",
+    "full": "分支 mvn test → 1190/0/0/1"
+  }
+}

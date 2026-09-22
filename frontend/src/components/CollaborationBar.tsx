@@ -81,7 +81,13 @@ export default function CollaborationBar({ projectId, onChanged, onReview, onSel
   const stopped = !busy && status?.state !== 'FINAL' && status?.task?.status === 'PAUSED';
   const failed = !busy && status?.state !== 'FINAL' && status?.task?.status === 'FAILED';
   const firstTodo = workspace?.todoList?.[0];
-  const label = busy ? !status?.task ? '正在处理内容' : status.stopRequested ? '正在停下' : 'Agent 正在创作'
+  // NCS-074: 匿名同步占坑（无任务可展示时）——显示是什么操作、已进行多久，并可取消
+  const activeWork = busy && !status?.task ? workspace?.activeWork : undefined;
+  const formatElapsed = (seconds: number) =>
+    seconds < 90 ? `${seconds} 秒` : `${Math.max(1, Math.round(seconds / 60))} 分钟`;
+  const label = busy ? !status?.task ? activeWork
+      ? `${activeWork.label}中 · 已 ${formatElapsed(activeWork.elapsedSeconds)}`
+      : '正在处理内容' : status.stopRequested ? '正在停下' : 'Agent 正在创作'
     : status?.state === 'FINAL' ? '全书已完成'
     // p33-03: 屏障待审——指向具体章节与稿号（设计 4.2）
     : workspace?.collabState === 'AWAITING_REVIEW' && firstTodo
@@ -110,10 +116,18 @@ export default function CollaborationBar({ projectId, onChanged, onReview, onSel
           </div>
           <Space wrap>
             {busy ? (
-              <Button data-collaboration-stop danger loading={acting} disabled={status?.stopRequested || !status?.task}
-                onClick={() => void act(() => api.stopCollaboration(projectId))}>
-                {!status?.task ? '等待内容处理完成' : status.stopRequested ? '当前步骤结束后交给你' : '我要接手编辑'}
-              </Button>
+              activeWork ? (
+                // NCS-074: 同步占坑可取消——立即释放项目工作权，不再让作者等超时
+                <Button data-active-work-cancel danger loading={acting}
+                  onClick={() => void act(() => api.cancelActiveWork(projectId))}>
+                  取消该操作
+                </Button>
+              ) : (
+                <Button data-collaboration-stop danger loading={acting} disabled={status?.stopRequested || !status?.task}
+                  onClick={() => void act(() => api.stopCollaboration(projectId))}>
+                  {!status?.task ? '等待内容处理完成' : status.stopRequested ? '当前步骤结束后交给你' : '我要接手编辑'}
+                </Button>
+              )
             ) : (
               <Button data-collaboration-start type="primary" loading={acting}
                 disabled={!status?.canContinue || !!error}
@@ -125,7 +139,9 @@ export default function CollaborationBar({ projectId, onChanged, onReview, onSel
           </Space>
         </div>
         <div style={{ color: '#666', fontSize: 13 }}>
-          {busy ? status?.stopRequested
+          {busy ? activeWork
+            ? '同步操作进行中：完成前其他修改会暂时冲突；可「取消该操作」立即释放项目工作权（原操作若稍后完成，结果仍按稿件版本落库）。'
+            : status?.stopRequested
             ? '正在完成当前创作步骤并保存内容。交接完成后即可保存修改，无需切换工作模式。'
             : 'Agent 会自动搭建框架、撰写正文并检查质量。你可以阅读已有内容，随时接手修改。'
             : '你可以直接编辑世界观、人物、大纲和正文，也可以让 Agent 按要求修改。审阅完成后继续协作。'}

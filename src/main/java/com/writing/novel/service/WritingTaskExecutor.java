@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,6 +42,11 @@ public class WritingTaskExecutor {
 
     /** p20-05: 项目工作权协调器——每项目至多一个 live worker 的唯一裁决点 */
     private final ProjectWorkCoordinator coordinator = new ProjectWorkCoordinator();
+
+    /** NCS-074: 匿名同步工作登记（workspace 可观测/可取消的数据源；内存态，与占坑同生命周期） */
+    public record SyncWorkInfo(String projectId, String workId, String kind, java.time.Instant startedAt) {}
+
+    private final Map<String, SyncWorkInfo> syncWorks = new ConcurrentHashMap<>();
 
     /** NCS-001: 写入门禁（epoch 租约）；null 时不启用 */
     private final com.writing.novel.service.WriteLeaseService writeLease;
@@ -518,7 +524,8 @@ public class WritingTaskExecutor {
 
     /** p20-05: 同步工作注册——占坑失败（已有 owner）时抛 409 语义异常。
      *  NCS-075: 冲突按持有者分类——RUNNING 任务=收尾中（稍候重试）、匿名=同步处理中
-     *  （等待或取消）、其余保持既有「暂停或取消」指引；细分码供前端区分提示。 */
+     *  （等待或取消）、其余保持既有「暂停或取消」指引；细分码供前端区分提示。
+     *  NCS-074: 占坑成功即登记同步工作（kind=workId 去 UUID 前缀）供观测。 */
     public void beginWork(String projectId, String workId) {
         if (coordinator.tryAcquire(projectId, workId).isEmpty()) {
             String owner = coordinator.currentOwner(projectId).orElse(null);
@@ -533,10 +540,49 @@ public class WritingTaskExecutor {
             }
             throw new WorkConflictException("已有进行中的写作任务，请先暂停或取消");
         }
+        syncWorks.put(projectId, new SyncWorkInfo(projectId, workId, kindOf(workId), java.time.Instant.now()));
     }
 
     public void endWork(String projectId, String workId) {
         coordinator.release(projectId, workId);
+        // NCS-074: 条件清除——非持有者的迟到释放不得清掉当前登记
+        syncWorks.computeIfPresent(projectId, (k, v) -> v.workId().equals(workId) ? null : v);
+    }
+
+    /** NCS-074: 当前匿名同步工作（仅当其仍持有项目工作权时可见；任务型占坑不在此展示） */
+    public Optional<SyncWorkInfo> activeSyncWork(String projectId) {
+        SyncWorkInfo info = syncWorks.get(projectId);
+        if (info == null || !coordinator.isOwner(projectId, info.workId())) {
+            return Optional.empty();
+        }
+        // 经 beginWork 占坑的任务 id（如协作任务）属于任务型占坑——走任务视图与终止路径
+        if (getTask(info.workId()) != null) {
+            return Optional.empty();
+        }
+        return Optional.of(info);
+    }
+
+    /**
+     * NCS-074: 取消匿名同步占坑——立即释放项目工作权，作者不再被挂起操作锁死。
+     * 诚实边界：不中断进行中的调用；原操作若最终完成仍按稿件身份落库。
+     * 任务型占坑返回 false（走 NCS-072/073 的任务终止路径），不在此误释放。
+     */
+    public boolean cancelSyncWork(String projectId) {
+        String owner = coordinator.currentOwner(projectId).orElse(null);
+        if (owner == null) return false;
+        if (getTask(owner) != null) return false;
+        endWork(projectId, owner);
+        log.warn("同步工作已被作者取消并释放项目工作权: projectId={}, workId={}", projectId, owner);
+        return true;
+    }
+
+    /** NCS-074: workId 形如 "<kind>-<uuid>"（uuid 5 段）——剥掉尾部 UUID 得到操作种类 */
+    private static String kindOf(String workId) {
+        String[] parts = workId.split("-", -1);
+        if (parts.length > 5) {
+            return String.join("-", java.util.Arrays.copyOfRange(parts, 0, parts.length - 5));
+        }
+        return workId;
     }
 
     public boolean cancelByProject(String projectId) {

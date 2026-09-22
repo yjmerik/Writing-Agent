@@ -268,6 +268,15 @@ export interface WorkspaceTodo {
   raisedAt: string;
 }
 
+/** NCS-074: 匿名同步占坑（补查/批准/内容修改等）进行中信息 */
+export interface ActiveWork {
+  kind: string;
+  label: string;
+  workId: string;
+  startedAt: string;
+  elapsedSeconds: number;
+}
+
 export interface WorkspaceStatus {
   projectId: string;
   stage: string;
@@ -278,6 +287,7 @@ export interface WorkspaceStatus {
   blockedReason: string | null;
   todoList: WorkspaceTodo[];
   currentChapter: number;
+  activeWork?: ActiveWork;
 }
 
 export interface QualityEvaluationResult {
@@ -715,6 +725,10 @@ export const api = {
 
   cancelWritingTask: (id: string, taskId: string) =>
     request<{ taskId: string; status: string }>(`/projects/${id}/writing-tasks/${taskId}/cancel`, { method: 'POST' }),
+
+  // NCS-074: 取消匿名同步占坑（补查/批准等）——立即释放项目工作权
+  cancelActiveWork: (id: string) =>
+    request<{ released: boolean }>(`/projects/${id}/active-work/cancel`, { method: 'POST' }),
 
   getWritingTask: (id: string, taskId: string) =>
     request<{

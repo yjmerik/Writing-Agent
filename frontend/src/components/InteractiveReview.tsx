@@ -788,19 +788,52 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
   // p36-05: 统一「批准当前稿」——章节卡、章节类检查点卡与窄屏抽屉共用同一 handler；
   // 服务端做原子比较提交（身份 + 待审集合指纹 + 幂等键），409 时保留草稿强制重读。
   const [rechecking, setRechecking] = useState(false);
+  // NCS-074: 补查占坑期间的进度展示与取消——不再让作者面对无解释的长时间等待
+  const [recheckElapsed, setRecheckElapsed] = useState(0);
+  const recheckStartedAtRef = useRef(0);
+  const recheckCancelledRef = useRef(false);
+
+  useEffect(() => {
+    if (!rechecking) return;
+    const timer = setInterval(() =>
+      setRecheckElapsed(Math.round((Date.now() - recheckStartedAtRef.current) / 1000)), 1000);
+    return () => clearInterval(timer);
+  }, [rechecking]);
+
   const recheckCurrentDraft = async () => {
     if (!currentChapter || !currentBody || rechecking) return;
     const context = reviewContexts[currentChapter.chapterIndex];
     if (!context || context.identity.version !== currentBody.version) return;
     setRechecking(true);
+    recheckCancelledRef.current = false;
+    recheckStartedAtRef.current = Date.now();
+    setRecheckElapsed(0);
     try {
       await api.recheckChapter(projectId, currentChapter.chapterIndex, context.identity);
+      if (recheckCancelledRef.current) {
+        // 作者已取消等待：检查若完成仍按稿件身份落库，静默刷新即可
+        await refresh(true, currentChapter.chapterIndex);
+        onChanged();
+        return;
+      }
       await refresh(true, currentChapter.chapterIndex);
       await loadReviewContext(currentChapter.chapterIndex);
       onChanged();
       message.success('当前稿连续性补查完成；其他报告仍按各自稿号显示');
-    } catch (e) { message.error(`补查未完成：${(e as Error).message}`); }
-    finally { setRechecking(false); }
+    } catch (e) {
+      if (!recheckCancelledRef.current) message.error(`补查未完成：${(e as Error).message}`);
+    } finally { setRechecking(false); }
+  };
+
+  const cancelRecheckWait = async () => {
+    recheckCancelledRef.current = true;
+    try {
+      await api.cancelActiveWork(projectId);
+      setRechecking(false);
+      message.info('已取消等待并释放项目工作权；检查若稍后完成，结果仍按稿件版本落库');
+    } catch (e) {
+      message.error(`取消失败：${(e as Error).message}`);
+    }
   };
 
   const approveChapterDraft = async (chapterIndex: number) => {
@@ -1260,6 +1293,14 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                     <Button size="small" onClick={() => setReviewPanelOpen(true)}>审查</Button>
                     <Button size="small" loading={rechecking} disabled={!currentApproveReady}
                       onClick={() => void recheckCurrentDraft()}>补查当前稿连续性</Button>
+                    {rechecking && (
+                      <>
+                        <span data-recheck-elapsed style={{ fontSize: 12, color: '#888' }}>
+                          补查进行中（已 {recheckElapsed < 90 ? `${recheckElapsed} 秒` : `${Math.max(1, Math.round(recheckElapsed / 60))} 分钟`}）
+                        </span>
+                        <Button size="small" danger onClick={() => void cancelRecheckWait()}>取消等待</Button>
+                      </>
+                    )}
                     {['DONE', 'NEEDS_MANUAL_REVIEW'].includes(currentChapter.status ?? '') && (
                       <Button size="small" type="primary" loading={approving}
                         disabled={!currentApproveReady}

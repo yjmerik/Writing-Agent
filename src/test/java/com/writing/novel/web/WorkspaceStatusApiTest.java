@@ -8,6 +8,8 @@ import com.writing.novel.domain.ChapterSynopsis;
 import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Project;
 import com.writing.novel.domain.Volume;
+import com.writing.novel.domain.WritingTask;
+import com.writing.novel.service.WritingTaskExecutor;
 import com.writing.novel.spi.NovelRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -49,6 +51,7 @@ class WorkspaceStatusApiTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper om;
     @Autowired NovelRepository repository;
+    @Autowired WritingTaskExecutor writingTaskExecutor;
 
     @BeforeAll
     static void createDataDir() {
@@ -153,5 +156,56 @@ class WorkspaceStatusApiTest {
                 .andExpect(jsonPath("$.collabState").value("WRITING"))
                 .andExpect(jsonPath("$.canContinue").value(true))
                 .andExpect(jsonPath("$.todoList").isEmpty());
+    }
+
+    @Test
+    void 同步占坑期间workspace暴露activeWork且取消释放工作权() throws Exception {
+        String pid = seedProject("WRITING");
+        writeChapter(pid, 1, Chapter.Status.DONE);
+        repository.findProject(pid).ifPresent(p -> { p.setCurrentChapterIndex(1); repository.saveProject(p); });
+
+        // NCS-074: 匿名同步占坑（如补查）必须可观测——workspace 暴露 kind/label/已用时
+        writingTaskExecutor.beginWork(pid, "recheck-3f2a9f0e-1b2c-3d4e-5f60-7a8b9c0d1e2f");
+        mvc.perform(get("/api/projects/" + pid + "/workspace"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.busy").value(true))
+                .andExpect(jsonPath("$.activeWork.kind").value("recheck"))
+                .andExpect(jsonPath("$.activeWork.label").value("连续性补查"))
+                .andExpect(jsonPath("$.activeWork.elapsedSeconds")
+                        .value(org.hamcrest.Matchers.greaterThanOrEqualTo(0)));
+
+        // NCS-074: 取消匿名占坑 → 立即释放项目工作权
+        mvc.perform(post("/api/projects/" + pid + "/active-work/cancel"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.released").value(true));
+        mvc.perform(get("/api/projects/" + pid + "/workspace"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.busy").value(false))
+                .andExpect(jsonPath("$.activeWork").doesNotExist());
+    }
+
+    @Test
+    void 任务型占坑不暴露activeWork也不可经同步取消路径释放() throws Exception {
+        String pid = seedProject("WRITING");
+        writeChapter(pid, 1, Chapter.Status.DONE);
+        repository.findProject(pid).ifPresent(p -> { p.setCurrentChapterIndex(1); repository.saveProject(p); });
+
+        WritingTask task = new WritingTask(pid, 1, WritingTask.Type.WRITE_CHAPTER);
+        repository.saveWritingTask(task);
+        writingTaskExecutor.beginWork(pid, task.getId());
+        try {
+            mvc.perform(get("/api/projects/" + pid + "/workspace"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.busy").value(true))
+                    .andExpect(jsonPath("$.activeWork").doesNotExist());
+            mvc.perform(post("/api/projects/" + pid + "/active-work/cancel"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.released").value(false));
+            mvc.perform(get("/api/projects/" + pid + "/workspace"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.busy").value(true));
+        } finally {
+            writingTaskExecutor.endWork(pid, task.getId());
+        }
     }
 }

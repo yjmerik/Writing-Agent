@@ -553,6 +553,9 @@ public class ContentController {
         var barriers = repository.findActiveReviewBarriers(id);
         String blockedReason = busy ? "正在处理内容" : writingTaskExecutor.collaborationBlocker(id);
 
+        // NCS-074: 匿名同步占坑（补查/批准/内容修改等）——workspace 暴露进行中操作与已用时
+        var syncWork = writingTaskExecutor.activeSyncWork(id).orElse(null);
+
         String collabState;
         if (busy && repository.findActiveWritingTask(id)
                 .map(t -> t.isStopRequested()).orElse(false)) {
@@ -594,7 +597,38 @@ public class ContentController {
         result.put("blockedReason", blockedReason);
         result.put("todoList", todoList);
         result.put("currentChapter", project.getCurrentChapterIndex());
+        if (syncWork != null) {
+            long elapsed = java.time.Duration.between(syncWork.startedAt(),
+                    java.time.Instant.now()).getSeconds();
+            result.put("activeWork", Map.of(
+                    "kind", syncWork.kind(),
+                    "label", syncWorkLabel(syncWork.kind()),
+                    "workId", syncWork.workId(),
+                    "startedAt", syncWork.startedAt().toString(),
+                    "elapsedSeconds", elapsed));
+        }
         return result;
+    }
+
+    /** NCS-074: 取消匿名同步占坑——立即释放项目工作权；原操作若最终完成仍按稿件身份落库。
+     *  任务型占坑 released=false（走既有「终止任务」路径）。 */
+    @PostMapping("/active-work/cancel")
+    public Map<String, Object> cancelActiveWork(@PathVariable String id) {
+        boolean released = writingTaskExecutor.cancelSyncWork(id);
+        return Map.of("released", released);
+    }
+
+    /** NCS-074: 同步工作种类 → 作者可读标签 */
+    private static String syncWorkLabel(String kind) {
+        return switch (kind == null ? "" : kind) {
+            case "recheck" -> "连续性补查";
+            case "review-decision" -> "批准处理";
+            case "checkpoint-revision" -> "审阅修订";
+            case "chapter-change" -> "内容修改";
+            case "step" -> "创作推进";
+            case "review-policy" -> "审核节奏调整";
+            default -> "同步内容处理";
+        };
     }
 
     /** p11-I2: 获取章节聚合质量报告 */

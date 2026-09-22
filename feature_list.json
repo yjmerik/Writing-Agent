@@ -8758,7 +8758,7 @@
       "phase": 50,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/WritingTaskExecutor.java",
         "src/test/java/com/writing/novel/service/WritingTaskExecutorPausedCancelTest.java"
@@ -8766,7 +8766,9 @@
       "spec": "docs/specs/2026-09-22-high-adjudication-unblock.md",
       "acceptance": "先失败测试复现cancel对PAUSED任务无效果；修复后PAUSED任务经cancel进入CANCELLED终态、工作权释放（新任务可立即启动）、写租约epoch已bump；RUNNING任务语义不变。编译与全量测试通过。",
       "verify_cmd": "mvn test -Dtest=WritingTaskExecutorPausedCancelTest",
-      "evidence": "来源：2026-09-22 UI全动线验证F1占坑根因（cancel仅设标志不终态转移不释放owner）。待实现验证。"
+      "evidence": "已合main 5624fce，干净main全量1190/0/0/1通过；WritingTaskExecutorPausedCancelTest 3项先RED（PAUSED取消无终态转移）后GREEN；RUNNING语义不变、未知任务不抛异常。证据docs/harness/evidence/2026-09-22-ncs-072-focused.json。",
+      "branch": "codex/ncs-072-paused-cancel",
+      "completion_record": "ncs-072-verified"
     },
     {
       "id": "NCS-073",

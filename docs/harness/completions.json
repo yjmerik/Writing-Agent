@@ -2035,6 +2035,17 @@
       "implementation_commit": "3c28791",
       "main_commit": "3c28791",
       "evidence": "docs/reports/2026-09-22-ui-walkthrough/UI全动线验证报告.md（裁决出路验证记录）"
+    },
+    {
+      "id": "ncs-072-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-072"
+      ],
+      "branch": "codex/ncs-072-paused-cancel",
+      "implementation_commit": "5624fce",
+      "main_commit": "9227687",
+      "evidence": "docs/harness/evidence/2026-09-22-ncs-072-focused.json"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

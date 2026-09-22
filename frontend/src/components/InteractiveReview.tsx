@@ -900,7 +900,12 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
       closeRewriteModal();
       onChanged();
     } catch (e) {
-      setRewriteError(`重写失败: ${(e as Error).message}`);
+      const reason = (e as Error).message || '';
+      // NCS-073: 占坑冲突给出可行动指引——终止暂停任务后再重写
+      const guidance = reason.includes('已有进行中的写作任务')
+        ? '；可到「任务与版本」终止已暂停的任务后重试'
+        : '';
+      setRewriteError(`重写失败: ${reason}${guidance}`);
     } finally { setRewriting(false); }
   };
 

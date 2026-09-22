@@ -80,6 +80,16 @@ export default function TasksView({ projectId, onChanged }: { projectId: string;
     } catch (e) { setError(e instanceof Error ? e.message : '操作失败'); }
     finally { setBusy(false); }
   };
+  // NCS-073: 终止暂停任务——PAUSED→CANCELLED 并释放项目工作权（NCS-072 后端语义）
+  const [terminating, setTerminating] = useState<string | null>(null);
+  const terminate = async (taskId: string) => {
+    setTerminating(taskId);
+    try {
+      await api.cancelWritingTask(projectId, taskId);
+      setError(''); setStatus(null); setRefresh(n => n + 1); onChanged();
+    } catch (e) { setError(e instanceof Error ? e.message : '终止失败'); }
+    finally { setTerminating(null); }
+  };
   const openChapter = (chapterIndex: number, version?: number) => {
     navigate(`/project/${projectId}/chapter/${chapterIndex}${version == null ? '' : `?version=${version}`}`);
   };
@@ -114,6 +124,11 @@ export default function TasksView({ projectId, onChanged }: { projectId: string;
                 ? status.blockedReason : '未记录') },
             { title: '费用', width: 90, render: () => '未记录' },
             { title: '更新时间', dataIndex: 'updatedAt', render: dateText },
+            // NCS-073: PAUSED 任务占坑死锁的界面出路——显式终止（后端终态转移并释放工作权）
+            { title: '操作', width: 110, render: (_, task) => task.status === 'PAUSED' ? (
+              <Button size="small" danger loading={terminating === task.id}
+                onClick={() => void terminate(task.id)}>终止任务</Button>
+            ) : null },
           ]} />
       </Space>
     </Card>

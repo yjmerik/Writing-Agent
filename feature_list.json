@@ -8733,8 +8733,8 @@
     },
     {
       "id": "NCS-071",
-      "name": "HIGH问题裁决UI与暂停任务出路",
-      "description": "审查卡内提供HIGH问题裁决表单（复用dispositions API：FALSE_POSITIVE/EXCEPTION/DEFER+理由+版本绑定）；PAUSED任务可显式终止或被新任务取代；「作为创作例外保留」从纯跳转改为可提交裁决",
+      "name": "HIGH问题裁决表单",
+      "description": "审查抽屉问题行内嵌裁决表单（误报/创作例外/暂挂+必填理由+暂挂目标章），提交既有dispositions API并在台账展示；「作为创作例外保留」深链预开表单",
       "phase": 50,
       "type": "bug",
       "dependencies": [],
@@ -8742,12 +8742,49 @@
       "files": [
         "frontend/src/components/InteractiveReview.tsx",
         "frontend/src/components/ReviewClassificationView.tsx",
-        "src/main/java/com/writing/novel/web/DispositionController.java"
+        "frontend/src/api/client.ts"
       ],
-      "spec": "docs/reports/2026-09-22-ui-walkthrough/UI全动线验证报告.md",
-      "acceptance": "先失败E2E复现：构造未解决HIGH+PAUSED任务场景，界面可提交裁决后批准通过、可终止PAUSED任务后拒绝重写；mvn compile/test与前端构建通过。",
+      "spec": "docs/specs/2026-09-22-high-adjudication-unblock.md",
+      "acceptance": "审查抽屉检测问题每条HIGH行有裁决入口；表单必填理由、暂挂必填目标章；提交成功后台账与审查上下文刷新，批准门禁按既有语义放行（后端豁免逻辑不变）；「作为创作例外保留」跳转后预开对应问题表单。先以现有DispositionApprovalGateApiTest证明豁免成立，前端构建通过。",
       "verify_cmd": "cd frontend && npm run build",
-      "evidence": "来源：2026-09-22 UI全动线验证F1（docs/reports/2026-09-22-ui-walkthrough/）。待实现验证。"
+      "evidence": "来源：2026-09-22 UI全动线验证F1；spec docs/specs/2026-09-22-high-adjudication-unblock.md。待实现验证。"
+    },
+    {
+      "id": "NCS-072",
+      "name": "暂停任务终止语义",
+      "description": "cancel对PAUSED任务执行终态转移（PAUSED→CANCELLED）+释放项目工作权+bump写租约epoch防残存worker写入；RUNNING任务保持既有取消标志语义",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "src/main/java/com/writing/novel/service/WritingTaskExecutor.java",
+        "src/test/java/com/writing/novel/service/WritingTaskExecutorPausedCancelTest.java"
+      ],
+      "spec": "docs/specs/2026-09-22-high-adjudication-unblock.md",
+      "acceptance": "先失败测试复现cancel对PAUSED任务无效果；修复后PAUSED任务经cancel进入CANCELLED终态、工作权释放（新任务可立即启动）、写租约epoch已bump；RUNNING任务语义不变。编译与全量测试通过。",
+      "verify_cmd": "mvn test -Dtest=WritingTaskExecutorPausedCancelTest",
+      "evidence": "来源：2026-09-22 UI全动线验证F1占坑根因（cancel仅设标志不终态转移不释放owner）。待实现验证。"
+    },
+    {
+      "id": "NCS-073",
+      "name": "任务终止入口与409指引",
+      "description": "任务与版本视图对PAUSED任务提供「终止任务」入口（调用既有cancel端点）；拒绝并重写遇409占坑时提示先终止暂停任务并可跳转",
+      "phase": 50,
+      "type": "feature",
+      "dependencies": [
+        "NCS-072"
+      ],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/TasksView.tsx",
+        "frontend/src/components/InteractiveReview.tsx",
+        "frontend/src/api/client.ts"
+      ],
+      "spec": "docs/specs/2026-09-22-high-adjudication-unblock.md",
+      "acceptance": "PAUSED任务在任务视图显示终止入口，终止后任务记录显示CANCELLED；拒绝并重写409时提示含终止指引；前端构建通过。",
+      "verify_cmd": "cd frontend && npm run build",
+      "evidence": "来源：2026-09-22 UI全动线验证F1。待实现验证。"
     }
   ],
   "schema_version": 2,

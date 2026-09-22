@@ -8738,7 +8738,7 @@
       "phase": 50,
       "type": "bug",
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/components/InteractiveReview.tsx",
         "frontend/src/components/ReviewClassificationView.tsx",
@@ -8747,7 +8747,9 @@
       "spec": "docs/specs/2026-09-22-high-adjudication-unblock.md",
       "acceptance": "审查抽屉检测问题每条HIGH行有裁决入口；表单必填理由、暂挂必填目标章；提交成功后台账与审查上下文刷新，批准门禁按既有语义放行（后端豁免逻辑不变）；「作为创作例外保留」跳转后预开对应问题表单。先以现有DispositionApprovalGateApiTest证明豁免成立，前端构建通过。",
       "verify_cmd": "cd frontend && npm run build",
-      "evidence": "来源：2026-09-22 UI全动线验证F1；spec docs/specs/2026-09-22-high-adjudication-unblock.md。待实现验证。"
+      "evidence": "已合main 3c28791，干净main全量1187/0/0/1通过；前端构建通过（tsc+vite）。真实UI验证：审查抽屉HIGH行裁决入口→创作例外+理由→「裁决已记入处置台账」→批准门禁放行（「已批准第1章 v4」）→继续协作无409写第2章。证据：docs/reports/2026-09-22-ui-walkthrough/（追加）。",
+      "branch": "codex/ncs-071-adjudication-form",
+      "completion_record": "ncs-071-verified"
     },
     {
       "id": "NCS-072",

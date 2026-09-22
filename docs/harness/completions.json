@@ -2024,6 +2024,17 @@
       "implementation_commit": "5a016c6",
       "main_commit": "aa2cc09",
       "evidence": "docs/harness/evidence/2026-09-21-ncs-070-e2e.json"
+    },
+    {
+      "id": "ncs-071-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-071"
+      ],
+      "branch": "codex/ncs-071-adjudication-form",
+      "implementation_commit": "3c28791",
+      "main_commit": "3c28791",
+      "evidence": "docs/reports/2026-09-22-ui-walkthrough/UI全动线验证报告.md（裁决出路验证记录）"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

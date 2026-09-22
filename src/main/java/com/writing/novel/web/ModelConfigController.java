@@ -17,7 +17,7 @@ import java.util.*;
 @RequestMapping("/api/llm/models")
 public class ModelConfigController {
 
-    /** 展示顺序：默认模型 + 8 个任务类型 */
+    /** 展示顺序：默认模型 + 全部任务类型（NCS-066 起含 EXTRACTION） */
     private static final LinkedHashMap<String, String> SCOPES = new LinkedHashMap<>();
     static {
         SCOPES.put(LlmModelConfigStore.DEFAULT_SCOPE, "默认模型");
@@ -29,6 +29,7 @@ public class ModelConfigController {
         SCOPES.put("STYLE_GUARDIAN", "风格守护");
         SCOPES.put("MEMORY_SUMMARY", "记忆摘要");
         SCOPES.put("GENERAL", "通用任务");
+        SCOPES.put("EXTRACTION", "提取任务");
     }
 
     private final LlmModelConfigStore store;

@@ -65,12 +65,17 @@ class ModelConfigControllerTest {
 
     @Test
     void 总览展示yml现有配置_默认与全部任务类型() throws Exception {
-        String json = mvc.perform(get("/api/llm/models"))
+        String json = new String(mvc.perform(get("/api/llm/models"))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn().getResponse().getContentAsByteArray(), java.nio.charset.StandardCharsets.UTF_8);
         var root = om.readTree(json);
 
-        assertEquals(9, root.path("entries").size());
+        // UI 验证缺陷修复（NCS-070 发现）：EXTRACTION 路由必须出现在模型配置页
+        assertEquals(10, root.path("entries").size());
+        var extraction = findEntry(root, "EXTRACTION");
+        assertEquals("提取任务", extraction.path("label").asText());
+        assertEquals("YML", extraction.path("source").asText());
+        assertEquals(16000, extraction.path("maxTokens").asInt());
         var chapter = findEntry(root, "CHAPTER_WRITING");
         var ymlChapter = llmProperties.getModels().get("CHAPTER_WRITING");
         assertEquals("YML", chapter.path("source").asText());

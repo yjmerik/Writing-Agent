@@ -347,6 +347,18 @@ public class WritingTaskExecutor {
             repository.findWritingTask(taskId).ifPresent(t ->
                     writeLease.bump(t.getProjectId(), "cancel:" + taskId));
         }
+        // NCS-072: PAUSED 任务没有活跃 worker 在检查取消标志——直接终态转移并释放
+        // 项目工作权，否则占坑死锁（作者无法拒绝重写/启动新任务且界面无出路）。
+        // 条件释放只影响仍持有坑位的该任务；若 worker 线程残存活着的写路径由
+        // 上面的写租约 epoch 提升（NCS-001）拦截。
+        repository.findWritingTask(taskId).ifPresent(t -> {
+            if (t.getStatus() == WritingTask.Status.PAUSED) {
+                t.setStatus(WritingTask.Status.CANCELLED);
+                repository.saveWritingTask(t);
+                endWork(t.getProjectId(), t.getId());
+                log.info("暂停任务已终止: taskId={}（PAUSED→CANCELLED，工作权已释放）", taskId);
+            }
+        });
         log.info("取消信号已发送: taskId={}（循环将在当前章完成后退出）", taskId);
         return true;
     }

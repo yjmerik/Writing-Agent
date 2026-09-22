@@ -516,9 +516,21 @@ public class WritingTaskExecutor {
         executor.shutdownNow();
     }
 
-    /** p20-05: 同步工作注册——占坑失败（已有 owner）时抛 409 语义异常 */
+    /** p20-05: 同步工作注册——占坑失败（已有 owner）时抛 409 语义异常。
+     *  NCS-075: 冲突按持有者分类——RUNNING 任务=收尾中（稍候重试）、匿名=同步处理中
+     *  （等待或取消）、其余保持既有「暂停或取消」指引；细分码供前端区分提示。 */
     public void beginWork(String projectId, String workId) {
         if (coordinator.tryAcquire(projectId, workId).isEmpty()) {
+            String owner = coordinator.currentOwner(projectId).orElse(null);
+            WritingTask ownerTask = owner == null ? null : getTask(owner);
+            if (ownerTask != null && ownerTask.getStatus() == WritingTask.Status.RUNNING) {
+                throw new WorkConflictException(
+                        "上一章的 Agent 仍在收尾质量检查（通常数十秒），请稍候重试", "WORKER_FINALIZING");
+            }
+            if (ownerTask == null) {
+                throw new WorkConflictException(
+                        "同步内容处理进行中，请等待其完成或取消该操作", "SYNC_WORK_BUSY");
+            }
             throw new WorkConflictException("已有进行中的写作任务，请先暂停或取消");
         }
     }

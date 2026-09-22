@@ -15,6 +15,10 @@ import AgentRevisionDialog from './AgentRevisionDialog';
 
 const { Text } = Typography;
 
+// NCS-075: 收尾窗口批准的自动重试——同一幂等键安全重发，等待 worker 退出
+const APPROVE_FINALIZING_MAX_ATTEMPTS = 3;
+const APPROVE_FINALIZING_RETRY_DELAY_MS = 15000;
+
 interface Props {
   projectId: string;
   reviewPanelOpen: boolean;
@@ -822,31 +826,53 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
       : { chapterIndex, version: body.version, idempotencyKey: crypto.randomUUID() };
     approvalIntentRef.current = intent;
     try {
-      const result = await api.approveChapterRevision(projectId, chapterIndex, {
-        identity: context.identity,
-        reviewSetHash: context.reviewSetHash,
-        idempotencyKey: intent.idempotencyKey,
-        reason: '作者确认当前稿',
-      });
-      approvalIntentRef.current = null;
-      setReviewConflict(null);
-      message.success(result.replayed
-        ? '批准已生效（同一请求重试返回原结果）'
-        : `已批准第${chapterIndex}章 v${body.version}`);
-      await refresh(true, chapterIndex);
-      void loadReviewContext(chapterIndex);
-      onChanged();
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 409) {
-        // 409：保留草稿并强制重读正文与审阅上下文，不自动重试批准
-        approvalIntentRef.current = null;
-        setReviewConflict(error.message);
-        message.warning(`批准未生效：${error.message}（已重新读取，请确认新稿后再批准）`);
-        await refresh(true, chapterIndex);
-        void loadReviewContext(chapterIndex);
-        onChanged();
-      } else {
-        message.error(`批准失败: ${(error as Error).message}`);
+      // NCS-075: 收尾窗口冲突（WORKER_FINALIZING）以同一幂等键自动重试——批准可安全重发；
+      // REVIEW_CONFLICT 保持"重读+人工确认"，其余冲突如实展示服务端原因
+      for (let attempt = 1; ; attempt++) {
+        try {
+          const result = await api.approveChapterRevision(projectId, chapterIndex, {
+            identity: context.identity,
+            reviewSetHash: context.reviewSetHash,
+            idempotencyKey: intent.idempotencyKey,
+            reason: '作者确认当前稿',
+          });
+          approvalIntentRef.current = null;
+          setReviewConflict(null);
+          message.success(result.replayed
+            ? '批准已生效（同一请求重试返回原结果）'
+            : `已批准第${chapterIndex}章 v${body.version}`);
+          await refresh(true, chapterIndex);
+          void loadReviewContext(chapterIndex);
+          onChanged();
+          return;
+        } catch (error) {
+          if (error instanceof ApiError && error.status === 409
+            && error.code === 'WORKER_FINALIZING'
+            && attempt < APPROVE_FINALIZING_MAX_ATTEMPTS) {
+            message.warning(`Agent 正在收尾上一章质量检查，${APPROVE_FINALIZING_RETRY_DELAY_MS / 1000} 秒后自动重试批准（第 ${attempt}/${APPROVE_FINALIZING_MAX_ATTEMPTS - 1} 次重试）…`);
+            await new Promise(resolve => setTimeout(resolve, APPROVE_FINALIZING_RETRY_DELAY_MS));
+            if (!mountedRef.current) return;
+            continue;
+          }
+          approvalIntentRef.current = null;
+          if (error instanceof ApiError && error.status === 409 && error.code === 'REVIEW_CONFLICT') {
+            // 409 版本/待审冲突：保留草稿并强制重读正文与审阅上下文，不自动重试批准
+            setReviewConflict(error.message);
+            message.warning(`批准未生效：${error.message}（已重新读取，请确认新稿后再批准）`);
+            await refresh(true, chapterIndex);
+            void loadReviewContext(chapterIndex);
+            onChanged();
+          } else if (error instanceof ApiError && error.status === 409) {
+            // 其余 409（如未解决 HIGH、工作权冲突）：如实展示原因并刷新状态
+            message.warning(`批准未生效：${error.message}`);
+            await refresh(true, chapterIndex);
+            void loadReviewContext(chapterIndex);
+            onChanged();
+          } else {
+            message.error(`批准失败: ${(error as Error).message}`);
+          }
+          return;
+        }
       }
     } finally {
       setApproving(false);

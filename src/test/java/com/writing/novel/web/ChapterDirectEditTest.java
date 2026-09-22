@@ -277,7 +277,7 @@ class ChapterDirectEditTest {
     /**
      * p36-12: 版本化批准（p36-04）与章节编辑共用同一工作所有权边界——
      * 旧入口永久 409 后（p36-06），本用例保证工权冲突覆盖仍由新接口真实承载：
-     * 占用期间批准 409 WORK_OWNERSHIP_CONFLICT 且章节屏障不变；释放后同键批准成功（重试语义）。
+     * 占用期间批准 409 冲突码（NCS-075 细分：匿名占坑=SYNC_WORK_BUSY）且章节屏障不变；释放后同键批准成功（重试语义）。
      */
     @Test
     void 版本化批准与直接编辑共用同一工作所有权边界() throws Exception {
@@ -297,7 +297,8 @@ class ChapterDirectEditTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(request))
                     .andExpect(status().isConflict())
-                    .andExpect(jsonPath("$.code").value("WORK_OWNERSHIP_CONFLICT"));
+                    // NCS-075: 匿名 workId 占坑 → 细分码 SYNC_WORK_BUSY（原通用 WORK_OWNERSHIP_CONFLICT）
+                    .andExpect(jsonPath("$.code").value("SYNC_WORK_BUSY"));
         } finally {
             writingTaskExecutor.endWork(projectId, "active-approver");
         }

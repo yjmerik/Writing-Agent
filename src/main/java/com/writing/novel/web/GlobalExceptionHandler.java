@@ -20,13 +20,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
     }
 
-    /** p32-12: 工作所有权占用 → 409 + code，前端据此提示等待/接手而非按版本冲突重试 */
+    /** p32-12: 工作所有权占用 → 409 + code，前端据此提示等待/接手而非按版本冲突重试。
+     *  NCS-075: 细分码（WORKER_FINALIZING/SYNC_WORK_BUSY）透传，通用冲突回退原码。 */
     @ExceptionHandler(com.writing.novel.service.WorkConflictException.class)
     public ResponseEntity<Map<String, String>> handleWorkConflict(
             com.writing.novel.service.WorkConflictException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                 "error", e.getMessage(),
-                "code", "WORK_OWNERSHIP_CONFLICT"));
+                "code", e.code() == null ? "WORK_OWNERSHIP_CONFLICT" : e.code()));
     }
 
     /** 候选生成后来源变化：正文提交已拒绝，客户端应重新生成预览。 */

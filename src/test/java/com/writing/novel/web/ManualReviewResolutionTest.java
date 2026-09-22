@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * p36-12：人工复核流程已迁移到版本化批准接口（p36-04 GET review-context / POST review-decisions）。
  * 保留原业务断言并映射到新契约：
  * 1) 人审中章节批准成功 → 章节 DONE、屏障解除、批准留痕；
- * 2) 写作中（工权占用）批准 → 409 WORK_OWNERSHIP_CONFLICT，章节与屏障不变；
+ * 2) 写作中（工权占用）批准 → 409 冲突码（NCS-075 细分：匿名占坑=SYNC_WORK_BUSY），章节与屏障不变；
  * 3) 非待审状态（已批准后重复批准）→ 409，不产生第二次批准记录。
  * 旧 resolve-review 无版本放行语义由 p36-06 关闭。
  */
@@ -90,7 +90,8 @@ class ManualReviewResolutionTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(approvalRequest(id, context, "mrr-key-busy")))
                     .andExpect(status().isConflict())
-                    .andExpect(jsonPath("$.code").value("WORK_OWNERSHIP_CONFLICT"));
+                    // NCS-075: 匿名 workId 占坑 → 细分码 SYNC_WORK_BUSY（原通用 WORK_OWNERSHIP_CONFLICT）
+                    .andExpect(jsonPath("$.code").value("SYNC_WORK_BUSY"));
         } finally {
             writingTaskExecutor.endWork(id, "write-chapter");
         }

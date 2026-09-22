@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * p32-12（UI 验证发现）：409 必须区分「所有权占用」与「版本冲突」。
  * 复现：Agent 活动期 restore/编辑被所有权门拒绝（行为正确），但响应与版本冲突
  * 同形，前端统一显示「章节已被更新，请重新确认」诱导无效重试。
- * 修复后：所有权占用返回 code=WORK_OWNERSHIP_CONFLICT，前端提示等待或接手。
+ * 修复后：所有权占用返回冲突码，前端提示等待或接手（NCS-075 细分：匿名占坑=SYNC_WORK_BUSY）。
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -67,7 +67,7 @@ class RestoreOwnershipMessageTest {
     }
 
     @Test
-    void 所有权占用期的restore返回WORK_OWNERSHIP_CONFLICT码() throws Exception {
+    void 所有权占用期的restore返回冲突码与等待指引() throws Exception {
         String id = seededProjectWithHistory();
         int current = repository.findChapterByIndex(id, 1).orElseThrow().getVersion();
         writingTaskExecutor.beginWork(id, "held-owner");
@@ -76,8 +76,9 @@ class RestoreOwnershipMessageTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(Map.of("expectedVersion", current))))
                     .andExpect(status().isConflict())
-                    .andExpect(jsonPath("$.code").value("WORK_OWNERSHIP_CONFLICT"))
-                    .andExpect(jsonPath("$.error").value(org.hamcrest.Matchers.containsString("写作任务")));
+                    .andExpect(jsonPath("$.code").value("SYNC_WORK_BUSY"))
+                    // NCS-075: 文案区分「同步处理中」与写作任务，指引等待或取消
+                    .andExpect(jsonPath("$.error").value(org.hamcrest.Matchers.containsString("同步内容处理")));
         } finally {
             writingTaskExecutor.endWork(id, "held-owner");
         }
@@ -96,7 +97,7 @@ class RestoreOwnershipMessageTest {
                                     "title", "第一章",
                                     "content", LONG_BODY + "改动。"))))
                     .andExpect(status().isConflict())
-                    .andExpect(jsonPath("$.code").value("WORK_OWNERSHIP_CONFLICT"));
+                    .andExpect(jsonPath("$.code").value("SYNC_WORK_BUSY"));
         } finally {
             writingTaskExecutor.endWork(id, "held-owner-2");
         }

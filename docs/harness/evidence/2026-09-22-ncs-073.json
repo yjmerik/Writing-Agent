@@ -1,0 +1,25 @@
+{
+ "commit": "58801befcf373d0c99a4ad1d0f9556c212ea4d9f",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-073"
+ ],
+ "checks": [
+  {
+   "command": "cd frontend && npm run build",
+   "result": "PASS: 任务与版本对 PAUSED 任务显示「终止任务」（调既有 cancel 端点）；拒绝重写 409 错误附终止指引。",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（合并后 main）",
+   "result": "PASS: 最终 main 全量 1190 tests / 0 failures / 0 errors / 1 skipped（报告记录，NCS-071..073 合并后）。",
+   "exitCode": 0
+  },
+  {
+   "command": "ego-browser 真实 UI",
+   "result": "PASS: 第 2 章任务 PAUSED 行「终止任务」点击后记录变「已停止」（CANCELLED）；坑位释放经单测与后续协作无冲突双重证明。",
+   "exitCode": 0
+  }
+ ],
+ "notes": "2026-09-23 格式迁移：原 evidence 指向报告 markdown 附加标题；checks 忠实转录自同报告。"
+}

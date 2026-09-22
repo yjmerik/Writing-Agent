@@ -1,25 +1,43 @@
 {
-  "feature": "NCS-065",
-  "date": "2026-09-21",
-  "title": "流式终止校验与截断信号",
-  "branch": "codex/ncs-065-stream-termination",
-  "implementation_commit": "c149912",
-  "root_cause": "completeViaStream 读到 EOF 即返回不校验 [DONE]/finish_reason（singleAttempt 有校验，两路径不一致）；LlmResponse 不携带 finish_reason，length 截断传输层不可见",
-  "changes": [
-    "LlmResponse 新增 finishReason 字段（默认 stop）与 isTruncated()；withExecution 保留信号",
-    "completeViaStream/singleAttempt/streamComplete 三条流路径全部终止校验：未见 [DONE] 且无 finish_reason 即 EOF 视为可重试服务端故障，重试耗尽显式失败（与空聚合同语义）",
-    "非流式与流式路径均透传 finish_reason",
-    "ObservedLlmGateway：length 截断发 LLM_TRUNCATED 独立事件，非 stop 的 LLM_CALL 事件携带 finishReason",
-    "RecordReplayLlmGateway：finishReason 随 fixture 落盘，旧 fixture 缺字段默认 stop"
-  ],
-  "failing_first": {
-    "tests": "LlmClientTerminationTest（8项）",
-    "red": "编译失败——getFinishReason/5参构造不存在；行为项：未终止流返回半截内容",
-    "green": "8/8 通过"
+ "feature": "NCS-065",
+ "date": "2026-09-21",
+ "title": "流式终止校验与截断信号",
+ "branch": "codex/ncs-065-stream-termination",
+ "implementation_commit": "c149912",
+ "root_cause": "completeViaStream 读到 EOF 即返回不校验 [DONE]/finish_reason（singleAttempt 有校验，两路径不一致）；LlmResponse 不携带 finish_reason，length 截断传输层不可见",
+ "changes": [
+  "LlmResponse 新增 finishReason 字段（默认 stop）与 isTruncated()；withExecution 保留信号",
+  "completeViaStream/singleAttempt/streamComplete 三条流路径全部终止校验：未见 [DONE] 且无 finish_reason 即 EOF 视为可重试服务端故障，重试耗尽显式失败（与空聚合同语义）",
+  "非流式与流式路径均透传 finish_reason",
+  "ObservedLlmGateway：length 截断发 LLM_TRUNCATED 独立事件，非 stop 的 LLM_CALL 事件携带 finishReason",
+  "RecordReplayLlmGateway：finishReason 随 fixture 落盘，旧 fixture 缺字段默认 stop"
+ ],
+ "failing_first": {
+  "tests": "LlmClientTerminationTest（8项）",
+  "red": "编译失败——getFinishReason/5参构造不存在；行为项：未终止流返回半截内容",
+  "green": "8/8 通过"
+ },
+ "verification": {
+  "verify_cmd": "mvn test -Dtest=LlmClientTerminationTest → 8 tests / 0 failures / 0 errors",
+  "full": "分支 mvn test → 1169 tests / 0 failures / 0 errors / 1 skipped（新增8项）"
+ },
+ "scope": "llm 层可观测性与传输正确性；不改业务 Agent、不改路由配置、不动 golden",
+ "commit": "00ad0dc7c18918de2e16d5a17911de389abc7203",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn test -Dtest=LlmClientTerminationTest",
+   "result": "PASS: 8 tests / 0 failures / 0 errors（先失败测试后实现，见 failing_first/verification 字段）",
+   "exitCode": 0
   },
-  "verification": {
-    "verify_cmd": "mvn test -Dtest=LlmClientTerminationTest → 8 tests / 0 failures / 0 errors",
-    "full": "分支 mvn test → 1169 tests / 0 failures / 0 errors / 1 skipped（新增8项）"
-  },
-  "scope": "llm 层可观测性与传输正确性；不改业务 Agent、不改路由配置、不动 golden"
+  {
+   "command": "mvn compile && mvn test（特性分支）",
+   "result": "PASS: 1169 tests / 0 failures / 0 errors / 1 skipped（新增8项）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "2026-09-23 格式迁移：由 focused 记录转为 verified evidence 结构；数值转录自原记录，运行发生于 2026-09-21 当时的分支与干净 main。",
+ "feature_ids": [
+  "NCS-065"
+ ]
 }

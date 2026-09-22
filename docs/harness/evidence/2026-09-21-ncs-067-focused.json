@@ -1,25 +1,43 @@
 {
-  "feature": "NCS-067",
-  "date": "2026-09-21",
-  "title": "实体提取拆分与schema瘦身",
-  "branch": "codex/ncs-067-entity-split",
-  "implementation_commit": "9a7fd55",
-  "root_cause": "单次调用要求实体+关系+description全量输出，需求约9.4k字符——无论预算多大都在鼓励长输出，4096预算必然截断",
-  "changes": [
-    "EntityExtractorAgent 拆两阶段：阶段一紧凑实体（entity-extraction.st 重写：无description、至多40个、变量名不变）；阶段二关系（新模板 entity-edges.st：source/target只引用阶段一规范名清单）",
-    "每阶段独立请求（EXTRACTION路由、temperature 0.1、maxTokens 8000）与独立解析落库；阶段失败返回error保持账本可恢复",
-    "阶段一输出空实体时直接成功（无从建边）",
-    "恢复重跑：实体按name/aliases去重、边按同类当前边去重——测试验证不重复",
-    "EntityGraphValidityTest 调用计数更新为3（1失败+成功1轮两阶段）；web桩按两阶段消息分别返回合法空结果"
-  ],
-  "failing_first": {
-    "tests": "EntityExtractorSplitTest（4项）",
-    "red": "2项断言失败（拆分为两次调用/关系截断恢复）",
-    "green": "4/4；相关 EntityGraphValidityTest/PostProcessingRecoveryTest/FactHarvestValidityTest 全部通过"
+ "feature": "NCS-067",
+ "date": "2026-09-21",
+ "title": "实体提取拆分与schema瘦身",
+ "branch": "codex/ncs-067-entity-split",
+ "implementation_commit": "9a7fd55",
+ "root_cause": "单次调用要求实体+关系+description全量输出，需求约9.4k字符——无论预算多大都在鼓励长输出，4096预算必然截断",
+ "changes": [
+  "EntityExtractorAgent 拆两阶段：阶段一紧凑实体（entity-extraction.st 重写：无description、至多40个、变量名不变）；阶段二关系（新模板 entity-edges.st：source/target只引用阶段一规范名清单）",
+  "每阶段独立请求（EXTRACTION路由、temperature 0.1、maxTokens 8000）与独立解析落库；阶段失败返回error保持账本可恢复",
+  "阶段一输出空实体时直接成功（无从建边）",
+  "恢复重跑：实体按name/aliases去重、边按同类当前边去重——测试验证不重复",
+  "EntityGraphValidityTest 调用计数更新为3（1失败+成功1轮两阶段）；web桩按两阶段消息分别返回合法空结果"
+ ],
+ "failing_first": {
+  "tests": "EntityExtractorSplitTest（4项）",
+  "red": "2项断言失败（拆分为两次调用/关系截断恢复）",
+  "green": "4/4；相关 EntityGraphValidityTest/PostProcessingRecoveryTest/FactHarvestValidityTest 全部通过"
+ },
+ "verification": {
+  "verify_cmd": "mvn test -Dtest=EntityExtractorSplitTest → 4/0/0",
+  "full": "分支 mvn test → 1178 tests / 0 failures / 0 errors / 1 skipped"
+ },
+ "e2e_note": "prompt变化按 DoD 在 NCS-070 统一重录（entity-extraction.st 重写+新模板必然指纹分叉，p32-15 预期）",
+ "commit": "351345293fdb35fd706d3ca3e32fe99ea72267dc",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn test -Dtest=EntityExtractorSplitTest",
+   "result": "PASS: 4/0/0（先失败测试后实现，见 failing_first/verification 字段）",
+   "exitCode": 0
   },
-  "verification": {
-    "verify_cmd": "mvn test -Dtest=EntityExtractorSplitTest → 4/0/0",
-    "full": "分支 mvn test → 1178 tests / 0 failures / 0 errors / 1 skipped"
-  },
-  "e2e_note": "prompt变化按 DoD 在 NCS-070 统一重录（entity-extraction.st 重写+新模板必然指纹分叉，p32-15 预期）"
+  {
+   "command": "mvn compile && mvn test（特性分支）",
+   "result": "PASS: 1178 tests / 0 failures / 0 errors / 1 skipped",
+   "exitCode": 0
+  }
+ ],
+ "notes": "2026-09-23 格式迁移：由 focused 记录转为 verified evidence 结构；数值转录自原记录，运行发生于 2026-09-21 当时的分支与干净 main。",
+ "feature_ids": [
+  "NCS-067"
+ ]
 }

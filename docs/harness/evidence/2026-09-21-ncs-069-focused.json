@@ -1,23 +1,41 @@
 {
-  "feature": "NCS-069",
-  "date": "2026-09-21",
-  "title": "复验缺项补问",
-  "branch": "codex/ncs-069-verification-gap",
-  "implementation_commit": "5a016c6",
-  "root_cause": "verifyCorrections 覆盖校验严格（正确）但缺项即整体失败→屏障；模型偶发回答缺项（2项只回1项）无降级路径",
-  "changes": [
-    "逐条严格校验抽离为 consumeVerdictItems（编号必填/结论枚举/RESOLVED需原文证据/不得重复）+ parseVerificationResponse（稿号与格式）",
-    "缺项时发 CORRECTION_GAP_REFILL 事件（missing ids/count），对缺失 issueId 单独补问一轮（输入只含缺失项+明确要求），结论合并",
-    "补问后仍缺才抛『缺少原问题复验结论』走原屏障路径；回执 receipt 记录 refillResults 便于审计",
-    "完整响应零额外调用"
-  ],
-  "failing_first": {
-    "tests": "CorrectionVerificationGapTest（3项）",
-    "red": "1失败+1错误（缺项直接失败无补问）",
-    "green": "3/3；ConsistencyGuardTest 2/2"
+ "feature": "NCS-069",
+ "date": "2026-09-21",
+ "title": "复验缺项补问",
+ "branch": "codex/ncs-069-verification-gap",
+ "implementation_commit": "5a016c6",
+ "root_cause": "verifyCorrections 覆盖校验严格（正确）但缺项即整体失败→屏障；模型偶发回答缺项（2项只回1项）无降级路径",
+ "changes": [
+  "逐条严格校验抽离为 consumeVerdictItems（编号必填/结论枚举/RESOLVED需原文证据/不得重复）+ parseVerificationResponse（稿号与格式）",
+  "缺项时发 CORRECTION_GAP_REFILL 事件（missing ids/count），对缺失 issueId 单独补问一轮（输入只含缺失项+明确要求），结论合并",
+  "补问后仍缺才抛『缺少原问题复验结论』走原屏障路径；回执 receipt 记录 refillResults 便于审计",
+  "完整响应零额外调用"
+ ],
+ "failing_first": {
+  "tests": "CorrectionVerificationGapTest（3项）",
+  "red": "1失败+1错误（缺项直接失败无补问）",
+  "green": "3/3；ConsistencyGuardTest 2/2"
+ },
+ "verification": {
+  "verify_cmd": "mvn test -Dtest=CorrectionVerificationGapTest → 3/0/0",
+  "full": "分支 mvn test → 1187 tests / 0 failures / 0 errors / 1 skipped"
+ },
+ "commit": "7446bac1131b7d9085d112af68fa82e8c06f9c4e",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "mvn test -Dtest=CorrectionVerificationGapTest",
+   "result": "PASS: 3/0/0（先失败测试后实现，见 failing_first/verification 字段）",
+   "exitCode": 0
   },
-  "verification": {
-    "verify_cmd": "mvn test -Dtest=CorrectionVerificationGapTest → 3/0/0",
-    "full": "分支 mvn test → 1187 tests / 0 failures / 0 errors / 1 skipped"
+  {
+   "command": "mvn compile && mvn test（特性分支）",
+   "result": "PASS: 1187 tests / 0 failures / 0 errors / 1 skipped",
+   "exitCode": 0
   }
+ ],
+ "notes": "2026-09-23 格式迁移：由 focused 记录转为 verified evidence 结构；数值转录自原记录，运行发生于 2026-09-21 当时的分支与干净 main。",
+ "feature_ids": [
+  "NCS-069"
+ ]
 }

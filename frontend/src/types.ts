@@ -162,6 +162,11 @@ export interface ChapterQualityReport {
     severity: string;
     description: string;
     resolved: boolean;
+    /** NCS-071: 裁决所需的问题标识与稿件绑定（API 返回完整 ContinuityIssue 投影） */
+    id?: string;
+    detectedAtChapter?: number;
+    chapterVersion?: number;
+    stale?: boolean;
   }>;
   clicheCount: number;
   topCliches: string[];

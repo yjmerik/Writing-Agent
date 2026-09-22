@@ -54,6 +54,8 @@ export default function ProjectWorkspace() {
   const historyView = versionParam != null && Number.isFinite(Number(versionParam))
     ? { version: Number(versionParam), anchor: searchParams.get('anchor') ?? undefined }
     : undefined;
+  // NCS-071: ?adjudicate=ISSUE_ID 深链——预开对应问题的裁决表单
+  const adjudicateIssue = searchParams.get('adjudicate') ?? undefined;
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [prefs, setPrefs] = useState<Record<string, unknown> | null>(null);
@@ -310,7 +312,7 @@ export default function ProjectWorkspace() {
             { key: 'run', label: '创作工具', children: <RunConsole projectId={project.id} projectState={project.state} onChanged={load} /> },
             { key: 'world', label: '🌍 世界观与人物', children: <WorldbuildingView key={`world-${project.id}`} projectId={project.id} currentChapter={project.currentChapterIndex} /> },
             { key: 'outline', label: '📋 大纲', children: <OutlineView key={`outline-${project.id}`} projectId={project.id} currentChapter={project.currentChapterIndex} /> },
-            { key: 'review', label: '📖 章节管理', children: <InteractiveReview key={`review-${project.id}`} refreshSignal={refreshSignal} projectId={project.id} onChanged={load} onNavigateTab={handleTabChange} focusChapter={focusChapter} onSelectChapter={handleSelectChapter} historyView={historyView} reviewPanelOpen={reviewPanelOpen} onReviewPanelChange={setReviewPanelOpen} readingMode={readingMode} onReadingModeChange={setReadingMode} /> },
+            { key: 'review', label: '📖 章节管理', children: <InteractiveReview key={`review-${project.id}`} refreshSignal={refreshSignal} projectId={project.id} onChanged={load} onNavigateTab={handleTabChange} focusChapter={focusChapter} onSelectChapter={handleSelectChapter} historyView={historyView} adjudicateIssue={adjudicateIssue} reviewPanelOpen={reviewPanelOpen} onReviewPanelChange={setReviewPanelOpen} readingMode={readingMode} onReadingModeChange={setReadingMode} /> },
             { key: 'quality', label: '🔍 质量评价', children: <QualityView projectId={project.id} /> },
             { key: 'revisions', label: '🛠 修订', children: <RevisionWorkspace key={`rev-${project.id}`} projectId={project.id} currentChapter={project.currentChapterIndex} /> },
             { key: 'intent', label: '📜 创作约定', children: <IntentView key={`intent-${project.id}`} projectId={project.id} projectState={project.state} currentChapter={project.currentChapterIndex} /> },

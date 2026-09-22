@@ -6,7 +6,7 @@ import {
 } from '../lib/draftStore';
 import type { StoredDraft } from '../lib/draftStore';
 import type { AuthorDirectiveView, DirectiveEvidenceView, ForeshadowCandidateView, ReviewContext } from '../api/client';
-import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, HistoryOutlined, PlusOutlined, ReloadOutlined, TrophyOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, HistoryOutlined, PlusOutlined, ReloadOutlined, SafetyOutlined, TrophyOutlined } from '@ant-design/icons';
 import { ApiError, api } from '../api/client';
 import type { AgentRevisionTarget, CheckpointRevision } from '../api/client';
 import { renderContent } from '../utils/renderContent';
@@ -30,6 +30,8 @@ interface Props {
   onSelectChapter?: (chapterIndex: number) => void;
   /** p36-08: ?version=V&anchor=HASH 深链接——打开对应历史正文；缺失/指纹不符明确提示 */
   historyView?: { version: number; anchor?: string };
+  /** NCS-071: ?adjudicate=ISSUE_ID 深链接——打开对应问题的裁决表单（来自质量分层跳转） */
+  adjudicateIssue?: string;
 }
 
 type RewriteTarget =
@@ -86,7 +88,7 @@ export const normalizeCheckpointPayload = (value: unknown): CheckpointPayload | 
   };
 };
 
-export default function InteractiveReview({ projectId, onChanged, onNavigateTab, refreshSignal, focusChapter, onSelectChapter, historyView, reviewPanelOpen, onReviewPanelChange: setReviewPanelOpen, readingMode, onReadingModeChange }: Props) {
+export default function InteractiveReview({ projectId, onChanged, onNavigateTab, refreshSignal, focusChapter, onSelectChapter, historyView, adjudicateIssue, reviewPanelOpen, onReviewPanelChange: setReviewPanelOpen, readingMode, onReadingModeChange }: Props) {
   // p21-05: 元数据一次加载；正文按选中章节懒加载缓存
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [bodies, setBodies] = useState<Record<number, Chapter>>({});
@@ -126,6 +128,14 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
   const [rewriting, setRewriting] = useState(false);
   const [reviewResult, setReviewResult] = useState<ReviewResult | null>(null);
   const [qualityReport, setQualityReport] = useState<ChapterQualityReport | null>(null);
+  // NCS-071: HIGH 问题裁决——表单状态与处置台账（issueId → 动作）
+  const [adjudication, setAdjudication] = useState<{ issueId: string; description: string } | null>(null);
+  const [adjAction, setAdjAction] = useState<'FALSE_POSITIVE' | 'EXCEPTION' | 'DEFER'>('FALSE_POSITIVE');
+  const [adjReason, setAdjReason] = useState('');
+  const [adjDeferUntil, setAdjDeferUntil] = useState<number | null>(null);
+  const [adjudicating, setAdjudicating] = useState(false);
+  const [dispositionsByIssue, setDispositionsByIssue] = useState<Record<string, string>>({});
+  const consumedAdjudicateRef = useRef<string | null>(null);
   // p11-G2: 段落编辑状态
   const [selectedParagraph, setSelectedParagraph] = useState<{ index: number; text: string } | null>(null);
   const [editMode, setEditMode] = useState<'REWRITE' | 'EXPAND' | 'INSERT'>('REWRITE');
@@ -418,6 +428,68 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
       .then(setQualityReport)
       .catch(() => setQualityReport(null));
   }, [projectId, currentMeta]);
+
+  // NCS-071: 处置台账随审阅上下文加载——问题行显示既有裁决
+  const identity = currentReviewContext?.identity;
+  useEffect(() => {
+    if (!identity) { setDispositionsByIssue({}); return; }
+    let active = true;
+    api.listDispositions(projectId, identity.chapterIndex, identity.version, identity.contentHash)
+      .then(rows => {
+        if (!active) return;
+        const map: Record<string, string> = {};
+        for (const row of rows) map[row.issueId] = row.action;
+        setDispositionsByIssue(map);
+      })
+      .catch(() => { if (active) setDispositionsByIssue({}); });
+    return () => { active = false; };
+  }, [projectId, identity?.chapterIndex, identity?.version, identity?.contentHash]);
+
+  // NCS-071: 打开裁决表单（问题行按钮或质量分层深链）
+  const openAdjudication = useCallback((issueId: string, description: string) => {
+    setAdjAction('FALSE_POSITIVE');
+    setAdjReason('');
+    setAdjDeferUntil(null);
+    setAdjudication({ issueId, description });
+  }, []);
+
+  // NCS-071: 深链 ?adjudicate=ISSUE_ID——质量报告加载后自动预开对应表单
+  useEffect(() => {
+    if (!adjudicateIssue || consumedAdjudicateRef.current === adjudicateIssue) return;
+    if (!qualityReport) return;
+    const issue = qualityReport.issues.find(i => i.id === adjudicateIssue);
+    if (!issue) return;
+    consumedAdjudicateRef.current = adjudicateIssue;
+    openAdjudication(issue.id as string, issue.description);
+  }, [adjudicateIssue, qualityReport, openAdjudication]);
+
+  // NCS-071: 提交裁决——理由强制；暂挂需目标章且不解除当前章批准门禁
+  const submitAdjudication = async () => {
+    if (!adjudication || !identity) return;
+    if (!adjReason.trim()) { message.warning('裁决必须说明理由'); return; }
+    if (adjAction === 'DEFER' && (adjDeferUntil == null || adjDeferUntil < 1)) {
+      message.warning('暂挂必须指定目标章号'); return;
+    }
+    setAdjudicating(true);
+    try {
+      await api.createDisposition(projectId, {
+        issueId: adjudication.issueId,
+        action: adjAction,
+        reason: adjReason.trim(),
+        deferUntilChapter: adjAction === 'DEFER' ? (adjDeferUntil ?? undefined) : undefined,
+        identity,
+      });
+      message.success('裁决已记入处置台账');
+      setAdjudication(null);
+      const refreshed = await api.getChapterQuality(projectId, identity.chapterIndex).catch(() => null);
+      if (refreshed) setQualityReport(refreshed);
+      void loadReviewContext(identity.chapterIndex);
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : '裁决提交失败');
+    } finally {
+      setAdjudicating(false);
+    }
+  };
 
   // p11-G2: 段落编辑
   const handleParagraphClick = (index: number, text: string) => {
@@ -1450,17 +1522,28 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                           <List
                             size="small"
                             dataSource={qualityReport.issues}
-                            renderItem={item => (
+                            renderItem={item => {
+                              const dispositionAction = item.id ? dispositionsByIssue[item.id] : undefined;
+                              const dispositionLabel = dispositionAction === 'FALSE_POSITIVE' ? '已裁决：误报'
+                                : dispositionAction === 'EXCEPTION' ? '已裁决：创作例外'
+                                : dispositionAction === 'DEFER' ? '已裁决：暂挂' : null;
+                              return (
                               <List.Item style={{ display: 'block' }}>
                                 <Space wrap size={[4, 8]} style={{ marginBottom: 8, maxWidth: '100%' }}>
                                 <Tag color={item.severity === 'HIGH' ? 'red' : item.severity === 'MEDIUM' ? 'orange' : 'default'}>
                                   {item.severity}
                                 </Tag>
                                 <Tag style={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>{item.type}</Tag>
+                                {dispositionLabel && <Tag color="green">{dispositionLabel}</Tag>}
+                                {item.id && item.severity === 'HIGH' && !dispositionLabel && (
+                                  <Button size="small" icon={<SafetyOutlined />}
+                                    onClick={() => openAdjudication(item.id as string, item.description)}>裁决</Button>
+                                )}
                                 </Space>
                                 <div style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', lineHeight: 1.8 }}>{item.description}</div>
                               </List.Item>
-                            )}
+                              );
+                            }}
                           />
                         ),
                       }]}
@@ -1489,6 +1572,66 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
           刷新
         </Button>
       </Spin>
+
+      {/* NCS-071: HIGH 问题裁决对话框——理由强制；暂挂不解除当前章批准门禁 */}
+      <Modal
+        title="问题裁决"
+        open={adjudication != null}
+        onCancel={() => setAdjudication(null)}
+        footer={[
+          <Button key="cancel" onClick={() => setAdjudication(null)}>取消</Button>,
+          <Button key="submit" type="primary" loading={adjudicating} onClick={() => void submitAdjudication()}>
+            记入处置台账
+          </Button>,
+        ]}
+      >
+        {adjudication && (
+          <div>
+            <Alert
+              type="info" showIcon style={{ marginBottom: 12 }}
+              message={`针对第 ${currentChapter?.chapterIndex ?? ''} 章第 v${currentReviewContext?.identity.version ?? currentChapter?.version ?? ''} 稿`}
+              description={<div style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{adjudication.description}</div>}
+            />
+            <Space direction="vertical" size={8} style={{ width: '100%' }}>
+              <Select
+                aria-label="裁决类型"
+                style={{ width: 300 }}
+                value={adjAction}
+                onChange={v => setAdjAction(v)}
+                options={[
+                  { value: 'FALSE_POSITIVE', label: '误报——问题不成立' },
+                  { value: 'EXCEPTION', label: '创作例外——有依据的保留' },
+                  { value: 'DEFER', label: '暂挂——推迟到后续章处理' },
+                ]}
+              />
+              <Input.TextArea
+                aria-label="裁决理由"
+                rows={3}
+                placeholder="裁决必须说明理由（记入处置台账，作者可查）"
+                value={adjReason}
+                onChange={e => setAdjReason(e.target.value)}
+              />
+              {adjAction === 'DEFER' && (
+                <>
+                  <Space wrap>
+                    <Text>暂挂到第</Text>
+                    <Input
+                      aria-label="暂挂目标章号"
+                      type="number" min={1} style={{ width: 90 }}
+                      value={adjDeferUntil ?? ''}
+                      onChange={e => setAdjDeferUntil(e.target.value ? Number(e.target.value) : null)}
+                    />
+                    <Text>章</Text>
+                  </Space>
+                  <Alert type="warning" showIcon
+                    message="暂挂不解除当前章的批准门禁——仅登记后续处理计划。" />
+                </>
+              )}
+              <Text type="secondary">裁决提交后不可撤销；批准门禁按台账豁免误报与创作例外。</Text>
+            </Space>
+          </div>
+        )}
+      </Modal>
 
       {/* 重写/拒绝 对话框 */}
       <Modal

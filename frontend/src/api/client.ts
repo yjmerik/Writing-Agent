@@ -637,6 +637,21 @@ export const api = {
     body: JSON.stringify(body),
   }),
 
+  /** NCS-071: HIGH 问题裁决——误报/创作例外/暂挂，理由强制，绑定当前稿件身份 */
+  createDisposition: (id: string, body: {
+    issueId: string;
+    action: 'FALSE_POSITIVE' | 'EXCEPTION' | 'DEFER';
+    reason: string;
+    deferUntilChapter?: number;
+    identity: ReviewIdentity;
+  }) => request<{ id: string; issueId: string; action: string; reason: string }>(
+    `/projects/${id}/dispositions`, { method: 'POST', body: JSON.stringify(body) }),
+
+  /** NCS-071: 按稿件身份列出台账中的既有裁决 */
+  listDispositions: (id: string, chapterIndex: number, chapterVersion: number, contentHash: string) =>
+    request<Array<{ id: string; issueId: string; action: string; reason: string; deferUntilChapter: number | null; createdAt: string }>>(
+      `/projects/${id}/dispositions?chapterIndex=${chapterIndex}&chapterVersion=${chapterVersion}&contentHash=${encodeURIComponent(contentHash)}`),
+
   pause: (id: string) =>
     request<ProjectStatus>(`/projects/${id}/pause`, { method: 'POST' }),
 

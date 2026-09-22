@@ -69,9 +69,9 @@ export default function ReviewClassificationView({ projectId }: { projectId: str
                     <Button size="small" icon={<ForkOutlined />}
                       onClick={() => navigate(`/project/${projectId}?tab=revisions`)}>生成修订建议</Button>
                   </Tooltip>
-                  <Tooltip title="有依据的创作例外（记入处置台账，附理由）">
+                  <Tooltip title="有依据的创作例外（记入处置台账，附理由）——跳转后预开裁决表单">
                     <Button size="small" icon={<SafetyOutlined />}
-                      onClick={() => navigate(`/project/${projectId}/chapter/${c.chapterIndex}`)}>作为创作例外保留</Button>
+                      onClick={() => navigate(`/project/${projectId}/chapter/${c.chapterIndex}${c.issueId ? `?adjudicate=${c.issueId}` : ''}`)}>作为创作例外保留</Button>
                   </Tooltip>
                 </>
               )}

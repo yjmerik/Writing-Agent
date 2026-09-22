@@ -8779,7 +8779,7 @@
       "dependencies": [
         "NCS-072"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "frontend/src/components/TasksView.tsx",
         "frontend/src/components/InteractiveReview.tsx",
@@ -8788,7 +8788,9 @@
       "spec": "docs/specs/2026-09-22-high-adjudication-unblock.md",
       "acceptance": "PAUSED任务在任务视图显示终止入口，终止后任务记录显示CANCELLED；拒绝并重写409时提示含终止指引；前端构建通过。",
       "verify_cmd": "cd frontend && npm run build",
-      "evidence": "来源：2026-09-22 UI全动线验证F1。待实现验证。"
+      "evidence": "已合main 58801be，干净main全量1190/0/0/1通过；前端构建通过。真实UI验证：任务与版本对PAUSED任务显示「终止任务」→点击后任务记录变「已停止」（CANCELLED），坑位释放经单测（新任务立即可占坑）与后续继续协作无409双重证明；拒绝重写409指引文案已实现（含终止任务跳转建议）。",
+      "branch": "codex/ncs-073-task-exit-ui",
+      "completion_record": "ncs-073-verified"
     }
   ],
   "schema_version": 2,

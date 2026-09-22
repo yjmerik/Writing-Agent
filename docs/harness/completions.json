@@ -2046,6 +2046,17 @@
       "implementation_commit": "5624fce",
       "main_commit": "9227687",
       "evidence": "docs/harness/evidence/2026-09-22-ncs-072-focused.json"
+    },
+    {
+      "id": "ncs-073-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-073"
+      ],
+      "branch": "codex/ncs-073-task-exit-ui",
+      "implementation_commit": "58801be",
+      "main_commit": "58801be",
+      "evidence": "docs/reports/2026-09-22-ui-walkthrough/UI全动线验证报告.md（追加F1修复验证）"
     }
   ],
   "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",

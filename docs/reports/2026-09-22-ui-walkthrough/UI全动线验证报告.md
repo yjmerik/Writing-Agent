@@ -76,3 +76,21 @@ NCS-066 新增的提取路由未加入 `ModelConfigController.SCOPES`（硬编�
   1187/0/0/1）。
 - 实例：端口 18099，数据目录 `data/ui-verify-20260922/`（git 不入库）；验证后实例保留运行。
 - 真实 LLM 成本：构思+第 1 章+检查+重写+补查约 25 次调用。
+
+## F1 修复实现与验证（2026-09-22 追加）
+
+spec：`docs/specs/2026-09-22-high-adjudication-unblock.md`。三特性全部先失败测试/构建后实现，
+逐项 ff-only 合入本地 main。
+
+| 特性 | 提交 | 内容 | 验证 |
+|---|---|---|---|
+| NCS-071 | `3c28791` | 审查抽屉 HIGH 行「裁决」按钮 + 裁决表单（误报/创作例外/暂挂+必填理由+暂挂目标章+身份绑定），提交既有 dispositions API，台账随审阅上下文加载并在问题行显示；「作为创作例外保留」深链预开表单 | 真实 UI：《雾中账房》第 1 章 HIGH（时间标记矛盾）→ 创作例外+理由 →「裁决已记入处置台账」→ 批准门禁放行（「已批准第1章 v4」）→ 继续协作无 409，第 2 章真实生成 |
+| NCS-072 | `5624fce` | `cancel` 对 PAUSED 任务终态转移（PAUSED→CANCELLED）+ 条件释放项目工作权 + 写租约 epoch 防护；RUNNING 语义不变 | WritingTaskExecutorPausedCancelTest 3 项先 RED 后 GREEN；全量 1190/0/0/1 |
+| NCS-073 | `58801be` | 任务与版本对 PAUSED 任务显示「终止任务」（调既有 cancel 端点）；拒绝重写 409 错误附终止指引 | 真实 UI：第 2 章任务 PAUSED 行「终止任务」点击后记录变「已停止」（CANCELLED），坑位释放经单测与后续协作无冲突双重证明 |
+
+两条出路均在真实界面走通：
+- **出路 1（裁决）**：HIGH → 裁决（创作例外）→ 批准 → 继续写作。
+- **出路 2（终止）**：PAUSED 任务 → 终止任务 → CANCELLED → 项目工作权释放。
+
+最终 main 全量 1190 tests / 0 failures / 0 errors / 1 skipped（新增 3 项）。
+F1 死锁关闭；NCS-071/072/073 均登记 completed。

@@ -453,6 +453,15 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
     setAdjudication({ issueId, description });
   }, []);
 
+  // NCS-076: 检查点卡片直达——正文未加载时引导作者打开本章（加载后批准按钮即就绪）
+  const openChapterForReview = useCallback((chapterIndex: number) => {
+    const idx = chapters.findIndex(c => c.chapterIndex === chapterIndex);
+    if (idx < 0) return;
+    if (onSelectChapter) onSelectChapter(chapterIndex);
+    else setSelectedIdx(idx);
+    window.scrollTo({ top: 0 });
+  }, [chapters, onSelectChapter]);
+
   // NCS-071: 深链 ?adjudicate=ISSUE_ID——质量报告加载后自动预开对应表单
   useEffect(() => {
     if (!adjudicateIssue || consumedAdjudicateRef.current === adjudicateIssue) return;
@@ -1053,15 +1062,24 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                   )}
                 </div>
               )}
-              <Space>
+              <Space wrap>
                 {isChapterClassCheckpoint ? (
-                  <Button type="primary" icon={<CheckCircleOutlined />} loading={approving}
-                    disabled={!checkpointApproveReady}
-                    aria-label="批准当前稿"
-                    title={checkpointApproveReady ? '批准当前加载的稿件' : '请先打开本章正文，审阅上下文就绪后才能批准'}
-                    onClick={() => checkpointChapterIndex != null && void approveChapterDraft(checkpointChapterIndex)}>
-                    批准当前稿
-                  </Button>
+                  <>
+                    {checkpointMeta && !checkpointBody && checkpointChapterIndex != null && (
+                      <Button icon={<EditOutlined />}
+                        aria-label={`打开第${checkpointChapterIndex}章正文`}
+                        onClick={() => openChapterForReview(checkpointChapterIndex)}>
+                        打开第 {checkpointChapterIndex} 章正文
+                      </Button>
+                    )}
+                    <Button type="primary" icon={<CheckCircleOutlined />} loading={approving}
+                      disabled={!checkpointApproveReady}
+                      aria-label="批准当前稿"
+                      title={checkpointApproveReady ? '批准当前加载的稿件' : '请先打开本章正文，审阅上下文就绪后才能批准'}
+                      onClick={() => checkpointChapterIndex != null && void approveChapterDraft(checkpointChapterIndex)}>
+                      批准当前稿
+                    </Button>
+                  </>
                 ) : (
                   <Button type="primary" icon={<CheckCircleOutlined />} onClick={() => handleApprove(cp)} loading={loading}>
                     ✅ 批准
@@ -1200,6 +1218,13 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                 <Typography.Title level={3} style={{ marginTop: 0, whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
                   第{currentChapter.chapterIndex}章 {currentChapter.title.replace(/\*\*/g, '')}
                 </Typography.Title>
+                  {/* NCS-076: 人工复核屏障引导——说明屏障含义与解除路径（批准即解除） */}
+                  {currentChapter.status === 'NEEDS_MANUAL_REVIEW' && (
+                    <Alert type="warning" showIcon style={{ marginBottom: 12 }}
+                      data-manual-review-banner
+                      message={`第 ${currentChapter.chapterIndex} 章第 v${currentChapter.version} 稿待人工复核，后续写作已暂停`}
+                      description="质量守卫未给出可放行的结论，本章被屏障保护。请审阅正文与质量报告：确认无需处理后点击「确认已复核并批准」解除屏障放行本稿；如检查缺项，可先「补查当前稿连续性」再确认。" />
+                  )}
                   <Space wrap style={{ marginBottom: 24 }}>
                     <Button size="small" onClick={() => onReadingModeChange(!readingMode)}>
                       {readingMode ? '退出专注阅读' : '专注阅读'}
@@ -1212,8 +1237,15 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                     {['DONE', 'NEEDS_MANUAL_REVIEW'].includes(currentChapter.status ?? '') && (
                       <Button size="small" type="primary" loading={approving}
                         disabled={!currentApproveReady}
-                        title={currentApproveReady ? '批准当前加载的稿件' : '正文或审阅上下文尚未就绪'}
-                        onClick={() => void approveChapterDraft(currentChapter.chapterIndex)}>批准当前稿</Button>
+                        aria-label={currentChapter.status === 'NEEDS_MANUAL_REVIEW' ? '确认已复核并批准' : '批准当前稿'}
+                        title={currentApproveReady
+                          ? (currentChapter.status === 'NEEDS_MANUAL_REVIEW'
+                            ? '确认已复核本稿：批准将解除人工复核屏障并放行'
+                            : '批准当前加载的稿件')
+                          : '正文或审阅上下文尚未就绪'}
+                        onClick={() => void approveChapterDraft(currentChapter.chapterIndex)}>
+                        {currentChapter.status === 'NEEDS_MANUAL_REVIEW' ? '确认已复核并批准' : '批准当前稿'}
+                      </Button>
                     )}
                     <Button
                       size="small"
@@ -1477,8 +1509,8 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
               />
               {currentChapter?.status === 'NEEDS_MANUAL_REVIEW' && (
                 <Alert type="warning" showIcon style={{ marginBottom: 12 }}
-                  message={`第 ${currentChapter.chapterIndex} 章第 v${currentChapter.version} 稿待你审查`}
-                  description="处理完成后再继续写作。正文头部的「批准当前稿」按钮核验已读稿件后放行本稿。" />
+                  message={`第 ${currentChapter.chapterIndex} 章第 v${currentChapter.version} 稿待人工复核`}
+                  description="后续写作已暂停。确认本稿无需处理后，点击下方「确认已复核并批准」解除屏障并放行；如检查缺项，可先补查当前稿连续性。" />
               )}
               {!currentChapter && <Text type="secondary">暂无章节。可关闭面板后新增章节。</Text>}
               {qualityReport ? (
@@ -1567,7 +1599,10 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
 
             {currentChapter && ['DONE', 'NEEDS_MANUAL_REVIEW'].includes(currentChapter.status ?? '') && (
               <Button type="primary" block loading={approving} disabled={!currentApproveReady}
-                onClick={() => void approveChapterDraft(currentChapter.chapterIndex)}>批准当前稿</Button>
+                aria-label={currentChapter.status === 'NEEDS_MANUAL_REVIEW' ? '确认已复核并批准' : '批准当前稿'}
+                onClick={() => void approveChapterDraft(currentChapter.chapterIndex)}>
+                {currentChapter.status === 'NEEDS_MANUAL_REVIEW' ? '确认已复核并批准' : '批准当前稿'}
+              </Button>
             )}
           </div>
         </Drawer>

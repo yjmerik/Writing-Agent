@@ -1,26 +1,30 @@
-# UI全动线回归验证（F1修复后） — 2026-09-22
+# UI 交互修复三连（NCS-074/075/076） — 2026-09-23
 
-Last Updated: 2026-09-22
+Last Updated: 2026-09-23
 
 ## Current
-按用户要求完成第二轮全动线回归：打包重启（main HEAD）+ ego-browser 新项目《铜壶漏断》
-完整生命周期 + 既有项目核查。上轮20项动线回归通过；NCS-071/072/073修复全部在真实界面
-复验生效（裁决→批准→继续写作；终止任务→已停止）。新发现F4/F5（P2）登记NCS-074/075；
-F3（resolve-review无UI入口）二次实证。active_feature=null。
+针对 2026-09-22 回归发现的 F3/F4/F5 三项 P2 交互缺陷完成修复闭环，逐特性走完整
+分支协议（先失败测试后实现 → ff-only 合并 → 干净 main 复验），并在真实 UI（18099
+重建实例）复验全部生效。F3 遗留的《铜壶漏断》第 2 章屏障已当场经界面解除
+（章 DONE v2、barrier RESOLVED、检查点 APPROVED、项目 WRITING）。active_feature=null。
 
 ## Files
-docs/reports/2026-09-22-ui-walkthrough/UI全动线回归验证报告.md：本轮报告。
-feature_list.json：新增NCS-074/075（not-started）。
-验证实例保留运行于18099（数据目录data/ui-verify-20260922/，本地）。
+docs/specs/2026-09-23-ui-interaction-fixes.md：三特性 spec。
+docs/reports/2026-09-23-ui-interaction-fixes/验证报告.md：逐项证据。
+feature_list.json：NCS-074/075/076 → completed + evidence。
+docs/harness/completions.json：新增 3 条 verified 记录。
+实现提交：e9ca928（NCS-076）/ 647daa9（NCS-075）/ eba271c（NCS-074），均在 main。
 
 ## Verification
-纯验证无代码改动。铜壶漏断2/2章9583字：第1章A级8/10已批准；第2章守卫未完成屏障→
-补查成功（5.3分钟）→屏障待人工确认（F3无入口，保持诚实状态）。
-卷末回读生成与展示、成书覆盖清单、终止任务×3、模型配置10路由均通过。
+合并后干净 main：mvn test 1202/0F/0E/1S；npm build PASS。
+NCS-075 先失败测试 WritingTaskExecutorBeginWorkConflictTest 4/0F；NCS-074 先失败测试
+WritingTaskExecutorSyncWorkTest 6/0F + WorkspaceStatusApiTest 2 新用例。
+真实 UI：屏障引导+确认已复核并批准解除屏障；占坑期批准得诚实 409 提示（不再误报
+请确认新稿）；补查计时+协作栏「连续性补查中·已X秒」+取消等待释放工作权。
 
 ## Blockers
-无。F3/F4/F5已登记（NCS-074/075及既有F3记录）。
+无。
 
 ## Next Steps
-授权后实现NCS-073类前端入口缺口（resolve-review入口）与NCS-074/075。
-文学质量真人验收仍归NCS-058。
+文学质量真人验收仍归 NCS-058。《铜壶漏断》2/2 章全 DONE，可继续写作或成书定稿。
+Ego Lite 有可用升级（0.5.0.32），待用户确认后执行 ego-browser upgrade。

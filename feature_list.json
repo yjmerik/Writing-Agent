@@ -8730,6 +8730,24 @@
       "verify_cmd": "./scripts/e2e.sh && python3 scripts/compare-baseline.py",
       "evidence": "2026-09-22：真实重录record+replay×2三次一致（报告/正文SHA-256/DB计数）；诊断失败分类0条；EXTRACTION零截断（实体27/关系40/真典21，修复前恒为0）；第1章纠偏复验RESOLVED含原文证据；用户人工确认后执行--bless（golden以验收轮record报告重建，replay1复验PASS，重建理由记入证据）。第2章守卫HIGH复核屏障经人工确认，验收通过。证据docs/harness/evidence/2026-09-21-ncs-070-e2e.json。",
       "completion_record": "ncs-070-e2e-verified"
+    },
+    {
+      "id": "NCS-071",
+      "name": "HIGH问题裁决UI与暂停任务出路",
+      "description": "审查卡内提供HIGH问题裁决表单（复用dispositions API：FALSE_POSITIVE/EXCEPTION/DEFER+理由+版本绑定）；PAUSED任务可显式终止或被新任务取代；「作为创作例外保留」从纯跳转改为可提交裁决",
+      "phase": 50,
+      "type": "bug",
+      "dependencies": [],
+      "status": "not-started",
+      "files": [
+        "frontend/src/components/InteractiveReview.tsx",
+        "frontend/src/components/ReviewClassificationView.tsx",
+        "src/main/java/com/writing/novel/web/DispositionController.java"
+      ],
+      "spec": "docs/reports/2026-09-22-ui-walkthrough/UI全动线验证报告.md",
+      "acceptance": "先失败E2E复现：构造未解决HIGH+PAUSED任务场景，界面可提交裁决后批准通过、可终止PAUSED任务后拒绝重写；mvn compile/test与前端构建通过。",
+      "verify_cmd": "cd frontend && npm run build",
+      "evidence": "来源：2026-09-22 UI全动线验证F1（docs/reports/2026-09-22-ui-walkthrough/）。待实现验证。"
     }
   ],
   "schema_version": 2,

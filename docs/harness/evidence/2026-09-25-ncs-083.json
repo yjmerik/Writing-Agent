@@ -1,0 +1,20 @@
+{
+ "commit": "24fbfc129ac7c810609278b4c5333842f4a5f872",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-083"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "PASS: PlanEditionServiceTest 3/0F（premise 权威覆盖段+二次压缩只保留一份+缓存失效）+ OutlineReplanningTest 8/0F（末卷延迟生成 planVolume 收到收束指令，区间 10-10）",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-083; spec docs/specs/2026-09-25-ui-wuxia-journey-fixes.md; branch codex/ncs-083-compressed-structure-inheritance"
+}

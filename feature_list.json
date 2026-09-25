@@ -8969,7 +8969,7 @@
    "phase": 50,
    "type": "bug",
    "dependencies": [],
-   "status": "not-started",
+   "status": "completed",
    "files": [
     "src/main/java/com/writing/novel/service/PlanEditionService.java",
     "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
@@ -8978,7 +8978,8 @@
    "spec": "docs/specs/2026-09-25-ui-wuxia-journey-fixes.md",
    "acceptance": "运行 verify_cmd 通过：confirmTarget 后 premise 含权威覆盖段（目标章数与收束要求）、contextAssembler.invalidateProject 被调用；规划区间含 targetChapters 时 planVolume 收到含“收束/终局/不得开启新悬念”的卷摘要指令（stub 断言）。",
    "verify_cmd": "mvn test -Dtest=PlanEditionServiceTest",
-   "evidence": "来源：docs/reports/2026-09-23-ui-wuxia-journey/体验报告.md 四-P1-3；待实现验证。"
+   "evidence": "2026-09-25 verified: 24fbfc129ac7（ff-merge=main 提交 24fbfc129ac7）; 来源：docs/reports/2026-09-23-ui-wuxia-journey/体验报告.md 四-P1-3",
+   "completion_record": "ncs-083-verified"
   },
   {
    "id": "NCS-084",

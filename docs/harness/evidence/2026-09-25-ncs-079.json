@@ -1,0 +1,20 @@
+{
+ "commit": "38a9fa8188a8decaf3fb1bc51ed46ebeef92fa7a",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-079"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "PASS: DeclareFinishTest 4/0F（关闭待审检查点→FINAL；mustResolve>3 如实 NEEDS_REVISION；无章节/已完结拒绝）+ ProjectActionPolicyTest 12/0F（FINISH 四写作态可用/三态不可用+原因文案）；npm build PASS（RunConsole 宣告完结按钮）",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-079; spec docs/specs/2026-09-25-ui-wuxia-journey-fixes.md; branch codex/ncs-079-author-finish"
+}

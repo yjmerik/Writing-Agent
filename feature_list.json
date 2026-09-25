@@ -8890,7 +8890,7 @@
    "phase": 50,
    "type": "feature",
    "dependencies": [],
-   "status": "not-started",
+   "status": "completed",
    "files": [
     "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
     "src/main/java/com/writing/novel/orchestrator/ProjectActionPolicy.java",
@@ -8901,7 +8901,8 @@
    "spec": "docs/specs/2026-09-25-ui-wuxia-journey-fixes.md",
    "acceptance": "运行 verify_cmd 通过：写作态项目 POST /finish 后待审检查点全部非 PENDING、状态为 FINAL 或 NEEDS_REVISION（门禁失败如实 NEEDS_REVISION）；CONCEIVING/PLANNING/FINAL 拒绝且给出原因；前端 isAllowed('FINISH') 时出现「宣告完结」。npm run build 通过。",
    "verify_cmd": "mvn test -Dtest=DeclareFinishTest,ProjectActionPolicyTest",
-   "evidence": "来源：docs/reports/2026-09-23-ui-wuxia-journey/体验报告.md 五-头条发现（P0）根因5与建议b；待实现验证。"
+   "evidence": "2026-09-25 verified: 38a9fa8188a8（ff-merge=main 提交 38a9fa8188a8）; 来源：docs/reports/2026-09-23-ui-wuxia-journey/体验报告.md 五-头条发现（P0）根因5与建议b",
+   "completion_record": "ncs-079-verified"
   },
   {
    "id": "NCS-080",

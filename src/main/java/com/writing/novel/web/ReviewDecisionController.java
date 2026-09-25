@@ -104,6 +104,10 @@ public class ReviewDecisionController {
         }
         try {
             return repository.approveChapter(request);
+        } catch (IllegalStateException e) {
+            // NCS-081: 满足性门禁失败（未解决 HIGH / 作者要求未落实）→ 结构化 409 + code，
+            // 前端据此常驻展示阻塞原因（此前裸 {error} 只换来 3 秒 toast）
+            throw new ApprovalBlockedException(e.getMessage(), e);
         } finally {
             if (writingTaskExecutor != null) {
                 writingTaskExecutor.endWork(id, workId);
@@ -191,5 +195,13 @@ public class ReviewDecisionController {
         }
         payload.put("currentReviewSetHash", e.getCurrentReviewSetHash());
         return ResponseEntity.status(409).body(payload);
+    }
+
+    /** NCS-081: 批准满足性门禁失败 → 409 + code=APPROVAL_BLOCKED，前端常驻展示原因。 */
+    @ExceptionHandler(ApprovalBlockedException.class)
+    public ResponseEntity<Map<String, Object>> handleApprovalBlocked(ApprovalBlockedException e) {
+        return ResponseEntity.status(409).body(Map.of(
+                "error", e.getMessage() == null ? "批准被门禁阻塞" : e.getMessage(),
+                "code", "APPROVAL_BLOCKED"));
     }
 }

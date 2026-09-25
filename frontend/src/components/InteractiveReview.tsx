@@ -107,6 +107,8 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
   const approvalIntentRef = useRef<{ chapterIndex: number; version: number; idempotencyKey: string } | null>(null);
   const [approving, setApproving] = useState(false);
   const [reviewConflict, setReviewConflict] = useState<string | null>(null);
+  // NCS-081: 批准满足性门禁阻塞原因（未解决 HIGH 等）——常驻显示在批准按钮附近
+  const [approveBlockReason, setApproveBlockReason] = useState<string | null>(null);
   const refreshGenerationRef = useRef(0);
   const projectGenerationRef = useRef(0);
   const activeProjectIdRef = useRef(projectId);
@@ -415,6 +417,11 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
     if (!currentMeta) return;
     void loadReviewContext(currentMeta.chapterIndex);
   }, [currentMeta?.chapterIndex, currentMeta?.version, loadReviewContext]);
+
+  // NCS-081: 切章/换稿后清除上一次的批准阻塞提示——旧原因不得跨章残留
+  useEffect(() => {
+    setApproveBlockReason(null);
+  }, [currentMeta?.chapterIndex, currentMeta?.version]);
 
   const currentChapter = currentMeta
     ? (currentBody ?? currentMeta)
@@ -852,6 +859,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
     }
     setApproving(true);
     setReviewConflict(null);
+    setApproveBlockReason(null);
     const intent = approvalIntentRef.current
       && approvalIntentRef.current.chapterIndex === chapterIndex
       && approvalIntentRef.current.version === body.version
@@ -896,7 +904,9 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
             void loadReviewContext(chapterIndex);
             onChanged();
           } else if (error instanceof ApiError && error.status === 409) {
-            // 其余 409（如未解决 HIGH、工作权冲突）：如实展示原因并刷新状态
+            // NCS-081: 其余 409（未解决 HIGH 等满足性门禁）——原因常驻显示在批准按钮附近，
+            // 不再只有 3 秒 toast（听雪刀 P1-2：作者需要知道"为什么批不了、差什么"）
+            setApproveBlockReason(error.message);
             message.warning(`批准未生效：${error.message}`);
             await refresh(true, chapterIndex);
             void loadReviewContext(chapterIndex);
@@ -1314,6 +1324,11 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                         {currentChapter.status === 'NEEDS_MANUAL_REVIEW' ? '确认已复核并批准' : '批准当前稿'}
                       </Button>
                     )}
+                    {['DONE', 'NEEDS_MANUAL_REVIEW'].includes(currentChapter.status ?? '') && !currentApproveReady && (
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        批准未就绪：正文或审阅上下文尚未加载/版本未对齐，请先在上方打开正文完成审阅
+                      </Text>
+                    )}
                     <Button
                       size="small"
                       icon={<EditOutlined />}
@@ -1355,6 +1370,13 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                       重写此章
                     </Button>
                   </Space>
+                  {approveBlockReason && currentChapter && (
+                    <Alert
+                      type="warning" showIcon style={{ marginTop: 8, marginBottom: 8 }}
+                      message="批准未生效：当前稿存在阻塞项"
+                      description={`${approveBlockReason}
+处理路径：到「质量」页查看未解决项（重新检查 / 作为创作例外保留），或修订正文后重试批准；处理完成后本提示自动消失。`} />
+                  )}
                 {currentBody ? (
                   <>
                     {renderChapterContent(currentChapter.content)}
@@ -1670,6 +1692,17 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                 onClick={() => void approveChapterDraft(currentChapter.chapterIndex)}>
                 {currentChapter.status === 'NEEDS_MANUAL_REVIEW' ? '确认已复核并批准' : '批准当前稿'}
               </Button>
+            )}
+            {approveBlockReason && currentChapter && (
+              <Alert
+                type="warning" showIcon style={{ marginTop: 8 }}
+                message="批准未生效：当前稿存在阻塞项"
+                description={approveBlockReason} />
+            )}
+            {currentChapter && ['DONE', 'NEEDS_MANUAL_REVIEW'].includes(currentChapter.status ?? '') && !currentApproveReady && (
+              <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
+                批准未就绪：正文或审阅上下文尚未加载/版本未对齐
+              </Text>
             )}
           </div>
         </Drawer>

@@ -1,0 +1,20 @@
+{
+ "commit": "016a6024a05ab00c9e6920185f01a82862e09a92",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-078"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "PASS: EmptyVolumeCandidateFinishesBookTest 4/0F：空候选移除未写章+门禁 FINAL；mustResolve>3 如实 NEEDS_REVISION；非空候选完整匹配校验保留；仍有未写章不误完结",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-078; spec docs/specs/2026-09-25-ui-wuxia-journey-fixes.md; branch codex/ncs-078-empty-candidate-finishes"
+}

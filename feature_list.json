@@ -8872,7 +8872,7 @@
    "dependencies": [
     "NCS-077"
    ],
-   "status": "not-started",
+   "status": "completed",
    "files": [
     "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
     "src/test/java/com/writing/novel/orchestrator/EmptyVolumeCandidateFinishesBookTest.java"
@@ -8880,7 +8880,8 @@
    "spec": "docs/specs/2026-09-25-ui-wuxia-journey-fixes.md",
    "acceptance": "运行 verify_cmd 通过：拒绝卷大纲检查点且候选为空时不再 409，目标卷未写章被移除；大纲耗尽（无 >currentChapter 的梗概）时项目状态进入 FINAL 或 NEEDS_REVISION；非空候选仍走完整匹配校验。",
    "verify_cmd": "mvn test -Dtest=EmptyVolumeCandidateFinishesBookTest",
-   "evidence": "来源：docs/reports/2026-09-23-ui-wuxia-journey/体验报告.md 五-头条发现（P0）根因3；待实现验证。"
+   "evidence": "2026-09-25 verified: 016a6024a05a（ff-merge=main 提交 016a6024a05a）; 来源：docs/reports/2026-09-23-ui-wuxia-journey/体验报告.md 五-头条发现（P0）根因3",
+   "completion_record": "ncs-078-verified"
   },
   {
    "id": "NCS-079",

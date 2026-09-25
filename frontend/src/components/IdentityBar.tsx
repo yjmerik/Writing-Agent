@@ -50,6 +50,10 @@ export default function IdentityBar({ projectId }: { projectId: string }) {
   const current = view.contentStatus.currentChapter;
   const run = view.run;
   const running = run?.status === 'RUNNING';
+  // NCS-085（听雪刀 P2-2）：任务未结束但章节已暂停待人审——如实显示暂停态，
+  // 不再误报「协作写作进行中」误导轮询判断
+  const pausedForReview = running && !run?.stopRequested
+    && (view.review.activeBarriers > 0 || view.review.pendingCheckpoints > 0);
   const blockedNext = view.availableActions.find(a => a.action === 'WRITE_CHAPTER' && !a.allowed);
   const allowedNext = view.availableActions.filter(a => a.allowed);
 
@@ -81,7 +85,13 @@ export default function IdentityBar({ projectId }: { projectId: string }) {
 
       {/* 任务条：正在执行/等待原因 */}
       <Space size={6} style={{ flex: 1, justifyContent: 'center' }}>
-        {running && !run?.stopRequested && (
+        {pausedForReview && (
+          <><PauseCircleOutlined style={{ color: '#fa8c16' }} />
+            <Text type="warning" style={{ fontSize: 12 }}>
+              已暂停待人审（待处理 {view.review.pendingCheckpoints + view.review.activeBarriers} 项；批准后写作自动继续）
+            </Text></>
+        )}
+        {running && !run?.stopRequested && !pausedForReview && (
           <><LoadingOutlined style={{ color: '#1677ff' }} />
             <Text style={{ fontSize: 12 }}>{run?.type === 'AUTO_RUN' ? '协作写作进行中' : '写作任务进行中'}（已写 {run?.chaptersWritten ?? 0} 章）</Text></>
         )}

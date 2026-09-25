@@ -223,6 +223,9 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
     } finally {
       setApplying(false);
       setCandidates([]);
+      // NCS-085（听雪刀 P2-3）：服务端已提交——无论父组件刷新是否成功，弹窗必须关闭，
+      // 不再依赖父回调链路（onCancel 幂等：只清空目标状态）
+      onCancel();
     }
   };
 

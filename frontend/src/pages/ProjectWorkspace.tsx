@@ -169,6 +169,9 @@ export default function ProjectWorkspace() {
             zIndex: 1000,
             overflowY: 'auto',
             boxShadow: sidebarCollapsed ? 'none' : '4px 0 18px rgba(0,0,0,0.16)',
+            // NCS-085（听雪刀 P2-3）：塌缩到 width=0 后固定层不再拦截内容点击
+            // （恢复按钮为独立兄弟元素，zIndex 1001，不受影响）
+            pointerEvents: sidebarCollapsed ? 'none' : undefined,
           } : {}),
         }}
       >

@@ -61,7 +61,10 @@ export default function OutlineView({ projectId, currentChapter = 0 }: { project
       setTargetPreview(result);
       setPreviewTargetNumber(requested);
       setAppliedTargetNumber(null);
-      setPromiseDecisions({});
+      // NCS-085（听雪刀 P2-3）：重复点击「影响预览」不得清空已填处置——只有目标值变化才重置
+      if (previewTargetNumber !== requested) {
+        setPromiseDecisions({});
+      }
     } catch (err) {
       if (sequence === previewRequestSeqRef.current) message.error((err as Error).message);
     } finally {

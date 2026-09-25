@@ -9006,7 +9006,7 @@
    "phase": 50,
    "type": "bug",
    "dependencies": [],
-   "status": "not-started",
+   "status": "completed",
    "files": [
     "frontend/src/components/IdentityBar.tsx",
     "frontend/src/components/AgentRevisionDialog.tsx",
@@ -9016,7 +9016,8 @@
    "spec": "docs/specs/2026-09-25-ui-wuxia-journey-fixes.md",
    "acceptance": "npm run build 通过：四项修复各就位——待人审时 chip 文案为暂停态；apply 成功即 setOpen(false)；重复点击影响预览保留 promiseDecisions（目标值变化才重置）；塌缩 Sider style 含 pointerEvents:none 且恢复按钮可用。",
    "verify_cmd": "cd frontend && npm run build",
-   "evidence": "来源：docs/reports/2026-09-23-ui-wuxia-journey/体验报告.md 四-P2-2/P2-3；待实现验证。"
+   "evidence": "2026-09-25 verified: 1f56f7232e9a（ff-merge=main 提交 1f56f7232e9a）; 来源：docs/reports/2026-09-23-ui-wuxia-journey/体验报告.md 四-P2-2/P2-3",
+   "completion_record": "ncs-085-verified"
   },
   {
    "id": "NCS-086",

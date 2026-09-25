@@ -1,0 +1,20 @@
+{
+ "commit": "1f56f7232e9a36e4e3c2a070fb88cbc8b5deac61",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-085"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "PASS: npm run build + tsc --noEmit；四项就位——待人审 chip 暂停态（activeBarriers/pendingCheckpoints 交叉判定）、AgentRevisionDialog 服务端提交后 finally onCancel 自闭、previewTarget 同目标重预览保留 promiseDecisions、塌缩 Sider pointerEvents:none",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-085; spec docs/specs/2026-09-25-ui-wuxia-journey-fixes.md; branch codex/ncs-085-frontend-residue-fixes"
+}

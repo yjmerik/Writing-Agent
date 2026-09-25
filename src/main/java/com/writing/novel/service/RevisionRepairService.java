@@ -47,6 +47,17 @@ public class RevisionRepairService {
 
     public RepairGeneration generateRepairs(String projectId, String requestId,
                                              int revisedChapterIndex, String intent) {
+        // NCS-086（听雪刀 P2-4）：成组修复的 LLM 调用携带项目上下文（成本归集）
+        com.writing.novel.telemetry.EventContext.setProjectId(projectId);
+        try {
+            return doGenerateRepairs(projectId, requestId, revisedChapterIndex, intent);
+        } finally {
+            com.writing.novel.telemetry.EventContext.clear();
+        }
+    }
+
+    private RepairGeneration doGenerateRepairs(String projectId, String requestId,
+                                               int revisedChapterIndex, String intent) {
         RevisionRequest request = requests.requireScopeApproved(projectId, requestId);
         var revised = agentRevisionChapter(projectId, revisedChapterIndex);
         var plan = impactAnalysis.analyze(projectId, revisedChapterIndex, revised.getVersion());

@@ -2850,6 +2850,16 @@ public class NovelOrchestrator {
      * @param instructions 可选修改意见（如"增加对话""减少打斗"）
      */
     public Chapter rewriteChapter(String projectId, int chapterIndex, String instructions) {
+        // NCS-086（听雪刀 P2-4）：修订管线补项目上下文——LLM_CALL 事件与成本归集携带 projectId
+        EventContext.setProjectId(projectId);
+        try {
+            return doRewriteChapter(projectId, chapterIndex, instructions);
+        } finally {
+            EventContext.clear();
+        }
+    }
+
+    private Chapter doRewriteChapter(String projectId, int chapterIndex, String instructions) {
         Project p = loadProject(projectId);
         Outline outline = repository.findOutlineByProject(projectId).orElseThrow(
                 () -> new IllegalStateException("无大纲"));
@@ -2953,6 +2963,17 @@ public class NovelOrchestrator {
      */
     public Chapter editPassage(String projectId, int chapterIndex, int paragraphIndex,
                                 String selectedText, String instruction, String mode) {
+        // NCS-086: 段落编辑同样携带项目上下文（与 rewriteChapter 对齐）
+        EventContext.setProjectId(projectId);
+        try {
+            return doEditPassage(projectId, chapterIndex, paragraphIndex, selectedText, instruction, mode);
+        } finally {
+            EventContext.clear();
+        }
+    }
+
+    private Chapter doEditPassage(String projectId, int chapterIndex, int paragraphIndex,
+                                  String selectedText, String instruction, String mode) {
         Chapter chapter = repository.findChapterByIndex(projectId, chapterIndex)
                 .orElseThrow(() -> new IllegalArgumentException("章节不存在: " + chapterIndex));
         String content = chapter.getContent();
@@ -3028,6 +3049,8 @@ public class NovelOrchestrator {
         var boundary = new com.writing.novel.service.ChapterRevisionService.DerivedWriteBoundary(
                 repository, projectId, chapterIndex, chapter.getVersion());
         POST_PROCESS.execute(() -> {
+            // NCS-086: 异步派生线程同样设置项目上下文（LLM 归因不随线程切换丢失）
+            EventContext.setProjectId(projectId);
             try {
                 recomputeSummariesForChapter(projectId, chapterIndex, boundary);
                 refreshChapterEntitiesAndFacts(projectId, chapter, boundary);
@@ -3042,6 +3065,8 @@ public class NovelOrchestrator {
                         "async", true,
                         "errorClass", e.getClass().getSimpleName(),
                         "message", String.valueOf(e.getMessage())));
+            } finally {
+                EventContext.clear();
             }
         });
     }

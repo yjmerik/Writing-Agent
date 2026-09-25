@@ -18,6 +18,7 @@ import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Volume;
 import com.writing.novel.orchestrator.NovelOrchestrator;
 import com.writing.novel.spi.NovelRepository;
+import com.writing.novel.telemetry.EventContext;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -63,6 +64,16 @@ public class AgentRevisionService {
     }
 
     public RevisionPreview preview(String projectId, RevisionRequest request) {
+        // NCS-086（听雪刀 P2-4）：让 Agent 修改的 LLM 调用携带项目上下文（成本归集前提）
+        EventContext.setProjectId(projectId);
+        try {
+            return doPreview(projectId, request);
+        } finally {
+            EventContext.clear();
+        }
+    }
+
+    private RevisionPreview doPreview(String projectId, RevisionRequest request) {
         requireProject(projectId);
         RevisionRequest valid = requireRequest(request);
         TargetSnapshot before = resolve(projectId, valid.targetType(), valid.targetId(),
@@ -171,6 +182,16 @@ public class AgentRevisionService {
     }
 
     public ApplyResult apply(String projectId, String previewId) {
+        // NCS-086: 应用阶段（含派生刷新触发的 LLM 链）同样携带项目上下文
+        EventContext.setProjectId(projectId);
+        try {
+            return doApply(projectId, previewId);
+        } finally {
+            EventContext.clear();
+        }
+    }
+
+    private ApplyResult doApply(String projectId, String previewId) {
         if (previewId == null || previewId.isBlank()) {
             throw new IllegalArgumentException("previewId 不能为空");
         }

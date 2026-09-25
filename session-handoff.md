@@ -1,43 +1,48 @@
-# UI 交互修复三连（NCS-074/075/076） — 2026-09-23
+# 武侠旅程缺陷修复十连（NCS-077..086） — 2026-09-25
 
-Last Updated: 2026-09-23
+Last Updated: 2026-09-25
 
 ## Current
-F3/F4/F5 三项 P2 交互缺陷修复完成并合入 main，真实 UI 复验通过。
-- NCS-076（e9ca928）：NEEDS_MANUAL_REVIEW 章节显示屏障引导 Alert + 按钮「确认已复核并批准」；
-  检查点卡片新增「打开第 N 章正文」直达。前端入口走既有版本化 review-decisions。
-- NCS-075（647daa9）：beginWork 冲突按持有者分类返回 WORKER_FINALIZING / SYNC_WORK_BUSY /
-  通用码；前端批准对 WORKER_FINALIZING 以同一幂等键自动重试（≤3 次×15s），
-  REVIEW_CONFLICT 行为不变，其余 409 如实展示原因。
-- NCS-074（eba271c）：beginWork 登记内存态 SyncWorkInfo；workspace 暴露
-  activeWork{kind,label,startedAt,elapsedSeconds}；新端点 POST /active-work/cancel
-  仅取消匿名占坑并释放工作权（任务型占坑走 NCS-072/073 终止路径）。
-  协作栏显示进行中操作与「取消该操作」；补查按钮旁显示已用时+「取消等待」。
-  诚实边界：取消不中断在途调用，原操作若完成仍按稿件身份落库。
+
+《听雪刀》体验报告 9 类缺陷（P0×1 + P1×4 + P2×4）全部修复并合入 main，
+每特性独立分支、失败测试先行、合并后干净 main 复验、verified 登记。
+
+| 特性 | 分支 | 状态 |
+|---|---|---|
+| NCS-077 重规划尊重 targetChapters+空卷不残留 | codex/ncs-077-replan-respects-target | completed |
+| NCS-078 空候选=全书完信号 | codex/ncs-078-empty-candidate-finishes | completed |
+| NCS-079 作者宣告完结 POST /finish + UI | codex/ncs-079-author-finish | completed |
+| NCS-080 重新检查按钮接通 | codex/ncs-080-recheck-button | completed |
+| NCS-081 批准 409 常驻可见 | codex/ncs-081-approval-blocked-visibility | completed |
+| NCS-082 回收卷确认制+审计口径 | codex/ncs-082-recovery-volume-consent | completed |
+| NCS-083 压缩结构贯穿延迟生成 | codex/ncs-083-compressed-structure-inheritance | completed |
+| NCS-084 过期 HIGH 不阻塞批准 | codex/ncs-084-stale-issues-no-block | completed |
+| NCS-085 前端四残留修复 | codex/ncs-085-frontend-residue-fixes | completed |
+| NCS-086 修订管线遥测 projectId | codex/ncs-086-revision-telemetry-projectid | completed |
 
 ## Files
-spec: docs/specs/2026-09-23-ui-interaction-fixes.md
-report: docs/reports/2026-09-23-ui-interaction-fixes/验证报告.md
-backend: WritingTaskExecutor / WorkConflictException / GlobalExceptionHandler / ContentController
-frontend: InteractiveReview.tsx / CollaborationBar.tsx / api/client.ts
-feature_list.json + docs/harness/completions.json：三条 completed/verified 登记。
+
+spec: docs/specs/2026-09-25-ui-wuxia-journey-fixes.md
+验证报告（含真实死锁项目 /finish 实测）: docs/reports/2026-09-25-ui-wuxia-fixes/验证报告.md
+scripts/register-completion.py：本轮新增的完成登记辅助脚本。
+feature_list.json + docs/harness/completions.json：十条 verified + evidence JSON（docs/harness/evidence/2026-09-25-ncs-0*.json）。
 
 ## Verification
-逐特性：先失败测试（WritingTaskExecutorBeginWorkConflictTest 4/0F、
-WritingTaskExecutorSyncWorkTest 6/0F）→ 实现 GREEN → ff-only 合并 → 干净 main 复验。
-最终 main：mvn test 1202/0F/0E/1S（bash source scripts/load-env.sh 后运行）；
-npm build PASS；ego-browser 真实 UI 三项全过。F3 遗留屏障当场解除：
-铜壶漏断第 2 章 DONE v2、barrier RESOLVED、AFTER_CHAPTER×2 APPROVED、项目 WRITING。
-无 prompt/上下文改动，未触发 e2e 基线重建；无远端推送。
+
+最终干净 main：mvn test 1231/0F/0E/1S（净增 29 项测试）；npm build + tsc 无错；
+python3 scripts/check-harness.py 仅剩既有 ncs-070 检查器 schema FAIL（待用户裁决）。
+真实数据：data/ui-wuxia-0925-verify 副本（新构建，18097 已停，重启命令见验证报告五节）
+——死锁项目 POST /finish 检查点全关→NEEDS_REVISION（9 项必查未查清，出口=质量页重新检查后重审）；
+POST /recovery-volume 有界。原 18098 实例与 ui-wuxia-0923 原库未动。
+无 .st/上下文组装改动，未触发 e2e 基线重建。
 
 ## Blockers
-无（业务）。遗留：`./init.sh` 仅剩 1 条 FAIL——`ncs-070-e2e-verified` 记录 branch
-"main(e2e-acceptance)" 不满足检查器的 codex/ 前缀规则；该验收为纯 evidence 提交（协议允许
-在 main），与检查器 schema 冲突，需用户裁决（放宽检查器 vs 补一条 codex 分支语义），
-本会话未擅自改检查器。其余遗留格式问题（065-069/071-073 短SHA与evidence结构）已迁移合规。
+
+无（业务）。ncs-070-e2e-verified 检查器 schema 冲突仍待用户裁决（放宽检查器 vs 补 codex 分支语义）。
 
 ## Next Steps
-下一特性从 feature_list.json 选 not-started 项（当前无 phase 50 未完成项）。
-文学质量真人验收归 NCS-058。验证实例保留运行于 18099
-（data/ui-verify-20260922/，重启命令见 docs/reports/2026-09-23-ui-interaction-fixes）。
-Ego Lite 有可用升级，待用户确认。
+
+1. 真实 UI 全动线回归（新前端 × 副本实例）：重检未查清项→裁决→批准→宣告完结→FINAL，
+   与 18098 旧现场对照；建议作为下一轮首个任务（可登记新 feature）。
+2. 或从 feature_list.json 选 not-started 项（NCS-034 起有依赖需核对）。
+3. NCS-058 真人艺术验收仍归档等待。

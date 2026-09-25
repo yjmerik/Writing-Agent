@@ -2131,8 +2131,8 @@
     "NCS-080"
    ],
    "branch": "codex/ncs-080-recheck-button",
-   "implementation_commit": "8bd5a27",
-   "main_commit": "8bd5a27",
+   "implementation_commit": "8bd5a27fc3a9a51824f6531d863a4a3748365992",
+   "main_commit": "8bd5a27fc3a9a51824f6531d863a4a3748365992",
    "evidence": "docs/harness/evidence/2026-09-25-ncs-080.json"
   },
   {
@@ -2203,5 +2203,5 @@
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "16cdaf21283aade38b00eb88ba0194127c34a993"
+ "main_commit": "8bd5a27fc3a9a51824f6531d863a4a3748365992"
 }

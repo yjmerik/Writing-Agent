@@ -63,32 +63,32 @@
 
 ## 验收标准
 
-- [ ] NCS-077：`mvn test -Dtest=OutlineReplanningTest` 通过——`currentChapter >= targetChapters`
+- [x] NCS-077：`mvn test -Dtest=OutlineReplanningTest` 通过——`currentChapter >= targetChapters`
       时中段重规划不产生新卷；未到目标时规划区间不超过 targetChapters；解析 0 章不残留空卷。
-- [ ] NCS-078：`mvn test -Dtest=EmptyVolumeCandidateFinishesBookTest` 通过——AFTER_VOLUME_OUTLINE
+- [x] NCS-078：`mvn test -Dtest=EmptyVolumeCandidateFinishesBookTest` 通过——AFTER_VOLUME_OUTLINE
       检查点拒绝指令返回空候选时不再 409，未写章被移除、大纲耗尽时项目进入 FINAL/NEEDS_REVISION。
-- [ ] NCS-079：`mvn test -Dtest=DeclareFinishTest` + `mvn test -Dtest=ProjectActionPolicyTest` 通过——
+- [x] NCS-079：`mvn test -Dtest=DeclareFinishTest` + `mvn test -Dtest=ProjectActionPolicyTest` 通过——
       WRITING/VOLUME_DONE/PAUSED_AT_CHECKPOINT/NEEDS_REVISION 下 POST /projects/{id}/finish
       触发成书门禁、待审检查点被拒绝关闭、状态到达 FINAL 或 NEEDS_REVISION；CONCEIVING/PLANNING 拒绝；
       FINAL 幂等拒绝。`npm run build` 通过且 RunConsole 出现「宣告完结」入口。
-- [ ] NCS-080：`cd frontend && npm run build` 通过；UNKNOWN_CHECK 卡「重新检查」点击后经
+- [x] NCS-080：`cd frontend && npm run build` 通过；UNKNOWN_CHECK 卡「重新检查」点击后经
       review-context 身份调用 recheck 端点、完成后分类数据刷新。
-- [ ] NCS-081：`mvn test -Dtest=ReviewDecisionApproveBlockedTest` 通过——未解决 HIGH 的 409
+- [x] NCS-081：`mvn test -Dtest=ReviewDecisionApproveBlockedTest` 通过——未解决 HIGH 的 409
       带 `code=APPROVAL_BLOCKED`；`npm run build` 通过，批准按钮附近常驻展示 409 原因，
       禁用态有静态文字说明。
-- [ ] NCS-082：`mvn test -Dtest=FinalForeshadowingRecoveryTest` 通过——INTERACTIVE 模式大纲耗尽
+- [x] NCS-082：`mvn test -Dtest=FinalForeshadowingRecoveryTest` 通过——INTERACTIVE 模式大纲耗尽
       且 mustResolve 未回收时不自动追加回收卷（事件可观测）；`POST /recovery-volume` 显式追加；
       审计 mustResolve 缺省 false、总数口径优先 prefs.targetChapters。
-- [ ] NCS-083：`mvn test -Dtest=PlanEditionServiceTest` 通过——确认压缩后 premise 含
+- [x] NCS-083：`mvn test -Dtest=PlanEditionServiceTest` 通过——确认压缩后 premise 含
       【篇幅与结构（当前有效）】权威覆盖段并失效上下文缓存；规划全书末卷时 planVolume 收到
       收束指令（stub 捕获断言）。
-- [ ] NCS-084：`mvn test -Dtest=ReviewVersionBindingTest` 通过——绑定旧稿版本的未解决 HIGH
+- [x] NCS-084：`mvn test -Dtest=ReviewVersionBindingTest` 通过——绑定旧稿版本的未解决 HIGH
       不再命中批准阻塞，当前稿 HIGH 仍阻塞。
-- [ ] NCS-085：`cd frontend && npm run build` 通过；章节暂停待人审时 chip 显示暂停而非协作进行中；
+- [x] NCS-085：`cd frontend && npm run build` 通过；章节暂停待人审时 chip 显示暂停而非协作进行中；
       应用成功后 Modal 自闭；重开影响预览不清空已填处置；塌缩 Sider 不拦截点击。
-- [ ] NCS-086：`mvn test -Dtest=RevisionTelemetryProjectIdTest` 通过——修改意见重写/段落编辑/
+- [x] NCS-086：`mvn test -Dtest=RevisionTelemetryProjectIdTest` 通过——修改意见重写/段落编辑/
       让 Agent 修改预览触发的 LLM_CALL 事件携带 projectId。
-- [ ] 每个特性 `mvn compile && mvn test` 全量通过；干净 main 合并后复验通过。
+- [x] 每个特性 `mvn compile && mvn test` 全量通过；干净 main 合并后复验通过。
 
 ## 影响面
 

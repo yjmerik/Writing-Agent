@@ -1,6 +1,7 @@
 package com.writing.novel.orchestrator;
 
 import com.writing.novel.domain.Chapter;
+import com.writing.novel.domain.ChapterApproval;
 import com.writing.novel.domain.ChapterQualityReport;
 import com.writing.novel.domain.ChapterReview;
 import com.writing.novel.domain.ChapterVersion;
@@ -19,6 +20,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -133,5 +135,36 @@ class ReviewVersionBindingTest {
                 ContinuityIssue.Type.STRUCTURE, ContinuityIssue.Severity.LOW, "[quality_risk] 规划"));
         report = orchestrator.buildChapterQualityReport(projectId, 1);
         assertTrue(report.getIssues().stream().noneMatch(i -> i.getDescription().contains("规划")));
+    }
+    // --- NCS-084（听雪刀 P2-1）：过期问题不阻塞批准 ---
+
+    private ChapterApproval.Request approvalRequest(String key) {
+        ChapterApproval.ReviewContext ctx = repo.readReviewContext(projectId, 1);
+        return new ChapterApproval.Request(ctx.identity(), ctx.reviewSetHash(), key, "作者确认当前稿");
+    }
+
+    @Test
+    void 旧稿版本的HIGH问题不阻塞新稿批准() {
+        // v1 检出 HIGH 问题（绑定 v1 身份）
+        repo.saveContinuityIssue(new ContinuityIssue(projectId, 1,
+                ContinuityIssue.Type.TIMELINE, ContinuityIssue.Severity.HIGH, "v1 时间线矛盾"));
+        int staleVersion = currentVersion();
+        bumpChapterVersion("作者修订后的正文，长度超过完成稿的五百字门槛。".repeat(25));
+        assertTrue(currentVersion() > staleVersion, "应已推进到新稿");
+
+        // 批准新稿：旧稿问题过期展示，不再阻塞（此前 IllegalStateException 永久 409）
+        ChapterApproval.Result result = repo.approveChapter(approvalRequest("stale-high-1"));
+        assertNotNull(result.approvalId(), "新稿批准应成功");
+    }
+
+    @Test
+    void 当前稿HIGH问题仍阻塞批准() {
+        repo.saveContinuityIssue(new ContinuityIssue(projectId, 1,
+                ContinuityIssue.Type.TIMELINE, ContinuityIssue.Severity.HIGH, "当前稿矛盾"));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> repo.approveChapter(approvalRequest("fresh-high-1")));
+        assertTrue(ex.getMessage().contains("未解决的 HIGH"),
+                "当前稿版本的 HIGH 仍应阻塞批准: " + ex.getMessage());
     }
 }

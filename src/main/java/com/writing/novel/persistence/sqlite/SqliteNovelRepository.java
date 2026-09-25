@@ -1666,20 +1666,24 @@ public class SqliteNovelRepository implements NovelRepository {
         return unsatisfied;
     }
 
-    /** 审计 P1-2: 该章未解决的 HIGH 问题（无有效 FALSE_POSITIVE/EXCEPTION 裁决）。 */
+    /** 审计 P1-2: 该章未解决的 HIGH 问题（无有效 FALSE_POSITIVE/EXCEPTION 裁决）。
+     *  NCS-084（听雪刀 P2-1）：只阻塞当前稿版本（及无版本戳的遗留行）——
+     *  旧稿版本的问题随作者改稿过期为展示层提示，不再滚雪球阻塞批准。 */
     private List<String> selectBlockingHighIssues(Connection conn, ChapterApproval.Identity identity) {
         List<String> blocking = new ArrayList<>();
         String sql = "SELECT i.id, i.description FROM continuity_issues i " +
                 "WHERE i.project_id=? AND i.detected_at_chapter=? AND i.resolved=0 " +
                 "AND i.severity='HIGH' " +
+                "AND (i.chapter_version IS NULL OR i.chapter_version = ?) " +
                 "AND NOT EXISTS (SELECT 1 FROM review_dispositions rd " +
                 "  WHERE rd.issue_id = i.id AND rd.project_id = i.project_id AND rd.chapter_index = ? AND rd.chapter_version = ? AND rd.content_hash = ? AND rd.action IN ('FALSE_POSITIVE','EXCEPTION'))";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, identity.projectId());
             ps.setInt(2, identity.chapterIndex());
-            ps.setInt(3, identity.chapterIndex());
-            ps.setInt(4, identity.version());
-            ps.setString(5, identity.contentHash());
+            ps.setInt(3, identity.version());
+            ps.setInt(4, identity.chapterIndex());
+            ps.setInt(5, identity.version());
+            ps.setString(6, identity.contentHash());
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 blocking.add(rs.getString("description"));

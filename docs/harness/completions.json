@@ -2134,8 +2134,19 @@
    "implementation_commit": "8bd5a27",
    "main_commit": "8bd5a27",
    "evidence": "docs/harness/evidence/2026-09-25-ncs-080.json"
+  },
+  {
+   "id": "ncs-081-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-081"
+   ],
+   "branch": "codex/ncs-081-approval-blocked-visibility",
+   "implementation_commit": "9c1f4c8793ca3bb0486fec69ad98df3393d62327",
+   "main_commit": "9c1f4c8793ca3bb0486fec69ad98df3393d62327",
+   "evidence": "docs/harness/evidence/2026-09-25-ncs-081.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "8bd5a27"
+ "main_commit": "9c1f4c8793ca3bb0486fec69ad98df3393d62327"
 }

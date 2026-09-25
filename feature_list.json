@@ -8928,7 +8928,7 @@
    "phase": 50,
    "type": "bug",
    "dependencies": [],
-   "status": "not-started",
+   "status": "completed",
    "files": [
     "src/main/java/com/writing/novel/web/ReviewDecisionController.java",
     "src/test/java/com/writing/novel/web/ReviewDecisionApproveBlockedTest.java",
@@ -8937,7 +8937,8 @@
    "spec": "docs/specs/2026-09-25-ui-wuxia-journey-fixes.md",
    "acceptance": "运行 verify_cmd 通过：approveChapter 抛 IllegalStateException（未解决 HIGH/作者要求未落实）时响应 409 且 body 含 code=APPROVAL_BLOCKED；npm run build 通过；前端 409 原因进入常驻 Alert（非一次性 toast），禁用按钮旁展示原因文字。",
    "verify_cmd": "mvn test -Dtest=ReviewDecisionApproveBlockedTest",
-   "evidence": "来源：docs/reports/2026-09-23-ui-wuxia-journey/体验报告.md 四-P1-2；待实现验证。"
+   "evidence": "2026-09-25 verified: 9c1f4c8793ca（ff-merge=main 提交 9c1f4c8793ca）; 来源：docs/reports/2026-09-23-ui-wuxia-journey/体验报告.md 四-P1-2",
+   "completion_record": "ncs-081-verified"
   },
   {
    "id": "NCS-082",

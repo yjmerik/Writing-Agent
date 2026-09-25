@@ -8988,7 +8988,7 @@
    "phase": 50,
    "type": "bug",
    "dependencies": [],
-   "status": "not-started",
+   "status": "completed",
    "files": [
     "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
     "src/test/java/com/writing/novel/orchestrator/ReviewVersionBindingTest.java"
@@ -8996,7 +8996,8 @@
    "spec": "docs/specs/2026-09-25-ui-wuxia-journey-fixes.md",
    "acceptance": "运行 verify_cmd 通过：v3 检出的 HIGH 在当前稿 v4 上批准时不再阻塞；绑定 v4 的 HIGH 与无版本戳遗留 HIGH 仍阻塞；处置豁免语义不变。",
    "verify_cmd": "mvn test -Dtest=ReviewVersionBindingTest",
-   "evidence": "来源：docs/reports/2026-09-23-ui-wuxia-journey/体验报告.md 四-P2-1；待实现验证。"
+   "evidence": "2026-09-25 verified: 547b05b40584（ff-merge=main 提交 547b05b40584）; 来源：docs/reports/2026-09-23-ui-wuxia-journey/体验报告.md 四-P2-1",
+   "completion_record": "ncs-084-verified"
   },
   {
    "id": "NCS-085",

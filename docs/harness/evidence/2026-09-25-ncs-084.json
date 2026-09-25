@@ -1,0 +1,20 @@
+{
+ "commit": "547b05b405842b0e92e15e7ec349fa300353cd51",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-084"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "PASS: ReviewVersionBindingTest 5/0F（v1 HIGH 不阻塞 v2 批准成功落审计；当前稿 HIGH 仍 409）",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-084; spec docs/specs/2026-09-25-ui-wuxia-journey-fixes.md; branch codex/ncs-084-stale-issues-no-block"
+}

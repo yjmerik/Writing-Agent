@@ -2167,8 +2167,19 @@
    "implementation_commit": "24fbfc129ac7c810609278b4c5333842f4a5f872",
    "main_commit": "24fbfc129ac7c810609278b4c5333842f4a5f872",
    "evidence": "docs/harness/evidence/2026-09-25-ncs-083.json"
+  },
+  {
+   "id": "ncs-084-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-084"
+   ],
+   "branch": "codex/ncs-084-stale-issues-no-block",
+   "implementation_commit": "547b05b405842b0e92e15e7ec349fa300353cd51",
+   "main_commit": "547b05b405842b0e92e15e7ec349fa300353cd51",
+   "evidence": "docs/harness/evidence/2026-09-25-ncs-084.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "24fbfc129ac7c810609278b4c5333842f4a5f872"
+ "main_commit": "547b05b405842b0e92e15e7ec349fa300353cd51"
 }

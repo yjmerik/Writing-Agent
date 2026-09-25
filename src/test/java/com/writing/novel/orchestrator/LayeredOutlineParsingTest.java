@@ -119,8 +119,9 @@ class LayeredOutlineParsingTest {
         Outline outline = new Outline("p1", "总纲");
         int parsed = invokeParse(outline, wrongRangeVolumeText(41), "p1", 1, 1, 8);
         assertEquals(0, parsed, "41-48 全部落在请求区间 1-8 之外，应解析 0 章走占位兜底");
-        assertTrue(outline.getVolumes().get(0).getSynopses().isEmpty(),
-                "区间外章号不得入库: " + outline.getVolumes().get(0).getSynopses());
+        // NCS-077: 解析 0 章不残留空卷（空卷+同号重复卷会挡死大纲 PUT 保存）
+        assertTrue(outline.getVolumes().isEmpty(),
+                "区间外章号不得入库且不得残留空卷: " + outline.getVolumes());
         assertTrue(RANGE_EVENTS.stream().anyMatch(e -> "p1".equals(e.get("projectId"))
                         && Integer.valueOf(41).equals(((java.util.List<Integer>) e.get("rejectedChapters")).get(0))),
                 "应发出 PLAN_VOLUME_RANGE_REJECTED 事件，实际: " + RANGE_EVENTS);

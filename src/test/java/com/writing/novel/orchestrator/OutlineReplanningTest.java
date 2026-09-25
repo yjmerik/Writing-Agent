@@ -119,4 +119,151 @@ class OutlineReplanningTest {
         assertTrue(after.getPremise().startsWith("原始总纲"),
                 "已有总纲应保留");
     }
+
+    /** NCS-077：中段重规划触发器构造——mock Plotter 捕获/拒绝 planVolume 调用。 */
+    private NovelOrchestrator replanOrchestratorWith(PlotterAgent plotterMock) {
+        return new NovelOrchestrator(repo, new ProjectService(repo),
+                null, null, plotterMock,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null, null);
+    }
+
+    private void savePrefs(int targetChapters) {
+        com.writing.novel.domain.WritingPreferences prefs =
+                new com.writing.novel.domain.WritingPreferences(pid);
+        prefs.setTargetChapters(targetChapters);
+        repo.saveWritingPreferences(prefs);
+    }
+
+    @Test
+    void 中段重规划在已达目标章数时不生成新卷() throws Exception {
+        savePrefs(10);
+        PlotterAgent plotterMock = org.mockito.Mockito.mock(PlotterAgent.class);
+        org.mockito.Mockito.when(plotterMock.planVolume(
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt(),
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn("第11章 新卷：场景节拍：无关内容");
+        NovelOrchestrator orch = replanOrchestratorWith(plotterMock);
+
+        Outline outline = new Outline(pid, "总纲");
+        Volume v1 = new Volume(pid, 1, "卷1", "");
+        v1.addSynopsis(new ChapterSynopsis(pid, 9, "第9章", "收束"));
+        v1.addSynopsis(new ChapterSynopsis(pid, 10, "第10章", "终局"));
+        outline.addVolume(v1);
+        repo.saveOutline(outline);
+        Project p = repo.findProject(pid).orElseThrow();
+        p.setCurrentChapterIndex(10);
+        repo.saveProject(p);
+
+        Method m = NovelOrchestrator.class.getDeclaredMethod("replanRemainingOutline", String.class, int.class);
+        m.setAccessible(true);
+        m.invoke(orch, pid, 10);
+
+        Outline after = repo.findOutlineByProject(pid).orElseThrow();
+        assertTrue(after.getVolumes().stream()
+                        .flatMap(v -> v.getSynopses().stream())
+                        .allMatch(s -> s.getChapterIndex() <= 10),
+                "已写满目标章数后中段重规划不得再生成新章（卷卷相生根因，听雪刀 P0）");
+        org.mockito.Mockito.verify(plotterMock, org.mockito.Mockito.never()).planVolume(
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void 中段重规划区间不超过目标章数() throws Exception {
+        savePrefs(10);
+        PlotterAgent plotterMock = org.mockito.Mockito.mock(PlotterAgent.class);
+        org.mockito.Mockito.when(plotterMock.planVolume(
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt(),
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn("");
+        NovelOrchestrator orch = replanOrchestratorWith(plotterMock);
+
+        Outline outline = new Outline(pid, "总纲");
+        Volume v1 = new Volume(pid, 1, "卷1", "");
+        v1.addSynopsis(new ChapterSynopsis(pid, 5, "第5章", "推进"));
+        outline.addVolume(v1);
+        repo.saveOutline(outline);
+        Project p = repo.findProject(pid).orElseThrow();
+        p.setCurrentChapterIndex(5);
+        repo.saveProject(p);
+
+        Method m = NovelOrchestrator.class.getDeclaredMethod("replanRemainingOutline", String.class, int.class);
+        m.setAccessible(true);
+        m.invoke(orch, pid, 5);
+
+        org.mockito.Mockito.verify(plotterMock).planVolume(
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.eq(6), org.mockito.ArgumentMatchers.eq(10),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void 中段重规划解析0章时保留现有未写卷() throws Exception {
+        savePrefs(40);
+        PlotterAgent plotterMock = org.mockito.Mockito.mock(PlotterAgent.class);
+        // 返回无法解析的输出（格式漂移），触发 parsed==0
+        org.mockito.Mockito.when(plotterMock.planVolume(
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt(),
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn("完全没有章节格式的输出");
+        NovelOrchestrator orch = replanOrchestratorWith(plotterMock);
+
+        Outline outline = new Outline(pid, "总纲");
+        Volume v1 = new Volume(pid, 1, "卷1", "");
+        v1.addSynopsis(new ChapterSynopsis(pid, 5, "第5章", "推进"));
+        outline.addVolume(v1);
+        Volume v2 = new Volume(pid, 2, "卷2", "");
+        v2.addSynopsis(new ChapterSynopsis(pid, 6, "第6章", "原计划"));
+        v2.addSynopsis(new ChapterSynopsis(pid, 7, "第7章", "原计划"));
+        outline.addVolume(v2);
+        repo.saveOutline(outline);
+        Project p = repo.findProject(pid).orElseThrow();
+        p.setCurrentChapterIndex(5);
+        repo.saveProject(p);
+
+        Method m = NovelOrchestrator.class.getDeclaredMethod("replanRemainingOutline", String.class, int.class);
+        m.setAccessible(true);
+        m.invoke(orch, pid, 5);
+
+        Outline after = repo.findOutlineByProject(pid).orElseThrow();
+        long unwritten = after.getVolumes().stream()
+                .flatMap(v -> v.getSynopses().stream())
+                .filter(s -> s.getChapterIndex() > 5).count();
+        assertEquals(2, unwritten, "解析失败时不得丢弃现有未写卷（原有计划被空替换卷吞掉的隐患）");
+    }
+
+    @Test
+    void parseAndAppendVolume解析0章不残留空卷() throws Exception {
+        NovelOrchestrator orchestrator = new NovelOrchestrator(repo, new ProjectService(repo),
+                null, null, plotter, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null);
+
+        Outline outline = new Outline(pid, "总纲");
+        Method m = NovelOrchestrator.class.getDeclaredMethod("parseAndAppendVolume",
+                Outline.class, String.class, String.class, int.class, int.class, int.class);
+        m.setAccessible(true);
+        int parsed = (int) m.invoke(orchestrator, outline, "无法解析的输出", pid, 1, 1, 8);
+
+        assertEquals(0, parsed);
+        assertTrue(outline.getVolumes().stream().noneMatch(v -> v.getSynopses().isEmpty()),
+                "解析 0 章不得残留空卷（空卷+重复卷号会挡死大纲 PUT 保存）");
+    }
 }

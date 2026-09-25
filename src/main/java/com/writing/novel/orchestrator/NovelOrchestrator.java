@@ -2264,19 +2264,38 @@ public class NovelOrchestrator {
             }
 
             if (plotter != null) {
+                // NCS-077（听雪刀 P0）：中段重规划必须尊重目标章数——已写满目标即不再生成后续卷
+                // （卷卷相生根因：卷5 尾声回收卷完成即自动生成卷6=第19-26章，锁死在检查点）
+                // 无偏好记录的旧项目按领域默认目标（WritingPreferences 默认 24）约束
+                int targetChapters = repository.findWritingPreferences(projectId)
+                        .map(com.writing.novel.domain.WritingPreferences::getTargetChapters)
+                        .orElse(24);
                 int nextStart = currentChapter + 1;
+                if (nextStart > targetChapters) {
+                    log.info("总纲中段重规划跳过(项目{}): 已写{}章 >= 目标{}章，不生成后续卷",
+                            projectId, currentChapter, targetChapters);
+                    EventLog.emit("REPLAN_SKIPPED_AT_TARGET", Map.of(
+                            "projectId", projectId,
+                            "currentChapter", currentChapter,
+                            "targetChapters", targetChapters));
+                    return;
+                }
+                int nextEnd = Math.min(nextStart + 7, targetChapters);
                 var replanGenre = repository.findProject(projectId)
                         .map(Project::getGenre).orElse(null);
                 String generated = plotter.planVolume(
                         outline.getPremise(), writtenSummary.toString(),
                         "后续卷", "根据已写剧情重规划未写卷",
-                        nextStart, nextStart + 7, "", "", replanGenre);
+                        nextStart, nextEnd, "", "", replanGenre);
                 Outline scratch = new Outline(projectId, outline.getPremise());
                 int nextVol = outline.getVolumes().stream().mapToInt(Volume::getVolumeIndex).max().orElse(0) + 1;
                 // p32-03: 用与 planVolume 请求一致的区间校验解析结果
-                parseAndAppendVolume(scratch, generated, projectId, nextVol, nextStart, nextStart + 7);
-                new com.writing.novel.service.OutlineReplanner()
-                        .replaceUnwritten(outline, currentChapter, scratch.getVolumes());
+                int parsed = parseAndAppendVolume(scratch, generated, projectId, nextVol, nextStart, nextEnd);
+                // NCS-077: 解析 0 章（格式漂移/截断）时保留现有未写卷——空替换会把原计划吞掉
+                if (parsed > 0) {
+                    new com.writing.novel.service.OutlineReplanner()
+                            .replaceUnwritten(outline, currentChapter, scratch.getVolumes());
+                }
             }
             repository.saveOutline(outline);
             if (contextAssembler != null) contextAssembler.invalidateProject(projectId);
@@ -2671,6 +2690,10 @@ public class NovelOrchestrator {
                 repository.saveCheckpoint(new Checkpoint(projectId,
                         Checkpoint.Type.AFTER_VOLUME_OUTLINE, "卷" + volumeNumber + "大纲已生成，待审核"));
             }
+        } else {
+            // NCS-077: 解析 0 章不残留空卷——空卷+同号重复卷会触发大纲 PUT
+            // 「卷号必须唯一/严格递增」400，挡死作者保存删改后的结构
+            outline.getVolumes().remove(volume);
         }
         return parsed;
     }

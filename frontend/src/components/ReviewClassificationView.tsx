@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Card, Tag, Space, Typography, Spin, Button, Tooltip } from 'antd';
+import { Card, Tag, Space, Typography, Spin, Button, Tooltip, message } from 'antd';
 import { AlertOutlined, EditOutlined, ForkOutlined, QuestionCircleOutlined, ReadOutlined, SafetyOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
@@ -15,22 +15,45 @@ const { Text, Paragraph } = Typography;
 export default function ReviewClassificationView({ projectId }: { projectId: string }) {
   const [data, setData] = useState<ReviewClassification | null>(null);
   const [loading, setLoading] = useState(true);
+  // NCS-080: 未查清项「重新检查」——正在重检的章号（同一时间只跑一个同步补查）
+  const [rechecking, setRechecking] = useState<number | null>(null);
   const navigate = useNavigate();
   const requestRef = useRef(0);
 
-  useEffect(() => {
+  const load = (pid: string) => {
     const requestId = ++requestRef.current;
-    void api.getReviewClassification(projectId).then(d => {
+    void api.getReviewClassification(pid).then(d => {
       if (requestRef.current === requestId) setData(d);
     }).catch(() => {}).finally(() => {
       if (requestRef.current === requestId) setLoading(false);
     });
+  };
+
+  useEffect(() => {
+    load(projectId);
   }, [projectId]);
 
   if (loading) return <Card size="small"><Spin><div style={{ height: 60 }} /></Spin></Card>;
 
   const toReview = (chapterIndex: number) => {
     navigate(`/project/${projectId}/chapter/${chapterIndex}`);
+  };
+
+  // NCS-080（听雪刀 P1-1）：未查清检查点的 UI 出路——经当前稿身份触发 recheck，
+  // 完成后刷新分类（检查结果信封落库会覆盖 UNKNOWN 状态）。长调用期间按钮置 loading；
+  // 占坑可经协作栏「取消该操作」释放（NCS-074）。
+  const recheckUnknown = async (chapterIndex: number) => {
+    setRechecking(chapterIndex);
+    try {
+      const ctx = await api.getReviewContext(projectId, chapterIndex);
+      await api.recheckChapter(projectId, chapterIndex, ctx.identity);
+      message.success(`第 ${chapterIndex} 章连续性重检完成，正在刷新分类…`);
+    } catch (e) {
+      message.error(`重新检查失败: ${(e as Error).message}（若提示身份过期，请先打开该章刷新审阅）`);
+    } finally {
+      setRechecking(null);
+      load(projectId);
+    }
   };
 
   const column = (title: string, icon: React.ReactNode, color: string, cards: ReviewCard[],
@@ -60,7 +83,12 @@ export default function ReviewClassificationView({ projectId }: { projectId: str
             <Space size={6} wrap>
               {c.kind === 'UNKNOWN_CHECK' ? (
                 <Tooltip title={c.reason ?? ''}>
-                  <Button size="small" icon={<QuestionCircleOutlined />}>重新检查</Button>
+                  <Button size="small" icon={<QuestionCircleOutlined />}
+                    loading={rechecking === c.chapterIndex}
+                    disabled={rechecking != null}
+                    onClick={() => void recheckUnknown(c.chapterIndex)}>
+                    {rechecking === c.chapterIndex ? '重检中（约 1-2 分钟）…' : '重新检查'}
+                  </Button>
                 </Tooltip>
               ) : (
                 <>

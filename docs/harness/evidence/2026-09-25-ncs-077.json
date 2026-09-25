@@ -1,0 +1,20 @@
+{
+ "commit": "27d1511e5a2d0e6262bb35a5ec7c56f6e6a8a17c",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-077"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "PASS: OutlineReplanningTest 7/0F：已达目标不生成新卷(planVolume never called)+区间封顶 target+解析0章保留未写卷+不残留空卷；LayeredOutlineParsingTest 契约更新（解析0章 outline 无残留空卷）；UnwrittenSynopsisEditTest 复归（prefs 缺省按领域默认24约束）",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-077; spec docs/specs/2026-09-25-ui-wuxia-journey-fixes.md; branch codex/ncs-077-replan-respects-target"
+}

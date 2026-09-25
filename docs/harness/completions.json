@@ -2189,8 +2189,19 @@
    "implementation_commit": "1f56f7232e9a36e4e3c2a070fb88cbc8b5deac61",
    "main_commit": "1f56f7232e9a36e4e3c2a070fb88cbc8b5deac61",
    "evidence": "docs/harness/evidence/2026-09-25-ncs-085.json"
+  },
+  {
+   "id": "ncs-086-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-086"
+   ],
+   "branch": "codex/ncs-086-revision-telemetry-projectid",
+   "implementation_commit": "16cdaf21283aade38b00eb88ba0194127c34a993",
+   "main_commit": "16cdaf21283aade38b00eb88ba0194127c34a993",
+   "evidence": "docs/harness/evidence/2026-09-25-ncs-086.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "1f56f7232e9a36e4e3c2a070fb88cbc8b5deac61"
+ "main_commit": "16cdaf21283aade38b00eb88ba0194127c34a993"
 }

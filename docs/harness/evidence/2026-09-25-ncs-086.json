@@ -1,0 +1,20 @@
+{
+ "commit": "16cdaf21283aade38b00eb88ba0194127c34a993",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-086"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "PASS: RevisionTelemetryProjectIdTest 2/0F（让 Agent 修改预览的 LLM_CALL 事件携带 projectId；预览后 EventContext 清理）；包装入口：AgentRevisionService preview/apply、rewriteChapter、editPassage、异步派生刷新 POST_PROCESS 线程、RevisionRepairService",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-086; spec docs/specs/2026-09-25-ui-wuxia-journey-fixes.md; branch codex/ncs-086-revision-telemetry-projectid"
+}

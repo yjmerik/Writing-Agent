@@ -1,0 +1,20 @@
+{
+ "commit": "8bd5a27",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-080"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "PASS: npm run build + tsc --noEmit 无错；UNKNOWN_CHECK 卡按钮 onClick→api.getReviewContext 身份→api.recheckChapter（300s）→成功/失败 message 反馈→刷新分类；重检中按钮 loading 且互斥",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-080; spec docs/specs/2026-09-25-ui-wuxia-journey-fixes.md; branch codex/ncs-080-recheck-button"
+}

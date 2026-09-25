@@ -922,6 +922,28 @@ public class NovelOrchestrator {
 
         Volume candidate = plotter.proposeVolumeRevision(projectId, outline.getPremise(), target,
                 project.getCurrentChapterIndex(), instructions);
+        // NCS-078（听雪刀 P0）：空候选 = 合法的「没有更多内容」信号——移除目标卷全部未写章，
+        // 大纲因此耗尽时直接走成书门禁。此前这里抛「Plotter 返回空卷大纲候选」409，
+        // 封死了作者拒绝后续卷并完结的唯一出口。
+        if (candidate == null || candidate.getSynopses().isEmpty()) {
+            boolean removedAny = target.getSynopses().removeIf(
+                    s -> s.getChapterIndex() > project.getCurrentChapterIndex());
+            if (target.getSynopses().isEmpty()) {
+                outline.getVolumes().remove(target);
+            }
+            repository.saveOutline(outline);
+            if (contextAssembler != null) contextAssembler.invalidateProject(projectId);
+            boolean outlineExhausted = outline.getVolumes().stream()
+                    .flatMap(v -> v.getSynopses().stream())
+                    .noneMatch(s -> s.getChapterIndex() > project.getCurrentChapterIndex());
+            if (removedAny && outlineExhausted && repository.findPendingCheckpoints(projectId).stream()
+                    .allMatch(pending -> pending.getId().equals(checkpoint.getId()))) {
+                finishBookWithGate(projectId, project, 0);
+            }
+            String after = outline.getVolumes().contains(target) ? canonicalVolume(target) : "（卷已移除）";
+            return new CheckpointRevisionResult("VOLUME_OUTLINE", displaySummary(before),
+                    displaySummary(after), contentVersion(before), contentVersion(before) + 1);
+        }
         validateVolumeCandidate(target, candidate, project.getCurrentChapterIndex());
 
         target.getSynopses().removeIf(s -> s.getChapterIndex() > project.getCurrentChapterIndex());

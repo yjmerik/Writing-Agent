@@ -8949,7 +8949,7 @@
    "dependencies": [
     "NCS-077"
    ],
-   "status": "not-started",
+   "status": "completed",
    "files": [
     "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
     "src/main/java/com/writing/novel/web/OrchestratorController.java",
@@ -8959,7 +8959,8 @@
    "spec": "docs/specs/2026-09-25-ui-wuxia-journey-fixes.md",
    "acceptance": "运行 verify_cmd 通过：INTERACTIVE 模式下大纲耗尽+mustResolve 未回收时 runWritingLoop 不追加回收卷且发出 FORESHADOW_RECOVERY_DECISION 事件、状态保持可决策；显式端点追加成功且幂等有界；审计 LLM 未给 mustResolve 字段时不置 true；总数口径=targetChapters。",
    "verify_cmd": "mvn test -Dtest=FinalForeshadowingRecoveryTest",
-   "evidence": "来源：docs/reports/2026-09-23-ui-wuxia-journey/体验报告.md 四-P1-4 与五-根因2；待实现验证。"
+   "evidence": "2026-09-25 verified: 9a68f6291bf1（ff-merge=main 提交 9a68f6291bf1）; 来源：docs/reports/2026-09-23-ui-wuxia-journey/体验报告.md 四-P1-4 与五-根因2",
+   "completion_record": "ncs-082-verified"
   },
   {
    "id": "NCS-083",

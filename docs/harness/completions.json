@@ -2145,8 +2145,19 @@
    "implementation_commit": "9c1f4c8793ca3bb0486fec69ad98df3393d62327",
    "main_commit": "9c1f4c8793ca3bb0486fec69ad98df3393d62327",
    "evidence": "docs/harness/evidence/2026-09-25-ncs-081.json"
+  },
+  {
+   "id": "ncs-082-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-082"
+   ],
+   "branch": "codex/ncs-082-recovery-volume-consent",
+   "implementation_commit": "9a68f6291bf161453c0e85a597a551a64464c88e",
+   "main_commit": "9a68f6291bf161453c0e85a597a551a64464c88e",
+   "evidence": "docs/harness/evidence/2026-09-25-ncs-082.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "9c1f4c8793ca3bb0486fec69ad98df3393d62327"
+ "main_commit": "9a68f6291bf161453c0e85a597a551a64464c88e"
 }

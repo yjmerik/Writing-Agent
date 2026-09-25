@@ -1,0 +1,20 @@
+{
+ "commit": "9a68f6291bf161453c0e85a597a551a64464c88e",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-082"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "PASS: FinalForeshadowingRecoveryTest 6/0F（SOLO 自动追加语义不变；INTERACTIVE 不自动追加+循环停 VOLUME_DONE+显式追加有界）+ ForeshadowingAuditorConsentTest 3/0F（mustResolve 缺省 false；显式标注生效；总数口径=target）；npm build PASS（VOLUME_DONE/NEEDS_REVISION 出现追加回收卷按钮）",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-082; spec docs/specs/2026-09-25-ui-wuxia-journey-fixes.md; branch codex/ncs-082-recovery-volume-consent"
+}

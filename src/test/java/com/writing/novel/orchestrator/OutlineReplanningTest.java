@@ -249,6 +249,47 @@ class OutlineReplanningTest {
     }
 
     @Test
+    void 延迟生成包含全书末章时向Plotter传入收束指令() throws Exception {
+        savePrefs(10);
+        PlotterAgent plotterMock = org.mockito.Mockito.mock(PlotterAgent.class);
+        org.mockito.Mockito.when(plotterMock.planVolume(
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt(),
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn("第10章 终局：场景节拍：收束。");
+        NovelOrchestrator orch = replanOrchestratorWith(plotterMock);
+
+        Outline outline = new Outline(pid, "总纲（旧24章结构，含第14/22章回收位）");
+        Volume v1 = new Volume(pid, 1, "卷1", "");
+        v1.addSynopsis(new ChapterSynopsis(pid, 9, "第9章", "推进"));
+        outline.addVolume(v1);
+        repo.saveOutline(outline);
+        Project p = repo.findProject(pid).orElseThrow();
+        p.setCurrentChapterIndex(9);
+        repo.saveProject(p);
+
+        Method m = NovelOrchestrator.class.getDeclaredMethod("tryExtendLayeredOutline",
+                String.class, Project.class);
+        m.setAccessible(true);
+        m.invoke(orch, pid, p);
+
+        var captor = org.mockito.ArgumentCaptor.forClass(String.class);
+        // planVolume(master, previous, title, summary, start, end, chars, protagonist, genre)
+        org.mockito.Mockito.verify(plotterMock).planVolume(
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), captor.capture(),
+                org.mockito.ArgumentMatchers.eq(10), org.mockito.ArgumentMatchers.eq(10),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any());
+        String summary = captor.getValue();
+        assertTrue(summary.contains("收束") && summary.contains("终局"),
+                "含全书末章的延迟生成必须传入收束指令（不得按旧结构开新篇），实际: " + summary);
+        assertTrue(summary.contains("不得"), "指令应明确禁止开启新篇/新悬念");
+    }
+
+    @Test
     void parseAndAppendVolume解析0章不残留空卷() throws Exception {
         NovelOrchestrator orchestrator = new NovelOrchestrator(repo, new ProjectService(repo),
                 null, null, plotter, null, null, null, null, null,

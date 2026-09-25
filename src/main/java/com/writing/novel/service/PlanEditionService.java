@@ -33,15 +33,25 @@ public class PlanEditionService {
     /** NCS-013: 统一修订请求；null 时不登记（旧装配/测试） */
     private RevisionRequestService revisionRequests;
 
+    /** NCS-083: premise 变更后失效上下文稳定段缓存；null 时不失效（测试/旧装配） */
+    private com.writing.novel.memory.ContextAssembler contextAssembler;
+
     public PlanEditionService(NovelRepository repository) {
         this.repository = repository;
     }
 
-    /** NCS-013: 注入统一修订请求服务（生产装配用） */
+    /** NCS-013/NCS-083: 注入统一修订请求与上下文装配器（生产装配用） */
     @org.springframework.beans.factory.annotation.Autowired
-    public PlanEditionService(NovelRepository repository, RevisionRequestService revisionRequests) {
+    public PlanEditionService(NovelRepository repository, RevisionRequestService revisionRequests,
+                              com.writing.novel.memory.ContextAssembler contextAssembler) {
         this(repository);
         this.revisionRequests = revisionRequests;
+        this.contextAssembler = contextAssembler;
+    }
+
+    /** NCS-083: 注入上下文装配器（premise 变更后失效稳定段缓存） */
+    public void setContextAssembler(com.writing.novel.memory.ContextAssembler contextAssembler) {
+        this.contextAssembler = contextAssembler;
     }
 
     /**
@@ -175,13 +185,22 @@ public class PlanEditionService {
         WritingPreferences prefs = repository.findWritingPreferences(projectId)
                 .orElseGet(() -> new WritingPreferences(projectId));
         Outline outline = repository.findOutlineByProject(projectId).orElseThrow();
+        Project project = repository.findProject(projectId).orElseThrow();
         prefs.setTargetChapters(targetChapters);
         for (Volume volume : outline.getVolumes()) {
             volume.getSynopses().removeIf(synopsis -> synopsis.getChapterIndex() > targetChapters);
         }
+        // NCS-083（听雪刀 P1-3）：压缩后 premise 追加权威覆盖段——延迟生成的卷大纲不再被
+        // 旧总纲结构（含已删卷的回收位表述）误导成"新篇开头"；冲突时以本段为准
+        outline.setPremise(withEffectiveStructureSection(outline.getPremise(),
+                project.getCurrentChapterIndex(), targetChapters));
         // One repository operation owns all persisted changes and source revalidation.
         repository.commitPlanEdition(projectId, previewId, sourcePlanHash, prefs, outline, decisions,
                 requestKey == null ? previewId : requestKey);
+        // NCS-083: premise 已变——稳定段缓存失效，后续章节组装读到新总纲
+        if (contextAssembler != null) {
+            contextAssembler.invalidateProject(projectId);
+        }
 
         // NCS-013: 计划调整登记为统一修订请求（承诺逐项处置即采纳决定）
         if (revisionRequests != null) {
@@ -244,5 +263,31 @@ public class PlanEditionService {
             }
         }
         return new Analysis(written, prefs.getTargetChapters(), pruned, affected);
+    }
+
+    /**
+     * NCS-083: 生成/替换 premise 中的【篇幅与结构（当前有效）】权威覆盖段。
+     * 原总纲正文保留（历史溯源），但覆盖段声明其口径优先——延迟生成的卷大纲
+     * 据此不再按旧章数结构开新篇。重复压缩只保留一份（替换旧段）。
+     */
+    static String withEffectiveStructureSection(String premise, int written, int target) {
+        String base = premise == null ? "" : premise;
+        String marker = "【篇幅与结构（当前有效）】";
+        int at = base.indexOf(marker);
+        if (at >= 0) base = base.substring(0, at).trim();
+        int remaining = Math.max(0, target - written);
+        StringBuilder section = new StringBuilder("\n\n").append(marker).append("\n");
+        section.append("（本段为篇幅变更后的权威口径，覆盖此前总纲中的卷章范围与回收位安排；冲突时以本段为准。）\n");
+        section.append("- 全书目标章数：").append(target).append(" 章（已确认）\n");
+        section.append("- 已完成：").append(written > 0 ? ("第 1-" + written + " 章") : "尚未动笔").append("\n");
+        if (remaining > 0) {
+            section.append("- 剩余可规划：第 ").append(written + 1).append("-").append(target)
+                    .append(" 章，共 ").append(remaining).append(" 章；后续卷大纲必须只规划剩余章数\n");
+            section.append("- 若包含全书末章（第").append(target)
+                    .append("章），必须收束主线、集中回收未回收伏笔、走向终局；不得开启新篇、不得埋设新悬念\n");
+        } else {
+            section.append("- 篇幅已用尽：不再规划新章节，全书进入完结收束\n");
+        }
+        return base + section;
     }
 }

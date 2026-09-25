@@ -2651,9 +2651,16 @@ public class NovelOrchestrator {
                     .map(c -> c.getName()).findFirst().orElse("");
 
             // 调用 planVolume 生成下一卷（p17-03: 传入题材——卷大纲带题材规则，长篇不断链）
+            // NCS-083（听雪刀 P1-3）：本卷包含全书末章时明确传入收束指令——
+            // 压缩后旧总纲残留的多卷结构曾把末章规划成"新篇开头"
+            boolean containsFinalChapter = nextEndChapter >= targetChapters;
+            String volumeSummary = containsFinalChapter
+                    ? "（延迟生成，根据总纲规划）本卷为全书最后阶段（至第" + nextEndChapter
+                      + "章全书完结）：必须收束主线、集中回收未回收伏笔、走向终局；不得开启新篇、不得埋设新悬念"
+                    : "（延迟生成，根据总纲规划）";
             String volumeText = plotter.planVolume(
                     masterOutline, previousSummary,
-                    "卷" + volumeNumber, "（延迟生成，根据总纲规划）",
+                    "卷" + volumeNumber, volumeSummary,
                     nextStartChapter, nextEndChapter, existingCharacters, protagonistName,
                     p.getGenre());
 

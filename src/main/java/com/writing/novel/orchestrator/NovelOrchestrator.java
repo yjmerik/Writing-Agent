@@ -1819,6 +1819,19 @@ public class NovelOrchestrator {
                             && appendForeshadowingRecoveryVolumeIfNeeded(projectId, p)) {
                         continue; // 回收卷已追加，写作循环继续写回收章
                     }
+                    // NCS-082（听雪刀 P1-4）：交互模式大纲耗尽且关键伏笔未回收时不自动完结——
+                    // 停在 VOLUME_DONE 等作者决策（显式追加回收卷 / 台账结清 / 宣告完结 NCS-079）
+                    if (p.getMode() == ProjectMode.INTERACTIVE && hasUnresolvedMustResolve(projectId)) {
+                        p.setState(NovelState.VOLUME_DONE);
+                        repository.saveProject(p);
+                        EventLog.emit("FORESHADOW_RECOVERY_DECISION", Map.of(
+                                "projectId", projectId,
+                                "currentChapter", p.getCurrentChapterIndex(),
+                                "action", "await_author"));
+                        log.info("交互模式大纲耗尽且关键伏笔未回收，停在决策点(项目{}, 章{})",
+                                projectId, p.getCurrentChapterIndex());
+                        break;
+                    }
                     finishBookWithGate(projectId, p, written);
                     break;
                 }
@@ -1893,6 +1906,13 @@ public class NovelOrchestrator {
     /** p16-02: 回收卷标题标记——用于有界判定（已追加过则不再追加，重启安全） */
     private static final String RECOVERY_VOLUME_MARKER = "伏笔回收";
 
+    /** NCS-082: 是否存在未回收的必须回收伏笔（交互模式决策点判定）。 */
+    private boolean hasUnresolvedMustResolve(String projectId) {
+        return !repository.findUnresolvedForeshadowings(projectId).stream()
+                .filter(Foreshadowing::isMustResolve)
+                .toList().isEmpty();
+    }
+
     /**
      * p16-02: 大纲耗尽且 mustResolve 伏笔未回收时，追加『尾声·伏笔回收卷』。
      * 回收指令写进新章梗概 writingNotes（ChapterWriter 的确定性输入通道），替代原
@@ -1900,6 +1920,32 @@ public class NovelOrchestrator {
      * 包级可见供测试。
      */
     boolean appendForeshadowingRecoveryVolumeIfNeeded(String projectId, Project p) {
+        try {
+            // NCS-082（听雪刀 P1-4）：交互模式不自动追加尾声回收卷——书不得被系统自动加长，
+            // 由作者显式决策（追加回收卷 / 台账结清 / 宣告完结）
+            if (p.getMode() == ProjectMode.INTERACTIVE) return false;
+            return appendForeshadowingRecoveryVolumeInternal(projectId, p);
+        } catch (Exception e) {
+            log.warn("追加伏笔回收卷失败: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * NCS-082: 作者显式追加尾声回收卷（交互模式的确认制入口，有界一次）。
+     * @return 是否实际追加（已存在回收卷返回 false）
+     */
+    public boolean appendForeshadowingRecoveryVolume(String projectId) {
+        Project p = loadProject(projectId);
+        try {
+            return appendForeshadowingRecoveryVolumeInternal(projectId, p);
+        } catch (Exception e) {
+            log.warn("追加伏笔回收卷失败: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean appendForeshadowingRecoveryVolumeInternal(String projectId, Project p) {
         try {
             // p10.1-e1: 回收前先做重要性审计——被低估的关键伏笔升级后才进入回收名单
             if (foreshadowingImportanceAuditor != null) {

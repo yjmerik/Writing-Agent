@@ -131,7 +131,9 @@ public class ForeshadowingImportanceAuditor {
                     f.setPriority(newPriority);
                     if (newPriority == Foreshadowing.Priority.HIGH) {
                         upgraded++;
-                        boolean mustResolve = node.path("mustResolve").asBoolean(true);
+                        // NCS-082（听雪刀 P1-4）：mustResolve 缺省不再默认 true——
+                        // LLM 漏标即全员"必须回收"是 62 条通胀的来源之一，必须显式标注
+                        boolean mustResolve = node.path("mustResolve").asBoolean(false);
                         f.setMustResolve(mustResolve);
                         int expected = node.path("expectedResolveChapter").asInt(0);
                         if (expected > 0) f.setExpectedResolveChapter(expected);
@@ -145,6 +147,11 @@ public class ForeshadowingImportanceAuditor {
     }
 
     private int estimateTotalChapters(String projectId) {
+        // NCS-082: 总数口径优先作者设定的目标章数（压缩后的有效目标）——
+        // 大纲最大章号会被追加的回收卷越推越高，审计不应反过来被自己的产物放大
+        int target = repository.findWritingPreferences(projectId)
+                .map(p -> p.getTargetChapters()).orElse(0);
+        if (target > 0) return target;
         var outline = repository.findOutlineByProject(projectId);
         if (outline.isPresent()) {
             int max = 0;

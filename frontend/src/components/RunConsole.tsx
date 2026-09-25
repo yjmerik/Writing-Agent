@@ -128,6 +128,27 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
     }
   }, [projectId, onChanged, refreshStatus]);
 
+  // NCS-082: 作者显式追加尾声回收卷（大纲耗尽且关键伏笔未回收时的决策出口之一）
+  const [appendingRecovery, setAppendingRecovery] = useState(false);
+  const handleAppendRecovery = useCallback(async () => {
+    setAppendingRecovery(true);
+    try {
+      const r = await api.appendRecoveryVolume(projectId);
+      if (r.appended) {
+        message.success('尾声回收卷已追加，可继续写作回收章');
+        setLastResult('✅ 尾声回收卷已追加：回收指令已写入新章梗概，继续写作即可逐章回收关键伏笔');
+      } else {
+        message.info(r.message || '未追加（回收卷已存在或无必须回收伏笔）');
+      }
+      await refreshStatus();
+      onChanged();
+    } catch (e) {
+      message.error(`追加回收卷失败: ${(e as Error).message}`);
+    } finally {
+      setAppendingRecovery(false);
+    }
+  }, [projectId, onChanged, refreshStatus]);
+
   const handleRun = useCallback(async () => {
     setRunning(true);
     setLastResult(null);
@@ -384,6 +405,24 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
               disabled={busy}
             >
               宣告完结
+            </Button>
+          </Popconfirm>
+        ) : null}
+        {isAllowed('FINISH') && (effectiveState === 'VOLUME_DONE' || effectiveState === 'NEEDS_REVISION') ? (
+          <Popconfirm
+            title="追加尾声回收卷"
+            description="大纲已尽但仍有未回收的关键伏笔时，追加一卷『尾声·伏笔回收』（有界一次）集中回收；也可改在台账结清或宣告完结。确定追加？"
+            onConfirm={handleAppendRecovery}
+            okText="追加回收卷"
+            cancelText="取消"
+            disabled={busy}
+          >
+            <Button
+              size="large"
+              loading={appendingRecovery}
+              disabled={busy}
+            >
+              追加尾声回收卷
             </Button>
           </Popconfirm>
         ) : null}

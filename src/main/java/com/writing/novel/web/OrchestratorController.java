@@ -195,6 +195,27 @@ public class OrchestratorController {
         );
     }
 
+    /**
+     * NCS-082: 作者显式追加『尾声·伏笔回收卷』——交互模式回收卷确认制入口。
+     * 有界一次；追加后可继续写作回收章。
+     */
+    @PostMapping("/recovery-volume")
+    public Map<String, Object> appendRecoveryVolume(@PathVariable String id) {
+        Project project = projectService.find(id).orElseThrow();
+        if (project.getState() == NovelState.FINAL) {
+            throw new IllegalStateException("全书已完结，不能追加回收卷");
+        }
+        if (writingTaskExecutor.hasActiveTask(id)) {
+            throw new IllegalStateException("写作任务仍在进行，请等待或取消任务后再追加回收卷");
+        }
+        boolean appended = orchestrator.appendForeshadowingRecoveryVolume(id);
+        return Map.of(
+                "projectId", id,
+                "appended", appended,
+                "message", appended ? "尾声回收卷已追加，可继续写作回收章" : "回收卷已存在或无必须回收伏笔，未追加"
+        );
+    }
+
     /** 质量评价：从一致性/风格/情节/人物/世界观 5 维度评分并发现问题 */
     @PostMapping("/evaluate")
     public Map<String, Object> evaluate(@PathVariable String id) {

@@ -711,6 +711,11 @@ export const api = {
     request<{ projectId: string; passed: boolean; state: string }>(
       `/projects/${id}/finish`, { method: 'POST' }, 120000),
 
+  /** NCS-082: 作者显式追加尾声回收卷（有界一次） */
+  appendRecoveryVolume: (id: string) =>
+    request<{ projectId: string; appended: boolean; message: string }>(
+      `/projects/${id}/recovery-volume`, { method: 'POST' }, 120000),
+
   getSummaries: (id: string) =>
     request<Summary[]>(`/projects/${id}/memory/summary`),
 

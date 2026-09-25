@@ -100,4 +100,57 @@ class FinalForeshadowingRecoveryTest {
         var volumes = repo.findOutlineByProject(p.getId()).orElseThrow().getVolumes();
         assertTrue(volumes.stream().noneMatch(v -> v.getTitle().contains("伏笔回收")));
     }
+
+    // --- NCS-082（听雪刀 P1-4）：交互模式回收卷需作者确认 ---
+
+    @Test
+    void 交互模式不自动追加回收卷() {
+        Project p = projectWithExhaustedOutline(8);
+        p.setMode(ProjectMode.INTERACTIVE);
+        repo.saveProject(p);
+        Foreshadowing f = new Foreshadowing(p.getId(), "主谋身份", "第2章埋设", 2);
+        f.setMustResolve(true);
+        repo.saveForeshadowing(f);
+
+        assertFalse(orchestrator.appendForeshadowingRecoveryVolumeIfNeeded(p.getId(), p),
+                "交互模式不得自动追加尾声回收卷（作者确认制）");
+        var volumes = repo.findOutlineByProject(p.getId()).orElseThrow().getVolumes();
+        assertTrue(volumes.stream().noneMatch(v -> v.getTitle().contains("伏笔回收")),
+                "大纲不得被系统自动加长");
+    }
+
+    @Test
+    void 交互模式写作循环停在决策点而非自动完结() {
+        Project p = projectWithExhaustedOutline(8);
+        p.setMode(ProjectMode.INTERACTIVE);
+        p.setState(NovelState.WRITING);
+        repo.saveProject(p);
+        Foreshadowing f = new Foreshadowing(p.getId(), "主谋身份", "第2章埋设", 2);
+        f.setMustResolve(true);
+        repo.saveForeshadowing(f);
+
+        int written = orchestrator.runWritingLoop(p.getId(), 1, () -> false);
+
+        assertEquals(0, written);
+        Project after = repo.findProject(p.getId()).orElseThrow();
+        assertEquals(NovelState.VOLUME_DONE, after.getState(),
+                "应停在 VOLUME_DONE 等作者决策（追加回收卷/台账结清/宣告完结），不得自动进门禁");
+        var volumes = repo.findOutlineByProject(p.getId()).orElseThrow().getVolumes();
+        assertTrue(volumes.stream().noneMatch(v -> v.getTitle().contains("伏笔回收")));
+    }
+
+    @Test
+    void 作者显式追加回收卷在交互模式可用且有界() {
+        Project p = projectWithExhaustedOutline(8);
+        p.setMode(ProjectMode.INTERACTIVE);
+        repo.saveProject(p);
+        Foreshadowing f = new Foreshadowing(p.getId(), "玉佩来历", "第2章埋设", 2);
+        f.setMustResolve(true);
+        repo.saveForeshadowing(f);
+
+        assertTrue(orchestrator.appendForeshadowingRecoveryVolume(p.getId()),
+                "作者显式追加应成功");
+        assertFalse(orchestrator.appendForeshadowingRecoveryVolume(p.getId()),
+                "显式追加同样有界（防无限延长）");
+    }
 }

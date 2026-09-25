@@ -706,6 +706,11 @@ export const api = {
     request<{ projectId: string; passed: boolean; state: string }>(
       `/projects/${id}/final-audit`, { method: 'POST' }, 120000),
 
+  /** NCS-079: 作者宣告完结——显式触发行成书门禁（待审检查点一并关闭） */
+  declareFinish: (id: string) =>
+    request<{ projectId: string; passed: boolean; state: string }>(
+      `/projects/${id}/finish`, { method: 'POST' }, 120000),
+
   getSummaries: (id: string) =>
     request<Summary[]>(`/projects/${id}/memory/summary`),
 

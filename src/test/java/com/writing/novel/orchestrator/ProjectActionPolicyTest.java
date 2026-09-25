@@ -12,7 +12,9 @@ import java.util.stream.Stream;
 
 import static com.writing.novel.orchestrator.ProjectActionPolicy.ProjectAction.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ProjectActionPolicyTest {
 
@@ -55,5 +57,39 @@ class ProjectActionPolicyTest {
                 () -> policy.requireAllowed(project, WRITE_CHAPTER, false, false));
 
         assertEquals(availability.blockedReasons().get(WRITE_CHAPTER), error.getMessage());
+    }
+
+    /** NCS-079：作者宣告完结动作——写作态且已有成章内容时可用。 */
+    @org.junit.jupiter.api.Test
+    void finishIsAllowedFromWritingStatesWithWrittenChapters() {
+        for (NovelState state : java.util.List.of(NovelState.WRITING, NovelState.VOLUME_DONE,
+                NovelState.PAUSED_AT_CHECKPOINT, NovelState.NEEDS_REVISION)) {
+            Project project = new Project("宣告完结" + state, "测试", "武侠");
+            project.setState(state);
+            project.setCurrentChapterIndex(2);
+            assertTrue(policy.evaluate(project, true, true).allowedActions().contains(FINISH),
+                    state + " 下已写章节应允许宣告完结（待审检查点由完结一并关闭）");
+        }
+    }
+
+    @org.junit.jupiter.api.Test
+    void finishIsBlockedBeforeWritingAndAfterFinal() {
+        for (NovelState state : java.util.List.of(NovelState.CONCEIVING, NovelState.PLANNING, NovelState.FINAL)) {
+            Project project = new Project("不可完结" + state, "测试", "武侠");
+            project.setState(state);
+            project.setCurrentChapterIndex(2);
+            assertFalse(policy.evaluate(project, true, false).allowedActions().contains(FINISH),
+                    state + " 下不应允许宣告完结");
+        }
+        Project nothingWritten = new Project("未动笔", "测试", "武侠");
+        nothingWritten.setState(NovelState.WRITING);
+        assertFalse(policy.evaluate(nothingWritten, true, false).allowedActions().contains(FINISH),
+                "未写任何章节时不应允许宣告完结");
+
+        Project conceiving = new Project("构思中", "测试", "武侠");
+        conceiving.setState(NovelState.CONCEIVING);
+        conceiving.setCurrentChapterIndex(0);
+        assertEquals("尚未写作任何章节，不能宣告完结",
+                policy.evaluate(conceiving, false, false).blockedReasons().get(FINISH));
     }
 }

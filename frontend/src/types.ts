@@ -11,7 +11,7 @@ export type NovelState =
   | 'NEEDS_REVISION'
   | 'PAUSED_AT_CHECKPOINT';
 
-export type ProjectAction = 'ADVANCE' | 'WRITE_CHAPTER' | 'WRITE_ALL' | 'FINAL_AUDIT';
+export type ProjectAction = 'ADVANCE' | 'WRITE_CHAPTER' | 'WRITE_ALL' | 'FINAL_AUDIT' | 'FINISH';
 
 export interface Project {
   id: string;

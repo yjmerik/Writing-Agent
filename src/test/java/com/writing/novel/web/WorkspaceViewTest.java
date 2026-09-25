@@ -60,10 +60,12 @@ class WorkspaceViewTest {
                 .andExpect(jsonPath("$.review.pendingCheckpoints").value(0))
                 .andExpect(jsonPath("$.review.unknownChecks").value(0))
                 .andExpect(jsonPath("$.review.staleIssues").value(0))
-                .andExpect(jsonPath("$.availableActions.length()").value(4))
+                .andExpect(jsonPath("$.availableActions.length()").value(5))
                 .andExpect(jsonPath("$.availableActions[?(@.action=='ADVANCE')].allowed").value(true))
                 .andExpect(jsonPath("$.availableActions[?(@.action=='WRITE_CHAPTER')].allowed").value(false))
-                .andExpect(jsonPath("$.availableActions[?(@.action=='WRITE_CHAPTER')].reason").isNotEmpty());
+                .andExpect(jsonPath("$.availableActions[?(@.action=='WRITE_CHAPTER')].reason").isNotEmpty())
+                .andExpect(jsonPath("$.availableActions[?(@.action=='FINISH')].allowed").value(false))
+                .andExpect(jsonPath("$.availableActions[?(@.action=='FINISH')].reason").isNotEmpty());
     }
 
     @Test

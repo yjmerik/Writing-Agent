@@ -176,6 +176,25 @@ public class OrchestratorController {
         );
     }
 
+    /**
+     * NCS-079: 作者宣告完结——写作态显式触发行成书门禁。
+     * 待审检查点一并关闭；通过 → FINAL，失败 → NEEDS_REVISION（如实反馈缺口）。
+     */
+    @PostMapping("/finish")
+    public Map<String, Object> declareFinish(@PathVariable String id) {
+        Project project = projectService.find(id).orElseThrow();
+        if (writingTaskExecutor.hasActiveTask(id)) {
+            throw new IllegalStateException("写作任务仍在进行，请等待或取消任务后再宣告完结");
+        }
+        requireAllowed(project, ProjectAction.FINISH);
+        boolean passed = orchestrator.declareFinish(id);
+        return Map.of(
+                "projectId", id,
+                "passed", passed,
+                "state", passed ? NovelState.FINAL.name() : NovelState.NEEDS_REVISION.name()
+        );
+    }
+
     /** 质量评价：从一致性/风格/情节/人物/世界观 5 维度评分并发现问题 */
     @PostMapping("/evaluate")
     public Map<String, Object> evaluate(@PathVariable String id) {

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Steps, Button, Space, message, Alert, Card, Popconfirm, Input, Progress, Tag } from 'antd';
-import { PlayCircleOutlined, FileAddOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { PlayCircleOutlined, FileAddOutlined, ThunderboltOutlined, FlagOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
 import type { ProjectStatus, NovelState, Chapter, SseState, ProjectAction } from '../types';
 
@@ -103,6 +103,28 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
       message.error(`重审失败: ${(e as Error).message}`);
     } finally {
       setAuditing(false);
+    }
+  }, [projectId, onChanged, refreshStatus]);
+
+  // NCS-079: 作者宣告完结——写作态显式触发行成书门禁（待审检查点一并关闭）
+  const [finishing, setFinishing] = useState(false);
+  const handleDeclareFinish = useCallback(async () => {
+    setFinishing(true);
+    try {
+      const r = await api.declareFinish(projectId);
+      if (r.passed) {
+        message.success('已宣告完结：成书门禁通过，全书进入 FINAL');
+        setLastResult('✅ 作者宣告完结：成书门禁通过，项目进入 FINAL');
+      } else {
+        message.warning('宣告完结已受理，但成书门禁未通过（NEEDS_REVISION）');
+        setLastResult('⛔ 成书门禁未通过：请按提示修订（如台账结清关键伏笔）后点击「重新评审」');
+      }
+      await refreshStatus();
+      onChanged();
+    } catch (e) {
+      message.error(`宣告完结失败: ${(e as Error).message}`);
+    } finally {
+      setFinishing(false);
     }
   }, [projectId, onChanged, refreshStatus]);
 
@@ -346,6 +368,25 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
             }
           }}>取消连续写作</Button>
         )}
+        {isAllowed('FINISH') ? (
+          <Popconfirm
+            title="宣告完结"
+            description="将立即触发行成书门禁：待审检查点会一并关闭；门禁通过进入 FINAL，未通过进入待修订（可修订后重审）。确定宣告完结？"
+            onConfirm={handleDeclareFinish}
+            okText="宣告完结"
+            cancelText="取消"
+            disabled={busy}
+          >
+            <Button
+              size="large"
+              icon={<FlagOutlined />}
+              loading={finishing}
+              disabled={busy}
+            >
+              宣告完结
+            </Button>
+          </Popconfirm>
+        ) : null}
         {/* p21-08: SSE 连接状态 */}
         {batchWriting && sseState && (
           <Tag color={SSE_TEXT[sseState].color} aria-live="polite">{SSE_TEXT[sseState].text}</Tag>

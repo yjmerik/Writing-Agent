@@ -1997,6 +1997,34 @@ public class NovelOrchestrator {
         return passed;
     }
 
+    /**
+     * NCS-079（听雪刀 P0）：作者宣告完结——从写作态显式触发行成书门禁。
+     * 待审检查点随完结一并拒绝关闭（内容不再等待审核）；门禁通过 → FINAL，
+     * 失败 → NEEDS_REVISION（修订后可经 retryFinalAudit 重试）。
+     * @return 门禁是否通过
+     */
+    public boolean declareFinish(String projectId) {
+        Project p = loadProject(projectId);
+        if (p.getState() == NovelState.FINAL) {
+            throw new IllegalStateException("全书已完结（FINAL），无需再次宣告完结");
+        }
+        if (p.getCurrentChapterIndex() < 1) {
+            throw new IllegalStateException("尚未写作任何章节，不能宣告完结");
+        }
+        for (Checkpoint pending : repository.findPendingCheckpoints(projectId)) {
+            pending.reject();
+            repository.saveCheckpoint(pending);
+        }
+        finishBookWithGate(projectId, p, 0);
+        boolean passed = p.getState() == NovelState.FINAL;
+        EventLog.emit("BOOK_FINISH_DECLARED", Map.of(
+                "projectId", projectId,
+                "passed", passed,
+                "state", p.getState().name()));
+        log.info("作者宣告完结(项目{}): 门禁后状态 {}", projectId, p.getState());
+        return passed;
+    }
+
     /** 统计项目总字数 */
     public int getTotalWordCount(String projectId) {
         // p12-K3: 使用 SUM 聚合，不全量加载正文

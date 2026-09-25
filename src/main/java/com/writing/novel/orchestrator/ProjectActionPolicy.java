@@ -16,7 +16,8 @@ public final class ProjectActionPolicy {
         ADVANCE,
         WRITE_CHAPTER,
         WRITE_ALL,
-        FINAL_AUDIT
+        FINAL_AUDIT,
+        FINISH
     }
 
     public record ActionAvailability(Set<ProjectAction> allowedActions,
@@ -45,6 +46,16 @@ public final class ProjectActionPolicy {
             case NEEDS_REVISION -> allowed.add(ProjectAction.FINAL_AUDIT);
             case PAUSED_AT_CHECKPOINT, FINAL -> {
                 // No primary workflow action is valid in these states.
+            }
+        }
+
+        // NCS-079：作者宣告完结——写作态（含暂停待审/待修订）且已有成章内容时可用；
+        // 待审检查点由完结流程一并关闭，因此有 pending 也不阻塞该动作。
+        if (project.getCurrentChapterIndex() >= 1) {
+            switch (state) {
+                case WRITING, VOLUME_DONE, PAUSED_AT_CHECKPOINT, NEEDS_REVISION ->
+                        allowed.add(ProjectAction.FINISH);
+                default -> { }
             }
         }
 
@@ -85,6 +96,7 @@ public final class ProjectActionPolicy {
             case ADVANCE -> "当前状态 " + state + " 不允许推进";
             case WRITE_CHAPTER, WRITE_ALL -> "当前状态 " + state + " 不允许写作";
             case FINAL_AUDIT -> "仅待修订状态可重新评审";
+            case FINISH -> "尚未写作任何章节，不能宣告完结";
         };
     }
 }

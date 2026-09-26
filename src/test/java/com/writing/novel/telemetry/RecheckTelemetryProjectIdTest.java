@@ -57,7 +57,8 @@ class RecheckTelemetryProjectIdTest {
         when(repo.findChapterByIndex(pid, 1)).thenReturn(java.util.Optional.of(chapter()));
 
         ReviewDecisionController controller = new ReviewDecisionController(
-                repo, executor, orchestrator, mock(CheckWaiverService.class));
+                repo, executor, orchestrator, mock(CheckWaiverService.class),
+                mock(com.writing.novel.service.LongTaskService.class));
         controller.recheck(pid, 1, Map.of("identity", Map.of(
                 "projectId", pid, "chapterIndex", 1, "version", 1, "contentHash", "h")));
 

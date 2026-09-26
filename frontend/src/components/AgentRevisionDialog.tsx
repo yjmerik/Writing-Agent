@@ -128,14 +128,27 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
     setStale(false); setLatest(null);
     setError('');
     try {
-      const result = await api.previewAgentRevision(target, instructions.trim());
-      if (requestSequence.current === requestId) setPreview(result);
+      // NCS-094: 预览异步化——提交任务后轮询，不再受前端/代理超时制约
+      const { jobId } = await api.previewAgentRevisionAsync(target, instructions.trim());
+      for (;;) {
+        await new Promise(r => setTimeout(r, 3000));
+        if (requestSequence.current !== requestId) return;
+        const st = await api.getLongTask(target.projectId, jobId);
+        if (st.status === 'DONE') {
+          setPreview(st.result as Parameters<typeof setPreview>[0]);
+          return;
+        }
+        if (st.status === 'FAILED') {
+          setError(`预览生成失败：${st.error ?? '任务失败'}`);
+          setGenerating(false);
+          return;
+        }
+      }
     } catch (cause) {
       if (requestSequence.current === requestId) {
         setError(`预览生成失败：${(cause as Error).message}`);
+        setGenerating(false);
       }
-    } finally {
-      if (requestSequence.current === requestId) setGenerating(false);
     }
   };
 

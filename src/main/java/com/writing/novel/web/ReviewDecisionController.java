@@ -31,15 +31,18 @@ public class ReviewDecisionController {
     private final WritingTaskExecutor writingTaskExecutor;
     private final com.writing.novel.orchestrator.NovelOrchestrator recheckService;
     private final com.writing.novel.service.CheckWaiverService checkWaiverService;
+    private final com.writing.novel.service.LongTaskService longTasks;
 
     @Autowired
     public ReviewDecisionController(NovelRepository repository, WritingTaskExecutor writingTaskExecutor,
                                     com.writing.novel.orchestrator.NovelOrchestrator recheckService,
-                                    com.writing.novel.service.CheckWaiverService checkWaiverService) {
+                                    com.writing.novel.service.CheckWaiverService checkWaiverService,
+                                    com.writing.novel.service.LongTaskService longTasks) {
         this.repository = repository;
         this.writingTaskExecutor = writingTaskExecutor;
         this.recheckService = recheckService;
         this.checkWaiverService = checkWaiverService;
+        this.longTasks = longTasks;
     }
 
     /** 已读正文身份、reviewSetHash、报告/待办/裁决/批准的一致快照。 */
@@ -167,6 +170,50 @@ public class ReviewDecisionController {
                 writingTaskExecutor.endWork(id, workId);
             }
         }
+    }
+
+    /** NCS-094: 重检异步化——立即返回 jobId，前端轮询 long-tasks/{jobId}。 */
+    @PostMapping("/recheck-async")
+    public Map<String, Object> recheckAsync(@PathVariable String id,
+                                            @PathVariable int chapterIndex,
+                                            @RequestBody Map<String, Object> body) {
+        Object identityRaw = body == null ? null : body.get("identity");
+        if (!(identityRaw instanceof Map<?, ?> identityMap)) {
+            throw new IllegalArgumentException("缺少 identity（服务端不补填）");
+        }
+        String identityProjectId = stringField(identityMap, "projectId");
+        if (!id.equals(identityProjectId)) {
+            throw new IllegalArgumentException("identity.projectId 与路径项目不符");
+        }
+        Integer idChapter = intField(identityMap, "chapterIndex");
+        if (idChapter == null || idChapter != chapterIndex) {
+            throw new IllegalArgumentException("identity.chapterIndex 与路径章节不符");
+        }
+        Integer version = intField(identityMap, "version");
+        String contentHash = stringField(identityMap, "contentHash");
+        if (version == null || contentHash == null || contentHash.isBlank()) {
+            throw new IllegalArgumentException("缺少 identity.version/contentHash");
+        }
+        var identity = new com.writing.novel.domain.ChapterApproval.Identity(
+                id, chapterIndex, version, contentHash);
+        List<String> checkers = null;
+        Object checkersRaw = body.get("checkers");
+        if (checkersRaw instanceof List<?> list) {
+            checkers = list.stream().filter(String.class::isInstance)
+                    .map(String.class::cast).toList();
+        }
+        final List<String> routedCheckers = checkers;
+        String jobId = longTasks.submit(id, "recheck", "连续性补查",
+                () -> recheckService.recheckChapter(id, chapterIndex, identity, routedCheckers));
+        return Map.of("jobId", jobId, "kind", "recheck");
+    }
+
+    /** NCS-094: 长任务状态查询（项目隔离；不存在/不匹配返回 404）。 */
+    @GetMapping("/long-tasks/{jobId}")
+    public com.writing.novel.service.LongTaskService.JobState longTask(@PathVariable String id,
+                                                                       @PathVariable String jobId) {
+        return longTasks.get(id, jobId)
+                .orElseThrow(() -> new IllegalArgumentException("任务不存在或已过期: " + jobId));
     }
 
     /** 版本化批准：identity + reviewSetHash + idempotencyKey + reason → ChapterApproval.Result。 */

@@ -637,6 +637,31 @@ export const api = {
       method: 'POST', body: JSON.stringify(checkers?.length ? { identity, checkers } : { identity }),
     }, 900000), // NCS-093: 同步补查可到数分钟
 
+  /** NCS-094: 重检异步化——立即返回 jobId，轮询 getLongTask 取结果 */
+  recheckChapterAsync: (id: string, chapterIndex: number, identity: ReviewIdentity, checkers?: string[]) =>
+    request<{ jobId: string; kind: string }>(`/projects/${id}/chapters/${chapterIndex}/recheck-async`, {
+      method: 'POST', body: JSON.stringify(checkers?.length ? { identity, checkers } : { identity }),
+    }, 30000),
+
+  /** NCS-094: 修订预览异步化 */
+  previewAgentRevisionAsync: (target: AgentRevisionTarget, instructions: string) =>
+    request<{ jobId: string; kind: string }>(`/projects/${target.projectId}/revisions/preview-async`, {
+      method: 'POST',
+      body: JSON.stringify({
+        targetType: target.targetType,
+        targetId: target.targetId,
+        chapterIndex: target.chapterIndex,
+        passageIndex: target.passageIndex,
+        instructions,
+      }),
+    }, 30000),
+
+  /** NCS-094: 长任务状态轮询（项目隔离） */
+  getLongTask: (projectId: string, jobId: string) =>
+    request<{ jobId: string; kind: string; label: string; status: 'RUNNING' | 'DONE' | 'FAILED';
+              result?: unknown; error?: string }>(
+      `/projects/${projectId}/long-tasks/${jobId}`, {}, 15000),
+
   /** NCS-088：未查清检查信封的作者担责豁免（reason 必填，记入台账可审计） */
   checkWaiver: (id: string, chapterIndex: number, identity: ReviewIdentity, checker: string, reason: string) =>
     request<{ chapterIndex: number; chapterVersion: number; checker: string; status: string }>(

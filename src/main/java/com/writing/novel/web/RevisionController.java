@@ -14,20 +14,40 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/projects/{id}/revisions")
 public class RevisionController {
 
     private final AgentRevisionService revisions;
+    private final com.writing.novel.service.LongTaskService longTasks;
 
-    public RevisionController(AgentRevisionService revisions) {
+    public RevisionController(AgentRevisionService revisions,
+                              com.writing.novel.service.LongTaskService longTasks) {
         this.revisions = revisions;
+        this.longTasks = longTasks;
     }
 
     @PostMapping("/preview")
     public RevisionPreview preview(@PathVariable String id, @RequestBody RevisionRequest request) {
         return revisions.preview(id, request);
+    }
+
+    /** NCS-094: 预览异步化——立即返回 jobId，前端轮询 long-tasks/{jobId}。 */
+    @PostMapping("/preview-async")
+    public Map<String, Object> previewAsync(@PathVariable String id, @RequestBody RevisionRequest request) {
+        String jobId = longTasks.submit(id, "agent-revision-preview", "修订候选生成",
+                () -> revisions.preview(id, request));
+        return Map.of("jobId", jobId, "kind", "agent-revision-preview");
+    }
+
+    /** NCS-094: 长任务状态查询（项目隔离；不存在/不匹配返回 404）。 */
+    @GetMapping("/long-tasks/{jobId}")
+    public com.writing.novel.service.LongTaskService.JobState longTask(@PathVariable String id,
+                                                                       @PathVariable String jobId) {
+        return longTasks.get(id, jobId)
+                .orElseThrow(() -> new IllegalArgumentException("任务不存在或已过期: " + jobId));
     }
 
     @PostMapping("/{previewId}/apply")

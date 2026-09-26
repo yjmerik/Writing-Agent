@@ -66,13 +66,29 @@ export default function ReviewClassificationView({ projectId }: { projectId: str
   // 完成后刷新分类（检查结果信封落库会覆盖 UNKNOWN 状态）。长调用期间按钮置 loading；
   // 占坑可经协作栏「取消该操作」释放（NCS-074）。
   // NCS-087: 按检查器路由重检——continuity 缺省；consistency-guard 显式传 checkers
+  // NCS-094: 同步长调用改异步任务 + 轮询（不再受前端/代理超时制约）
+  const pollLongTask = async (jobId: string, done: (r: unknown) => void, failed: (msg: string) => void) => {
+    for (;;) {
+      await new Promise(r => setTimeout(r, 3000));
+      try {
+        const st = await api.getLongTask(projectId, jobId);
+        if (st.status === 'DONE') { done(st.result); return; }
+        if (st.status === 'FAILED') { failed(st.error ?? '任务失败'); return; }
+      } catch (e) {
+        failed((e as Error).message); return;
+      }
+    }
+  };
   const recheckUnknown = async (chapterIndex: number, checker?: string) => {
     setRechecking(chapterIndex);
     try {
       const ctx = await api.getReviewContext(projectId, chapterIndex);
       const checkers = checker === 'consistency-guard' ? ['consistency-guard'] : undefined;
-      await api.recheckChapter(projectId, chapterIndex, ctx.identity, checkers);
-      message.success(`第 ${chapterIndex} 章 ${checker ?? 'continuity'} 重检完成，正在刷新分类…`);
+      const { jobId } = await api.recheckChapterAsync(projectId, chapterIndex, ctx.identity, checkers);
+      await pollLongTask(
+        jobId,
+        () => message.success(`第 ${chapterIndex} 章 ${checker ?? 'continuity'} 重检完成，正在刷新分类…`),
+        msg => message.error(`重新检查失败: ${msg}（若提示身份过期，请先打开该章刷新审阅）`));
     } catch (e) {
       message.error(`重新检查失败: ${(e as Error).message}（若提示身份过期，请先打开该章刷新审阅）`);
     } finally {

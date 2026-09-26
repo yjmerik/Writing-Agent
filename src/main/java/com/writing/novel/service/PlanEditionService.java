@@ -251,7 +251,14 @@ public class PlanEditionService {
         }
         List<Map<String, Object>> affected = new ArrayList<>();
         for (Foreshadowing f : repository.findUnresolvedForeshadowings(projectId)) {
-            if (f.getExpectedResolveChapter() != null && f.getExpectedResolveChapter() > newTarget) {
+            boolean beyondTarget = f.getExpectedResolveChapter() != null
+                    && f.getExpectedResolveChapter() > newTarget;
+            // NCS-092（第二轮旅程 A-5）：无有效回收位的关键承诺也必须逐项处置——
+            // 回收章号只写在描述文本里的 mustResolve/HIGH（expectedResolveChapter=null）
+            // 曾全部漏网，债务延迟到成书门禁引爆（旅程实测 8 条 HIGH 失位、72 条未回收）
+            boolean criticalWithoutSlot = (f.isMustResolve() || f.getPriority() == Foreshadowing.Priority.HIGH)
+                    && (f.getExpectedResolveChapter() == null || f.getExpectedResolveChapter() > newTarget);
+            if (beyondTarget || criticalWithoutSlot) {
                 Map<String, Object> m = new LinkedHashMap<>();
                 m.put("id", f.getId());
                 m.put("description", f.getDescription());

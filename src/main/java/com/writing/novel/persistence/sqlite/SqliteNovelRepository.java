@@ -1546,6 +1546,18 @@ public class SqliteNovelRepository implements NovelRepository {
                 ps.setString(7, Instant.now().toString());
                 ps.executeUpdate();
             } catch (SQLException e) { throw new RuntimeException(e); }
+            // NCS-092: MIGRATE 同步更新承诺回收位——账本与压缩后的篇幅保持一致
+            if (PlanChange.PromiseDecision.ACTION_MIGRATE.equals(decision.action())
+                    && decision.targetChapter() != null) {
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE foreshadowings SET expected_resolve_chapter=? " +
+                                "WHERE project_id=? AND id=?")) {
+                    ps.setInt(1, decision.targetChapter());
+                    ps.setString(2, projectId);
+                    ps.setString(3, decision.promiseId());
+                    ps.executeUpdate();
+                } catch (SQLException e) { throw new RuntimeException(e); }
+            }
         }
         try (PreparedStatement ps = conn.prepareStatement(
                 "UPDATE plan_changes SET status='CONFIRMED' WHERE project_id=? AND preview_id=?")) {

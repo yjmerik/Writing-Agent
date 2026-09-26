@@ -84,6 +84,8 @@ public class ReviewDecisionController {
             checkers = list.stream().filter(String.class::isInstance)
                     .map(String.class::cast).toList();
         }
+        // NCS-091: recheck 的 LLM 调用携带 projectId（成本归集，照 NCS-086 模式）
+        com.writing.novel.telemetry.EventContext.setProjectId(id);
         String workId = "recheck-" + UUID.randomUUID();
         if (writingTaskExecutor != null) {
             writingTaskExecutor.beginWork(id, workId);
@@ -98,6 +100,7 @@ public class ReviewDecisionController {
             result.put("issues", report.getIssues().size());
             return result;
         } finally {
+            com.writing.novel.telemetry.EventContext.clear();
             if (writingTaskExecutor != null) {
                 writingTaskExecutor.endWork(id, workId);
             }

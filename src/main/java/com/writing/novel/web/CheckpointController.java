@@ -140,11 +140,14 @@ public class CheckpointController {
     }
 
     private <T> T withRevisionWork(String projectId, java.util.function.Supplier<T> work) {
+        // NCS-091: checkpoint 修订（重写初始设定/卷计划/章节）的 LLM 调用携带 projectId
+        com.writing.novel.telemetry.EventContext.setProjectId(projectId);
         String workId = "checkpoint-revision-" + java.util.UUID.randomUUID();
         writingTaskExecutor.beginWork(projectId, workId);
         try {
             return work.get();
         } finally {
+            com.writing.novel.telemetry.EventContext.clear();
             writingTaskExecutor.endWork(projectId, workId);
         }
     }

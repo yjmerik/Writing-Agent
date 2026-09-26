@@ -1,7 +1,9 @@
 package com.writing.novel.web;
 
+import com.writing.novel.telemetry.EventContext;
 import com.writing.novel.telemetry.EventLog;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
@@ -19,6 +21,13 @@ import static org.junit.jupiter.api.Assertions.*;
 class SseEventBusTest {
 
     private final List<Runnable> cleanups = new ArrayList<>();
+
+    @BeforeEach
+    void cleanEventContext() {
+        // NCS-091: 「无 projectId 广播」依赖当前线程无 EventContext 残留——
+        // 套件中其他测试可能在线程上泄漏 projectId，这里显式清理保证密封性
+        EventContext.clear();
+    }
 
     @AfterEach
     void tearDown() {

@@ -856,12 +856,105 @@ public class NovelOrchestrator {
                 project.getTags() != null ? project.getTags() : "", "", instructions);
         validateWorldCandidate(projectId, candidate);
         String after = canonicalWorld(candidate.getEntries());
-        requireChanged(before, after, "世界观候选未产生有效变化");
 
-        worldBuilder.replaceEntries(projectId, List.copyOf(candidate.getEntries()));
-        replaceWorldCanon(projectId, beforeEntries, candidate.getEntries(), project.getCurrentChapterIndex());
+        // NCS-090（第二轮旅程 A-1）：人物层同步——补章纲新配角卡、点名零出场卡。
+        // 此前本方法只重写世界观，作者的人物反馈被静默丢弃。
+        // 意图门控：仅当修改意见涉及人物/配角/角色时触发人物层调用（避免搭车改动）
+        boolean characterIntent = instructions != null
+                && (instructions.contains("人物") || instructions.contains("配角")
+                    || instructions.contains("角色"));
+        String characterSync = characterIntent
+                ? syncCharactersFromOutline(projectId, instructions) : "";
+
+        boolean worldChanged = !before.equals(after);
+        if (!worldChanged && characterSync.isBlank()) {
+            throw new IllegalStateException("世界观候选未产生有效变化");
+        }
+        if (worldChanged) {
+            worldBuilder.replaceEntries(projectId, List.copyOf(candidate.getEntries()));
+            replaceWorldCanon(projectId, beforeEntries, candidate.getEntries(),
+                    project.getCurrentChapterIndex());
+        }
         if (contextAssembler != null) contextAssembler.invalidateProject(projectId);
-        return revisionResult("INITIAL_SETUP", before, after);
+        String afterFull = (worldChanged ? after : before)
+                + (characterSync.isBlank() ? "" : "\n【人物层同步】" + characterSync);
+        return revisionResult("INITIAL_SETUP", before, afterFull);
+    }
+
+    /**
+     * NCS-090：按大纲同步人物层（确定性规则 + CharacterDesigner）。
+     * 候选名 = 卷梗概「新配角：」约定（顿号分隔、名取括号前）中尚无卡者；
+     * 零出场既有卡不静默删除，仅在返回摘要中点名，处置留给作者。
+     * 单个补卡失败不回滚整体，逐条记录并继续。
+     */
+    private String syncCharactersFromOutline(String projectId, String instructions) {
+        if (characterDesigner == null) return "";
+        Outline outline = repository.findOutlineByProject(projectId).orElse(null);
+        if (outline == null) return "";
+        StringBuilder outlineText = new StringBuilder();
+        for (Volume v : outline.getVolumes()) {
+            if (v.getSummary() != null) outlineText.append(v.getSummary()).append('\n');
+            for (ChapterSynopsis s : v.getSynopses()) {
+                if (s.getSynopsis() != null) outlineText.append(s.getSynopsis()).append('\n');
+            }
+        }
+        String text = outlineText.toString();
+        List<com.writing.novel.domain.Character> existing = repository.findCharactersByProject(projectId);
+        java.util.Set<String> knownNames = existing.stream()
+                .map(com.writing.novel.domain.Character::getName).collect(java.util.stream.Collectors.toSet());
+
+        List<String> candidates = new java.util.ArrayList<>();
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("新配角：([^。\\n]+)").matcher(text);
+        while (m.find()) {
+            for (String part : m.group(1).split("[、，,]")) {
+                String name = part.trim().split("[（(]")[0].trim();
+                if (name.length() >= 2 && name.length() <= 8
+                        && !knownNames.contains(name) && !candidates.contains(name)) {
+                    candidates.add(name);
+                }
+            }
+        }
+
+        List<String> createdNames = new java.util.ArrayList<>();
+        for (String name : candidates) {
+            try {
+                int at = text.indexOf(name);
+                String context = text.substring(Math.max(0, at - 20),
+                        Math.min(text.length(), at + 60));
+                String requirement = "设计人物卡：" + name
+                        + "。该人物在大纲中的出场与设定：" + context
+                        + "。作者要求：" + (instructions == null ? "" : instructions)
+                        + "。姓名必须为「" + name + "」。";
+                com.writing.novel.domain.Character card =
+                        characterDesigner.design(projectId, requirement, existing);
+                if (card == null) continue;
+                card.setName(name);
+                repository.saveCharacter(card);
+                createdNames.add(name);
+                existing = repository.findCharactersByProject(projectId);
+            } catch (Exception e) {
+                log.warn("人物层同步-补卡失败({}): {}", name, e.getMessage());
+            }
+        }
+
+        List<String> zeroAppearance = existing.stream()
+                .filter(c -> c.getName() != null && c.getName().length() >= 2)
+                .filter(c -> c.getRole() == null || !c.getRole().contains("主角"))
+                .map(com.writing.novel.domain.Character::getName)
+                .filter(name -> !text.contains(name))
+                .toList();
+
+        StringBuilder summary = new StringBuilder();
+        if (!createdNames.isEmpty()) {
+            summary.append("已为章纲新配角补卡 ").append(createdNames.size()).append(" 人（")
+                    .append(String.join("、", createdNames)).append("）。");
+        }
+        if (!zeroAppearance.isEmpty()) {
+            summary.append("以下人物卡在章纲中零出场，请作者处置：")
+                    .append(String.join("、", zeroAppearance)).append("。");
+        }
+        return summary.toString();
     }
 
     private void replaceWorldCanon(String projectId, List<KnowledgeEntry> oldEntries,

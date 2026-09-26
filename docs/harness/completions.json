@@ -2255,8 +2255,19 @@
    "implementation_commit": "a15571d80b211e56cd0b72273d6f5b71ff7fd343",
    "main_commit": "a15571d80b211e56cd0b72273d6f5b71ff7fd343",
    "evidence": "docs/harness/evidence/2026-09-26-ncs-091.json"
+  },
+  {
+   "id": "ncs-092-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-092"
+   ],
+   "branch": "codex/ncs-092-compression-promise-ledger",
+   "implementation_commit": "ebbd5368a8f3bba2511277f13fdcc37536023439",
+   "main_commit": "f76042f12bbf8c8d189baf737f17805e7887dfb7",
+   "evidence": "docs/harness/evidence/2026-09-26-ncs-092.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "a15571d80b211e56cd0b72273d6f5b71ff7fd343"
+ "main_commit": "f76042f12bbf8c8d189baf737f17805e7887dfb7"
 }

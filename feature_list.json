@@ -9118,13 +9118,14 @@
    "description": "PlanEditionService.analyze 受影响承诺判定扩展：未回收且 (expectedResolveChapter 超出新目标) 或 ((mustResolve||priority==HIGH) 且无有效回收位) 一律要求 MIGRATE(≤新目标)/OPEN_END(理由) 后才能确认生效",
    "phase": 50,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "来源：docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（第二轮旅程）",
+   "status": "completed",
+   "evidence": "2026-09-26 verified: ebbd5368a8f3（ff-merge=main 提交 f76042f12bbf）; 来源：docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（第二轮旅程）",
    "files": [],
    "spec": "docs/specs/2026-09-26-journey2-fixes.md",
    "acceptance": "运行 verify_cmd 通过：存在无回收位的 mustResolve/HIGH 承诺且未处置时确认被拒并逐项列出；补齐 MIGRATE 处置后确认成功且台账回收位更新",
    "verify_cmd": "mvn test -Dtest=PlanCompressionPromiseLedgerTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-092-verified"
   },
   {
    "id": "NCS-093",

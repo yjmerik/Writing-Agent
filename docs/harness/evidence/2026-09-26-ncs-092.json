@@ -1,0 +1,20 @@
+{
+ "commit": "ebbd5368a8f3bba2511277f13fdcc37536023439",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-092"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "3/3 GREEN：无回收位关键承诺强制处置+缺处置拒绝确认+MIGRATE回写回收位+OPEN_END理由必填；全量1248/0F/0E/1S",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-092; spec docs/specs/2026-09-26-journey2-fixes.md; branch codex/ncs-092-compression-promise-ledger"
+}

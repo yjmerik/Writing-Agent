@@ -1,0 +1,20 @@
+{
+ "commit": "62eeca709157790bb48b5eb3959e933a2e414e2c",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-090"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "2/2 GREEN：新配角补卡(柳拂水/顾星桥)+零出场卡点名+无诉求不触发；全量1250/0F/0E/1S",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-090; spec docs/specs/2026-09-26-journey2-fixes.md; branch codex/ncs-090-initial-setup-character-sync"
+}

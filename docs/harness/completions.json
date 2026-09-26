@@ -2277,8 +2277,19 @@
    "implementation_commit": "17433e187c8ee79ecf9cc544907b23a140e61eae",
    "main_commit": "b6218191b6ffd21d6234c0a5374ccdf742c23918",
    "evidence": "docs/harness/evidence/2026-09-26-ncs-095.json"
+  },
+  {
+   "id": "ncs-090-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-090"
+   ],
+   "branch": "codex/ncs-090-initial-setup-character-sync",
+   "implementation_commit": "62eeca709157790bb48b5eb3959e933a2e414e2c",
+   "main_commit": "2a6fcc7468554e2a74558e5e5d1970f5d7a99094",
+   "evidence": "docs/harness/evidence/2026-09-26-ncs-090.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "b6218191b6ffd21d6234c0a5374ccdf742c23918"
+ "main_commit": "2a6fcc7468554e2a74558e5e5d1970f5d7a99094"
 }

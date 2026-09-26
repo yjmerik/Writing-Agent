@@ -2244,8 +2244,19 @@
    "implementation_commit": "f8a50d8292142e9557783b284ca81c4510d35dea",
    "main_commit": "1a973810854a43c27ae1464a4a0eb90bb4698ec5",
    "evidence": "docs/harness/evidence/2026-09-26-ncs-093.json"
+  },
+  {
+   "id": "ncs-091-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-091"
+   ],
+   "branch": "codex/ncs-091-recheck-checker-telemetry",
+   "implementation_commit": "a15571d80b211e56cd0b72273d6f5b71ff7fd343",
+   "main_commit": "a15571d80b211e56cd0b72273d6f5b71ff7fd343",
+   "evidence": "docs/harness/evidence/2026-09-26-ncs-091.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "1a973810854a43c27ae1464a4a0eb90bb4698ec5"
+ "main_commit": "a15571d80b211e56cd0b72273d6f5b71ff7fd343"
 }

@@ -9103,13 +9103,14 @@
    "description": "CheckpointController.withRevisionWork 与 ReviewDecisionController.recheck 入口补 EventContext.setProjectId/clear（照 NCS-086 模式），两条路径 LLM_CALL 事件携带 projectId",
    "phase": 50,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "来源：docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（第二轮旅程）",
+   "status": "completed",
+   "evidence": "2026-09-26 verified: a15571d80b21（ff-merge=main 提交 a15571d80b21）; 来源：docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（第二轮旅程）",
    "files": [],
    "spec": "docs/specs/2026-09-26-journey2-fixes.md",
    "acceptance": "运行 verify_cmd 通过：两条入口触发的 LLM 调用在事件日志携带正确 projectId（测试替身断言）",
    "verify_cmd": "mvn test -Dtest=RecheckTelemetryProjectIdTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-091-verified"
   },
   {
    "id": "NCS-092",

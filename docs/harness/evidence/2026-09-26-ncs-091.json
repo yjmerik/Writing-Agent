@@ -1,0 +1,20 @@
+{
+ "commit": "a15571d80b211e56cd0b72273d6f5b71ff7fd343",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-091"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "2/2 GREEN（recheck/checkpoint修订携带projectId并清理）；顺带修复SseEventBusTest线程残留非密封性；全量1245/0F/0E/1S",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-091; spec docs/specs/2026-09-26-journey2-fixes.md; branch codex/ncs-091-recheck-checker-telemetry"
+}

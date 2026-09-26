@@ -9058,13 +9058,14 @@
    "description": "CheckResultEnvelope.Status 新增 AUTHOR_WAIVED；版本化批准成功后自动对该章最新 UNKNOWN/INVALID 信封追加 AUTHOR_WAIVED 行（reason 记 approvalId）；新增 POST /chapters/{n}/check-waiver（identity+checker+reason 必填）供存量章节手动豁免；前端 UNKNOWN_CHECK 卡片增加担责豁免按钮；校验报告展示「作者担责豁免」",
    "phase": 50,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "来源：docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（第二轮旅程）",
+   "status": "completed",
+   "evidence": "2026-09-26 verified: 27c32c360d85（ff-merge=main 提交 27c32c3）; 来源：docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（第二轮旅程）",
    "files": [],
    "spec": "docs/specs/2026-09-26-journey2-fixes.md",
    "acceptance": "运行 verify_cmd 通过：批准后该章 UNKNOWN 信封最新行为 AUTHOR_WAIVED 且 unknownCount=0；check-waiver 无 reason 被拒；豁免后成书门禁不再因 unknown FAIL",
    "verify_cmd": "mvn test -Dtest=AuthorWaiverCheckEnvelopeTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-088-verified"
   },
   {
    "id": "NCS-089",

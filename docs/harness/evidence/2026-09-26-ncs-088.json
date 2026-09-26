@@ -1,0 +1,20 @@
+{
+ "commit": "27c32c360d857aa8b57033a9ac0262efbe511fe4",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-088"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "27c32c360d857aa8b57033a9ac0262efbe511fe4",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-088; spec docs/specs/2026-09-26-journey2-fixes.md; branch codex/ncs-088-author-waiver-check-envelope"
+}

@@ -25,7 +25,7 @@ checks = [
 ev = {
     "commit": impl, "cleanCheckout": True, "feature_ids": [feature_id],
     "checks": checks,
-    "notes": f"scope: {feature_id}; spec docs/specs/2026-09-25-ui-wuxia-journey-fixes.md; branch {branch}",
+    "notes": f"scope: {feature_id}; spec {next((f.get('spec') for f in json.loads((ROOT / 'feature_list.json').read_text())['features'] if f['id'] == feature_id), 'n/a')}; branch {branch}",
 }
 (ROOT / ev_rel).write_text(json.dumps(ev, ensure_ascii=False, indent=1) + "\n")
 
@@ -45,7 +45,7 @@ for f in fl["features"]:
     if f["id"] == feature_id:
         f["status"] = "completed"
         f["completion_record"] = rec_id
-        f["evidence"] = (f"2026-09-25 verified: {impl[:12]}（ff-merge=main 提交 {main_c[:12]}）; "
+        f["evidence"] = (f"{date.today()} verified: {impl[:12]}（ff-merge=main 提交 {main_c[:12]}）; "
                          + f.get("evidence", "").split("；待实现验证")[0])
 fl["updated_at"] = today
 (ROOT / "feature_list.json").write_text(json.dumps(fl, ensure_ascii=False, indent=1) + "\n")

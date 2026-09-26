@@ -632,9 +632,9 @@ export const api = {
     request<ReviewContext>(`/projects/${id}/chapters/${chapterIndex}/review-context`),
 
   /** p36-05: 版本化批准——identity/reviewSetHash 必须与作者已读内容一致，服务端不补填 */
-  recheckChapter: (id: string, chapterIndex: number, identity: ReviewIdentity) =>
+  recheckChapter: (id: string, chapterIndex: number, identity: ReviewIdentity, checkers?: string[]) =>
     request<{ reportCurrent: boolean }>(`/projects/${id}/chapters/${chapterIndex}/recheck`, {
-      method: 'POST', body: JSON.stringify({ identity }),
+      method: 'POST', body: JSON.stringify(checkers?.length ? { identity, checkers } : { identity }),
     }, 300000),
 
   /** NCS-088：未查清检查信封的作者担责豁免（reason 必填，记入台账可审计） */

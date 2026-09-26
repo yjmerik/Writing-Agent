@@ -32,6 +32,14 @@ public class StubLlmGatewayTestConfig {
                 if (req.getUserMessage().startsWith("请提取第") && req.getUserMessage().endsWith("章中实体之间的关系。")) {
                     return new LlmResponse("{\"edges\":[]}", 1, 1);
                 }
+                // NCS-087: 一致性守卫（consistency-guard）——返回可解析的空问题 JSON（VALID_EMPTY 信封）
+                if (req.getUserMessage().startsWith("请检查本章是否存在能力越界或凭空证据问题。")) {
+                    return new LlmResponse("{\"abilityViolations\":[],\"evidenceProblems\":[],\"anachronisms\":[]}", 10, 20);
+                }
+                // NCS-087: 连续性检查（CONTINUITY_CHECK）——干净标记文本（VALID_EMPTY 信封）
+                if (req.getTaskType() == com.writing.novel.llm.LlmTaskType.CONTINUITY_CHECK) {
+                    return new LlmResponse("未发现连续性问题。", 10, 20);
+                }
                 String content = switch (req.getTaskType()) {
                     case WORLDBUILDING ->
                             "【地理】玄黄大陆：东方主大陆。\n【力量体系】灵气：修炼九重。";

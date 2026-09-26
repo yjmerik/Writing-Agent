@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -75,12 +76,20 @@ public class ReviewDecisionController {
         }
         var identity = new com.writing.novel.domain.ChapterApproval.Identity(
                 id, chapterIndex, version, contentHash);
+        // NCS-087: 可选 checkers 路由（缺省仅 continuity，向后兼容）；
+        // correction-verification 不可重跑，编排器 409 明示担责豁免出路。
+        List<String> checkers = null;
+        Object checkersRaw = body == null ? null : body.get("checkers");
+        if (checkersRaw instanceof List<?> list) {
+            checkers = list.stream().filter(String.class::isInstance)
+                    .map(String.class::cast).toList();
+        }
         String workId = "recheck-" + UUID.randomUUID();
         if (writingTaskExecutor != null) {
             writingTaskExecutor.beginWork(id, workId);
         }
         try {
-            var report = recheckService.recheckChapter(id, chapterIndex, identity);
+            var report = recheckService.recheckChapter(id, chapterIndex, identity, checkers);
             Map<String, Object> result = new LinkedHashMap<>();
             result.put("chapterIndex", chapterIndex);
             result.put("chapterVersion", version);

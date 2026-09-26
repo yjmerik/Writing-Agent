@@ -3154,6 +3154,28 @@ public class NovelOrchestrator {
      */
     public ChapterQualityReport recheckChapter(String projectId, int chapterIndex,
             com.writing.novel.domain.ChapterApproval.Identity expectedIdentity) {
+        return recheckChapter(projectId, chapterIndex, expectedIdentity, List.of("continuity"));
+    }
+
+    /**
+     * NCS-087：按检查器路由的重新检查——信封按 (chapter, checker) 存储，
+     * 只重跑 continuity 覆盖不了 consistency-guard 的 UNKNOWN（第二轮旅程 A-2）。
+     * correction-verification 不可独立重跑（复验依赖当时的原问题清单，无法重建），
+     * 明示走担责豁免（NCS-088 check-waiver）。
+     */
+    public ChapterQualityReport recheckChapter(String projectId, int chapterIndex,
+            com.writing.novel.domain.ChapterApproval.Identity expectedIdentity, List<String> checkers) {
+        List<String> requested = checkers == null || checkers.isEmpty()
+                ? List.of("continuity") : checkers;
+        for (String checker : requested) {
+            if (!List.of("continuity", "consistency-guard").contains(checker)) {
+                if ("correction-verification".equals(checker)) {
+                    throw new IllegalStateException("correction-verification 不可独立重跑"
+                            + "（复验依赖当时的原问题清单，无法重建）——请使用担责豁免 check-waiver");
+                }
+                throw new IllegalArgumentException("不支持的重新检查类型: " + checker);
+            }
+        }
         Chapter chapter = repository.findChapterByIndex(projectId, chapterIndex)
                 .orElseThrow(() -> new IllegalArgumentException("章节不存在: " + chapterIndex));
         var currentIdentity = com.writing.novel.domain.ChapterApproval.Identity.of(chapter);
@@ -3162,14 +3184,22 @@ public class NovelOrchestrator {
                     com.writing.novel.spi.NovelRepository.ReviewConflictException.Reason.IDENTITY_STALE,
                     "重新检查必须针对当前稿", currentIdentity, null);
         }
-        StringBuilder settings = new StringBuilder();
-        for (var c : repository.findCharactersByProject(projectId)) {
-            settings.append(c.getName()).append('：')
-                    .append(c.getAbility() == null ? "" : c.getAbility()).append('；')
-                    .append(c.getPersonality() == null ? "" : c.getPersonality()).append('\n');
+        List<ContinuityIssue> issues = new java.util.ArrayList<>();
+        for (String checker : requested) {
+            if ("continuity".equals(checker)) {
+                StringBuilder settings = new StringBuilder();
+                for (var c : repository.findCharactersByProject(projectId)) {
+                    settings.append(c.getName()).append('：')
+                            .append(c.getAbility() == null ? "" : c.getAbility()).append('；')
+                            .append(c.getPersonality() == null ? "" : c.getPersonality()).append('\n');
+                }
+                issues.addAll(continuityChecker.check(projectId, chapterIndex, chapter.getContent(),
+                        settings.toString()));
+            } else if ("consistency-guard".equals(checker)) {
+                if (consistencyGuard == null) throw new IllegalStateException("ConsistencyGuard 未配置");
+                issues.addAll(consistencyGuard.check(projectId, chapterIndex, chapter.getContent(), null));
+            }
         }
-        var issues = continuityChecker.check(projectId, chapterIndex, chapter.getContent(),
-                settings.toString());
         // 检查完成后重读：正文已变化则丢弃（不落库为新稿的问题）
         Chapter after = repository.findChapterByIndex(projectId, chapterIndex).orElse(null);
         if (after == null || !com.writing.novel.domain.ChapterApproval.Identity.of(after)

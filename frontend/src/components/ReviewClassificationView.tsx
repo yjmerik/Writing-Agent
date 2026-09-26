@@ -65,12 +65,14 @@ export default function ReviewClassificationView({ projectId }: { projectId: str
   // NCS-080（听雪刀 P1-1）：未查清检查点的 UI 出路——经当前稿身份触发 recheck，
   // 完成后刷新分类（检查结果信封落库会覆盖 UNKNOWN 状态）。长调用期间按钮置 loading；
   // 占坑可经协作栏「取消该操作」释放（NCS-074）。
-  const recheckUnknown = async (chapterIndex: number) => {
+  // NCS-087: 按检查器路由重检——continuity 缺省；consistency-guard 显式传 checkers
+  const recheckUnknown = async (chapterIndex: number, checker?: string) => {
     setRechecking(chapterIndex);
     try {
       const ctx = await api.getReviewContext(projectId, chapterIndex);
-      await api.recheckChapter(projectId, chapterIndex, ctx.identity);
-      message.success(`第 ${chapterIndex} 章连续性重检完成，正在刷新分类…`);
+      const checkers = checker === 'consistency-guard' ? ['consistency-guard'] : undefined;
+      await api.recheckChapter(projectId, chapterIndex, ctx.identity, checkers);
+      message.success(`第 ${chapterIndex} 章 ${checker ?? 'continuity'} 重检完成，正在刷新分类…`);
     } catch (e) {
       message.error(`重新检查失败: ${(e as Error).message}（若提示身份过期，请先打开该章刷新审阅）`);
     } finally {
@@ -106,15 +108,19 @@ export default function ReviewClassificationView({ projectId }: { projectId: str
             <Space size={6} wrap>
               {c.kind === 'UNKNOWN_CHECK' ? (
                 <>
-                  <Tooltip title={c.reason ?? ''}>
-                    <Button size="small" icon={<QuestionCircleOutlined />}
-                      loading={rechecking === c.chapterIndex}
-                      disabled={rechecking != null}
-                      onClick={() => void recheckUnknown(c.chapterIndex)}>
-                      {rechecking === c.chapterIndex ? '重检中（约 1-2 分钟）…' : '重新检查'}
-                    </Button>
-                  </Tooltip>
-                  <Tooltip title="作者已复核并愿意担责放行（AUTHOR_WAIVED，理由记入台账）">
+                  {c.checker !== 'correction-verification' && (
+                    <Tooltip title={c.reason ?? ''}>
+                      <Button size="small" icon={<QuestionCircleOutlined />}
+                        loading={rechecking === c.chapterIndex}
+                        disabled={rechecking != null}
+                        onClick={() => void recheckUnknown(c.chapterIndex, c.checker)}>
+                        {rechecking === c.chapterIndex ? '重检中（约 1-2 分钟）…' : '重新检查'}
+                      </Button>
+                    </Tooltip>
+                  )}
+                  <Tooltip title={c.checker === 'correction-verification'
+                    ? '复验依赖当时的原问题清单，不可重跑——请作者复核后担责豁免'
+                    : '作者已复核并愿意担责放行（AUTHOR_WAIVED，理由记入台账）'}>
                     <Button size="small" icon={<SafetyOutlined />}
                       disabled={rechecking != null}
                       onClick={() => { setWaiverTarget({ chapterIndex: c.chapterIndex, checker: c.checker ?? '' }); setWaiverReason(''); }}>

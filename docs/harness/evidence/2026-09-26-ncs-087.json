@@ -1,0 +1,20 @@
+{
+ "commit": "41caf260ab1cd219755bdcac6b35c074878a420b",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-087"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "3/3 GREEN：guard路由覆盖信封键+correction-verification 409豁免指引+缺省向后兼容；全量1239/0F/0E/1S",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-087; spec docs/specs/2026-09-26-journey2-fixes.md; branch codex/ncs-087-recheck-checker-routing"
+}

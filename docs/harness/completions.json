@@ -2211,8 +2211,19 @@
    "implementation_commit": "27c32c360d857aa8b57033a9ac0262efbe511fe4",
    "main_commit": "27c32c360d857aa8b57033a9ac0262efbe511fe4",
    "evidence": "docs/harness/evidence/2026-09-26-ncs-088.json"
+  },
+  {
+   "id": "ncs-087-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-087"
+   ],
+   "branch": "codex/ncs-087-recheck-checker-routing",
+   "implementation_commit": "41caf260ab1cd219755bdcac6b35c074878a420b",
+   "main_commit": "d029b191605ce0c8ea85e5446841b3e2fabd2eb6",
+   "evidence": "docs/harness/evidence/2026-09-26-ncs-087.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "27c32c3"
+ "main_commit": "d029b191605ce0c8ea85e5446841b3e2fabd2eb6"
 }

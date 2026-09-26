@@ -9044,13 +9044,14 @@
    "description": "POST /chapters/{n}/recheck 增加可选 checkers 参数：continuity（缺省，现行）与 consistency-guard（路由到 ConsistencyGuard.check 并落对应信封）；correction-verification 不可重跑，返回 409 指引走担责豁免。前端 UNKNOWN_CHECK 卡片按 c.checker 传参并修正按钮 loading 态绑定（首次点击静默失败问题）",
    "phase": 50,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "来源：docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（第二轮旅程）",
+   "status": "completed",
+   "evidence": "2026-09-26 verified: 41caf260ab1c（ff-merge=main 提交 d029b191605c）; 来源：docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（第二轮旅程）",
    "files": [],
    "spec": "docs/specs/2026-09-26-journey2-fixes.md",
    "acceptance": "运行 verify_cmd 通过：指定 consistency-guard 的 recheck 调用 ConsistencyGuard 且 check_results 落 consistency-guard 键（信封覆盖 UNKNOWN）；不传 checkers 行为与现状一致（兼容）；correction-verification 返回 409 且消息含豁免指引",
    "verify_cmd": "mvn test -Dtest=RecheckCheckerRoutingTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-087-verified"
   },
   {
    "id": "NCS-088",

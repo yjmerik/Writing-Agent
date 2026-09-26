@@ -2219,7 +2219,7 @@
     "NCS-087"
    ],
    "branch": "codex/ncs-087-recheck-checker-routing",
-   "implementation_commit": "41caf260ab1cd219755bdcac6b35c074878a420b",
+   "implementation_commit": "d029b191605ce0c8ea85e5446841b3e2fabd2eb6",
    "main_commit": "d029b191605ce0c8ea85e5446841b3e2fabd2eb6",
    "evidence": "docs/harness/evidence/2026-09-26-ncs-087.json"
   },
@@ -2230,7 +2230,7 @@
     "NCS-089"
    ],
    "branch": "codex/ncs-089-recovery-volume-resumes",
-   "implementation_commit": "6586fbd51f16b24c689075fbb078f7593add0c4b",
+   "implementation_commit": "d60fd2393b94a95f11e30108ef057436b1a8ed00",
    "main_commit": "d60fd2393b94a95f11e30108ef057436b1a8ed00",
    "evidence": "docs/harness/evidence/2026-09-26-ncs-089.json"
   },
@@ -2241,7 +2241,7 @@
     "NCS-093"
    ],
    "branch": "codex/ncs-093-revision-preview-truncation-guard",
-   "implementation_commit": "f8a50d8292142e9557783b284ca81c4510d35dea",
+   "implementation_commit": "1a973810854a43c27ae1464a4a0eb90bb4698ec5",
    "main_commit": "1a973810854a43c27ae1464a4a0eb90bb4698ec5",
    "evidence": "docs/harness/evidence/2026-09-26-ncs-093.json"
   },
@@ -2263,7 +2263,7 @@
     "NCS-092"
    ],
    "branch": "codex/ncs-092-compression-promise-ledger",
-   "implementation_commit": "ebbd5368a8f3bba2511277f13fdcc37536023439",
+   "implementation_commit": "b70f471e1605b8cd5bd69fb1cc7ff5829cce3c5e",
    "main_commit": "b70f471e1605b8cd5bd69fb1cc7ff5829cce3c5e",
    "evidence": "docs/harness/evidence/2026-09-26-ncs-092.json"
   },
@@ -2274,7 +2274,7 @@
     "NCS-095"
    ],
    "branch": "codex/ncs-095-word-trend-warning",
-   "implementation_commit": "17433e187c8ee79ecf9cc544907b23a140e61eae",
+   "implementation_commit": "b6218191b6ffd21d6234c0a5374ccdf742c23918",
    "main_commit": "b6218191b6ffd21d6234c0a5374ccdf742c23918",
    "evidence": "docs/harness/evidence/2026-09-26-ncs-095.json"
   },
@@ -2285,7 +2285,7 @@
     "NCS-090"
    ],
    "branch": "codex/ncs-090-initial-setup-character-sync",
-   "implementation_commit": "62eeca709157790bb48b5eb3959e933a2e414e2c",
+   "implementation_commit": "2a6fcc7468554e2a74558e5e5d1970f5d7a99094",
    "main_commit": "2a6fcc7468554e2a74558e5e5d1970f5d7a99094",
    "evidence": "docs/harness/evidence/2026-09-26-ncs-090.json"
   },
@@ -2296,7 +2296,7 @@
     "NCS-094"
    ],
    "branch": "codex/ncs-094-long-task-async",
-   "implementation_commit": "1104803ccf753cb2b90e3d0e1c12d110f2790ae6",
+   "implementation_commit": "d4aabe9a6848a832d807c0e92bb30ee2db58bccf",
    "main_commit": "d4aabe9a6848a832d807c0e92bb30ee2db58bccf",
    "evidence": "docs/harness/evidence/2026-09-26-ncs-094.json"
   }

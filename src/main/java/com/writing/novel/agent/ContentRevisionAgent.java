@@ -67,7 +67,14 @@ public class ContentRevisionAgent {
                 .maxTokens(8192)
                 .build();
 
-        String content = gateway.complete(request).getContent();
+        // NCS-093: 截断 fail-fast——失控长输出被 max_tokens 截断时（第二轮旅程 52k tokens/9.4min），
+        // 立即给出行动指引，而不是让调用方在解析失败的泛化错误里空等
+        var response = gateway.complete(request);
+        if (response.isTruncated()) {
+            throw new IllegalStateException(
+                    "修订候选输出被 max_tokens 截断（finish_reason=length）——请缩小修改范围或按段落分次修改后重试");
+        }
+        String content = response.getContent();
         if (content == null || content.isBlank()) {
             throw invalidCandidate(null);
         }

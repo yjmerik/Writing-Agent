@@ -45,6 +45,28 @@ class ContentRevisionAgentTest {
     }
 
     @Test
+    void rejectsTruncatedResponseWithActionableGuidance() {
+        // NCS-093: finish_reason=length 的失控长输出必须 fail-fast 并给出行动指引，
+        // 而不是落进 JSON 解析失败的泛化错误（第二轮旅程 52k tokens/9.4min 案例）
+        LlmGateway truncatedGateway = new LlmGateway() {
+            @Override
+            public LlmResponse complete(LlmRequest request) {
+                return new LlmResponse("{\"targetType\":\"CHAPTER\",\"title\":\"候选", 10, 8190, "length", null);
+            }
+
+            @Override
+            public void streamComplete(LlmRequest request, StreamHandler handler) {
+            }
+        };
+        ContentRevisionAgent agent = new ContentRevisionAgent(truncatedGateway, TestPromptHelper.create());
+
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                () -> agent.preview(TargetType.CHAPTER, "{\"id\":\"chapter-1\",\"title\":\"旧标题\"}", "修复矛盾"));
+        assertTrue(e.getMessage().contains("截断"), e.getMessage());
+        assertTrue(e.getMessage().contains("分段修改") || e.getMessage().contains("缩小修改范围"), e.getMessage());
+    }
+
+    @Test
     void rejectsBlankResponseAndBlankRequiredContent() {
         assertInvalidResponse("   ");
         assertInvalidResponse("""

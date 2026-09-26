@@ -561,12 +561,12 @@ export const api = {
         passageIndex: target.passageIndex,
         instructions,
       }),
-    }, 300000),
+    }, 900000), // NCS-093: 修订预览可达数分钟，避免长输出下前端先于服务端放弃
 
   applyAgentRevision: (projectId: string, previewId: string) =>
     request<AgentRevisionApplyResult>(`/projects/${projectId}/revisions/${previewId}/apply`, {
       method: 'POST',
-    }, 300000),
+    }, 900000), // NCS-093: 应用含落库+刷新，与预览同为长调用
 
   /** p37-04: 恢复入口——查询持久候选（刷新/重启后仍在） */
   listRevisionCandidates: (projectId: string, targetId?: string, status?: string) => {
@@ -635,7 +635,7 @@ export const api = {
   recheckChapter: (id: string, chapterIndex: number, identity: ReviewIdentity, checkers?: string[]) =>
     request<{ reportCurrent: boolean }>(`/projects/${id}/chapters/${chapterIndex}/recheck`, {
       method: 'POST', body: JSON.stringify(checkers?.length ? { identity, checkers } : { identity }),
-    }, 300000),
+    }, 900000), // NCS-093: 同步补查可到数分钟
 
   /** NCS-088：未查清检查信封的作者担责豁免（reason 必填，记入台账可审计） */
   checkWaiver: (id: string, chapterIndex: number, identity: ReviewIdentity, checker: string, reason: string) =>

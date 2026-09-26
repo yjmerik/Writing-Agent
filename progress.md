@@ -1,49 +1,54 @@
-# 第二轮武侠旅程回归与修复设计（NCS-087..095 登记） — 2026-09-26
+# 第二轮旅程修复九连（NCS-087..095）完成 — 2026-09-26
 
 Last Updated: 2026-09-26
 
 ## Current
 
-2026-09-25/26 完成第二轮真实用户 UI 全流程旅程《沉钟记》（12 章 55,750 字全批准，
-wuxia 预设，实例 18100 / data/ui-wuxia-0925-journey）。**上轮 NCS-077..086 修复全部验证生效**
-（宣告完结、常驻 Alert、过期 HIGH 不阻断、回收卷确认制、弹窗自闭、预览遥测）。
-旅程发现新一轮缺陷并完成修复设计，按需求拆分协议落 spec + backlog：
+第二轮武侠旅程（《沉钟记》）发现的全部 9 项缺陷已修复完毕并合入 main。
+A-8 终局死锁三因全部解除：NCS-088（未查清信封 AUTHOR_WAIVED 担责豁免：批准自动豁免
++ 手动豁免端点）、NCS-087（recheck 按检查器路由，consistency-guard 可真实重检，
+correction-verification 409 明示豁免出路）、NCS-089（追加回收卷置回 WRITING 解禁写作）。
 
-- **A-8（P0）终局死锁变体**：门禁 unknownCount>0 × recheck 只跑 continuity（A-2）×
-  NEEDS_REVISION 禁写回收卷——12 章成书无法经任何 UI 路径到 FINAL。
-  对应 NCS-087（recheck 按检查器路由）/ NCS-088（未查清信封 AUTHOR_WAIVED 担责豁免）/
-  NCS-089（追加回收卷置回 WRITING）三连解锁。
-- **A-1（P1）** 修改意见重写只改世界观、人物层被静默丢弃 → NCS-090 人物层同步。
-- **A-4（P1）** 修订预览失控长输出（52k token/9.4min）vs 前端 300s 超时 → NCS-093 超时分层
-  +截断守护、NCS-094 异步任务化（依赖 093）。
-- **A-3/A-5/A-6（P2/P3）** → NCS-091 遥测归属、NCS-092 压缩强制处置关键承诺、
-  NCS-095 字数趋势预警。
-- **A-7 撤案**：SPA 深链 500 系 jar 热替换损坏 JVM 期的误报，健康实例复验 200。
+| 特性 | 内容 | 提交 |
+|---|---|---|
+| NCS-088 担责豁免 | 枚举+批准自动豁免+check-waiver+前端按钮+校验报告标签 | 27c32c3 |
+| NCS-087 重检路由 | checkers 参数路由；correction-verification 409 指引 | d029b19 |
+| NCS-089 回收卷解禁 | 追加回收卷置回 WRITING + RECOVERY_RESUMED 事件 | d60fd23 |
+| NCS-093 截断守护 | 修订预览 finish_reason=length fail-fast + 900s 分层超时 | 1a97381 |
+| NCS-091 遥测归属 | recheck/checkpoint 修订 EventContext 传播 | a15571d |
+| NCS-092 压缩台账 | 无回收位关键承诺强制处置 + MIGRATE 回写回收位 | f76042f |
+| NCS-095 字数预警 | 前 3 章均值 50% 阈值「篇幅骤降」提示（后端+审阅卡） | b621819 |
+| NCS-090 人物层同步 | 修改意见触发补新配角卡 + 点名零出场卡（意图门控） | 2a6fcc7 |
+| NCS-094 异步任务化 | LongTaskService + recheck-async/preview-async + 前端轮询 | d4aabe9 |
+
+每个特性独立分支、失败测试先行（RED→GREEN）、ff-only 合并、干净 main 复验、verified 登记。
 
 ## Files
 
-spec: docs/specs/2026-09-26-journey2-fixes.md（根因+设计+验收+风险）
-报告: docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（含修复对照表、A-7 撤案标注）
-成书: 同目录 沉钟记-全书导出.md（56,026 字符）+ 证据文件
-backlog: feature_list.json 追加 NCS-087..095（9 项，not-started，含 acceptance/verify_cmd）
+spec: docs/specs/2026-09-26-journey2-fixes.md
+报告: docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md
+evidence: docs/harness/evidence/2026-09-26-ncs-09*.json（9 份）
+后端: NovelOrchestrator（recheck 路由/人物层同步/回收卷状态）/ CheckWaiverService /
+  LongTaskService / ReviewDecisionController / CheckpointController / RevisionController /
+  CheckResultRepository / EditionValidationService / ContentRevisionAgent
+前端: ReviewClassificationView（豁免+异步重检）/ AgentRevisionDialog（异步预览）/
+  RunConsole / InteractiveReview（篇幅骤降 Tag）/ EditionsPanel / api client
 
 ## Verification
 
-- 旅程全程真实 LLM、仅 UI 操作（诊断性只读 API/sqlite 已在报告标注）；
-  249 次归属 LLM 调用 ≈6.2 元。
-- 修复设计经代码级核对：recheckChapter:3171、runFinalAuditGate:2505、ProjectActionPolicy
-  NEEDS_REVISION 分支、PlanEditionService.analyze:253、ConsistencyGuard 双检查器、
-  AgentRevisionService NCS-086 模式。
-- check-harness：仅剩既有 ncs-070 遗留（待用户裁决）。
+干净 main：mvn test 1257/0F/0E/1S（净增 26 项测试，1231→1257）；
+npm run build + tsc --noEmit 通过；逐特性 verify_cmd + 合并后全量见 evidence JSON。
+18100 现场已用新构建重启（pid 见 server.log），《沉钟记》保持 NEEDS_REVISION，
+数据完好——可立即人工验收：重检 3×consistency-guard → 豁免 2×correction-verification
+→ 继续协作写回收卷 13-20 → 回收 mustResolve ≤3 → 重审到 FINAL。
 
 ## Blockers
 
-无（业务）。ncs-070 检查器 schema 遗留待用户裁决（此前已记录）。
+无（业务）。ncs-070 检查器 schema 遗留待用户裁决。
 
 ## Next Steps
 
-按 spec 实施顺序逐个推进（同一时间一个 feature，bugfix gate 先写失败测试）：
-NCS-088 → 087 → 089（A-8 解锁）→ 093 → 094 → 090/091/092/095。
-人工验收用保留现场：18100《沉钟记》重检 3 个 consistency-guard、担责豁免 2 个
-correction-verification、写回收卷章节、重审到 FINAL。
-旧现场未动：18098（听雪刀旧构建）。
+- 人工 UI 验收（18100，约 3-4 小时含回收章写作）：按上条路径走 FINAL。
+- NCS-087 首次点击静默失败的根因（前端乐观 loading vs 服务端未受理）已由 NCS-094
+  异步化规避；如需彻底定位可另立小特性。
+- ncs-070 检查器 schema 遗留仍待用户裁决。

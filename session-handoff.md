@@ -1,53 +1,56 @@
-# 第二轮武侠旅程回归 + 修复设计登记（NCS-087..095） — 2026-09-26
+# 第二轮旅程修复九连（NCS-087..095）完成 — 2026-09-26
 
 Last Updated: 2026-09-26
 
 ## Current
 
-第二轮 UI 全流程旅程《沉钟记》完成（ego-browser、真实 LLM、12 章全批准 55,750 字、
-宣告完结→门禁 FAIL→回收卷追加→重审 FAIL 死锁实证）；上轮 NCS-077..086 修复全部验证生效。
-新一轮缺陷已按需求拆分协议完成设计登记，**尚未开始实现**（全部 not-started）。
+第二轮武侠旅程（《沉钟记》）全部 9 项缺陷修复完毕并合入 main，A-8 终局死锁解除。
+每个特性独立分支（codex/ncs-0XX-<slug>）、失败测试先行（RED→GREEN）、
+ff-only 合并、干净 main 复验、verified 登记（evidence 9 份）。
 
-| 特性 | 对应缺陷 | 优先级 |
+| 特性 | 分支 | 提交 |
 |---|---|---|
-| NCS-087 recheck 按检查器路由 | A-2 | P1 |
-| NCS-088 未查清信封 AUTHOR_WAIVED 担责豁免 | A-8① | P0 |
-| NCS-089 追加回收卷置回 WRITING | A-8② | P0 |
-| NCS-090 框架审阅修订纳入人物层 | A-1 | P1 |
-| NCS-091 recheck/checkpoint 遥测归属 | A-3 | P2 |
-| NCS-092 压缩强制处置关键承诺 | A-5 | P2 |
-| NCS-093 修订预览超时分层+截断守护 | A-4 一期 | P1 |
-| NCS-094 preview/recheck 异步任务化 | A-4 二期（依赖 093） | P1 |
-| NCS-095 章节字数趋势预警 | A-6 | P3 |
+| NCS-088 担责豁免（AUTHOR_WAIVED） | codex/ncs-088-author-waiver-check-envelope | 27c32c3 |
+| NCS-087 recheck 按检查器路由 | codex/ncs-087-recheck-checker-routing | d029b19 |
+| NCS-089 回收卷追加解禁写作 | codex/ncs-089-recovery-volume-resumes | d60fd23 |
+| NCS-093 预览截断守护+900s 超时 | codex/ncs-093-revision-preview-truncation-guard | 1a97381 |
+| NCS-091 recheck/checkpoint 遥测归属 | codex/ncs-091-recheck-checker-telemetry | a15571d |
+| NCS-092 压缩强制处置关键承诺+MIGRATE 回写 | codex/ncs-092-compression-promise-ledger | f76042f |
+| NCS-095 章节字数趋势预警 | codex/ncs-095-word-trend-warning | b621819 |
+| NCS-090 框架修订人物层同步 | codex/ncs-090-initial-setup-character-sync | 2a6fcc7 |
+| NCS-094 recheck/preview 异步任务化 | codex/ncs-094-long-task-async | d4aabe9 |
 
-（A-7 SPA 深链已复验撤案——jar 热替换损坏 JVM 期误报。）
+（NCS-089/092 的收尾 docs 提交：f8a50d8 / 81dd9d4 / 17433e1；其余同型。）
 
 ## Files
 
-spec: docs/specs/2026-09-26-journey2-fixes.md（根因定位到行号 + 每项设计 + 验收 + 风险）
+spec: docs/specs/2026-09-26-journey2-fixes.md（根因+设计+验收）
 报告: docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md
-成书: 同目录 沉钟记-全书导出.md + evidence-*.json/png
-backlog: feature_list.json（426 项，NCS-087..095 not-started）
+新增主要代码：CheckWaiverService / LongTaskService / NovelOrchestrator
+（recheck 路由、syncCharactersFromOutline、回收卷置回 WRITING、
+buildChapterQualityReport 字数趋势）
+测试净增 26（1231→1257），全量 1257/0F/0E/1S；npm build + tsc 通过。
 
 ## Verification
 
-本轮为旅程 + 设计登记（纯文档）：feature_list/spec/progress/handoff 日期一致（09-26）；
-check-harness 仅剩既有 ncs-070 FAIL（待用户裁决，与本轮无关）。
-代码事实核对清单见 spec 各节（recheckChapter、runFinalAuditGate、ProjectActionPolicy、
-PlanEditionService.analyze、ConsistencyGuard、AgentRevisionService）。
+每特性：失败测试复现 → 修复 GREEN → 分支全量 → ff-only 合并 → 干净 main 复跑
+compile+全量（最终 1257/0F/0E/1S）→ register-completion.py 登记
+（docs/harness/evidence/2026-09-26-ncs-09*.json）。
+无 .st 模板改动；人物同步走既有 character-design 模板，未触发 e2e 基线重建。
+18100 现场已用新构建重启，《沉钟记》NEEDS_REVISION 现场完好，等待人工 UI 验收。
 
 ## Blockers
 
-无（业务）。ncs-070 检查器 schema 冲突仍待用户裁决。
+无（业务）。ncs-070 检查器 schema 遗留待用户裁决。
 
 ## Next Steps
 
-1. 按 spec 顺序实现：NCS-088 → 087 → 089（先解 A-8 死锁）→ 093 → 094 → 090/091/092/095；
-   每个 feature 独立分支 + bugfix gate（先写失败测试）。
-2. 人工验收（保留现场）：18100 实例《沉钟记》——重检 3×consistency-guard、
-   豁免 2×correction-verification、继续协作写回收卷 13-20、逐章回收 mustResolve ≤3、
-   重审到 FINAL。重启命令：java -jar target/writing-agent-0.1.0-SNAPSHOT.jar
-   --server.port=18100 --persistence.sqlite.db-path=./data/ui-wuxia-0925-journey/novel.db
-   --persistence.vector-store.index-path=./data/ui-wuxia-0925-journey/vectors.idx（bash source scripts/load-env.sh）。
-3. 运维注意：重建 target/*.jar 前先停 18100/18098 实例（运行中 fat jar 被替换会损坏 JVM）。
-   旧现场 18098（听雪刀旧构建）保持不动。
+1. 人工 UI 验收（18100）：质量页「重新检查」重检 3×consistency-guard →
+   「担责豁免」处理 2×correction-verification → 继续协作写回收卷 13-20 →
+   台账回收 mustResolve 至 ≤3 → 宣告完结/重审到 FINAL。
+2. 重启命令：bash -c 'source scripts/load-env.sh && java -jar
+   target/writing-agent-0.1.0-SNAPSHOT.jar --server.port=18100
+   --persistence.sqlite.db-path=./data/ui-wuxia-0925-journey/novel.db
+   --persistence.vector-store.index-path=./data/ui-wuxia-0925-journey/vectors.idx'
+3. 重建 jar 前先停 18100/18098 实例（热替换运行中 fat jar 会损坏 JVM）。
+4. ncs-070 检查器 schema 遗留待用户裁决。

@@ -411,7 +411,7 @@ export default function RunConsole({ projectId, projectState, onChanged }: { pro
         {isAllowed('FINISH') && (effectiveState === 'VOLUME_DONE' || effectiveState === 'NEEDS_REVISION') ? (
           <Popconfirm
             title="追加尾声回收卷"
-            description="大纲已尽但仍有未回收的关键伏笔时，追加一卷『尾声·伏笔回收』（有界一次）集中回收；也可改在台账结清或宣告完结。确定追加？"
+            description="大纲已尽但仍有未回收的关键伏笔时，追加一卷『尾声·伏笔回收』（有界一次）集中回收；也可改在台账结清或宣告完结。追加后若处于待修订态将回到写作态，可继续写作回收章。确定追加？"
             onConfirm={handleAppendRecovery}
             okText="追加回收卷"
             cancelText="取消"

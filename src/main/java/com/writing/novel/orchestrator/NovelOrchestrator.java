@@ -2000,6 +2000,16 @@ public class NovelOrchestrator {
             }
             log.warn("mustResolve 伏笔 {} 条未回收，已追加尾声回收卷（第{}-{}章）",
                     criticalUnresolved.size(), startChapter, startChapter + chapterCount - 1);
+            // NCS-089：追加回收卷意味着作者选择"写作回收章"——若正停在 NEEDS_REVISION，
+            // 回到 WRITING 让 WRITE_CHAPTER/WRITE_ALL 恢复可用（否则回收卷永远写不了）
+            if (p.getState() == NovelState.NEEDS_REVISION) {
+                p.setState(NovelState.WRITING);
+                repository.saveProject(p);
+                EventLog.emit("RECOVERY_RESUMED", Map.of(
+                        "projectId", projectId,
+                        "chapterIndex", p.getCurrentChapterIndex(),
+                        "state", NovelState.WRITING.name()));
+            }
             return true;
         } catch (Exception e) {
             log.warn("追加伏笔回收卷失败: {}", e.getMessage());

@@ -1,0 +1,20 @@
+{
+ "commit": "f8a50d8292142e9557783b284ca81c4510d35dea",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-093"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "截断守护测试 RED→GREEN（行动指引抛错）；全量 1243/0F/0E/1S；前端 900s 分层+build/tsc 通过",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-093; spec docs/specs/2026-09-26-journey2-fixes.md; branch codex/ncs-093-revision-preview-truncation-guard"
+}

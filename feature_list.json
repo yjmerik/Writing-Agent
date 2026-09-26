@@ -9131,13 +9131,14 @@
    "description": "client.ts 的 recheck/agent 修订 preview/apply 调用点显式 900s 超时；LlmResponse 暴露 truncated 标志（finish_reason=length）；ContentRevisionAgent 截断/解析失败抛带行动指引的错误（缩小修改范围/分段修改），前端透传",
    "phase": 50,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "来源：docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（第二轮旅程）",
+   "status": "completed",
+   "evidence": "2026-09-26 verified: f8a50d829214（ff-merge=main 提交 1a973810854a）; 来源：docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（第二轮旅程）",
    "files": [],
    "spec": "docs/specs/2026-09-26-journey2-fixes.md",
    "acceptance": "运行 verify_cmd 通过：truncated 响应抛出含指引文案的错误而非泛化解析错误；前端 npm run build 通过",
    "verify_cmd": "mvn test -Dtest=RevisionPreviewTruncationGuardTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-093-verified"
   },
   {
    "id": "NCS-094",

@@ -2233,8 +2233,19 @@
    "implementation_commit": "6586fbd51f16b24c689075fbb078f7593add0c4b",
    "main_commit": "d60fd2393b94a95f11e30108ef057436b1a8ed00",
    "evidence": "docs/harness/evidence/2026-09-26-ncs-089.json"
+  },
+  {
+   "id": "ncs-093-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-093"
+   ],
+   "branch": "codex/ncs-093-revision-preview-truncation-guard",
+   "implementation_commit": "f8a50d8292142e9557783b284ca81c4510d35dea",
+   "main_commit": "1a973810854a43c27ae1464a4a0eb90bb4698ec5",
+   "evidence": "docs/harness/evidence/2026-09-26-ncs-093.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "d60fd2393b94a95f11e30108ef057436b1a8ed00"
+ "main_commit": "1a973810854a43c27ae1464a4a0eb90bb4698ec5"
 }

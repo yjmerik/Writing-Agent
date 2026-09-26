@@ -1,48 +1,53 @@
-# 武侠旅程缺陷修复十连（NCS-077..086） — 2026-09-25
+# 第二轮武侠旅程回归 + 修复设计登记（NCS-087..095） — 2026-09-26
 
-Last Updated: 2026-09-25
+Last Updated: 2026-09-26
 
 ## Current
 
-《听雪刀》体验报告 9 类缺陷（P0×1 + P1×4 + P2×4）全部修复并合入 main，
-每特性独立分支、失败测试先行、合并后干净 main 复验、verified 登记。
+第二轮 UI 全流程旅程《沉钟记》完成（ego-browser、真实 LLM、12 章全批准 55,750 字、
+宣告完结→门禁 FAIL→回收卷追加→重审 FAIL 死锁实证）；上轮 NCS-077..086 修复全部验证生效。
+新一轮缺陷已按需求拆分协议完成设计登记，**尚未开始实现**（全部 not-started）。
 
-| 特性 | 分支 | 状态 |
+| 特性 | 对应缺陷 | 优先级 |
 |---|---|---|
-| NCS-077 重规划尊重 targetChapters+空卷不残留 | codex/ncs-077-replan-respects-target | completed |
-| NCS-078 空候选=全书完信号 | codex/ncs-078-empty-candidate-finishes | completed |
-| NCS-079 作者宣告完结 POST /finish + UI | codex/ncs-079-author-finish | completed |
-| NCS-080 重新检查按钮接通 | codex/ncs-080-recheck-button | completed |
-| NCS-081 批准 409 常驻可见 | codex/ncs-081-approval-blocked-visibility | completed |
-| NCS-082 回收卷确认制+审计口径 | codex/ncs-082-recovery-volume-consent | completed |
-| NCS-083 压缩结构贯穿延迟生成 | codex/ncs-083-compressed-structure-inheritance | completed |
-| NCS-084 过期 HIGH 不阻塞批准 | codex/ncs-084-stale-issues-no-block | completed |
-| NCS-085 前端四残留修复 | codex/ncs-085-frontend-residue-fixes | completed |
-| NCS-086 修订管线遥测 projectId | codex/ncs-086-revision-telemetry-projectid | completed |
+| NCS-087 recheck 按检查器路由 | A-2 | P1 |
+| NCS-088 未查清信封 AUTHOR_WAIVED 担责豁免 | A-8① | P0 |
+| NCS-089 追加回收卷置回 WRITING | A-8② | P0 |
+| NCS-090 框架审阅修订纳入人物层 | A-1 | P1 |
+| NCS-091 recheck/checkpoint 遥测归属 | A-3 | P2 |
+| NCS-092 压缩强制处置关键承诺 | A-5 | P2 |
+| NCS-093 修订预览超时分层+截断守护 | A-4 一期 | P1 |
+| NCS-094 preview/recheck 异步任务化 | A-4 二期（依赖 093） | P1 |
+| NCS-095 章节字数趋势预警 | A-6 | P3 |
+
+（A-7 SPA 深链已复验撤案——jar 热替换损坏 JVM 期误报。）
 
 ## Files
 
-spec: docs/specs/2026-09-25-ui-wuxia-journey-fixes.md
-验证报告（含真实死锁项目 /finish 实测）: docs/reports/2026-09-25-ui-wuxia-fixes/验证报告.md
-scripts/register-completion.py：本轮新增的完成登记辅助脚本。
-feature_list.json + docs/harness/completions.json：十条 verified + evidence JSON（docs/harness/evidence/2026-09-25-ncs-0*.json）。
+spec: docs/specs/2026-09-26-journey2-fixes.md（根因定位到行号 + 每项设计 + 验收 + 风险）
+报告: docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md
+成书: 同目录 沉钟记-全书导出.md + evidence-*.json/png
+backlog: feature_list.json（426 项，NCS-087..095 not-started）
 
 ## Verification
 
-最终干净 main：mvn test 1231/0F/0E/1S（净增 29 项测试）；npm build + tsc 无错；
-python3 scripts/check-harness.py 仅剩既有 ncs-070 检查器 schema FAIL（待用户裁决）。
-真实数据：data/ui-wuxia-0925-verify 副本（新构建，18097 已停，重启命令见验证报告五节）
-——死锁项目 POST /finish 检查点全关→NEEDS_REVISION（9 项必查未查清，出口=质量页重新检查后重审）；
-POST /recovery-volume 有界。原 18098 实例与 ui-wuxia-0923 原库未动。
-无 .st/上下文组装改动，未触发 e2e 基线重建。
+本轮为旅程 + 设计登记（纯文档）：feature_list/spec/progress/handoff 日期一致（09-26）；
+check-harness 仅剩既有 ncs-070 FAIL（待用户裁决，与本轮无关）。
+代码事实核对清单见 spec 各节（recheckChapter、runFinalAuditGate、ProjectActionPolicy、
+PlanEditionService.analyze、ConsistencyGuard、AgentRevisionService）。
 
 ## Blockers
 
-无（业务）。ncs-070-e2e-verified 检查器 schema 冲突仍待用户裁决（放宽检查器 vs 补 codex 分支语义）。
+无（业务）。ncs-070 检查器 schema 冲突仍待用户裁决。
 
 ## Next Steps
 
-1. 真实 UI 全动线回归（新前端 × 副本实例）：重检未查清项→裁决→批准→宣告完结→FINAL，
-   与 18098 旧现场对照；建议作为下一轮首个任务（可登记新 feature）。
-2. 或从 feature_list.json 选 not-started 项（NCS-034 起有依赖需核对）。
-3. NCS-058 真人艺术验收仍归档等待。
+1. 按 spec 顺序实现：NCS-088 → 087 → 089（先解 A-8 死锁）→ 093 → 094 → 090/091/092/095；
+   每个 feature 独立分支 + bugfix gate（先写失败测试）。
+2. 人工验收（保留现场）：18100 实例《沉钟记》——重检 3×consistency-guard、
+   豁免 2×correction-verification、继续协作写回收卷 13-20、逐章回收 mustResolve ≤3、
+   重审到 FINAL。重启命令：java -jar target/writing-agent-0.1.0-SNAPSHOT.jar
+   --server.port=18100 --persistence.sqlite.db-path=./data/ui-wuxia-0925-journey/novel.db
+   --persistence.vector-store.index-path=./data/ui-wuxia-0925-journey/vectors.idx（bash source scripts/load-env.sh）。
+3. 运维注意：重建 target/*.jar 前先停 18100/18098 实例（运行中 fat jar 被替换会损坏 JVM）。
+   旧现场 18098（听雪刀旧构建）保持不动。

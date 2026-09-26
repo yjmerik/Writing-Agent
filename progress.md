@@ -1,54 +1,49 @@
-# 武侠旅程缺陷修复十连（NCS-077..086） — 2026-09-25
+# 第二轮武侠旅程回归与修复设计（NCS-087..095 登记） — 2026-09-26
 
-Last Updated: 2026-09-25
+Last Updated: 2026-09-26
 
 ## Current
 
-2026-09-23/24《听雪刀》UI 全流程体验报告（P0 死锁 + P1×4 + P2×4）全部修复完毕，
-10 个特性（NCS-077..086）逐个走完「失败测试复现 → 修复 → 全量回归 → ff-only 合并 →
-干净 main 合并后验证 → 完成登记」闭环，真实死锁项目验证通过。
+2026-09-25/26 完成第二轮真实用户 UI 全流程旅程《沉钟记》（12 章 55,750 字全批准，
+wuxia 预设，实例 18100 / data/ui-wuxia-0925-journey）。**上轮 NCS-077..086 修复全部验证生效**
+（宣告完结、常驻 Alert、过期 HIGH 不阻断、回收卷确认制、弹窗自闭、预览遥测）。
+旅程发现新一轮缺陷并完成修复设计，按需求拆分协议落 spec + backlog：
 
-- **P0 三连（状态机可到达 FINAL）**：NCS-077 中段重规划尊重 targetChapters（卷卷相生根因，
-  解析 0 章不残留空卷）；NCS-078 空卷大纲候选=合法"全书完"信号（拒绝并指示完结不再 409，
-  大纲耗尽直接进门禁）；NCS-079 作者宣告完结入口 POST /finish（+RunConsole 按钮，
-  关闭待审检查点后触发行成书门禁）。
-- **P1**：NCS-080 UNKNOWN_CHECK「重新检查」接通 recheck；NCS-081 批准 409 带
-  code=APPROVAL_BLOCKED + 前端常驻 Alert/禁用说明；NCS-082 INTERACTIVE 回收卷确认制
-  （POST /recovery-volume + 审计 mustResolve 缺省 false + 总数口径=target）；
-  NCS-083 压缩后 premise 权威覆盖段 + 末卷延迟生成收束指令。
-- **P2**：NCS-084 旧稿版本 HIGH 不再阻塞批准；NCS-085 前端四残留（暂停 chip/Modal 自闭/
-  预览不重置/Sider 遮罩）；NCS-086 修订管线 LLM_CALL 携带 projectId。
-- **真实数据验证**：复制 ui-wuxia-0923 库以新构建启动 18097，《听雪刀》死锁项目
-  POST /finish → 检查点全关、NEEDS_REVISION（9 项必查未查清，如实反馈；对应 NCS-080 出口）；
-  recovery-volume 有界 appended=false。
+- **A-8（P0）终局死锁变体**：门禁 unknownCount>0 × recheck 只跑 continuity（A-2）×
+  NEEDS_REVISION 禁写回收卷——12 章成书无法经任何 UI 路径到 FINAL。
+  对应 NCS-087（recheck 按检查器路由）/ NCS-088（未查清信封 AUTHOR_WAIVED 担责豁免）/
+  NCS-089（追加回收卷置回 WRITING）三连解锁。
+- **A-1（P1）** 修改意见重写只改世界观、人物层被静默丢弃 → NCS-090 人物层同步。
+- **A-4（P1）** 修订预览失控长输出（52k token/9.4min）vs 前端 300s 超时 → NCS-093 超时分层
+  +截断守护、NCS-094 异步任务化（依赖 093）。
+- **A-3/A-5/A-6（P2/P3）** → NCS-091 遥测归属、NCS-092 压缩强制处置关键承诺、
+  NCS-095 字数趋势预警。
+- **A-7 撤案**：SPA 深链 500 系 jar 热替换损坏 JVM 期的误报，健康实例复验 200。
 
 ## Files
 
-spec: docs/specs/2026-09-25-ui-wuxia-journey-fixes.md（验收项全部勾选）
-报告: docs/reports/2026-09-25-ui-wuxia-fixes/验证报告.md（逐特性证据 + 真实数据验证）
-backend: NovelOrchestrator / ProjectActionPolicy / OrchestratorController / ReviewDecisionController
-  (+ApprovalBlockedException) / PlanEditionService / ForeshadowingImportanceAuditor /
-  SqliteNovelRepository / AgentRevisionService / RevisionRepairService
-frontend: ReviewClassificationView / InteractiveReview / RunConsole / IdentityBar /
-  AgentRevisionDialog / OutlineView / ProjectWorkspace / api client / types
-测试净增 29 项（1202→1231）；feature_list.json + completions.json 十条 verified 登记。
+spec: docs/specs/2026-09-26-journey2-fixes.md（根因+设计+验收+风险）
+报告: docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（含修复对照表、A-7 撤案标注）
+成书: 同目录 沉钟记-全书导出.md（56,026 字符）+ 证据文件
+backlog: feature_list.json 追加 NCS-087..095（9 项，not-started，含 acceptance/verify_cmd）
 
 ## Verification
 
-逐特性：先失败测试（bugfix gate）→ GREEN → 分支全量 mvn test → ff-only 合并 →
-干净 main 复跑 compile+verify_cmd+全量。最终 main：mvn test 1231/0F/0E/1S；
-npm build + tsc 无错。真实死锁项目（data/ui-wuxia-0925-verify 副本，18097）：
-/finish 打通完结出口、/recovery-volume 有界。无 prompt/上下文组装改动，未触发 e2e 基线重建。
+- 旅程全程真实 LLM、仅 UI 操作（诊断性只读 API/sqlite 已在报告标注）；
+  249 次归属 LLM 调用 ≈6.2 元。
+- 修复设计经代码级核对：recheckChapter:3171、runFinalAuditGate:2505、ProjectActionPolicy
+  NEEDS_REVISION 分支、PlanEditionService.analyze:253、ConsistencyGuard 双检查器、
+  AgentRevisionService NCS-086 模式。
+- check-harness：仅剩既有 ncs-070 遗留（待用户裁决）。
 
 ## Blockers
 
-无（业务）。遗留两条均为此前已记录：
-1) `./init.sh` 的 ncs-070-e2e-verified 检查器 schema FAIL（branch 前缀规则 vs 纯 evidence 提交），
-   待用户裁决，本轮未动检查器；
-2) NCS-029..057 等 phase50 既有 not-started 项按原计划顺延。
+无（业务）。ncs-070 检查器 schema 遗留待用户裁决（此前已记录）。
 
 ## Next Steps
 
-- 下轮可做：真实 UI 全动线回归（新前端 × 18097 副本实例走完「重检→裁决→批准→宣告完结」），
-  或从 feature_list.json 选下一个 not-started 项。
-- 武侠死锁现场保留：18098 原实例（旧构建）+ ui-wuxia-0923 原库未动，可对照验证。
+按 spec 实施顺序逐个推进（同一时间一个 feature，bugfix gate 先写失败测试）：
+NCS-088 → 087 → 089（A-8 解锁）→ 093 → 094 → 090/091/092/095。
+人工验收用保留现场：18100《沉钟记》重检 3 个 consistency-guard、担责豁免 2 个
+correction-verification、写回收卷章节、重审到 FINAL。
+旧现场未动：18098（听雪刀旧构建）。

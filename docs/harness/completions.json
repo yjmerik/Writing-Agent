@@ -2264,7 +2264,7 @@
    ],
    "branch": "codex/ncs-092-compression-promise-ledger",
    "implementation_commit": "ebbd5368a8f3bba2511277f13fdcc37536023439",
-   "main_commit": "f76042f12bbf8c8d189baf737f17805e7887dfb7",
+   "main_commit": "b70f471e1605b8cd5bd69fb1cc7ff5829cce3c5e",
    "evidence": "docs/harness/evidence/2026-09-26-ncs-092.json"
   }
  ],

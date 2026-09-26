@@ -1,5 +1,5 @@
 {
- "commit": "ebbd5368a8f3bba2511277f13fdcc37536023439",
+ "commit": "b70f471e1605b8cd5bd69fb1cc7ff5829cce3c5e",
  "cleanCheckout": true,
  "feature_ids": [
   "NCS-092"
@@ -13,6 +13,11 @@
   {
    "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
    "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  },
+  {
+   "command": "合并后修正 PlanEditionTest 账本断言并复跑全量",
+   "result": "PASS: 1248/0F/0E/1S（含 MIGRATE 回写语义）",
    "exitCode": 0
   }
  ],

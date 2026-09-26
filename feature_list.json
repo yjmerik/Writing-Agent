@@ -9074,13 +9074,14 @@
    "description": "appendForeshadowingRecoveryVolume 成功追加且 state==NEEDS_REVISION 时置 WRITING（事件 RECOVERY_RESUMED），使 WRITE_CHAPTER/WRITE_ALL 恢复可用、可继续写作回收章；RunConsole 确认弹窗文案补充说明",
    "phase": 50,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "来源：docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（第二轮旅程）",
+   "status": "completed",
+   "evidence": "2026-09-26 verified: 6586fbd51f16（ff-merge=main 提交 d60fd2393b94）; 来源：docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（第二轮旅程）",
    "files": [],
    "spec": "docs/specs/2026-09-26-journey2-fixes.md",
    "acceptance": "运行 verify_cmd 通过：NEEDS_REVISION 项目追加回收卷后 state=WRITING 且动作策略允许 WRITE_CHAPTER；非 NEEDS_REVISION 路径行为不变",
    "verify_cmd": "mvn test -Dtest=RecoveryVolumeResumesWritingTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-089-verified"
   },
   {
    "id": "NCS-090",

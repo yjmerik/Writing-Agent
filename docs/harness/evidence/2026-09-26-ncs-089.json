@@ -1,0 +1,20 @@
+{
+ "commit": "6586fbd51f16b24c689075fbb078f7593add0c4b",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-089"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "3/3 GREEN：NEEDS_REVISION追加回收卷回到WRITING写作动作可用+有界一次不改状态+写作态路径不变；全量1242/0F/0E/1S",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-089; spec docs/specs/2026-09-26-journey2-fixes.md; branch codex/ncs-089-recovery-volume-resumes"
+}

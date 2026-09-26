@@ -2222,8 +2222,19 @@
    "implementation_commit": "41caf260ab1cd219755bdcac6b35c074878a420b",
    "main_commit": "d029b191605ce0c8ea85e5446841b3e2fabd2eb6",
    "evidence": "docs/harness/evidence/2026-09-26-ncs-087.json"
+  },
+  {
+   "id": "ncs-089-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-089"
+   ],
+   "branch": "codex/ncs-089-recovery-volume-resumes",
+   "implementation_commit": "6586fbd51f16b24c689075fbb078f7593add0c4b",
+   "main_commit": "d60fd2393b94a95f11e30108ef057436b1a8ed00",
+   "evidence": "docs/harness/evidence/2026-09-26-ncs-089.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "d029b191605ce0c8ea85e5446841b3e2fabd2eb6"
+ "main_commit": "d60fd2393b94a95f11e30108ef057436b1a8ed00"
 }

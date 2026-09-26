@@ -9151,13 +9151,14 @@
    "dependencies": [
     "NCS-093"
    ],
-   "status": "not-started",
-   "evidence": "来源：docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（第二轮旅程）",
+   "status": "completed",
+   "evidence": "2026-09-26 verified: 1104803ccf75（ff-merge=main 提交 d4aabe9a6848）; 来源：docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（第二轮旅程）",
    "files": [],
    "spec": "docs/specs/2026-09-26-journey2-fixes.md",
    "acceptance": "运行 verify_cmd 通过：异步 job 生命周期（RUNNING→DONE/FAILED）、工作权占用与释放、轮询端点返回结果；前端切换后 build 通过",
    "verify_cmd": "mvn test -Dtest=LongRunningTaskJobTest && cd frontend && npm run build",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-094-verified"
   },
   {
    "id": "NCS-095",

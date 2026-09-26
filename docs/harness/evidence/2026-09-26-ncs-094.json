@@ -1,0 +1,20 @@
+{
+ "commit": "1104803ccf753cb2b90e3d0e1c12d110f2790ae6",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-094"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "4/4 GREEN：DONE/FAILED/工作权占用释放/项目隔离；前端 build+tsc 通过；全量1257/0F/0E/1S",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-094; spec docs/specs/2026-09-26-journey2-fixes.md; branch codex/ncs-094-long-task-async"
+}

@@ -34,6 +34,10 @@ public class ChapterQualityReport {
      *  与当前稿不同即"旧稿报告"——前端据此显式提示，不得冒充当前审查。 */
     private Integer reportForVersion;
     private boolean reportCurrent = true;
+    /** NCS-095: 字数趋势——本章字数低于前 3 章均值 50% 时为 true（只读提示，不阻断） */
+    private boolean wordTrendWarning;
+    /** NCS-095: 参与对比的前 3 章均值（不足 3 章历史时为 0，且不产生警告） */
+    private int previousAvgWordCount;
 
     public ChapterQualityReport(int chapterIndex, String chapterTitle, int wordCount) {
         this.chapterIndex = chapterIndex;
@@ -92,4 +96,8 @@ public class ChapterQualityReport {
     public void setReportForVersion(Integer v) { this.reportForVersion = v; }
     public boolean isReportCurrent() { return reportCurrent; }
     public void setReportCurrent(boolean v) { this.reportCurrent = v; }
+    public boolean isWordTrendWarning() { return wordTrendWarning; }
+    public void setWordTrendWarning(boolean v) { this.wordTrendWarning = v; }
+    public int getPreviousAvgWordCount() { return previousAvgWordCount; }
+    public void setPreviousAvgWordCount(int v) { this.previousAvgWordCount = v; }
 }

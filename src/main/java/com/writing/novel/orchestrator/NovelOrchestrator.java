@@ -3235,6 +3235,20 @@ public class NovelOrchestrator {
         // p32-05: 报告绑定章节当前版本——绑定旧版本的条目在报告中标记过期
         report.setChapterVersion(chapter.getVersion());
 
+        // NCS-095: 字数趋势——本章低于前 3 章均值 50% 时提示（只读，不阻断）；
+        // 第二轮旅程实测后半部章节字数从 10k 量级滑落到 3-4k 且无任何提示
+        List<Integer> previousWords = repository.findChaptersByProject(projectId).stream()
+                .filter(c -> c.getChapterIndex() < chapterIndex && c.getChapterIndex() >= chapterIndex - 3)
+                .map(Chapter::getWordCount)
+                .filter(w -> w > 0)
+                .toList();
+        if (previousWords.size() >= 2) {
+            int avg = (int) Math.round(previousWords.stream().mapToInt(Integer::intValue).average().orElse(0));
+            report.setPreviousAvgWordCount(avg);
+            report.setWordTrendWarning(avg > 0 && chapter.getWordCount() > 0
+                    && chapter.getWordCount() < avg * 0.5);
+        }
+
         // 读者评审
         repository.findChapterReview(projectId, chapterIndex)
                 .ifPresent(r -> {

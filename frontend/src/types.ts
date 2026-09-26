@@ -147,6 +147,9 @@ export interface ChapterQualityReport {
   chapterTitle: string;
   wordCount: number;
   grade: string;
+  /** NCS-095: 本章字数低于前 3 章均值 50%（只读提示，不阻断） */
+  wordTrendWarning?: boolean;
+  previousAvgWordCount?: number;
   review: {
     overallScore: number;
     engagement: number;
@@ -209,6 +212,8 @@ export interface CheckpointPayload {
   preview?: string;
   score?: number;
   unresolvedHigh?: number;
+  wordTrendWarning?: boolean;
+  previousAvgWordCount?: number;
   worldSummary?: string;
   characterSummary?: string;
   premiseSummary?: string;

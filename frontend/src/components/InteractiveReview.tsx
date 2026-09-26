@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin, Progress, Collapse, Drawer, Grid, Select } from 'antd';
+import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin, Progress, Collapse, Drawer, Grid, Select, Tooltip } from 'antd';
 import {
   saveDraft, loadDraft, loadConflictDraft, clearDraft, clearConflictDraft,
   contentHashHex, localStorageAdapter,
@@ -1089,6 +1089,11 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                     </span>
                   )}
                   {payload.wordCount != null && <span style={{ marginRight: 12 }}>字数：{payload.wordCount.toLocaleString?.() ?? payload.wordCount}</span>}
+                  {payload.wordTrendWarning && (
+                    <Tooltip title={`本章字数低于前 3 章均值（${payload.previousAvgWordCount?.toLocaleString?.() ?? payload.previousAvgWordCount} 字）的 50%——全书篇幅可能正在滑坡，建议审阅时关注`}>
+                      <Tag color="volcano" style={{ fontSize: 11 }}>篇幅骤降</Tag>
+                    </Tooltip>
+                  )}
                   {payload.unresolvedHigh != null && payload.unresolvedHigh > 0 && (
                     <span style={{ marginRight: 12, color: '#ff4d4f' }}>未解决 HIGH 问题：{payload.unresolvedHigh}</span>
                   )}

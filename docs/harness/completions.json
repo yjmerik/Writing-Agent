@@ -2266,8 +2266,19 @@
    "implementation_commit": "ebbd5368a8f3bba2511277f13fdcc37536023439",
    "main_commit": "b70f471e1605b8cd5bd69fb1cc7ff5829cce3c5e",
    "evidence": "docs/harness/evidence/2026-09-26-ncs-092.json"
+  },
+  {
+   "id": "ncs-095-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-095"
+   ],
+   "branch": "codex/ncs-095-word-trend-warning",
+   "implementation_commit": "17433e187c8ee79ecf9cc544907b23a140e61eae",
+   "main_commit": "b6218191b6ffd21d6234c0a5374ccdf742c23918",
+   "evidence": "docs/harness/evidence/2026-09-26-ncs-095.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "f76042f12bbf8c8d189baf737f17805e7887dfb7"
+ "main_commit": "b6218191b6ffd21d6234c0a5374ccdf742c23918"
 }

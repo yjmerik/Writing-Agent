@@ -1,0 +1,20 @@
+{
+ "commit": "17433e187c8ee79ecf9cc544907b23a140e61eae",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-095"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "3/3 GREEN：骤降告警+对比均值5440+正常与历史不足不告警；全量1251/0F/0E/1S",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-095; spec docs/specs/2026-09-26-journey2-fixes.md; branch codex/ncs-095-word-trend-warning"
+}

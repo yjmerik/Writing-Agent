@@ -9164,13 +9164,14 @@
    "description": "审阅卡与章节质量报告增加只读「篇幅骤降」提示：本章字数 < 前 3 章均值 50% 时显示；不阻断不干预",
    "phase": 50,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "来源：docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（第二轮旅程）",
+   "status": "completed",
+   "evidence": "2026-09-26 verified: 17433e187c8e（ff-merge=main 提交 b6218191b6ff）; 来源：docs/reports/2026-09-25-ui-wuxia-journey-2/体验报告.md（第二轮旅程）",
    "files": [],
    "spec": "docs/specs/2026-09-26-journey2-fixes.md",
    "acceptance": "运行 verify_cmd 通过：构造字数骤降场景时报告/视图携带警示标记，正常场景不出现",
    "verify_cmd": "mvn test -Dtest=ChapterWordTrendWarningTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-095-verified"
   }
  ],
  "schema_version": 2,

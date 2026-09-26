@@ -141,8 +141,9 @@ class PlanEditionTest {
         assertEquals(5, repository.findWritingPreferences(pid).orElseThrow().getTargetChapters());
         assertEquals(5, countSynopses(), "大纲裁剪到新目标");
         assertTrue(countSynopses() >= 3, "已写章节的梗概不得被裁掉");
-        // 未决承诺保留原期望值（作者裁决迁移/开放结局），系统不静默改写
-        assertEquals(7, repository.findForeshadowingsByProject(pid).get(0).getExpectedResolveChapter());
+        // NCS-092: MIGRATE 处置同步回写账本回收位（旧断言"系统不静默改写"与新设计冲突——
+        // 账本必须与压缩后篇幅一致，否则失位承诺延迟到成书门禁才暴露）
+        assertEquals(4, repository.findForeshadowingsByProject(pid).get(0).getExpectedResolveChapter());
     }
 
     @Test

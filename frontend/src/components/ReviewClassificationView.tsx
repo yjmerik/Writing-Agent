@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Card, Tag, Space, Typography, Spin, Button, Tooltip, message } from 'antd';
+import { Card, Input, Modal, Tag, Space, Typography, Spin, Button, Tooltip, message } from 'antd';
 import { AlertOutlined, EditOutlined, ForkOutlined, QuestionCircleOutlined, ReadOutlined, SafetyOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
@@ -11,12 +11,17 @@ const { Text, Paragraph } = Typography;
  * NCS-023（方案 §13/UX09）：三类信息分层审阅——必须处理 / 尚未查清 / 文学建议。
  * 文字+图标区分（不只靠颜色）；问题卡含章稿版本与过期标注；
  * 不提供无证据的"标记已解决"（复核后关闭走人工复核流）。
+ * NCS-088：未查清项增加「担责豁免」出口（AUTHOR_WAIVED，reason 必填记入台账）。
  */
 export default function ReviewClassificationView({ projectId }: { projectId: string }) {
   const [data, setData] = useState<ReviewClassification | null>(null);
   const [loading, setLoading] = useState(true);
   // NCS-080: 未查清项「重新检查」——正在重检的章号（同一时间只跑一个同步补查）
   const [rechecking, setRechecking] = useState<number | null>(null);
+  // NCS-088: 担责豁免表单
+  const [waiverTarget, setWaiverTarget] = useState<{ chapterIndex: number; checker: string } | null>(null);
+  const [waiverReason, setWaiverReason] = useState('');
+  const [waiverBusy, setWaiverBusy] = useState(false);
   const navigate = useNavigate();
   const requestRef = useRef(0);
 
@@ -27,6 +32,24 @@ export default function ReviewClassificationView({ projectId }: { projectId: str
     }).catch(() => {}).finally(() => {
       if (requestRef.current === requestId) setLoading(false);
     });
+  };
+
+  const submitWaiver = async () => {
+    if (!waiverTarget) return;
+    if (!waiverReason.trim()) { message.warning('豁免必须说明理由（记入台账，作者可查）'); return; }
+    setWaiverBusy(true);
+    try {
+      const ctx = await api.getReviewContext(projectId, waiverTarget.chapterIndex);
+      await api.checkWaiver(projectId, waiverTarget.chapterIndex, ctx.identity, waiverTarget.checker, waiverReason.trim());
+      message.success(`第 ${waiverTarget.chapterIndex} 章 ${waiverTarget.checker} 已记入作者担责豁免`);
+      setWaiverTarget(null);
+      setWaiverReason('');
+      load(projectId);
+    } catch (e) {
+      message.error(`担责豁免失败: ${(e as Error).message}（若提示身份过期，请先打开该章刷新审阅）`);
+    } finally {
+      setWaiverBusy(false);
+    }
   };
 
   useEffect(() => {
@@ -82,14 +105,23 @@ export default function ReviewClassificationView({ projectId }: { projectId: str
           <div style={{ marginTop: 6 }}>
             <Space size={6} wrap>
               {c.kind === 'UNKNOWN_CHECK' ? (
-                <Tooltip title={c.reason ?? ''}>
-                  <Button size="small" icon={<QuestionCircleOutlined />}
-                    loading={rechecking === c.chapterIndex}
-                    disabled={rechecking != null}
-                    onClick={() => void recheckUnknown(c.chapterIndex)}>
-                    {rechecking === c.chapterIndex ? '重检中（约 1-2 分钟）…' : '重新检查'}
-                  </Button>
-                </Tooltip>
+                <>
+                  <Tooltip title={c.reason ?? ''}>
+                    <Button size="small" icon={<QuestionCircleOutlined />}
+                      loading={rechecking === c.chapterIndex}
+                      disabled={rechecking != null}
+                      onClick={() => void recheckUnknown(c.chapterIndex)}>
+                      {rechecking === c.chapterIndex ? '重检中（约 1-2 分钟）…' : '重新检查'}
+                    </Button>
+                  </Tooltip>
+                  <Tooltip title="作者已复核并愿意担责放行（AUTHOR_WAIVED，理由记入台账）">
+                    <Button size="small" icon={<SafetyOutlined />}
+                      disabled={rechecking != null}
+                      onClick={() => { setWaiverTarget({ chapterIndex: c.chapterIndex, checker: c.checker ?? '' }); setWaiverReason(''); }}>
+                      担责豁免
+                    </Button>
+                  </Tooltip>
+                </>
               ) : (
                 <>
                   <Button size="small" icon={<EditOutlined />} onClick={() => toReview(c.chapterIndex)}>我来编辑</Button>
@@ -121,6 +153,24 @@ export default function ReviewClassificationView({ projectId }: { projectId: str
         {column('文学建议', <ReadOutlined style={{ color: '#389e0d' }} />, 'green', data?.suggestions ?? [],
           '节奏/语言方面的可讨论意见——可拒绝，不影响完成度')}
       </div>
+      <Modal title={`担责豁免 · 第 ${waiverTarget?.chapterIndex ?? ''} 章 ${waiverTarget?.checker ?? ''}`}
+        open={waiverTarget != null}
+        onOk={() => void submitWaiver()}
+        onCancel={() => setWaiverTarget(null)}
+        okText="记入台账（AUTHOR_WAIVED）"
+        cancelText="取消"
+        confirmLoading={waiverBusy}
+        okButtonProps={{ disabled: !waiverReason.trim() }}>
+        <Paragraph type="secondary" style={{ fontSize: 12 }}>
+          作者确认已复核该检查关注点并愿意担责放行；豁免不可撤销、理由记入台账，
+          成书门禁与校验报告将不再因该未查清项阻塞（会标注「作者担责豁免」以区分「已检查」）。
+        </Paragraph>
+        <Input.TextArea
+          value={waiverReason}
+          onChange={e => setWaiverReason(e.target.value)}
+          placeholder="豁免必须说明理由（记入处置台账，作者可查）"
+          rows={3} />
+      </Modal>
     </Card>
   );
 }

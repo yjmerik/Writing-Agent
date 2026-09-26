@@ -29,13 +29,16 @@ public class ReviewDecisionController {
     private final NovelRepository repository;
     private final WritingTaskExecutor writingTaskExecutor;
     private final com.writing.novel.orchestrator.NovelOrchestrator recheckService;
+    private final com.writing.novel.service.CheckWaiverService checkWaiverService;
 
     @Autowired
     public ReviewDecisionController(NovelRepository repository, WritingTaskExecutor writingTaskExecutor,
-                                    com.writing.novel.orchestrator.NovelOrchestrator recheckService) {
+                                    com.writing.novel.orchestrator.NovelOrchestrator recheckService,
+                                    com.writing.novel.service.CheckWaiverService checkWaiverService) {
         this.repository = repository;
         this.writingTaskExecutor = writingTaskExecutor;
         this.recheckService = recheckService;
+        this.checkWaiverService = checkWaiverService;
     }
 
     /** 已读正文身份、reviewSetHash、报告/待办/裁决/批准的一致快照。 */
@@ -92,6 +95,68 @@ public class ReviewDecisionController {
         }
     }
 
+    /**
+     * NCS-088：未查清检查信封的作者担责豁免——针对当前稿，必须携带 identity 与不可空 reason；
+     * 已有有效结论（SUCCESS/VALID_EMPTY）的检查拒绝豁免。豁免行不可变追加，reason 记入台账可审计。
+     */
+    @PostMapping("/check-waiver")
+    public Map<String, Object> checkWaiver(@PathVariable String id,
+                                           @PathVariable int chapterIndex,
+                                           @RequestBody Map<String, Object> body) {
+        Object identityRaw = body == null ? null : body.get("identity");
+        if (!(identityRaw instanceof Map<?, ?> identityMap)) {
+            throw new IllegalArgumentException("缺少 identity（服务端不补填）");
+        }
+        String identityProjectId = stringField(identityMap, "projectId");
+        if (!id.equals(identityProjectId)) {
+            throw new IllegalArgumentException("identity.projectId 与路径项目不符");
+        }
+        Integer idChapter = intField(identityMap, "chapterIndex");
+        if (idChapter == null || idChapter != chapterIndex) {
+            throw new IllegalArgumentException("identity.chapterIndex 与路径章节不符");
+        }
+        Integer version = intField(identityMap, "version");
+        String contentHash = stringField(identityMap, "contentHash");
+        if (version == null || contentHash == null || contentHash.isBlank()) {
+            throw new IllegalArgumentException("缺少 identity.version/contentHash");
+        }
+        String checker = stringField(body, "checker");
+        if (checker == null || checker.isBlank()) {
+            throw new IllegalArgumentException("缺少 checker");
+        }
+        String reason = stringField(body, "reason");
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("豁免必须说明理由（记入处置台账，作者可查）");
+        }
+        var identity = new com.writing.novel.domain.ChapterApproval.Identity(
+                id, chapterIndex, version, contentHash);
+        String workId = "check-waiver-" + UUID.randomUUID();
+        if (writingTaskExecutor != null) {
+            writingTaskExecutor.beginWork(id, workId);
+        }
+        try {
+            var chapter = repository.findChapterByIndex(id, chapterIndex)
+                    .orElseThrow(() -> new IllegalArgumentException("章节不存在: " + chapterIndex));
+            var currentIdentity = com.writing.novel.domain.ChapterApproval.Identity.of(chapter);
+            if (!currentIdentity.equals(identity)) {
+                throw new NovelRepository.ReviewConflictException(
+                        NovelRepository.ReviewConflictException.Reason.IDENTITY_STALE,
+                        "担责豁免必须针对当前稿", currentIdentity, null);
+            }
+            checkWaiverService.waive(id, chapterIndex, checker, reason);
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("chapterIndex", chapterIndex);
+            result.put("chapterVersion", version);
+            result.put("checker", checker);
+            result.put("status", "AUTHOR_WAIVED");
+            return result;
+        } finally {
+            if (writingTaskExecutor != null) {
+                writingTaskExecutor.endWork(id, workId);
+            }
+        }
+    }
+
     /** 版本化批准：identity + reviewSetHash + idempotencyKey + reason → ChapterApproval.Result。 */
     @PostMapping("/review-decisions")
     public ChapterApproval.Result reviewDecision(@PathVariable String id,
@@ -103,7 +168,13 @@ public class ReviewDecisionController {
             writingTaskExecutor.beginWork(id, workId);
         }
         try {
-            return repository.approveChapter(request);
+            ChapterApproval.Result result = repository.approveChapter(request);
+            // NCS-088：批准 = 作者已读当前稿并担责放行——新批准（非幂等重放）自动把该章
+            // 未查清信封追加 AUTHOR_WAIVED 行，门禁不再被无出口的 unknown 卡死。
+            if (!result.replayed() && checkWaiverService != null) {
+                checkWaiverService.waiveForApproval(id, chapterIndex, result.approvalId());
+            }
+            return result;
         } catch (IllegalStateException e) {
             // NCS-081: 满足性门禁失败（未解决 HIGH / 作者要求未落实）→ 结构化 409 + code，
             // 前端据此常驻展示阻塞原因（此前裸 {error} 只换来 3 秒 toast）

@@ -13,10 +13,12 @@ import java.util.regex.Pattern;
  * <p>检测失败与"没有问题"必须区分——未执行、解析失败、空响应、截断、拒绝
  * 分别落为非通过状态，不能伪装成 VALID_EMPTY（空问题列表）自动 PASS。
  * SUCCESS：解析出 ≥1 条问题；VALID_EMPTY：输出明确声明无问题；INVALID：非空但不可解析；UNKNOWN：无法判定。
+ * AUTHOR_WAIVED（NCS-088）：作者对未查清项担责豁免——版本化批准自动追加或经 check-waiver 手动豁免，
+ * 不可变追加行覆盖最新状态，不计入 unknownCount/未查清，但保留审计追溯。
  */
 public record CheckResultEnvelope(Status status, List<ContinuityIssue> issues, String reason) {
 
-    public enum Status { SUCCESS, VALID_EMPTY, INVALID, UNKNOWN }
+    public enum Status { SUCCESS, VALID_EMPTY, INVALID, UNKNOWN, AUTHOR_WAIVED }
 
     private static final Pattern ISSUE_PATTERN = Pattern.compile("【([^|]+)\\|([^】]+)】(.+)");
     private static final List<String> CLEAN_MARKERS = List.of("未发现", "无问题", "无矛盾", "未发现连续性");

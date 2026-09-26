@@ -91,4 +91,11 @@ public class CheckResultRepository {
                         || c.status() == CheckResultEnvelope.Status.INVALID)
                 .count();
     }
+
+    /** NCS-088：单章每检查器的最新状态（批准自动豁免/手动豁免的目标集合） */
+    public List<LatestCheck> latestForChapter(String projectId, int chapterIndex) {
+        return latestStatuses(projectId).stream()
+                .filter(c -> c.chapterIndex() == chapterIndex)
+                .toList();
+    }
 }

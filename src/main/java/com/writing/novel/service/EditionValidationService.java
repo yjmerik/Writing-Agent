@@ -98,10 +98,14 @@ public class EditionValidationService {
             var checks = repo.findEditionChecks(id, c.chapterIndex(), c.content());
             boolean continuity = false;
             for (var check : checks) {
-                boolean valid = check.bound() && ("VALID_EMPTY".equals(check.status()) || "SUCCESS".equals(check.status()));
+                // NCS-088: AUTHOR_WAIVED=作者担责豁免——不阻塞校验，但与"已检查"区分展示
+                boolean waived = "AUTHOR_WAIVED".equals(check.status());
+                boolean valid = check.bound() && ("VALID_EMPTY".equals(check.status()) || "SUCCESS".equals(check.status()) || waived);
                 if (check.checker().equals("continuity")) continuity = true;
                 if (!valid) unknown.add(item("CHECK", c.chapterIndex(), check.checker() + "：" +
                         (check.bound() ? check.reason() : "旧检查未绑定正文，需重新检查")));
+                else if (waived) suggestions.add(item("CHECK_WAIVED", c.chapterIndex(),
+                        check.checker() + "：作者担责豁免（" + check.reason() + "）"));
             }
             if (!continuity) unknown.add(item("MISSING_CHECK", c.chapterIndex(), "所选章稿尚无连续性检查证据"));
             coverage.add(Map.of("chapterIndex", c.chapterIndex(), "version", c.version(), "contentHash", c.contentHash(),

@@ -147,7 +147,9 @@ export default function EditionsPanel({ projectId }: { projectId: string }) {
               { title: '稿', dataIndex: 'version', render: (v: number) => `第 ${v} 稿` },
               { title: '作者决定', dataIndex: 'authorApproved', render: (v: boolean) => v ? '已批准' : '待批准' },
               { title: '检查证据', dataIndex: 'checks', render: (cs: NonNullable<EditionValidation['coverage']>[number]['checks']) =>
-                cs.length ? cs.map(c => `${c.checker}：${c.bound && ['SUCCESS', 'VALID_EMPTY'].includes(c.status) ? '已检查' : '尚未查清'}`).join('；') : '未检查' },
+                cs.length ? cs.map(c => `${c.checker}：${!c.bound ? '旧检查未绑定正文'
+                  : c.status === 'AUTHOR_WAIVED' ? '作者担责豁免'
+                  : ['SUCCESS', 'VALID_EMPTY'].includes(c.status) ? '已检查' : '尚未查清'}`).join('；') : '未检查' },
             ]} />
           {([
             ['必须处理', validation.mustFix], ['尚未查清', validation.unknown],

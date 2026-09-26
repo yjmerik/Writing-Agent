@@ -637,6 +637,13 @@ export const api = {
       method: 'POST', body: JSON.stringify({ identity }),
     }, 300000),
 
+  /** NCS-088：未查清检查信封的作者担责豁免（reason 必填，记入台账可审计） */
+  checkWaiver: (id: string, chapterIndex: number, identity: ReviewIdentity, checker: string, reason: string) =>
+    request<{ chapterIndex: number; chapterVersion: number; checker: string; status: string }>(
+      `/projects/${id}/chapters/${chapterIndex}/check-waiver`, {
+        method: 'POST', body: JSON.stringify({ identity, checker, reason }),
+      }, 30000),
+
   approveChapterRevision: (id: string, chapterIndex: number, body: {
     identity: ReviewIdentity;
     reviewSetHash: string;

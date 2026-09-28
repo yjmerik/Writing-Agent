@@ -179,8 +179,17 @@ public class ChapterWriterAgent {
 
         // 4. 内容校验：仍不达标则不保存、抛异常（绝不入库空章节）
         if (resp.getContent() == null || resp.getContent().length() < minLen) {
-            throw new RuntimeException("章节内容为空或过短（" 
+            throw new RuntimeException("章节内容为空或过短（"
                     + (resp.getContent() == null ? 0 : resp.getContent().length()) + "字，需≥" + minLen + "字），放弃保存");
+        }
+
+        // 4b. NCS-107: 截断门禁——finish_reason=length 的半章即使字数达标也不得直接入库
+        //     （剧情腰斩风险）：用 chapter-continuation 续写补全一次，仍截断则失败放弃
+        if (resp.isTruncated()) {
+            resp = completeTruncatedTail(projectId, chapterIndex, resp, ctx);
+            if (resp == null || resp.isTruncated()) {
+                throw new RuntimeException("章节输出被 max_tokens 截断且续写补全失败（剧情腰斩风险），放弃保存");
+            }
         }
 
         // 5. 构建 Chapter 并保存（纠正错误的章节号）
@@ -478,6 +487,41 @@ public class ChapterWriterAgent {
                 **高潮执行技巧：**
                 - 张力点的释放要有铺垫→积蓄→爆发的节奏，用具体细节与人物反应呈现，不要直白宣告
                 - 反转必须有逻辑支撑与前置伏笔，不为反转而反转""";
+    }
+
+    /**
+     * NCS-107: 截断续写补全——把已写结尾 + 本章任务交给续写引擎，从截断处无缝续写。
+     * 返回合并后的完整响应（finishReason=stop）；续写调用失败/仍截断返回 null 由调用方放弃。
+     */
+    private com.writing.novel.llm.LlmResponse completeTruncatedTail(
+            String projectId, int chapterIndex, com.writing.novel.llm.LlmResponse truncated,
+            WritingContext ctx) {
+        try {
+            String content = truncated.getContent();
+            String tail = content.length() > 600 ? content.substring(content.length() - 600) : content;
+            String continuationSystem = promptService.render("chapter-continuation", Map.of(
+                    "truncatedTail", tail,
+                    "taskSection", ctx.getTaskSection() != null ? ctx.getTaskSection() : "",
+                    "styleGuide", extractStyleGuide(projectId)));
+            var req = LlmRequest.builder()
+                    .taskType(LlmTaskType.CHAPTER_WRITING)
+                    .systemPrompt(continuationSystem)
+                    .userMessage("请从截断处续写第" + chapterIndex + "章剩余正文直到本章自然收束。")
+                    .temperature(0.7)
+                    .maxTokens(chapterWritingMaxTokens())
+                    .build();
+            var cont = gateway.complete(req);
+            if (cont.getContent() == null || cont.getContent().isBlank() || cont.isTruncated()) {
+                return null;
+            }
+            String combined = content + cont.getContent();
+            return new com.writing.novel.llm.LlmResponse(combined,
+                    truncated.getPromptTokens() + cont.getPromptTokens(),
+                    truncated.getCompletionTokens() + cont.getCompletionTokens(),
+                    "stop", null);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private String extractStyleGuide(String projectId) {

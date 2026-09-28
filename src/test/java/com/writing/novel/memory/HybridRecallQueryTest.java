@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyDouble;
 
 /**
  * NCS-110: 多查询混合检索与词法兜底——
@@ -98,7 +99,7 @@ class HybridRecallQueryTest {
     void 各路独立检索_合并去重保最高分() {
         List<String> seenQueries = new ArrayList<>();
         AtomicInteger callCount = new AtomicInteger();
-        when(vectorRetrieval.search(anyString(), anyString(), anyInt())).thenAnswer(inv -> {
+        when(vectorRetrieval.search(anyString(), anyString(), anyInt(), anyDouble())).thenAnswer(inv -> {
             seenQueries.add(inv.getArgument(0));
             String q = inv.getArgument(0);
             int n = callCount.incrementAndGet();
@@ -118,7 +119,7 @@ class HybridRecallQueryTest {
 
     @Test
     void 向量失败_词法兜底非空() {
-        when(vectorRetrieval.search(anyString(), anyString(), anyInt()))
+        when(vectorRetrieval.search(anyString(), anyString(), anyInt(), anyDouble()))
                 .thenThrow(new RuntimeException("embedding down"));
 
         WritingContext ctx = assembler.assemble(pid, 2, "第2章", "林凡夜探城主府", null);

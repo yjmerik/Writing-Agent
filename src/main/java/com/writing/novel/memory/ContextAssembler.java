@@ -584,7 +584,7 @@ public class ContextAssembler {
         for (String query : queries) {
             try {
                 int perQueryK = Math.max(3, topK / queries.size());
-                for (var r : vectorRetrieval.search(query, projectId, perQueryK)) {
+                for (var r : vectorRetrieval.search(query, projectId, perQueryK, MIN_RELEVANCE_SCORE)) {
                     scored.merge(r.id(), r.score(), Math::max);
                 }
             } catch (Exception e) {
@@ -599,9 +599,11 @@ public class ContextAssembler {
         }
         List<String> relevantIds = scored.entrySet().stream()
                 .sorted((a, b) -> Double.compare(b.getValue(), a.getValue()))
-                .limit(topK)
                 .map(java.util.Map.Entry::getKey)
                 .toList();
+        // NCS-111: 正文 chunk 与设定/角色两桶配额（各半），防正文 chunk 数量级压没设定条目；
+        // 同章相邻 chunk 只保留首位（语义重叠去重）
+        relevantIds = applySourceQuotaAndAdjacency(relevantIds, topK);
         // NCS-110: 词法兜底——向量失败或全部低于阈值（0 分）时按实体名精确匹配知识条目，
         // 消除静默空召回
         if (relevantIds.isEmpty() && (vectorFailed || cast != null)) {
@@ -658,7 +660,61 @@ public class ContextAssembler {
                 });
             }
         }
-        ctx.setRelevantSettings(settings.toString().trim());
+        String settingsText = settings.toString().trim();
+        if (settingsText.length() > RELEVANT_SETTINGS_MAX_CHARS) {
+            settingsText = settingsText.substring(0, RELEVANT_SETTINGS_MAX_CHARS) + "\n…（相关设定已达注入上限）";
+        }
+        ctx.setRelevantSettings(settingsText);
+    }
+
+    /** NCS-111: 绝对相似度阈值——低于此分数的 chunk 不注入（可按 embedding 模型调整） */
+    static final double MIN_RELEVANCE_SCORE = 0.35;
+    /** NCS-111: relevantSettings 注入字数上限（防长 chunk 挤爆上下文） */
+    static final int RELEVANT_SETTINGS_MAX_CHARS = 6000;
+
+    /**
+     * NCS-111: 两桶配额 + 相邻 chunk 去重——
+     * chunk（id 含 #chunk）与非 chunk（知识条目/角色卡）各占 topK 一半（不足半额时另一桶可补足）；
+     * 同章相邻 chunk（chapterId#chunkN 与 #chunkN+1 同时命中）只保留前一块。
+     */
+    static List<String> applySourceQuotaAndAdjacency(List<String> sortedIds, int topK) {
+        List<String> chunks = new java.util.ArrayList<>();
+        List<String> others = new java.util.ArrayList<>();
+        for (String id : sortedIds) {
+            (id.contains("#chunk") ? chunks : others).add(id);
+        }
+        // 相邻 chunk 去重：同章按块号升序，与前一个保留块相邻（n = lastKept+1）才丢弃——链式不传染
+        java.util.Set<String> adjacentDropped = new java.util.HashSet<>();
+        java.util.Map<String, java.util.TreeMap<Integer, String>> byChapter = new java.util.HashMap<>();
+        for (String id : chunks) {
+            int hash = id.lastIndexOf('#');
+            if (hash <= 0) continue;
+            try {
+                int n = Integer.parseInt(id.substring(hash + "chunk".length() + 1));
+                byChapter.computeIfAbsent(id.substring(0, hash), k -> new java.util.TreeMap<>()).put(n, id);
+            } catch (NumberFormatException ignored) {}
+        }
+        for (java.util.TreeMap<Integer, String> series : byChapter.values()) {
+            Integer lastKept = null;
+            for (var e : series.entrySet()) {
+                if (lastKept != null && e.getKey() == lastKept + 1) {
+                    adjacentDropped.add(e.getValue());
+                } else {
+                    lastKept = e.getKey();
+                }
+            }
+        }
+        chunks.removeAll(adjacentDropped);
+        int quota = Math.max(2, topK / 2);
+        List<String> keptChunks = chunks.size() > quota ? chunks.subList(0, quota) : chunks;
+        List<String> keptOthers = others.size() > quota ? others.subList(0, quota) : others;
+        List<String> out = new java.util.ArrayList<>(keptChunks);
+        out.addAll(keptOthers);
+        // 补足：某桶不足半额时另一桶依序补到 topK
+        java.util.Iterator<String> extra = sortedIds.stream()
+                .filter(id -> !out.contains(id) && !adjacentDropped.contains(id)).iterator();
+        while (out.size() < topK && extra.hasNext()) out.add(extra.next());
+        return out;
     }
 
     /**

@@ -36,8 +36,15 @@ public class VectorRetrievalService {
     }
 
     public List<VectorSearchResult> search(String queryText, String projectId, int topK) {
+        return search(queryText, projectId, topK, 0.0);
+    }
+
+    /** NCS-111: 绝对相似度阈值——低于 minScore 的结果不返回（宁缺毋滥，替换 score>=0.0 形同虚设） */
+    public List<VectorSearchResult> search(String queryText, String projectId, int topK, double minScore) {
         float[] queryVector = embeddingProvider.embed(queryText);
-        return vectorStore.search(queryVector, projectId, topK);
+        return vectorStore.search(queryVector, projectId, topK).stream()
+                .filter(r -> r.score() >= minScore)
+                .toList();
     }
 
     public String getText(String id) {

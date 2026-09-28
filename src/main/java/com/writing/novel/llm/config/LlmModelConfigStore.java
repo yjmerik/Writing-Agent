@@ -36,17 +36,39 @@ public class LlmModelConfigStore {
     /** 覆盖层内容（scope → 完整合并后的配置），即 JSON 文件中的 entries */
     private final Map<String, ModelConfig> overrides = new LinkedHashMap<>();
 
+    /** NCS-108: yml 路由基线快照（providers 形态删除覆盖时恢复原路由） */
+    private final Map<String, java.util.List<String>> baselineRoutes = new LinkedHashMap<>();
+    private final java.util.List<String> baselineDefaultProviders = new java.util.ArrayList<>();
+    /** legacy 面快照：构造时 models 中显式存在的 scope（删除覆盖时按来源恢复） */
+    private final java.util.Set<String> baselineModelScopes = new java.util.LinkedHashSet<>();
+
     public LlmModelConfigStore(LlmProperties properties,
                                @Value("${llm.model-config-file:./data/config/llm-models.json}") String filePath) {
         this.properties = properties;
         this.ioEnabled = filePath != null && !filePath.isBlank();
         this.file = ioEnabled ? Path.of(filePath) : null;
-        baseline.put(DEFAULT_SCOPE, copy(properties.getDefaultModel()));
-        properties.getModels().forEach((scope, cfg) -> baseline.put(scope, copy(cfg)));
+        // NCS-108: 基线按「当前生效配置」快照——providers/routing 与 legacy 两种形态一致
+        baseline.put(DEFAULT_SCOPE, copy(effectiveDefault()));
+        for (LlmTaskType task : LlmTaskType.values()) {
+            baseline.put(task.name(), copy(properties.forTaskType(task.name())));
+        }
+        baselineRoutes.putAll(properties.getRouting().getTasks());
+        baselineDefaultProviders.addAll(properties.getRouting().getDefaultProviders());
+        baselineModelScopes.addAll(properties.getModels().keySet());
         if (ioEnabled) {
             loadOverrides();
             overrides.forEach(this::applyToProperties);
         }
+    }
+
+    /** 默认生效配置：providers 形态取 defaultProviders 首位；legacy 取 defaultModel */
+    private ModelConfig effectiveDefault() {
+        var defaults = properties.getRouting().getDefaultProviders();
+        if (!defaults.isEmpty()) {
+            ModelConfig cfg = properties.getProviders().get(defaults.get(0));
+            if (cfg != null) return cfg;
+        }
+        return properties.getDefaultModel() == null ? new ModelConfig() : properties.getDefaultModel();
     }
 
     /** scope 合法性：DEFAULT 或任务类型名 */
@@ -60,13 +82,10 @@ public class LlmModelConfigStore {
         }
     }
 
-    /** 当前生效配置——任务类型 scope 未显式配置时回退 defaultModel（与 forTaskType 一致） */
+    /** 当前生效配置——providers/routing 与 legacy 两形态统一经 forTaskType 解析 */
     public synchronized ModelConfig effectiveForScope(String scope) {
-        if (DEFAULT_SCOPE.equals(scope)) {
-            return copy(properties.getDefaultModel() == null ? new ModelConfig() : properties.getDefaultModel());
-        }
-        ModelConfig cfg = properties.getModels().get(scope);
-        return copy(cfg != null ? cfg : properties.getDefaultModel());
+        if (DEFAULT_SCOPE.equals(scope)) return copy(effectiveDefault());
+        return copy(properties.forTaskType(scope));
     }
 
     /** 是否存在页面配置的覆盖（可删除） */
@@ -94,13 +113,22 @@ public class LlmModelConfigStore {
             throw new IllegalStateException("该范围没有页面配置，无法删除: " + scope);
         }
         overrides.remove(scope);
-        ModelConfig base = baseline.get(scope);
-        if (base != null) {
-            applyToProperties(scope, base);
-        } else if (DEFAULT_SCOPE.equals(scope)) {
-            properties.setDefaultModel(new ModelConfig());
+        // NCS-108: 恢复 yml 原路由（providers 形态恢复任务/默认路由）；legacy 形态同时恢复 models/defaultModel 面
+        if (DEFAULT_SCOPE.equals(scope)) {
+            properties.getRouting().setDefaultProviders(new java.util.ArrayList<>(baselineDefaultProviders));
+            properties.setDefaultModel(copy(baseline.get(DEFAULT_SCOPE)));
         } else {
-            properties.getModels().remove(scope);
+            java.util.List<String> route = baselineRoutes.get(scope);
+            if (route != null) {
+                properties.getRouting().getTasks().put(scope, new java.util.ArrayList<>(route));
+            } else {
+                properties.getRouting().getTasks().remove(scope);
+            }
+            if (baselineModelScopes.contains(scope)) {
+                properties.getModels().put(scope, copy(baseline.get(scope)));   // legacy 面恢复
+            } else {
+                properties.getModels().remove(scope);
+            }
         }
         persist();
     }
@@ -112,9 +140,26 @@ public class LlmModelConfigStore {
         return snapshot;
     }
 
+    /**
+     * NCS-108: 覆盖写入 providers/routing 层（providers 形态下写 models 不生效——
+     * forTaskType 优先路由）；legacy 形态同样经路由生效，行为统一。
+     */
     private void applyToProperties(String scope, ModelConfig cfg) {
-        if (DEFAULT_SCOPE.equals(scope)) properties.setDefaultModel(cfg);
-        else properties.getModels().put(scope, cfg);
+        if (DEFAULT_SCOPE.equals(scope)) {
+            properties.setDefaultModel(cfg);   // legacy/defaultModel 面始终镜像
+            // providers 形态才接管默认路由——legacy 下设 defaultProviders 会使未显式配置任务
+            // 绕过 models 回退（回归实测），保持 legacy 语义不动路由
+            if (!baselineDefaultProviders.isEmpty() || !properties.getRouting().getTasks().isEmpty()) {
+                String providerId = "ui-" + scope.toLowerCase();
+                properties.getProviders().put(providerId, cfg);
+                properties.getRouting().setDefaultProviders(java.util.List.of(providerId));
+            }
+        } else {
+            String providerId = "ui-" + scope.toLowerCase();
+            properties.getProviders().put(providerId, cfg);
+            properties.getRouting().getTasks().put(scope, java.util.List.of(providerId));
+            properties.getModels().put(scope, cfg);   // legacy 面镜像
+        }
     }
 
     private void loadOverrides() {

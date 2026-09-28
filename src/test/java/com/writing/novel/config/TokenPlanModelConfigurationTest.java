@@ -39,10 +39,11 @@ class TokenPlanModelConfigurationTest {
         var env = environment(Map.of("DASHSCOPE_TOKEN_PLAN_API_KEY", "test-plan-key"));
         var properties = Binder.get(env).bind("llm", LlmProperties.class).get();
         properties.validateKeys();
-        assertEquals(9, properties.getModels().size());
-        var configs = new java.util.ArrayList<>(properties.getModels().values());
-        configs.add(properties.getDefaultModel());
-        for (var config : configs) {
+        // NCS-108: providers/routing 唯一形态——六参数档全走 Token Plan，九任务显式路由
+        assertFalse(properties.isLegacyRouting());
+        assertEquals(6, properties.getProviders().size());
+        assertEquals(9, properties.getRouting().getTasks().size());
+        for (var config : properties.getProviders().values()) {
             assertEquals("https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1", config.getBaseUrl());
             assertEquals("qwen3.8-flash", config.getModel());
             assertEquals("test-plan-key", config.getApiKey());
@@ -62,7 +63,10 @@ class TokenPlanModelConfigurationTest {
         var env = environment(Map.of("DEEPSEEK_API_KEY", "test-old-key", "DASHSCOPE_API_KEY", "test-payg-key"));
         var properties = Binder.get(env).bind("llm", LlmProperties.class).get();
         assertThrows(IllegalStateException.class, properties::validateKeys);
-        assertEquals("", properties.getDefaultModel().getApiKey());
+        // NCS-108: providers 形态下无关 key 不得给任何 provider 供钥
+        for (var config : properties.getProviders().values()) {
+            assertTrue(config.getApiKey() == null || config.getApiKey().isBlank());
+        }
         assertEquals("test-payg-key", env.getProperty("persistence.embedding-cfg.api-key"));
         assertEquals("qwen3.7-text-embedding", env.getProperty("persistence.embedding-cfg.model"));
     }

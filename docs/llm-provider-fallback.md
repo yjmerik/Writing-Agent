@@ -106,3 +106,18 @@ python3 scripts/compare-baseline.py
 ```
 
 本地模拟测试和回放验证切换可靠性，不替代真实备用模型的小说质量与服务兼容性验收。
+
+## NCS-108: 路由语义收敛与配置优先级
+
+`application.yml` 已迁移为 **providers/routing 唯一形态**（qwen3.8-flash 单模型六参数档：
+write/plan/worldbuild/check/general/extract，全部 9 个任务类型显式路由）。熔断
+（`llm.fallback.cooldown-seconds`）与 provider 顺序 failover 自此默认生效；legacy
+`llm.models.<TASK>` 单模型直连解析保留一版（启动时打弃用告警），后续版本删除。
+
+### 配置优先级（低 → 高）
+
+1. `src/main/resources/application.yml` — 出厂默认
+2. 环境变量（yml 中的 `${DASHSCOPE_TOKEN_PLAN_*}` 占位符解析）
+3. UI 运行时覆盖（`LlmModelConfigStore.applyToProperties`，进程内生效不落盘）
+
+运维排障时按此顺序推断实际路由；UI 覆盖在进程重启后失效。

@@ -50,6 +50,11 @@ public class LlmProperties {
         return routing.tasks.getOrDefault(task, routing.defaultProviders);
     }
 
+    /** NCS-108: 是否 legacy llm.models 形态（无 providers/routing）——弃用告警与兼容路径判定 */
+    public boolean isLegacyRouting() {
+        return routing.defaultProviders.isEmpty() && routing.tasks.isEmpty();
+    }
+
     /** mc-p0-04: replay 模式标志——replay 时不校验 key */
     private boolean replayMode = false;
 
@@ -76,8 +81,13 @@ public class LlmProperties {
             catch (IllegalArgumentException e) { throw new IllegalStateException("Unknown LLM task: " + task); }
             if (ids == null || ids.isEmpty()) throw new IllegalStateException("Empty LLM route: " + task);
         });
-        boolean legacy = routing.defaultProviders.isEmpty() && routing.tasks.isEmpty();
+        boolean legacy = isLegacyRouting();
         if (legacy) {
+            // NCS-108: legacy llm.models 弃用——单模型直连无熔断/failover，迁移到 providers/routing
+            System.getLogger(LlmProperties.class.getName())
+                    .log(System.Logger.Level.WARNING,
+                            "llm.models（legacy 单模型直连）已弃用：无熔断与 provider fallback。"
+                                    + "请迁移到 llm.providers + llm.routing（见 docs/llm-provider-fallback.md）");
             if (defaultModel != null) requireKey("default-model", defaultModel);
             models.forEach(this::requireKey);
             return;

@@ -18,23 +18,17 @@ persistence:
     model: qwen3.7-text-embedding
 
 llm:
-  # 多 provider 自动 fallback 配置见 docs/llm-provider-fallback.md；显式添加 providers/routing 后启用。
+  # NCS-108: providers/routing 唯一路由形态（熔断/failover 生效）；legacy llm.models 已弃用（解析保留+告警）。
+  # 迁移说明与 yml/env/UI 优先级见 docs/llm-provider-fallback.md。
   # 录制/回放：确定性 E2E 的基石。mode: "off" | "record" | "replay"（off 必须加引号，否则 YAML 解析为 false）
   replay:
     mode: "off"
     dir: data/fixtures/llm
-  # 2026-09-07：百炼 Token Plan；专用套餐凭据与向量按量凭据隔离。
-  default-model:
-    base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
-    api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
-    model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
-    temperature: 0.7
-    max-tokens: 8192
-    context-window: 64000
-    streaming: true
-    style-guide: "严格遵循世界观设定中已确立的类型风格。不要引入与世界观类型不兼容的元素。人物名字必须与【出场人物】完全一致，绝对不得改名。"
-  models:
-    CHAPTER_WRITING:
+  fallback:
+    cooldown-seconds: 60
+  providers:
+    # 2026-09-07：百炼 Token Plan 专用套餐（与向量按量凭据隔离），qwen3.8-flash 单模型多参数档
+    qwen-flash-write:
       base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
       api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
       model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
@@ -42,15 +36,9 @@ llm:
       # 推理模型 reasoning_content 消耗大量输出 token；8192 会截断 3000+ 字正文
       max-tokens: 20000
       context-window: 64000
+      streaming: true
       style-guide: "严格遵循世界观设定中已确立的类型风格。人物名字必须与【出场人物】完全一致，绝对不得改名。不得引入与世界观不兼容的元素。"
-    CONTINUITY_CHECK:
-      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
-      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
-      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
-      temperature: 0.3
-      max-tokens: 4096
-      context-window: 64000
-    PLOTTING:
+    qwen-flash-plan:
       base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
       api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
       model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
@@ -58,51 +46,52 @@ llm:
       # op-fix: 推理模型 reasoning_content 耗 token，8192 致总纲正文为空
       max-tokens: 16000
       context-window: 64000
-    WORLDBUILDING:
+      streaming: true
+    qwen-flash-worldbuild:
       base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
       api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
       model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.7
       max-tokens: 8192
       context-window: 64000
-    CHARACTER_DESIGN:
-      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
-      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
-      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
-      temperature: 0.7
-      max-tokens: 8192
-      context-window: 64000
-    STYLE_GUARDIAN:
+      streaming: true
+    qwen-flash-check:
       base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
       api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
       model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.3
       max-tokens: 4096
       context-window: 64000
-    MEMORY_SUMMARY:
+      streaming: true
+    qwen-flash-general:
       base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
       api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
       model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.3
       max-tokens: 4096
       context-window: 64000
-    GENERAL:
-      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
-      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
-      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
-      temperature: 0.3
-      max-tokens: 4096
-      context-window: 64000
-    # NCS-066: 结构化提取（实体/事实/校验 JSON 输出）独立路由——输出需求远超 GENERAL 4096
-    # （实体图谱实测 ~9.4k 字符截断）；提取不需要创意推理，关思考（DashScope enable_thinking:false，
-    # AUTO 按端点推断）既释放输出预算又提速。实测质量劣化时可先调回 thinking-enabled: true。
-    EXTRACTION:
+      streaming: true
+    # NCS-066: 结构化提取（实体/事实/校验 JSON 输出）独立路由——输出需求远超 4096
+    # （实体图谱实测 ~9.4k 字符截断）；提取不需要创意推理，关思考（DashScope enable_thinking:false）
+    # 既释放输出预算又提速。实测质量劣化时可先调回 thinking-enabled: true。
+    qwen-flash-extract:
       base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
       api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
       model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.1
       max-tokens: 16000
       context-window: 64000
+      streaming: true
       thinking-enabled: false
-
-
+  routing:
+    default-providers: [qwen-flash-general]
+    tasks:
+      CHAPTER_WRITING: [qwen-flash-write]
+      PLOTTING: [qwen-flash-plan]
+      WORLDBUILDING: [qwen-flash-worldbuild]
+      CHARACTER_DESIGN: [qwen-flash-worldbuild]
+      CONTINUITY_CHECK: [qwen-flash-check]
+      STYLE_GUARDIAN: [qwen-flash-check]
+      MEMORY_SUMMARY: [qwen-flash-check]
+      GENERAL: [qwen-flash-general]
+      EXTRACTION: [qwen-flash-extract]

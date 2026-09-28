@@ -77,7 +77,7 @@ class ModelConfigControllerTest {
         assertEquals("YML", extraction.path("source").asText());
         assertEquals(16000, extraction.path("maxTokens").asInt());
         var chapter = findEntry(root, "CHAPTER_WRITING");
-        var ymlChapter = llmProperties.getModels().get("CHAPTER_WRITING");
+        var ymlChapter = llmProperties.forTaskType("CHAPTER_WRITING"); // NCS-108: providers 形态生效配置
         assertEquals("YML", chapter.path("source").asText());
         assertEquals("OPENAI_CHAT_COMPLETIONS", chapter.path("protocol").asText());
         assertEquals(ymlChapter.getModel(), chapter.path("model").asText());
@@ -157,7 +157,7 @@ class ModelConfigControllerTest {
     @Test
     void 删除覆盖回退yml配置() throws Exception {
         // 先取 yml 基线期望值（PUT 会改运行时 properties）
-        String ymlModel = llmProperties.getModels().get("MEMORY_SUMMARY").getModel();
+        String ymlModel = llmProperties.forTaskType("MEMORY_SUMMARY").getModel(); // NCS-108
         putConfig("MEMORY_SUMMARY", om.writeValueAsString(java.util.Map.of(
                 "model", "temp-override-model")));
 

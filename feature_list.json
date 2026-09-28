@@ -9213,13 +9213,14 @@
    "description": "激活 RepairArbiter 三分类：harvest CONFLICT、WORLDBUILDING 类 HIGH、跨章时间线矛盾路由 REWRITE/SUPERSEDE_CANON/MANUAL_REVIEW；SUPERSEDE_CANON 走真典合法演进；裁决前 CONFLICT 对从 recall 过滤不再双注入",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-28 verified: caf6fb956ddc（ff-merge=main 提交 caf6fb956ddc）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：构造 CONFLICT 与 WORLDBUILDING 矛盾场景分别走到三类出口，未裁决的 CONFLICT 事实不出现在 recall 结果中",
    "verify_cmd": "mvn test -Dtest=RepairArbiterClosedLoopTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-098-verified"
   },
   {
    "id": "NCS-099",

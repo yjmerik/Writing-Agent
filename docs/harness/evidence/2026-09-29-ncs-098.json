@@ -1,0 +1,20 @@
+{
+ "commit": "caf6fb956ddc2ca111fb034720224028557d49d9",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-098"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：4 项测试（冲突对过滤/三分类路由/世界观演进出入口集成/时间线直通人工集成，旧路径版本号 v3→新路径 v2 证明不消耗重写）；分支与 main 全量 1270/0F/0E/1S",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-098; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-098-repair-arbiter-loop"
+}

@@ -2321,8 +2321,19 @@
    "implementation_commit": "9bfe4c4cbb54f5cadc37116232fd26c39d193f8a",
    "main_commit": "9bfe4c4cbb54f5cadc37116232fd26c39d193f8a",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-097.json"
+  },
+  {
+   "id": "ncs-098-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-098"
+   ],
+   "branch": "codex/ncs-098-repair-arbiter-loop",
+   "implementation_commit": "caf6fb956ddc2ca111fb034720224028557d49d9",
+   "main_commit": "caf6fb956ddc2ca111fb034720224028557d49d9",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-098.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "9bfe4c4cbb54f5cadc37116232fd26c39d193f8a"
+ "main_commit": "caf6fb956ddc2ca111fb034720224028557d49d9"
 }

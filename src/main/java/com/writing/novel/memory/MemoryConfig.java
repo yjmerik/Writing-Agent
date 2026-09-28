@@ -6,11 +6,15 @@ import com.writing.novel.service.ClicheDetector;
 import com.writing.novel.service.DiversityTracker;
 import com.writing.novel.service.EntityGraphService;
 import com.writing.novel.service.NarrativeThreadTracker;
+import com.writing.novel.domain.WritingPreset;
 import com.writing.novel.spi.EmbeddingProvider;
 import com.writing.novel.spi.NovelRepository;
 import com.writing.novel.spi.VectorStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * 记忆模块的 Bean 装配。
@@ -48,8 +52,16 @@ public class MemoryConfig {
     }
 
     @Bean
-    public com.writing.novel.service.ConsistencyGate consistencyGate(NovelRepository repository) {
-        return new com.writing.novel.service.ConsistencyGate(repository);
+    public com.writing.novel.service.ConsistencyGate consistencyGate(NovelRepository repository,
+                                                                     com.writing.novel.service.PresetRegistry presetRegistry) {
+        // NCS-103: preset forbiddenLexicon 按题材并入默认词表（preset 可扩展，无则行为等价）
+        Map<com.writing.novel.domain.GenreProfile, List<String>> extra = new java.util.HashMap<>();
+        for (WritingPreset preset : presetRegistry.listPresets()) {
+            if (preset.getGenreHint() == null || preset.getForbiddenLexicon().isEmpty()) continue;
+            extra.put(preset.getGenreHint(), preset.getForbiddenLexicon());
+        }
+        return extra.isEmpty() ? new com.writing.novel.service.ConsistencyGate(repository)
+                : new com.writing.novel.service.ConsistencyGate(repository, extra);
     }
 
     @Bean

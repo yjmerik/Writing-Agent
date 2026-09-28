@@ -18,6 +18,10 @@ public class WritingPreset {
     private String styleTone;
     private String styleVoice;
     private String styleDosAndDonts;
+    /** NCS-103: 风格例文范本段（few-shot 锚点，至多 3 段） */
+    private java.util.List<String> styleSamples = new java.util.ArrayList<>();
+    /** NCS-103: 题材禁用词表（并入 ConsistencyGate 规则检查，preset 可扩展） */
+    private java.util.List<String> forbiddenLexicon = new java.util.ArrayList<>();
     private boolean builtin;
 
     public WritingPreset() {
@@ -34,6 +38,17 @@ public class WritingPreset {
         p.styleVoice = (String) map.get("styleVoice");
         p.styleDosAndDonts = (String) map.get("styleDosAndDonts");
         p.builtin = Boolean.TRUE.equals(map.get("builtin"));
+        // NCS-103: 例文范本 + 禁用词表资产
+        Object samples = map.get("styleSamples");
+        if (samples instanceof java.util.List<?> list) {
+            list.stream().filter(x -> x instanceof String && !((String) x).isBlank())
+                    .map(Object::toString).limit(3).forEach(p.styleSamples::add);
+        }
+        Object lexicon = map.get("forbiddenLexicon");
+        if (lexicon instanceof java.util.List<?> list2) {
+            list2.stream().filter(x -> x instanceof String && !((String) x).isBlank())
+                    .map(Object::toString).forEach(p.forbiddenLexicon::add);
+        }
         String genre = (String) map.get("genreHint");
         if (genre != null && !genre.isBlank()) {
             try { p.genreHint = GenreProfile.valueOf(genre); } catch (Exception ignored) {}
@@ -55,6 +70,8 @@ public class WritingPreset {
         m.put("styleTone", styleTone);
         m.put("styleVoice", styleVoice);
         m.put("styleDosAndDonts", styleDosAndDonts);
+        m.put("styleSamples", styleSamples);
+        m.put("forbiddenLexicon", forbiddenLexicon);
         m.put("builtin", builtin);
         return m;
     }
@@ -73,6 +90,8 @@ public class WritingPreset {
         if (styleTone != null) profile.setTone(styleTone);
         if (styleVoice != null) profile.setVoice(styleVoice);
         if (styleDosAndDonts != null) profile.setDosAndDonts(styleDosAndDonts);
+        // NCS-102/103: preset 例文范本落 StyleProfile（作者可后续增删）
+        if (styleSamples != null) styleSamples.forEach(profile::addStyleSample);
     }
 
     // Getters / Setters
@@ -90,6 +109,12 @@ public class WritingPreset {
     public void setStyleVoice(String s) { this.styleVoice = s; }
     public String getStyleDosAndDonts() { return styleDosAndDonts; }
     public void setStyleDosAndDonts(String s) { this.styleDosAndDonts = s; }
+    public java.util.List<String> getStyleSamples() { return styleSamples; }
+    public void setStyleSamples(java.util.List<String> s) {
+        this.styleSamples = s == null ? new java.util.ArrayList<>() : s; }
+    public java.util.List<String> getForbiddenLexicon() { return forbiddenLexicon; }
+    public void setForbiddenLexicon(java.util.List<String> l) {
+        this.forbiddenLexicon = l == null ? new java.util.ArrayList<>() : l; }
     public boolean isBuiltin() { return builtin; }
     public void setBuiltin(boolean b) { this.builtin = b; }
 }

@@ -21,6 +21,8 @@ import java.util.regex.Pattern;
 public class ConsistencyGate {
 
     private final NovelRepository repository;
+    /** NCS-103: preset 扩展禁用词（按题材并入默认表，null=仅默认） */
+    private final Map<GenreProfile, List<String>> presetForbidden;
 
     /** 各题材的禁用现代词清单（题材无关框架 + 题材化词表） */
     private static final Map<GenreProfile, List<String>> FORBIDDEN_MODERN_TERMS = Map.of(
@@ -47,7 +49,23 @@ public class ConsistencyGate {
     );
 
     public ConsistencyGate(NovelRepository repository) {
+        this(repository, null);
+    }
+
+    /** NCS-103: 带题材扩展词表的构造（preset forbiddenLexicon 并入默认表） */
+    public ConsistencyGate(NovelRepository repository, Map<GenreProfile, List<String>> presetForbidden) {
         this.repository = repository;
+        this.presetForbidden = presetForbidden;
+    }
+
+    private List<String> forbiddenTermsFor(GenreProfile genre) {
+        List<String> base = FORBIDDEN_MODERN_TERMS.getOrDefault(genre, List.of());
+        List<String> extra = presetForbidden == null ? List.of()
+                : presetForbidden.getOrDefault(genre, List.of());
+        if (extra.isEmpty()) return base;
+        List<String> merged = new ArrayList<>(base);
+        extra.stream().filter(t -> t != null && !t.isBlank() && !merged.contains(t)).forEach(merged::add);
+        return List.copyOf(merged);
     }
 
     /**
@@ -80,9 +98,9 @@ public class ConsistencyGate {
             }
         }
 
-        // 2. 时代用语检查
+        // 2. 时代用语检查（NCS-103: 默认表 ∪ preset 扩展词表）
         if (genre != null) {
-            List<String> forbidden = FORBIDDEN_MODERN_TERMS.getOrDefault(genre, List.of());
+            List<String> forbidden = forbiddenTermsFor(genre);
             for (String term : forbidden) {
                 if (chapterContent.contains(term)) {
                     issues.add(new ContinuityIssue(projectId, chapterIndex,

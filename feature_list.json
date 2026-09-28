@@ -9290,13 +9290,14 @@
    "dependencies": [
     "NCS-102"
    ],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-28 verified: dddbd38a1d38（ff-merge=main 提交 dddbd38a1d38）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：wuxia preset 含例文与词表资产并落库，非 preset 项目行为不变，词表外置后 ConsistencyGate 行为等价",
    "verify_cmd": "mvn test -Dtest=PresetStyleAssetTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-103-verified"
   },
   {
    "id": "NCS-104",

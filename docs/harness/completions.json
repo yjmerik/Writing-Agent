@@ -2376,8 +2376,19 @@
    "implementation_commit": "87efd8b47a92f466af086d0c5299b2690f553aad",
    "main_commit": "87efd8b47a92f466af086d0c5299b2690f553aad",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-102.json"
+  },
+  {
+   "id": "ncs-103-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-103"
+   ],
+   "branch": "codex/ncs-103-preset-style-assets",
+   "implementation_commit": "dddbd38a1d38561cdab63e95e6e5fcba6c259754",
+   "main_commit": "dddbd38a1d38561cdab63e95e6e5fcba6c259754",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-103.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "87efd8b47a92f466af086d0c5299b2690f553aad"
+ "main_commit": "dddbd38a1d38561cdab63e95e6e5fcba6c259754"
 }

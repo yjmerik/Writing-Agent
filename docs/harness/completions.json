@@ -2343,8 +2343,19 @@
    "implementation_commit": "64870d39cb102a3b5162efe5b1126c5a0b61361a",
    "main_commit": "64870d39cb102a3b5162efe5b1126c5a0b61361a",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-099.json"
+  },
+  {
+   "id": "ncs-100-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-100"
+   ],
+   "branch": "codex/ncs-100-style-arbitration",
+   "implementation_commit": "d1fa0ac179930128acc7aeab00cd3fda943d25af",
+   "main_commit": "d1fa0ac179930128acc7aeab00cd3fda943d25af",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-100.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "64870d39cb102a3b5162efe5b1126c5a0b61361a"
+ "main_commit": "d1fa0ac179930128acc7aeab00cd3fda943d25af"
 }

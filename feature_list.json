@@ -9243,13 +9243,14 @@
    "description": "QualityCouncil.collect 生产调用传入真实 styleScore（当前恒 null）；风格检查移入仲裁决策之前，低于阈值在重写预算内触发风格重写；评分解析失败发事件不再静默跳过",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-28 verified: d1fa0ac17993（ff-merge=main 提交 d1fa0ac17993）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：styleScore<阈值 场景走 REWRITE 决策且消耗重写预算，解析失败场景产生遥测事件而非静默",
    "verify_cmd": "mvn test -Dtest=StyleGateArbitrationTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-100-verified"
   },
   {
    "id": "NCS-101",

@@ -94,10 +94,17 @@ public class ContextAssembler {
     private final java.util.Map<String, CacheEntry> stableSectionCache = new java.util.concurrent.ConcurrentHashMap<>();
     // p37-10: 作者要求选取服务（可选注入；未注入时不注入该节，行为与旧版一致）
     private com.writing.novel.service.DirectiveContextService directiveContextService;
+    /** NCS-096: 注入清单持久化出口（可选；未注入时清单仍随 WritingContext 返回，仅不落库） */
+    private InjectionManifest.Store manifestStore;
 
     /** p37-10: 注入作者要求选取服务（生产装配用）。 */
     public void setDirectiveContextService(com.writing.novel.service.DirectiveContextService s) {
         this.directiveContextService = s;
+    }
+
+    /** NCS-096: 注入清单持久化出口（生产装配用）。 */
+    public void setManifestStore(InjectionManifest.Store store) {
+        this.manifestStore = store;
     }
 
     public WritingContext assemble(String projectId, int chapterIndex,
@@ -116,6 +123,9 @@ public class ContextAssembler {
                                    String writingNotes, int maxContextTokens) {
 
         WritingContext ctx = new WritingContext();
+        // NCS-096: 注入清单——与各 section 同源生成，选取点现场记录
+        InjectionManifest manifest = new InjectionManifest(
+                projectId, chapterIndex, draftVersionOf(projectId, chapterIndex), maxContextTokens);
 
         // 【故事原旨】最高优先级注入——让 LLM 永远知道这本书讲什么
         ctx.setPremiseSection(buildPremiseSection(projectId));
@@ -129,10 +139,10 @@ public class ContextAssembler {
         ctx.setRecentTextSection(buildRecentText(projectId, chapterIndex));
 
         String queryText = chapterSynopsis != null ? chapterSynopsis : chapterTitle;
-        assembleRetrievedContext(projectId, queryText, ctx, maxContextTokens);
-        ctx.setRelevantForeshadowings(buildForeshadowings(projectId, chapterIndex));
+        assembleRetrievedContext(projectId, queryText, ctx, maxContextTokens, manifest);
+        ctx.setRelevantForeshadowings(buildForeshadowings(projectId, chapterIndex, manifest));
         ChapterSynopsis fullSynopsis = findFullSynopsis(projectId, chapterIndex);
-        ctx.setBibleSection(buildBibleSection(projectId, chapterIndex, fullSynopsis));
+        ctx.setBibleSection(buildBibleSection(projectId, chapterIndex, fullSynopsis, manifest));
         ctx.setTaskSection(buildTaskSection(chapterTitle, chapterSynopsis, writingNotes, fullSynopsis));
 
         // p37-10: 有效作者要求注入生成上下文（不可静默裁剪）——HARD 超预算明确阻塞。
@@ -191,9 +201,76 @@ public class ContextAssembler {
         ctx.setFeedbackSection(buildFeedbackSection(projectId, chapterIndex));
 
         // Token 预算控制：预算按模型窗口推导（90%），超限时按优先级裁剪低优先级 section
+        java.util.Map<String, Integer> beforeTrim = sectionTokenSnapshot(ctx);
         applyTokenBudget(ctx, maxContextTokens);
+        finalizeManifest(manifest, ctx, beforeTrim);
+        ctx.setManifest(manifest);
+        saveManifestQuietly(manifest);
 
         return ctx;
+    }
+
+    /** NCS-096: 本次组装针对的稿件版本（现有章版本+1；新章=1），与 Chapter.version 对齐 */
+    private int draftVersionOf(String projectId, int chapterIndex) {
+        return repository.findChapterByIndex(projectId, chapterIndex)
+                .map(Chapter::getVersion).orElse(0) + 1;
+    }
+
+    /** NCS-096: section 名→文本视图（快照/结算共用同一枚举顺序） */
+    private static List<String[]> sectionViews(WritingContext ctx) {
+        return List.of(
+                new String[]{"premiseSection", ctx.getPremiseSection()},
+                new String[]{"authorDirectiveSection", ctx.getAuthorDirectiveSection()},
+                new String[]{"styleSection", ctx.getStyleSection()},
+                new String[]{"worldbuildingSection", ctx.getWorldbuildingSection()},
+                new String[]{"bibleSection", ctx.getBibleSection()},
+                new String[]{"entityConsistencySection", ctx.getEntityConsistencySection()},
+                new String[]{"feedbackSection", ctx.getFeedbackSection()},
+                new String[]{"relevantSettings", ctx.getRelevantSettings()},
+                new String[]{"characterVoiceSection", ctx.getCharacterVoiceSection()},
+                new String[]{"volumeOutlineSection", ctx.getVolumeOutlineSection()},
+                new String[]{"recentSummarySection", ctx.getRecentSummarySection()},
+                new String[]{"recentTextSection", ctx.getRecentTextSection()},
+                new String[]{"relevantForeshadowings", ctx.getRelevantForeshadowings()},
+                new String[]{"narrativeThreadSection", ctx.getNarrativeThreadSection()},
+                new String[]{"qualityFeedbackSection", ctx.getQualityFeedbackSection()},
+                new String[]{"knowledgeQuoteSection", ctx.getKnowledgeQuoteSection()},
+                new String[]{"taskSection", ctx.getTaskSection()},
+                new String[]{"writingConstraints", ctx.getWritingConstraints()});
+    }
+
+    private java.util.Map<String, Integer> sectionTokenSnapshot(WritingContext ctx) {
+        java.util.Map<String, Integer> map = new java.util.LinkedHashMap<>();
+        for (String[] view : sectionViews(ctx)) {
+            String text = view[1];
+            map.put(view[0], text == null ? 0 : TokenBudget.estimateTokens(text));
+        }
+        return map;
+    }
+
+    /** NCS-096: 按裁剪后的最终注入内容结算 section token，并标记被削减的 section */
+    private void finalizeManifest(InjectionManifest manifest, WritingContext ctx,
+                                  java.util.Map<String, Integer> beforeTrim) {
+        java.util.Map<String, Integer> after = sectionTokenSnapshot(ctx);
+        for (java.util.Map.Entry<String, Integer> e : after.entrySet()) {
+            Integer before = beforeTrim.get(e.getKey());
+            if (before != null && e.getValue() < before) {
+                manifest.addTrimmedSection(e.getKey());
+            }
+        }
+        manifest.setSectionTokens(after);
+    }
+
+    /** NCS-096: 清单持久化失败不影响写作（可见性靠告警日志） */
+    private void saveManifestQuietly(InjectionManifest manifest) {
+        if (manifestStore == null) return;
+        try {
+            manifestStore.save(manifest);
+        } catch (Exception e) {
+            System.getLogger(ContextAssembler.class.getName())
+                    .log(System.Logger.Level.WARNING,
+                            "注入清单持久化失败（不影响写作）: " + e.getMessage());
+        }
     }
 
     private String buildStyleSection(StyleProfile style) {
@@ -230,7 +307,8 @@ public class ContextAssembler {
         this.relevanceGateway = relevanceGateway;
     }
 
-    private String buildBibleSection(String projectId, int chapterIndex, ChapterSynopsis synopsis) {
+    private String buildBibleSection(String projectId, int chapterIndex, ChapterSynopsis synopsis,
+                                     InjectionManifest manifest) {
         List<String> cast = parseCast(synopsis);
         List<StoryFact> facts;
         if (relevanceGateway != null) {
@@ -251,8 +329,17 @@ public class ContextAssembler {
                 sb.append("【待核：来源为角色陈述或推测，未经确认，不得作为铁律引用】");
             }
             sb.append("\n");
+            // NCS-096: 真典事实选取点现场记录
+            manifest.addEntry("bibleSection", InjectionManifest.Kind.FACT, f.getId(),
+                    f.getSubject() + "：" + firstChars(f.getAssertion(), 40),
+                    TokenBudget.estimateTokens(sb.substring(sb.lastIndexOf("■"))));
         }
         return sb.toString().trim();
+    }
+
+    private static String firstChars(String s, int n) {
+        if (s == null) return "";
+        return s.length() > n ? s.substring(0, n) : s;
     }
 
     private List<String> parseCast(ChapterSynopsis synopsis) {
@@ -465,7 +552,8 @@ public class ContextAssembler {
         return sb.toString();
     }
 
-    private void assembleRetrievedContext(String projectId, String queryText, WritingContext ctx, int maxContextTokens) {
+    private void assembleRetrievedContext(String projectId, String queryText, WritingContext ctx,
+                                          int maxContextTokens, InjectionManifest manifest) {
         List<Character> allChars = knowledgeBase.findAllCharacters(projectId);
         if (allChars.isEmpty()) return;
 
@@ -503,6 +591,11 @@ public class ContextAssembler {
         }
 
         ctx.setRelevantCharacters(relevantChars);
+        // NCS-096: 出场角色选取点记录（含主角强制锚定与回退注入）
+        for (Character c : relevantChars) {
+            manifest.addEntry("relevantCharacters", InjectionManifest.Kind.CHARACTER,
+                    c.getId(), c.getName() + "（" + c.getRole() + "）", 0);
+        }
 
         StringBuilder settings = new StringBuilder();
         for (String id : relevantIds) {
@@ -511,12 +604,18 @@ public class ContextAssembler {
                 String chunkText = vectorRetrieval.getText(id);
                 if (chunkText != null) {
                     settings.append(chunkText).append("\n");
+                    // NCS-096: 正文 chunk 选取点记录
+                    manifest.addEntry("relevantSettings", InjectionManifest.Kind.CHUNK, id,
+                            firstChars(chunkText, 40), TokenBudget.estimateTokens(chunkText));
                 }
             } else {
                 // 知识条目：从 DB 取
                 repository.findKnowledgeEntry(id).ifPresent(e -> {
                     settings.append("【").append(e.getName()).append("】")
                             .append(e.getContent()).append("\n");
+                    // NCS-096: 知识条目选取点记录
+                    manifest.addEntry("relevantSettings", InjectionManifest.Kind.KNOWLEDGE, id,
+                            e.getName(), TokenBudget.estimateTokens(e.getName() + e.getContent()));
                 });
             }
         }
@@ -529,7 +628,13 @@ public class ContextAssembler {
         return role != null && (role.contains("主角") || role.contains("男主") || role.contains("女主"));
     }
 
+    /** 兼容旧签名（既有测试反射调用）；生产路径走带清单的三参版本 */
     private String buildForeshadowings(String projectId, int chapterIndex) {
+        return buildForeshadowings(projectId, chapterIndex,
+                new InjectionManifest(projectId, chapterIndex, 0, 0));
+    }
+
+    private String buildForeshadowings(String projectId, int chapterIndex, InjectionManifest manifest) {
         List<Foreshadowing> unresolved = repository.findUnresolvedForeshadowings(projectId).stream()
                 .filter(f -> f.getPlantedAtChapter() <= chapterIndex)
                 .toList();
@@ -549,6 +654,15 @@ public class ContextAssembler {
                         b.suspenseChapters(currentChapter), a.suspenseChapters(currentChapter)))
                 .limit(Math.max(0, LIMIT - mustInclude.size()))
                 .toList();
+        // NCS-096: 伏笔注入选取点记录（mustInclude + others 即实际注入集）
+        for (Foreshadowing f : mustInclude) {
+            manifest.addEntry("relevantForeshadowings", InjectionManifest.Kind.FORESHADOW,
+                    f.getId(), firstChars(f.getDescription(), 40), 0);
+        }
+        for (Foreshadowing f : others) {
+            manifest.addEntry("relevantForeshadowings", InjectionManifest.Kind.FORESHADOW,
+                    f.getId(), firstChars(f.getDescription(), 40), 0);
+        }
 
         StringBuilder sb = new StringBuilder();
 

@@ -30,6 +30,7 @@ public class WritingContext {
     private String feedbackSection;           // 历史反馈（ContinuityIssue 注入）
     private String bibleSection;              // p10-w2-07: 故事真典（ACTIVE 事实，长程记忆，替代级联摘要）
     private String authorDirectiveSection;    // p37-09: 作者要求（不可静默裁剪；空=输出与原 prompt 逐字一致）
+    private InjectionManifest manifest;       // NCS-096: 注入清单（与各 section 同源生成，不事后重建）
 
     /** system prompt：故事原旨 + 风格 + 世界观 + 相关设定 + 出场人物 */
     public String toSystemPrompt() {
@@ -183,4 +184,6 @@ public class WritingContext {
     public void setAuthorDirectiveSection(String s) { this.authorDirectiveSection = s; }
     public String getBibleSection() { return bibleSection; }
     public void setBibleSection(String s) { this.bibleSection = s; }
+    public InjectionManifest getManifest() { return manifest; }
+    public void setManifest(InjectionManifest m) { this.manifest = m; }
 }

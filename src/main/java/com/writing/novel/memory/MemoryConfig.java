@@ -79,7 +79,8 @@ public class MemoryConfig {
                                               MemoryRevision memoryRevision,
                                               com.writing.novel.spi.StoryCanon storyCanon,
                                               RelevanceGateway relevanceGateway,
-                                              com.writing.novel.service.AuthorIntentContextService authorIntentContextService) {
+                                              com.writing.novel.service.AuthorIntentContextService authorIntentContextService,
+                                              com.writing.novel.persistence.sqlite.InjectionManifestRepository injectionManifestRepository) {
         ContextAssembler assembler = new ContextAssembler(repository, knowledgeBase, summaryService,
                 vectorRetrieval, entityGraphService, climaxDiversityTracker,
                 narrativeThreadTracker, diversityTracker, clicheDetector, memoryRevision);
@@ -88,6 +89,8 @@ public class MemoryConfig {
         assembler.setAuthorIntentContextService(authorIntentContextService);
         assembler.setStoryCanon(storyCanon);
         assembler.setRelevanceGateway(relevanceGateway);
+        // NCS-096: 注入清单随组装落库
+        assembler.setManifestStore(injectionManifestRepository);
         return assembler;
     }
 

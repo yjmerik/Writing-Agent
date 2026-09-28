@@ -246,6 +246,12 @@ public class SqliteSchemaInitializer {
             "status TEXT DEFAULT 'PENDING', updated_at TEXT, " +
             "PRIMARY KEY (project_id, chapter_index, stage))",
 
+        // NCS-096: 上下文注入清单——组装时同源记录"实际注入了什么"，追加式历史
+        "CREATE TABLE IF NOT EXISTS context_injection_manifest (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, project_id TEXT NOT NULL, " +
+            "chapter_index INTEGER NOT NULL, chapter_version INTEGER NOT NULL, " +
+            "payload TEXT NOT NULL, created_at TEXT NOT NULL)",
+
         // p36-02: 不可变章节批准审计——DONE 不等于作者批准。
         // 批准绑定稿件身份 (project_id, chapter_index, chapter_version, content_hash)；
         // 正文/屏障修订只失效其有效性，永不改写历史批准行。已存在 DONE 不回填。

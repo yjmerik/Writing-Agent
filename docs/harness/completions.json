@@ -2299,8 +2299,19 @@
    "implementation_commit": "d4aabe9a6848a832d807c0e92bb30ee2db58bccf",
    "main_commit": "d4aabe9a6848a832d807c0e92bb30ee2db58bccf",
    "evidence": "docs/harness/evidence/2026-09-26-ncs-094.json"
+  },
+  {
+   "id": "ncs-096-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-096"
+   ],
+   "branch": "codex/ncs-096-injection-manifest",
+   "implementation_commit": "85d26ea48bcb035d2397fea76ed42ad261c09ada",
+   "main_commit": "85d26ea48bcb035d2397fea76ed42ad261c09ada",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-096.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "d4aabe9a6848a832d807c0e92bb30ee2db58bccf"
+ "main_commit": "85d26ea85d26ea85d26ea85d26ea85d26ea85d26ea"
 }

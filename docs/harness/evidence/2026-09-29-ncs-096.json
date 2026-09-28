@@ -1,0 +1,20 @@
+{
+ "commit": "85d26ea48bcb035d2397fea76ed42ad261c09ada",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-096"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：先建 InjectionManifestTest（清单与注入一一对应/裁剪标记/同版本稳定/落库往返/JSON 往返），实现后 5/5 通过；分支与合并后 main 全量 1262/0F/0E/1S",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-096; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-096-injection-manifest"
+}

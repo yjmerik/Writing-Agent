@@ -9181,13 +9181,14 @@
    "description": "ContextAssembler 组装 WritingContext 的同一路径同步产出注入清单（section/kind/refId/estTokens：真典事实、向量 chunk、知识条目、伏笔、实体、风格资产），由 ChapterProduction 按 projectId+chapterIndex+chapterVersion 持久化；禁止事后重建",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-28 verified: 85d26ea48bcb（ff-merge=main 提交 85d26ea48bcb）; 注入清单组装同源生成并按稿版本落库",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：组装后 manifest 条目与 WritingContext 实际注入一一对应，同章同版本重复组装清单稳定，按章稿版本可查询",
    "verify_cmd": "mvn test -Dtest=InjectionManifestTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-096-verified"
   },
   {
    "id": "NCS-097",

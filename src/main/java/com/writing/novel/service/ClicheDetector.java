@@ -35,6 +35,20 @@ public class ClicheDetector {
             "不由自主地", "浑身一震", "身体一僵", "猛地站起", "腾地站起"
     );
 
+    /** NCS-104: 固定词表在文本中的总出现次数（风格量化指标，零成本） */
+    public static int countHits(String content) {
+        if (content == null || content.isEmpty()) return 0;
+        int hits = 0;
+        for (String phrase : CLICHE_PHRASES) {
+            int idx = 0;
+            while ((idx = content.indexOf(phrase, idx)) >= 0) {
+                hits++;
+                idx += phrase.length();
+            }
+        }
+        return hits;
+    }
+
     /** 单章内某词出现 > 此阈值 → 加入禁用词表 */
     private static final int SINGLE_CHAPTER_THRESHOLD = 3;
 

@@ -3327,6 +3327,9 @@ public class NovelOrchestrator {
         // p32-05: 报告绑定章节当前版本——绑定旧版本的条目在报告中标记过期
         report.setChapterVersion(chapter.getVersion());
 
+        // NCS-104: 风格量化指标——确定性、零 LLM 成本，进质量报告与 golden 基线
+        report.setStyleMetrics(com.writing.novel.service.StyleMetricsService.compute(chapter.getContent()));
+
         // NCS-095: 字数趋势——本章低于前 3 章均值 50% 时提示（只读，不阻断）；
         // 第二轮旅程实测后半部章节字数从 10k 量级滑落到 3-4k 且无任何提示
         List<Integer> previousWords = repository.findChaptersByProject(projectId).stream()

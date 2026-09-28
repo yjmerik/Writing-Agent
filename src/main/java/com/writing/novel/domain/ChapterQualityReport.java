@@ -38,6 +38,8 @@ public class ChapterQualityReport {
     private boolean wordTrendWarning;
     /** NCS-095: 参与对比的前 3 章均值（不足 3 章历史时为 0，且不产生警告） */
     private int previousAvgWordCount;
+    /** NCS-104: 风格量化指标（StyleMetricsService 确定性计算：句长/对话密度/套路词/n-gram 重复率） */
+    private java.util.Map<String, Object> styleMetrics;
 
     public ChapterQualityReport(int chapterIndex, String chapterTitle, int wordCount) {
         this.chapterIndex = chapterIndex;
@@ -99,5 +101,8 @@ public class ChapterQualityReport {
     public boolean isWordTrendWarning() { return wordTrendWarning; }
     public void setWordTrendWarning(boolean v) { this.wordTrendWarning = v; }
     public int getPreviousAvgWordCount() { return previousAvgWordCount; }
+
+    public java.util.Map<String, Object> getStyleMetrics() { return styleMetrics; }
+    public void setStyleMetrics(java.util.Map<String, Object> m) { this.styleMetrics = m; }
     public void setPreviousAvgWordCount(int v) { this.previousAvgWordCount = v; }
 }

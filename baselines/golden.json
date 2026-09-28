@@ -1,10 +1,14 @@
 {
-  "blessedAt": "2026-09-22T06:03:58.567676",
-  "blessedFrom": "data/e2e-evidence/ncs065-070-20260921/record2-replay/e2e-report-record.json",
+  "blessedAt": null,
+  "blessedFrom": "/var/folders/n1/0rdqrqbj0tvfcgjbgds9rmlc0000gn/T/tmpcy6nl68r/g.json",
   "minChapters": 2,
-  "minTotalWords": 5865,
-  "minAvgWordCount": 2566,
+  "minTotalWords": 4800,
+  "minAvgWordCount": 2100,
   "maxChapterFailures": 0,
   "maxLlmErrors": 0,
-  "minEvaluationScore": null
+  "minEvaluationScore": null,
+  "styleMetrics": {
+    "maxRepeatedNgramRate": 0.055,
+    "maxAvgClicheHitsPerChapter": 4.4
+  }
 }

@@ -6,5 +6,9 @@
   "minAvgWordCount": 2638,
   "maxChapterFailures": 0,
   "maxLlmErrors": 0,
-  "minEvaluationScore": null
+  "minEvaluationScore": null,
+  "styleMetrics": {
+    "maxRepeatedNgramRate": 0.1,
+    "maxAvgClicheHitsPerChapter": 15
+  }
 }

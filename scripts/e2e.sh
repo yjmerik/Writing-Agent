@@ -217,8 +217,20 @@ try:
     def get_json(path):
         with opener.open("$BASE/api/projects/$PROJECT_ID/" + path, timeout=30) as response:
             return json.load(response)
-    quality = quality_counts(get_json("workspace"),
-        [get_json("chapters/" + str(c["chapterIndex"]) + "/quality") for c in chapters])
+    chapter_qualities = [get_json("chapters/" + str(c["chapterIndex"]) + "/quality") for c in chapters]
+    quality = quality_counts(get_json("workspace"), chapter_qualities)
+    # NCS-104: 聚合风格量化指标（服务端确定性计算，随章节质量报告返回）
+    def _avg(vals):
+        vals = [v for v in vals if v is not None]
+        return round(sum(vals) / len(vals), 4) if vals else 0
+    _metrics = [q.get("styleMetrics") or {} for q in chapter_qualities]
+    quality["styleMetrics"] = {
+        "avgSentenceLength": _avg([m.get("avgSentenceLength") for m in _metrics]),
+        "sentenceLengthStdDev": _avg([m.get("sentenceLengthStdDev") for m in _metrics]),
+        "dialogueDensity": _avg([m.get("dialogueDensity") for m in _metrics]),
+        "clicheHits": sum((m.get("clicheHits") or 0) for m in _metrics),
+        "repeatedNgramRate": _avg([m.get("repeatedNgramRate") for m in _metrics]),
+    }
 except (OSError, KeyError, TypeError, ValueError) as exc:
     print("质量证据读取失败: " + str(exc), file=sys.stderr)
 

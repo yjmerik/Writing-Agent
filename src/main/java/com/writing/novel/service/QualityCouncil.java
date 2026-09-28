@@ -49,6 +49,11 @@ public class QualityCouncil {
         if (reviewOverall < 7 && reviewSuggestion != null && !reviewSuggestion.isBlank()) {
             fb.append("- [读者反馈] ").append(reviewSuggestion).append("\n");
         }
+        // NCS-100: 风格低分进纠偏指令——重写 brief 携带风格约束
+        if (styleScore != null && styleScore < Arbiter.STYLE_REWRITE_THRESHOLD) {
+            fb.append("- [风格漂移] 风格一致性评分 ").append(styleScore)
+                    .append("/100，重写必须严格回归基线风格（基调/叙事/注意事项）\n");
+        }
         return new CouncilReport(all, hasHigh, scores, fb.toString().trim());
     }
 }

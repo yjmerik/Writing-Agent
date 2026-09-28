@@ -210,8 +210,10 @@ public class ChapterProduction {
             pauseForQuality(projectId, chapterIndex, chapter, "一致性守卫未完成：" + e.getMessage());
             return false;
         }
+        // NCS-100: 风格评分先于仲裁决策计算并传入委员会——低分在重写预算内触发风格重写
+        Integer styleScore = styleGateScore(projectId, chapterIndex, chapter);
         rewritten = applyArbiterDecision(projectId, chapterIndex, chapter, cast,
-                continuityIssuesRef, guardIssuesRef, false);
+                continuityIssuesRef, guardIssuesRef, false, styleScore);
 
         // p10-d2: 一致性门禁——章号/时代用语检查（纯规则）
         try {
@@ -243,37 +245,52 @@ public class ChapterProduction {
             log.warn("说明文密度检测失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
-        // 每 5 章检查风格漂移，解析评分并记录问题（p3-02）
-        if (chapterIndex % 5 == 0) {
-            try {
-                var styleOpt = repository.findStyleProfileByProject(projectId);
-                if (styleOpt.isPresent()) {
-                    var style = styleOpt.get();
-                    String baseline = "基调：" + (style.getTone() != null ? style.getTone() : "")
-                            + "，叙事：" + (style.getVoice() != null ? style.getVoice() : "")
-                            + "，注意事项：" + (style.getDosAndDonts() != null ? style.getDosAndDonts() : "");
-                    String report = styleGuardian.checkConsistency(projectId, chapter.getContent(), baseline);
-                    // 解析评分：格式 "风格一致性评分：XX/100"
-                    if (report != null) {
-                        var scoreMatch = java.util.regex.Pattern.compile("(\\d+)/100").matcher(report);
-                        if (scoreMatch.find()) {
-                            int score = Integer.parseInt(scoreMatch.group(1));
-                            if (score < 60) {
-                                // 风格评分低，记录为 ContinuityIssue
-                                repository.saveContinuityIssue(new ContinuityIssue(
-                                        projectId, chapterIndex,
-                                        ContinuityIssue.Type.WORLDBUILDING,
-                                        ContinuityIssue.Severity.MEDIUM,
-                                        "风格漂移（评分" + score + "/100）：" + report));
-                            }
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                log.warn("风格检查失败: {}", e.getMessage());
-            }
-        }
         return rewritten;
+    }
+
+    /**
+     * NCS-100: 风格漂移评分（每 5 章一次，p3-02 节奏）——先于仲裁执行，
+     * 低分（<60）落 ContinuityIssue 且评分进 QualityCouncil 触发预算内重写；
+     * 评分解析失败发事件，不再静默跳过。
+     */
+    private Integer styleGateScore(String projectId, int chapterIndex, Chapter chapter) {
+        if (chapterIndex % 5 != 0) return null;
+        try {
+            var styleOpt = repository.findStyleProfileByProject(projectId);
+            if (styleOpt.isEmpty()) return null;
+            var style = styleOpt.get();
+            String baseline = "基调：" + (style.getTone() != null ? style.getTone() : "")
+                    + "，叙事：" + (style.getVoice() != null ? style.getVoice() : "")
+                    + "，注意事项：" + (style.getDosAndDonts() != null ? style.getDosAndDonts() : "");
+            String report = styleGuardian.checkConsistency(projectId, chapter.getContent(), baseline);
+            if (report == null) {
+                EventLog.emit("STYLE_SCORE_PARSE_FAILED", Map.of("projectId", projectId,
+                        "chapterIndex", chapterIndex, "reason", "null_report"));
+                return null;
+            }
+            var scoreMatch = java.util.regex.Pattern.compile("(\\d+)/100").matcher(report);
+            if (!scoreMatch.find()) {
+                EventLog.emit("STYLE_SCORE_PARSE_FAILED", Map.of("projectId", projectId,
+                        "chapterIndex", chapterIndex,
+                        "reason", EventLog.truncate("no_score_pattern: " + report, 200)));
+                return null;
+            }
+            int score = Integer.parseInt(scoreMatch.group(1));
+            if (score < 60) {
+                repository.saveContinuityIssue(new ContinuityIssue(
+                        projectId, chapterIndex,
+                        ContinuityIssue.Type.WORLDBUILDING,
+                        ContinuityIssue.Severity.MEDIUM,
+                        "风格漂移（评分" + score + "/100）：" + report));
+            }
+            return score;
+        } catch (Exception e) {
+            EventLog.emit("STYLE_SCORE_PARSE_FAILED", Map.of("projectId", projectId,
+                    "chapterIndex", chapterIndex,
+                    "reason", EventLog.truncate(String.valueOf(e.getMessage()), 200)));
+            log.warn("风格检查失败: {}", e.getMessage());
+            return null;
+        }
     }
 
 
@@ -383,7 +400,8 @@ public class ChapterProduction {
 
     private boolean applyArbiterDecision(String projectId, int chapterIndex, Chapter chapter,
                                          List<String> cast, List<ContinuityIssue> continuityIssues,
-                                         List<ContinuityIssue> guardIssues, boolean alreadyRewritten) {
+                                         List<ContinuityIssue> guardIssues, boolean alreadyRewritten,
+                                         Integer styleScore) {
         // NCS-098: 先按 RepairArbiter 三分类路由 continuity/guard 高危问题——
         // 跨章/根源性矛盾直通人工（不浪费重写预算），真典合法演进不改正文（事件留痕+issue 结清）
         var continuityPartition = partitionByRepairAction(continuityIssues, alreadyRewritten);
@@ -417,7 +435,7 @@ public class ChapterProduction {
         int readerOverall = review == null ? 10 : review.getScore();
         var council = (orch.qualityCouncil() != null ? orch.qualityCouncil() : new com.writing.novel.service.QualityCouncil())
                 .collect(effectiveIssues, effectiveGuardIssues, readerOverall,
-                        review == null ? null : review.getImprovementSuggestion(), null);
+                        review == null ? null : review.getImprovementSuggestion(), styleScore);
         int budget = repository.findWritingPreferences(projectId)
                 .map(com.writing.novel.domain.WritingPreferences::getRewriteBudget).orElse(1);
         var arbiter = orch.arbiterRef() != null ? orch.arbiterRef() : new com.writing.novel.service.Arbiter();

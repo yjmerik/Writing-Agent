@@ -14,6 +14,9 @@ public class Arbiter {
 
     public enum Action { PASS, REWRITE, BLOCK }
 
+    /** NCS-100: 风格一致性低于此阈值触发预算内重写（与 style-check 持久化口径一致） */
+    public static final int STYLE_REWRITE_THRESHOLD = 60;
+
     public record Arbitration(Action action, String correctionBrief) {}
 
     /**
@@ -29,7 +32,10 @@ public class Arbiter {
         }
         // 有 HIGH 或读者评分 <7，且预算允许且未重写 → 合并重写（喂入全部问题）
         int readerOverall = report.scores().getOrDefault("readerOverall", 10);
-        boolean needRewrite = report.hasHigh() || readerOverall < 7;
+        // NCS-100: 风格分 <60 同样触发预算内重写
+        int styleScore = report.scores().getOrDefault("style", 100);
+        boolean needRewrite = report.hasHigh() || readerOverall < 7
+                || styleScore < STYLE_REWRITE_THRESHOLD;
         if (needRewrite && rewriteBudget > 0 && !alreadyRewritten) {
             return new Arbitration(Action.REWRITE, report.combinedFeedback());
         }

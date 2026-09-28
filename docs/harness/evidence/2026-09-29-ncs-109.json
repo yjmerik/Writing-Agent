@@ -1,0 +1,20 @@
+{
+ "commit": "62e58ea12e13678afb2a0d4b545c902b1eab3ca8",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-109"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：RelevanceHardeningTest 4 项（别名回解/cast 别名扩展命中真典与角色/validFrom-validTo 过滤+chapter0 保守放行/must 截断 cast 与人工补丁优先）；分支与 main 全量 1312/0F/0E/1S",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-109; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-109-relevance-hardening"
+}

@@ -2442,8 +2442,19 @@
    "implementation_commit": "3744e3ae7790752ff92ac5eaa5a3567a49abd6f8",
    "main_commit": "3744e3ae7790752ff92ac5eaa5a3567a49abd6f8",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-108.json"
+  },
+  {
+   "id": "ncs-109-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-109"
+   ],
+   "branch": "codex/ncs-109-relevance-hardening",
+   "implementation_commit": "62e58ea12e13678afb2a0d4b545c902b1eab3ca8",
+   "main_commit": "62e58ea12e13678afb2a0d4b545c902b1eab3ca8",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-109.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "3744e3ae7790752ff92ac5eaa5a3567a49abd6f8"
+ "main_commit": "62e58ea12e13678afb2a0d4b545c902b1eab3ca8"
 }

@@ -9382,13 +9382,14 @@
    "description": "EntityGraphService.resolveCanonical 查别名表（当前只精确匹配 name，别名入表后无法回解规范名）；RelevanceGateway.matchesCast 用规范名匹配（当前纯 contains，大纲写别名即全 miss）；recall 过滤 validFrom/validToChapter 失效事实；mustCap 截断保序（cast 命中优先）",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-28 verified: 62e58ea12e13（ff-merge=main 提交 62e58ea12e13）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：别名 cast 命中规范名事实、失效区间事实不注入、must 截断时 cast 命中项不丢",
    "verify_cmd": "mvn test -Dtest=RelevanceHardeningTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-109-verified"
   },
   {
    "id": "NCS-110",

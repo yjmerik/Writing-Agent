@@ -9399,13 +9399,14 @@
    "dependencies": [
     "NCS-109"
    ],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-28 verified: bf684880b06a（ff-merge=main 提交 bf684880b06a）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：构造含实体名大纲场景时召回包含该实体相关 chunk，向量故障场景词法通道返回非空结果",
    "verify_cmd": "mvn test -Dtest=HybridRecallQueryTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-110-verified"
   },
   {
    "id": "NCS-111",

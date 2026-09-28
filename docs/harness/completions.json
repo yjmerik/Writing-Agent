@@ -2453,8 +2453,19 @@
    "implementation_commit": "62e58ea12e13678afb2a0d4b545c902b1eab3ca8",
    "main_commit": "62e58ea12e13678afb2a0d4b545c902b1eab3ca8",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-109.json"
+  },
+  {
+   "id": "ncs-110-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-110"
+   ],
+   "branch": "codex/ncs-110-hybrid-recall",
+   "implementation_commit": "bf684880b06ae4556a2e488d3710c9dcc758dff4",
+   "main_commit": "bf684880b06ae4556a2e488d3710c9dcc758dff4",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-110.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "62e58ea12e13678afb2a0d4b545c902b1eab3ca8"
+ "main_commit": "bf684880b06ae4556a2e488d3710c9dcc758dff4"
 }

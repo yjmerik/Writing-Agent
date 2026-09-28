@@ -76,6 +76,9 @@ public class RelevanceGateway {
         if (canon == null) return List.of();
         List<StoryFact> all = canon.recall(projectId);
         if (all.isEmpty()) return List.of();
+        // NCS-098: 裁决前的极性冲突对不注入——双方同时注入会向写作/检查上下文输入自相矛盾约束；
+        // 冲突对留待 RepairArbiter 三分类裁决或作者人工补丁处置
+        all = withoutConflictPairs(all);
         List<String> names = cast == null ? List.of() : cast;
         List<StoryFact> must = new ArrayList<>();
         List<StoryFact> fill = new ArrayList<>();
@@ -127,6 +130,32 @@ public class RelevanceGateway {
 
     private boolean containsFact(List<StoryFact> list, StoryFact f) {
         return list.stream().anyMatch(x -> x.getId().equals(f.getId()));
+    }
+
+    /**
+     * NCS-098: 过滤同 subject+type+predicate 且极性相反的 ACTIVE 冲突对（双方整体排除）。
+     * 与 SqliteStoryCanon.harvest 的冲突判定（同谓词相反极性）同一口径。
+     */
+    public static List<StoryFact> withoutConflictPairs(List<StoryFact> facts) {
+        java.util.Map<String, java.util.List<StoryFact>> groups = new java.util.HashMap<>();
+        for (StoryFact f : facts) {
+            if (f.getPredicate() == null) continue;
+            groups.computeIfAbsent(f.getSubject() + "|" + f.getFactType() + "|" + f.getPredicate(),
+                    k -> new ArrayList<>()).add(f);
+        }
+        java.util.Set<String> conflicted = new java.util.HashSet<>();
+        for (var e : groups.entrySet()) {
+            var group = e.getValue();
+            if (group.size() < 2) continue;
+            boolean hasConflict = group.stream().anyMatch(a -> a.getPolarity() != null
+                    && group.stream().anyMatch(b -> b != a && b.getPolarity() != null
+                    && !a.getPolarity().equals(b.getPolarity())));
+            if (hasConflict) {
+                group.forEach(f -> conflicted.add(f.getId()));
+            }
+        }
+        if (conflicted.isEmpty()) return facts;
+        return facts.stream().filter(f -> !conflicted.contains(f.getId())).toList();
     }
 
     /**

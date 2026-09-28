@@ -357,9 +357,56 @@ public class ChapterProduction {
         }
     }
 
+    /** NCS-098: 高危问题三分类结果；rewrite=进入既有重写仲裁链，其余两类走各自出口 */
+    record RepairPartition(List<ContinuityIssue> rewrite, List<ContinuityIssue> manualReview,
+                           List<ContinuityIssue> canonEvolution) {}
+
+    /** NCS-098: 激活 RepairArbiter 三分类——只有 HIGH 级参与路由，非 HIGH 全部进入 rewrite 桶（随 council 反馈） */
+    static RepairPartition partitionByRepairAction(List<ContinuityIssue> issues, boolean alreadyRewritten) {
+        com.writing.novel.service.RepairArbiter arbiter = new com.writing.novel.service.RepairArbiter();
+        List<ContinuityIssue> rewrite = new java.util.ArrayList<>();
+        List<ContinuityIssue> manual = new java.util.ArrayList<>();
+        List<ContinuityIssue> evolution = new java.util.ArrayList<>();
+        for (ContinuityIssue issue : issues) {
+            if (issue.getSeverity() != ContinuityIssue.Severity.HIGH) {
+                rewrite.add(issue);
+                continue;
+            }
+            switch (arbiter.classify(issue, alreadyRewritten)) {
+                case MANUAL_REVIEW -> manual.add(issue);
+                case SUPERSEDE_CANON -> evolution.add(issue);
+                default -> rewrite.add(issue);
+            }
+        }
+        return new RepairPartition(rewrite, manual, evolution);
+    }
+
     private boolean applyArbiterDecision(String projectId, int chapterIndex, Chapter chapter,
                                          List<String> cast, List<ContinuityIssue> continuityIssues,
                                          List<ContinuityIssue> guardIssues, boolean alreadyRewritten) {
+        // NCS-098: 先按 RepairArbiter 三分类路由 continuity/guard 高危问题——
+        // 跨章/根源性矛盾直通人工（不浪费重写预算），真典合法演进不改正文（事件留痕+issue 结清）
+        var continuityPartition = partitionByRepairAction(continuityIssues, alreadyRewritten);
+        var guardPartition = partitionByRepairAction(guardIssues, alreadyRewritten);
+        List<ContinuityIssue> manualReview = new java.util.ArrayList<>(continuityPartition.manualReview());
+        manualReview.addAll(guardPartition.manualReview());
+        List<ContinuityIssue> canonEvolution = new java.util.ArrayList<>(continuityPartition.canonEvolution());
+        canonEvolution.addAll(guardPartition.canonEvolution());
+        if (!manualReview.isEmpty()) {
+            pauseForQuality(projectId, chapterIndex, chapter,
+                    "根源性/跨章矛盾待人工裁决（单章重写无法修复）：" + manualReview.get(0).getDescription());
+            return false;
+        }
+        for (ContinuityIssue issue : canonEvolution) {
+            issue.resolve();
+            repository.saveContinuityIssue(issue);
+            EventLog.emit("CONTRADICTION_ARBITRATED", Map.of("projectId", projectId,
+                    "chapterIndex", chapterIndex, "version", chapter.getVersion(),
+                    "issueId", issue.getId(), "action", "SUPERSEDE_CANON",
+                    "description", EventLog.truncate(issue.getDescription(), 200)));
+        }
+        List<ContinuityIssue> effectiveIssues = continuityPartition.rewrite();
+        List<ContinuityIssue> effectiveGuardIssues = guardPartition.rewrite();
         com.writing.novel.domain.ReviewReport review;
         try {
             review = checkedReaderReview(projectId, chapterIndex, chapter);
@@ -369,7 +416,7 @@ public class ChapterProduction {
         }
         int readerOverall = review == null ? 10 : review.getScore();
         var council = (orch.qualityCouncil() != null ? orch.qualityCouncil() : new com.writing.novel.service.QualityCouncil())
-                .collect(continuityIssues, guardIssues, readerOverall,
+                .collect(effectiveIssues, effectiveGuardIssues, readerOverall,
                         review == null ? null : review.getImprovementSuggestion(), null);
         int budget = repository.findWritingPreferences(projectId)
                 .map(com.writing.novel.domain.WritingPreferences::getRewriteBudget).orElse(1);

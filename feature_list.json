@@ -9273,13 +9273,14 @@
    "description": "激活 StyleProfile 死字段体系：新增 styleSamples（2-3 段例文，来源 preset/作者 likedSnippets/作者确认的生成段落）并持久化；ChapterWriter 以 few-shot 注入（extractStyleGuide 同路径），风格约束从抽象形容词升级为客观锚点",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-28 verified: 87efd8b47a92（ff-merge=main 提交 87efd8b47a92）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：styleSamples 非空时 chapter-writing prompt 含例文段，为空时行为与现状一致",
    "verify_cmd": "mvn test -Dtest=StyleSampleAnchorTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-102-verified"
   },
   {
    "id": "NCS-103",

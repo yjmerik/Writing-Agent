@@ -2365,8 +2365,19 @@
    "implementation_commit": "ef484479d491193a2280f5bd533622128ff8536d",
    "main_commit": "ef484479d491193a2280f5bd533622128ff8536d",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-101.json"
+  },
+  {
+   "id": "ncs-102-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-102"
+   ],
+   "branch": "codex/ncs-102-style-sample-anchor",
+   "implementation_commit": "87efd8b47a92f466af086d0c5299b2690f553aad",
+   "main_commit": "87efd8b47a92f466af086d0c5299b2690f553aad",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-102.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "ef484479d491193a2280f5bd533622128ff8536d"
+ "main_commit": "87efd8b47a92f466af086d0c5299b2690f553aad"
 }

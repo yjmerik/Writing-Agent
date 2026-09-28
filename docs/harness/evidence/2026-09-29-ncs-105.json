@@ -1,0 +1,20 @@
+{
+ "commit": "0a9f09adb828e0de42917ae2aff2dcda5d8e5170",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-105"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：LlmJsonComponentTest 7 项（围栏/类型化失败/成功路径/带因重试/重试仍败类型化/QE 失败不再静默/伏笔提取走中心化）；分支与 main 全量 1299/0F/0E/1S",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-105; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-105-llm-json"
+}

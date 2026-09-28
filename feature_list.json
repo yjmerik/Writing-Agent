@@ -9320,13 +9320,14 @@
    "description": "新增中心化结构化输出组件 LlmJson：剥围栏→解析→带因修复重试一次→类型化失败（TRUNCATED/INVALID/EMPTY）→STRUCTURED_OUTPUT 事件；先迁移两个高危点：QualityEvaluationAgent（当前解析失败静默降级全 0 分无事件）与 ForeshadowingExtractor（当前静默丢伏笔）",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-28 verified: 0a9f09adb828（ff-merge=main 提交 0a9f09adb828）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：两组件解析失败路径产生类型化失败与事件而非静默空结果，成功路径行为不变",
    "verify_cmd": "mvn test -Dtest=LlmJsonComponentTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-105-verified"
   },
   {
    "id": "NCS-106",

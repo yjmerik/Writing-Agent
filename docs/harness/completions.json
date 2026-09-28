@@ -2398,8 +2398,19 @@
    "implementation_commit": "d8bd66453a2fd3db40e34d5ffb223ce5411f22d5",
    "main_commit": "d8bd66453a2fd3db40e34d5ffb223ce5411f22d5",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-104.json"
+  },
+  {
+   "id": "ncs-105-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-105"
+   ],
+   "branch": "codex/ncs-105-llm-json",
+   "implementation_commit": "0a9f09adb828e0de42917ae2aff2dcda5d8e5170",
+   "main_commit": "0a9f09adb828e0de42917ae2aff2dcda5d8e5170",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-105.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "d8bd66453a2fd3db40e34d5ffb223ce5411f22d5"
+ "main_commit": "0a9f09adb828e0de42917ae2aff2dcda5d8e5170"
 }

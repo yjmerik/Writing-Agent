@@ -79,7 +79,15 @@ public class RelevanceGateway {
         // NCS-098: 裁决前的极性冲突对不注入——双方同时注入会向写作/检查上下文输入自相矛盾约束；
         // 冲突对留待 RepairArbiter 三分类裁决或作者人工补丁处置
         all = withoutConflictPairs(all);
-        List<String> names = cast == null ? List.of() : cast;
+        // NCS-109: 时间有效性过滤——生效区间外的事实不注入（chapterIndex=0 视为上下文未知，保守放行）
+        if (chapterIndex > 0) {
+            final int ch = chapterIndex;
+            all = all.stream().filter(f ->
+                    f.getValidFromChapter() <= ch
+                            && (f.getValidToChapter() == null || f.getValidToChapter() >= ch))
+                    .toList();
+        }
+        List<String> names = cast == null ? List.of() : expandCastWithAliases(projectId, cast);
         List<StoryFact> must = new ArrayList<>();
         List<StoryFact> fill = new ArrayList<>();
         boolean hasCast = !names.isEmpty();
@@ -91,6 +99,14 @@ public class RelevanceGateway {
             }
         }
         fill.sort((a, b) -> Integer.compare(score(b, chapterIndex), score(a, chapterIndex)));
+        // NCS-109: must 截断保序——cast 命中 > 人工补丁 > importance > recency
+        // （旧序为 recall 的 importance 降序，must 膨胀时 cast 关键状态被静默丢弃）
+        List<String> finalNames = names;
+        must.sort(Comparator
+                .comparing((StoryFact f) -> matchesCast(f, finalNames) ? 0 : 1)
+                .thenComparing(f -> isHumanPatch(f) ? 0 : 1)
+                .thenComparing(f -> -f.getImportance())
+                .thenComparing(f -> -score(f, chapterIndex)));
         List<StoryFact> out = new ArrayList<>(must);
         int mustCap = Math.min(must.size(), Math.max(cap, 24));
         if (out.size() > mustCap) out = new ArrayList<>(out.subList(0, mustCap));
@@ -99,6 +115,33 @@ public class RelevanceGateway {
             if (!containsFact(out, f)) out.add(f);
         }
         return out;
+    }
+
+    private static boolean isHumanPatch(StoryFact f) {
+        String assertion = f.getAssertion() == null ? "" : f.getAssertion();
+        return assertion.startsWith(StoryCanon.HUMAN_PATCH_PREFIX);
+    }
+
+    /**
+     * NCS-109: cast 别名扩展——大纲写「林公子」时补上规范名「林凡」，
+     * 使真典/角色匹配不再因别名 miss（原纯 contains 双向匹配的单向盲区）。
+     */
+    List<String> expandCastWithAliases(String projectId, List<String> cast) {
+        if (cast == null || cast.isEmpty()) return cast == null ? List.of() : cast;
+        List<Entity> entities = repository.findEntitiesByProject(projectId);
+        if (entities.isEmpty()) return cast;
+        List<String> expanded = new ArrayList<>(cast);
+        for (String name : cast) {
+            if (name == null || name.isBlank()) continue;
+            for (Entity e : entities) {
+                boolean aliasHit = (e.getAliases() != null && e.getAliases().contains(name));
+                if (aliasHit && !expanded.contains(e.getName())) {
+                    expanded.add(e.getName());
+                    break;
+                }
+            }
+        }
+        return expanded;
     }
 
     private boolean isMustInclude(StoryFact f, List<String> cast, int chapterIndex) {

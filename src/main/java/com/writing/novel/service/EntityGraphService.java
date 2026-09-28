@@ -208,7 +208,13 @@ public class EntityGraphService {
         if (rawName == null || rawName.isBlank()) return rawName;
         // 先精确匹配
         var entity = repository.findEntityByName(projectId, rawName);
-        return entity.map(Entity::getName).orElse(rawName);
+        if (entity.isPresent()) return entity.get().getName();
+        // NCS-109: 别名回解——「林公子」→规范名「林凡」（此前只查 name，别名入表后无法回解，
+        // 真典/召回两侧 subject 分裂）
+        for (Entity e : repository.findEntitiesByProject(projectId)) {
+            if (e.getAliases() != null && e.getAliases().contains(rawName)) return e.getName();
+        }
+        return rawName;
     }
 
     /**

@@ -9367,13 +9367,14 @@
    "description": "application.yml 从 legacy 单模型直连迁移到 providers/routing 唯一形态（熔断/failover 真正生效）；legacy 解析保留一版弃用告警后删除；文档化 yml/env/UI 覆盖三方优先级，消除同进程两套故障语义",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-28 verified: 3744e3ae7790（ff-merge=main 提交 3744e3ae7790）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：providers 形态下路由/降级/熔断单测通过，legacy-only 配置启动时产生弃用告警，优先级文档存在于 docs/llm-provider-fallback.md",
    "verify_cmd": "mvn test -Dtest=LlmRoutingConvergenceTest",
-   "type": "maintenance"
+   "type": "maintenance",
+   "completion_record": "ncs-108-verified"
   },
   {
    "id": "NCS-109",

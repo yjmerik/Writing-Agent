@@ -1,0 +1,20 @@
+{
+ "commit": "3744e3ae7790752ff92ac5eaa5a3567a49abd6f8",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-108"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：LlmRoutingConvergenceTest 3 项（yml 唯一 providers 形态断言/路由参数档等价迁移/legacy 判定保留）；既有 TokenPlan 与 ModelConfig 契约测试随迁移更新；LlmModelConfigStore 覆盖层写路由（legacy 面镜像，含回归实测修正）；分支与 main 全量 1308/0F/0E/1S",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-108; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-108-routing-convergence"
+}

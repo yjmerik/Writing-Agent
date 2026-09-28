@@ -2409,8 +2409,19 @@
    "implementation_commit": "0a9f09adb828e0de42917ae2aff2dcda5d8e5170",
    "main_commit": "0a9f09adb828e0de42917ae2aff2dcda5d8e5170",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-105.json"
+  },
+  {
+   "id": "ncs-106-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-106"
+   ],
+   "branch": "codex/ncs-106-llm-json-migration",
+   "implementation_commit": "46eb6825ff2bfa00e0146770b6bcb99d4433f4b1",
+   "main_commit": "46eb6825ff2bfa00e0146770b6bcb99d4433f4b1",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-106.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "0a9f09adb828e0de42917ae2aff2dcda5d8e5170"
+ "main_commit": "46eb6825ff2bfa00e0146770b6bcb99d4433f4b1"
 }

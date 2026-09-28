@@ -9337,13 +9337,14 @@
    "dependencies": [
     "NCS-105"
    ],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-28 verified: 46eb6825ff2b（ff-merge=main 提交 46eb6825ff2b）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：迁移覆盖测试断言生产代码中除 LlmJson 外无手写 JSON 围栏剥离/直连 readTree 解析点",
    "verify_cmd": "mvn test -Dtest=LlmJsonMigrationCoverageTest",
-   "type": "maintenance"
+   "type": "maintenance",
+   "completion_record": "ncs-106-verified"
   },
   {
    "id": "NCS-107",

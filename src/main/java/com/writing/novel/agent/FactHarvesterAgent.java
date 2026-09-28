@@ -155,8 +155,12 @@ public class FactHarvesterAgent {
                 }
             }
             final var batch = facts;
+            // NCS-099: 重写稿收割前先撤回旧稿派生事实——被重写删除的情节不再以 ACTIVE 污染长程记忆；
+            // 新事实随后带当前稿版本号落库，同稿重复收割幂等（withdraw < 同版本为空操作）
+            canon.withdrawDraftFacts(projectId, chapter.getChapterIndex(), chapter.getVersion());
+            final int draftVersion = chapter.getVersion();
             var write = (java.util.function.Supplier<HarvestResult>) () ->
-                    applyFacts(batch, projectId, chapter.getChapterIndex());
+                    applyFacts(batch, projectId, chapter.getChapterIndex(), draftVersion);
             return boundary == null ? write.get()
                     : boundary.apply(write, new HarvestResult(0, 0, 0));
         } catch (Exception e) {
@@ -200,7 +204,8 @@ public class FactHarvesterAgent {
     }
 
     /** 校验通过后的事实批次与真典比对落库 */
-    private HarvestResult applyFacts(java.util.List<JsonNode> arr, String projectId, int chapterIndex) {
+    private HarvestResult applyFacts(java.util.List<JsonNode> arr, String projectId, int chapterIndex,
+                                     int draftVersion) {
         int added = 0, validated = 0, superseded = 0;
         try {
             for (JsonNode item : arr) {
@@ -213,6 +218,8 @@ public class FactHarvesterAgent {
                 // p22-02: 冲突裁决 / HUMAN_PATCH 保护窗口 / 审计链全部在 StoryCanon 端口内
                 StoryFact machine = new StoryFact(projectId, type, subject, assertion, chapterIndex);
                 machine.setImportance(3);
+                // NCS-099: 溯源稿版本——重写回滚按此撤回（此前恒 0 无法区分稿次）
+                machine.setSourceChapterVersion(draftVersion);
                 // NCS-008: 谓词化字段（旧格式缺省为 null，兼容）
                 if (item.hasNonNull("predicate")) machine.setPredicate(item.get("predicate").asText());
                 if (item.hasNonNull("object")) machine.setObjectValue(item.get("object").asText());

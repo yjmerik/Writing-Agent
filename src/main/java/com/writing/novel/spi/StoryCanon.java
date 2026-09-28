@@ -42,6 +42,15 @@ public interface StoryCanon {
     /** 按主体查 ACTIVE 事实 */
     List<StoryFact> recallBySubject(String projectId, String subject);
 
+    /**
+     * NCS-099: 撤回旧稿派生事实——同章 sourceChapterVersion &lt; keepVersion 的机器收割
+     * ACTIVE 事实置 RETIRED（其来源正文已被重写取代），返回撤回条数。
+     * 默认实现为空操作（测试桩/旧实现兼容）。
+     */
+    default int withdrawDraftFacts(String projectId, int chapterIndex, int keepVersion) {
+        return 0;
+    }
+
     /** 全部事实（含 SUPERSEDED/RETIRED——审计/诊断） */
     List<StoryFact> findAll(String projectId);
 

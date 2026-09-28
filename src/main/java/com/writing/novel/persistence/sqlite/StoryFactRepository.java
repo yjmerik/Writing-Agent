@@ -112,6 +112,25 @@ public class StoryFactRepository {
         save(newFact);
     }
 
+    /**
+     * NCS-099: 撤回旧稿派生事实——同章 sourceChapterVersion < keepVersion 的机器收割
+     * ACTIVE 事实置 RETIRED（其来源正文已被重写取代）。只动带版本号的机器事实
+     * （v0 旧数据/人工补丁不动，人工意图最高优先）。返回撤回条数。
+     */
+    public int retireSupersededDraftFacts(String projectId, int chapterIndex, int keepVersion) {
+        String sql = "UPDATE story_facts SET status='RETIRED' " +
+                "WHERE project_id=? AND chapter_established=? AND status='ACTIVE' " +
+                "AND source_chapter_version>0 AND source_chapter_version<? " +
+                "AND assertion NOT LIKE '【HUMAN_PATCH】%'";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            ps.setInt(2, chapterIndex);
+            ps.setInt(3, keepVersion);
+            return ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
     // --- p39-10: 同连接事务辅助方法（包内使用，不向业务层暴露 SQL 或 ConnectionProvider） ---
 
     /** 同连接只读回调。 */

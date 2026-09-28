@@ -33,6 +33,18 @@ public class SqliteStoryCanon implements StoryCanon {
         return factRepo.findActive(projectId);
     }
 
+    /** NCS-099: 重写后撤回旧稿派生事实（RETIRED），防止被删除情节的事实继续 ACTIVE 污染长程记忆 */
+    @Override
+    public int withdrawDraftFacts(String projectId, int chapterIndex, int keepVersion) {
+        int withdrawn = factRepo.retireSupersededDraftFacts(projectId, chapterIndex, keepVersion);
+        if (withdrawn > 0) {
+            com.writing.novel.telemetry.EventLog.emit("FACTS_DRAFT_WITHDRAWN", java.util.Map.of(
+                    "projectId", projectId, "chapterIndex", chapterIndex,
+                    "keepVersion", keepVersion, "withdrawn", withdrawn));
+        }
+        return withdrawn;
+    }
+
     @Override
     public List<StoryFact> recallBySubject(String projectId, String subject) {
         return factRepo.findActiveBySubject(projectId, subject);

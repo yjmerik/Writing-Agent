@@ -139,9 +139,19 @@ public class ContextAssembler {
         ctx.setRecentTextSection(buildRecentText(projectId, chapterIndex));
 
         String queryText = chapterSynopsis != null ? chapterSynopsis : chapterTitle;
-        assembleRetrievedContext(projectId, queryText, ctx, maxContextTokens, manifest);
-        ctx.setRelevantForeshadowings(buildForeshadowings(projectId, chapterIndex, manifest));
         ChapterSynopsis fullSynopsis = findFullSynopsis(projectId, chapterIndex);
+        // NCS-110: 多路查询——大纲 + cast 规范名 + 待回收伏笔关键词
+        List<String> cast = expandCast(parseCast(fullSynopsis), projectId);
+        List<String> foreshadowHints = repository.findUnresolvedForeshadowings(projectId).stream()
+                .filter(f -> f.getPlantedAtChapter() <= chapterIndex)
+                .filter(f -> f.getPriority() == Foreshadowing.Priority.HIGH || f.isMustResolve())
+                .sorted(java.util.Comparator.comparingInt(
+                        f -> -f.suspenseChapters(chapterIndex)))
+                .map(Foreshadowing::getDescription)
+                .limit(3)
+                .toList();
+        assembleRetrievedContext(projectId, queryText, cast, foreshadowHints, ctx, maxContextTokens, manifest);
+        ctx.setRelevantForeshadowings(buildForeshadowings(projectId, chapterIndex, manifest));
         ctx.setBibleSection(buildBibleSection(projectId, chapterIndex, fullSynopsis, manifest));
         ctx.setTaskSection(buildTaskSection(chapterTitle, chapterSynopsis, writingNotes, fullSynopsis));
 
@@ -340,6 +350,12 @@ public class ContextAssembler {
     private static String firstChars(String s, int n) {
         if (s == null) return "";
         return s.length() > n ? s.substring(0, n) : s;
+    }
+
+    /** NCS-110: cast 别名扩展——无 RelevanceGateway 时原样返回（向后兼容） */
+    private List<String> expandCast(List<String> cast, String projectId) {
+        return relevanceGateway != null && cast != null
+                ? relevanceGateway.expandCastWithAliases(projectId, cast) : cast;
     }
 
     private List<String> parseCast(ChapterSynopsis synopsis) {
@@ -552,7 +568,8 @@ public class ContextAssembler {
         return sb.toString();
     }
 
-    private void assembleRetrievedContext(String projectId, String queryText, WritingContext ctx,
+    private void assembleRetrievedContext(String projectId, String queryText, List<String> cast,
+                                          List<String> foreshadowHints, WritingContext ctx,
                                           int maxContextTokens, InjectionManifest manifest) {
         List<Character> allChars = knowledgeBase.findAllCharacters(projectId);
         if (allChars.isEmpty()) return;
@@ -560,17 +577,39 @@ public class ContextAssembler {
         // p10-w1-03: top-K 随组装预算动态（5~20），大窗口多召回历史相关情节，修复固定 5 召回率过低
         int topK = Math.max(RETRIEVAL_TOP_K, Math.min(20, maxContextTokens / 4000));
 
-        // 向量检索相关人物（try-catch 防止 embedding API 失败中断写作）
-        List<String> relevantIds;
-        try {
-            var searchResults = vectorRetrieval.search(queryText, projectId, topK);
-            relevantIds = searchResults.stream().map(r -> r.id()).toList();
-        } catch (Exception e) {
-            // p10-w1-03: embedding 失败不再静默——记录告警，便于发现检索层故障（此前静默丢历史召回）
-            System.getLogger(ContextAssembler.class.getName())
-                    .log(System.Logger.Level.WARNING,
-                            "向量检索失败，本次组装跳过相关设定召回（不中断写作）: " + e.getMessage());
-            relevantIds = List.of();
+        // NCS-110: 多路查询混合检索——大纲/cast/伏笔锚点各路独立检索，id 去重合并保最高分
+        List<String> queries = RecallQueryPlanner.queries(queryText, null, cast, foreshadowHints);
+        java.util.Map<String, Double> scored = new java.util.LinkedHashMap<>();
+        boolean vectorFailed = false;
+        for (String query : queries) {
+            try {
+                int perQueryK = Math.max(3, topK / queries.size());
+                for (var r : vectorRetrieval.search(query, projectId, perQueryK)) {
+                    scored.merge(r.id(), r.score(), Math::max);
+                }
+            } catch (Exception e) {
+                // p10-w1-03: embedding 失败不再静默——记录告警，便于发现检索层故障（此前静默丢历史召回）
+                vectorFailed = true;
+                System.getLogger(ContextAssembler.class.getName())
+                        .log(System.Logger.Level.WARNING,
+                                "向量检索失败(查询路数" + queries.size() + ")，本次组装降级词法通道: "
+                                        + e.getMessage());
+                break;
+            }
+        }
+        List<String> relevantIds = scored.entrySet().stream()
+                .sorted((a, b) -> Double.compare(b.getValue(), a.getValue()))
+                .limit(topK)
+                .map(java.util.Map.Entry::getKey)
+                .toList();
+        // NCS-110: 词法兜底——向量失败或全部低于阈值（0 分）时按实体名精确匹配知识条目，
+        // 消除静默空召回
+        if (relevantIds.isEmpty() && (vectorFailed || cast != null)) {
+            relevantIds = lexicalFallback(projectId, cast, topK);
+            if (!relevantIds.isEmpty()) {
+                manifest.addEntry("relevantSettings", InjectionManifest.Kind.KNOWLEDGE,
+                        "lexical-fallback:" + relevantIds.size(), "词法兜底通道", 0);
+            }
         }
 
         final List<String> finalRelevantIds = relevantIds;
@@ -620,6 +659,26 @@ public class ContextAssembler {
             }
         }
         ctx.setRelevantSettings(settings.toString().trim());
+    }
+
+    /**
+     * NCS-110: 词法兜底通道——实体名/别名精确匹配知识条目（cap），向量层不可用时保底召回。
+     */
+    private List<String> lexicalFallback(String projectId, List<String> cast, int cap) {
+        if (cast == null || cast.isEmpty()) return List.of();
+        try {
+            List<String> out = new java.util.ArrayList<>();
+            for (var e : repository.findKnowledgeEntriesByProject(projectId)) {
+                if (out.size() >= cap) break;
+                boolean hit = cast.stream().anyMatch(name -> name != null && !name.isBlank()
+                        && (e.getName() != null && (e.getName().contains(name)
+                            || (e.getContent() != null && e.getContent().contains(name)))));
+                if (hit) out.add(e.getId());
+            }
+            return out;
+        } catch (Exception ex) {
+            return List.of();
+        }
     }
 
     /** 判断是否主角（用于强制锚定） */

@@ -9258,13 +9258,14 @@
    "description": "新增 ContinuityIssue.Type.STYLE（当前风格漂移误标 WORLDBUILDING，会被 RepairArbiter 路由到覆写真典）；buildFeedbackSection 的风格反馈不再截断 80 字，完整报告（漂移点+高频词清单）注入下一章",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-28 verified: ef484479d491（ff-merge=main 提交 ef484479d491）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：风格 issue 类型为 STYLE，反馈注入包含完整报告内容（>80 字）",
    "verify_cmd": "mvn test -Dtest=StyleFeedbackFlowTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-101-verified"
   },
   {
    "id": "NCS-102",

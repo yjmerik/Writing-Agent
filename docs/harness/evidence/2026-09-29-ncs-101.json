@@ -1,0 +1,20 @@
+{
+ "commit": "ef484479d491193a2280f5bd533622128ff8536d",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-101"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：StyleFeedbackFlowTest 3 项（文风→STYLE 信封解析/STYLE 持久化往返/风格报告完整注入不截 80 字而其他类型维持）；分支与 main 全量 1279/0F/0E/1S",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-101; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-101-style-feedback-flow"
+}

@@ -2332,8 +2332,19 @@
    "implementation_commit": "caf6fb956ddc2ca111fb034720224028557d49d9",
    "main_commit": "caf6fb956ddc2ca111fb034720224028557d49d9",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-098.json"
+  },
+  {
+   "id": "ncs-099-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-099"
+   ],
+   "branch": "codex/ncs-099-rewrite-derived-rollback",
+   "implementation_commit": "64870d39cb102a3b5162efe5b1126c5a0b61361a",
+   "main_commit": "64870d39cb102a3b5162efe5b1126c5a0b61361a",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-099.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "caf6fb956ddc2ca111fb034720224028557d49d9"
+ "main_commit": "64870d39cb102a3b5162efe5b1126c5a0b61361a"
 }

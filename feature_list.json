@@ -9228,13 +9228,14 @@
    "description": "FactHarvester 真实赋值 StoryFact.sourceChapterVersion（当前恒 0）；章节重写被接受后按旧稿版本 supersede 旧派生事实/实体边/伏笔条目，旧版本抽取不再以 ACTIVE 污染长程记忆",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-28 verified: 64870d39cb10（ff-merge=main 提交 64870d39cb10）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：重写接受后旧稿版本的派生事实状态为 SUPERSEDED（或等价撤销），新稿事实 ACTIVE 唯一",
    "verify_cmd": "mvn test -Dtest=RewriteDerivedRollbackTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-099-verified"
   },
   {
    "id": "NCS-100",

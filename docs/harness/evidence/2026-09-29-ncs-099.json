@@ -1,0 +1,20 @@
+{
+ "commit": "64870d39cb102a3b5162efe5b1126c5a0b61361a",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-099"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：RewriteDerivedRollbackTest 2 项（旧稿事实撤回 RETIRED+新稿带版本号 ACTIVE 唯一；人工补丁保护+同稿幂等）；分支与 main 全量 1272/0F/0E/1S",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-099; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-099-rewrite-derived-rollback"
+}

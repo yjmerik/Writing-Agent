@@ -108,11 +108,7 @@ public class ForeshadowingResolutionDetector {
     private int parseAndMarkResolved(String json, String projectId, int chapterIndex,
                                       List<Foreshadowing> unresolved) {
         try {
-            String clean = json.trim();
-            if (clean.startsWith("```")) {
-                clean = clean.replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
-            }
-            JsonNode root = MAPPER.readTree(clean);
+            JsonNode root = com.writing.novel.llm.LlmJson.parseOrThrow(json, null);
             JsonNode resolvedArray = root.path("resolved");
             if (!resolvedArray.isArray()) return 0;
 

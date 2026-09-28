@@ -50,8 +50,8 @@ public class DirectiveEvidenceAgent {
         }
         JsonNode directiveArray;
         try {
-            directiveArray = MAPPER.readTree(directivesJson);
-        } catch (JsonProcessingException e) {
+            directiveArray = com.writing.novel.llm.LlmJson.parseOrThrow(directivesJson, "directivesJson");
+        } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("directivesJson 非法", e);
         }
         if (!directiveArray.isArray()) {
@@ -132,7 +132,7 @@ public class DirectiveEvidenceAgent {
             throw new IllegalStateException("核对器返回非 JSON 数组：要求保持未验证");
         }
         try {
-            JsonNode array = MAPPER.readTree(json.substring(start, end + 1));
+            JsonNode array = com.writing.novel.llm.LlmJson.parseOrThrow(json.substring(start, end + 1), "核对响应");
             List<AuthorDirective.Evidence> list = new ArrayList<>();
             for (JsonNode node : array) {
                 String id = node.path("directiveId").asText(null);
@@ -146,7 +146,7 @@ public class DirectiveEvidenceAgent {
                         node.path("reason").asText(null)));
             }
             return list;
-        } catch (JsonProcessingException e) {
+        } catch (IllegalArgumentException e) {
             throw new IllegalStateException("核对器返回解析失败：要求保持未验证", e);
         }
     }
@@ -160,12 +160,8 @@ public class DirectiveEvidenceAgent {
     }
 
     private String extractChapterBody(String chapterJson) {
-        try {
-            JsonNode node = MAPPER.readTree(chapterJson);
-            return node.path("content").asText(null);
-        } catch (Exception e) {
-            return null;
-        }
+        var parsed = com.writing.novel.llm.LlmJson.parse(chapterJson);
+        return parsed.ok() ? parsed.node().path("content").asText(null) : null;
     }
 
     private String UUID_FOR_MISSING() {

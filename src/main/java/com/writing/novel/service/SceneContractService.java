@@ -50,7 +50,7 @@ public class SceneContractService {
         String trimmed = contractJson == null ? "" : contractJson.trim();
         if (!trimmed.isEmpty()) {
             try {
-                var node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(trimmed);
+                var node = com.writing.novel.llm.LlmJson.parseOrThrow(trimmed, "场景合同");
                 if (!node.isObject()) throw new IllegalArgumentException("合同必须是 JSON 对象");
             } catch (Exception e) {
                 throw new IllegalArgumentException("合同不是有效 JSON: " + e.getMessage());

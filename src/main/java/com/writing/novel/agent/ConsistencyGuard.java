@@ -144,11 +144,7 @@ public class ConsistencyGuard {
     private List<ContinuityIssue> parseIssues(String json, String projectId, int chapterIndex) {
         List<ContinuityIssue> issues = new ArrayList<>();
         try {
-            String clean = json.trim();
-            if (clean.startsWith("```")) {
-                clean = clean.replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
-            }
-            JsonNode root = MAPPER.readTree(clean);
+            JsonNode root = com.writing.novel.llm.LlmJson.parseOrThrow(json, null);
             for (String field : List.of("abilityViolations", "evidenceProblems", "anachronisms")) {
                 if (root == null || !root.path(field).isArray())
                     throw new IllegalArgumentException("缺少问题数组：" + field);
@@ -304,8 +300,8 @@ public class ConsistencyGuard {
 
     /** 剥离代码围栏并校验稿号；结果数组存在性在此保证 */
     private JsonNode parseVerificationResponse(String raw, int chapterVersion) throws Exception {
-        String clean = raw == null ? "" : raw.trim().replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
-        JsonNode result = MAPPER.readTree(clean);
+        JsonNode result = com.writing.novel.llm.LlmJson.parseOrThrow(
+                raw == null ? "" : raw, "复验响应");
         if (result == null || !result.path("chapterVersion").isIntegralNumber()
                 || result.path("chapterVersion").asInt() != chapterVersion
                 || !result.path("results").isArray())

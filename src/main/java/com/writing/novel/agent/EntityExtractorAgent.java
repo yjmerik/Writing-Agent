@@ -313,13 +313,9 @@ public class EntityExtractorAgent {
         return new EdgeStage(newEdges, null);
     }
 
-    /** 剥离 ```json 包裹后解析；截断的 JSON 在此抛出异常 */
+    /** NCS-106: 中心化解析（剥围栏/类型化失败）；截断的 JSON 在此抛出异常 */
     private static JsonNode parseJson(String json) throws Exception {
-        String clean = json.trim();
-        if (clean.startsWith("```")) {
-            clean = clean.replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
-        }
-        return MAPPER.readTree(clean);
+        return com.writing.novel.llm.LlmJson.parseOrThrow(json, "实体/关系 JSON");
     }
 
     /** 按规范名或别名匹配已有实体 */

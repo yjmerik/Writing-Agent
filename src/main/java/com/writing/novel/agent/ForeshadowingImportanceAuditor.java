@@ -105,11 +105,7 @@ public class ForeshadowingImportanceAuditor {
     private int applyAudit(String json, List<Foreshadowing> batch) {
         int upgraded = 0;
         try {
-            String clean = json.trim();
-            if (clean.startsWith("```")) {
-                clean = clean.replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
-            }
-            JsonNode root = MAPPER.readTree(clean);
+            JsonNode root = com.writing.novel.llm.LlmJson.parseOrThrow(json, null);
             JsonNode audits = root.path("audits");
             if (!audits.isArray()) return 0;
 

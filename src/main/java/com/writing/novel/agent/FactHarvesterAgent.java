@@ -182,7 +182,7 @@ public class FactHarvesterAgent {
             int start = json.indexOf('[');
             int end = json.lastIndexOf(']');
             if (start < 0 || end < start) throw new IllegalArgumentException("缺少完整事实数组");
-            JsonNode arr = MAPPER.readTree(json.substring(start, end + 1));
+            JsonNode arr = com.writing.novel.llm.LlmJson.parseOrThrow(json.substring(start, end + 1), "事实响应");
             if (!arr.isArray()) throw new IllegalArgumentException("事实响应必须为数组");
             // 先校验整批响应，避免前半批落库后才发现后面的条目无效。
             for (JsonNode item : arr) {

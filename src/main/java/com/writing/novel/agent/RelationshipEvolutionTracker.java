@@ -102,11 +102,7 @@ public class RelationshipEvolutionTracker {
     private int applyEvolutions(String json, String projectId, int chapterIndex) {
         int count = 0;
         try {
-            String clean = json.trim();
-            if (clean.startsWith("```")) {
-                clean = clean.replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
-            }
-            JsonNode root = MAPPER.readTree(clean);
+            JsonNode root = com.writing.novel.llm.LlmJson.parseOrThrow(json, null);
             JsonNode evolutions = root.path("evolutions");
             if (!evolutions.isArray()) return 0;
 

@@ -61,7 +61,7 @@ public class CharacterDecisionExtractor {
         }
         List<CharacterDecision> decisions = new ArrayList<>();
         try {
-            var arr = MAPPER.readTree(raw.substring(start, end + 1));
+            var arr = com.writing.novel.llm.LlmJson.parseOrThrow(raw.substring(start, end + 1), "角色决策响应");
             for (var item : arr) {
                 String character = item.path("character").asText("");
                 String chosen = item.path("chosenAction").asText("");

@@ -35,7 +35,7 @@ public final class LlmJson {
         if (raw == null) return "";
         String clean = raw.trim();
         if (clean.startsWith("```")) {
-            clean = clean.replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
+            clean = clean.replaceAll("^```[a-zA-Z]*\\s*", "").replaceAll("\\s*```$", "");
         }
         return clean.trim();
     }

@@ -63,11 +63,7 @@ public class ReaderReviewAgent {
 
     private ReviewReport parseReport(String json, int chapterIndex) {
         try {
-            String clean = json.trim();
-            if (clean.startsWith("```")) {
-                clean = clean.replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
-            }
-            JsonNode root = MAPPER.readTree(clean);
+            JsonNode root = com.writing.novel.llm.LlmJson.parseOrThrow(json, null);
             if (root == null || !root.isObject() || !root.path("summary").isTextual()
                     || root.path("summary").asText().isBlank()) throw new IllegalArgumentException("缺少评价说明");
             for (String key : List.of("engagement", "coherence", "character", "hook", "overall")) {

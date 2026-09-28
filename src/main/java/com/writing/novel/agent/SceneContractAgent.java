@@ -43,12 +43,9 @@ public class SceneContractAgent {
         int end = raw.lastIndexOf('}');
         if (start < 0 || end <= start) return null;
         String json = raw.substring(start, end + 1);
-        try {
-            var node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(json);
-            if (!node.isObject() || node.path("purpose").asText("").isBlank()) return null;
-            return node.toString();
-        } catch (Exception e) {
-            return null;
-        }
+        var parsed = com.writing.novel.llm.LlmJson.parse(json);
+        if (!parsed.ok() || !parsed.node().isObject()
+                || parsed.node().path("purpose").asText("").isBlank()) return null;
+        return parsed.node().toString();
     }
 }

@@ -60,12 +60,8 @@ public class PassageEditor {
             var resp = gateway.complete(req);
             String result = resp.getContent();
             if (result == null || result.isBlank()) return null;
-            // 清理可能的 markdown 包裹
-            result = result.trim();
-            if (result.startsWith("```")) {
-                result = result.replaceAll("^```[a-z]*\\s*", "").replaceAll("\\s*```$", "").trim();
-            }
-            return result;
+            // NCS-106: 中心化围栏剥离（markdown 代码块包裹的正文段）
+            return com.writing.novel.llm.LlmJson.stripFences(result);
         } catch (Exception e) {
             return null;
         }

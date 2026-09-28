@@ -524,12 +524,12 @@ public class AgentRevisionService {
 
     private ObjectNode candidateObject(RevisionCandidate candidate) {
         try {
-            JsonNode node = objectMapper.readTree(candidate.structuredJson());
+            JsonNode node = com.writing.novel.llm.LlmJson.parseOrThrow(candidate.structuredJson(), "Agent 候选 JSON");
             if (!(node instanceof ObjectNode object)) {
                 throw new IllegalStateException("Agent 候选必须是 JSON 对象");
             }
             return object;
-        } catch (JsonProcessingException e) {
+        } catch (IllegalArgumentException e) {
             throw new IllegalStateException("Agent 候选不是有效 JSON", e);
         }
     }

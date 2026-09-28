@@ -115,7 +115,7 @@ public class GroupAcceptanceService {
             return;
         }
         try {
-            var arr = new com.fasterxml.jackson.databind.ObjectMapper().readTree(protectAnchorsJson);
+            var arr = com.writing.novel.llm.LlmJson.parseOrThrow(protectAnchorsJson, "保护锚点");
             for (var anchor : arr) {
                 int anchorChapter = anchor.path("chapterIndex").asInt(-1);
                 String span = anchor.path("span").asText("");
@@ -139,11 +139,7 @@ public class GroupAcceptanceService {
     }
 
     private String proposalContent(RevisionProposal proposal) {
-        try {
-            var node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(proposal.getAfterJson());
-            return node.path("content").asText(null);
-        } catch (Exception e) {
-            return null;
-        }
+        var parsed = com.writing.novel.llm.LlmJson.parse(proposal.getAfterJson());
+        return parsed.ok() ? parsed.node().path("content").asText(null) : null;
     }
 }

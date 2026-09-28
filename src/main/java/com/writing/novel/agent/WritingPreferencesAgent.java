@@ -63,11 +63,7 @@ public class WritingPreferencesAgent {
     @SuppressWarnings("unchecked")
     private ChatResult parseResponse(String json, WritingPreferences prefs) {
         try {
-            String clean = json.trim();
-            if (clean.startsWith("```")) {
-                clean = clean.replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
-            }
-            JsonNode root = MAPPER.readTree(clean);
+            JsonNode root = com.writing.novel.llm.LlmJson.parseOrThrow(json, null);
 
             String reply = root.path("reply").asText("已更新。");
             JsonNode updates = root.path("updates");

@@ -104,11 +104,9 @@ public class PlotMotifTracker {
                 .build();
         try {
             var resp = gateway.complete(req);
-            String json = resp.getContent().trim();
-            if (json.startsWith("```")) {
-                json = json.replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
-            }
-            JsonNode root = MAPPER.readTree(json);
+            var parsed = com.writing.novel.llm.LlmJson.parse(resp.getContent());
+            if (!parsed.ok()) return List.of();
+            JsonNode root = parsed.node();
             JsonNode arr = root.path("motifs");
             List<String> motifs = new ArrayList<>();
             if (arr.isArray()) {
@@ -132,7 +130,7 @@ public class PlotMotifTracker {
                 if (keys != null && !keys.equals("[]")) {
                     // 解析 JSON 数组
                     try {
-                        JsonNode arr = MAPPER.readTree(keys);
+                        JsonNode arr = com.writing.novel.llm.LlmJson.parseOrThrow(keys, "历史桥段记录");
                         if (arr.isArray()) {
                             for (JsonNode n : arr) {
                                 String m = n.asText("").trim();

@@ -364,8 +364,8 @@ public class ChapterRevisionService {
 
     private com.fasterxml.jackson.databind.node.ObjectNode parseProposalAfter(RevisionProposal proposal) {
         try {
-            com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper()
-                    .readTree(proposal.getAfterJson());
+            com.fasterxml.jackson.databind.JsonNode node = com.writing.novel.llm.LlmJson.parseOrThrow(
+                    proposal.getAfterJson(), "候选 after 内容");
             if (node == null || !node.isObject()) {
                 throw new IllegalStateException("候选 after 内容无效");
             }

@@ -121,7 +121,7 @@ public class PlanDeviationService {
         Outline outline = repository.findOutlineByProject(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("项目尚无大纲"));
         try {
-            var node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(deviationJson);
+            var node = com.writing.novel.llm.LlmJson.parseOrThrow(deviationJson, "偏离分析");
             String realized = node.path("realized").asText("");
             String replaced = node.path("replaced").asText("");
             StringBuilder updated = new StringBuilder();
@@ -150,12 +150,8 @@ public class PlanDeviationService {
         int end = raw.lastIndexOf('}');
         if (start < 0 || end <= start) return null;
         String json = raw.substring(start, end + 1);
-        try {
-            var node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(json);
-            if (!node.isObject()) return null;
-            return node.toString();
-        } catch (Exception e) {
-            return null;
-        }
+        var node = com.writing.novel.llm.LlmJson.parse(json);
+        if (!node.ok() || !node.node().isObject()) return null;
+        return node.node().toString();
     }
 }

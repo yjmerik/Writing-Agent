@@ -150,7 +150,7 @@ public class SelectiveAcceptService {
 
     private String contentOf(RevisionProposal proposal) {
         try {
-            var node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(proposal.getAfterJson());
+            var node = com.writing.novel.llm.LlmJson.parseOrThrow(proposal.getAfterJson(), "候选内容");
             return node.path("content").asText("");
         } catch (Exception e) {
             throw new IllegalStateException("候选内容无效", e);

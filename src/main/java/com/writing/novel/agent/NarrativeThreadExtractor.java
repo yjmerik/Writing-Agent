@@ -51,11 +51,7 @@ public class NarrativeThreadExtractor {
 
     private void parseAndUpdate(String json, String projectId, int chapterIndex) {
         try {
-            String clean = json.trim();
-            if (clean.startsWith("```")) {
-                clean = clean.replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
-            }
-            JsonNode root = MAPPER.readTree(clean);
+            JsonNode root = com.writing.novel.llm.LlmJson.parseOrThrow(json, null);
             JsonNode threads = root.path("threads");
             if (!threads.isArray()) return;
 

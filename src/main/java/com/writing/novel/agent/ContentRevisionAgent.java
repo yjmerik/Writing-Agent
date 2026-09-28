@@ -99,11 +99,11 @@ public class ContentRevisionAgent {
             throw new IllegalArgumentException("instructions 不能为空");
         }
         try {
-            JsonNode current = MAPPER.readTree(currentJson);
-            if (current == null || !current.isObject()) {
+            JsonNode current = com.writing.novel.llm.LlmJson.parseOrThrow(currentJson, "currentJson");
+            if (!current.isObject()) {
                 throw new IllegalArgumentException("currentJson 必须是单个 JSON 对象");
             }
-        } catch (JsonProcessingException e) {
+        } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("currentJson 不是有效 JSON", e);
         }
     }
@@ -118,11 +118,11 @@ public class ContentRevisionAgent {
         }
 
         try {
-            JsonNode structured = MAPPER.readTree(candidate.structuredJson());
-            if (structured == null || !structured.isObject()) {
+            JsonNode structured = com.writing.novel.llm.LlmJson.parseOrThrow(candidate.structuredJson(), "候选结构化 JSON");
+            if (!structured.isObject()) {
                 throw invalidCandidate(null);
             }
-        } catch (JsonProcessingException e) {
+        } catch (IllegalArgumentException e) {
             throw invalidCandidate(e);
         }
 

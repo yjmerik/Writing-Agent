@@ -1,0 +1,20 @@
+{
+ "commit": "11ec8b8fc9229f674c76bfcbf74c5dcc0c222f48",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-107"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED（截断响应字数达标被直接入库，续写调用 0 次）→GREEN：3 项（触发续写合并落库/续写仍截断失败不入库/完整响应不触发）；新增 chapter-continuation.st（仅截断时使用，常规回放不触发）；分支与 main 全量 1305/0F/0E/1S",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-107; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-107-truncation-gate"
+}

@@ -9352,13 +9352,14 @@
    "description": "ChapterWriterAgent 消费 finish_reason=length（当前无视，半章只要字数达标即入库）：截断时用 chapter-continuation 模板续写补全一次，仍截断按失败走既有递降重试，杜绝剧情腰斩章节入库",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-28 verified: 11ec8b8fc922（ff-merge=main 提交 11ec8b8fc922）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：构造 length 截断响应时先续写补全，补全后完整才入库，连续截断不入库",
    "verify_cmd": "mvn test -Dtest=ChapterWriterTruncationGateTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-107-verified"
   },
   {
    "id": "NCS-108",

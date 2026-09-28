@@ -9414,13 +9414,14 @@
    "description": "VectorStore.search 支持 sourceType 配额（默认 CHAPTER:WORLDBUILDING:CHARACTER=0.5:0.25:0.25，激活零消费的 sourceType 字段）与绝对相似度阈值（默认 0.35 可配，替换 score>=0.0 形同虚设）；同章相邻 chunk 合并注入；relevantSettings 命中加条数/字数上限",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-28 verified: f3c42f2e0d11（ff-merge=main 提交 f3c42f2e0d11）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：混排场景下三类来源各占配额、低于阈值不注入、相邻 chunk 单次注入",
    "verify_cmd": "mvn test -Dtest=VectorSearchQuotaTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-111-verified"
   },
   {
    "id": "NCS-112",

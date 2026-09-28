@@ -279,7 +279,7 @@ public class ChapterProduction {
             if (score < 60) {
                 repository.saveContinuityIssue(new ContinuityIssue(
                         projectId, chapterIndex,
-                        ContinuityIssue.Type.WORLDBUILDING,
+                        ContinuityIssue.Type.STYLE,
                         ContinuityIssue.Severity.MEDIUM,
                         "风格漂移（评分" + score + "/100）：" + report));
             }

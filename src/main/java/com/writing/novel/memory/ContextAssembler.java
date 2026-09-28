@@ -1190,9 +1190,11 @@ public class ContextAssembler {
         for (var issue : issues) {
             sb.append("■ [").append(issue.getSeverity()).append("] ");
             sb.append(issue.getType()).append("：");
-            // 截取描述前 80 字
+            // NCS-101: 风格漂移报告不截断——漂移点与高频词清单是下一章纠正的全部依据（旧 80 字截断恰好截掉）；
+            // 其余类型维持 80 字上限控制预算
             String desc = issue.getDescription();
-            sb.append(desc.length() > 80 ? desc.substring(0, 80) + "..." : desc);
+            boolean fullText = issue.getType() == ContinuityIssue.Type.STYLE;
+            sb.append(!fullText && desc.length() > 80 ? desc.substring(0, 80) + "..." : desc);
             sb.append("\n");
         }
 

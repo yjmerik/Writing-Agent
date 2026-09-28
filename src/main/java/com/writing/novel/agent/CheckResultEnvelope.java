@@ -51,6 +51,7 @@ public record CheckResultEnvelope(Status status, List<ContinuityIssue> issues, S
             case "世界观" -> ContinuityIssue.Type.WORLDBUILDING;
             case "时间线" -> ContinuityIssue.Type.TIMELINE;
             case "伏笔" -> ContinuityIssue.Type.FORESHADOWING;
+            case "文风" -> ContinuityIssue.Type.STYLE;
             default -> ContinuityIssue.Type.WORLDBUILDING;
         };
     }

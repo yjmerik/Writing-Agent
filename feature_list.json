@@ -9198,13 +9198,14 @@
    "dependencies": [
     "NCS-096"
    ],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-28 verified: 9bfe4c4cbb54（ff-merge=main 提交 9bfe4c4cbb54）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：检查输入的 fact 集与写作注入同口径（recency 生效）、真典只注入一段、recheck 与首查判据一致；continuity-check.st 只增变量不改既有变量名",
    "verify_cmd": "mvn test -Dtest=ContinuityContextParityTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-097-verified"
   },
   {
    "id": "NCS-098",

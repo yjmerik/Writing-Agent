@@ -2310,8 +2310,19 @@
    "implementation_commit": "85d26ea48bcb035d2397fea76ed42ad261c09ada",
    "main_commit": "85d26ea48bcb035d2397fea76ed42ad261c09ada",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-096.json"
+  },
+  {
+   "id": "ncs-097-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-097"
+   ],
+   "branch": "codex/ncs-097-checker-context-parity",
+   "implementation_commit": "9bfe4c4cbb54f5cadc37116232fd26c39d193f8a",
+   "main_commit": "9bfe4c4cbb54f5cadc37116232fd26c39d193f8a",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-097.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "85d26ea85d26ea85d26ea85d26ea85d26ea85d26ea"
+ "main_commit": "9bfe4c4cbb54f5cadc37116232fd26c39d193f8a"
 }

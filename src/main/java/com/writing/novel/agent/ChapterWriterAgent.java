@@ -496,6 +496,15 @@ public class ChapterWriterAgent {
             if (sb.length() > 0) sb.append("。");
             sb.append(style.getDosAndDonts());
         }
+        // NCS-102: 例文范本 few-shot——抽象形容词约束升级为客观语感锚点（空=行为不变）
+        var samples = style.getStyleSamples();
+        if (samples != null && !samples.isEmpty()) {
+            sb.append("\n\n【风格范本（模仿以下例文的语感/句式/节奏，不得照抄内容）】\n");
+            for (int i = 0; i < samples.size(); i++) {
+                sb.append("——范本").append(i + 1).append("——\n")
+                        .append(samples.get(i)).append('\n');
+            }
+        }
         return sb.toString();
     }
 }

@@ -2698,17 +2698,29 @@ public class SqliteNovelRepository implements NovelRepository {
     public void saveStyleProfile(StyleProfile p) {
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO style_profiles (project_id,tone,voice,dos_and_donts,sample_chapter_indices,updated_at) " +
-                     "VALUES (?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET tone=excluded.tone, " +
+                     "INSERT INTO style_profiles (project_id,tone,voice,dos_and_donts,sample_chapter_indices,style_samples,updated_at) " +
+                     "VALUES (?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET tone=excluded.tone, " +
                      "voice=excluded.voice, dos_and_donts=excluded.dos_and_donts, " +
-                     "sample_chapter_indices=excluded.sample_chapter_indices, updated_at=excluded.updated_at")) {
+                     "sample_chapter_indices=excluded.sample_chapter_indices, " +
+                     "style_samples=excluded.style_samples, updated_at=excluded.updated_at")) {
             ps.setString(1, p.getProjectId()); ps.setString(2, p.getTone());
             ps.setString(3, p.getVoice()); ps.setString(4, p.getDosAndDonts());
             ps.setString(5, String.join(",", p.getSampleChapterIndices().stream()
                     .map(String::valueOf).toList()));
-            ps.setString(6, p.getUpdatedAt().toString());
+            ps.setString(6, serializeStyleSamples(p.getStyleSamples()));
+            ps.setString(7, p.getUpdatedAt().toString());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** NCS-102: style_samples 列以 JSON 数组持久化（例文含换行等任意文本） */
+    private static String serializeStyleSamples(java.util.List<String> samples) {
+        if (samples == null || samples.isEmpty()) return null;
+        try {
+            return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(samples);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
@@ -2728,6 +2740,15 @@ public class SqliteNovelRepository implements NovelRepository {
                     if (!s.isEmpty()) p.addSampleChapter(Integer.parseInt(s.trim()));
                 }
             }
+            // NCS-102: 例文范本段（JSON 数组；旧行/空列为空列表）
+            try {
+                String samplesJson = rs.getString("style_samples");
+                if (samplesJson != null && !samplesJson.isBlank()) {
+                    p.setStyleSamples(new com.fasterxml.jackson.databind.ObjectMapper()
+                            .readValue(samplesJson,
+                                    new com.fasterxml.jackson.core.type.TypeReference<java.util.List<String>>() {}));
+                }
+            } catch (Exception ignored) {}
             return Optional.of(p);
         } catch (SQLException e) { throw new RuntimeException(e); }
     }

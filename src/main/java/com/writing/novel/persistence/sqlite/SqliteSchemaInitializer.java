@@ -68,7 +68,6 @@ public class SqliteSchemaInitializer {
         "CREATE TABLE IF NOT EXISTS style_profiles (" +
             "project_id TEXT PRIMARY KEY, tone TEXT, voice TEXT, " +
             "dos_and_donts TEXT, sample_chapter_indices TEXT, updated_at TEXT)",
-
         "CREATE TABLE IF NOT EXISTS continuity_issues (" +
             "id TEXT PRIMARY KEY, project_id TEXT, detected_at_chapter INTEGER, " +
             "type TEXT, severity TEXT, description TEXT, resolved INTEGER, created_at TEXT)",
@@ -454,6 +453,8 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN max_chapter_length INTEGER DEFAULT 6000");
         safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN chapter_length_variation TEXT DEFAULT 'VARIED'");
         safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN fast_pace_window INTEGER DEFAULT 4");
+        // NCS-102: 风格例文范本段（JSON 数组，至多 3 段）
+        safeAddColumn(st, "ALTER TABLE style_profiles ADD COLUMN style_samples TEXT");
         // p11.1-J3
         safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN foreshadow_suspense_threshold INTEGER DEFAULT 8");
         // mc-p2-01: versioned memory——summaries 派生版本与脏标记

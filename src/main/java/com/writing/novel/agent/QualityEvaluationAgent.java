@@ -85,14 +85,19 @@ public class QualityEvaluationAgent {
         return parseReport(resp.getContent());
     }
 
-    private EvaluationReport parseReport(String json) {
+    /** NCS-105: 包可见性放宽供中心化解析回归测试直接验证失败路径 */
+    public EvaluationReport parseReport(String json) {
+        // NCS-105: 中心化解析——失败路径发事件（此前静默降级全 0 分无任何信号）
+        var parsed = com.writing.novel.llm.LlmJson.parse(json);
+        if (!parsed.ok()) {
+            com.writing.novel.llm.LlmJson.emitFailure("quality-evaluate",
+                    com.writing.novel.llm.LlmTaskType.GENERAL.name(), parsed);
+            EvaluationReport degraded = new EvaluationReport();
+            degraded.summary = "评价解析失败（" + parsed.failure() + "），原始响应:\n" + json;
+            return degraded;
+        }
         try {
-            // 尝试提取 JSON（LLM 可能包了 ```json 标记）
-            String clean = json.trim();
-            if (clean.startsWith("```")) {
-                clean = clean.replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
-            }
-            JsonNode root = MAPPER.readTree(clean);
+            JsonNode root = parsed.node();
 
             EvaluationReport report = new EvaluationReport();
             JsonNode scores = root.path("scores");

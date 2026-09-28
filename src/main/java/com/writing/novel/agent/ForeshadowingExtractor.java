@@ -74,19 +74,28 @@ public class ForeshadowingExtractor {
                 .build();
 
         var resp = gateway.complete(req);
+        // NCS-105: 中心化解析 + 带因修复重试一次；终态失败发事件（不再静默丢伏笔；
+        // 完全 fail-loud 化在 NCS-118）
+        var parsed = com.writing.novel.llm.LlmJson.parseWithRetry(resp.getContent(), gateway, req,
+                "上一次输出不是合法的 JSON 对象。请只输出 JSON 本体："
+                        + "{\"foreshadowings\":[{\"description\":\"…\",\"context\":\"…\","
+                        + "\"priority\":\"HIGH|MEDIUM|LOW\",\"mustResolve\":false,"
+                        + "\"expectedResolveChapter\":null}]}，无伏笔时输出 {\"foreshadowings\":[]}。",
+                "foreshadow-extract");
+        if (!parsed.ok()) {
+            com.writing.novel.llm.LlmJson.emitFailure("foreshadow-extract",
+                    req.getTaskType().name(), parsed);
+            return boundary == null ? 0 : boundary.apply(() -> 0, 0);
+        }
+        JsonNode root = parsed.node();
         var write = (java.util.function.Supplier<Integer>) () ->
-                parseAndSave(resp.getContent(), projectId, chapter.getChapterIndex(), existing);
+                parseAndSave(root, projectId, chapter.getChapterIndex(), existing);
         return boundary == null ? write.get() : boundary.apply(write, 0);
     }
 
-    private int parseAndSave(String json, String projectId, int chapterIndex, List<Foreshadowing> existing) {
+    private int parseAndSave(JsonNode root, String projectId, int chapterIndex, List<Foreshadowing> existing) {
         int count = 0;
         try {
-            String clean = json.trim();
-            if (clean.startsWith("```")) {
-                clean = clean.replaceAll("^```(json)?\\s*", "").replaceAll("\\s*```$", "");
-            }
-            JsonNode root = MAPPER.readTree(clean);
             JsonNode array = root.path("foreshadowings");
             if (!array.isArray()) return 0;
 

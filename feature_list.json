@@ -9305,13 +9305,14 @@
    "description": "新增 StyleMetricsService：句长分布漂移、跨章 n-gram 重复率、cliche 命中率（统一 ClicheDetector 口径+从生成正文动态挖掘高频 n-gram、LLM 检查超标词回流禁用表）、对话密度，每章确定性计算零 LLM 成本；指标进章节质量报告与 golden.json 新 styleMetrics 维度",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-28 verified: d8bd66453a2f（ff-merge=main 提交 d8bd66453a2f）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：指标计算确定性可测，golden.json 含 styleMetrics 维度且 compare-baseline.py 能校验（超标 FAIL / --bless 更新）",
    "verify_cmd": "python3 scripts/compare-baseline.py && mvn test -Dtest=StyleMetricsServiceTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-104-verified"
   },
   {
    "id": "NCS-105",

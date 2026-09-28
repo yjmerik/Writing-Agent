@@ -1,0 +1,20 @@
+{
+ "commit": "d8bd66453a2fd3db40e34d5ffb223ce5411f22d5",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-104"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：StyleMetricsServiceTest 6 项（句长/对话密度/套路词计数/章内与跨章 n-gram/确定性往返/空内容）；compare-baseline 新维度合成验证 PASS-超标FAIL- bless 捕获通过；分支与 main 全量 1292/0F/0E/1S。e2e replay 因 097 continuity prompt 变更 fixture 分叉——按 spec 风险节推迟到收尾统一 record 重建（不逐 feature 大分叉）",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-104; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-104-style-metrics"
+}

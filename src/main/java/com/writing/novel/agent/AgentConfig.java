@@ -53,8 +53,13 @@ public class AgentConfig {
     public ContinuityCheckerAgent continuityCheckerAgent(LlmGateway gateway, NovelRepository repo,
                                                           PromptTemplateService promptService,
                                                           RelevanceGateway relevanceGateway,
-                                                          com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository) {
-        return new ContinuityCheckerAgent(gateway, repo, promptService, relevanceGateway, checkResultRepository);
+                                                          com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository,
+                                                          com.writing.novel.persistence.sqlite.InjectionManifestRepository injectionManifestRepository) {
+        ContinuityCheckerAgent agent = new ContinuityCheckerAgent(gateway, repo, promptService,
+                relevanceGateway, checkResultRepository);
+        // NCS-097: 封闭式核对段数据源
+        agent.setManifestRepository(injectionManifestRepository);
+        return agent;
     }
 
     @Bean

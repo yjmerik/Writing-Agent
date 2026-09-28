@@ -26,6 +26,8 @@ public class ContinuityCheckerAgent {
     private final RelevanceGateway relevanceGateway; // p11-q0-01: 检索收窄门面
     /** NCS-007: 检查结果信封持久化；null 时不落库（旧装配/测试） */
     private final com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository;
+    /** NCS-097: 注入清单仓库——封闭式核对段的数据源；null 时跳过该段（旧装配/测试） */
+    private com.writing.novel.persistence.sqlite.InjectionManifestRepository manifestRepository;
 
     public ContinuityCheckerAgent(LlmGateway gateway, NovelRepository repository,
                                   PromptTemplateService promptService) {
@@ -47,6 +49,11 @@ public class ContinuityCheckerAgent {
         this.promptService = promptService;
         this.relevanceGateway = relevanceGateway;
         this.checkResultRepository = checkResultRepository;
+    }
+
+    /** NCS-097: 注入封闭式核对段数据源（生产装配用） */
+    public void setManifestRepository(com.writing.novel.persistence.sqlite.InjectionManifestRepository repo) {
+        this.manifestRepository = repo;
     }
 
     public List<ContinuityIssue> check(String projectId, int chapterIndex,
@@ -80,10 +87,17 @@ public class ContinuityCheckerAgent {
             msg.append("\n\n").append(nameCheck);
         }
 
-        // p11-q0-02: 故事真典（已确立事实）——长程一致性校验依据，替代级联压缩的摘要
-        String canon = buildCanonSection(projectId);
+        // p11-q0-02 / NCS-097: 故事真典（已确立事实）——与写作侧同源口径（带章节号 + 本章 cast），
+        // 唯一真典注入通道（settings 侧不再重复注入）；recency 随章节生效，与写时强调的近章事实同集
+        String canon = buildCanonSection(projectId, chapterIndex);
         if (canon != null && !canon.isBlank()) {
             msg.append("\n\n").append(canon);
+        }
+
+        // NCS-097: 封闭式核对段——写作本章时实际注入的约束清单，逐项核对是否被遵守
+        String injected = buildInjectedConstraintsSection(projectId, chapterIndex);
+        if (injected != null && !injected.isBlank()) {
+            msg.append("\n\n").append(injected);
         }
 
         var req = LlmRequest.builder()
@@ -211,12 +225,14 @@ public class ContinuityCheckerAgent {
     }
 
     /**
-     * p11-q0-02: 故事真典段——消费 ACTIVE 事实作为连续性校验依据。
-     * 经 RelevanceGateway 取 importance 降序的相关事实（主角保底），作为长程一致性核对依据。
+     * p11-q0-02 / NCS-097: 故事真典段——消费 ACTIVE 事实作为连续性校验依据。
+     * 与写作侧 ContextAssembler 同一口径：带章节号的 relevantFacts（recency 生效）
+     * + 本章大纲 cast 收窄（NCS-096 前为 chapterIndex=0 的退化排序，与写作口径不一致）。
      */
-    private String buildCanonSection(String projectId) {
+    private String buildCanonSection(String projectId, int chapterIndex) {
         if (relevanceGateway == null) return "";
-        List<StoryFact> facts = relevanceGateway.relevantFacts(projectId, null, 15);
+        List<String> cast = com.writing.novel.orchestrator.CheckSettingsBuilder.castOf(repository, projectId, chapterIndex);
+        List<StoryFact> facts = relevanceGateway.relevantFacts(projectId, cast, chapterIndex, 15);
         if (facts.isEmpty()) return "";
         StringBuilder sb = new StringBuilder("【故事真典（已确立的事实，新章节必须严格遵守）】\n");
         for (StoryFact f : facts) {
@@ -224,6 +240,33 @@ public class ContinuityCheckerAgent {
                     .append("）：").append(f.getAssertion()).append("\n");
         }
         return sb.toString().trim();
+    }
+
+    /**
+     * NCS-097: 封闭式核对段——从注入清单（NCS-096）取写作时实际注入的真典事实/伏笔，
+     * 要求逐项核对本章正文是否遵守。"作者被告知什么"是确定性的，比对开放世界检查可靠。
+     */
+    private String buildInjectedConstraintsSection(String projectId, int chapterIndex) {
+        if (manifestRepository == null) return "";
+        try {
+            var manifestOpt = manifestRepository.latest(projectId, chapterIndex);
+            if (manifestOpt.isEmpty()) return "";
+            var facts = manifestOpt.get().entriesOfKind(com.writing.novel.memory.InjectionManifest.Kind.FACT);
+            var foreshadows = manifestOpt.get().entriesOfKind(com.writing.novel.memory.InjectionManifest.Kind.FORESHADOW);
+            if (facts.isEmpty() && foreshadows.isEmpty()) return "";
+            StringBuilder sb = new StringBuilder("【本章写作时注入的约束清单（封闭式核对——逐项检查正文是否遵守，")
+                    .append("违反任何一条必须以对应类型报告）】\n");
+            for (var e : facts) {
+                sb.append("- [真典] ").append(e.label).append("\n");
+            }
+            for (var e : foreshadows) {
+                sb.append("- [伏笔] ").append(e.label)
+                        .append("（不得在未回收前自相矛盾或提前无据揭晓）\n");
+            }
+            return sb.toString().trim();
+        } catch (Exception ex) {
+            return "";
+        }
     }
 
     private ContinuityIssue.Type parseType(String s) {

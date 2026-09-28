@@ -451,49 +451,10 @@ public class ChapterProduction {
         log.warn("章{}质量检查暂停：{}", chapterIndex, reason);
     }
 
-    /** 收集设定摘要供连续性检查参考。p11-q0-01: 经 RelevanceGateway 按本章 cast 收窄角色 */
+    /** 收集设定摘要供连续性检查参考。NCS-097: 委托共享构建器（首查/重查同判据）；
+     *  故事真典不再在此注入——由 ContinuityCheckerAgent 以带章节号的写作同源口径注入，消除双通道 */
     private String collectSettingsForCheck(String projectId, int chapterIndex, List<String> cast) {
-        StringBuilder sb = new StringBuilder();
-        var characters = orch.relevanceGateway() != null
-                ? orch.relevanceGateway().relevantCharacters(projectId, cast, 10)
-                : repository.findCharactersByProject(projectId);
-        for (var c : characters) {
-            sb.append(c.getName()).append("（").append(c.getRole()).append("）");
-            if (c.getPersonality() != null) sb.append(" 性格：").append(c.getPersonality());
-            if (c.getAbility() != null) sb.append(" 能力：").append(c.getAbility());
-            sb.append("\n");
-        }
-        for (var e : repository.findKnowledgeEntriesByProject(projectId)) {
-            sb.append("【").append(e.getName()).append("】").append(e.getContent()).append("\n");
-        }
-        // p5-c1: 注入未回收伏笔台账，供连续性检查器参考
-        // p16-04: cap 20——mustResolve 恒在，其余按埋设先后（早埋优先），防全量注入随章节无界增长
-        var foreshadowings = repository.findUnresolvedForeshadowings(projectId).stream()
-                .filter(f -> f.getPlantedAtChapter() <= chapterIndex)
-                .sorted(java.util.Comparator
-                        .comparing(Foreshadowing::isMustResolve).reversed()
-                        .thenComparing(Foreshadowing::getPlantedAtChapter))
-                .limit(20)
-                .toList();
-        if (!foreshadowings.isEmpty()) {
-            sb.append("\n=== 待回收伏笔 ===\n");
-            for (var f : foreshadowings) {
-                sb.append("- ").append(f.getDescription())
-                  .append("（埋于第").append(f.getPlantedAtChapter()).append("章）\n");
-            }
-        }
-        // p11-q0-02: 故事真典 ACTIVE 事实——长程一致性校验依据（替代级联压缩摘要）
-        if (orch.relevanceGateway() != null) {
-            var facts = orch.relevanceGateway().relevantFacts(projectId, cast, 15);
-            if (!facts.isEmpty()) {
-                sb.append("\n=== 故事真典（已确立事实，新章节必须严格遵守） ===\n");
-                for (var f : facts) {
-                    sb.append("- ").append(f.getSubject()).append("（").append(f.getFactType())
-                            .append("）：").append(f.getAssertion()).append("\n");
-                }
-            }
-        }
-        return sb.toString();
+        return CheckSettingsBuilder.build(repository, orch.relevanceGateway(), projectId, chapterIndex, cast);
     }
 
     /** 按章号找梗概（与 Orchestrator.findSynopsis 同语义的生产侧副本） */

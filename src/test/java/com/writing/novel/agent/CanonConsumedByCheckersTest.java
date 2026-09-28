@@ -67,7 +67,8 @@ class CanonConsumedByCheckersTest {
         RelevanceGateway gw = mock(RelevanceGateway.class);
         var fact = new StoryFact("p", StoryFact.FactType.WORLD_RULE, "灵气体系", "九重境界不可越级", 1);
         when(gw.relevantCharacters(any(), any(), anyInt())).thenReturn(List.of());
-        when(gw.relevantFacts(eq("p"), any(), anyInt())).thenReturn(List.of(fact));
+        // NCS-097: 真典段改用与写作同源的四参口径（带章节号，recency 生效）
+        when(gw.relevantFacts(eq("p"), any(), anyInt(), anyInt())).thenReturn(List.of(fact));
 
         var sink = new ArrayList<String>();
         var agent = new ContinuityCheckerAgent(capturing(sink, "未发现连续性问题。"),

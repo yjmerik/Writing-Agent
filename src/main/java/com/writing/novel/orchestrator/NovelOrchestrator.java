@@ -3290,14 +3290,13 @@ public class NovelOrchestrator {
         List<ContinuityIssue> issues = new java.util.ArrayList<>();
         for (String checker : requested) {
             if ("continuity".equals(checker)) {
-                StringBuilder settings = new StringBuilder();
-                for (var c : repository.findCharactersByProject(projectId)) {
-                    settings.append(c.getName()).append('：')
-                            .append(c.getAbility() == null ? "" : c.getAbility()).append('；')
-                            .append(c.getPersonality() == null ? "" : c.getPersonality()).append('\n');
-                }
+                // NCS-097: 重查与首查同判据——共用 CheckSettingsBuilder（人物卡/知识/伏笔），
+                // 真典与封闭式核对段由检查器自身按写作同源口径注入
+                var cast = CheckSettingsBuilder.castOf(repository, projectId, chapterIndex);
+                String settings = CheckSettingsBuilder.build(repository, relevanceGateway(),
+                        projectId, chapterIndex, cast);
                 issues.addAll(continuityChecker.check(projectId, chapterIndex, chapter.getContent(),
-                        settings.toString()));
+                        settings));
             } else if ("consistency-guard".equals(checker)) {
                 if (consistencyGuard == null) throw new IllegalStateException("ConsistencyGuard 未配置");
                 issues.addAll(consistencyGuard.check(projectId, chapterIndex, chapter.getContent(), null));

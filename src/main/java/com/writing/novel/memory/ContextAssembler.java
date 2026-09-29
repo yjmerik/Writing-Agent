@@ -213,6 +213,15 @@ public class ContextAssembler {
         // Token 预算控制：预算按模型窗口推导（90%），超限时按优先级裁剪低优先级 section
         java.util.Map<String, Integer> beforeTrim = sectionTokenSnapshot(ctx);
         applyTokenBudget(ctx, maxContextTokens);
+        // NCS-112: 兜底校验——不可裁盲区（taskSection/bible/约束等）之和超预算时显式事件化，
+        // 不再静默发送超窗 prompt
+        int finalEstimate = sumTokens(ctx);
+        if (finalEstimate > maxContextTokens) {
+            lastBudgetOverflowEstimate = finalEstimate;
+            com.writing.novel.telemetry.EventLog.emit("CONTEXT_BUDGET_EXCEEDED", java.util.Map.of(
+                    "projectId", projectId, "chapterIndex", chapterIndex,
+                    "estimatedTokens", finalEstimate, "budget", maxContextTokens));
+        }
         finalizeManifest(manifest, ctx, beforeTrim);
         ctx.setManifest(manifest);
         saveManifestQuietly(manifest);
@@ -665,6 +674,22 @@ public class ContextAssembler {
             settingsText = settingsText.substring(0, RELEVANT_SETTINGS_MAX_CHARS) + "\n…（相关设定已达注入上限）";
         }
         ctx.setRelevantSettings(settingsText);
+    }
+
+    /** NCS-112: 最近一次组装的预算溢出估算（0=未溢出；测试与诊断用） */
+    private volatile int lastBudgetOverflowEstimate = 0;
+
+    public int getLastBudgetOverflowEstimate() { return lastBudgetOverflowEstimate; }
+
+    /**
+     * NCS-112: 截断常量随预算缩放——大窗口（&gt; 基准 16000）线性放大不浪费；小窗口保持基准值
+     * 不向下折损（摘要/衔接等记忆核心段的既有裁剪语义不变，小预算压力由 settings 截断与
+     * 溢出信号承担）。
+     */
+    static int scaled(int base, int budget) {
+        int reference = TokenBudget.DEFAULT_BUDGET;
+        if (budget <= reference) return base;
+        return (int) ((long) base * budget / reference);
     }
 
     /** NCS-111: 绝对相似度阈值——低于此分数的 chunk 不注入（可按 embedding 模型调整） */
@@ -1352,31 +1377,40 @@ public class ContextAssembler {
             total = sumTokens(ctx);
         }
         if (total > budget && ctx.getNarrativeThreadSection() != null) {
-            ctx.setNarrativeThreadSection(TokenBudget.truncateToTokens(ctx.getNarrativeThreadSection(), 400));
+            ctx.setNarrativeThreadSection(TokenBudget.truncateToTokens(
+                    ctx.getNarrativeThreadSection(), scaled(400, budget)));
             total = sumTokens(ctx);
         }
+        // NCS-112: relevantSettings 从「整体置空」改为按预算截断——长程召回在预算紧张时
+        // 最先全灭的矛盾修复（保留头部高分配额内容）
         if (total > budget && ctx.getRelevantSettings() != null) {
-            ctx.setRelevantSettings("");
+            ctx.setRelevantSettings(TokenBudget.truncateToTokens(
+                    ctx.getRelevantSettings(), scaled(1200, budget)));
             total = sumTokens(ctx);
         }
         if (total > budget && ctx.getWorldbuildingSection() != null) {
-            ctx.setWorldbuildingSection(TokenBudget.truncateToTokens(ctx.getWorldbuildingSection(), 2000));
+            ctx.setWorldbuildingSection(TokenBudget.truncateToTokens(
+                    ctx.getWorldbuildingSection(), scaled(2000, budget)));
             total = sumTokens(ctx);
         }
         if (total > budget && ctx.getVolumeOutlineSection() != null) {
-            ctx.setVolumeOutlineSection(TokenBudget.truncateToTokens(ctx.getVolumeOutlineSection(), 1500));
+            ctx.setVolumeOutlineSection(TokenBudget.truncateToTokens(
+                    ctx.getVolumeOutlineSection(), scaled(1500, budget)));
             total = sumTokens(ctx);
         }
         if (total > budget && ctx.getRecentTextSection() != null) {
-            ctx.setRecentTextSection(TokenBudget.truncateToTokens(ctx.getRecentTextSection(), 800));
+            ctx.setRecentTextSection(TokenBudget.truncateToTokens(
+                    ctx.getRecentTextSection(), scaled(800, budget)));
             total = sumTokens(ctx);
         }
         if (total > budget && ctx.getRecentSummarySection() != null) {
-            ctx.setRecentSummarySection(TokenBudget.truncateToTokens(ctx.getRecentSummarySection(), 4000));
+            ctx.setRecentSummarySection(TokenBudget.truncateToTokens(
+                    ctx.getRecentSummarySection(), scaled(4000, budget)));
             total = sumTokens(ctx);
         }
         if (total > budget && ctx.getRelevantForeshadowings() != null) {
-            ctx.setRelevantForeshadowings(TokenBudget.truncateToTokens(ctx.getRelevantForeshadowings(), 500));
+            ctx.setRelevantForeshadowings(TokenBudget.truncateToTokens(
+                    ctx.getRelevantForeshadowings(), scaled(500, budget)));
             total = sumTokens(ctx);
         }
         // p16-06-B: premise（故事原旨/总纲）最后参与裁剪——链尾=最低优先级，仅预算极端紧张时触发。

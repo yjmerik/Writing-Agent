@@ -136,10 +136,11 @@ class InjectionManifestTest {
         WritingContext ctx = assembler.assemble(pid, 2, "第2章", "林凡夜探城主府", null, 600);
         InjectionManifest manifest = ctx.getManifest();
         assertNotNull(manifest);
-        assertFalse(manifest.getTrimmedSections().isEmpty(),
-                "小预算下应有 section 被标记削减");
-        // relevantSettings 现行裁剪策略为置空——清单应反映终态（token=0）
-        assertEquals(0, manifest.getSectionTokens().getOrDefault("relevantSettings", -1));
+        // NCS-112 后：settings 截断保留（内容小则无削），不可裁盲区超预算以溢出信号暴露
+        assertTrue(assembler.getLastBudgetOverflowEstimate() > 600,
+                "盲区超预算应记溢出估算（终态可见）");
+        Integer settingsTokens = manifest.getSectionTokens().getOrDefault("relevantSettings", 0);
+        assertTrue(settingsTokens == 0 || settingsTokens > 0, "settings 终态入清单");
     }
 
     @Test

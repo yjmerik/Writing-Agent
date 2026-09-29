@@ -71,16 +71,18 @@ class ForeshadowIdChainTest {
     void 列表携带id_模板契约含id主键() {
         detectorReturning("{\"resolved\":[]}").detectAndResolve(pid, 5, "正文内容足够长。".repeat(30));
         String prompt = lastSystemPrompt.get();
-        assertTrue(prompt.contains("[" + sword.getId() + "]"), "台账列表必须携带 id");
+        assertTrue(prompt.contains("[F1]") || prompt.contains("[F2]"),
+                "台账列表必须携带稳定 F 标号（UUID 嵌入会破坏回放确定性）");
         assertTrue(prompt.contains("id 必须逐字复制"), "输出契约必须说明 id 主键");
         assertTrue(prompt.contains("id 不在列表中的条目将被拒绝"));
     }
 
     @Test
     void id对账_同义改写描述也能命中正确伏笔() {
-        // 描述与台账完全不同（同义改写），id 正确 → 命中 sword 而非 bell（旧语义匹配会错位/失败）
-        String json = "{\"resolved\":[{\"id\":\"" + sword.getId()
-                + "\",\"description\":\"那把残缺兵器的身世终于揭晓\",\"reason\":\"铁匠认出断剑乃先王遗物\"}]}";
+        // 描述与台账完全不同（同义改写），F 标号正确 → 命中 sword 而非 bell（旧语义匹配会错位/失败）
+        // deterministicOrder：sword(埋第1章) → F1，bell(埋第2章) → F2
+        String json = "{\"resolved\":[{\"id\":\"F1\",\"description\":\"那把残缺兵器的身世终于揭晓\","
+                + "\"reason\":\"铁匠认出断剑乃先王遗物\"}]}";
         int resolved = detectorReturning(json).detectAndResolve(pid, 5, "正文。".repeat(200));
         assertEquals(1, resolved);
         assertTrue(repository.findForeshadowingsByProject(pid).stream()
@@ -105,8 +107,7 @@ class ForeshadowIdChainTest {
                 "主线", "断剑的来历必须揭晓", 1);
         new StoryFactRepository(new ConnectionProvider(tempDir.resolve("idchain.db").toString())).save(commitment);
 
-        String json = "{\"resolved\":[{\"id\":\"" + sword.getId()
-                + "\",\"reason\":\"铁匠认出断剑乃先王遗物\"}]}";
+        String json = "{\"resolved\":[{\"id\":\"F1\",\"reason\":\"铁匠认出断剑乃先王遗物\"}]}";
         int r = detectorReturning(json).detectAndResolve(pid, 7, "正文。".repeat(200));
         assertEquals(1, r);
         var synced = canon.findById(commitment.getId()).orElseThrow();

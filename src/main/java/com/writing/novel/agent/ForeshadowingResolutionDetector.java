@@ -34,6 +34,34 @@ public class ForeshadowingResolutionDetector {
         this.promptService = promptService;
     }
 
+    /** NCS-120 修复：稳定序（埋设章 → 描述），F 标号由此序派生——跨运行确定 */
+    static List<Foreshadowing> deterministicOrder(List<Foreshadowing> list) {
+        return list.stream()
+                .sorted(java.util.Comparator.comparingInt(Foreshadowing::getPlantedAtChapter)
+                        .thenComparing(Foreshadowing::getDescription))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    private static java.util.Map<String, Integer> labelIndex(List<Foreshadowing> ordered) {
+        java.util.Map<String, Integer> idx = new java.util.HashMap<>();
+        for (int i = 0; i < ordered.size(); i++) idx.put(ordered.get(i).getId(), i + 1);
+        return idx;
+    }
+
+    private static String label(List<Foreshadowing> ordered, Foreshadowing f) {
+        for (int i = 0; i < ordered.size(); i++) {
+            if (ordered.get(i).getId().equals(f.getId())) return "F" + (i + 1);
+        }
+        return "F?";
+    }
+
+    /** F 标号解析（"F3" → 第 3 项）；非标号格式返回 null */
+    static Foreshadowing resolveByLabel(List<Foreshadowing> ordered, String id) {
+        if (id == null || !id.matches("F[0-9]+")) return null;
+        int n = Integer.parseInt(id.substring(1));
+        return n >= 1 && n <= ordered.size() ? ordered.get(n - 1) : null;
+    }
+
     /** NCS-120: 注入真典端口（生产装配用；null 跳过同步） */
     public void setStoryCanon(com.writing.novel.spi.StoryCanon canon) {
         this.storyCanon = canon;
@@ -75,10 +103,15 @@ public class ForeshadowingResolutionDetector {
         if (unresolved.isEmpty()) return 0;
 
         // 构建伏笔列表文本（标注重要性和过期状态）
-        // NCS-120: id 引用链——列表携带 id，回收对账以 id 为主键（同义改写不再错位/互误回收）
+        // NCS-120: id 引用链——列表携带稳定 F 标号（按埋设章+描述排序），
+        // 回收对账以标号为主键（同义改写不再错位/互误回收）。标号而非 UUID：
+        // UUID 每次运行随机生成，嵌入 prompt 会破坏 record→replay 指纹确定性（NCS-120 修复）
+        unresolved = deterministicOrder(unresolved);
+        final List<Foreshadowing> ordered1 = unresolved;
+        java.util.Map<String, Integer> labelIndex = labelIndex(unresolved);
         String foreshadowingList = unresolved.stream()
                 .map(f -> {
-                    StringBuilder line = new StringBuilder("- [").append(f.getId()).append("] ")
+                    StringBuilder line = new StringBuilder("- [").append(label(ordered1, f)).append("] ")
                             .append(f.getDescription());
                     line.append("（埋于第").append(f.getPlantedAtChapter()).append("章");
                     if (f.getPriority() == Foreshadowing.Priority.HIGH) line.append("，★重要");
@@ -108,8 +141,11 @@ public class ForeshadowingResolutionDetector {
                 // 刷新未回收列表（前段可能已回收部分）
                 unresolved = repository.findUnresolvedForeshadowings(projectId);
                 if (unresolved.isEmpty()) break;
-                foreshadowingList = unresolved.stream()
-                        .map(f -> "- [" + f.getId() + "] " + f.getDescription()
+                List<Foreshadowing> refreshed = deterministicOrder(unresolved);
+                unresolved = refreshed;
+                final List<Foreshadowing> orderedN = refreshed;
+                foreshadowingList = refreshed.stream()
+                        .map(f -> "- [" + label(orderedN, f) + "] " + f.getDescription()
                                 + "（埋于第" + f.getPlantedAtChapter() + "章）")
                         .collect(Collectors.joining("\n"));
             }
@@ -147,8 +183,9 @@ public class ForeshadowingResolutionDetector {
             for (JsonNode node : resolvedArray) {
                 String desc = node.path("description").asText("");
                 String id = node.path("id").asText("").trim();
-                // NCS-120: id 对账——id 不在台账中的条目直接拒绝（防幻觉引用）
-                if (!id.isBlank() && unresolved.stream().noneMatch(f -> f.getId().equals(id))) {
+                // NCS-120: id 对账——接受稳定 F 标号或真实 UUID；两者都不在台账中的条目拒绝（防幻觉引用）
+                if (!id.isBlank() && resolveByLabel(unresolved, id) == null
+                        && unresolved.stream().noneMatch(f -> f.getId().equals(id))) {
                     continue;
                 }
                 if (desc.isBlank() && id.isBlank()) continue;
@@ -158,9 +195,11 @@ public class ForeshadowingResolutionDetector {
                 if (evidence.isEmpty()) continue;
 
                 // NCS-120: id 优先匹配；无 id（旧输出兼容）降级语义匹配
+                Foreshadowing byLabel = id.isBlank() ? null : resolveByLabel(unresolved, id);
                 for (var f : unresolved) {
                     if (f.isResolved()) continue;
-                    boolean matched = !id.isBlank() ? f.getId().equals(id)
+                    boolean matched = !id.isBlank()
+                            ? (f.getId().equals(id) || f == byLabel)
                             : descriptionsMatch(f.getDescription(), desc);
                     if (matched) {
                         f.resolve(chapterIndex, evidence);

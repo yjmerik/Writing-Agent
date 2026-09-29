@@ -1,0 +1,20 @@
+{
+ "commit": "afd5f81868d99721cc6ae7c734b8b44a9e694558",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-121"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：CheckResultEnvelopeEnhancedTest 4 项（已回收/类型枚举对齐/VALID_EMPTY 收紧混合输出拒绝/空与截断不变）；首跑 HistoricalFactEvidenceApiTest 偶发 500 单跑+重跑全量均绿（记录为 flaky，非本改动路径）；分支与 main 全量 1354/0F/0E/1S 严格门禁",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-121; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-121-envelope-enhancement"
+}

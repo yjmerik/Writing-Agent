@@ -9568,13 +9568,14 @@
    "description": "CheckResultEnvelope.parseSeverity 支持 prompt 承诺的「已回收」严重度（当前降级 LOW 扭曲统计）；类型枚举对齐 continuity-check.st 承诺；VALID_EMPTY 收紧为「零 issue 行」（当前含「未发现」关键词即判干净，可能吞真问题）；ContinuityChecker maxTokens 提升（当前 1000，多问题章节截断→整章人工）",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: afd5f81868d9（ff-merge=main 提交 afd5f81868d9）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：已回收严重度/结构节奏类型正确解析，混合输出（部分问题）不判 VALID_EMPTY",
    "verify_cmd": "mvn test -Dtest=CheckResultEnvelopeTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-121-verified"
   },
   {
    "id": "NCS-122",

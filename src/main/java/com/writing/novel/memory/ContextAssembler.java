@@ -91,7 +91,15 @@ public class ContextAssembler {
         final long revision;
         CacheEntry(String value, long revision) { this.value = value; this.revision = revision; }
     }
-    private final java.util.Map<String, CacheEntry> stableSectionCache = new java.util.concurrent.ConcurrentHashMap<>();
+    /** NCS-115: 有界 LRU（256 项）——多项目长跑不再无淘汰增长；访问序淘汰 */
+    private final java.util.Map<String, CacheEntry> stableSectionCache =
+            java.util.Collections.synchronizedMap(new java.util.LinkedHashMap<>(16, 0.75f, true) {
+                @Override protected boolean removeEldestEntry(java.util.Map.Entry<String, CacheEntry> eldest) {
+                    return size() > 256;
+                }
+            });
+
+    int stableSectionCacheSize() { return stableSectionCache.size(); }
     // p37-10: 作者要求选取服务（可选注入；未注入时不注入该节，行为与旧版一致）
     private com.writing.novel.service.DirectiveContextService directiveContextService;
     /** NCS-096: 注入清单持久化出口（可选；未注入时清单仍随 WritingContext 返回，仅不落库） */
@@ -206,7 +214,11 @@ public class ContextAssembler {
         ctx.setNarrativeThreadSection(buildNarrativeThreadSection(projectId, cast));
 
         // p11-H4: 角色关系网络注入
-        String relationshipWeb = buildRelationshipWeb(projectId, fullSynopsis);
+        // NCS-115: 与实体一致性段去重——实体段已渲染「当前关系动态」（canonical 源）时
+        // 不再叠加平行的【角色关系网络】段（两套 cast 匹配口径易互相矛盾）
+        boolean entitySectionHasRelationships = ctx.getEntityConsistencySection() != null
+                && ctx.getEntityConsistencySection().contains("当前关系动态");
+        String relationshipWeb = entitySectionHasRelationships ? "" : buildRelationshipWeb(projectId, fullSynopsis);
         if (relationshipWeb != null && !relationshipWeb.isBlank()) {
             ctx.setNarrativeThreadSection(
                     (ctx.getNarrativeThreadSection() != null ? ctx.getNarrativeThreadSection() + "\n\n" : "")
@@ -771,10 +783,12 @@ public class ContextAssembler {
         }
     }
 
-    /** 判断是否主角（用于强制锚定） */
-    private boolean isMainCharacter(Character c) {
+    /** NCS-115: 主角判定结构化——精确角色名集合，"女主角之妹"类 contains 误命中消除 */
+    static boolean isMainCharacter(Character c) {
         String role = c.getRole();
-        return role != null && (role.contains("主角") || role.contains("男主") || role.contains("女主"));
+        if (role == null) return false;
+        return role.equals("主角") || role.equals("男主") || role.equals("女主")
+                || role.equals("男主角") || role.equals("女主角") || role.equals("主人公");
     }
 
     /** NCS-113: 伏笔相关性分——本章 cast 命中 +100（相关但不够老的伏笔不再被纯悬置排序挤出）；僵尸（>25 章且无关）-50 */
@@ -1095,7 +1109,7 @@ public class ContextAssembler {
     private String buildProtagonistNameConstraint(String projectId) {
         try {
             var mc = knowledgeBase.findAllCharacters(projectId).stream()
-                    .filter(this::isMainCharacter)
+                    .filter(ContextAssembler::isMainCharacter)
                     .map(c -> c.getName())
                     .findFirst().orElse(null);
             if (mc == null || mc.isBlank()) return "";
@@ -1381,57 +1395,53 @@ public class ContextAssembler {
     }
 
     void applyTokenBudget(WritingContext ctx, int budget) {
+        // NCS-115: 增量核算——prompt = 各 section 文本 + 固定标题封装之和，裁剪只改动单个
+        // section，用算术增量维护 total，替代旧「每级裁剪全量重渲染两个 prompt」的 O(级数×全文) 浪费
         int total = sumTokens(ctx);
         if (total <= budget) return;
+        java.util.Map<String, Integer> before = sectionTokenSnapshot(ctx);
 
         if (total > budget && ctx.getKnowledgeQuoteSection() != null) {
+            total -= before.getOrDefault("knowledgeQuoteSection", 0);
             ctx.setKnowledgeQuoteSection("");
-            total = sumTokens(ctx);
         }
         if (total > budget && ctx.getQualityFeedbackSection() != null) {
+            total -= before.getOrDefault("qualityFeedbackSection", 0);
             ctx.setQualityFeedbackSection("");
-            total = sumTokens(ctx);
         }
         if (total > budget && ctx.getCharacterVoiceSection() != null) {
+            total -= before.getOrDefault("characterVoiceSection", 0);
             ctx.setCharacterVoiceSection("");
-            total = sumTokens(ctx);
         }
         if (total > budget && ctx.getNarrativeThreadSection() != null) {
-            ctx.setNarrativeThreadSection(TokenBudget.truncateToTokens(
-                    ctx.getNarrativeThreadSection(), scaled(400, budget)));
-            total = sumTokens(ctx);
+            total = trimAndReckon(ctx.getNarrativeThreadSection(), scaled(400, budget),
+                    t -> ctx.setNarrativeThreadSection(t), total);
         }
         // NCS-112: relevantSettings 从「整体置空」改为按预算截断——长程召回在预算紧张时
         // 最先全灭的矛盾修复（保留头部高分配额内容）
         if (total > budget && ctx.getRelevantSettings() != null) {
-            ctx.setRelevantSettings(TokenBudget.truncateToTokens(
-                    ctx.getRelevantSettings(), scaled(1200, budget)));
-            total = sumTokens(ctx);
+            total = trimAndReckon(ctx.getRelevantSettings(), scaled(1200, budget),
+                    t -> ctx.setRelevantSettings(t), total);
         }
         if (total > budget && ctx.getWorldbuildingSection() != null) {
-            ctx.setWorldbuildingSection(TokenBudget.truncateToTokens(
-                    ctx.getWorldbuildingSection(), scaled(2000, budget)));
-            total = sumTokens(ctx);
+            total = trimAndReckon(ctx.getWorldbuildingSection(), scaled(2000, budget),
+                    t -> ctx.setWorldbuildingSection(t), total);
         }
         if (total > budget && ctx.getVolumeOutlineSection() != null) {
-            ctx.setVolumeOutlineSection(TokenBudget.truncateToTokens(
-                    ctx.getVolumeOutlineSection(), scaled(1500, budget)));
-            total = sumTokens(ctx);
+            total = trimAndReckon(ctx.getVolumeOutlineSection(), scaled(1500, budget),
+                    t -> ctx.setVolumeOutlineSection(t), total);
         }
         if (total > budget && ctx.getRecentTextSection() != null) {
-            ctx.setRecentTextSection(TokenBudget.truncateToTokens(
-                    ctx.getRecentTextSection(), scaled(800, budget)));
-            total = sumTokens(ctx);
+            total = trimAndReckon(ctx.getRecentTextSection(), scaled(800, budget),
+                    t -> ctx.setRecentTextSection(t), total);
         }
         if (total > budget && ctx.getRecentSummarySection() != null) {
-            ctx.setRecentSummarySection(TokenBudget.truncateToTokens(
-                    ctx.getRecentSummarySection(), scaled(4000, budget)));
-            total = sumTokens(ctx);
+            total = trimAndReckon(ctx.getRecentSummarySection(), scaled(4000, budget),
+                    t -> ctx.setRecentSummarySection(t), total);
         }
         if (total > budget && ctx.getRelevantForeshadowings() != null) {
-            ctx.setRelevantForeshadowings(TokenBudget.truncateToTokens(
-                    ctx.getRelevantForeshadowings(), scaled(500, budget)));
-            total = sumTokens(ctx);
+            total = trimAndReckon(ctx.getRelevantForeshadowings(), scaled(500, budget),
+                    t -> ctx.setRelevantForeshadowings(t), total);
         }
         // p16-06-B: premise（故事原旨/总纲）最后参与裁剪——链尾=最低优先级，仅预算极端紧张时触发。
         // 「【故事原旨】永不裁剪」的设计针对 premise 的核心段（立意/主线位于文本头部）：
@@ -1441,6 +1451,14 @@ public class ContextAssembler {
         if (total > budget && ctx.getPremiseSection() != null) {
             ctx.setPremiseSection(truncatePremiseHead(ctx.getPremiseSection()));
         }
+    }
+
+    /** NCS-115: 截断并按新文本重算该 section 的 token 增量（避免全量重渲染） */
+    private int trimAndReckon(String text, int capTokens, java.util.function.Consumer<String> setter, int total) {
+        String trimmed = TokenBudget.truncateToTokens(text, capTokens);
+        total += TokenBudget.estimateTokens(trimmed) - TokenBudget.estimateTokens(text);
+        setter.accept(trimmed);
+        return total;
     }
 
     /** p16-06-B: premise 参与预算裁剪时的截断上限（token） */

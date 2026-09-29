@@ -1,0 +1,20 @@
+{
+ "commit": "cba7fe2e13c1b812b4ca616cc64c629f428f980f",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-129"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：PerTaskRetryPolicyTest 3 项（默认回退语义/按配置只试一次不重试/默认三连第三次成功——MockWebServer 实测请求次数）；指数+jitter 退避；分支与 main 全量 1376/0F/0E/1S 严格门禁",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-129; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-129-per-task-retry"
+}

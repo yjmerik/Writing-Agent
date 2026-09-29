@@ -2662,8 +2662,19 @@
    "implementation_commit": "334d3af49f4cd44b64fb06f4d38a72ecef1a4d96",
    "main_commit": "334d3af49f4cd44b64fb06f4d38a72ecef1a4d96",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-128.json"
+  },
+  {
+   "id": "ncs-129-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-129"
+   ],
+   "branch": "codex/ncs-129-per-task-retry",
+   "implementation_commit": "cba7fe2e13c1b812b4ca616cc64c629f428f980f",
+   "main_commit": "cba7fe2e13c1b812b4ca616cc64c629f428f980f",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-129.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "334d3af49f4cd44b64fb06f4d38a72ecef1a4d96"
+ "main_commit": "cba7fe2e13c1b812b4ca616cc64c629f428f980f"
 }

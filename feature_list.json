@@ -9692,13 +9692,14 @@
    "description": "ModelConfig 支持 per-LlmTaskType {timeout, maxAttempts, backoff 指数+jitter}（当前所有任务统一 3 次线性退避、legacy 路径共享 30 分钟超时）：EXTRACTION 60s/2 次、CHAPTER_WRITING 900s/1 次、CHECK 类 180s/2 次；传输层重试所有权归网关单层，Agent 层只保留语义重试；消除 429 同步重放风暴",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: cba7fe2e13c1（ff-merge=main 提交 cba7fe2e13c1）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：各任务超时/次数/退避按配置生效，单章总 attempt 有上限，退避含 jitter",
    "verify_cmd": "mvn test -Dtest=PerTaskRetryPolicyTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-129-verified"
   },
   {
    "id": "NCS-130",

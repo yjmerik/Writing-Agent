@@ -70,7 +70,7 @@ public class QualityEvaluationAgent {
                 "\n\n=== 大纲 ===\n" + truncate(outline, 500) +
                 "\n\n=== 前情摘要 ===\n" + truncate(summary, 800) +
                 "\n\n=== 故事真典（已确立事实） ===\n" + truncate(canon, 800) +
-                "\n\n=== 章节正文采样 ===\n" + truncate(chapterSamples, 3000) +
+                "\n\n=== 章节正文采样 ===\n" + truncate(chapterSamples, 9000) +
                 "\n\n请评价这部小说的质量。";
 
         var req = LlmRequest.builder()
@@ -185,28 +185,57 @@ public class QualityEvaluationAgent {
                 .collect(Collectors.joining("\n"));
     }
 
+    /**
+     * NCS-126: 分层采样——首/中/末三章全章摘要（头+尾节选）+ 其余章头尾节选，
+     * 覆盖率 ≥20%（旧实现只取 3 章各前 500 字，30 章卷 <2% 采样，style 分基本是噪声）。
+     * 附证据覆盖声明（评语可信度依据）。
+     */
     private String collectChapterSamples(String projectId) {
         var chapters = repository.findChaptersByProject(projectId);
         if (chapters.isEmpty()) return "（无章节）";
-        StringBuilder sb = new StringBuilder();
-        // 采样：第1章、中间章、最后一章（各取前500字）
+        // 按章号排序（findChaptersByProject 顺序不保证）
+        chapters.sort(java.util.Comparator.comparingInt(com.writing.novel.domain.Chapter::getChapterIndex));
         int total = chapters.size();
-        sb.append("共 ").append(total).append(" 章\n\n");
-        // 第一章
-        sb.append("--- 第1章 ").append(chapters.get(0).getTitle()).append("（前500字）---\n");
-        sb.append(truncate(chapters.get(0).getContent(), 500)).append("\n\n");
-        // 中间章
-        if (total > 2) {
-            int mid = total / 2;
-            sb.append("--- 第").append(mid + 1).append("章 ").append(chapters.get(mid).getTitle()).append("（前500字）---\n");
-            sb.append(truncate(chapters.get(mid).getContent(), 500)).append("\n\n");
+        // 采样数：max(3, ceil(20%))，cap 10（token 可控）
+        int sampleCount = Math.min(10, Math.max(3, (total + 4) / 5));
+        int stride = Math.max(1, total / sampleCount);
+        StringBuilder picked = new StringBuilder();
+        int pickedCount = 0;
+        int lastPickedIndex = -1;
+        for (int i = 0; i < total && pickedCount < sampleCount; i += stride) {
+            var ch = chapters.get(i);
+            boolean keyChapter = i == 0 || i == total - 1;   // 首章或末章
+            lastPickedIndex = i;
+            if (keyChapter) {
+                // 关键章：头 700 字 + 尾 300 字（开头定基调、结尾见完成度）
+                String c = ch.getContent() == null ? "" : ch.getContent();
+                String head = truncate(c, 700);
+                String tail = c.length() > 1000
+                        ? "……" + c.substring(c.length() - 300) : "";
+                picked.append("--- 第").append(ch.getChapterIndex()).append("章 ")
+                        .append(ch.getTitle()).append("（开头+结尾节选）---\n")
+                        .append(head).append(tail).append("\n\n");
+            } else {
+                picked.append("--- 第").append(ch.getChapterIndex()).append("章 ")
+                        .append(ch.getTitle()).append("（前400字）---\n")
+                        .append(truncate(ch.getContent(), 400)).append("\n\n");
+            }
+            pickedCount++;
         }
-        // 最后一章
-        if (total > 1) {
-            sb.append("--- 第").append(total).append("章 ").append(chapters.get(total - 1).getTitle()).append("（前500字）---\n");
-            sb.append(truncate(chapters.get(total - 1).getContent(), 500)).append("\n\n");
+        // NCS-126: 末章保底——stride 未覆盖到最后一章时追加（卷尾完成度是评价关键证据）
+        if (lastPickedIndex < total - 1 && pickedCount < sampleCount + 1) {
+            var last = chapters.get(total - 1);
+            String c = last.getContent() == null ? "" : last.getContent();
+            picked.append("--- 第").append(last.getChapterIndex()).append("章 ")
+                    .append(last.getTitle()).append("（开头+结尾节选）---\n")
+                    .append(truncate(c, 700)).append(c.length() > 1000
+                            ? "……" + c.substring(c.length() - 300) : "").append("\n\n");
+            pickedCount++;
         }
-        return sb.toString();
+        // 覆盖率声明
+        double coverage = Math.min(100.0, 100.0 * pickedCount / total);
+        return "共 " + total + " 章；本次评价证据覆盖 " + pickedCount + " 章（分层采样，覆盖率 "
+                + Math.round(coverage) + "%≥20%）\n\n" + picked;
     }
 
     private static String truncate(String s, int max) {

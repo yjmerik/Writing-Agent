@@ -97,12 +97,8 @@ public class ForeshadowingResolutionDetector {
                 .maxTokens(1500)
                 .build();
 
-        try {
-            var resp = gateway.complete(req);
-            return parseAndMarkResolved(resp.getContent(), projectId, chapterIndex, unresolved);
-        } catch (Exception e) {
-            return 0;
-        }
+        var resp = gateway.complete(req);
+        return parseAndMarkResolved(resp.getContent(), projectId, chapterIndex, unresolved);
     }
 
     private int parseAndMarkResolved(String json, String projectId, int chapterIndex,
@@ -134,8 +130,12 @@ public class ForeshadowingResolutionDetector {
                 }
             }
             return count;
+        } catch (com.writing.novel.agent.util.PostProcessStageFailure e) {
+            throw e;
         } catch (Exception e) {
-            return 0;
+            // NCS-118: 回收检测失败不得伪装成"本章无回收"（伏笔状态会错误悬置）
+            throw new com.writing.novel.agent.util.PostProcessStageFailure(
+                    "foreshadow-resolution", "回收检测失败: " + e.getMessage(), e);
         }
     }
 

@@ -110,7 +110,8 @@ class LlmJsonComponentTest {
                 com.writing.novel.agent.TestPromptHelper.create());
         var chapter = new com.writing.novel.domain.Chapter("p", 1, "第一章");
         chapter.setContent("正文内容");
-        int count = extractor.extract("p", chapter);
-        assertEquals(0, count);
+        // NCS-118 后：终态失败 fail-loud 抛阶段异常（不再静默返回 0）
+        assertThrows(com.writing.novel.agent.util.PostProcessStageFailure.class,
+                () -> extractor.extract("p", chapter));
     }
 }

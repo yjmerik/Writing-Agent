@@ -89,6 +89,10 @@ class PostProcessingRecoveryTest {
                         "这是本章的正文内容，张三的故事继续。".repeat(120), 100, 500);
                 case CONTINUITY_CHECK -> new LlmResponse("未发现连续性问题。", 10, 10);
                 case MEMORY_SUMMARY -> new LlmResponse("章节摘要：张三的修炼进展。", 50, 50);
+                // NCS-118 fail-loud 后：伏笔提取（GENERAL 路由）需要合法 JSON，其余 GENERAL 保持 "ok"
+                case GENERAL -> req.getSystemPrompt() != null && req.getSystemPrompt().contains("foreshadowing")
+                        ? new LlmResponse("{\"foreshadowings\":[]}", 1, 1)
+                        : new LlmResponse("ok", 1, 1);
                 default -> new LlmResponse("ok", 1, 1);
             };
         }
@@ -194,7 +198,9 @@ class PostProcessingRecoveryTest {
                 summarySvc, assembler,
                 new com.writing.novel.agent.QualityEvaluationAgent(gateway, repo, promptSvc),
                 entityGraph,
-                null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null,
+                new com.writing.novel.agent.ForeshadowingExtractor(gateway, repo, promptSvc), // idx17: 伏笔提取（旧 null 靠 NPE 静默吞掉凑 COMPLETED——NCS-118 消除的缺陷形态）
+                null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 // p22-05: ledger 与收割桩经策略包组合期注入（原后置 setter）
                 new OrchestratorPolicies(null, null, null, null, null, null, null,
@@ -202,9 +208,19 @@ class PostProcessingRecoveryTest {
         return new Ctx(repo, orchestrator, projectService, ledger, entityGraph, gateway, factHarvester);
     }
 
+    /**
+     * NCS-118 后伏笔族 fail-loud：桩按任务形态返回合法最小输出
+     * （旧单字符串桩依赖"解析失败静默吞掉"才凑齐全 COMPLETED——恰是本特性消除的缺陷）。
+     */
     private static LlmGateway mockGatewayReturning(String content) {
         return new LlmGateway() {
-            @Override public LlmResponse complete(LlmRequest req) { return new LlmResponse(content, 10, 10); }
+            @Override public LlmResponse complete(LlmRequest req) {
+                String sys = req.getSystemPrompt() == null ? "" : req.getSystemPrompt();
+                if (sys.contains("foreshadowing")) {
+                    return new LlmResponse("{\"foreshadowings\":[]}", 10, 10);
+                }
+                return new LlmResponse(content, 10, 10);
+            }
             @Override public void streamComplete(LlmRequest req, StreamHandler h) {}
         };
     }

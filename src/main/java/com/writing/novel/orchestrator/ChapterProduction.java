@@ -176,6 +176,13 @@ public class ChapterProduction {
         // p5-c1: 伏笔回收检测——本章是否回收了某个未回收伏笔
         try {
             checkForeshadowingResolution(projectId, chapterIndex, chapter);
+        } catch (com.writing.novel.agent.util.PostProcessStageFailure e) {
+            // NCS-118: 检测失败可见但不阻断章节（伏笔状态保持悬置待复检）
+            EventLog.emit("POST_PROCESS_STAGE_UNKNOWN", Map.of(
+                    "projectId", projectId, "chapterIndex", chapterIndex,
+                    "stage", "FORESHADOWING_RESOLUTION", "detail", e.stage(),
+                    "reason", EventLog.truncate(e.getMessage(), 200)));
+            log.warn("伏笔回收检测失败(章{}): {}", chapterIndex, e.getMessage());
         } catch (Exception e) {
             log.warn("伏笔回收检测失败(章{}): {}", chapterIndex, e.getMessage());
         }
@@ -306,6 +313,13 @@ public class ChapterProduction {
             if (resolved > 0) {
                 log.info("伏笔回收(章{}): {} 条", chapterIndex, resolved);
             }
+        } catch (com.writing.novel.agent.util.PostProcessStageFailure e) {
+            // NCS-118: 检测失败可见但不阻断章节（伏笔状态保持悬置待复检）
+            EventLog.emit("POST_PROCESS_STAGE_UNKNOWN", Map.of(
+                    "projectId", projectId, "chapterIndex", chapterIndex,
+                    "stage", "FORESHADOWING_RESOLUTION", "detail", e.stage(),
+                    "reason", EventLog.truncate(e.getMessage(), 200)));
+            log.warn("伏笔回收检测失败(章{}): {}", chapterIndex, e.getMessage());
         } catch (Exception e) {
             log.warn("伏笔回收检测失败(章{}): {}", chapterIndex, e.getMessage());
         }

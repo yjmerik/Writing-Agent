@@ -94,12 +94,8 @@ public class ForeshadowingImportanceAuditor {
                 .maxTokens(4096)
                 .build();
 
-        try {
-            var resp = gateway.complete(req);
-            return applyAudit(resp.getContent(), batch);
-        } catch (Exception e) {
-            return 0;
-        }
+        var resp = gateway.complete(req);
+        return applyAudit(resp.getContent(), batch);
     }
 
     private int applyAudit(String json, List<Foreshadowing> batch) {
@@ -137,7 +133,12 @@ public class ForeshadowingImportanceAuditor {
                     repository.saveForeshadowing(f);
                 }
             }
-        } catch (Exception ignored) {
+        } catch (com.writing.novel.agent.util.PostProcessStageFailure e) {
+            throw e;
+        } catch (Exception e) {
+            // NCS-118: 重要性审计失败可见（mustResolve 标注不全会让成书门禁失真）
+            throw new com.writing.novel.agent.util.PostProcessStageFailure(
+                    "foreshadow-audit", "重要性审计失败: " + e.getMessage(), e);
         }
         return upgraded;
     }

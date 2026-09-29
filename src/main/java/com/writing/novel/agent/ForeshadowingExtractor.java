@@ -85,7 +85,9 @@ public class ForeshadowingExtractor {
         if (!parsed.ok()) {
             com.writing.novel.llm.LlmJson.emitFailure("foreshadow-extract",
                     req.getTaskType().name(), parsed);
-            return boundary == null ? 0 : boundary.apply(() -> 0, 0);
+            // NCS-118: fail-loud——伏笔提取失败不得伪装成"无伏笔"（该章伏笔会永久丢失）
+            throw new com.writing.novel.agent.util.PostProcessStageFailure(
+                    "foreshadow-extract", parsed.failure() + ": " + parsed.reason());
         }
         JsonNode root = parsed.node();
         var write = (java.util.function.Supplier<Integer>) () ->

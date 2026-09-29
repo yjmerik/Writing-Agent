@@ -130,6 +130,7 @@ public class ChapterPostProcessor {
         for (Stage stage : Stage.values()) {
             if (only != null && !only.contains(stage)) continue;
             if (ledger != null) ledger.markRunning(projectId, chapterIndex, stage);
+            try {
             switch (stage) {
                 case CONTINUITY -> rewrittenByContinuity =
                         stageContinuity(projectId, chapterIndex, chapter, synopsis);
@@ -145,6 +146,16 @@ public class ChapterPostProcessor {
                 case VOLUME_SUMMARY -> stageVolumeSummary(projectId, outline, chapterIndex);
             }
             if (ledger != null) ledger.markCompleted(projectId, chapterIndex, stage);
+            } catch (com.writing.novel.agent.util.PostProcessStageFailure stageFailure) {
+                // NCS-118: 阶段终态失败——UNKNOWN 事件 + ledger 不标 COMPLETED（重启续跑补齐），
+                // 不中断其余阶段
+                com.writing.novel.telemetry.EventLog.emit("POST_PROCESS_STAGE_UNKNOWN", java.util.Map.of(
+                        "projectId", projectId, "chapterIndex", chapterIndex,
+                        "stage", stage.name(), "detail", stageFailure.stage(),
+                        "reason", com.writing.novel.telemetry.EventLog.truncate(stageFailure.getMessage(), 200)));
+                log.warn("后处理阶段失败保持未完成(章{}, {}): {}",
+                        chapterIndex, stage, stageFailure.getMessage());
+            }
         }
         return chapter;
     }
@@ -223,8 +234,11 @@ public class ChapterPostProcessor {
     private void stageForeshadowing(String projectId, Chapter chapter, int chapterIndex) {
         try {
             foreshadowingExtractor.extract(projectId, chapter);
+        } catch (com.writing.novel.agent.util.PostProcessStageFailure e) {
+            throw e;   // NCS-118: ledger 不标 COMPLETED
         } catch (Exception e) {
-            log.warn("伏笔提取失败(章{}): {}", chapterIndex, e.getMessage());
+            throw new com.writing.novel.agent.util.PostProcessStageFailure(
+                    "foreshadow-extract", "伏笔提取失败: " + e.getMessage(), e);
         }
     }
 

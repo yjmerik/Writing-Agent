@@ -1,0 +1,20 @@
+{
+ "commit": "ebf2fc7ab1e820880229ff6c983a458c6793c639",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-133"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：LongTaskPersistenceTest 4 项（执行落库重启可查/RUNNING 孤儿标记取消/进度阶段+百分比落库/过期终态清理）；@Service 双构造 @Autowired 修复 Spring 装配；分支与 main 全量 1387/0F/0E/1S 严格门禁",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-133; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-133-longtask-persistence"
+}

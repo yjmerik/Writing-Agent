@@ -9752,13 +9752,14 @@
    "description": "LongTaskService 当前内存薄壳（job 无界、无进度、重启全丢、无取消）：job 落 sqlite 表+阶段级进度上报+取消标记+过期清理，重启后可查询终态",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: ebf2fc7ab1e8（ff-merge=main 提交 ebf2fc7ab1e8）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：任务重启后可查，进度阶段可见，取消生效，过期任务被清理",
    "verify_cmd": "mvn test -Dtest=LongTaskPersistenceTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-133-verified"
   },
   {
    "id": "NCS-134",

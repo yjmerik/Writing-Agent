@@ -2706,8 +2706,19 @@
    "implementation_commit": "48216494aee105f792e979eb6f75240dba5d2641",
    "main_commit": "48216494aee105f792e979eb6f75240dba5d2641",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-132.json"
+  },
+  {
+   "id": "ncs-133-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-133"
+   ],
+   "branch": "codex/ncs-133-longtask-persistence",
+   "implementation_commit": "ebf2fc7ab1e820880229ff6c983a458c6793c639",
+   "main_commit": "ebf2fc7ab1e820880229ff6c983a458c6793c639",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-133.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "48216494aee105f792e979eb6f75240dba5d2641"
+ "main_commit": "ebf2fc7ab1e820880229ff6c983a458c6793c639"
 }

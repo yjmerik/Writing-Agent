@@ -2761,8 +2761,19 @@
    "implementation_commit": "5f13e39d75d65ceaba60459522e5ae0e59ab5966",
    "main_commit": "5f13e39d75d65ceaba60459522e5ae0e59ab5966",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-137.json"
+  },
+  {
+   "id": "ncs-138-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-138"
+   ],
+   "branch": "codex/ncs-138-reader-agent",
+   "implementation_commit": "095422032444f893522d9681314aee220c0f1281",
+   "main_commit": "095422032444f893522d9681314aee220c0f1281",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-138.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "5f13e39d75d65ceaba60459522e5ae0e59ab5966"
+ "main_commit": "095422032444f893522d9681314aee220c0f1281"
 }

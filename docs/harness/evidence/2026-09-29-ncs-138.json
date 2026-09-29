@@ -1,0 +1,20 @@
+{
+ "commit": "095422032444f893522d9681314aee220c0f1281",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-138"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：ReaderPerspectiveAgentTest 5 项（三维度+覆盖率/只读零issue/fail-loud/无章节拒绝/单次调用）；全量 1404/0F/0E/1S",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-138; spec docs/specs/2026-09-29-reader-agent.md; branch codex/ncs-138-reader-agent"
+}

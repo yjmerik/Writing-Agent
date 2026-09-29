@@ -106,6 +106,9 @@ public class MemoryConfig {
         assembler.setManifestStore(injectionManifestRepository);
         // NCS-114: 召回命中率调节真典 cap
         assembler.setRecallFeedbackService(recallFeedbackService);
+        // NCS-123: 检测器趋势聚合反馈
+        assembler.setDetectorTrendService(
+                new com.writing.novel.service.DetectorTrendService(repository));
         return assembler;
     }
 

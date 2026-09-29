@@ -60,6 +60,13 @@ public class NovelOrchestrator {
     private final NarrativeThreadExtractor narrativeThreadExtractor;
     private final ReaderReviewAgent readerReviewAgent;
     private final ForeshadowingResolutionDetector foreshadowingResolutionDetector;
+    /** NCS-123: 检测器产出趋势门禁（可选；null 跳过；生产经 setDetectorTrendService 注入） */
+    private com.writing.novel.service.DetectorTrendService detectorTrendService;
+
+    /** NCS-123: 趋势门禁注入 */
+    public void setDetectorTrendService(com.writing.novel.service.DetectorTrendService service) {
+        this.detectorTrendService = service;
+    }
     private final SceneClassifier sceneClassifier;
     private final com.writing.novel.service.DiversityTracker diversityTracker;
     private final com.writing.novel.service.ArcScheduler arcScheduler;
@@ -1498,6 +1505,16 @@ public class NovelOrchestrator {
         // p5-c3: ChekhovAudit——卷末检查未回收伏笔
         try {
             chekhovAudit(projectId, volume.getVolumeIndex(), fromChapter, toChapter);
+            // NCS-123: 检测器产出趋势门禁（卷级聚合，非逐章阻断）
+            if (detectorTrendService != null) {
+                String trendWarning = detectorTrendService.volumeGate(projectId, fromChapter, toChapter);
+                if (!trendWarning.isEmpty()) {
+                    EventLog.emit("VOLUME_TREND_WARNING", Map.of(
+                            "projectId", projectId, "fromChapter", fromChapter,
+                            "toChapter", toChapter,
+                            "warning", EventLog.truncate(trendWarning, 200)));
+                }
+            }
         } catch (Exception e) {
             log.warn("伏笔审计失败: {}", e.getMessage());
         }

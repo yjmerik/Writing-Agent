@@ -97,6 +97,9 @@ public class OrchestratorConfig {
                         requirePolicy(archiveCompactor, "ArchiveCompactor"),
                         requirePolicy(costBudgetMonitor, "CostBudgetMonitor"),
                         requirePolicy(postProcessLedger, "PostProcessLedgerRepository")));
+        // NCS-123: 检测器产出趋势门禁（卷级聚合回流）
+        orchestrator.setDetectorTrendService(
+                new com.writing.novel.service.DetectorTrendService(repo));
         // p37-16: 章节完成后作者要求逐章核对
         orchestrator.setDirectiveEvidenceService(new com.writing.novel.service.DirectiveEvidenceService(repo, directiveEvidenceAgent));
         // NCS-001: 写入门禁（epoch 租约）——后处理等生产模块经此读取

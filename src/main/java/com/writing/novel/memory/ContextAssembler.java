@@ -106,6 +106,8 @@ public class ContextAssembler {
     private InjectionManifest.Store manifestStore;
     /** NCS-114: 召回反馈服务（可选；未注入时真典 cap 不受命中率调节） */
     private RecallFeedbackService recallFeedbackService;
+    /** NCS-123: 检测器趋势服务（可选；未注入时 qualityFeedback 不含趋势聚合段） */
+    private com.writing.novel.service.DetectorTrendService detectorTrendService;
 
     /** p37-10: 注入作者要求选取服务（生产装配用）。 */
     public void setDirectiveContextService(com.writing.novel.service.DirectiveContextService s) {
@@ -120,6 +122,11 @@ public class ContextAssembler {
     /** NCS-114: 注入召回反馈服务（生产装配用）。 */
     public void setRecallFeedbackService(RecallFeedbackService service) {
         this.recallFeedbackService = service;
+    }
+
+    /** NCS-123: 注入检测器趋势服务（生产装配用）。 */
+    public void setDetectorTrendService(com.writing.novel.service.DetectorTrendService service) {
+        this.detectorTrendService = service;
     }
 
     public WritingContext assemble(String projectId, int chapterIndex,
@@ -1273,6 +1280,13 @@ public class ContextAssembler {
         StringBuilder sb = new StringBuilder();
         sb.append("【上卷质量评价反馈——改进方向】\n");
         sb.append(record.formatFeedback());
+        // NCS-123: 检测器趋势聚合反馈（桥段/密度/结构类 MEDIUM 一句话聚合，替代逐章噪音）
+        if (detectorTrendService != null) {
+            int now = repository.findChaptersByProject(projectId).stream()
+                    .mapToInt(Chapter::getChapterIndex).max().orElse(1);
+            String trend = detectorTrendService.feedbackSection(projectId, Math.max(1, now - 29), now);
+            if (!trend.isBlank()) sb.append("\n").append(trend);
+        }
         return sb.toString();
     }
 

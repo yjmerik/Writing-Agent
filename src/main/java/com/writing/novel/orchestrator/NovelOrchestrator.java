@@ -3056,7 +3056,14 @@ public class NovelOrchestrator {
                         log.info("重写触发关系演变(章{}): {} 条变化", chapterIndex, changes);
                     }
                 }
-            } catch (Exception ignored) {}
+            } catch (com.writing.novel.agent.util.PostProcessStageFailure e) {
+                // NCS-119: 失败可见（不再静默 ignored）
+                EventLog.emit("POST_PROCESS_STAGE_UNKNOWN", Map.of(
+                        "projectId", projectId, "chapterIndex", chapterIndex,
+                        "stage", "RELATIONSHIP_EVOLUTION", "detail", e.stage(),
+                        "reason", EventLog.truncate(e.getMessage(), 200)));
+                log.warn("重写触发关系演变失败(章{}): {}", chapterIndex, e.getMessage());
+            }
 
             log.info("章节重写成功(章{}): {} 字", chapterIndex, newContent.length());
         }

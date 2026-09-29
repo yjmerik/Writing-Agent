@@ -74,8 +74,11 @@ public class RelationshipEvolutionTracker {
         try {
             var resp = gateway.complete(req);
             return applyEvolutions(resp.getContent(), projectId, chapterIndex);
+        } catch (com.writing.novel.agent.util.PostProcessStageFailure e) {
+            throw e;
         } catch (Exception e) {
-            return 0;
+            // NCS-119: 关系演化失败可见（旧静默 0——本章关系变化永久丢失且无人知晓）
+            throw new com.writing.novel.agent.util.PostProcessStageFailure("relationship-evolution", "关系演化检测失败: " + e.getMessage(), e);
         }
     }
 
@@ -149,7 +152,10 @@ public class RelationshipEvolutionTracker {
                 repository.saveEntityEdge(newEdge);
                 count++;
             }
-        } catch (Exception ignored) {
+        } catch (com.writing.novel.agent.util.PostProcessStageFailure e) {
+            throw e;
+        } catch (Exception e) {
+            throw new com.writing.novel.agent.util.PostProcessStageFailure("relationship-evolution", "关系演化应用失败: " + e.getMessage(), e);
         }
         return count;
     }

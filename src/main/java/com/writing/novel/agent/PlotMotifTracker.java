@@ -105,7 +105,11 @@ public class PlotMotifTracker {
         try {
             var resp = gateway.complete(req);
             var parsed = com.writing.novel.llm.LlmJson.parse(resp.getContent());
-            if (!parsed.ok()) return List.of();
+            // NCS-119: 桥段提取失败可见（旧静默空——本章桥段记录永久缺失）
+            if (!parsed.ok()) {
+                throw new com.writing.novel.agent.util.PostProcessStageFailure("plot-motif",
+                        "桥段提取解析失败: " + parsed.failure() + ": " + parsed.reason());
+            }
             JsonNode root = parsed.node();
             JsonNode arr = root.path("motifs");
             List<String> motifs = new ArrayList<>();
@@ -116,8 +120,10 @@ public class PlotMotifTracker {
                 }
             }
             return motifs;
+        } catch (com.writing.novel.agent.util.PostProcessStageFailure e) {
+            throw e;
         } catch (Exception e) {
-            return List.of();
+            throw new com.writing.novel.agent.util.PostProcessStageFailure("plot-motif", "桥段提取失败: " + e.getMessage(), e);
         }
     }
 

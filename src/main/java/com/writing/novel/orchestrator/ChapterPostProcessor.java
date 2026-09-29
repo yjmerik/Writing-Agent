@@ -298,6 +298,7 @@ public class ChapterPostProcessor {
         }
 
         // p11-H3: 关系演变追踪——检测本章角色关系变化并更新图谱
+        // NCS-119: 阶段失败上抛（ledger 不标 COMPLETED，POST_PROCESS_STAGE_UNKNOWN 可见）
         try {
             if (relationshipEvolutionTracker != null) {
                 String castStr = synopsis != null ? synopsis.getCast() : "";
@@ -307,8 +308,10 @@ public class ChapterPostProcessor {
                     log.info("关系演变(章{}): {} 条变化", chapterIndex, changes);
                 }
             }
+        } catch (com.writing.novel.agent.util.PostProcessStageFailure e) {
+            throw e;
         } catch (Exception e) {
-            log.warn("关系演变追踪失败(章{}): {}", chapterIndex, e.getMessage());
+            throw new com.writing.novel.agent.util.PostProcessStageFailure("relationship-evolution", "关系演变追踪失败: " + e.getMessage(), e);
         }
 
         // p11.1-J2: 桥段追踪——提取叙事桥段标签并检测重复
@@ -320,8 +323,10 @@ public class ChapterPostProcessor {
                     log.warn("桥段重复(章{}): {}", chapterIndex, issue.getDescription());
                 }
             }
+        } catch (com.writing.novel.agent.util.PostProcessStageFailure e) {
+            throw e;
         } catch (Exception e) {
-            log.warn("桥段追踪失败(章{}): {}", chapterIndex, e.getMessage());
+            throw new com.writing.novel.agent.util.PostProcessStageFailure("plot-motif", "桥段追踪失败: " + e.getMessage(), e);
         }
 
         // 剧情停滞检测：基于张力曲线，连续低张力触发警告

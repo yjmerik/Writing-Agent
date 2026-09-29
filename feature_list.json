@@ -9643,13 +9643,14 @@
    "description": "QualityEvaluationAgent.collectChapterSamples 当前全卷仅采样首/中/末 3 章各前 500 字（<2% 采样率，style 分基本是噪声）：提升为分层抽样≥20% 或全章摘要合成，评语标注证据覆盖",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: 8e1468acfea1（ff-merge=main 提交 8e1468acfea1）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：30 章卷的采样覆盖≥20% 章节或含全章摘要，评语携带覆盖说明",
    "verify_cmd": "mvn test -Dtest=QualityEvaluationSamplingTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-126-verified"
   },
   {
    "id": "NCS-127",

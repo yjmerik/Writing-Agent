@@ -1,0 +1,20 @@
+{
+ "commit": "8e1468acfea19e5eb572a5a0533fee85189f67df",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-126"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：QualityEvaluationSamplingTest 3 项（30 章分层采样 ≥6 章含覆盖率声明/短卷全覆盖/末章保底入选）；分支与 main 全量 1369/0F/0E/1S 严格门禁。评价 prompt 输入变化分叉旧语料——收尾统一重建",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-126; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-126-eval-sampling"
+}

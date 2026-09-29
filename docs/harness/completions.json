@@ -2629,8 +2629,19 @@
    "implementation_commit": "6c554b3bb9ff7e379e5778f79ed1bd7691601a33",
    "main_commit": "6c554b3bb9ff7e379e5778f79ed1bd7691601a33",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-125.json"
+  },
+  {
+   "id": "ncs-126-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-126"
+   ],
+   "branch": "codex/ncs-126-eval-sampling",
+   "implementation_commit": "8e1468acfea19e5eb572a5a0533fee85189f67df",
+   "main_commit": "8e1468acfea19e5eb572a5a0533fee85189f67df",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-126.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "6c554b3bb9ff7e379e5778f79ed1bd7691601a33"
+ "main_commit": "8e1468acfea19e5eb572a5a0533fee85189f67df"
 }

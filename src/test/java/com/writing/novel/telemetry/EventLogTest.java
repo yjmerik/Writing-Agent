@@ -34,6 +34,7 @@ class EventLogTest {
         EventLog.emit("LLM_CALL", Map.of("taskType", "CHAPTER_WRITING", "durationMs", 1234));
         EventLog.emit("CHAPTER_WRITTEN", Map.of("wordCount", 3000));
 
+        com.writing.novel.telemetry.EventLog.awaitFlush();
         List<String> lines = Files.readAllLines(eventsFile);
         assertEquals(2, lines.size());
 
@@ -60,6 +61,7 @@ class EventLogTest {
         EventContext.clear();
         EventLog.emit("LLM_CALL", Map.of("taskType", "GENERAL"));
 
+        com.writing.novel.telemetry.EventLog.awaitFlush();
         JsonNode node = new ObjectMapper().readTree(Files.readAllLines(eventsFile).get(0));
         assertFalse(node.has("projectId"));
     }

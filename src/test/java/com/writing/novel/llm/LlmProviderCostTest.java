@@ -30,6 +30,7 @@ class LlmProviderCostTest {
             public void onError(Throwable e){fail(e);}
         });
         assertEquals(List.of(response),received);
+        com.writing.novel.telemetry.EventLog.awaitFlush();
         var lines=Files.readAllLines(tmp.resolve("events.jsonl"));assertEquals(2,lines.size());
         for(String line:lines){
             JsonNode event=new ObjectMapper().readTree(line);

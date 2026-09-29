@@ -27,6 +27,8 @@ class QualityEventLogTest {
             EventLog.emit("QUALITY_CIRCUIT_BREAKER", Map.of("consecutiveHighIssues", 10, "threshold", 10));
             EventLog.emit("QUALITY_GATE", Map.of("stage", "WorldBuilder", "feedback", "缺力量体系"));
 
+            com.writing.novel.telemetry.EventLog.awaitFlush();
+
             String content = Files.readString(events);
             for (String ev : new String[]{"QUALITY_REVIEW", "REWRITE_TRIGGERED", "CONSISTENCY_ISSUE",
                     "QUALITY_CIRCUIT_BREAKER", "QUALITY_GATE"}) {

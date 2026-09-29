@@ -48,6 +48,7 @@ class LlmCostTelemetryTest {
                 .userMessage("user")
                 .build());
 
+        com.writing.novel.telemetry.EventLog.awaitFlush();
         List<String> lines = Files.readAllLines(eventsFile);
         assertEquals(1, lines.size());
 
@@ -79,6 +80,7 @@ class LlmCostTelemetryTest {
         assertThrows(IllegalStateException.class, () -> observed.complete(
                 LlmRequest.builder().taskType(LlmTaskType.CONTINUITY_CHECK).build()));
 
+        com.writing.novel.telemetry.EventLog.awaitFlush();
         List<String> lines = Files.readAllLines(eventsFile);
         JsonNode event = new ObjectMapper().readTree(lines.get(0));
         assertEquals("LLM_ERROR", event.get("event").asText());

@@ -39,6 +39,11 @@ public class ObservedLlmGateway implements LlmGateway {
     @Override
     public LlmResponse complete(LlmRequest request) {
         long start = System.currentTimeMillis();
+        // NCS-130: 逻辑调用 correlationId——同一请求的成功/失败/重试事件可关联
+        String correlationId = java.util.UUID.randomUUID().toString().substring(0, 12);
+        String promptFingerprint = promptFingerprint(request);
+        String provider = resolveProvider(request);
+        String model = resolveModel(request);
         try {
             LlmResponse response = delegate.complete(request);
             recordResponse(request, response, start, false);
@@ -46,11 +51,50 @@ public class ObservedLlmGateway implements LlmGateway {
         } catch (RuntimeException e) {
             EventLog.emit("LLM_ERROR", Map.of(
                     "taskType", request.getTaskType().name(),
+                    "correlationId", correlationId,
+                    "provider", provider,
+                    "model", model,
+                    "promptFingerprint", promptFingerprint,
                     "durationMs", System.currentTimeMillis() - start,
                     "errorClass", e.getClass().getSimpleName(),
                     "message", EventLog.truncate(e.getMessage(), 200)));
             throw e;
         }
+    }
+
+    /** NCS-130: prompt SHA-256 前 12 位——"同一 prompt 反复失败"可聚类 */
+    private static String promptFingerprint(LlmRequest request) {
+        try {
+            var digest = java.security.MessageDigest.getInstance("SHA-256");
+            String normalized = (request.getSystemPrompt() == null ? "" : request.getSystemPrompt())
+                    + "\u0001" + (request.getUserMessage() == null ? "" : request.getUserMessage());
+            byte[] hash = digest.digest(normalized.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < 6; i++) sb.append(String.format("%02x", hash[i]));
+            return sb.toString();
+        } catch (Exception e) {
+            return "unavailable";
+        }
+    }
+
+    private String resolveProvider(LlmRequest request) {
+        try {
+            if (llmProperties != null) {
+                var ids = llmProperties.providerIdsForTask(request.getTaskType().name());
+                if (!ids.isEmpty()) return ids.get(0);
+            }
+        } catch (Exception ignored) {}
+        return "legacy";
+    }
+
+    private String resolveModel(LlmRequest request) {
+        try {
+            if (llmProperties != null) {
+                var cfg = llmProperties.forTaskType(request.getTaskType().name());
+                if (cfg != null && cfg.getModel() != null) return cfg.getModel();
+            }
+        } catch (Exception ignored) {}
+        return "unknown";
     }
 
     @Override

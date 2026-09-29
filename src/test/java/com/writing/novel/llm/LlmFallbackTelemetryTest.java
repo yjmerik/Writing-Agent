@@ -41,6 +41,7 @@ class LlmFallbackTelemetryTest {
     }
     @Test void completeReturnsActualProviderPriceWithoutCredentials() throws Exception {
         var response=gateway().complete(LlmProviderFallbackTest.REQUEST);verify(response);
+        com.writing.novel.telemetry.EventLog.awaitFlush();
         String events=Files.readString(tmp.resolve("events.jsonl"));
         assertTrue(events.contains("LLM_FALLBACK"));assertTrue(events.contains("LLM_PROVIDER_UNAVAILABLE"));
         assertTrue(events.contains("\"from\":\"a\"") && events.contains("\"to\":\"b\""));

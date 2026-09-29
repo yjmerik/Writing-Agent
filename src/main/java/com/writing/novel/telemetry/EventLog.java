@@ -59,6 +59,54 @@ public final class EventLog {
     /**
      * 追加一条事件。自动补充时间戳与 EventContext 中的 projectId/chapter。
      */
+    /** NCS-130: 异步写盘队列（有界；满时同步降级保不丢） */
+    private static final java.util.concurrent.BlockingQueue<String> ASYNC_QUEUE =
+            new java.util.concurrent.LinkedBlockingQueue<>(10_000);
+    private static final Thread FLUSHER = startFlusher();
+
+    private static Thread startFlusher() {
+        Thread t = new Thread(() -> {
+            java.util.List<String> batch = new java.util.ArrayList<>(256);
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    batch.clear();
+                    String first = ASYNC_QUEUE.take();   // 阻塞取首条
+                    batch.add(first);
+                    ASYNC_QUEUE.drainTo(batch, 255);
+                    StringBuilder sb = new StringBuilder();
+                    for (String line : batch) sb.append(line).append('\n');
+                    synchronized (LOCK) {
+                        Path path = currentPath();
+                        if (path.getParent() != null) Files.createDirectories(path.getParent());
+                        Files.writeString(path, sb.toString(), StandardCharsets.UTF_8,
+                                StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                } catch (Exception e) {
+                    log.warn("事件日志异步刷盘失败: {}", e.getMessage());
+                }
+            }
+        }, "eventlog-flusher");
+        t.setDaemon(true);
+        t.start();
+        return t;
+    }
+
+    private static void writeLine(String line) {
+        try {
+            synchronized (LOCK) {
+                Path path = currentPath();
+                if (path.getParent() != null) Files.createDirectories(path.getParent());
+                Files.writeString(path, line + "\n", StandardCharsets.UTF_8,
+                        StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            }
+        } catch (Exception e) {
+            log.warn("事件日志写入失败: {}", e.getMessage());
+        }
+    }
+
     public static void emit(String event, Map<String, Object> fields) {
         try {
             Map<String, Object> record = new LinkedHashMap<>();
@@ -72,13 +120,9 @@ public final class EventLog {
                 if (v != null) record.put(k, v);
             });
             String line = MAPPER.writeValueAsString(record);
-            synchronized (LOCK) {
-                Path path = currentPath();
-                if (path.getParent() != null) {
-                    Files.createDirectories(path.getParent());
-                }
-                Files.writeString(path, line + "\n", StandardCharsets.UTF_8,
-                        StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            // NCS-130: 异步批量写盘（调用线程不再阻塞在全局锁串行 IO）；队列满同步降级
+            if (!ASYNC_QUEUE.offer(line)) {
+                writeLine(line);
             }
             // p18-04: 落盘成功后通知订阅者（推送失败不影响主流程）
             for (Listener l : LISTENERS) {
@@ -86,6 +130,19 @@ public final class EventLog {
             }
         } catch (Exception e) {
             log.warn("事件日志写入失败: {}", e.getMessage());
+        }
+    }
+
+    /** 测试钩子：等待异步队列清空（断言前调用） */
+    public static void awaitFlush() {
+        try {
+            long deadline = System.currentTimeMillis() + 5000;
+            while (!ASYNC_QUEUE.isEmpty() && System.currentTimeMillis() < deadline) {
+                Thread.sleep(10);
+            }
+            Thread.sleep(50);   // 批次落盘窗口
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 

@@ -138,7 +138,9 @@ class LlmClientTerminationTest {
         try {
             LlmGateway returningTruncated = stubGateway(new LlmResponse("[{\"name\":\"张", 10, 4000, "length", null));
             new ObservedLlmGateway(returningTruncated).complete(request());
+            com.writing.novel.telemetry.EventLog.awaitFlush();   // NCS-130: 异步落盘
             assertTrue(Files.exists(eventsFile), "事件文件应已写入");
+        com.writing.novel.telemetry.EventLog.awaitFlush();
             String lines = Files.readString(eventsFile);
             assertTrue(lines.contains("\"event\":\"LLM_TRUNCATED\""), "应发 LLM_TRUNCATED 事件: " + lines);
             assertTrue(lines.contains("\"finishReason\":\"length\""), "事件应含 finishReason: " + lines);
@@ -156,6 +158,7 @@ class LlmClientTerminationTest {
             LlmGateway normal = stubGateway(new LlmResponse("ok", 10, 5, "stop", null));
             new ObservedLlmGateway(normal).complete(request());
             if (Files.exists(eventsFile)) {
+        com.writing.novel.telemetry.EventLog.awaitFlush();
                 assertFalse(Files.readString(eventsFile).contains("LLM_TRUNCATED"));
             }
         } finally {

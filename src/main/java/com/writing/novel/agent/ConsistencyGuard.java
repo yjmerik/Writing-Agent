@@ -83,9 +83,9 @@ public class ConsistencyGuard {
                 .collect(Collectors.joining("\n"));
         if (abilities.isEmpty()) abilities = "（无角色能力设定）";
 
-        // 截断超长章节
-        String content = chapterContent.length() > 5000
-                ? chapterContent.substring(0, 5000) : chapterContent;
+        // NCS-117: 统一抽取窗口（≤12000 字）+ 所见范围声明（旧 5000 截断且不告知）
+        String content = com.writing.novel.agent.util.ExcerptPolicy.coveredWithNote(
+                chapterContent, "本章正文");
 
         // p11-q0-02: 消费真典 ACTIVE 事实作为能力越界/凭空证据的校验依据
         var facts = relevanceGateway != null

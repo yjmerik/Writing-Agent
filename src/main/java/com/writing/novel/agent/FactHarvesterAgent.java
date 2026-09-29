@@ -120,8 +120,9 @@ public class FactHarvesterAgent {
                 .map(f -> "- [" + f.getFactType() + "] " + f.getSubject() + "：" + f.getAssertion())
                 .collect(Collectors.joining("\n"));
 
-        String chapterContent = content;
-        if (chapterContent.length() > 4000) chapterContent = chapterContent.substring(0, 4000);
+        // NCS-117: 统一抽取窗口（≤12000 字）+ 所见范围声明（旧 4000 截断且不告知）
+        String chapterContent = com.writing.novel.agent.util.ExcerptPolicy.coveredWithNote(
+                content, "本章正文");
 
         boolean truncatedList = existing.size() > scoped.size();
         String systemPrompt = promptService.render("fact-harvest", Map.of(

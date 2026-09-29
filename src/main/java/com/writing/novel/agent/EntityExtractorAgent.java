@@ -75,11 +75,9 @@ public class EntityExtractorAgent {
             if (!canon.isBlank()) existingJson = existingJson + "\n已确立事实: " + canon;
         }
 
-        // p9-5: 截断正文到 3000 字，避免超 token 导致 LLM 返回空
-        String chapterContent = chapter.getContent();
-        if (chapterContent != null && chapterContent.length() > 3000) {
-            chapterContent = chapterContent.substring(0, 3000);
-        }
+        // NCS-117: 统一抽取窗口（≤12000 字）+ 所见范围声明（旧 3000 截断且不告知）
+        String chapterContent = com.writing.novel.agent.util.ExcerptPolicy.coveredWithNote(
+                chapter.getContent(), "本章正文");
 
         // ---- 阶段一：紧凑实体（无 description，输出体量受控）----
         String entityPrompt = promptService.render("entity-extraction", Map.of(

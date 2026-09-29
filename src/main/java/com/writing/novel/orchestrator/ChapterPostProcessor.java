@@ -131,12 +131,60 @@ public class ChapterPostProcessor {
                     "post-process:" + chapterIndex);
         }
         boolean rewrittenByContinuity = false;
+        // NCS-132: 独立提取器扇出组——ENTITY_GRAPH / NARRATIVE_THREADS / FORESHADOWING 互不依赖
+        // （写不同的表；WAL+busy_timeout 保证 SQLite 写串行安全），并行执行缩短单章后处理墙钟。
+        // FACT_HARVEST 依赖实体规范名，保持在其后串行；ledger/失败语义逐阶段不变。
+        java.util.Set<Stage> fanout = java.util.Set.of(Stage.ENTITY_GRAPH, Stage.NARRATIVE_THREADS,
+                Stage.FORESHADOWING);
+        java.util.List<java.util.concurrent.Future<?>> fanoutFutures = new java.util.ArrayList<>();
         for (Stage stage : Stage.values()) {
             if (only != null && !only.contains(stage)) continue;
+            if (fanout.contains(stage) && (only == null || only.size() > 1)) {
+                final Stage st = stage;
+                fanoutFutures.add(FANOUT_EXECUTOR.submit(() ->
+                        runSingleStage(st, projectId, chapter, chapterIndex, synopsis, outline, false)));
+                continue;
+            }
+            // FACT_HARVEST 依赖实体规范名——必须等扇出组完成；其余串行阶段不阻塞扇出（继续并行）
+            if (!fanoutFutures.isEmpty() && stage == Stage.FACT_HARVEST) {
+                awaitFanout(fanoutFutures);
+                fanoutFutures.clear();
+            }
+            var result = runSingleStage(stage, projectId, chapter, chapterIndex, synopsis, outline,
+                    rewrittenByContinuity);
+            if (result instanceof Boolean b && stage == Stage.CONTINUITY) {
+                rewrittenByContinuity = b;
+            }
+        }
+        awaitFanout(fanoutFutures);
+        return chapter;
+    }
+
+    /**
+     * NCS-132: 等待扇出组。阶段级业务失败已在线程内按 ledger 语义处理；
+     * 但 Error（模拟进程死亡/严重故障）必须逃逸到调用方——不被线程边界吞掉。
+     */
+    private void awaitFanout(java.util.List<java.util.concurrent.Future<?>> futures) {
+        for (var f : futures) {
+            try {
+                f.get();
+            } catch (java.util.concurrent.ExecutionException e) {
+                if (e.getCause() instanceof Error err) throw err;
+                if (e.getCause() instanceof RuntimeException re) throw re;
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    /** 单阶段执行（含 ledger 与失败语义）——串行/并行共用 */
+    private Object runSingleStage(Stage stage, String projectId, Chapter chapter, int chapterIndex,
+                                  ChapterSynopsis synopsis, Outline outline, boolean rewrittenByContinuity) {
+        {
             if (ledger != null) ledger.markRunning(projectId, chapterIndex, stage);
             try {
+            Object stageResult = null;
             switch (stage) {
-                case CONTINUITY -> rewrittenByContinuity =
+                case CONTINUITY -> stageResult =
                         stageContinuity(projectId, chapterIndex, chapter, synopsis);
                 case ENTITY_GRAPH -> stageEntityGraph(projectId, chapter, chapterIndex);
                 case FACT_HARVEST -> stageFactHarvest(projectId, chapter, chapterIndex);
@@ -150,6 +198,7 @@ public class ChapterPostProcessor {
                 case VOLUME_SUMMARY -> stageVolumeSummary(projectId, outline, chapterIndex);
             }
             if (ledger != null) ledger.markCompleted(projectId, chapterIndex, stage);
+            return stageResult;
             } catch (com.writing.novel.agent.util.PostProcessStageFailure stageFailure) {
                 // NCS-118: 阶段终态失败——UNKNOWN 事件 + ledger 不标 COMPLETED（重启续跑补齐），
                 // 不中断其余阶段
@@ -160,9 +209,17 @@ public class ChapterPostProcessor {
                 log.warn("后处理阶段失败保持未完成(章{}, {}): {}",
                         chapterIndex, stage, stageFailure.getMessage());
             }
+            return null;
         }
-        return chapter;
     }
+
+    /** NCS-132: 扇出线程池（守护线程，有界）——独立提取器并行 */
+    private static final java.util.concurrent.ExecutorService FANOUT_EXECUTOR =
+            java.util.concurrent.Executors.newFixedThreadPool(3, r -> {
+                Thread t = new Thread(r, "postprocess-fanout");
+                t.setDaemon(true);
+                return t;
+            });
 
 
 

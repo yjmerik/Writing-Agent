@@ -1,0 +1,127 @@
+root
+  container
+    container
+      heading
+        text "📖 长篇小说写作系统"
+    container
+      container
+        container
+          button [ref=281, loc=unstable]
+            image "arrow-left"
+              svg_root
+            text "返回列表"
+          button [ref=288, loc=unstable]
+            image "plus"
+              svg_root
+            text "新建"
+        container
+          text "潮痕档案｜全流程体验0905"
+          table
+            table_row
+              table_cell
+                text "构思中"
+                text "人机协作"
+            table_row
+              table_cell
+                text "进度"
+                container
+                  text "0"
+                  text "章"
+          container [ref=322, loc=unstable]
+            text "💡"
+            text "当代虚构江南河港城白沙，旧堤拆迁前，水文档案员许知微发现二十年前洪灾的水位记录被人更改，父亲当年的失踪并非意外。她与曾参与救援、如今�..."
+        container
+          button [ref=328, loc=unstable]
+            image "expanded"
+              svg_root
+            container
+              image "setting"
+                svg_root
+              text "写作偏好"
+          container
+            container
+              container
+                text "对话密度"
+                container
+                  text "50"
+                  text "%"
+              container
+                container
+                container
+                slider [ref=476, loc=unstable]
+                  container
+                  container
+              container
+                text "爽点轮换"
+                switch [ref=480, loc=unstable]
+                  container
+                  container
+              container
+                text "角色声音"
+                switch [ref=483, loc=unstable]
+                  container
+                  container
+              container
+                text "引用素材"
+                switch [ref=486, loc=unstable]
+                  container
+                  container
+            container
+              textbox [ref=488, loc=css:input[placeholder="对话调整偏好，如：增加古风对话"]]
+                text "对话调整偏好，如：增加古风对话"
+                container
+              button [ref=491, loc=unstable]
+                image "send"
+                  svg_root
+      container
+        container
+          container
+            container
+              text "一起完成这本书"
+              text "创作遇到问题"
+              text "搭建世界、人物与全书框架 · 已写 0 / 目标 200 章 · 0 字"
+            container
+              button [ref=273, loc=unstable]
+                text "继续协作"
+              button [ref=358, loc=unstable]
+                text "审阅内容"
+          text "你可以直接编辑世界观、人物、大纲和正文，也可以让 Agent 按要求修改。审阅完成后继续协作。"
+          alert
+            text "Embedding 调用失败: HTTP 401 {"error":{"message":"You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY)..."
+          container
+            container
+              text "审核节奏"
+              container "审核节奏"
+                container
+                  comboboxgrouping "审核节奏" [ref=270, loc=css:input[aria-label="审核节奏"]]
+                  text "仅主动接手"
+                  text " "
+                svg_root
+            textbox "创作要求" [ref=271, loc=css:textarea[placeholder="给 Agent 的创作要求（继续时生效，留空可清除）"]]
+              text "写作始终遵守：限知视角；所有关键证据在解答前出现；每卷推进核心谜团并支付人物代价；同类调查场景不得连续复用。许知微不具超能力，周泊单�..."
+        container
+          tablist
+            container
+            container
+              tab [ref=386, loc=unstable]
+                text "创作工具"
+              tab [ref=389, loc=unstable]
+                text "🌍 世界观与人物"
+              tab [ref=392, loc=unstable]
+                text "📋 大纲"
+              tab [ref=395, loc=unstable]
+                text "📖 章节管理"
+              tab [ref=398, loc=unstable]
+                text "🔍 质量评价"
+          tabpanel "🔍 质量评价" [ref=786, loc=role:tabpanel[name="🔍 质量评价"]]
+            button [ref=791, loc=unstable]
+              image "safety-certificate"
+                svg_root
+              text "🔍 开始质量评价"
+            alert
+              text "质量评价说明"
+              text "AI 将从 7 个维度（长程一致性 / 风格统一 / 情节质量 / 人物塑造 / 世界观完整 / 对话质量 / 模式多样性）评价已生成的小说，发现具体问题并给出改进�..."
+            container
+              svg_root
+              text "尚未评价"
+  text "::1"

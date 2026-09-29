@@ -1,0 +1,16 @@
+{
+  "clientWidth": 375,
+  "scrollWidth": 392,
+  "fields": [
+    {
+      "placeholder": "新增铁律，如：嘉靖年间不得出现望远镜",
+      "x": 32,
+      "right": 392
+    },
+    {
+      "placeholder": "种下伏笔，如：账册缺页尚未对上人",
+      "x": 32,
+      "right": 392
+    }
+  ]
+}

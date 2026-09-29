@@ -1,0 +1,112 @@
+root
+  container
+    container
+      heading
+        text "📖 长篇小说写作系统"
+    container
+      container
+        button [ref=3223, loc=unstable]
+          svg_root
+          text "返回列表"
+        button [ref=3230, loc=unstable]
+          svg_root
+          text "新建"
+        container
+          text "潮痕档案｜全流程体验0905"
+          table
+            table_row
+              table_cell
+                text "规划中"
+                text "人机协作"
+            table_row
+              table_cell
+                text "进度"
+                text "0"
+                text "章"
+          container [ref=3264, loc=unstable]
+            text "💡"
+            text "当代虚构江南河港城白沙，旧堤拆迁前，水文档案员许知微发现二十年前洪灾的水位记录被人更改，父亲当年的失踪并非意外。她与曾参与救援、如今�..."
+        button [ref=3270, loc=unstable]
+          image "collapsed"
+            svg_root
+          container
+            image "setting"
+              svg_root
+            text "写作偏好"
+      container
+        container
+          text "一起完成这本书"
+          text "已交给作者"
+          text "准备章节计划 · 已写 0 / 目标 200 章 · 0 字"
+          button [ref=3297, loc=unstable]
+            text "继续协作"
+          button [ref=3301, loc=unstable]
+            text "审阅内容"
+          text "你可以直接编辑世界观、人物、大纲和正文，也可以让 Agent 按要求修改。审阅完成后继续协作。"
+          text "请先处理待审核内容，再继续创作"
+          container
+            container
+              text "审核节奏"
+              container "审核节奏"
+                container
+                  comboboxgrouping "审核节奏" [ref=3206, loc=css:input[aria-label="审核节奏"]]
+                  text "卷末审阅"
+                  text " "
+                svg_root
+            textbox "创作要求" [ref=3207, loc=css:textarea[placeholder="给 Agent 的创作要求（继续时生效，留空可清除）"]]
+              text "写作始终遵守：限知视角；所有关键证据在解答前出现；每卷推进核心谜团并支付人物代价；同类调查场景不得连续复用。许知微不具超能力，周泊单�..."
+        container
+          tablist
+            container
+            container
+              tab [ref=3335, loc=unstable]
+                text "创作工具"
+              tab [ref=3338, loc=unstable]
+                text "🌍 世界观与人物"
+              tab [ref=3341, loc=unstable]
+                text "📋 大纲"
+              tab [ref=3344, loc=unstable]
+                text "📖 章节管理"
+              tab [ref=3347, loc=unstable]
+                text "🔍 质量评价"
+          tabpanel "📖 章节管理" [ref=5976, loc=role:tabpanel[name="📖 章节管理"]]
+            alert
+              text "审核操作完成：初始设定生成完成，待审核"
+              container
+                container
+                  text "审核目标："
+                  text "INITIAL_SETUP"
+                container
+                  text "修改前摘要（v"
+                  text "248057158"
+                  text "）："
+                  text "CULTURE|水志谱牒|白沙旧埠船民历来不属于“户籍”，而活在另一种谱系里。每艘船、每段码头、每道水工闸都有自己的“水志”——由地方管水作坊世�..."
+                container
+                  text "修改后摘要（v"
+                  text "-1234950813"
+                  text "）："
+                  text "CUSTOM|周泊|44岁，白沙内河驳船船工，左耳全聋。十七岁顶替亡父上船，常年运送砂石，水性极佳；七一六洪灾时他驾小机动船往返闸下浅滩救出三十七�..."
+            button [ref=5967, loc=unstable]
+              image "plus"
+                svg_root
+              text "新增章节"
+            container
+              container
+                container
+                  table
+                    table_row
+                      table_cell
+                  text "📖 章节 (0)"
+                  table
+                    table_row
+                      table_cell
+                container
+                  svg_root
+                  text "暂无数据"
+              text "暂无章节。点击"写一章"开始创作。"
+            button [ref=5974, loc=unstable]
+              image "reload"
+                svg_root
+              text "刷新"
+  text "::1"
+  container

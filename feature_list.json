@@ -1,6 +1,6 @@
 {
  "project": "WritingAgent — 长篇小说自动写作系统",
- "current_phase": 51,
+ "current_phase": 52,
  "features": [
   {
    "id": "p1-01",
@@ -9822,6 +9822,21 @@
    "verify_cmd": "mvn test -Dtest=CheckerGoldenSetTest",
    "type": "test",
    "completion_record": "ncs-137-verified"
+  },
+  {
+   "id": "NCS-138",
+   "name": "读者视角评审 Agent",
+   "description": "像真实读者一样读完全书已有章节，从剧情/连续性/艺术性三维度产出结构化反馈报告；分层采样+覆盖率声明；只读不参与门禁；异步 LongTask + 报告持久化",
+   "phase": 52,
+   "dependencies": [],
+   "status": "completed",
+   "evidence": "",
+   "files": [],
+   "spec": "docs/specs/2026-09-29-reader-agent.md",
+   "acceptance": "ReaderPerspectiveAgentTest 5 项通过；三维度报告+覆盖率声明+只读性（零issue落库）+fail-loud+单次调用",
+   "verify_cmd": "mvn test -Dtest=ReaderPerspectiveAgentTest",
+   "type": "feature",
+   "completion_record": null
   }
  ],
  "schema_version": 2,

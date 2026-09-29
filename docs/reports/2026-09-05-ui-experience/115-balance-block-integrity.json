@@ -1,0 +1,30 @@
+{
+  "observedChapters": 20,
+  "chapterNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "continuous1To20": true,
+  "sumDisplayedWords": 66880,
+  "pending21To25Unchanged": true,
+  "pendingFields": 10,
+  "firstChapterV6Exact": true
+}

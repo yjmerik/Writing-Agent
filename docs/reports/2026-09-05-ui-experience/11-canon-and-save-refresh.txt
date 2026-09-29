@@ -1,0 +1,192 @@
+root
+  container
+    container
+      heading
+        text "📖 长篇小说写作系统"
+    container
+      container
+        button [ref=1018, loc=unstable]
+          svg_root
+          text "返回列表"
+        button [ref=1025, loc=unstable]
+          svg_root
+          text "新建"
+        text "潮痕档案｜全流程体验0905"
+        table
+          table_row
+            table_cell
+              text "构思中"
+              text "人机协作"
+          table_row
+            table_cell
+              text "进度"
+              text "0"
+              text "章"
+        container [ref=1059, loc=unstable]
+          text "💡"
+          text "当代虚构江南河港城白沙，旧堤拆迁前，水文档案员许知微发现二十年前洪灾的水位记录被人更改，父亲当年的失踪并非意外。她与曾参与救援、如今�..."
+        button [ref=1065, loc=unstable]
+          svg_root
+          svg_root
+          text "写作偏好"
+      container
+        text "一起完成这本书"
+        text "创作遇到问题"
+        text "搭建世界、人物与全书框架 · 已写 0 / 目标 200 章 · 0 字"
+        button [ref=1010, loc=unstable]
+          text "继续协作"
+        button [ref=1094, loc=unstable]
+          text "审阅内容"
+        text "你可以直接编辑世界观、人物、大纲和正文，也可以让 Agent 按要求修改。审阅完成后继续协作。"
+        text "Embedding 调用失败: HTTP 401 {"error":{"message":"You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY)..."
+        container
+          text "审核节奏"
+          container "审核节奏"
+            container
+              comboboxgrouping "审核节奏" [ref=1007, loc=css:input[aria-label="审核节奏"]]
+              text "仅主动接手"
+              text " "
+            svg_root
+        textbox "创作要求" [ref=1008, loc=css:textarea[placeholder="给 Agent 的创作要求（继续时生效，留空可清除）"]]
+          text "写作始终遵守：限知视角；所有关键证据在解答前出现；每卷推进核心谜团并支付人物代价；同类调查场景不得连续复用。许知微不具超能力，周泊单�..."
+        container
+          tab [ref=1127, loc=unstable]
+            text "创作工具"
+          tab [ref=1130, loc=unstable]
+            text "🌍 世界观与人物"
+          tab [ref=1133, loc=unstable]
+            text "📋 大纲"
+          tab [ref=1136, loc=unstable]
+            text "📖 章节管理"
+          tab [ref=1139, loc=unstable]
+            text "🔍 质量评价"
+          tabpanel "🌍 世界观与人物" [ref=1325, loc=role:tabpanel[name="🌍 世界观与人物"]]
+            button [ref=1567, loc=unstable]
+              svg_root
+              text "刷新"
+            heading
+              text "🌍 世界观设定"
+            container "新增世界观类型"
+              container
+                comboboxgrouping "新增世界观类型" [ref=1477, loc=css:input[aria-label="新增世界观类型"]]
+                text "势力"
+                text " "
+              svg_root
+            textbox [ref=1478, loc=css:input[placeholder="名称"]]
+              text "名称"
+              container
+            textbox [ref=1479, loc=css:input[placeholder="内容"]]
+              text "内容"
+              container
+            button [ref=1596, loc=unstable]
+              text "添加设定"
+            button [ref=1599, loc=unstable]
+              text "请 Agent 补设定"
+            container
+              table
+                table_row
+                  table_cell
+              text "地理"
+              table
+                table_row
+                  table_cell
+              container
+                table
+                  table_row
+                    table_cell
+                      text "类型"
+                      text ":"
+                      container "白沙城 世界观类型"
+                        container
+                          comboboxgrouping "白沙城 世界观类型" [ref=1480, loc=css:input[aria-label="白沙城 世界观类型"]]
+                          text "地理"
+                          text " "
+                        svg_root
+                  table_row
+                    table_cell
+                      text "名称"
+                      text ":"
+                      textbox "白沙城 世界观名称" [ref=1481, loc=css:input[aria-label="白沙城 世界观名称"]]
+                        text "白沙城"
+                  table_row
+                    table_cell
+                      container
+                        text "正文"
+                        text ":"
+                      textbox "白沙城 世界观正文" [ref=1482, loc=css:textarea[aria-label="白沙城 世界观正文"]]
+                        text "长江下游支流与海潮交汇，江水半咸，受潮汐顶托，老城坐落在低于河面的低洼冲积地上，全靠一线旧堤“白砂埭”圈住。城与水之间有南门旧闸、中�..."
+                container
+                  button [ref=1646, loc=unstable]
+                    image "save"
+                      svg_root
+                    text "保存设定"
+                  button "让 Agent 修改世界观 白沙城" [ref=1653, loc=css:button[aria-label="让 Agent 修改世界观 白沙城"]]
+                    text "让 Agent 修改"
+            splitter
+            heading
+              text "👥 人物卡"
+            container
+              textbox [ref=1483, loc=css:input[placeholder="姓名"]]
+                text "姓名"
+                container
+              textbox [ref=1484, loc=css:input[placeholder="定位"]]
+                text "配角"
+              textbox [ref=1485, loc=css:input[placeholder="能力"]]
+                text "能力"
+                container
+              button [ref=1668, loc=unstable]
+                text "添加人物"
+              button [ref=1671, loc=unstable]
+                text "请 Agent 补人物"
+            container
+              svg_root
+              text "暂无人物"
+            splitter
+            heading
+              text "📜 真典"
+            container
+              textbox [ref=1486, loc=css:input[placeholder="新增铁律，如：嘉靖年间不得出现望远镜"]]
+                text "新增铁律，如：嘉靖年间不得出现望远镜"
+                container
+              button [ref=1696, loc=unstable]
+                text "添 加"
+            unordered_list
+              list_item
+                text "WORLD_RULE"
+                text "白沙城"
+                textbox [ref=1487, loc=unstable]
+                  text "【HUMAN_PATCH】长江下游支流与海潮交汇，江水半咸，受潮汐顶托，老城坐落在低于河面的低洼冲积地上，全靠一线旧堤“白砂埭”圈住。城与水之间有南..."
+                unordered_list
+                  list_item
+                    button [ref=1709, loc=unstable]
+                      text "保存"
+                    container
+                  list_item
+                    button [ref=1713, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "人补丁"
+                textbox [ref=1488, loc=unstable]
+                  text "【HUMAN_PATCH】城市正式名称为白沙城；许知微与周泊没有超能力，周泊的单耳听力损伤持续影响其行动。"
+                unordered_list
+                  list_item
+                    button [ref=1722, loc=unstable]
+                      text "保存"
+                    container
+                  list_item
+                    button [ref=1726, loc=unstable]
+                      text "废止"
+            splitter
+            heading
+              text "🧵 伏笔"
+            container
+              textbox [ref=1489, loc=css:input[placeholder="种下伏笔，如：账册缺页尚未对上人"]]
+                text "种下伏笔，如：账册缺页尚未对上人"
+                container
+              button [ref=1735, loc=unstable]
+                text "种下伏笔"
+            container
+              svg_root
+              text "暂无伏笔"
+  text "::1"

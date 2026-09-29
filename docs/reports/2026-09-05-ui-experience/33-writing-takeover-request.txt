@@ -1,0 +1,105 @@
+root
+  container
+    container
+      heading
+        text "📖 长篇小说写作系统"
+    container
+      container
+        container
+          button [ref=3223, loc=unstable]
+            image "arrow-left"
+              svg_root
+            text "返回列表"
+          button [ref=3230, loc=unstable]
+            image "plus"
+              svg_root
+            text "新建"
+        container
+          text "潮痕档案｜全流程体验0905"
+          table
+            table_row
+              table_cell
+                text "创作中"
+                text "人机协作"
+            table_row
+              table_cell
+                text "进度"
+                container
+                  text "0"
+                  text "章"
+          container [ref=3264, loc=unstable]
+            text "💡"
+            text "当代虚构江南河港城白沙，旧堤拆迁前，水文档案员许知微发现二十年前洪灾的水位记录被人更改，父亲当年的失踪并非意外。她与曾参与救援、如今�..."
+        button [ref=3270, loc=unstable]
+          image "collapsed"
+            svg_root
+          container
+            image "setting"
+              svg_root
+            text "写作偏好"
+      container
+        container
+          container
+            container
+              text "一起完成这本书"
+              text "正在停下"
+              text "撰写与检查正文 · 已写 0 / 目标 200 章 · 0 字"
+            container
+              button [ref=3297, loc=unstable]
+                svg_root
+                text "当前步骤结束后交给你"
+              button [ref=3301, loc=unstable]
+                text "审阅内容"
+          text "正在完成当前创作步骤并保存内容。交接完成后即可保存修改，无需切换工作模式。"
+          container
+            container
+              text "审核节奏"
+              container "审核节奏"
+                container
+                  comboboxgrouping "审核节奏" [ref=3206, loc=css:input[aria-label="审核节奏"]]
+                  text "每章审阅"
+                  text " "
+                svg_root
+            textbox "创作要求" [ref=3207, loc=css:textarea[placeholder="给 Agent 的创作要求（继续时生效，留空可清除）"]]
+              text "遵循作者刚保存的修订总纲与第一卷1—25章计划，不再生成旧41—48章。故事2025年、洪灾2005年7月16日、白沙城与林溪闸。全部人物无超能力，周泊左耳�..."
+        container
+          tablist
+            container
+            container
+              tab [ref=3335, loc=unstable]
+                text "创作工具"
+              tab [ref=3338, loc=unstable]
+                text "🌍 世界观与人物"
+              tab [ref=3341, loc=unstable]
+                text "📋 大纲"
+              tab [ref=3344, loc=unstable]
+                text "📖 章节管理"
+              tab [ref=3347, loc=unstable]
+                text "🔍 质量评价"
+          tabpanel "📖 章节管理" [ref=18378, loc=role:tabpanel[name="📖 章节管理"]]
+            alert
+              text "📝 写作中 — 可查看和重写已完成的章节"
+            button [ref=18364, loc=unstable]
+              image "plus"
+                svg_root
+              text "新增章节"
+            container
+              container
+                container
+                  table
+                    table_row
+                      table_cell
+                  text "📖 章节 (0)"
+                  table
+                    table_row
+                      table_cell
+                container
+                  svg_root
+                  text "暂无数据"
+              text "暂无章节。点击"写一章"开始创作。"
+            button [ref=18371, loc=unstable]
+              image "reload"
+                svg_root
+              text "刷新"
+  text "::1"
+  container

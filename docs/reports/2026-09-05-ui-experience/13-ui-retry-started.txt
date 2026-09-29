@@ -1,0 +1,93 @@
+root
+  container
+    container
+      heading
+        text "📖 长篇小说写作系统"
+    container
+      container
+        container
+          button [ref=1018, loc=unstable]
+            image "arrow-left"
+              svg_root
+            text "返回列表"
+          button [ref=1025, loc=unstable]
+            image "plus"
+              svg_root
+            text "新建"
+        container
+          text "潮痕档案｜全流程体验0905"
+          table
+            table_row
+              table_cell
+                text "构思中"
+                text "人机协作"
+            table_row
+              table_cell
+                text "进度"
+                container
+                  text "0"
+                  text "章"
+          container [ref=1059, loc=unstable]
+            text "💡"
+            text "当代虚构江南河港城白沙，旧堤拆迁前，水文档案员许知微发现二十年前洪灾的水位记录被人更改，父亲当年的失踪并非意外。她与曾参与救援、如今�..."
+        button [ref=1065, loc=unstable]
+          image "collapsed"
+            svg_root
+          container
+            image "setting"
+              svg_root
+            text "写作偏好"
+      container
+        container
+          container
+            container
+              text "一起完成这本书"
+              text "Agent 正在创作"
+              text "搭建世界、人物与全书框架 · 已写 0 / 目标 200 章 · 0 字"
+            container
+              button [ref=1010, loc=unstable]
+                container
+                image "loading"
+                  svg_root
+                text "我要接手编辑"
+              button [ref=1094, loc=unstable]
+                text "审阅内容"
+          text "Agent 会自动搭建框架、撰写正文并检查质量。你可以阅读已有内容，随时接手修改。"
+          container
+            container
+              text "审核节奏"
+              container "审核节奏"
+                container
+                  comboboxgrouping "审核节奏" [ref=1007, loc=css:input[aria-label="审核节奏"]]
+                  text "卷末审阅"
+                  text " "
+                svg_root
+            textbox "创作要求" [ref=1008, loc=css:textarea[placeholder="给 Agent 的创作要求（继续时生效，留空可清除）"]]
+              text "写作始终遵守：限知视角；所有关键证据在解答前出现；每卷推进核心谜团并支付人物代价；同类调查场景不得连续复用。许知微不具超能力，周泊单�..."
+        container
+          tablist
+            container
+            container
+              tab [ref=1127, loc=unstable]
+                text "创作工具"
+              tab [ref=1130, loc=unstable]
+                text "🌍 世界观与人物"
+              tab [ref=1133, loc=unstable]
+                text "📋 大纲"
+              tab [ref=1136, loc=unstable]
+                text "📖 章节管理"
+              tab [ref=1139, loc=unstable]
+                text "🔍 质量评价"
+          tabpanel "🔍 质量评价" [ref=2108, loc=role:tabpanel[name="🔍 质量评价"]]
+            button [ref=2113, loc=unstable]
+              image "safety-certificate"
+                svg_root
+              text "🔍 开始质量评价"
+            alert
+              text "质量评价说明"
+              text "AI 将从 7 个维度（长程一致性 / 风格统一 / 情节质量 / 人物塑造 / 世界观完整 / 对话质量 / 模式多样性）评价已生成的小说，发现具体问题并给出改进�..."
+            container
+              svg_root
+              text "尚未评价"
+  text "::1"
+  container

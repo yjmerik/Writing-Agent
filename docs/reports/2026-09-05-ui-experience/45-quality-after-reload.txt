@@ -1,0 +1,95 @@
+root
+  container
+    container
+      heading
+        text "📖 长篇小说写作系统"
+    container
+      container
+        container
+          button [ref=1753, loc=unstable]
+            image "arrow-left"
+              svg_root
+            text "返回列表"
+          button [ref=1760, loc=unstable]
+            image "plus"
+              svg_root
+            text "新建"
+        container
+          text "潮痕档案｜全流程体验0905"
+          table
+            table_row
+              table_cell
+                text "待审核"
+                text "人机协作"
+            table_row
+              table_cell
+                text "进度"
+                container
+                  text "1"
+                  text "章"
+          container [ref=1794, loc=unstable]
+            text "💡"
+            text "当代虚构江南河港城白沙，旧堤拆迁前，水文档案员许知微发现二十年前洪灾的水位记录被人更改，父亲当年的失踪并非意外。她与曾参与救援、如今�..."
+        button [ref=1800, loc=unstable]
+          image "collapsed"
+            svg_root
+          container
+            image "setting"
+              svg_root
+            text "写作偏好"
+      container
+        container
+          container
+            container
+              text "一起完成这本书"
+              text "等待你审阅"
+              text "等待作者审阅 · 已写 1 / 目标 200 章 · 2,761 字"
+            container
+              button [ref=1717, loc=unstable]
+                text "继续协作"
+              button [ref=1718, loc=unstable]
+                text "审阅内容（1 项待审核）"
+          text "你可以直接编辑世界观、人物、大纲和正文，也可以让 Agent 按要求修改。审阅完成后继续协作。"
+          alert
+            image "exclamation-circle"
+              svg_root
+            text "请先处理待审核内容，再继续创作"
+          alert
+            text "服务曾中断，已保留进度与指令，检查内容后可继续"
+          container
+            container
+              text "审核节奏"
+              container "审核节奏"
+                container
+                  comboboxgrouping "审核节奏" [ref=1713, loc=css:input[aria-label="审核节奏"]]
+                  text "每章审阅"
+                  text " "
+                svg_root
+            textbox "创作要求" [ref=1714, loc=css:textarea[placeholder="给 Agent 的创作要求（继续时生效，留空可清除）"]]
+              text "遵循作者刚保存的修订总纲与第一卷1—25章计划，不再生成旧41—48章。故事2025年、洪灾2005年7月16日、白沙城与林溪闸。全部人物无超能力，周泊左耳�..."
+        container
+          tablist
+            container
+            container
+              tab [ref=1861, loc=unstable]
+                text "创作工具"
+              tab [ref=1864, loc=unstable]
+                text "🌍 世界观与人物"
+              tab [ref=1867, loc=unstable]
+                text "📋 大纲"
+              tab [ref=1870, loc=unstable]
+                text "📖 章节管理"
+              tab [ref=1873, loc=unstable]
+                text "🔍 质量评价"
+          tabpanel "🔍 质量评价" [ref=2385, loc=role:tabpanel[name="🔍 质量评价"]]
+            button [ref=2390, loc=unstable]
+              image "safety-certificate"
+                svg_root
+              text "🔍 开始质量评价"
+            alert
+              text "质量评价说明"
+              text "AI 将从 7 个维度（长程一致性 / 风格统一 / 情节质量 / 人物塑造 / 世界观完整 / 对话质量 / 模式多样性）评价已生成的小说，发现具体问题并给出改进�..."
+            container
+              svg_root
+              text "尚未评价"
+  text "::1"

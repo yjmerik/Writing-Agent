@@ -1,0 +1,520 @@
+root
+  container
+    container
+      heading
+        text "📖 长篇小说写作系统"
+    container
+      container
+        button [ref=31601, loc=unstable]
+          svg_root
+          text "返回列表"
+        button [ref=31608, loc=unstable]
+          svg_root
+          text "新建"
+        container
+          text "潮痕档案｜全流程体验0905"
+          table
+            table_row
+              table_cell
+                text "创作中"
+                text "人机协作"
+            table_row
+              table_cell
+                text "进度"
+                text "9"
+                text "章"
+          container [ref=31642, loc=unstable]
+            text "💡"
+            text "当代虚构江南河港城白沙，旧堤拆迁前，水文档案员许知微发现二十年前洪灾的水位记录被人更改，父亲当年的失踪并非意外。她与曾参与救援、如今�..."
+        button [ref=31648, loc=unstable]
+          image "collapsed"
+            svg_root
+          container
+            image "setting"
+              svg_root
+            text "写作偏好"
+      container
+        container
+          text "一起完成这本书"
+          text "Agent 正在创作"
+          text "撰写与检查正文 · 已写 9 / 目标 200 章 · 26,020 字"
+          button [ref=31583, loc=unstable]
+            text "我要接手编辑"
+          button [ref=31678, loc=unstable]
+            text "审阅内容"
+          text "Agent 会自动搭建框架、撰写正文并检查质量。你可以阅读已有内容，随时接手修改。"
+          container
+            container
+              text "审核节奏"
+              container "审核节奏"
+                container
+                  comboboxgrouping "审核节奏" [ref=31566, loc=css:input[aria-label="审核节奏"]]
+                  text "卷末审阅"
+                  text " "
+                svg_root
+            textbox "创作要求" [ref=31567, loc=css:textarea[placeholder="给 Agent 的创作要求（继续时生效，留空可清除）"]]
+              text "从下一未写章（第9章）起按作者保存的卷1第1—25章计划顺序继续，卷末审阅。保护第1章当前v6（2769字，首句2025年6月），不重写已有第1—8章。严格遵�..."
+        container
+          tablist
+            container
+            container
+              tab [ref=31704, loc=unstable]
+                text "创作工具"
+              tab [ref=31707, loc=unstable]
+                text "🌍 世界观与人物"
+              tab [ref=31710, loc=unstable]
+                text "📋 大纲"
+              tab [ref=31713, loc=unstable]
+                text "📖 章节管理"
+              tab [ref=31716, loc=unstable]
+                text "🔍 质量评价"
+          tabpanel "📖 章节管理" [ref=31720, loc=role:tabpanel[name="📖 章节管理"]]
+            alert
+              text "📝 写作中 — 可查看和重写已完成的章节"
+            button [ref=31559, loc=unstable]
+              image "plus"
+                svg_root
+              text "新增章节"
+            container
+              container
+                container
+                  table
+                    table_row
+                      table_cell
+                  text "📖 章节 (9)"
+                  table
+                    table_row
+                      table_cell
+                unordered_list
+                  button "第1章 移交清单" [ref=31744, loc=role:button[name="第1章 移交清单"]]
+                    heading
+                      text "第"
+                      text "1"
+                      text "章"
+                      text "移交清单"
+                    container
+                      text "2769"
+                      text "字"
+                  button "第2章 缺页的水" [ref=31760, loc=role:button[name="第2章 缺页的水"]]
+                    heading
+                      text "第"
+                      text "2"
+                      text "章"
+                      text "缺页的水"
+                    container
+                      text "2866"
+                      text "字"
+                  button "第3章 背向人声" [ref=31776, loc=role:button[name="第3章 背向人声"]]
+                    heading
+                      text "第"
+                      text "3"
+                      text "章"
+                      text "背向人声"
+                    container
+                      text "2744"
+                      text "字"
+                  button "第4章 恩人的签字" [ref=31792, loc=role:button[name="第4章 恩人的签字"]]
+                    heading
+                      text "第"
+                      text "4"
+                      text "章"
+                      text "恩人的签字"
+                    container
+                      text "3064"
+                      text "字"
+                  button "第5章 两枚订孔" [ref=32438, loc=role:button[name="第5章 两枚订孔"]]
+                    heading
+                      text "第"
+                      text "5"
+                      text "章"
+                      text "两枚订孔"
+                    container
+                      text "3647"
+                      text "字"
+                  button "第6章 提前一天" [ref=33157, loc=role:button[name="第6章 提前一天"]]
+                    heading
+                      text "第"
+                      text "6"
+                      text "章"
+                      text "提前一天"
+                    container
+                      text "2380"
+                      text "字"
+                  button "第7章 屋檐下的水" [ref=33624, loc=role:button[name="第7章 屋檐下的水"]]
+                    heading
+                      text "第"
+                      text "7"
+                      text "章"
+                      text "屋檐下的水"
+                    container
+                      text "3069"
+                      text "字"
+                  button "第8章 未寄出的信" [ref=34190, loc=role:button[name="第8章 未寄出的信"]]
+                    heading
+                      text "第"
+                      text "8"
+                      text "章"
+                      text "未寄出的信"
+                    container
+                      text "2567"
+                      text "字"
+                  button "第9章 复印件的边" [ref=35689, loc=role:button[name="第9章 复印件的边"]]
+                    heading
+                      text "第"
+                      text "9"
+                      text "章"
+                      text "复印件的边"
+                    container
+                      text "2914"
+                      text "字"
+              container [ref=31565, loc=unstable]
+                container
+                  table
+                    table_row
+                      table_cell
+                  container
+                    text "第9章 复印件的边"
+                    container
+                      container
+                        text "2914"
+                        text "字"
+                      container
+                        text "v"
+                        text "2"
+                      button [ref=31584, loc=unstable]
+                        image "edit"
+                          svg_root
+                        text "编辑正文"
+                      button [ref=31585, loc=unstable]
+                        image "history"
+                          svg_root
+                        text "版本记录"
+                      button "让 Agent 修改第9章" [ref=31586, loc=css:button[aria-label="让 Agent 修改第9章"]]
+                        text "让 Agent 修改"
+                      button [ref=31841, loc=unstable]
+                        image "edit"
+                          svg_root
+                        text "重写此章"
+                  table
+                    table_row
+                      table_cell
+                container
+                  container
+                    paragraph
+                      text "方阙的办公室在档案馆东侧旧楼的二层，门牌号被一块新贴的塑料皮盖住，露出底下铁牌的半角——也是“2”，同一套字钉，同一个高度。许知微在门�..."
+                    container
+                      button "编辑第 1 段" [ref=35711, loc=css:button[aria-label="编辑第 1 段"]]
+                        image "edit"
+                          svg_root
+                        text "编辑段落"
+                      button "让 Agent 修改第 1 段" [ref=35719, loc=css:button[aria-label="让 Agent 修改第 1 段"]]
+                        text "让 Agent 修改"
+                  container
+                    paragraph
+                      text "方阙坐在桌子后头，面前摊着一册牛皮纸包的卷宗，没抬头。等她走到桌边，他才把一支旋帽钢笔搁下，问了句：“借阅单带了？”"
+                    container
+                      button "编辑第 3 段" [ref=35727, loc=css:button[aria-label="编辑第 3 段"]]
+                        image "edit"
+                          svg_root
+                        text "编辑段落"
+                      button "让 Agent 修改第 3 段" [ref=35735, loc=css:button[aria-label="让 Agent 修改第 3 段"]]
+                        text "让 Agent 修改"
+                  container
+                    paragraph
+                      text "许知微把文件夹递上去：“中闸管理所2005年7月原始水情记录，申请核对原件。”"
+                    container
+                      button "编辑第 5 段" [ref=35744, loc=css:button[aria-label="编辑第 5 段"]]
+                        image "edit"
+                          svg_root
+                        text "编辑段落"
+                      button "让 Agent 修改第 5 段" [ref=35752, loc=css:button[aria-label="让 Agent 修改第 5 段"]]
+                        text "让 Agent 修改"
+                  container
+                    paragraph
+                      text "方阙翻开单子，目光从上往下移了两行，停住。他没有立刻说不，只是把单子合上，推回来：“这个件号不对。”"
+                    container
+                      button "编辑第 7 段" [ref=35761, loc=css:button[aria-label="编辑第 7 段"]]
+                        image "edit"
+                          svg_root
+                        text "编辑段落"
+                      button "让 Agent 修改第 7 段" [ref=35769, loc=css:button[aria-label="让 Agent 修改第 7 段"]]
+                        text "让 Agent 修改"
+                  container
+                    paragraph
+                      text "“怎么不对？”"
+                    container
+                      button "编辑第 9 段" [ref=35778, loc=css:button[aria-label="编辑第 9 段"]]
+                        image "edit"
+                          svg_root
+                        text "编辑段落"
+                      button "让 Agent 修改第 9 段" [ref=35786, loc=css:button[aria-label="让 Agent 修改第 9 段"]]
+                        text "让 Agent 修改"
+                  container
+                    paragraph
+                      text "“你填的是整卷件号。”方阙用指节敲了敲桌面，“这批卷宗在整理时拆过，原件分成两个保管单元。你申请的这一卷，在库的只是后半部分，从七月�..."
+                    container
+                      button "编辑第 11 段" [ref=35794, loc=css:button[aria-label="编辑第 11 段"]]
+                        image "edit"
+                          svg_root
+                        text "编辑段落"
+                      button "让 Agent 修改第 11 段" [ref=35802, loc=css:button[aria-label="让 Agent 修改第 11 段"]]
+                        text "让 Agent 修改"
+                  container
+                    paragraph
+                      text "许知微的指尖在文件夹边缘停住：“前半部分在哪？”"
+                    container
+                      button "编辑第 13 段" [ref=35811, loc=css:button[aria-label="编辑第 13 段"]]
+                        image "edit"
+                          svg_root
+                        text "编辑段落"
+                      button "让 Agent 修改第 13 段" [ref=35819, loc=css:button[aria-label="让 Agent 修改第 13 段"]]
+                        text "让 Agent 修改"
+                  paragraph
+                    text "“没有前半部分。”方阙的句子短得像落闸，“档案迁移的时候，卷内目录和实体对不上。后半卷单独立了件，前半卷没有进库记录。”"
+                  button "编辑第 15 段" [ref=35824, loc=css:button[aria-label="编辑第 15 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 15 段" [ref=35827, loc=css:button[aria-label="让 Agent 修改第 15 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“那后半卷的卷内目录里，前半部分的条目怎么体现的？”"
+                  button "编辑第 17 段" [ref=35831, loc=css:button[aria-label="编辑第 17 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 17 段" [ref=35834, loc=css:button[aria-label="让 Agent 修改第 17 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "方阙顿了一下，像没料到她会直接问这一句。他重新打开文件夹，抽出卷内目录的复印件，平放在桌上，手指点在第1—3行：“七月十五日零时至八时，..."
+                  button "编辑第 19 段" [ref=35838, loc=css:button[aria-label="编辑第 19 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 19 段" [ref=35841, loc=css:button[aria-label="让 Agent 修改第 19 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微垂眼看了看那页目录，没有动。她早料到原件会缺页——“缺页”几乎成了所有旧案的共同症候。但她今天为了另一件事而来。她把自己带来的�..."
+                  button "编辑第 21 段" [ref=35845, loc=css:button[aria-label="编辑第 21 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 21 段" [ref=35848, loc=css:button[aria-label="让 Agent 修改第 21 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“这是我上午从库房调阅时复印的，卷号和你这边同一件。”她指着第一页复印件上边缘，“每页右下角应该有页码。可这一份，页码被裁掉了，只留�..."
+                  button "编辑第 23 段" [ref=35852, loc=css:button[aria-label="编辑第 23 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 23 段" [ref=35855, loc=css:button[aria-label="让 Agent 修改第 23 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "方阙低头看了一眼，没接话。"
+                  button "编辑第 25 段" [ref=35859, loc=css:button[aria-label="编辑第 25 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 25 段" [ref=35862, loc=css:button[aria-label="让 Agent 修改第 25 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“第二份是我今天下午，按卷内目录单独调出的——同一卷，同一天，不同页。”许知微把另一张纸转了个方向，“这张的右下角，页码完整。但你看�..."
+                  button "编辑第 27 段" [ref=35866, loc=css:button[aria-label="编辑第 27 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 27 段" [ref=35869, loc=css:button[aria-label="让 Agent 修改第 27 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "方阙的视线在两张纸之间来回扫了一遍。他没问“这能说明什么”——他看得懂。两页复印件虽然标注同一卷宗、同一时段，但页码格式不一致，意味�..."
+                  button "编辑第 29 段" [ref=35873, loc=css:button[aria-label="编辑第 29 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 29 段" [ref=35876, loc=css:button[aria-label="让 Agent 修改第 29 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“这两份，可能不是同一卷里复印出来的。”许知微说，“或者说，不是同一批立卷时装进去的。”"
+                  button "编辑第 31 段" [ref=35880, loc=css:button[aria-label="编辑第 31 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 31 段" [ref=35883, loc=css:button[aria-label="让 Agent 修改第 31 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "方阙没有否认，却也没有松口。他把两张复印件挪到灯下，又看了一会儿，才说：“复印件能说明的，只是当时你拿到的原件是这个样子。你从库房调�..."
+                  button "编辑第 33 段" [ref=35887, loc=css:button[aria-label="编辑第 33 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 33 段" [ref=35890, loc=css:button[aria-label="让 Agent 修改第 33 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微报了号。方阙翻出一本厚登记簿，用指腹顺着栏位滑下，在一个号码上顿了顿。他没抬头，说：“这个件号上午出过库，下午也出过库。出库经�..."
+                  button "编辑第 35 段" [ref=35894, loc=css:button[aria-label="编辑第 35 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 35 段" [ref=35897, loc=css:button[aria-label="让 Agent 修改第 35 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微的动作停住了：“谁？”"
+                  button "编辑第 37 段" [ref=35901, loc=css:button[aria-label="编辑第 37 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 37 段" [ref=35904, loc=css:button[aria-label="让 Agent 修改第 37 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "方阙把登记簿合上，没有立即回答。他起身走到身后的铁皮柜前，拉出中层的抽屉，翻了一会儿，取出一页纸——A4，复印件，格式和许知微手里的两份..."
+                  button "编辑第 39 段" [ref=35908, loc=css:button[aria-label="编辑第 39 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 39 段" [ref=35911, loc=css:button[aria-label="让 Agent 修改第 39 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“上午出库的那次，”方阙把纸递给许知微，“复印的不是这批原件。是从旧目录里调出来的留底，按卷号复制的整页。下午才是原件出库。”"
+                  button "编辑第 41 段" [ref=35915, loc=css:button[aria-label="编辑第 41 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 41 段" [ref=35918, loc=css:button[aria-label="让 Agent 修改第 41 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微把那页A4接过来，和自己手里的第一张复印件放在一起并排比了比。她心里很快拣出了一条线索——上午的复印件纸张裁切干净，右下角页码虽然..."
+                  button "编辑第 43 段" [ref=35922, loc=css:button[aria-label="编辑第 43 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 43 段" [ref=35925, loc=css:button[aria-label="让 Agent 修改第 43 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“所以我拿到的这两份，一份来自留底，一份来自原件。”许知微缓慢地说，“目录和原件，各是一套来源。”"
+                  button "编辑第 45 段" [ref=35929, loc=css:button[aria-label="编辑第 45 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 45 段" [ref=35932, loc=css:button[aria-label="让 Agent 修改第 45 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“它们本来就不该放在一起比对。”方阙的语调没有起伏，含义却再明白不过：你刚才的结论建立在错误的基础上。"
+                  button "编辑第 47 段" [ref=35936, loc=css:button[aria-label="编辑第 47 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 47 段" [ref=35939, loc=css:button[aria-label="让 Agent 修改第 47 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微安静了一会儿。她知道自己一度要往前走错方向。她把两份复印件分开，重新摆成两组，各归各位。她没有急着找补，只是问：“那在这两批复�..."
+                  button "编辑第 49 段" [ref=35943, loc=css:button[aria-label="编辑第 49 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 49 段" [ref=35946, loc=css:button[aria-label="让 Agent 修改第 49 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "方阙没有立刻答。他坐回桌后，拿起旋帽钢笔旋开又旋紧。过了几秒，他说：“借阅登记查过了，你是今年以来第一位调阅这个卷的人。”"
+                  button "编辑第 51 段" [ref=35950, loc=css:button[aria-label="编辑第 51 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 51 段" [ref=35953, loc=css:button[aria-label="让 Agent 修改第 51 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“那今年的档案整理呢？立卷、数字化扫描，有没有把这一卷从库里提出来过？”许知微看着方阙，“原件重新整理过一次，就可能动过一次页码——�..."
+                  button "编辑第 53 段" [ref=35957, loc=css:button[aria-label="编辑第 53 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 53 段" [ref=35960, loc=css:button[aria-label="让 Agent 修改第 53 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "方阙的动作停了一下。他没有说“没有”，也没有说“有”。他只是把旋帽钢笔放下，声音放平了些：“你走流程，还是查旧账的走法？”"
+                  button "编辑第 55 段" [ref=35964, loc=css:button[aria-label="编辑第 55 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 55 段" [ref=35967, loc=css:button[aria-label="让 Agent 修改第 55 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微明白他的意思。“这件事两样都得占着。”她说，“流程我要走，旧账我也要查。”"
+                  button "编辑第 57 段" [ref=35971, loc=css:button[aria-label="编辑第 57 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 57 段" [ref=35974, loc=css:button[aria-label="让 Agent 修改第 57 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "方阙沉默了几秒。他忽然从抽屉底层抽出一页纸，是复印件，页面边角卷了，看得出是反复折过。纸面是一张整理交接单，日期写着2008年9月。许知微的..."
+                  button "编辑第 59 段" [ref=35978, loc=css:button[aria-label="编辑第 59 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 59 段" [ref=35981, loc=css:button[aria-label="让 Agent 修改第 59 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "方阙指了一下那处涂改：“这是我在移交这批档案时发现的。当时没有人解释为什么要改记录。我只是把它留了下来。”"
+                  button "编辑第 61 段" [ref=35985, loc=css:button[aria-label="编辑第 61 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 61 段" [ref=35988, loc=css:button[aria-label="让 Agent 修改第 61 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "他把纸重新折好递给她：“这批东西和你的查证有关。但原件不在库，说明它曾经被人翻动过，至于是在哪一环节被翻动的，你只能从目录登记和实体�..."
+                  button "编辑第 63 段" [ref=35992, loc=css:button[aria-label="编辑第 63 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 63 段" [ref=35995, loc=css:button[aria-label="让 Agent 修改第 63 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微接过去，却没急着看。她透过那张涂改过的交接单，隐约看到一条缝隙的另一侧，有人早在方阙之前就设了一道墙——档案副本、原件留底、目�..."
+                  button "编辑第 65 段" [ref=35999, loc=css:button[aria-label="编辑第 65 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 65 段" [ref=36002, loc=css:button[aria-label="让 Agent 修改第 65 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "她拉开椅子起身，把两张自己带来的复印件留在方阙桌上，只带走了那张交接单。走到门口，她回头看方阙：“如果我从别的保管环节查，查到了原件�..."
+                  button "编辑第 67 段" [ref=36006, loc=css:button[aria-label="编辑第 67 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 67 段" [ref=36009, loc=css:button[aria-label="让 Agent 修改第 67 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "方阙没有抬头，过了片刻他说：“我只管这间库里的事。”"
+                  button "编辑第 69 段" [ref=36013, loc=css:button[aria-label="编辑第 69 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 69 段" [ref=36016, loc=css:button[aria-label="让 Agent 修改第 69 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "他的回答把她挡在外面，但她听出另一层意思——他能确认的权限只到库房门口为止，出了门，他也不拦她。"
+                  button "编辑第 71 段" [ref=36020, loc=css:button[aria-label="编辑第 71 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 71 段" [ref=36023, loc=css:button[aria-label="让 Agent 修改第 71 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微沿着窄楼梯走下二层，到转角平台时停步。她把交接单展开，就着天窗透进的光又看了一遍，目光钉在修正液盖底的那一处。她试着用手指轻轻�..."
+                  button "编辑第 73 段" [ref=36027, loc=css:button[aria-label="编辑第 73 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 73 段" [ref=36030, loc=css:button[aria-label="让 Agent 修改第 73 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "她合上单子，一步下两级台阶，踩到地面的碎石子响时，她忽然明白了那份缺页登记为什么要用修正液：不是为了隐藏页号，而是为了把两个不同日期�..."
+                  button "编辑第 75 段" [ref=36034, loc=css:button[aria-label="编辑第 75 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 75 段" [ref=36037, loc=css:button[aria-label="让 Agent 修改第 75 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "她站定，又把单子翻过来。背面有人用铅笔写了一行小字，笔迹因受潮洇开了半边，只剩几个字能辨清：“拆——重装——可拼”。下头还有个日期，�..."
+                  button "编辑第 77 段" [ref=36041, loc=css:button[aria-label="编辑第 77 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 77 段" [ref=36044, loc=css:button[aria-label="让 Agent 修改第 77 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微在原地站了很久。手机在口袋里震了两下，她没接。"
+                  button "编辑第 79 段" [ref=36048, loc=css:button[aria-label="编辑第 79 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 79 段" [ref=36051, loc=css:button[aria-label="让 Agent 修改第 79 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "那行铅笔字的笔迹，和她父亲留在旧档案背面的草算字迹，出自同一只手。她想把这句话先喝下去，像吞掉一口还没冷的水——等证据再多一点，等她�..."
+                  button "编辑第 81 段" [ref=36055, loc=css:button[aria-label="编辑第 81 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 81 段" [ref=36058, loc=css:button[aria-label="让 Agent 修改第 81 段"]]
+                    text "让 Agent 修改"
+                  heading
+                    svg_root
+                    text "章节质量报告"
+                    text "?"
+                    text "级"
+            button [ref=31582, loc=unstable]
+              image "reload"
+                svg_root
+              text "刷新"
+  text "::1"
+  container

@@ -1,0 +1,617 @@
+root
+  container
+    container
+      heading
+        text "📖 长篇小说写作系统"
+    container
+      container
+        button [ref=47299, loc=unstable]
+          svg_root
+          text "返回列表"
+        button [ref=47306, loc=unstable]
+          svg_root
+          text "新建"
+        container
+          text "潮痕档案｜全流程体验0905"
+          table
+            table_row
+              table_cell
+                text "创作中"
+                text "人机协作"
+            table_row
+              table_cell
+                text "进度"
+                text "20"
+                text "章"
+          container [ref=47340, loc=unstable]
+            text "💡"
+            text "当代虚构江南河港城白沙，旧堤拆迁前，水文档案员许知微发现二十年前洪灾的水位记录被人更改，父亲当年的失踪并非意外。她与曾参与救援、如今�..."
+        button [ref=47346, loc=unstable]
+          image "collapsed"
+            svg_root
+          container
+            image "setting"
+              svg_root
+            text "写作偏好"
+      container
+        container
+          text "一起完成这本书"
+          text "已交给作者"
+          text "撰写与检查正文 · 已写 20 / 目标 200 章 · 66,880 字"
+          button [ref=47373, loc=unstable]
+            text "继续协作"
+          button [ref=47377, loc=unstable]
+            text "审阅内容"
+          text "你可以直接编辑世界观、人物、大纲和正文，也可以让 Agent 按要求修改。审阅完成后继续协作。"
+          text "创作已停下，请检查章节质量或运行记录后继续"
+          container
+            container
+              text "审核节奏"
+              container "审核节奏"
+                container
+                  comboboxgrouping "审核节奏" [ref=47262, loc=css:input[aria-label="审核节奏"]]
+                  text "卷末审阅"
+                  text " "
+                svg_root
+            textbox "创作要求" [ref=47263, loc=css:textarea[placeholder="给 Agent 的创作要求（继续时生效，留空可清除）"]]
+              text "从下一未写章（第21章）起按作者保存的卷1第1—25章计划顺序继续，卷末审阅。保护第1章当前v6（2769字，首句2025年6月），不重写已有第1—20章。严格�..."
+        container
+          tablist
+            container
+            container
+              tab [ref=47403, loc=unstable]
+                text "创作工具"
+              tab [ref=47406, loc=unstable]
+                text "🌍 世界观与人物"
+              tab [ref=47409, loc=unstable]
+                text "📋 大纲"
+              tab [ref=47412, loc=unstable]
+                text "📖 章节管理"
+              tab [ref=47415, loc=unstable]
+                text "🔍 质量评价"
+          tabpanel "📋 大纲" [ref=49106, loc=role:tabpanel[name="📋 大纲"]]
+            container
+              button [ref=49111, loc=unstable]
+                image "reload"
+                  svg_root
+                text "刷新"
+              button [ref=49119, loc=unstable]
+                text "重规划未写卷"
+            container
+              text "总纲"
+              textbox "总纲内容" [ref=49094, loc=css:textarea[aria-label="总纲内容"]]
+                text "《潮痕档案》作者修订总纲。全书200章，8卷，每卷25章。严格现实主义、第三人称限知。故事发生于2025年，旧洪灾为2005年7月16日。白沙城、林溪闸、上..."
+                text
+                text "主角许知微是28岁水文档案员。周泊44岁、左耳全聋，靠船工经验与可核验记录协助调查，听障持续带来行动限制。陆衡52岁水利副局长，救过许知微，�..."
+                text
+                text "核心真相：2005年上游口头预排令未按规定留痕，陆衡在后续险情中自行开闸，事后倒填时间以遮掩上游指令缺位与下游撤离迟滞。许父许敬川发现记录�..."
+                text
+                text "三条核心线索：缺页水文簿证明记录事后被抽换；铜牌日期为7月15日，来自汛前预备抢险制作，与7月16日才启动的公开记录冲突，须与采购、模具和签�..."
+                text
+                text "卷1【档案异常】第1—25章：移交档案、缺页、水位异常、铜牌初现、周泊与陆衡登场。结束时证明一份记录被事后替换，仅锁定程序异常，不提前破案�..."
+                text
+                text "卷2【旧城证人】第26—50章：三组普通人的证词相互冲突，实地核对高程、照明与报时，厘清共同经历，保护首位愿公开作证者。铜牌签领记录指向预先..."
+                text
+                text "卷3【上游调查】第51—75章：追查青瓦湖调度、降雨与电话记录，发现未落纸的预排令。取得经多来源验证的时间差，许知微的调查权限被收回。"
+                text
+                text "卷4【工程利益】第76—100章：检验旧堤拆迁、蓝线调整和安置利益。证据保全与居民生计冲突，团队因公开范围分裂；找到连接旧案与当前工程的责任�..."
+                text
+                text "卷5【证据反噬】第101—125章：关键材料真伪遭质疑，合法来源和保管链经受审查。以原卷页码、材质、签收与第三方记录排除伪造，承認己方推理错误�..."
+                text
+                text "卷6【群像抉择】第126—150章：核实许父2005—2007年轨迹及病逝，解释未归原因而不替他洗白；普通证人、陆衡和顾堰声各做代价明确的选择，三条核心�..."
+                text
+                text "卷7【新汛危机】第151—175章：新洪水检验旧调度制度，主角以事前证据争取提前撤离，救援服从专业指挥，不拿群众安全做实验。周泊听障导致行动险�..."
+                text
+                text "卷8【公开对质】第176—200章：按既有证据逐步公开，交叉质询与独立复核，明确每人责任、保护普通居民正当利益。父亲去向、缺页、铜牌日期及三次�..."
+                text
+                text "每卷需有独立的小闭环、主线进展与人物代价。所有章号连续，章标题2至10字、梗概独立。禁止重复查账拖延、全知切镜和不可核验的专业断言。"
+              button "保存总纲" [ref=49152, loc=css:button[aria-label="保存总纲"]]
+                image "save"
+                  svg_root
+                text "保存总纲"
+            container
+              button "新增卷" [ref=49161, loc=css:button[aria-label="新增卷"]]
+                image "plus"
+                  svg_root
+                text "新增卷"
+              button "保存未写大纲" [ref=49170, loc=css:button[aria-label="保存未写大纲"]]
+                image "save"
+                  svg_root
+                text "保存未写大纲"
+            container
+              textbox "for screen reader" [ref=49095, loc=css:input[aria-label="for screen reader"]]
+              tree
+                treeitem
+                  container
+                  image "minus-square"
+                    svg_root
+                  container
+                    container
+                      text "📚 卷"
+                      text "1"
+                    text "档案异常"
+                    container "卷1已锁定"
+                      text "含已写章节，锁定"
+                    button "让 Agent 修改卷1" [ref=49205, loc=css:button[aria-label="让 Agent 修改卷1"]]
+                      text "让 Agent 修改"
+                    button "新增章节到卷1" [ref=49208, loc=css:button[aria-label="新增章节到卷1"]]
+                      image "plus"
+                        svg_root
+                      text "新增章节"
+                    button "上移卷1" [ref=49217, loc=css:button[aria-label="上移卷1"]]
+                      svg_root
+                      text "上移卷"
+                    button "下移卷1" [ref=49221, loc=css:button[aria-label="下移卷1"]]
+                      svg_root
+                      text "下移卷"
+                    button "删除卷1" [ref=49225, loc=css:button[aria-label="删除卷1"]]
+                      svg_root
+                      text "删除卷"
+                treeitem
+                  container
+                  container
+                  container
+                    container
+                    container
+                  container
+                    container
+                      container
+                        text "第"
+                        text "1"
+                        text "章"
+                      text "移交清单"
+                      container "第1章已锁定"
+                        text "已写，锁定"
+                      button "上移第1章" [ref=49252, loc=css:button[aria-label="上移第1章"]]
+                        svg_root
+                        text "上移"
+                      button "下移第1章" [ref=49256, loc=css:button[aria-label="下移第1章"]]
+                        svg_root
+                        text "下移"
+                      button "删除第1章" [ref=49260, loc=css:button[aria-label="删除第1章"]]
+                        svg_root
+                        text "删除章节"
+                    text "2025年7月，许知微在旧堤拆迁资料移交时逐箱核对2005年洪灾卷宗，发现清单有册而架上无册。她拒绝先签收后补件，面对主管催促，保存当日纸质移交�..."
+                treeitem
+                  container
+                  container
+                  container
+                    container
+                    container
+                  container
+                    container
+                      container
+                        text "第"
+                        text "2"
+                        text "章"
+                      text "缺页的水"
+                      container "第2章已锁定"
+                        text "已写，锁定"
+                      button "上移第2章" [ref=49289, loc=css:button[aria-label="上移第2章"]]
+                        svg_root
+                        text "上移"
+                      button "下移第2章" [ref=49293, loc=css:button[aria-label="下移第2章"]]
+                        svg_root
+                        text "下移"
+                      button "删除第2章" [ref=49297, loc=css:button[aria-label="删除第2章"]]
+                        svg_root
+                        text "删除章节"
+                    text "许知微在找到的水文簿中发现页码与装订孔不一致。她记录现状、申请复核，在允许范围内比对纸张和目录，得到可能事后抽页的初步证据。复核尚不�..."
+                treeitem
+                  container
+                  container
+                  container
+                    container
+                    container
+                  container
+                    container
+                      container
+                        text "第"
+                        text "3"
+                        text "章"
+                      text "背向人声"
+                      container "第3章已锁定"
+                        text "已写，锁定"
+                      button "上移第3章" [ref=49326, loc=css:button[aria-label="上移第3章"]]
+                        svg_root
+                        text "上移"
+                      button "下移第3章" [ref=49330, loc=css:button[aria-label="下移第3章"]]
+                        svg_root
+                        text "下移"
+                      button "删除第3章" [ref=49334, loc=css:button[aria-label="删除第3章"]]
+                        svg_root
+                        text "删除章节"
+                    text "许知微去旧堤寻找观测点，遇船工周泊。左耳失聪使他漏听岸上提醒，二人改用面对面手势配合。周泊指出旧标尺位置已迁移，拒绝把经验当作精确水�..."
+                treeitem
+                  container
+                  container
+                  container
+                    container
+                    container
+                  container
+                    container
+                      container
+                        text "第"
+                        text "4"
+                        text "章"
+                      text "恩人的签字"
+                      container "第4章已锁定"
+                        text "已写，锁定"
+                      button "上移第4章" [ref=49363, loc=css:button[aria-label="上移第4章"]]
+                        svg_root
+                        text "上移"
+                      button "下移第4章" [ref=49367, loc=css:button[aria-label="下移第4章"]]
+                        svg_root
+                        text "下移"
+                      button "删除第4章" [ref=49371, loc=css:button[aria-label="删除第4章"]]
+                        svg_root
+                        text "删除章节"
+                    text "陆衡接见许知微，承认救过幼年的她，也提醒移交时限。他批准有限查阅，却要求不要惊扰被安置居民。许知微首次看到他2005年的签字，记录职务和日�..."
+                treeitem
+                  container
+                  container
+                  container
+                    container
+                    container
+                  container
+                    container
+                      container
+                        text "第"
+                        text "5"
+                        text "章"
+                      text "两枚订孔"
+                      container "第5章已锁定"
+                        text "已写，锁定"
+                      button "上移第5章" [ref=49400, loc=css:button[aria-label="上移第5章"]]
+                        svg_root
+                        text "上移"
+                      button "下移第5章" [ref=49404, loc=css:button[aria-label="下移第5章"]]
+                        svg_root
+                        text "下移"
+                      button "删除第5章" [ref=49408, loc=css:button[aria-label="删除第5章"]]
+                        svg_root
+                        text "删除章节"
+                    text "许知微请退休档案员沈照夜核对装订制度，发现一页存在两组孔距。沈照夜只能说明常规工序，明确无法凭肉眼确定更换年份。她提供可查的旧登记编�..."
+                treeitem
+                  container
+                  container
+                  container
+                    container
+                    container
+                  container
+                    container
+                      container
+                        text "第"
+                        text "6"
+                        text "章"
+                      text "提前一天"
+                      container "第6章已锁定"
+                        text "已写，锁定"
+                      button "上移第6章" [ref=49437, loc=css:button[aria-label="上移第6章"]]
+                        svg_root
+                        text "上移"
+                      button "下移第6章" [ref=49441, loc=css:button[aria-label="下移第6章"]]
+                        svg_root
+                        text "下移"
+                      button "删除第6章" [ref=49445, loc=css:button[aria-label="删除第6章"]]
+                        svg_root
+                        text "删除章节"
+                    text "周泊带来一枚家中保留的抢险铜牌，刻着7月15日，与7月16日公开启动记录相差一天。许知微拍照并记下保管来源，暂列纪念日期、预制及提前动员三种�..."
+                treeitem
+                  container
+                  container
+                    container
+                    container
+                  container
+                    container
+                      container
+                        text "第"
+                        text "7"
+                        text "章"
+                      text "屋檐下的水"
+                      container "第7章已锁定"
+                        text "已写，锁定"
+                      button "上移第7章" [ref=49473, loc=css:button[aria-label="上移第7章"]]
+                        svg_root
+                        text "上移"
+                      button "下移第7章" [ref=49477, loc=css:button[aria-label="下移第7章"]]
+                        svg_root
+                        text "下移"
+                      button "删除第7章" [ref=49481, loc=css:button[aria-label="删除第7章"]]
+                        svg_root
+                        text "删除章节"
+                    text "旧街商户说当晚水未过门槛，船民却说水已越过堤脚。许知微与周泊步行核对两处高程，发现两人谈的不是同一地点。对证词不一致先求解释，不急于�..."
+                treeitem
+                  text "第"
+                  text "8"
+                  text "章"
+                  text "未寄出的信"
+                  text "已写，锁定"
+                  button "上移第8章" [ref=49492, loc=css:button[aria-label="上移第8章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第8章" [ref=49495, loc=css:button[aria-label="下移第8章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第8章" [ref=49498, loc=css:button[aria-label="删除第8章"]]
+                    svg_root
+                    text "删除章节"
+                  text "姑母整理搬家旧物，拿出许父寄来的旧信封，邮戳属于外地且晚于洪灾。信纸内容并不完整，许知微记录发现过程，第一次承认父亲可能曾有机会联络�..."
+                treeitem
+                  text "第"
+                  text "9"
+                  text "章"
+                  text "复印件的边"
+                  text "已写，锁定"
+                  button "上移第9章" [ref=49509, loc=css:button[aria-label="上移第9章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第9章" [ref=49512, loc=css:button[aria-label="下移第9章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第9章" [ref=49515, loc=css:button[aria-label="删除第9章"]]
+                    svg_root
+                    text "删除章节"
+                  text "移交复印件边缘缺失页码，许知微向保管单位申请看原件。批准范围受限，她用合法留存目录对照，发现两份复印件来自不同整理批次，不能直接拼成�..."
+                treeitem
+                  text "第"
+                  text "10"
+                  text "章"
+                  text "签领的人"
+                  text "已写，锁定"
+                  button "上移第10章" [ref=49526, loc=css:button[aria-label="上移第10章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第10章" [ref=49529, loc=css:button[aria-label="下移第10章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第10章" [ref=49532, loc=css:button[aria-label="删除第10章"]]
+                    svg_root
+                    text "删除章节"
+                  text "查铜牌签领册需要原持有人同意。周泊担心公开影响旧安置资格，许知微说明用途与保护边界，获得部分核对授权，并接受有些名字不能进入公开材料�..."
+                treeitem
+                  text "第"
+                  text "11"
+                  text "章"
+                  text "三种报时"
+                  text "已写，锁定"
+                  button "上移第11章" [ref=49543, loc=css:button[aria-label="上移第11章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第11章" [ref=49546, loc=css:button[aria-label="下移第11章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第11章" [ref=49549, loc=css:button[aria-label="删除第11章"]]
+                    svg_root
+                    text "删除章节"
+                  text "三位证人分别按收音机报时、厂钟和停电时刻记忆洪水。许知微分开记下原话，寻找当年停电记录及节目表交叉核验。只能缩小时间区间，不得凭回忆�..."
+                treeitem
+                  text "第"
+                  text "12"
+                  text "章"
+                  text "旧标尺"
+                  text "已写，锁定"
+                  button "上移第12章" [ref=49560, loc=css:button[aria-label="上移第12章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第12章" [ref=49563, loc=css:button[aria-label="下移第12章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第12章" [ref=49566, loc=css:button[aria-label="删除第12章"]]
+                    svg_root
+                    text "删除章节"
+                  text "姜隔川带二人找到旧标尺底座，现场与图纸位置不符。拆迁工人准备清场，许知微申请短时记录并与工人约定取证时限，保存可见刻痕及测量参照，不�..."
+                treeitem
+                  text "第"
+                  text "13"
+                  text "章"
+                  text "退回的申请"
+                  text "已写，锁定"
+                  button "上移第13章" [ref=49577, loc=css:button[aria-label="上移第13章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第13章" [ref=49580, loc=css:button[aria-label="下移第13章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第13章" [ref=49583, loc=css:button[aria-label="删除第13章"]]
+                    svg_root
+                    text "删除章节"
+                  text "跨单位原件申请被退回，理由是缺保管责任人签字。许知微纠正自己把程序困难当作恶意阻挠的判断，补齐手续，同时发现当年签收登记有一笔无法对�..."
+                treeitem
+                  text "第"
+                  text "14"
+                  text "章"
+                  text "纸上的两小时"
+                  text "已写，锁定"
+                  button "上移第14章" [ref=49594, loc=css:button[aria-label="上移第14章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第14章" [ref=49597, loc=css:button[aria-label="下移第14章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第14章" [ref=49600, loc=css:button[aria-label="删除第14章"]]
+                    svg_root
+                    text "删除章节"
+                  text "复核显示一份调度单记录时间与接收登记相差两小时，尚不能证明开闸时间。许知微将“记录时间”“收件时间”“实际执行”分列，陆衡要求她明确�..."
+                treeitem
+                  text "第"
+                  text "15"
+                  text "章"
+                  text "造牌的模具"
+                  text "已写，锁定"
+                  button "上移第15章" [ref=49611, loc=css:button[aria-label="上移第15章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第15章" [ref=49614, loc=css:button[aria-label="下移第15章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第15章" [ref=49617, loc=css:button[aria-label="删除第15章"]]
+                    svg_root
+                    text "删除章节"
+                  text "周泊介绍的老厂工说明铜牌可能汛前预制。许知微去查采购与模具登记，发现制作确在7月15日前，排除“刻错字”的简单解释，但仍需核实实际发放时�..."
+                treeitem
+                  text "第"
+                  text "16"
+                  text "章"
+                  text "一张医疗票据"
+                  text "已写，锁定"
+                  button "上移第16章" [ref=49628, loc=css:button[aria-label="上移第16章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第16章" [ref=49631, loc=css:button[aria-label="下移第16章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第16章" [ref=49634, loc=css:button[aria-label="删除第16章"]]
+                    svg_root
+                    text "删除章节"
+                  text "姑母提供许父灾后外地就医票据，日期晚于旧信封。许知微只确认父亲当时可能存活，依法寻求进一步档案核对；票据为卷6去向核实埋下线索，不在本�..."
+                treeitem
+                  text "第"
+                  text "17"
+                  text "章"
+                  text "被改的门牌"
+                  text "已写，锁定"
+                  button "上移第17章" [ref=49645, loc=css:button[aria-label="上移第17章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第17章" [ref=49648, loc=css:button[aria-label="下移第17章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第17章" [ref=49651, loc=css:button[aria-label="删除第17章"]]
+                    svg_root
+                    text "删除章节"
+                  text "证人搬离旧住所，门牌改变导致许知微找错人。她用旧户籍索引与地籍图修正路线，承认自己的错误，避免同名者被卷入。沈照夜提醒档案中的地址也�..."
+                treeitem
+                  text "第"
+                  text "18"
+                  text "章"
+                  text "不能公开的姓名"
+                  text "已写，锁定"
+                  button "上移第18章" [ref=49662, loc=css:button[aria-label="上移第18章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第18章" [ref=49665, loc=css:button[aria-label="下移第18章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第18章" [ref=49668, loc=css:button[aria-label="删除第18章"]]
+                    svg_root
+                    text "删除章节"
+                  text "受访者担心孩子工作受影响而撤回部分口述授权。许知微撤下拟公开姓名，保留经同意的匿名记录，失去一条捷径。周泊因此愿意继续帮助，信任来自�..."
+                treeitem
+                  text "第"
+                  text "19"
+                  text "章"
+                  text "原卷到场"
+                  text "已写，锁定"
+                  button "上移第19章" [ref=49679, loc=css:button[aria-label="上移第19章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第19章" [ref=49682, loc=css:button[aria-label="下移第19章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第19章" [ref=49685, loc=css:button[aria-label="删除第19章"]]
+                    svg_root
+                    text "删除章节"
+                  text "补齐手续后原卷在保管人监督下供核对，许知微确认一页纸张格式晚于洪灾当年。她请相关人员记录观察并盖核验章，仍区分事后归档整理与蓄意造假�..."
+                treeitem
+                  text "第"
+                  text "20"
+                  text "章"
+                  text "一次误判"
+                  text "已写，锁定"
+                  button "上移第20章" [ref=49696, loc=css:button[aria-label="上移第20章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第20章" [ref=49699, loc=css:button[aria-label="下移第20章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第20章" [ref=49702, loc=css:button[aria-label="删除第20章"]]
+                    svg_root
+                    text "删除章节"
+                  text "许知微曾以纸张较新推断数值被改，沈照夜指出档案誊清也用新纸。二人对照当年副本和目录，撤销过度判断，重新寻找数值差异和替换时间的独立证�..."
+                treeitem
+                  text "第"
+                  text "21"
+                  text "章"
+                  textbox "第21章标题" [ref=49096, loc=css:input[aria-label="第21章标题"]]
+                    text "另一本值班簿"
+                  button "上移第21章" [ref=49713, loc=css:button[aria-label="上移第21章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第21章" [ref=49716, loc=css:button[aria-label="下移第21章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第21章" [ref=49719, loc=css:button[aria-label="删除第21章"]]
+                    svg_root
+                    text "删除章节"
+                  textbox "第21章梗概" [ref=49097, loc=css:textarea[aria-label="第21章梗概"]]
+                    text "周泊联系老值班员的家属取得知情同意，核对另一本值班簿。该簿只覆盖部分时段，与官方记录有差异，但家属说明保管缺口。许知微将这项限制写入�..."
+                treeitem
+                  text "第"
+                  text "22"
+                  text "章"
+                  textbox "第22章标题" [ref=49098, loc=css:input[aria-label="第22章标题"]]
+                    text "拆除之前"
+                  button "上移第22章" [ref=49731, loc=css:button[aria-label="上移第22章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第22章" [ref=49734, loc=css:button[aria-label="下移第22章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第22章" [ref=49737, loc=css:button[aria-label="删除第22章"]]
+                    svg_root
+                    text "删除章节"
+                  textbox "第22章梗概" [ref=49099, loc=css:textarea[aria-label="第22章梗概"]]
+                    text "旧标尺所在墙面即将拆除，许知微争取合理留样与测绘时间。她与施工负责人协商保留可验证参照，并承诺不拖延整个工程，居民补偿压力由具体对话�..."
+                treeitem
+                  text "第"
+                  text "23"
+                  text "章"
+                  textbox "第23章标题" [ref=49100, loc=css:input[aria-label="第23章标题"]]
+                    text "抄写者"
+                  button "上移第23章" [ref=49749, loc=css:button[aria-label="上移第23章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第23章" [ref=49752, loc=css:button[aria-label="下移第23章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第23章" [ref=49755, loc=css:button[aria-label="删除第23章"]]
+                    svg_root
+                    text "删除章节"
+                  textbox "第23章梗概" [ref=49101, loc=css:textarea[aria-label="第23章梗概"]]
+                    text "借阅登记和格式变化共同指向一次灾后整理。顾堰声承认参与誊清但否认改数，指出当时有统一更正通知。许知微要求核对通知原件，不把半句承认当�..."
+                treeitem
+                  text "第"
+                  text "24"
+                  text "章"
+                  textbox "第24章标题" [ref=49102, loc=css:input[aria-label="第24章标题"]]
+                    text "不能消去的差"
+                  button "上移第24章" [ref=49767, loc=css:button[aria-label="上移第24章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第24章" [ref=49770, loc=css:button[aria-label="下移第24章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第24章" [ref=49773, loc=css:button[aria-label="删除第24章"]]
+                    svg_root
+                    text "删除章节"
+                  textbox "第24章梗概" [ref=49103, loc=css:textarea[aria-label="第24章梗概"]]
+                    text "原卷、副本、签收目录和保管人证词形成有限闭环，证明至少一页记录在事件后被替换且关键数值不同。尚不确定这是技术更正还是掩饰责任，许知微�..."
+                treeitem
+                  text "第"
+                  text "25"
+                  text "章"
+                  textbox "第25章标题" [ref=49104, loc=css:input[aria-label="第25章标题"]]
+                    text "第二份清单"
+                  button "上移第25章" [ref=49785, loc=css:button[aria-label="上移第25章"]]
+                    svg_root
+                    text "上移"
+                  button "下移第25章" [ref=49788, loc=css:button[aria-label="下移第25章"]]
+                    svg_root
+                    text "下移"
+                  button "删除第25章" [ref=49791, loc=css:button[aria-label="删除第25章"]]
+                    svg_root
+                    text "删除章节"
+                  textbox "第25章梗概" [ref=49105, loc=css:textarea[aria-label="第25章梗概"]]
+                    text "卷末正式记录异常并提交复核，许知微承担暂停原岗的代价。周泊同意陪她访问旧城证人，铜牌实际发放、三种报时和上游指令仍待核实。以一份新增�..."
+  text "::1"

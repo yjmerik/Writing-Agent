@@ -1,0 +1,1205 @@
+root
+  container
+    container
+      heading
+        text "📖 长篇小说写作系统"
+    container
+      container
+        button [ref=3223, loc=unstable]
+          svg_root
+          text "返回列表"
+        button [ref=3230, loc=unstable]
+          svg_root
+          text "新建"
+        text "潮痕档案｜全流程体验0905"
+        table
+          table_row
+            table_cell
+              text "规划中"
+              text "人机协作"
+          table_row
+            table_cell
+              text "进度"
+              text "0"
+              text "章"
+        container [ref=3264, loc=unstable]
+          text "💡"
+          text "当代虚构江南河港城白沙，旧堤拆迁前，水文档案员许知微发现二十年前洪灾的水位记录被人更改，父亲当年的失踪并非意外。她与曾参与救援、如今�..."
+        button [ref=3270, loc=unstable]
+          svg_root
+          svg_root
+          text "写作偏好"
+      container
+        text "一起完成这本书"
+        text "已交给作者"
+        text "准备章节计划 · 已写 0 / 目标 200 章 · 0 字"
+        button [ref=3297, loc=unstable]
+          text "继续协作"
+        button [ref=3301, loc=unstable]
+          text "审阅内容"
+        text "你可以直接编辑世界观、人物、大纲和正文，也可以让 Agent 按要求修改。审阅完成后继续协作。"
+        text "请先处理待审核内容，再继续创作"
+        container
+          text "审核节奏"
+          container "审核节奏"
+            container
+              comboboxgrouping "审核节奏" [ref=3206, loc=css:input[aria-label="审核节奏"]]
+              text "卷末审阅"
+              text " "
+            svg_root
+        textbox "创作要求" [ref=3207, loc=css:textarea[placeholder="给 Agent 的创作要求（继续时生效，留空可清除）"]]
+          text "写作始终遵守：限知视角；所有关键证据在解答前出现；每卷推进核心谜团并支付人物代价；同类调查场景不得连续复用。许知微不具超能力，周泊单�..."
+        container
+          tab [ref=3335, loc=unstable]
+            text "创作工具"
+          tab [ref=3338, loc=unstable]
+            text "🌍 世界观与人物"
+          tab [ref=3341, loc=unstable]
+            text "📋 大纲"
+          tab [ref=3344, loc=unstable]
+            text "📖 章节管理"
+          tab [ref=3347, loc=unstable]
+            text "🔍 质量评价"
+          tabpanel "🌍 世界观与人物" [ref=7865, loc=role:tabpanel[name="🌍 世界观与人物"]]
+            button [ref=7869, loc=unstable]
+              svg_root
+              text "刷新"
+            heading
+              text "🌍 世界观设定"
+            container "新增世界观类型"
+              container
+                comboboxgrouping "新增世界观类型" [ref=7757, loc=css:input[aria-label="新增世界观类型"]]
+                text "势力"
+                text " "
+              svg_root
+            textbox [ref=7758, loc=css:input[placeholder="名称"]]
+              text "名称"
+              container
+            textbox [ref=7759, loc=css:input[placeholder="内容"]]
+              text "内容"
+              container
+            button [ref=7898, loc=unstable]
+              text "添加设定"
+            button [ref=7902, loc=unstable]
+              text "请 Agent 补设定"
+            table
+              table_row
+                table_cell
+            text "其他"
+            table
+              table_row
+                table_cell
+            table
+              table_row
+                table_cell
+                  text "类型"
+                  text ":"
+                  container "许知微 世界观类型"
+                    container
+                      comboboxgrouping "许知微 世界观类型" [ref=7760, loc=css:input[aria-label="许知微 世界观类型"]]
+                      text "其他"
+                      text " "
+                    svg_root
+              table_row
+                table_cell
+                  text "名称"
+                  text ":"
+                  textbox "许知微 世界观名称" [ref=7761, loc=css:input[aria-label="许知微 世界观名称"]]
+                    text "许知微"
+              table_row
+                table_cell
+                  text "正文"
+                  text ":"
+                  textbox "许知微 世界观正文" [ref=7762, loc=css:textarea[aria-label="许知微 世界观正文"]]
+                    text "28岁，白沙市水文档案局助理馆员，现借调至旧堤拆迁办做资料移交。瘦，常年戴一副银框眼镜，指节有翻旧卷磨出的茧。性格克制甚至寡言，对纸张气..."
+            button [ref=7958, loc=unstable]
+              svg_root
+              text "保存设定"
+            button "让 Agent 修改世界观 许知微" [ref=7966, loc=css:button[aria-label="让 Agent 修改世界观 许知微"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+                  text "类型"
+                  text ":"
+                  container "周泊 世界观类型"
+                    container
+                      comboboxgrouping "周泊 世界观类型" [ref=7763, loc=css:input[aria-label="周泊 世界观类型"]]
+                      text "其他"
+                      text " "
+                    svg_root
+              table_row
+                table_cell
+                  text "名称"
+                  text ":"
+                  textbox "周泊 世界观名称" [ref=7764, loc=css:input[aria-label="周泊 世界观名称"]]
+                    text "周泊"
+              table_row
+                table_cell
+                  text "正文"
+                  text ":"
+                  textbox "周泊 世界观正文" [ref=7765, loc=css:textarea[aria-label="周泊 世界观正文"]]
+                    text "44岁，白沙内河驳船船工，左耳全聋。十七岁顶替亡父上船，常年运送砂石，水性极佳；七一六洪灾时他驾小机动船往返闸下浅滩救出三十七人，右臂被..."
+            button [ref=8011, loc=unstable]
+              svg_root
+              text "保存设定"
+            button "让 Agent 修改世界观 周泊" [ref=8019, loc=css:button[aria-label="让 Agent 修改世界观 周泊"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+                  text "类型"
+                  text ":"
+                  container "陆衡 世界观类型"
+                    container
+                      comboboxgrouping "陆衡 世界观类型" [ref=7766, loc=css:input[aria-label="陆衡 世界观类型"]]
+                      text "其他"
+                      text " "
+                    svg_root
+              table_row
+                table_cell
+                  text "名称"
+                  text ":"
+                  textbox "陆衡 世界观名称" [ref=7767, loc=css:input[aria-label="陆衡 世界观名称"]]
+                    text "陆衡"
+              table_row
+                table_cell
+                  text "正文"
+                  text ":"
+                  textbox "陆衡 世界观正文" [ref=7768, loc=css:textarea[aria-label="陆衡 世界观正文"]]
+                    text "52岁，白沙市水利局副局长，堤防改造工程常务副指挥。二十年前是林溪闸管理所技术员，七一六当夜轮值；许知微幼时落水，是他从闸墩下捞出来的。..."
+            button [ref=8042, loc=unstable]
+              svg_root
+              text "保存设定"
+            button "让 Agent 修改世界观 陆衡" [ref=8045, loc=css:button[aria-label="让 Agent 修改世界观 陆衡"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+                  text "类型"
+                  text ":"
+                  container "白沙城与林溪闸 世界观类型"
+                    container
+                      comboboxgrouping "白沙城与林溪闸 世界观类型" [ref=7769, loc=css:input[aria-label="白沙城与林溪闸 世界观类型"]]
+                      text "其他"
+                      text " "
+                    svg_root
+              table_row
+                table_cell
+                  text "名称"
+                  text ":"
+                  textbox "白沙城与林溪闸 世界观名称" [ref=7770, loc=css:input[aria-label="白沙城与林溪闸 世界观名称"]]
+                    text "白沙城与林溪闸"
+              table_row
+                table_cell
+                  text "正文"
+                  text ":"
+                  textbox "白沙城与林溪闸 世界观正文" [ref=7771, loc=css:textarea[aria-label="白沙城与林溪闸 世界观正文"]]
+                    text "白沙是江南运河支流的河港城，城区沿白沙溪呈弯月展开，城西旧堤建于上世纪五十年代，堤后地势低洼的“滩下区”住着老船民、搬运工与上岸渔民�..."
+            button [ref=8067, loc=unstable]
+              svg_root
+              text "保存设定"
+            button "让 Agent 修改世界观 白沙城与林溪闸" [ref=8070, loc=css:button[aria-label="让 Agent 修改世界观 白沙城与林溪闸"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+                  text "类型"
+                  text ":"
+                  container "现行闸口调度铁律与档案逻辑 世界观类型"
+                    container
+                      comboboxgrouping "现行闸口调度铁律与档案逻辑 世界观类型" [ref=7772, loc=css:input[aria-label="现行闸口调度铁律与档案逻辑 世界观类型"]]
+                      text "其他"
+                      text " "
+                    svg_root
+              table_row
+                table_cell
+                  text "名称"
+                  text ":"
+                  textbox "现行闸口调度铁律与档案逻辑 世界观名称" [ref=7773, loc=css:input[aria-label="现行闸口调度铁律与档案逻辑 世界观名称"]]
+                    text "现行闸口调度铁律与档案逻辑"
+              table_row
+                table_cell
+                  text "正文"
+                  text ":"
+                  textbox "现行闸口调度铁律与档案逻辑 世界观正文" [ref=7774, loc=css:textarea[aria-label="现行闸口调度铁律与档案逻辑 世界观正文"]]
+                    text "林溪闸实行“三票一录”——书面调度单、闸位运行记录、电话录音缺一不可；凡水库泄洪必须有上游防办书面令，值班员不得接受口头调遣，闸门启�..."
+            button [ref=8092, loc=unstable]
+              svg_root
+              text "保存设定"
+            button "让 Agent 修改世界观 现行闸口调度铁律与档案逻辑" [ref=8095, loc=css:button[aria-label="让 Agent 修改世界观 现行闸口调度铁律与档案逻辑"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+            text "历史"
+            table
+              table_row
+                table_cell
+            table
+              table_row
+                table_cell
+                  text "类型"
+                  text ":"
+                  container "七一六洪灾与二十年悬差 世界观类型"
+                    container
+                      comboboxgrouping "七一六洪灾与二十年悬差 世界观类型" [ref=7775, loc=css:input[aria-label="七一六洪灾与二十年悬差 世界观类型"]]
+                      text "历史"
+                      text " "
+                    svg_root
+              table_row
+                table_cell
+                  text "名称"
+                  text ":"
+                  textbox "七一六洪灾与二十年悬差 世界观名称" [ref=7776, loc=css:input[aria-label="七一六洪灾与二十年悬差 世界观名称"]]
+                    text "七一六洪灾与二十年悬差"
+              table_row
+                table_cell
+                  text "正文"
+                  text ":"
+                  textbox "七一六洪灾与二十年悬差 世界观正文" [ref=7777, loc=css:textarea[aria-label="七一六洪灾与二十年悬差 世界观正文"]]
+                    text "故事起始年份为2025年7月，距七一六洪灾整二十年。2005年7月16日，青瓦湖流域连续暴雨，上游防办未发书面泄洪令；林溪闸凌晨自行提闸，但因早先“�..."
+            button [ref=8149, loc=unstable]
+              svg_root
+              text "保存设定"
+            button "让 Agent 修改世界观 七一六洪灾与二十年悬差" [ref=8157, loc=css:button[aria-label="让 Agent 修改世界观 七一六洪灾与二十年悬差"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+            text "势力"
+            table
+              table_row
+                table_cell
+            table
+              table_row
+                table_cell
+                  text "类型"
+                  text ":"
+                  container "滩下利益网络与改造工程的四方角力 世界观类型"
+                    container
+                      comboboxgrouping "滩下利益网络与改造工程的四方角力 世界观类型" [ref=7778, loc=css:input[aria-label="滩下利益网络与改造工程的四方角力 世界观类型"]]
+                      text "势力"
+                      text " "
+                    svg_root
+              table_row
+                table_cell
+                  text "名称"
+                  text ":"
+                  textbox "滩下利益网络与改造工程的四方角力 世界观名称" [ref=7779, loc=css:input[aria-label="滩下利益网络与改造工程的四方角力 世界观名称"]]
+                    text "滩下利益网络与改造工程的四方角力"
+              table_row
+                table_cell
+                  text "正文"
+                  text ":"
+                  textbox "滩下利益网络与改造工程的四方角力 世界观正文" [ref=7780, loc=css:textarea[aria-label="滩下利益网络与改造工程的四方角力 世界观正文"]]
+                    text "一是市水利局改造办（陆衡方），主导旧堤景观化，资金源于省水利专项与土地出让金，保工程质量怕查历史，倾向把原居民迁往城东安置房；二是滩�..."
+            button [ref=8183, loc=unstable]
+              svg_root
+              text "保存设定"
+            button "让 Agent 修改世界观 滩下利益网络与改造工程的四方角力" [ref=8186, loc=css:button[aria-label="让 Agent 修改世界观 滩下利益网络与改造工程的四方角力"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+            text "经济"
+            table
+              table_row
+                table_cell
+            table
+              table_row
+                table_cell
+                  text "类型"
+                  text ":"
+                  container "水账的潜流 世界观类型"
+                    container
+                      comboboxgrouping "水账的潜流 世界观类型" [ref=7781, loc=css:input[aria-label="水账的潜流 世界观类型"]]
+                      text "经济"
+                      text " "
+                    svg_root
+              table_row
+                table_cell
+                  text "名称"
+                  text ":"
+                  textbox "水账的潜流 世界观名称" [ref=7782, loc=css:input[aria-label="水账的潜流 世界观名称"]]
+                    text "水账的潜流"
+              table_row
+                table_cell
+                  text "正文"
+                  text ":"
+                  textbox "水账的潜流 世界观正文" [ref=7783, loc=css:textarea[aria-label="水账的潜流 世界观正文"]]
+                    text "白沙与上游之间最隐秘的经济资源是“泄洪指标”。洪水不只关乎安全——青瓦湖库容决定周边两万亩农业供水与两座小水电站的发电水头，而每年“�..."
+            button [ref=8211, loc=unstable]
+              svg_root
+              text "保存设定"
+            button "让 Agent 修改世界观 水账的潜流" [ref=8214, loc=css:button[aria-label="让 Agent 修改世界观 水账的潜流"]]
+              text "让 Agent 修改"
+            heading
+              text "👥 人物卡"
+            textbox [ref=7784, loc=css:input[placeholder="姓名"]]
+              text "姓名"
+              container
+            textbox [ref=7785, loc=css:input[placeholder="定位"]]
+              text "配角"
+            textbox [ref=7786, loc=css:input[placeholder="能力"]]
+              text "能力"
+              container
+            button [ref=8224, loc=unstable]
+              text "添加人物"
+            button [ref=8226, loc=unstable]
+              text "请 Agent 补人物"
+            container
+              container
+                table
+                  table_row
+                    table_cell
+                text "许知微"
+                text "主角 · 调查者"
+                table
+                  table_row
+                    table_cell
+                container
+                  table
+                    table_row
+                      table_cell
+                        text "姓名"
+                        text ":"
+                        textbox "许知微 姓名" [ref=7787, loc=css:input[aria-label="许知微 姓名"]]
+                          text "许知微"
+                    table_row
+                      table_cell
+                        text "角色定位"
+                        text ":"
+                        textbox "许知微 角色定位" [ref=7788, loc=css:input[aria-label="许知微 角色定位"]]
+                          text "主角 · 调查者"
+                    table_row
+                      table_cell
+                        text "性格"
+                        text ":"
+                        textbox "许知微 性格" [ref=7789, loc=css:textarea[aria-label="许知微 性格"]]
+                          text "1. 对纸张的信任"
+                    table_row
+                      table_cell
+                        text "能力"
+                        text ":"
+                        textbox "许知微 能力" [ref=7790, loc=css:textarea[aria-label="许知微 能力"]]
+                    table_row
+                      table_cell
+                        text "动机"
+                        text ":"
+                        textbox "许知微 动机" [ref=7791, loc=css:textarea[aria-label="许知微 动机"]]
+                    table_row
+                      table_cell
+                        text "外貌"
+                        text ":"
+                        textbox "许知微 外貌" [ref=7792, loc=css:textarea[aria-label="许知微 外貌"]]
+                    table_row
+                      table_cell
+                        text "关系"
+                        text ":"
+                        textbox "许知微 关系" [ref=7793, loc=css:textarea[aria-label="许知微 关系"]]
+                    table_row
+                      table_cell
+                        text "成长弧"
+                        text ":"
+                        textbox "许知微 成长弧" [ref=7794, loc=css:textarea[aria-label="许知微 成长弧"]]
+                  button [ref=8268, loc=unstable]
+                    svg_root
+                    text "保存人物"
+                  button "让 Agent 修改人物 许知微" [ref=8271, loc=css:button[aria-label="让 Agent 修改人物 许知微"]]
+                    text "让 Agent 修改"
+              container
+                table
+                  table_row
+                    table_cell
+                text "顾堰声"
+                text "配角 / 深层对手（非终极反派，但贯穿全书的灰色对立者）"
+                table
+                  table_row
+                    table_cell
+                container
+                  table
+                    table_row
+                      table_cell
+                        text "姓名"
+                        text ":"
+                        textbox "顾堰声 姓名" [ref=7795, loc=css:input[aria-label="顾堰声 姓名"]]
+                          text "顾堰声"
+                    table_row
+                      table_cell
+                        text "角色定位"
+                        text ":"
+                        textbox "顾堰声 角色定位" [ref=7796, loc=css:input[aria-label="顾堰声 角色定位"]]
+                          text "配角 / 深层对手（非终极反派，但贯穿全书的灰色对立者）"
+                    table_row
+                      table_cell
+                        text "性格"
+                        text ":"
+                        textbox "顾堰声 性格" [ref=7797, loc=css:textarea[aria-label="顾堰声 性格"]]
+                          text "1. 寡言而善于倾听。在饭桌上永远最后一个放下筷子，在会议上从不第一个发言；说话前会有两秒停顿，这段空白里他已经完成了对发言者立场的估算�..."
+                          text
+                          text "2. 自我道德感极强，却不断自认“做过脏事”。他从不标榜奉献，只是每年清明都会独自去白沙老闸口站一刻钟。熟人问起，只说“透口气”。"
+                          text
+                          text "3. 对“记忆”近乎偏执的守护。随身带着一只牛皮面笔记本，不记工作，只记河流的呓语——某年某月的水色、气味、闸门下泡沫的形状。他认为河水�..."
+                          text
+                          text "4. 对许知微有隐蔽的爱护之心，但这种爱护以“试探”面目出现。他不会直接告诉她危险，只会把一份泛黄的施工安全手册“遗忘”在她常去的阅览室�..."
+                          text
+                          text "5. 恐惧“被完全理解”。他的所有选择都建立在“只要没人看穿我当年的真实意图，我就能继续保住这二十年来用谎言维系的一切”之上。"
+                    table_row
+                      table_cell
+                        text "能力"
+                        text ":"
+                        textbox "顾堰声 能力" [ref=7798, loc=css:textarea[aria-label="顾堰声 能力"]]
+                          text "- 当前：白沙段水利工程活图谱。能凭河面风声预报三小时内汛情变化；闭眼可画出从旧闸到新堤每处管道的老旧程度；仅凭档案纸页的水渍边缘形状，..."
+                          text
+                          text "- 精通“旧改新”工程中的程序漏洞。早年做技术员时参与过旧闸报废申报，深谙如何让一份本不该被通过的调度方案，被淹没在两公分厚的附表中盖章..."
+                          text
+                          text "- 潜力上限：若他愿意，可以成为白沙水利最出色的善后与修复者。但他一生都将这是能用来赎罪，而非用来创造。"
+                          text
+                          text "- 隐藏软肋：不会游泳。二十年前那场洪水中，他是站在闸顶按按钮的人，从未下过水。他一生回避雨季的白沙滩，不去水边。"
+                    table_row
+                      table_cell
+                        text "动机"
+                        text ":"
+                        textbox "顾堰声 动机" [ref=7799, loc=css:textarea[aria-label="顾堰声 动机"]]
+                          text "核心欲望是“维持他所构建的理性叙事的完整性”，具体而言：他要让当年那次闸门调度在纸面上看似因水位误判而发生的“技术性灾难”，而非因他�..."
+                    table_row
+                      table_cell
+                        text "外貌"
+                        text ":"
+                        textbox "顾堰声 外貌" [ref=7800, loc=css:textarea[aria-label="顾堰声 外貌"]]
+                          text "中等身量，偏瘦，肩微前倾，是常年看图纸看出来的地质学式弧度。花白头发剪得很短，露出深色头皮。眉骨高，显得眼窝深陷，眼神常处于一种“正�..."
+                    table_row
+                      table_cell
+                        text "关系"
+                        text ":"
+                        textbox "顾堰声 关系" [ref=7801, loc=css:textarea[aria-label="顾堰声 关系"]]
+                          text "名义上的“长辈同僚”——他是许知微父亲当年在水文站的老同事。表面上：多次在她问询时给出简短而精确的技术解答，甚至帮她指认过一份被涂改�..."
+                    table_row
+                      table_cell
+                        text "成长弧"
+                        text ":"
+                        textbox "顾堰声 成长弧" [ref=7802, loc=css:textarea[aria-label="顾堰声 成长弧"]]
+                          text "起点：他是“正确”的执行者，坚信自己所做的是牺牲局部救全体的必要之恶，而自己能承受那种必要的沉默；他试图让当年的洪水事故在档案里“自�..."
+                  button [ref=8332, loc=unstable]
+                    svg_root
+                    text "保存人物"
+                  button "让 Agent 修改人物 顾堰声" [ref=8335, loc=css:button[aria-label="让 Agent 修改人物 顾堰声"]]
+                    text "让 Agent 修改"
+              container
+                container
+                  table
+                    table_row
+                      table_cell
+                  container
+                    text "沈照夜"
+                    text "重要女性配角／血脉支点（许知微的姑祖母，却比主角年轻者）"
+                  table
+                    table_row
+                      table_cell
+                container
+                  table
+                    table_row
+                      table_cell
+                        container
+                          text "姓名"
+                          text ":"
+                        textbox "沈照夜 姓名" [ref=7803, loc=css:input[aria-label="沈照夜 姓名"]]
+                          text "沈照夜"
+                    table_row
+                      table_cell
+                        container
+                          text "角色定位"
+                          text ":"
+                        textbox "沈照夜 角色定位" [ref=7804, loc=css:input[aria-label="沈照夜 角色定位"]]
+                          text "重要女性配角／血脉支点（许知微的姑祖母，却比主角年轻者）"
+                    table_row
+                      table_cell
+                        container
+                          text "性格"
+                          text ":"
+                        textbox "沈照夜 性格" [ref=7805, loc=css:textarea[aria-label="沈照夜 性格"]]
+                          text "1. 收藏癖式的温柔——她会为每个过世的人誊抄一本手抄册，以不存在的备忘录记录他们今生的形状。唯独不为许知微抄：怕封面写上名字，她就会真�..."
+                          text
+                          text "2. 底层的仪式感——她每七天给自己放一回“忌日”，关掉灯，在暗房里烧白纸，把灰烬喂给一缸本不该有鱼的水。"
+                          text
+                          text "3. 清醒的残酷——她从不吝啬说出最不堪的真相，但她是在替你疼之后才说的。"
+                          text
+                          text "4. 对名字病态的执念——她几乎从不叫现用名，而用数十年前的旧名、诨名、宗谱讳称来称呼熟人，因为对她来说名字是唯一的存续凭证。"
+                          text
+                          text "5. 极其罕见的软弱——她无法拒绝宗亲中某个孤儿的任何请求，即使明知那是索命的圈套。"
+                    table_row
+                      table_cell
+                        container
+                          text "能力"
+                          text ":"
+                        textbox "沈照夜 能力" [ref=7806, loc=css:textarea[aria-label="沈照夜 能力"]]
+                          text "当前能力："
+                          text
+                          text "- 「影名录」：可在活人额面上看见其血脉源头的一张“名字清单”，溯至三代以内。此目不可控，对视愈久看得愈深。"
+                          text
+                          text "- 「留灯」：她能取出人体内某种凝聚的“念头”（恐惧／愿望／执念）以指甲封存于灯芯中燃掉，实现极有限的“愿力交换”，代价是自己血肉的暂时..."
+                          text
+                          text "潜力上限：若她肯彻底放弃人名，将自己的名字也从宗谱“撕去”，则可短暂穿过人间与“忘川”的界缝，呼唤已彻底死透之人的残念——那是连顾堰�..."
+                    table_row
+                      table_cell
+                        container
+                          text "动机"
+                          text ":"
+                        textbox "沈照夜 动机" [ref=7807, loc=css:textarea[aria-label="沈照夜 动机"]]
+                          text "表象动机——找回“她那一支”血脉散佚的旧名录，因为名录每残缺一页，族中便有一人不明不白地“被遗忘”。真实核心驱动——她怕被彻底忘掉。�..."
+                    table_row
+                      table_cell
+                        container
+                          text "外貌"
+                          text ":"
+                        textbox "沈照夜 外貌" [ref=7808, loc=css:textarea[aria-label="沈照夜 外貌"]]
+                          text "个子不高，骨架纤细却总习惯稍稍含肩，仿佛怕撞到门框或惊到谁。常年穿墨灰对襟长衫，袖口缠着褪色的素绢，绢上以银线绣着极密的名字，已经模�..."
+                    table_row
+                      table_cell
+                        container
+                          text "关系"
+                          text ":"
+                        textbox "沈照夜 关系" [ref=7809, loc=css:textarea[aria-label="沈照夜 关系"]]
+                          text "血亲——她是许知微名义上的“姑祖母”，终生未婚配孩子，在族谱里承许知微一脉归宗时的证明人。但实际关系远比谱系复杂：她既是许知微身世谜�..."
+                    table_row
+                      table_cell
+                        container
+                          text "成长弧"
+                          text ":"
+                        textbox "沈照夜 成长弧" [ref=7810, loc=css:textarea[aria-label="沈照夜 成长弧"]]
+                          text "起点：她把自己当作一座活墓碑，相信自己的全部价值是保管名字，而非拥有名字；她一直以“我是不该被记住的那个人”来合理化自己的孤独，甚至�..."
+                  container
+                    button [ref=8396, loc=unstable]
+                      image "save"
+                        svg_root
+                      text "保存人物"
+                    button "让 Agent 修改人物 沈照夜" [ref=8399, loc=css:button[aria-label="让 Agent 修改人物 沈照夜"]]
+                      text "让 Agent 修改"
+              container
+                container
+                  table
+                    table_row
+                      table_cell
+                  container
+                    text "方阙"
+                    text "反派／对手（“秩序执行者”型对手——与许知微求“真”、顾堰声谋“利”不同，他守的是对“重演洪灾”的绝对恐惧，把伪证当作防灾的责任去执�..."
+                  table
+                    table_row
+                      table_cell
+                container
+                  table
+                    table_row
+                      table_cell
+                        container
+                          text "姓名"
+                          text ":"
+                        textbox "方阙 姓名" [ref=7811, loc=css:input[aria-label="方阙 姓名"]]
+                          text "方阙"
+                    table_row
+                      table_cell
+                        container
+                          text "角色定位"
+                          text ":"
+                        textbox "方阙 角色定位" [ref=7812, loc=css:input[aria-label="方阙 角色定位"]]
+                          text "反派／对手（“秩序执行者”型对手——与许知微求“真”、顾堰声谋“利”不同，他守的是对“重演洪灾”的绝对恐惧，把伪证当作防灾的责任去执�..."
+                    table_row
+                      table_cell
+                        container
+                          text "性格"
+                          text ":"
+                        textbox "方阙 性格" [ref=7813, loc=css:textarea[aria-label="方阙 性格"]]
+                          text "1. 精密刻板：日程和工具归位十几年不变；从不说“没有”，只说“规程上没有”。桌面一尘不染，所有记录按秒计存。"
+                          text
+                          text "2. 温和而得体的压迫：从不失控，不发火，常用“我建议你走正式流程”结束谈话。他亲口说的话永远无法被当成撒谎——因为他规避问题时只背条文�..."
+                          text
+                          text "3. 以止损为旗帜的冷酷：可以亲手烧掉自己青年时期手绘的旧堤勘察图，眼都不眨；也可以替老同事“解决”一份不该存在的证词。"
+                    table_row
+                      table_cell
+                        container
+                          text "能力"
+                          text ":"
+                        textbox "方阙 能力" [ref=7814, loc=css:textarea[aria-label="方阙 能力"]]
+                          text "当前能力：熟悉白沙流域每段堤防的隐患、每个旧施工日志的留白；熟练用流程、归档规范和“鉴定周期”合法地吞掉证据。对闸机声音有极敏锐的职�..."
+                          text
+                          text "潜力上限：若新汛到达前他掌握调度权，能在不暴露自己的前提下改变整座城市的命运——但代价是让许知微永远背上诬告之名。"
+                    table_row
+                      table_cell
+                        container
+                          text "动机"
+                          text ":"
+                        textbox "方阙 动机" [ref=7815, loc=css:textarea[aria-label="方阙 动机"]]
+                          text "他要让“旧堤改造工程”按期完工。为此，二十年前的记录必须保持错误版本，知情者必须沉默。他以为只要工程落成，数据就能被现实覆盖，历史便�..."
+                    table_row
+                      table_cell
+                        container
+                          text "外貌"
+                          text ":"
+                        textbox "方阙 外貌" [ref=7816, loc=css:textarea[aria-label="方阙 外貌"]]
+                          text "瘦而腰背直，常年江风使皮肤粗糙发红。常穿旧墨绿色工装，袖口卷两折。左手中指指根有一道旧钢丝绳勒出的白疤。行走时习惯微低着头，说话时双�..."
+                    table_row
+                      table_cell
+                        container
+                          text "关系"
+                          text ":"
+                        textbox "方阙 关系" [ref=7817, loc=css:textarea[aria-label="方阙 关系"]]
+                          text "旧识。十七岁的方阙在水利值班室当杂工，被许知微父亲从洪水中拽上屋顶。这份恩情他记得，却判断“失踪”比“获救”更有利于关闭卷宗，亲手将�..."
+                    table_row
+                      table_cell
+                        container
+                          text "成长弧"
+                          text ":"
+                        textbox "方阙 成长弧" [ref=7818, loc=css:textarea[aria-label="方阙 成长弧"]]
+                          text "起点：相信“删改过去可以买下未来”，将自我沉默当作献身式的英雄主义。"
+                          text
+                          text "终点：承认防洪的第一道工序不是修堤，而是记住每一次溃口。最终卷公开对质中，他提交当年被撕走的那页手抄水位记录，附上自己的工程日志，不�..."
+                          text
+                          text "转折发生在第八卷新汛危机——他不得不在销毁证据与启动泄洪之间选一次，而他选了泄洪，哪怕这意味着自己伪造记录的计划彻底曝光。"
+                  container
+                    button [ref=8457, loc=unstable]
+                      image "save"
+                        svg_root
+                      text "保存人物"
+                    button "让 Agent 修改人物 方阙" [ref=8460, loc=css:button[aria-label="让 Agent 修改人物 方阙"]]
+                      text "让 Agent 修改"
+              container
+                container
+                  table
+                    table_row
+                      table_cell
+                  container
+                    text "唐挽柁"
+                    text "配角／盟友／许知微的行动侧助手（隐藏核心秘密）"
+                  table
+                    table_row
+                      table_cell
+                container
+                  table
+                    table_row
+                      table_cell
+                        container
+                          text "姓名"
+                          text ":"
+                        textbox "唐挽柁 姓名" [ref=7819, loc=css:input[aria-label="唐挽柁 姓名"]]
+                          text "唐挽柁"
+                    table_row
+                      table_cell
+                        container
+                          text "角色定位"
+                          text ":"
+                        textbox "唐挽柁 角色定位" [ref=7820, loc=css:input[aria-label="唐挽柁 角色定位"]]
+                          text "配角／盟友／许知微的行动侧助手（隐藏核心秘密）"
+                    table_row
+                      table_cell
+                        container
+                          text "性格"
+                          text ":"
+                        textbox "唐挽柁 性格" [ref=7821, loc=css:textarea[aria-label="唐挽柁 性格"]]
+                          text "- 闷：话极少，能用点头摇头就不出声。沉默不是木讷，是常年在水下工作练出的耐心——他在等鱼进笼时不呼吸也能待很久。"
+                          text
+                          text "- 精：对水流、汛峰、闸门启闭规律了如指掌，靠观察水痕就能推算出三天前的开闸高度。谈工程细节时精准如尺，但一涉及人，就用“不晓得”挡回去..."
+                          text
+                          text "- 怯（表象）：在码头被问话时会下意识低头、挪步、缩肩。这个姿态骗过了很多人，只有少数人知道那是他刻意练的“安全壳”。"
+                          text
+                          text "- 勇（内在）：汛期里救过七个人。他救人时极其冷静，不叫嚷，不出多余动作，把自己当岸上人抛出的第二根缆绳。"
+                          text
+                          text "- 自毁倾向的克制体：长期活在“我不配出声”的负罪感里，不敢争取、不敢辩白，唯独在救人时敢把命豁出去——这是他认可自己的唯一方式。"
+                    table_row
+                      table_cell
+                        container
+                          text "能力"
+                          text ":"
+                        textbox "唐挽柁 能力" [ref=7822, loc=css:textarea[aria-label="唐挽柁 能力"]]
+                          text "- 当前能力：水性与船工技艺超群；能只身潜至十二米深打捞证物；熟悉白沙全流域每一处老码头、废闸、歪脖子树的位置；能凭手感辨别新旧混凝土浇..."
+                          text
+                          text "- 潜力上限：他是唯一能预判“闸坝调度事故链”的水文实操者——纸上算不出，但他摸过那座闸的底阀，知道它不吃哪一套。后期可独力反证二十年前..."
+                    table_row
+                      table_cell
+                        container
+                          text "动机"
+                          text ":"
+                        textbox "唐挽柁 动机" [ref=7823, loc=css:textarea[aria-label="唐挽柁 动机"]]
+                          text "核心动机是赎罪与自保的双重绞合："
+                          text
+                          text "- 表层：还二十年前欠下的“命债”。他认定父亲删改洪峰水位是帮人背锅，最终投水自尽；他认为自己当年没有发声替父亲作证，就是帮凶。"
+                          text
+                          text "- 深层：他想知道父亲到底替谁背了锅。“如果知道那个人，我就能决定继续低头，还是抬头。”——这是支撑他走到最后的驱动。"
+                    table_row
+                      table_cell
+                        container
+                          text "外貌"
+                          text ":"
+                        textbox "唐挽柁 外貌" [ref=7824, loc=css:textarea[aria-label="唐挽柁 外貌"]]
+                          text "- 一米五八，矮而结实，背微驼，像一根被江水泡弯的老樟木棍。"
+                          text
+                          text "- 皮肤深褐偏黑，常年被风浸成粗砂质感；左眉骨上有一道从闸门钢缆擦出的白疤。"
+                          text
+                          text "- 右手比左手大半个号码，指节粗大，布满老茧与细碎裂口；食指缺半截指甲，是当年卡进绞盘留下的。"
+                          text
+                          text "- 习惯穿一件洗透的藏青色旧夹克，内兜永远别着一根不知年份的红色铅笔。"
+                    table_row
+                      table_cell
+                        container
+                          text "关系"
+                          text ":"
+                        textbox "唐挽柁 关系" [ref=7825, loc=css:textarea[aria-label="唐挽柁 关系"]]
+                          text "盟友，但非同类："
+                          text
+                          text "- 许知微求“真话重见天日”，他在前期不过求“罪人瞑目”。两条路线在第七卷前若即若离。"
+                          text
+                          text "- 他对许知微是感激与戒备的混合体：感激她查父亲的事，戒备她查得太透会碰碎自己的“安全壳”。"
+                          text
+                          text "- 他手里有一本里正留下的老堤检修手记，记着许知微父亲失踪前最后一次夜巡的路线——这东西他藏了二十年，要到第十卷前才交出来。交出后就意味..."
+                          text
+                          text "- 他和沈照夜是一条暗线：沈照夜资助过他学潜水，他帮她照顾过旧宅，二人联手瞒着一件事——但这与许知微所求并不冲突，只是让关系更黏稠。"
+                    table_row
+                      table_cell
+                        container
+                          text "成长弧"
+                          text ":"
+                        textbox "唐挽柁 成长弧" [ref=7826, loc=css:textarea[aria-label="唐挽柁 成长弧"]]
+                          text "起点：藏匿者，相信沉默能护人，把自己活成一座会走路的旧闸，只泄洪、不发声。"
+                          text
+                          text "终点：从“不敢开口”到“选择在公开对质时第一个说出‘是’，并在满场哗然中把里正手记拍在桌上的人。”他学会了理解父亲那句从未说出的话—�..."
+                  container
+                    button [ref=8537, loc=unstable]
+                      image "save"
+                        svg_root
+                      text "保存人物"
+                    button "让 Agent 修改人物 唐挽柁" [ref=8540, loc=css:button[aria-label="让 Agent 修改人物 唐挽柁"]]
+                      text "让 Agent 修改"
+              container
+                container
+                  table
+                    table_row
+                      table_cell
+                  container
+                    text "杜若洲"
+                    text "配角／历史证人／体制内迷宫的职业向导——她不是对手，却把许知微引入最绕的路；不是盟友，却替许知微保管了最后一把锁的钥匙。"
+                  table
+                    table_row
+                      table_cell
+                container
+                  table
+                    table_row
+                      table_cell
+                        container
+                          text "姓名"
+                          text ":"
+                        textbox "杜若洲 姓名" [ref=7827, loc=css:input[aria-label="杜若洲 姓名"]]
+                          text "杜若洲"
+                    table_row
+                      table_cell
+                        container
+                          text "角色定位"
+                          text ":"
+                        textbox "杜若洲 角色定位" [ref=7828, loc=css:input[aria-label="杜若洲 角色定位"]]
+                          text "配角／历史证人／体制内迷宫的职业向导——她不是对手，却把许知微引入最绕的路；不是盟友，却替许知微保管了最后一把锁的钥匙。"
+                    table_row
+                      table_cell
+                        container
+                          text "性格"
+                          text ":"
+                        textbox "杜若洲 性格" [ref=7829, loc=css:textarea[aria-label="杜若洲 性格"]]
+                          text "她像一本编排极妥帖的卷宗：封面干净，页码整齐，内容齐全，但翻阅者总找不到想找的那一页。三个特质："
+                          text
+                          text
+                          text "一、习惯性“对账”。别人追忆旧事用“我记得”，她说“按编号，那天应该在第三卷。”她从不以叙述为准，所有事都必须落到纸张编号、留痕日期�..."
+                          text
+                          text
+                          text "二、答非所问的礼貌。别人问东，她答西，答得完整详尽、笑容温和，令对方不好意思再追问。这是多年在信访与安置窗口磨出来的话术，她以此保护�..."
+                          text
+                          text
+                          text "三、对“数字缺口”的病态敏感。她接人待物只看数目是否对得上。账单、名单、赔偿金、安置人数，任何账面错误都会令她瞬间安静，像鱼线被扯断�..."
+                          text
+                          text
+                          text "独特记忆点：她永远随身带一份自己手写的“白沙灾后四十日逐日账”，从粮食调入、帐篷分配、死亡登记，到开水桶几只、饼干数错三块，事无巨细�..."
+                    table_row
+                      table_cell
+                        container
+                          text "能力"
+                          text ":"
+                        textbox "杜若洲 能力" [ref=7830, loc=css:textarea[aria-label="杜若洲 能力"]]
+                          text "现为市档案馆民生档案科科长，曾参与灾后安置档案的建立。能力上限是“从任何一张残缺老底稿上识别出被撕掉的那一页留下的针脚”——在许知微�..."
+                    table_row
+                      table_cell
+                        container
+                          text "动机"
+                          text ":"
+                        textbox "杜若洲 动机" [ref=7831, loc=css:textarea[aria-label="杜若洲 动机"]]
+                          text "核心动机：不让那场洪水再卷走任何人——不是肉体，而是让活着的人避免第二次“被洪水冲卷”的记忆重创。杜若洲十七岁的妹妹死于灾后安置点的�..."
+                    table_row
+                      table_cell
+                        container
+                          text "外貌"
+                          text ":"
+                        textbox "杜若洲 外貌" [ref=7832, loc=css:textarea[aria-label="杜若洲 外貌"]]
+                          text "高而瘦，圆脸，头发挽得很低，一丝碎发都不出。常年穿灰色或米色半袖衬衫，衣领扣到最上一粒，袖口平整，像随时准备上台念通知的人。细看，右�..."
+                    table_row
+                      table_cell
+                        container
+                          text "关系"
+                          text ":"
+                        textbox "杜若洲 关系" [ref=7833, loc=css:textarea[aria-label="杜若洲 关系"]]
+                          text "间接引路人与灰色纵容者。杜若洲是许知微在档案馆查证的必经关卡，她最初以娴熟的“抽屉规则”和“编号口径”将许知微的每一次查阅引向其他卷�..."
+                    table_row
+                      table_cell
+                        container
+                          text "成长弧"
+                          text ":"
+                        textbox "杜若洲 成长弧" [ref=7834, loc=css:textarea[aria-label="杜若洲 成长弧"]]
+                          text "起点：把“真相”看作一笔需要精算抵押品的债务，以完善档案来不断“销账”。"
+                          text
+                          text "终点：承认妹妹的名字被划掉的一刻不是档案录入错误，而是一次真实、具体的疏忽——她签下作为知情人的证言，亲手将“二十四年前的自己”从账�..."
+                  container
+                    button [ref=8602, loc=unstable]
+                      image "save"
+                        svg_root
+                      text "保存人物"
+                    button "让 Agent 修改人物 杜若洲" [ref=8605, loc=css:button[aria-label="让 Agent 修改人物 杜若洲"]]
+                      text "让 Agent 修改"
+              table
+                table_row
+                  table_cell
+              text "岑半潮"
+              text "配角／亦敌亦友的码头掮客——游走于许知微与顾堰声两边，信息两头卖，谁都不真正效忠。"
+              table
+                table_row
+                  table_cell
+              table
+                table_row
+                  table_cell
+                    text "姓名"
+                    text ":"
+                    textbox "岑半潮 姓名" [ref=7835, loc=css:input[aria-label="岑半潮 姓名"]]
+                      text "岑半潮"
+                table_row
+                  table_cell
+                    text "角色定位"
+                    text ":"
+                    textbox "岑半潮 角色定位" [ref=7836, loc=css:input[aria-label="岑半潮 角色定位"]]
+                      text "配角／亦敌亦友的码头掮客——游走于许知微与顾堰声两边，信息两头卖，谁都不真正效忠。"
+                table_row
+                  table_cell
+                    text "性格"
+                    text ":"
+                    textbox "岑半潮 性格" [ref=7837, loc=css:textarea[aria-label="岑半潮 性格"]]
+                      text "- 市井精明：办任何事先谈“价”，不做亏本买卖，但也不赶尽杀绝，总是留半条退路给对方，这是他在码头活到今天的规矩。"
+                      text
+                      text "- 分寸感极强：说话永远带三分笑，称呼人从不大声，但每句话都在掂量对方的底牌。"
+                      text
+                      text "- 对“欠下的命”有隐秘执念：平日里最忌讳谈论死在水里的人，年纪越大越信“水会记账”。"
+                      text
+                      text "- 重利却不贪得无厌：顾堰声开高价让他彻底倒向一方，他却始终不接满，只肯收“半份钱”，保持进退空间。"
+                table_row
+                  table_cell
+                    text "能力"
+                    text ":"
+                    textbox "岑半潮 能力" [ref=7838, loc=css:textarea[aria-label="岑半潮 能力"]]
+                      text "对旧白沙港的水下地形、沉船暗舱、闸口底坎烂熟于心，能凭目测水位估出吃水深度（误差极小）；掌握打通河汊、过驳货物、藏匿物件的全套野路子�..."
+                table_row
+                  table_cell
+                    text "动机"
+                    text ":"
+                    textbox "岑半潮 动机" [ref=7839, loc=css:textarea[aria-label="岑半潮 动机"]]
+                      text "两个层次：表层——趁旧堤拆迁前把手里压在岸上的货出清、多得一笔赔偿；底层——还一笔二十多年前的“水债”，当年因他卖给救援队一批劣质防�..."
+                table_row
+                  table_cell
+                    text "外貌"
+                    text ":"
+                    textbox "岑半潮 外貌" [ref=7840, loc=css:textarea[aria-label="岑半潮 外貌"]]
+                      text "矮壮结实，一张常年晒成紫铜色的脸，眼白分明；穿藏蓝粗布工装，右手腕套着一串五把锈钥匙（历年在水里捞的、找不到主人），走起路来叮当响。"
+                table_row
+                  table_cell
+                    text "关系"
+                    text ":"
+                    textbox "岑半潮 关系" [ref=7841, loc=css:textarea[aria-label="岑半潮 关系"]]
+                      text "许知微查明父亲事件牵扯到顾堰声的物资渠道后，经人指点找到岑半潮“问水路”。岑供给许真消息，同一份情报也卖给顾堰声那边。他是许的线人，�..."
+                table_row
+                  table_cell
+                    text "成长弧"
+                    text ":"
+                    textbox "岑半潮 成长弧" [ref=7842, loc=css:textarea[aria-label="岑半潮 成长弧"]]
+                      text "起点：一个只信行价、不亏本的老码头掮客。中段：当许把“半潮叔”这句外人还当称号叫的时候，水底那桩旧债和现案流向开始重合——他欠的那条�..."
+              button [ref=8659, loc=unstable]
+                svg_root
+                text "保存人物"
+              button "让 Agent 修改人物 岑半潮" [ref=8662, loc=css:button[aria-label="让 Agent 修改人物 岑半潮"]]
+                text "让 Agent 修改"
+              table
+                table_row
+                  table_cell
+              text "姜隔川"
+              text "配角·旧城日常层底景人物——不推主线、不掌关键证据，却是主角进入老街区时的街巷活地图，也是各条线索人物旧日生活的共同背景板。"
+              table
+                table_row
+                  table_cell
+              table
+                table_row
+                  table_cell
+                    text "姓名"
+                    text ":"
+                    textbox "姜隔川 姓名" [ref=7843, loc=css:input[aria-label="姜隔川 姓名"]]
+                      text "姜隔川"
+                table_row
+                  table_cell
+                    text "角色定位"
+                    text ":"
+                    textbox "姜隔川 角色定位" [ref=7844, loc=css:input[aria-label="姜隔川 角色定位"]]
+                      text "配角·旧城日常层底景人物——不推主线、不掌关键证据，却是主角进入老街区时的街巷活地图，也是各条线索人物旧日生活的共同背景板。"
+                table_row
+                  table_cell
+                    text "性格"
+                    text ":"
+                    textbox "姜隔川 性格" [ref=7845, loc=css:textarea[aria-label="姜隔川 性格"]]
+                      text "1. 记账型记忆，不动声色。他记性极好且以“物件”为索引：谁家何时换过锁、哪条驳船哪年改漆、哪道闸口当年加焊了几颗铆钉，都装在心里。但他�..."
+                      text
+                      text
+                      text "2. 守物如守人。铺面最里头一张老木台，摆一尊缺了手指的瓷财神、一个黄铜顶针、一块看不出年份的船名牌，旁人来看都是破烂，只有他自己知道那�..."
+                      text
+                      text
+                      text "3. 有水必避的隐痛。他开修车摊，兼补轮胎、焊铁件，岸上的活计样样利索，唯独从不下水，连码头栈桥都不踩上去。每逢涨水季节便话少，坐在门口�..."
+                      text
+                      text
+                      text "4. 慢热但待小辈体恤。对陌生人与公家人提防多话，对街坊孩子很宽厚。许知微儿时常在他铺前等父亲寄放的自行车，他会塞给小孩一块姜糖，并不攀�..."
+                table_row
+                  table_cell
+                    text "能力"
+                    text ":"
+                    textbox "姜隔川 能力" [ref=7846, loc=css:textarea[aria-label="姜隔川 能力"]]
+                      text "当下能力：依靠几十年练出的手工触觉（听声辨机件间隙、看胎纹判断载重与路面），能在不拆机的情况下判断一台废弃马达来自哪一年哪一批厂货；�..."
+                      text
+                      text "潜力上限（若有需要）：能在废墟中辨认旧地界与私建夹层，靠界碑痕迹与地基差异复原早年街道原貌——但那需要他愿意开口。"
+                table_row
+                  table_cell
+                    text "动机"
+                    text ":"
+                    textbox "姜隔川 动机" [ref=7847, loc=css:textarea[aria-label="姜隔川 动机"]]
+                      text "表层动机：把铺面守到拆迁最后一天，把收到的物件归还原主，把欠下的“人情账”一笔笔还清。"
+                      text
+                      text "深层动机：二十年前洪灾中，他因怕水未能参与一线救援，在岸上仅做了搬运和看管物资的事。他存一柜子杂物、修一柜子旧物，实则是在等一个机会�..."
+                table_row
+                  table_cell
+                    text "外貌"
+                    text ":"
+                    textbox "姜隔川 外貌" [ref=7848, loc=css:textarea[aria-label="姜隔川 外貌"]]
+                      text "个头不高，背微驼，常年穿一件洗得发白的深蓝工作服，袖口卷到小臂。双手骨节粗大，虎口有深浅不一的油痕，洗不净。头发花白，剪得很短，露出�..."
+                table_row
+                  table_cell
+                    text "关系"
+                    text ":"
+                    textbox "姜隔川 关系" [ref=7849, loc=css:textarea[aria-label="姜隔川 关系"]]
+                      text "并非结盟，而是“旧街坊中的引路星”。他认得许知微的父亲——那人生前常把自行车推来补胎，也会在他柜台前多站一支烟工夫。这种关系低而静，�..."
+                table_row
+                  table_cell
+                    text "成长弧"
+                    text ":"
+                    textbox "姜隔川 成长弧" [ref=7850, loc=css:textarea[aria-label="姜隔川 成长弧"]]
+                      text "起点：一个守着铺子、怕水、怕变动、只以物件维系旧关系的老人。"
+                      text
+                      text "终点：拆迁前夜，他最后一次走到水边，把丢掉的那枚（其实是捡来的）银耳扣投进河里，然后回铺子坐至天明——不证明什么，只是不再闪躲那条河�..."
+              button [ref=8725, loc=unstable]
+                svg_root
+                text "保存人物"
+              button "让 Agent 修改人物 姜隔川" [ref=8728, loc=css:button[aria-label="让 Agent 修改人物 姜隔川"]]
+                text "让 Agent 修改"
+            heading
+              text "📜 真典"
+            textbox [ref=7851, loc=css:input[placeholder="新增铁律，如：嘉靖年间不得出现望远镜"]]
+              text "新增铁律，如：嘉靖年间不得出现望远镜"
+              container
+            button [ref=8734, loc=unstable]
+              text "添 加"
+            unordered_list
+              list_item
+                text "WORLD_RULE"
+                text "白沙城"
+                textbox [ref=7852, loc=unstable]
+                  text "【HUMAN_PATCH】长江下游支流与海潮交汇，江水半咸，受潮汐顶托，老城坐落在低于河面的低洼冲积地上，全靠一线旧堤“白砂埭”圈住。城与水之间有南..."
+                unordered_list
+                  list_item
+                    button [ref=8744, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=8747, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "人补丁"
+                textbox [ref=7853, loc=unstable]
+                  text "【HUMAN_PATCH】城市正式名称为白沙城；许知微与周泊没有超能力，周泊的单耳听力损伤持续影响其行动。"
+                unordered_list
+                  list_item
+                    button [ref=8756, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=8759, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "许知微"
+                textbox [ref=7854, loc=unstable]
+                  text "许知微（主角 · 调查者）"
+                unordered_list
+                  list_item
+                    button [ref=8768, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=8771, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "沈照夜"
+                textbox [ref=7855, loc=unstable]
+                  text "沈照夜（重要女性配角／血脉支点（许知微的姑祖母，却比主角年轻者）），初始能力：当前能力："
+                  text
+                  text "- 「影名录」：可在活人额面上看见其血脉源头的一张“名字清单”，溯至三代以内。此目不可控，对视愈久看得愈深。"
+                  text
+                  text "- 「留灯」：她能取出人体内某种凝聚的“念头”（恐惧／愿望／执念）以指甲封存于灯芯中燃掉，实现极有限的“愿力交换”，代价是自己血肉的暂时..."
+                  text
+                  text "潜力上限：若她肯彻底放弃人名，将自己的名字也从宗谱“撕去”，则可短暂穿过人间与“忘川”的界缝，呼唤已彻底死透之人的残念——那是连顾堰�..."
+                unordered_list
+                  list_item
+                    button [ref=8786, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=8789, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "姜隔川"
+                textbox [ref=7856, loc=unstable]
+                  text "姜隔川（配角·旧城日常层底景人物——不推主线、不掌关键证据，却是主角进入老街区时的街巷活地图，也是各条线索人物旧日生活的共同背景板。）..."
+                  text
+                  text "潜力上限（若有需要）：能在废墟中辨认旧地界与私建夹层，靠界碑痕迹与地基差异复原早年街道原貌——但那需要他愿意开口。，动机：表层动机：�..."
+                  text
+                  text "深层动机：二十年前洪灾中，他因怕水未能参与一线救援，在岸上仅做了搬运和看管物资的事。他存一柜子杂物、修一柜子旧物，实则是在等一个机会�..."
+                unordered_list
+                  list_item
+                    button [ref=8802, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=8805, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "许知微"
+                textbox [ref=7857, loc=unstable]
+                  text "【HUMAN_PATCH】许知微：28岁，白沙市水文档案局助理馆员，现借调至旧堤拆迁办做资料移交。瘦，常年戴一副银框眼镜，指节有翻旧卷磨出的茧。性格克�..."
+                unordered_list
+                  list_item
+                    button [ref=8814, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=8817, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "周泊"
+                textbox [ref=7858, loc=unstable]
+                  text "【HUMAN_PATCH】周泊：44岁，白沙内河驳船船工，左耳全聋。十七岁顶替亡父上船，常年运送砂石，水性极佳；七一六洪灾时他驾小机动船往返闸下浅滩救�..."
+                unordered_list
+                  list_item
+                    button [ref=8826, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=8829, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "陆衡"
+                textbox [ref=7859, loc=unstable]
+                  text "【HUMAN_PATCH】陆衡：52岁，白沙市水利局副局长，堤防改造工程常务副指挥。二十年前是林溪闸管理所技术员，七一六当夜轮值；许知微幼时落水，是他�..."
+                unordered_list
+                  list_item
+                    button [ref=8838, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=8841, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "白沙城与林溪闸"
+                textbox [ref=7860, loc=unstable]
+                  text "【HUMAN_PATCH】白沙城与林溪闸：白沙是江南运河支流的河港城，城区沿白沙溪呈弯月展开，城西旧堤建于上世纪五十年代，堤后地势低洼的“滩下区”住..."
+                unordered_list
+                  list_item
+                    button [ref=8850, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=8853, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "现行闸口调度铁律与档案逻辑"
+                textbox [ref=7861, loc=unstable]
+                  text "【HUMAN_PATCH】现行闸口调度铁律与档案逻辑：林溪闸实行“三票一录”——书面调度单、闸位运行记录、电话录音缺一不可；凡水库泄洪必须有上游防办..."
+                unordered_list
+                  list_item
+                    button [ref=8862, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=8865, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "七一六洪灾与二十年悬差"
+                textbox [ref=7862, loc=unstable]
+                  text "【HUMAN_PATCH】七一六洪灾与二十年悬差：故事起始年份为2025年7月，距七一六洪灾整二十年。2005年7月16日，青瓦湖流域连续暴雨，上游防办未发书面泄洪..."
+                unordered_list
+                  list_item
+                    button [ref=8874, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=8877, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "滩下利益网络与改造工程的四方角力"
+                textbox [ref=7863, loc=unstable]
+                  text "【HUMAN_PATCH】滩下利益网络与改造工程的四方角力：一是市水利局改造办（陆衡方），主导旧堤景观化，资金源于省水利专项与土地出让金，保工程质量..."
+                unordered_list
+                  list_item
+                    button [ref=8886, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=8889, loc=unstable]
+                      text "废止"
+            heading
+              text "🧵 伏笔"
+            textbox [ref=7864, loc=css:input[placeholder="种下伏笔，如：账册缺页尚未对上人"]]
+              text "种下伏笔，如：账册缺页尚未对上人"
+              container
+            button [ref=8895, loc=unstable]
+              text "种下伏笔"
+            unordered_list
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "铜牌刻错的日期比官方洪灾日期早一天，终局必须用事前出现的证据解释时间差。"
+                unordered_list
+                  list_item
+                    button [ref=8904, loc=unstable]
+                      text "回收"
+  text "::1"
+  container
+    container
+    container [ref=9115, loc=unstable]
+      button "Close" [ref=9117, loc=css:button[aria-label="Close"]]
+        container "关闭"
+          image "close"
+            svg_root
+      text "让 Agent 修改 · 人物 · 沈照夜"
+      container
+        text "只处理当前选中的对象。预览与取消不会保存；确认应用前，请核对修改前后内容。"
+        textbox "修改要求" [ref=8936, loc=css:textarea[placeholder="例如：保留既有事实，只增强冲突动机与可验证细节"]]
+          text "将沈照夜整张人物卡改为严格现实主义，保留姓名、女性配角、档案与亲属记忆主题。设为62岁退休户籍档案员，是许知微父亲的表姐。删除全部超能力..."
+        alert
+          image "close-circle"
+            svg_root
+          text "预览生成失败：Agent 未返回有效修改候选"
+      container
+        button [ref=9131, loc=unstable]
+          text "取 消"
+        button [ref=9134, loc=unstable]
+          text "生成预览"

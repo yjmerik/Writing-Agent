@@ -121,3 +121,13 @@ write/plan/worldbuild/check/general/extract，全部 9 个任务类型显式路�
 3. UI 运行时覆盖（`LlmModelConfigStore.applyToProperties`，进程内生效不落盘）
 
 运维排障时按此顺序推断实际路由；UI 覆盖在进程重启后失效。
+
+### recheck-async 端点的 identity.contentHash 构造
+
+`POST /api/projects/{id}/chapters/{chapterIndex}/recheck-async` 要求调用方提供
+完整稿件身份 `identity`（projectId/chapterIndex/version/contentHash）。
+
+**contentHash = SHA-256(8字节大端标题长度 + 标题UTF-8 + 8字节大端正文长度 + 正文UTF-8) 的十六进制**。
+
+前端已内置此逻辑（`frontend/src/lib/draftStore.ts` 的 `contentHashHex`）。
+API 直调方请按同一公式计算，或从 `GET .../review-context` 获取服务端快照中的 `identity` 直接使用。

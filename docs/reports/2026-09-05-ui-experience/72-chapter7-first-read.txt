@@ -1,0 +1,575 @@
+root
+  container
+    container
+      heading
+        text "📖 长篇小说写作系统"
+    container
+      container
+        button [ref=31601, loc=unstable]
+          svg_root
+          text "返回列表"
+        button [ref=31608, loc=unstable]
+          svg_root
+          text "新建"
+        container
+          text "潮痕档案｜全流程体验0905"
+          table
+            table_row
+              table_cell
+                text "创作中"
+                text "人机协作"
+            table_row
+              table_cell
+                text "进度"
+                text "7"
+                text "章"
+          container [ref=31642, loc=unstable]
+            text "💡"
+            text "当代虚构江南河港城白沙，旧堤拆迁前，水文档案员许知微发现二十年前洪灾的水位记录被人更改，父亲当年的失踪并非意外。她与曾参与救援、如今�..."
+        button [ref=31648, loc=unstable]
+          image "collapsed"
+            svg_root
+          container
+            image "setting"
+              svg_root
+            text "写作偏好"
+      container
+        container
+          text "一起完成这本书"
+          text "Agent 正在创作"
+          text "撰写与检查正文 · 已写 7 / 目标 200 章 · 20,563 字"
+          button [ref=31583, loc=unstable]
+            text "我要接手编辑"
+          button [ref=31678, loc=unstable]
+            text "审阅内容"
+          text "Agent 会自动搭建框架、撰写正文并检查质量。你可以阅读已有内容，随时接手修改。"
+          container
+            container
+              text "审核节奏"
+              container "审核节奏"
+                container
+                  comboboxgrouping "审核节奏" [ref=31566, loc=css:input[aria-label="审核节奏"]]
+                  text "卷末审阅"
+                  text " "
+                svg_root
+            textbox "创作要求" [ref=31567, loc=css:textarea[placeholder="给 Agent 的创作要求（继续时生效，留空可清除）"]]
+              text "从第5章起按作者保存的卷1第1—25章计划顺序继续，卷末审阅。保护第1章当前v6（2769字，首句2025年6月），不重写已有第1—4章。严格遵守200章八卷现实�..."
+        container
+          tablist
+            container
+            container
+              tab [ref=31704, loc=unstable]
+                text "创作工具"
+              tab [ref=31707, loc=unstable]
+                text "🌍 世界观与人物"
+              tab [ref=31710, loc=unstable]
+                text "📋 大纲"
+              tab [ref=31713, loc=unstable]
+                text "📖 章节管理"
+              tab [ref=31716, loc=unstable]
+                text "🔍 质量评价"
+          tabpanel "📖 章节管理" [ref=31720, loc=role:tabpanel[name="📖 章节管理"]]
+            alert
+              text "📝 写作中 — 可查看和重写已完成的章节"
+            button [ref=31559, loc=unstable]
+              image "plus"
+                svg_root
+              text "新增章节"
+            container
+              container
+                container
+                  table
+                    table_row
+                      table_cell
+                  text "📖 章节 (7)"
+                  table
+                    table_row
+                      table_cell
+                unordered_list
+                  button "第1章 移交清单" [ref=31744, loc=role:button[name="第1章 移交清单"]]
+                    heading
+                      text "第"
+                      text "1"
+                      text "章"
+                      text "移交清单"
+                    container
+                      text "2769"
+                      text "字"
+                  button "第2章 缺页的水" [ref=31760, loc=role:button[name="第2章 缺页的水"]]
+                    heading
+                      text "第"
+                      text "2"
+                      text "章"
+                      text "缺页的水"
+                    container
+                      text "2866"
+                      text "字"
+                  button "第3章 背向人声" [ref=31776, loc=role:button[name="第3章 背向人声"]]
+                    heading
+                      text "第"
+                      text "3"
+                      text "章"
+                      text "背向人声"
+                    container
+                      text "2744"
+                      text "字"
+                  button "第4章 恩人的签字" [ref=31792, loc=role:button[name="第4章 恩人的签字"]]
+                    heading
+                      text "第"
+                      text "4"
+                      text "章"
+                      text "恩人的签字"
+                    container
+                      text "3064"
+                      text "字"
+                  button "第5章 两枚订孔" [ref=32438, loc=role:button[name="第5章 两枚订孔"]]
+                    heading
+                      text "第"
+                      text "5"
+                      text "章"
+                      text "两枚订孔"
+                    container
+                      text "3647"
+                      text "字"
+                  button "第6章 提前一天" [ref=33157, loc=role:button[name="第6章 提前一天"]]
+                    heading
+                      text "第"
+                      text "6"
+                      text "章"
+                      text "提前一天"
+                    container
+                      text "2380"
+                      text "字"
+                  button "第7章 屋檐下的水" [ref=33624, loc=role:button[name="第7章 屋檐下的水"]]
+                    heading
+                      text "第"
+                      text "7"
+                      text "章"
+                      text "屋檐下的水"
+                    container
+                      text "3093"
+                      text "字"
+              container [ref=31565, loc=unstable]
+                container
+                  table
+                    table_row
+                      table_cell
+                  container
+                    text "第7章 屋檐下的水"
+                    container
+                      container
+                        text "3093"
+                        text "字"
+                      container
+                        text "v"
+                        text "2"
+                      button [ref=31584, loc=unstable]
+                        image "edit"
+                          svg_root
+                        text "编辑正文"
+                      button [ref=31585, loc=unstable]
+                        image "history"
+                          svg_root
+                        text "版本记录"
+                      button "让 Agent 修改第7章" [ref=31586, loc=css:button[aria-label="让 Agent 修改第7章"]]
+                        text "让 Agent 修改"
+                      button [ref=31841, loc=unstable]
+                        image "edit"
+                          svg_root
+                        text "重写此章"
+                  table
+                    table_row
+                      table_cell
+                container
+                  container
+                    paragraph
+                      text "雨水顺着瓦当滴下来，敲在檐下铁皮桶沿上，发出均匀的钝响。姜隔川坐在门槛里侧，膝盖上铺着块绒布，正把一只旧表芯拆散了养油。许知微站在檐�..."
+                    container
+                      button "编辑第 1 段" [ref=33789, loc=css:button[aria-label="编辑第 1 段"]]
+                        image "edit"
+                          svg_root
+                        text "编辑段落"
+                      button "让 Agent 修改第 1 段" [ref=33797, loc=css:button[aria-label="让 Agent 修改第 1 段"]]
+                        text "让 Agent 修改"
+                  container
+                    paragraph
+                      text "砖缝里有一线水痕。雨已经停了大半个时辰，檐水早就断了，那一线却还在往外洇，贴着墙根缓缓漫开，像有什么东西在地底下顶着砖缝朝上渗。"
+                    container
+                      button "编辑第 3 段" [ref=33806, loc=css:button[aria-label="编辑第 3 段"]]
+                        image "edit"
+                          svg_root
+                        text "编辑段落"
+                      button "让 Agent 修改第 3 段" [ref=33814, loc=css:button[aria-label="让 Agent 修改第 3 段"]]
+                        text "让 Agent 修改"
+                  container
+                    paragraph
+                      text "“老姜师傅。”她开口，“你这段墙根底下有水管吗？”"
+                    container
+                      button "编辑第 5 段" [ref=33823, loc=css:button[aria-label="编辑第 5 段"]]
+                        image "edit"
+                          svg_root
+                        text "编辑段落"
+                      button "让 Agent 修改第 5 段" [ref=33831, loc=css:button[aria-label="让 Agent 修改第 5 段"]]
+                        text "让 Agent 修改"
+                  container
+                    paragraph
+                      text "姜隔川没抬头，手指捏着镊子拨弄一颗游丝，过了几息才说：“底下没有管子。底下是土。”"
+                    container
+                      button "编辑第 7 段" [ref=33840, loc=css:button[aria-label="编辑第 7 段"]]
+                        image "edit"
+                          svg_root
+                        text "编辑段落"
+                      button "让 Agent 修改第 7 段" [ref=33848, loc=css:button[aria-label="让 Agent 修改第 7 段"]]
+                        text "让 Agent 修改"
+                  container
+                    paragraph
+                      text "许知微蹲下去，指尖悬在水痕上方半寸，没碰。水色发浑，带一点铁锈般的黄，渗出的位置不在落水管附近，也不在排水口方向。她从包里取出一把不�..."
+                    container
+                      button "编辑第 9 段" [ref=33857, loc=css:button[aria-label="编辑第 9 段"]]
+                        image "edit"
+                          svg_root
+                        text "编辑段落"
+                      button "让 Agent 修改第 9 段" [ref=33865, loc=css:button[aria-label="让 Agent 修改第 9 段"]]
+                        text "让 Agent 修改"
+                  container
+                    paragraph
+                      text "“这是地下水。”她站起来，“上游河道涨水，河床水位抬高压进旧土层，渗出来的。不是管网漏的，也不是雨水积的。”"
+                    container
+                      button "编辑第 11 段" [ref=33874, loc=css:button[aria-label="编辑第 11 段"]]
+                        image "edit"
+                          svg_root
+                        text "编辑段落"
+                      button "让 Agent 修改第 11 段" [ref=33882, loc=css:button[aria-label="让 Agent 修改第 11 段"]]
+                        text "让 Agent 修改"
+                  container
+                    paragraph
+                      text "姜隔川放下镊子，起身走到门口，低头看了看那道水线，又抬头望了望几十米外施工围挡的方向，像是把什么旧事跟眼前的水叠在一处比了比。"
+                    container
+                      button "编辑第 13 段" [ref=33891, loc=css:button[aria-label="编辑第 13 段"]]
+                        image "edit"
+                          svg_root
+                        text "编辑段落"
+                      button "让 Agent 修改第 13 段" [ref=33899, loc=css:button[aria-label="让 Agent 修改第 13 段"]]
+                        text "让 Agent 修改"
+                  paragraph
+                    text "“你爸以前也看水。”他说，“他蹲在地上看水，也跟你一个样子，先看缝，再看流向，不动手。”"
+                  button "编辑第 15 段" [ref=33904, loc=css:button[aria-label="编辑第 15 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 15 段" [ref=33907, loc=css:button[aria-label="让 Agent 修改第 15 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微没接这句话，只把直尺抽出来擦干。姜隔川也没等她接腔，返身从柜台后摸出半卷发黄的青壳纸，展开来是一张八十年代的白沙旧街巷排水走向�..."
+                  button "编辑第 17 段" [ref=33911, loc=css:button[aria-label="编辑第 17 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 17 段" [ref=33914, loc=css:button[aria-label="让 Agent 修改第 17 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“你手中那份图上有没有一道线——”他指着图上一个位置，“从鬼夹弯斜着上来，往电厂冷却井那个方向去的？”"
+                  button "编辑第 19 段" [ref=33918, loc=css:button[aria-label="编辑第 19 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 19 段" [ref=33921, loc=css:button[aria-label="让 Agent 修改第 19 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微包里带着那张复印过的暗涵轴线图。她展开，两图并排，指尖沿着自己图上的墨线移动，到电厂冷却井外侧停住，正是沈照夜说过悬停半寸的末�..."
+                  button "编辑第 21 段" [ref=33925, loc=css:button[aria-label="编辑第 21 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 21 段" [ref=33928, loc=css:button[aria-label="让 Agent 修改第 21 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "两道图上的线路，在同一个位置附近折向。"
+                  button "编辑第 23 段" [ref=33932, loc=css:button[aria-label="编辑第 23 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 23 段" [ref=33935, loc=css:button[aria-label="让 Agent 修改第 23 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“这道虚线是什么？”她问。"
+                  button "编辑第 25 段" [ref=33939, loc=css:button[aria-label="编辑第 25 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 25 段" [ref=33942, loc=css:button[aria-label="让 Agent 修改第 25 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "姜隔川没有说话。他拿起门边那把常用来垫桌脚的铁锹，走到砖地边缘，在离砖缝约一尺远的泥地上铲了几下。泥土松软，铁锹切下去碰着什么硬物，�..."
+                  button "编辑第 27 段" [ref=33946, loc=css:button[aria-label="编辑第 27 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 27 段" [ref=33949, loc=css:button[aria-label="让 Agent 修改第 27 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“老暗渠。”他说，“砌了管，填了土，图纸上划了线，说是封了。”"
+                  button "编辑第 29 段" [ref=33953, loc=css:button[aria-label="编辑第 29 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 29 段" [ref=33956, loc=css:button[aria-label="让 Agent 修改第 29 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "他顿了顿，用锹尖在水泥管壁上敲了一下，声音闷而实：“水泥管没破，管子也还在，可水还是从砖缝里上来了。水不走管子，水从管子外面的老土里�..."
+                  button "编辑第 31 段" [ref=33960, loc=css:button[aria-label="编辑第 31 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 31 段" [ref=33963, loc=css:button[aria-label="让 Agent 修改第 31 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微看着那段管壁，又看了一眼自己手中图纸上那道被封堵的暗涵轴线——图上标着“封堵”，管壁也确实砌着，可水没有按照图上的结论消失。水�..."
+                  button "编辑第 33 段" [ref=33967, loc=css:button[aria-label="编辑第 33 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 33 段" [ref=33970, loc=css:button[aria-label="让 Agent 修改第 33 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“浆缝。”她说，“管口封了，管壁和老土之间的浆缝没有压实，水就从缝里透上来。”"
+                  button "编辑第 35 段" [ref=33974, loc=css:button[aria-label="编辑第 35 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 35 段" [ref=33977, loc=css:button[aria-label="让 Agent 修改第 35 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "姜隔川把铁锹靠回墙边，卷着那半卷旧图，没有点头也没有摇头。雨又开始落了，又细又密。他站在檐下，望着铺子外低洼处那道水痕，像在跟那段水�..."
+                  button "编辑第 37 段" [ref=33981, loc=css:button[aria-label="编辑第 37 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 37 段" [ref=33984, loc=css:button[aria-label="让 Agent 修改第 37 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "他的声音不高，像在量什么旧物的尺寸：“一九七一年，汛期里发的病，人没留住，就埋在滩上。后来河滩整修，坟迁过一回，家里人在新地方立了块�..."
+                  button "编辑第 39 段" [ref=33988, loc=css:button[aria-label="编辑第 39 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 39 段" [ref=33991, loc=css:button[aria-label="让 Agent 修改第 39 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "他停住，拿绒布擦了擦手上沾的机油：“碑后来被人拔了。不知道是谁。”"
+                  button "编辑第 41 段" [ref=33995, loc=css:button[aria-label="编辑第 41 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 41 段" [ref=33998, loc=css:button[aria-label="让 Agent 修改第 41 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微没问立碑的是谁家的人。她看着姜隔川收起铁锹的背影，过了好一会儿才轻声问：“是顾堰声的女儿？”"
+                  button "编辑第 43 段" [ref=34002, loc=css:button[aria-label="编辑第 43 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 43 段" [ref=34005, loc=css:button[aria-label="让 Agent 修改第 43 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "姜隔川没有停下，也没有回头：“那时候我在。”"
+                  button "编辑第 45 段" [ref=34009, loc=css:button[aria-label="编辑第 45 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 45 段" [ref=34012, loc=css:button[aria-label="让 Agent 修改第 45 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "雨声大了一些，落在铁皮桶沿上，把这句话盖去了一半。"
+                  button "编辑第 47 段" [ref=34016, loc=css:button[aria-label="编辑第 47 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 47 段" [ref=34019, loc=css:button[aria-label="让 Agent 修改第 47 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微没有再追问。她从铺子里出来，拐过巷口，雨水顺着她后颈往下淌。她走得很快，心里翻着一条时间线：一九七一年，汛期，一个孩子病死。顾�..."
+                  button "编辑第 49 段" [ref=34023, loc=css:button[aria-label="编辑第 49 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 49 段" [ref=34026, loc=css:button[aria-label="让 Agent 修改第 49 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "档案室在旧办公楼三层。门半掩着，沈照夜坐在靠窗的桌子前，面前摊开一只黑布面登记簿，手指正逐行往下移。许知微进门时脚步轻，她还是听见了�..."
+                  button "编辑第 51 段" [ref=34030, loc=css:button[aria-label="编辑第 51 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 51 段" [ref=34033, loc=css:button[aria-label="让 Agent 修改第 51 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“那孩子来了。”沈照夜的声音低哑，像书页翻动时的沙沙声，“淋雨了？手巾在门后勾上。”"
+                  button "编辑第 53 段" [ref=34037, loc=css:button[aria-label="编辑第 53 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 53 段" [ref=34040, loc=css:button[aria-label="让 Agent 修改第 53 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微没顾上手巾，走到桌前问：“沈姨，民政旧档里能不能查到一九七一年的死亡登记，汛期内的？”"
+                  button "编辑第 55 段" [ref=34044, loc=css:button[aria-label="编辑第 55 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 55 段" [ref=34047, loc=css:button[aria-label="让 Agent 修改第 55 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "沈照夜目光在她脸上停了一瞬，没问缘由，只放下登记簿，起身往里去。里间档案架有一人高，她熟门熟路地拉开第三排最底层的一只铁皮抽屉，抽出�..."
+                  button "编辑第 57 段" [ref=34051, loc=css:button[aria-label="编辑第 57 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 57 段" [ref=34054, loc=css:button[aria-label="让 Agent 修改第 57 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“一九七一年。说是‘汛期急病’，这一栏在旧档里归在夏季临时赈济卷下。”她把册子搁在桌上，“名册不按姓排，按街区报上来的次序。你想找的�..."
+                  button "编辑第 59 段" [ref=34058, loc=css:button[aria-label="编辑第 59 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 59 段" [ref=34061, loc=css:button[aria-label="让 Agent 修改第 59 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微说：“女儿滩。”"
+                  button "编辑第 61 段" [ref=34065, loc=css:button[aria-label="编辑第 61 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 61 段" [ref=34068, loc=css:button[aria-label="让 Agent 修改第 61 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "册子翻到第三页，上端用蓝黑墨水写着“女儿滩”三个字，下面一行字。沈照夜的目光顺着字行移到底，没有停驻，只伸手指了指那行字：“顾堰声之�..."
+                  button "编辑第 63 段" [ref=34072, loc=css:button[aria-label="编辑第 63 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 63 段" [ref=34075, loc=css:button[aria-label="让 Agent 修改第 63 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微没有说话。纸上没有更多。没有病历，没有医院名，没有诊断，只在备注栏里有一个小字——“夭”。"
+                  button "编辑第 65 段" [ref=34079, loc=css:button[aria-label="编辑第 65 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 65 段" [ref=34082, loc=css:button[aria-label="让 Agent 修改第 65 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“没有迁坟记录？”她问。"
+                  button "编辑第 67 段" [ref=34086, loc=css:button[aria-label="编辑第 67 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 67 段" [ref=34089, loc=css:button[aria-label="让 Agent 修改第 67 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“迁移记录是后来另立的。你顺着那个滩名找，早个十年还有簿子。”沈照夜把册子放回桌面，“后来滩涂整编，女儿滩这个地名在民政册上不作数了�..."
+                  button "编辑第 69 段" [ref=34093, loc=css:button[aria-label="编辑第 69 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 69 段" [ref=34096, loc=css:button[aria-label="让 Agent 修改第 69 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "她像是在陈述一个档案学事实，但许知微听得出那句“不作数了”底下有一层别的意思——地名不作数了，滩上的印记也就不作数了。碑还在的时候，�..."
+                  button "编辑第 71 段" [ref=34100, loc=css:button[aria-label="编辑第 71 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 71 段" [ref=34103, loc=css:button[aria-label="让 Agent 修改第 71 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“她说顾堰声有没有来看过这个档案？”许知微问，“他本人在民政或闸管所留下过登记记录吗？”"
+                  button "编辑第 73 段" [ref=34107, loc=css:button[aria-label="编辑第 73 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 73 段" [ref=34110, loc=css:button[aria-label="让 Agent 修改第 73 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "沈照夜摇摇头，声音很轻：“他那样的人……”"
+                  button "编辑第 75 段" [ref=34114, loc=css:button[aria-label="编辑第 75 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 75 段" [ref=34117, loc=css:button[aria-label="让 Agent 修改第 75 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "窗外一道闪电扯亮半边天，雨蓦地大了。两个人都没去关窗，雨斜着打进窗洞，落在窗台上，溅湿了桌沿。沈照夜伸手把卷册往内侧挪开，从抽屉里取�..."
+                  button "编辑第 77 段" [ref=34121, loc=css:button[aria-label="编辑第 77 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 77 段" [ref=34124, loc=css:button[aria-label="让 Agent 修改第 77 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“一个父亲肯替别人守一辈子的闸，是因为他没能守住自己女儿的一口气。”"
+                  button "编辑第 79 段" [ref=34128, loc=css:button[aria-label="编辑第 79 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 79 段" [ref=34131, loc=css:button[aria-label="让 Agent 修改第 79 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "许知微没有接话。她低头看着那行字。跳入脑海的，是顾堰声说“电话没坏，坏的是记录它的那支笔”时的语气。平静。像是说着与自己无关的事。一�..."
+                  button "编辑第 81 段" [ref=34135, loc=css:button[aria-label="编辑第 81 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 81 段" [ref=34138, loc=css:button[aria-label="让 Agent 修改第 81 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "她站在桌边没有动，窗外的雨幕把整个档案室罩在灰白色的光照里。片刻后她拿起卷册，合拢，放回原位，没有去复印这件旧档，也没有写进笔记，只�..."
+                  button "编辑第 83 段" [ref=34142, loc=css:button[aria-label="编辑第 83 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 83 段" [ref=34145, loc=css:button[aria-label="让 Agent 修改第 83 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "她把卷册放回原处时，压着卷册的镇纸底下露出一角纸片。像是旧册页缝里夹着的，没有录入正文。许知微没有碰那角纸片——至少，此刻没有。"
+                  button "编辑第 85 段" [ref=34149, loc=css:button[aria-label="编辑第 85 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 85 段" [ref=34152, loc=css:button[aria-label="让 Agent 修改第 85 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "她转身要走时，沈照夜叫住她：“那孩子，你记不记得档案卷宗有一条规定？”"
+                  button "编辑第 87 段" [ref=34156, loc=css:button[aria-label="编辑第 87 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 87 段" [ref=34159, loc=css:button[aria-label="让 Agent 修改第 87 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“编号要跟着原件走，缺页要写缺页，不能自己补齐。”许知微说。"
+                  button "编辑第 89 段" [ref=34163, loc=css:button[aria-label="编辑第 89 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 89 段" [ref=34166, loc=css:button[aria-label="让 Agent 修改第 89 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“我有一本二十多年前的登记册，册里记着一笔迁坟款。”沈照夜说着拉开身后柜门，取出一册深灰色封皮的收据底册，“领款人签的名字……”她翻�..."
+                  button "编辑第 91 段" [ref=34170, loc=css:button[aria-label="编辑第 91 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 91 段" [ref=34173, loc=css:button[aria-label="让 Agent 修改第 91 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "“领款签的是一个‘顾堰’，没写全。”沈照夜合上底册，语气依旧平静，“你跟那个顾堰声说话时，留意过他的签字吗？他签‘声’字时，末笔是不�..."
+                  button "编辑第 93 段" [ref=34177, loc=css:button[aria-label="编辑第 93 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 93 段" [ref=34180, loc=css:button[aria-label="让 Agent 修改第 93 段"]]
+                    text "让 Agent 修改"
+                  paragraph
+                    text "窗外又一阵雨扫过来。沈照夜说完也没看许知微，只低头把底册锁回柜里，像只是提起一桩无关紧要的旧事。许知微站在门口，雨水从她的伞尖滴答落�..."
+                  button "编辑第 95 段" [ref=34184, loc=css:button[aria-label="编辑第 95 段"]]
+                    svg_root
+                    text "编辑段落"
+                  button "让 Agent 修改第 95 段" [ref=34187, loc=css:button[aria-label="让 Agent 修改第 95 段"]]
+                    text "让 Agent 修改"
+                  heading
+                    svg_root
+                    text "章节质量报告"
+                    text "?"
+                    text "级"
+                  button [ref=33623, loc=unstable]
+                    svg_root
+                    text "检测问题（5 项）"
+                  unordered_list
+                    list_item
+                      text "HIGH"
+                      text "CHARACTER"
+                      text "本章后半段出现“沈照夜叫住她”（指许知微）后，文中将许知微称为“那孩子”——此称呼虽为旧识长辈惯用语，但在已确立的档案语境中许知微是�..."
+                    list_item
+                      text "MEDIUM"
+                      text "CHARACTER"
+                      text "原文“许知微看了眼自己看过的那份人事旧档上‘顾堰声’三个字”时，顾堰声已被唤为“顾堰”且姓氏明确，但故事真典中顾堰声的人物关系设定仅�..."
+                    list_item
+                      text "MEDIUM"
+                      text "TIMELINE"
+                      text "文中设置“一九七一年，汛期里发，人没留住，埋女儿滩”后，沈照夜提到“领款人签了个‘顾堰’”且“那孩子，你记不记得档案卷宗有一条规定。�..."
+                    list_item
+                      text "MEDIUM"
+                      text "FORESHADOWING"
+                      text "顾堰声的签字“声字末笔收得急”作为潜在笔迹鉴定伏笔，本章埋下后未推进亦未回收；伏笔本身与核心真相（顾堰声在2005年纪录异常中的角色）没有�..."
+                    list_item
+                      text "LOW"
+                      text "WORLDBUILDING"
+                      text "文中“白沙旧街巷排水走向图”提到“电厂冷却井”与“鬼夹弯”相接，地理上应与白沙城“三道口子、鬼夹弯在水闸外”的设定兼容；但“电厂冷却�..."
+            button [ref=31582, loc=unstable]
+              image "reload"
+                svg_root
+              text "刷新"
+  text "::1"
+  container

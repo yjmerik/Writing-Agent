@@ -1,0 +1,38 @@
+[
+  {
+    "role": "slider",
+    "label": null,
+    "labelledby": null,
+    "checked": null,
+    "value": "50",
+    "context": "",
+    "title": ""
+  },
+  {
+    "role": "switch",
+    "label": null,
+    "labelledby": null,
+    "checked": "true",
+    "value": null,
+    "context": "爽点轮换",
+    "title": ""
+  },
+  {
+    "role": "switch",
+    "label": null,
+    "labelledby": null,
+    "checked": "true",
+    "value": null,
+    "context": "角色声音",
+    "title": ""
+  },
+  {
+    "role": "switch",
+    "label": null,
+    "labelledby": null,
+    "checked": "true",
+    "value": null,
+    "context": "引用素材",
+    "title": ""
+  }
+]

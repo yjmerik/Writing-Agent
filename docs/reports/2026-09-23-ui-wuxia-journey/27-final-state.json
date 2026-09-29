@@ -1,0 +1,33 @@
+{
+ "state": "PAUSED_AT_CHECKPOINT",
+ "currentChapter": 18,
+ "target": 10,
+ "words": 70260,
+ "pauseReason": "卷6大纲已生成，待审核",
+ "foreshadow": {
+  "total": 139,
+  "unresolved": 0
+ },
+ "editions": [
+  {
+   "id": "6664af0a",
+   "state": "DRAFT"
+  },
+  {
+   "id": "ae261d56",
+   "state": "DRAFT"
+  }
+ ],
+ "evaluation": {
+  "overall": 6,
+  "scores": {
+   "characters": 7,
+   "worldbuilding": 8,
+   "plot": 6,
+   "dialogue": 7,
+   "style": 7,
+   "pattern_diversity": 6,
+   "consistency": 5
+  }
+ }
+}

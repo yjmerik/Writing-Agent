@@ -1,0 +1,3533 @@
+root
+  container
+    container
+      heading
+        text "📖 长篇小说写作系统"
+    container
+      container
+        button [ref=53621, loc=unstable]
+          svg_root
+          text "返回列表"
+        button [ref=53624, loc=unstable]
+          svg_root
+          text "新建"
+        container
+          text "潮痕档案｜全流程体验0905"
+          table
+            table_row
+              table_cell
+                text "创作中"
+                text "人机协作"
+            table_row
+              table_cell
+                text "进度"
+                text "22"
+                text "章"
+          container [ref=53640, loc=unstable]
+            text "💡"
+            text "当代虚构江南河港城白沙，旧堤拆迁前，水文档案员许知微发现二十年前洪灾的水位记录被人更改，父亲当年的失踪并非意外。她与曾参与救援、如今�..."
+        button [ref=53646, loc=unstable]
+          image "collapsed"
+            svg_root
+          container
+            image "setting"
+              svg_root
+            text "写作偏好"
+      container
+        container
+          text "一起完成这本书"
+          text "Agent 正在创作"
+          text "撰写与检查正文 · 已写 22 / 目标 200 章 · 77,219 字"
+          button [ref=53315, loc=unstable]
+            text "我要接手编辑"
+          button [ref=53665, loc=unstable]
+            text "审阅内容"
+          text "Agent 会自动搭建框架、撰写正文并检查质量。你可以阅读已有内容，随时接手修改。"
+          container
+            container
+              text "审核节奏"
+              container "审核节奏"
+                container
+                  comboboxgrouping "审核节奏" [ref=53311, loc=css:input[aria-label="审核节奏"]]
+                  text "卷末审阅"
+                  text " "
+                svg_root
+            textbox "创作要求" [ref=53312, loc=css:textarea[placeholder="给 Agent 的创作要求（继续时生效，留空可清除）"]]
+              text "从下一未写章（第22章）起按作者保存的卷1第1—25章计划顺序继续，卷末审阅。保护第1章当前v6（2769字，首句2025年6月），不重写已有第1—21章。严格�..."
+        container
+          tablist
+            container
+            container
+              tab [ref=53680, loc=unstable]
+                text "创作工具"
+              tab [ref=53608, loc=unstable]
+                text "🌍 世界观与人物"
+              tab [ref=53685, loc=unstable]
+                text "📋 大纲"
+              tab [ref=53688, loc=unstable]
+                text "📖 章节管理"
+              tab [ref=53691, loc=unstable]
+                text "🔍 质量评价"
+          tabpanel "🌍 世界观与人物" [ref=53695, loc=role:tabpanel[name="🌍 世界观与人物"]]
+            button [ref=53699, loc=unstable]
+              image "reload"
+                svg_root
+              text "刷新"
+            heading
+              text "🌍 世界观设定"
+            container
+              container "新增世界观类型"
+                container
+                  comboboxgrouping "新增世界观类型" [ref=53714, loc=css:input[aria-label="新增世界观类型"]]
+                  text "势力"
+                  text " "
+                svg_root
+              textbox [ref=53364, loc=css:input[placeholder="名称"]]
+                text "名称"
+                container
+              textbox [ref=53365, loc=css:input[placeholder="内容"]]
+                text "内容"
+                container
+              button [ref=53729, loc=unstable]
+                text "添加设定"
+              button [ref=53733, loc=unstable]
+                text "请 Agent 补设定"
+            container
+              container
+                container
+                  table
+                    table_row
+                      table_cell
+                  text "其他"
+                  table
+                    table_row
+                      table_cell
+                container
+                  container
+                    table
+                      table_row
+                        table_cell
+                          container
+                            text "类型"
+                            text ":"
+                          container "许知微 世界观类型"
+                            container
+                              comboboxgrouping "许知微 世界观类型" [ref=53762, loc=css:input[aria-label="许知微 世界观类型"]]
+                              text "其他"
+                              text " "
+                            svg_root
+                      table_row
+                        table_cell
+                          container
+                            text "名称"
+                            text ":"
+                          textbox "许知微 世界观名称" [ref=53366, loc=css:input[aria-label="许知微 世界观名称"]]
+                            text "许知微"
+                      table_row
+                        table_cell
+                          container
+                            text "正文"
+                            text ":"
+                          textbox "许知微 世界观正文" [ref=53367, loc=css:textarea[aria-label="许知微 世界观正文"]]
+                            text "28岁，白沙市水文档案局助理馆员，现借调至旧堤拆迁办做资料移交。瘦，常年戴一副银框眼镜，指节有翻旧卷磨出的茧。性格克制甚至寡言，对纸张气..."
+                    container
+                      button [ref=53790, loc=unstable]
+                        image "save"
+                          svg_root
+                        text "保存设定"
+                      button "让 Agent 修改世界观 许知微" [ref=53798, loc=css:button[aria-label="让 Agent 修改世界观 许知微"]]
+                        text "让 Agent 修改"
+                  container
+                    table
+                      table_row
+                        table_cell
+                          container
+                            text "类型"
+                            text ":"
+                          container "周泊 世界观类型"
+                            container
+                              comboboxgrouping "周泊 世界观类型" [ref=53816, loc=css:input[aria-label="周泊 世界观类型"]]
+                              text "其他"
+                              text " "
+                            svg_root
+                      table_row
+                        table_cell
+                          container
+                            text "名称"
+                            text ":"
+                          textbox "周泊 世界观名称" [ref=53368, loc=css:input[aria-label="周泊 世界观名称"]]
+                            text "周泊"
+                      table_row
+                        table_cell
+                          container
+                            text "正文"
+                            text ":"
+                          textbox "周泊 世界观正文" [ref=53369, loc=css:textarea[aria-label="周泊 世界观正文"]]
+                            text "44岁，白沙内河驳船船工，左耳全聋。十七岁顶替亡父上船，常年运送砂石，水性极佳；七一六洪灾时他驾小机动船往返闸下浅滩救出三十七人，右臂被..."
+                    container
+                      button [ref=53844, loc=unstable]
+                        image "save"
+                          svg_root
+                        text "保存设定"
+                      button "让 Agent 修改世界观 周泊" [ref=53852, loc=css:button[aria-label="让 Agent 修改世界观 周泊"]]
+                        text "让 Agent 修改"
+                  container
+                    table
+                      table_row
+                        table_cell
+                          container
+                            text "类型"
+                            text ":"
+                          container "陆衡 世界观类型"
+                            container
+                              comboboxgrouping "陆衡 世界观类型" [ref=53870, loc=css:input[aria-label="陆衡 世界观类型"]]
+                              text "其他"
+                              text " "
+                            svg_root
+                      table_row
+                        table_cell
+                          container
+                            text "名称"
+                            text ":"
+                          textbox "陆衡 世界观名称" [ref=53370, loc=css:input[aria-label="陆衡 世界观名称"]]
+                            text "陆衡"
+                      table_row
+                        table_cell
+                          container
+                            text "正文"
+                            text ":"
+                          textbox "陆衡 世界观正文" [ref=53371, loc=css:textarea[aria-label="陆衡 世界观正文"]]
+                            text "52岁，白沙市水利局副局长，堤防改造工程常务副指挥。二十年前是林溪闸管理所技术员，七一六当夜轮值；许知微幼时落水，是他从闸墩下捞出来的。..."
+                    container
+                      button [ref=53898, loc=unstable]
+                        image "save"
+                          svg_root
+                        text "保存设定"
+                      button "让 Agent 修改世界观 陆衡" [ref=53906, loc=css:button[aria-label="让 Agent 修改世界观 陆衡"]]
+                        text "让 Agent 修改"
+                  container
+                    table
+                      table_row
+                        table_cell
+                          container
+                            text "类型"
+                            text ":"
+                          container "白沙城与林溪闸 世界观类型"
+                            container
+                              comboboxgrouping "白沙城与林溪闸 世界观类型" [ref=53924, loc=css:input[aria-label="白沙城与林溪闸 世界观类型"]]
+                              text "其他"
+                              text " "
+                            svg_root
+                      table_row
+                        table_cell
+                          container
+                            text "名称"
+                            text ":"
+                          textbox "白沙城与林溪闸 世界观名称" [ref=53372, loc=css:input[aria-label="白沙城与林溪闸 世界观名称"]]
+                            text "白沙城与林溪闸"
+                      table_row
+                        table_cell
+                          container
+                            text "正文"
+                            text ":"
+                          textbox "白沙城与林溪闸 世界观正文" [ref=53373, loc=css:textarea[aria-label="白沙城与林溪闸 世界观正文"]]
+                            text "白沙是江南运河支流的河港城，城区沿白沙溪呈弯月展开，城西旧堤建于上世纪五十年代，堤后地势低洼的“滩下区”住着老船民、搬运工与上岸渔民�..."
+                    button [ref=53950, loc=unstable]
+                      svg_root
+                      text "保存设定"
+                    button "让 Agent 修改世界观 白沙城与林溪闸" [ref=53953, loc=css:button[aria-label="让 Agent 修改世界观 白沙城与林溪闸"]]
+                      text "让 Agent 修改"
+                  table
+                    table_row
+                      table_cell
+                        text "类型"
+                        text ":"
+                        container "现行闸口调度铁律与档案逻辑 世界观类型"
+                          container
+                            comboboxgrouping "现行闸口调度铁律与档案逻辑 世界观类型" [ref=53961, loc=css:input[aria-label="现行闸口调度铁律与档案逻辑 世界观类型"]]
+                            text "其他"
+                            text " "
+                          svg_root
+                    table_row
+                      table_cell
+                        text "名称"
+                        text ":"
+                        textbox "现行闸口调度铁律与档案逻辑 世界观名称" [ref=53374, loc=css:input[aria-label="现行闸口调度铁律与档案逻辑 世界观名称"]]
+                          text "现行闸口调度铁律与档案逻辑"
+                    table_row
+                      table_cell
+                        text "正文"
+                        text ":"
+                        textbox "现行闸口调度铁律与档案逻辑 世界观正文" [ref=53375, loc=css:textarea[aria-label="现行闸口调度铁律与档案逻辑 世界观正文"]]
+                          text "林溪闸实行“三票一录”——书面调度单、闸位运行记录、电话录音缺一不可；凡水库泄洪必须有上游防办书面令，值班员不得接受口头调遣，闸门启�..."
+                  button [ref=53976, loc=unstable]
+                    svg_root
+                    text "保存设定"
+                  button "让 Agent 修改世界观 现行闸口调度铁律与档案逻辑" [ref=53979, loc=css:button[aria-label="让 Agent 修改世界观 现行闸口调度铁律与档案逻辑"]]
+                    text "让 Agent 修改"
+              container
+                container
+                  table
+                    table_row
+                      table_cell
+                  text "历史"
+                  table
+                    table_row
+                      table_cell
+                container
+                  table
+                    table_row
+                      table_cell
+                        container
+                          text "类型"
+                          text ":"
+                        container "七一六洪灾与二十年悬差 世界观类型"
+                          container
+                            comboboxgrouping "七一六洪灾与二十年悬差 世界观类型" [ref=54006, loc=css:input[aria-label="七一六洪灾与二十年悬差 世界观类型"]]
+                            text "历史"
+                            text " "
+                          svg_root
+                    table_row
+                      table_cell
+                        container
+                          text "名称"
+                          text ":"
+                        textbox "七一六洪灾与二十年悬差 世界观名称" [ref=53376, loc=css:input[aria-label="七一六洪灾与二十年悬差 世界观名称"]]
+                          text "七一六洪灾与二十年悬差"
+                    table_row
+                      table_cell
+                        container
+                          text "正文"
+                          text ":"
+                        textbox "七一六洪灾与二十年悬差 世界观正文" [ref=53377, loc=css:textarea[aria-label="七一六洪灾与二十年悬差 世界观正文"]]
+                          text "故事起始年份为2025年7月，距七一六洪灾整二十年。2005年7月16日，青瓦湖流域连续暴雨，上游防办未发书面泄洪令；林溪闸凌晨自行提闸，但因早先“�..."
+                  container
+                    button [ref=54034, loc=unstable]
+                      image "save"
+                        svg_root
+                      text "保存设定"
+                    button "让 Agent 修改世界观 七一六洪灾与二十年悬差" [ref=54042, loc=css:button[aria-label="让 Agent 修改世界观 七一六洪灾与二十年悬差"]]
+                      text "让 Agent 修改"
+              table
+                table_row
+                  table_cell
+              text "势力"
+              table
+                table_row
+                  table_cell
+              table
+                table_row
+                  table_cell
+                    text "类型"
+                    text ":"
+                    container "滩下利益网络与改造工程的四方角力 世界观类型"
+                      container
+                        comboboxgrouping "滩下利益网络与改造工程的四方角力 世界观类型" [ref=54054, loc=css:input[aria-label="滩下利益网络与改造工程的四方角力 世界观类型"]]
+                        text "势力"
+                        text " "
+                      svg_root
+                table_row
+                  table_cell
+                    text "名称"
+                    text ":"
+                    textbox "滩下利益网络与改造工程的四方角力 世界观名称" [ref=53378, loc=css:input[aria-label="滩下利益网络与改造工程的四方角力 世界观名称"]]
+                      text "滩下利益网络与改造工程的四方角力"
+                table_row
+                  table_cell
+                    text "正文"
+                    text ":"
+                    textbox "滩下利益网络与改造工程的四方角力 世界观正文" [ref=53379, loc=css:textarea[aria-label="滩下利益网络与改造工程的四方角力 世界观正文"]]
+                      text "一是市水利局改造办（陆衡方），主导旧堤景观化，资金源于省水利专项与土地出让金，保工程质量怕查历史，倾向把原居民迁往城东安置房；二是滩�..."
+              button [ref=54069, loc=unstable]
+                svg_root
+                text "保存设定"
+              button "让 Agent 修改世界观 滩下利益网络与改造工程的四方角力" [ref=54072, loc=css:button[aria-label="让 Agent 修改世界观 滩下利益网络与改造工程的四方角力"]]
+                text "让 Agent 修改"
+              table
+                table_row
+                  table_cell
+              text "经济"
+              table
+                table_row
+                  table_cell
+              table
+                table_row
+                  table_cell
+                    text "类型"
+                    text ":"
+                    container "水账的潜流 世界观类型"
+                      container
+                        comboboxgrouping "水账的潜流 世界观类型" [ref=54083, loc=css:input[aria-label="水账的潜流 世界观类型"]]
+                        text "经济"
+                        text " "
+                      svg_root
+                table_row
+                  table_cell
+                    text "名称"
+                    text ":"
+                    textbox "水账的潜流 世界观名称" [ref=53380, loc=css:input[aria-label="水账的潜流 世界观名称"]]
+                      text "水账的潜流"
+                table_row
+                  table_cell
+                    text "正文"
+                    text ":"
+                    textbox "水账的潜流 世界观正文" [ref=53381, loc=css:textarea[aria-label="水账的潜流 世界观正文"]]
+                      text "白沙与上游之间最隐秘的经济资源是“泄洪指标”。洪水不只关乎安全——青瓦湖库容决定周边两万亩农业供水与两座小水电站的发电水头，而每年“�..."
+              button [ref=54098, loc=unstable]
+                svg_root
+                text "保存设定"
+              button "让 Agent 修改世界观 水账的潜流" [ref=54101, loc=css:button[aria-label="让 Agent 修改世界观 水账的潜流"]]
+                text "让 Agent 修改"
+            heading
+              text "👥 人物卡"
+            textbox [ref=53382, loc=css:input[placeholder="姓名"]]
+              text "姓名"
+              container
+            textbox [ref=53383, loc=css:input[placeholder="定位"]]
+              text "配角"
+            textbox [ref=53384, loc=css:input[placeholder="能力"]]
+              text "能力"
+              container
+            button [ref=54111, loc=unstable]
+              text "添加人物"
+            button [ref=54113, loc=unstable]
+              text "请 Agent 补人物"
+            table
+              table_row
+                table_cell
+            text "许知微"
+            text "主角 · 调查者"
+            table
+              table_row
+                table_cell
+            table
+              table_row
+                table_cell
+                  text "姓名"
+                  text ":"
+                  textbox "许知微 姓名" [ref=53385, loc=css:input[aria-label="许知微 姓名"]]
+                    text "许知微"
+              table_row
+                table_cell
+                  text "角色定位"
+                  text ":"
+                  textbox "许知微 角色定位" [ref=53386, loc=css:input[aria-label="许知微 角色定位"]]
+                    text "主角 · 调查者"
+              table_row
+                table_cell
+                  text "性格"
+                  text ":"
+                  textbox "许知微 性格" [ref=53387, loc=css:textarea[aria-label="许知微 性格"]]
+                    text "严谨克制，信赖书面记录但愿意纠正误判；面对亲人旧事容易把求证当作情感回避。"
+              table_row
+                table_cell
+                  text "能力"
+                  text ":"
+                  textbox "许知微 能力" [ref=53388, loc=css:textarea[aria-label="许知微 能力"]]
+                    text "水文档案整理、目录检索和记录比对；专业结论须由原件、合格测量与独立核验支持，无超能力。"
+              table_row
+                table_cell
+                  text "动机"
+                  text ":"
+                  textbox "许知微 动机" [ref=53389, loc=css:textarea[aria-label="许知微 动机"]]
+                    text "查清父亲许敬川在2005年洪灾后的去向，纠正记录异常，同时保护无辜证人不被调查牵连。"
+              table_row
+                table_cell
+                  text "外貌"
+                  text ":"
+                  textbox "许知微 外貌" [ref=53390, loc=css:textarea[aria-label="许知微 外貌"]]
+                    text "28岁，短发，银框眼镜，指节有翻卷留下的细茧，常穿便于现场调查的深色外套。"
+              table_row
+                table_cell
+                  text "关系"
+                  text ":"
+                  textbox "许知微 关系" [ref=53391, loc=css:textarea[aria-label="许知微 关系"]]
+                    text "姜隔川在许知微的视界里从“岸上旧物铺的知情人”浮升为“判断上足以扭转她取舍的指津人”。他隔着柜台以铁签为教具，用缆绳断茬教她区分“水�..."
+              table_row
+                table_cell
+                  text "成长弧"
+                  text ":"
+                  textbox "许知微 成长弧" [ref=53392, loc=css:textarea[aria-label="许知微 成长弧"]]
+                    text "她已从“按图纸定位孤立物证”的现场视角，推开一道缝隙：物质的来历与去向，比编目栏里的分类名更沉重。当她撕去“护岸防撞系缆”的印刷标签�..."
+            button [ref=54160, loc=unstable]
+              svg_root
+              text "保存人物"
+            button "让 Agent 修改人物 许知微" [ref=54163, loc=css:button[aria-label="让 Agent 修改人物 许知微"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+            text "顾堰声"
+            text "配角 / 深层对手（非终极反派，但贯穿全书的灰色对立者）"
+            table
+              table_row
+                table_cell
+            table
+              table_row
+                table_cell
+                  text "姓名"
+                  text ":"
+                  textbox "顾堰声 姓名" [ref=53393, loc=css:input[aria-label="顾堰声 姓名"]]
+                    text "顾堰声"
+              table_row
+                table_cell
+                  text "角色定位"
+                  text ":"
+                  textbox "顾堰声 角色定位" [ref=53394, loc=css:input[aria-label="顾堰声 角色定位"]]
+                    text "配角 / 深层对手（非终极反派，但贯穿全书的灰色对立者）"
+              table_row
+                table_cell
+                  text "性格"
+                  text ":"
+                  textbox "顾堰声 性格" [ref=53395, loc=css:textarea[aria-label="顾堰声 性格"]]
+                    text "1. 寡言而善于倾听。在饭桌上永远最后一个放下筷子，在会议上从不第一个发言；说话前会有两秒停顿，这段空白里他已经完成了对发言者立场的估算�..."
+                    text
+                    text "2. 自我道德感极强，却不断自认“做过脏事”。他从不标榜奉献，只是每年清明都会独自去白沙老闸口站一刻钟。熟人问起，只说“透口气”。"
+                    text
+                    text "3. 对“记忆”近乎偏执的守护。随身带着一只牛皮面笔记本，不记工作，只记河流的呓语——某年某月的水色、气味、闸门下泡沫的形状。他认为河水�..."
+                    text
+                    text "4. 对许知微有隐蔽的爱护之心，但这种爱护以“试探”面目出现。他不会直接告诉她危险，只会把一份泛黄的施工安全手册“遗忘”在她常去的阅览室�..."
+                    text
+                    text "5. 恐惧“被完全理解”。他的所有选择都建立在“只要没人看穿我当年的真实意图，我就能继续保住这二十年来用谎言维系的一切”之上。"
+              table_row
+                table_cell
+                  text "能力"
+                  text ":"
+                  textbox "顾堰声 能力" [ref=53396, loc=css:textarea[aria-label="顾堰声 能力"]]
+                    text "熟悉旧水工图纸、档案整理与报批程序；只能凭经验提出假说，不能凭风声准确预报汛情，不能凭水渍确定档案楼层。不会游泳，现场判断须经专业测�..."
+              table_row
+                table_cell
+                  text "动机"
+                  text ":"
+                  textbox "顾堰声 动机" [ref=53397, loc=css:textarea[aria-label="顾堰声 动机"]]
+                    text "核心欲望是“维持他所构建的理性叙事的完整性”，具体而言：他要让当年那次闸门调度在纸面上看似因水位误判而发生的“技术性灾难”，而非因他�..."
+              table_row
+                table_cell
+                  text "外貌"
+                  text ":"
+                  textbox "顾堰声 外貌" [ref=53398, loc=css:textarea[aria-label="顾堰声 外貌"]]
+                    text "中等身量，偏瘦，肩微前倾，是常年看图纸看出来的地质学式弧度。花白头发剪得很短，露出深色头皮。眉骨高，显得眼窝深陷，眼神常处于一种“正�..."
+              table_row
+                table_cell
+                  text "关系"
+                  text ":"
+                  textbox "顾堰声 关系" [ref=53399, loc=css:textarea[aria-label="顾堰声 关系"]]
+                    text "不再纯粹是许知微的“同僚长辈”或“误导者”。他仍是那面折射真相的玻璃，却从中出现了一道他本人也来不及修补的裂纹。他给出起闭机室电话未�..."
+              table_row
+                table_cell
+                  text "成长弧"
+                  text ":"
+                  textbox "顾堰声 成长弧" [ref=53400, loc=css:textarea[aria-label="顾堰声 成长弧"]]
+                    text "他仍是“正确”的执行者，坚信自己对二十年前洪水的处理方式无可指摘——封存电话断线记录、让事故在档案中“自然消失”，都是局部牺牲保全整�..."
+            button [ref=54218, loc=unstable]
+              svg_root
+              text "保存人物"
+            button "让 Agent 修改人物 顾堰声" [ref=54221, loc=css:button[aria-label="让 Agent 修改人物 顾堰声"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+            text "沈照夜"
+            text "普通退休档案员／许知微身世线索的整理者"
+            table
+              table_row
+                table_cell
+            table
+              table_row
+                table_cell
+                  text "姓名"
+                  text ":"
+                  textbox "沈照夜 姓名" [ref=53401, loc=css:input[aria-label="沈照夜 姓名"]]
+                    text "沈照夜"
+              table_row
+                table_cell
+                  text "角色定位"
+                  text ":"
+                  textbox "沈照夜 角色定位" [ref=53402, loc=css:input[aria-label="沈照夜 角色定位"]]
+                    text "普通退休档案员／许知微身世线索的整理者"
+              table_row
+                table_cell
+                  text "性格"
+                  text ":"
+                  textbox "沈照夜 性格" [ref=53403, loc=css:textarea[aria-label="沈照夜 性格"]]
+                    text "1. 档案员式的严谨——她只承认有物证的结论。凡是无法被原件、登记表、笔迹或第三方证词支持的说法，她宁可压在舌下，也不会郑重其事地说出来�..."
+                    text
+                    text "2. 整理癖的温柔——她会为故去的人整理一册纸质档案，夹入登记表、手写便签和一张旧照片。唯独不为许知微做：怕一旦立卷，许多尚未查证的事就�..."
+                    text
+                    text "3. 清醒的克制——她从不吝啬说出难听的实情，但只说有据可查的那部分，并会在说完后补一句“这是卷宗里的样子，不一定全貌”。"
+                    text
+                    text "4. 对名字的执念——她习惯用旧登记名、当年通行的称呼来指代熟人，因为这能帮助她快速检索本地旧档，也避免同名者混淆。"
+                    text
+                    text "5. 极其罕见的软弱——她无法拒绝宗亲中某个孤儿的请求，即便明知对方可能只是在利用她的退休时间。"
+              table_row
+                table_cell
+                  text "能力"
+                  text ":"
+                  textbox "沈照夜 能力" [ref=53404, loc=css:textarea[aria-label="沈照夜 能力"]]
+                    text "当前能力：无超自然能力，仅有长期档案工作积累的专业技能。"
+                    text
+                    text "- 能系统整理纸质档案，按时间、来源、人物关系等线索建立索引。"
+                    text
+                    text "- 能访询问证人，擅长从细节中捕捉口述与书面证据的相互印证点。"
+                    text
+                    text "- 能通过比对笔迹、印章、纸张及墨水痕迹辅助鉴别档案年代和真伪。"
+                    text
+                    text "局限：一切结论都有赖于残存资料；若档案佚失或证据链不全，她也只能如实说明自己所知到此为止。"
+              table_row
+                table_cell
+                  text "动机"
+                  text ":"
+                  textbox "沈照夜 动机" [ref=53405, loc=css:textarea[aria-label="沈照夜 动机"]]
+                    text "表象动机——希望赶在退休后的时间里把馆内积压旧档整编完成，为本地人物志补充可查证的底稿。真实核心驱动——她不希望任何人在档案缺失的状�..."
+              table_row
+                table_cell
+                  text "外貌"
+                  text ":"
+                  textbox "沈照夜 外貌" [ref=53406, loc=css:textarea[aria-label="沈照夜 外貌"]]
+                    text "个子不高，骨架纤细，总习惯稍稍含肩，像怕撞到门框或惊到谁。常年穿墨灰对襟便装，袖口缠着褪色的素绢，绢上以银线绣着一行极小的编号，已经�..."
+              table_row
+                table_cell
+                  text "关系"
+                  text ":"
+                  textbox "沈照夜 关系" [ref=53407, loc=css:textarea[aria-label="沈照夜 关系"]]
+                    text "沈照夜与许知微之间，已从“一面藏在谱系里的老辈看卷人”走向“可以被找上门的夜间核证人”。许知微发现页码对不上时，第一个动作是站起来迎�..."
+              table_row
+                table_cell
+                  text "成长弧"
+                  text ":"
+                  textbox "沈照夜 成长弧" [ref=53408, loc=css:textarea[aria-label="沈照夜 成长弧"]]
+                    text "沈照夜已从“只等证据齐全才开口的沉默保管者”，变成“把核查方法直接递到当事人手里的人”。她冒着雨在夜里主动去找许知微，不是泛泛地提示�..."
+            button [ref=54284, loc=unstable]
+              svg_root
+              text "保存人物"
+            button "让 Agent 修改人物 沈照夜" [ref=54287, loc=css:button[aria-label="让 Agent 修改人物 沈照夜"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+            text "方阙"
+            text "反派／对手（“秩序执行者”型对手——与许知微求“真”、顾堰声谋“利”不同，他守的是对“重演洪灾”的绝对恐惧，把伪证当作防灾的责任去执�..."
+            table
+              table_row
+                table_cell
+            table
+              table_row
+                table_cell
+                  text "姓名"
+                  text ":"
+                  textbox "方阙 姓名" [ref=53409, loc=css:input[aria-label="方阙 姓名"]]
+                    text "方阙"
+              table_row
+                table_cell
+                  text "角色定位"
+                  text ":"
+                  textbox "方阙 角色定位" [ref=53410, loc=css:input[aria-label="方阙 角色定位"]]
+                    text "反派／对手（“秩序执行者”型对手——与许知微求“真”、顾堰声谋“利”不同，他守的是对“重演洪灾”的绝对恐惧，把伪证当作防灾的责任去执�..."
+              table_row
+                table_cell
+                  text "性格"
+                  text ":"
+                  textbox "方阙 性格" [ref=53411, loc=css:textarea[aria-label="方阙 性格"]]
+                    text "1. 精密刻板：日程和工具归位十几年不变；从不说“没有”，只说“规程上没有”。桌面一尘不染，所有记录按秒计存。"
+                    text
+                    text "2. 温和而得体的压迫：从不失控，不发火，常用“我建议你走正式流程”结束谈话。他亲口说的话永远无法被当成撒谎——因为他规避问题时只背条文�..."
+                    text
+                    text "3. 以止损为旗帜的冷酷：可以亲手烧掉自己青年时期手绘的旧堤勘察图，眼都不眨；也可以替老同事“解决”一份不该存在的证词。"
+              table_row
+                table_cell
+                  text "能力"
+                  text ":"
+                  textbox "方阙 能力" [ref=53412, loc=css:textarea[aria-label="方阙 能力"]]
+                    text "当前能力：熟悉白沙流域每段堤防的隐患、每个旧施工日志的留白；熟练用流程、归档规范和“鉴定周期”合法地吞掉证据。对闸机声音有极敏锐的职�..."
+                    text
+                    text "潜力上限：若新汛到达前他掌握调度权，能在不暴露自己的前提下改变整座城市的命运——但代价是让许知微永远背上诬告之名。"
+              table_row
+                table_cell
+                  text "动机"
+                  text ":"
+                  textbox "方阙 动机" [ref=53413, loc=css:textarea[aria-label="方阙 动机"]]
+                    text "他要让“旧堤改造工程”按期完工。为此，二十年前的记录必须保持错误版本，知情者必须沉默。他以为只要工程落成，数据就能被现实覆盖，历史便�..."
+              table_row
+                table_cell
+                  text "外貌"
+                  text ":"
+                  textbox "方阙 外貌" [ref=53414, loc=css:textarea[aria-label="方阙 外貌"]]
+                    text "瘦而腰背直，常年江风使皮肤粗糙发红。常穿旧墨绿色工装，袖口卷两折。左手中指指根有一道旧钢丝绳勒出的白疤。行走时习惯微低着头，说话时双�..."
+              table_row
+                table_cell
+                  text "关系"
+                  text ":"
+                  textbox "方阙 关系" [ref=53415, loc=css:textarea[aria-label="方阙 关系"]]
+                    text "更新后的人物关系："
+              table_row
+                table_cell
+                  text "成长弧"
+                  text ":"
+                  textbox "方阙 成长弧" [ref=53416, loc=css:textarea[aria-label="方阙 成长弧"]]
+                    text "更新后的成长弧："
+            button [ref=54341, loc=unstable]
+              svg_root
+              text "保存人物"
+            button "让 Agent 修改人物 方阙" [ref=54344, loc=css:button[aria-label="让 Agent 修改人物 方阙"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+            text "唐挽柁"
+            text "配角／盟友／许知微的行动侧助手（隐藏核心秘密）"
+            table
+              table_row
+                table_cell
+            table
+              table_row
+                table_cell
+                  text "姓名"
+                  text ":"
+                  textbox "唐挽柁 姓名" [ref=53417, loc=css:input[aria-label="唐挽柁 姓名"]]
+                    text "唐挽柁"
+              table_row
+                table_cell
+                  text "角色定位"
+                  text ":"
+                  textbox "唐挽柁 角色定位" [ref=53418, loc=css:input[aria-label="唐挽柁 角色定位"]]
+                    text "配角／盟友／许知微的行动侧助手（隐藏核心秘密）"
+              table_row
+                table_cell
+                  text "性格"
+                  text ":"
+                  textbox "唐挽柁 性格" [ref=53419, loc=css:textarea[aria-label="唐挽柁 性格"]]
+                    text "- 闷：话极少，能用点头摇头就不出声。沉默不是木讷，是常年在水下工作练出的耐心——他在等鱼进笼时不呼吸也能待很久。"
+                    text
+                    text "- 精：对水流、汛峰、闸门启闭规律了如指掌，靠观察水痕就能推算出三天前的开闸高度。谈工程细节时精准如尺，但一涉及人，就用“不晓得”挡回去..."
+                    text
+                    text "- 怯（表象）：在码头被问话时会下意识低头、挪步、缩肩。这个姿态骗过了很多人，只有少数人知道那是他刻意练的“安全壳”。"
+                    text
+                    text "- 勇（内在）：汛期里救过七个人。他救人时极其冷静，不叫嚷，不出多余动作，把自己当岸上人抛出的第二根缆绳。"
+                    text
+                    text "- 自毁倾向的克制体：长期活在“我不配出声”的负罪感里，不敢争取、不敢辩白，唯独在救人时敢把命豁出去——这是他认可自己的唯一方式。"
+              table_row
+                table_cell
+                  text "能力"
+                  text ":"
+                  textbox "唐挽柁 能力" [ref=53420, loc=css:textarea[aria-label="唐挽柁 能力"]]
+                    text "有船工与潜水工作经验，水下作业必须依靠合规装备、资质与团队，不能独自深潜充当万能证据提供者；混凝土年代和调度结论需要检测与记录。"
+              table_row
+                table_cell
+                  text "动机"
+                  text ":"
+                  textbox "唐挽柁 动机" [ref=53421, loc=css:textarea[aria-label="唐挽柁 动机"]]
+                    text "核心动机是赎罪与自保的双重绞合："
+                    text
+                    text "- 表层：还二十年前欠下的“命债”。他认定父亲删改洪峰水位是帮人背锅，最终投水自尽；他认为自己当年没有发声替父亲作证，就是帮凶。"
+                    text
+                    text "- 深层：他想知道父亲到底替谁背了锅。“如果知道那个人，我就能决定继续低头，还是抬头。”——这是支撑他走到最后的驱动。"
+              table_row
+                table_cell
+                  text "外貌"
+                  text ":"
+                  textbox "唐挽柁 外貌" [ref=53422, loc=css:textarea[aria-label="唐挽柁 外貌"]]
+                    text "- 一米五八，矮而结实，背微驼，像一根被江水泡弯的老樟木棍。"
+                    text
+                    text "- 皮肤深褐偏黑，常年被风浸成粗砂质感；左眉骨上有一道从闸门钢缆擦出的白疤。"
+                    text
+                    text "- 右手比左手大半个号码，指节粗大，布满老茧与细碎裂口；食指缺半截指甲，是当年卡进绞盘留下的。"
+                    text
+                    text "- 习惯穿一件洗透的藏青色旧夹克，内兜永远别着一根不知年份的红色铅笔。"
+              table_row
+                table_cell
+                  text "关系"
+                  text ":"
+                  textbox "唐挽柁 关系" [ref=53423, loc=css:textarea[aria-label="唐挽柁 关系"]]
+                    text "盟友，但非同类："
+                    text
+                    text "- 许知微求“真话重见天日”，他在前期不过求“罪人瞑目”。两条路线在第七卷前若即若离。"
+                    text
+                    text "- 他对许知微是感激与戒备的混合体：感激她查父亲的事，戒备她查得太透会碰碎自己的“安全壳”。"
+                    text
+                    text "- 他手里有一本里正留下的老堤检修手记，记着许知微父亲失踪前最后一次夜巡的路线——这东西他藏了二十年，要到第十卷前才交出来。交出后就意味..."
+                    text
+                    text "- 他和沈照夜是一条暗线：沈照夜资助过他学潜水，他帮她照顾过旧宅，二人联手瞒着一件事——但这与许知微所求并不冲突，只是让关系更黏稠。"
+              table_row
+                table_cell
+                  text "成长弧"
+                  text ":"
+                  textbox "唐挽柁 成长弧" [ref=53424, loc=css:textarea[aria-label="唐挽柁 成长弧"]]
+                    text "起点：藏匿者，相信沉默能护人，把自己活成一座会走路的旧闸，只泄洪、不发声。"
+                    text
+                    text "终点：从“不敢开口”到“选择在公开对质时第一个说出‘是’，并在满场哗然中把里正手记拍在桌上的人。”他学会了理解父亲那句从未说出的话—�..."
+            button [ref=54419, loc=unstable]
+              svg_root
+              text "保存人物"
+            button "让 Agent 修改人物 唐挽柁" [ref=54422, loc=css:button[aria-label="让 Agent 修改人物 唐挽柁"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+            text "杜若洲"
+            text "配角／历史证人／体制内迷宫的职业向导——她不是对手，却把许知微引入最绕的路；不是盟友，却替许知微保管了最后一把锁的钥匙。"
+            table
+              table_row
+                table_cell
+            table
+              table_row
+                table_cell
+                  text "姓名"
+                  text ":"
+                  textbox "杜若洲 姓名" [ref=53425, loc=css:input[aria-label="杜若洲 姓名"]]
+                    text "杜若洲"
+              table_row
+                table_cell
+                  text "角色定位"
+                  text ":"
+                  textbox "杜若洲 角色定位" [ref=53426, loc=css:input[aria-label="杜若洲 角色定位"]]
+                    text "配角／历史证人／体制内迷宫的职业向导——她不是对手，却把许知微引入最绕的路；不是盟友，却替许知微保管了最后一把锁的钥匙。"
+              table_row
+                table_cell
+                  text "性格"
+                  text ":"
+                  textbox "杜若洲 性格" [ref=53427, loc=css:textarea[aria-label="杜若洲 性格"]]
+                    text "她像一本编排极妥帖的卷宗：封面干净，页码整齐，内容齐全，但翻阅者总找不到想找的那一页。三个特质："
+                    text
+                    text
+                    text "一、习惯性“对账”。别人追忆旧事用“我记得”，她说“按编号，那天应该在第三卷。”她从不以叙述为准，所有事都必须落到纸张编号、留痕日期�..."
+                    text
+                    text
+                    text "二、答非所问的礼貌。别人问东，她答西，答得完整详尽、笑容温和，令对方不好意思再追问。这是多年在信访与安置窗口磨出来的话术，她以此保护�..."
+                    text
+                    text
+                    text "三、对“数字缺口”的病态敏感。她接人待物只看数目是否对得上。账单、名单、赔偿金、安置人数，任何账面错误都会令她瞬间安静，像鱼线被扯断�..."
+                    text
+                    text
+                    text "独特记忆点：她永远随身带一份自己手写的“白沙灾后四十日逐日账”，从粮食调入、帐篷分配、死亡登记，到开水桶几只、饼干数错三块，事无巨细�..."
+              table_row
+                table_cell
+                  text "能力"
+                  text ":"
+                  textbox "杜若洲 能力" [ref=53428, loc=css:textarea[aria-label="杜若洲 能力"]]
+                    text "能整理跨部门档案、检索签收与安置记录，但残缺材料不保证能够复原；无法从任何残页推断全部缺失内容。"
+              table_row
+                table_cell
+                  text "动机"
+                  text ":"
+                  textbox "杜若洲 动机" [ref=53429, loc=css:textarea[aria-label="杜若洲 动机"]]
+                    text "核心动机：不让那场洪水再卷走任何人——不是肉体，而是让活着的人避免第二次“被洪水冲卷”的记忆重创。杜若洲十七岁的妹妹死于灾后安置点的�..."
+              table_row
+                table_cell
+                  text "外貌"
+                  text ":"
+                  textbox "杜若洲 外貌" [ref=53430, loc=css:textarea[aria-label="杜若洲 外貌"]]
+                    text "高而瘦，圆脸，头发挽得很低，一丝碎发都不出。常年穿灰色或米色半袖衬衫，衣领扣到最上一粒，袖口平整，像随时准备上台念通知的人。细看，右�..."
+              table_row
+                table_cell
+                  text "关系"
+                  text ":"
+                  textbox "杜若洲 关系" [ref=53431, loc=css:textarea[aria-label="杜若洲 关系"]]
+                    text "间接引路人与灰色纵容者。杜若洲是许知微在档案馆查证的必经关卡，她最初以娴熟的“抽屉规则”和“编号口径”将许知微的每一次查阅引向其他卷�..."
+              table_row
+                table_cell
+                  text "成长弧"
+                  text ":"
+                  textbox "杜若洲 成长弧" [ref=53432, loc=css:textarea[aria-label="杜若洲 成长弧"]]
+                    text "起点：把“真相”看作一笔需要精算抵押品的债务，以完善档案来不断“销账”。"
+                    text
+                    text "终点：承认妹妹的名字被划掉的一刻不是档案录入错误，而是一次真实、具体的疏忽——她签下作为知情人的证言，亲手将“二十四年前的自己”从账�..."
+            button [ref=54484, loc=unstable]
+              svg_root
+              text "保存人物"
+            button "让 Agent 修改人物 杜若洲" [ref=54487, loc=css:button[aria-label="让 Agent 修改人物 杜若洲"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+            text "岑半潮"
+            text "配角／亦敌亦友的码头掮客——游走于许知微与顾堰声两边，信息两头卖，谁都不真正效忠。"
+            table
+              table_row
+                table_cell
+            table
+              table_row
+                table_cell
+                  text "姓名"
+                  text ":"
+                  textbox "岑半潮 姓名" [ref=53433, loc=css:input[aria-label="岑半潮 姓名"]]
+                    text "岑半潮"
+              table_row
+                table_cell
+                  text "角色定位"
+                  text ":"
+                  textbox "岑半潮 角色定位" [ref=53434, loc=css:input[aria-label="岑半潮 角色定位"]]
+                    text "配角／亦敌亦友的码头掮客——游走于许知微与顾堰声两边，信息两头卖，谁都不真正效忠。"
+              table_row
+                table_cell
+                  text "性格"
+                  text ":"
+                  textbox "岑半潮 性格" [ref=53435, loc=css:textarea[aria-label="岑半潮 性格"]]
+                    text "- 市井精明：办任何事先谈“价”，不做亏本买卖，但也不赶尽杀绝，总是留半条退路给对方，这是他在码头活到今天的规矩。"
+                    text
+                    text "- 分寸感极强：说话永远带三分笑，称呼人从不大声，但每句话都在掂量对方的底牌。"
+                    text
+                    text "- 对“欠下的命”有隐秘执念：平日里最忌讳谈论死在水里的人，年纪越大越信“水会记账”。"
+                    text
+                    text "- 重利却不贪得无厌：顾堰声开高价让他彻底倒向一方，他却始终不接满，只肯收“半份钱”，保持进退空间。"
+              table_row
+                table_cell
+                  text "能力"
+                  text ":"
+                  textbox "岑半潮 能力" [ref=53436, loc=css:textarea[aria-label="岑半潮 能力"]]
+                    text "熟悉旧码头和部分河道，经验估计存在误差且河床会变化，必须结合现行测量；不能成为全知的水下地图。"
+              table_row
+                table_cell
+                  text "动机"
+                  text ":"
+                  textbox "岑半潮 动机" [ref=53437, loc=css:textarea[aria-label="岑半潮 动机"]]
+                    text "两个层次：表层——趁旧堤拆迁前把手里压在岸上的货出清、多得一笔赔偿；底层——还一笔二十多年前的“水债”，当年因他卖给救援队一批劣质防�..."
+              table_row
+                table_cell
+                  text "外貌"
+                  text ":"
+                  textbox "岑半潮 外貌" [ref=53438, loc=css:textarea[aria-label="岑半潮 外貌"]]
+                    text "矮壮结实，一张常年晒成紫铜色的脸，眼白分明；穿藏蓝粗布工装，右手腕套着一串五把锈钥匙（历年在水里捞的、找不到主人），走起路来叮当响。"
+              table_row
+                table_cell
+                  text "关系"
+                  text ":"
+                  textbox "岑半潮 关系" [ref=53439, loc=css:textarea[aria-label="岑半潮 关系"]]
+                    text "许知微查明父亲事件牵扯到顾堰声的物资渠道后，经人指点找到岑半潮“问水路”。岑供给许真消息，同一份情报也卖给顾堰声那边。他是许的线人，�..."
+              table_row
+                table_cell
+                  text "成长弧"
+                  text ":"
+                  textbox "岑半潮 成长弧" [ref=53440, loc=css:textarea[aria-label="岑半潮 成长弧"]]
+                    text "起点：一个只信行价、不亏本的老码头掮客。中段：当许把“半潮叔”这句外人还当称号叫的时候，水底那桩旧债和现案流向开始重合——他欠的那条�..."
+            button [ref=54541, loc=unstable]
+              svg_root
+              text "保存人物"
+            button "让 Agent 修改人物 岑半潮" [ref=54544, loc=css:button[aria-label="让 Agent 修改人物 岑半潮"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+            text "姜隔川"
+            text "配角·旧城日常层底景人物——不推主线、不掌关键证据，却是主角进入老街区时的街巷活地图，也是各条线索人物旧日生活的共同背景板。"
+            table
+              table_row
+                table_cell
+            table
+              table_row
+                table_cell
+                  text "姓名"
+                  text ":"
+                  textbox "姜隔川 姓名" [ref=53441, loc=css:input[aria-label="姜隔川 姓名"]]
+                    text "姜隔川"
+              table_row
+                table_cell
+                  text "角色定位"
+                  text ":"
+                  textbox "姜隔川 角色定位" [ref=53442, loc=css:input[aria-label="姜隔川 角色定位"]]
+                    text "配角·旧城日常层底景人物——不推主线、不掌关键证据，却是主角进入老街区时的街巷活地图，也是各条线索人物旧日生活的共同背景板。"
+              table_row
+                table_cell
+                  text "性格"
+                  text ":"
+                  textbox "姜隔川 性格" [ref=53443, loc=css:textarea[aria-label="姜隔川 性格"]]
+                    text "1. 记账型记忆，不动声色。他记性极好且以“物件”为索引：谁家何时换过锁、哪条驳船哪年改漆、哪道闸口当年加焊了几颗铆钉，都装在心里。但他�..."
+                    text
+                    text
+                    text "2. 守物如守人。铺面最里头一张老木台，摆一尊缺了手指的瓷财神、一个黄铜顶针、一块看不出年份的船名牌，旁人来看都是破烂，只有他自己知道那�..."
+                    text
+                    text
+                    text "3. 有水必避的隐痛。他开修车摊，兼补轮胎、焊铁件，岸上的活计样样利索，唯独从不下水，连码头栈桥都不踩上去。每逢涨水季节便话少，坐在门口�..."
+                    text
+                    text
+                    text "4. 慢热但待小辈体恤。对陌生人与公家人提防多话，对街坊孩子很宽厚。许知微儿时常在他铺前等父亲寄放的自行车，他会塞给小孩一块姜糖，并不攀�..."
+              table_row
+                table_cell
+                  text "能力"
+                  text ":"
+                  textbox "姜隔川 能力" [ref=53444, loc=css:textarea[aria-label="姜隔川 能力"]]
+                    text "有维修经验并熟悉老街区，可提出机件年代和道路变迁的线索，结论须用铭牌、出厂记录、图纸及现场核验验证。"
+              table_row
+                table_cell
+                  text "动机"
+                  text ":"
+                  textbox "姜隔川 动机" [ref=53445, loc=css:textarea[aria-label="姜隔川 动机"]]
+                    text "表层动机：把铺面守到拆迁最后一天，把收到的物件归还原主，把欠下的“人情账”一笔笔还清。"
+                    text
+                    text "深层动机：二十年前洪灾中，他因怕水未能参与一线救援，在岸上仅做了搬运和看管物资的事。他存一柜子杂物、修一柜子旧物，实则是在等一个机会�..."
+              table_row
+                table_cell
+                  text "外貌"
+                  text ":"
+                  textbox "姜隔川 外貌" [ref=53446, loc=css:textarea[aria-label="姜隔川 外貌"]]
+                    text "个头不高，背微驼，常年穿一件洗得发白的深蓝工作服，袖口卷到小臂。双手骨节粗大，虎口有深浅不一的油痕，洗不净。头发花白，剪得很短，露出�..."
+              table_row
+                table_cell
+                  text "关系"
+                  text ":"
+                  textbox "姜隔川 关系" [ref=53447, loc=css:textarea[aria-label="姜隔川 关系"]]
+                    text "许知微与他之间，从“旧街坊中的引路星”往前迈了半格：他已成为她线索推进中一张“主动翻页的索引”。他替许知微指了方向，撕掉了她贴错的标�..."
+              table_row
+                table_cell
+                  text "成长弧"
+                  text ":"
+                  textbox "姜隔川 成长弧" [ref=53448, loc=css:textarea[aria-label="姜隔川 成长弧"]]
+                    text "起点未变——一个守着铺子、怕水、怕变动、只以物件维系旧关系的老人。近期变化在于：他不再只是被动地被许知微问上门、给出一两个“看东西的�..."
+            button [ref=54603, loc=unstable]
+              svg_root
+              text "保存人物"
+            button "让 Agent 修改人物 姜隔川" [ref=54606, loc=css:button[aria-label="让 Agent 修改人物 姜隔川"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+            text "周泊"
+            text "核心配角·船工与调查伙伴"
+            table
+              table_row
+                table_cell
+            table
+              table_row
+                table_cell
+                  text "姓名"
+                  text ":"
+                  textbox "周泊 姓名" [ref=53449, loc=css:input[aria-label="周泊 姓名"]]
+                    text "周泊"
+              table_row
+                table_cell
+                  text "角色定位"
+                  text ":"
+                  textbox "周泊 角色定位" [ref=53450, loc=css:input[aria-label="周泊 角色定位"]]
+                    text "核心配角·船工与调查伙伴"
+              table_row
+                table_cell
+                  text "性格"
+                  text ":"
+                  textbox "周泊 性格" [ref=53451, loc=css:textarea[aria-label="周泊 性格"]]
+                    text "寡言、重诺、护短，对外来调查保持戒心。"
+              table_row
+                table_cell
+                  text "能力"
+                  text ":"
+                  textbox "周泊 能力" [ref=53452, loc=css:textarea[aria-label="周泊 能力"]]
+                    text "44岁，左耳全聋。熟悉河道、航行和救援协作，判断需要图纸、仪器或多人观察核实，不能听水定位。"
+              table_row
+                table_cell
+                  text "动机"
+                  text ":"
+                  textbox "周泊 动机" [ref=53453, loc=css:textarea[aria-label="周泊 动机"]]
+                    text "保护当年被救者与今日沿岸居民，不愿真相变成对普通人的二次伤害。"
+              table_row
+                table_cell
+                  text "外貌"
+                  text ":"
+                  textbox "周泊 外貌" [ref=53454, loc=css:textarea[aria-label="周泊 外貌"]]
+                    text "结实偏瘦，右臂旧疤，常穿耐磨船工外套，谈话会把右耳朝向对方。"
+              table_row
+                table_cell
+                  text "关系"
+                  text ":"
+                  textbox "周泊 关系" [ref=53455, loc=css:textarea[aria-label="周泊 关系"]]
+                    text "与许知微的协作明显加深：许带图上门共读，两人形成真正意义上的“看图纸一个看水面”的专业互补，许已不需要解释背景，周泊直接给出关键判断�..."
+              table_row
+                table_cell
+                  text "成长弧"
+                  text ":"
+                  textbox "周泊 成长弧" [ref=53456, loc=css:textarea[aria-label="周泊 成长弧"]]
+                    text "从“在明确保护边界后提供证词、承担现实风险”的被动协助者，转变为“以自身经验主动参与调查、并决定亲身涉险”的行动者。他不再停留于回答�..."
+            button [ref=54653, loc=unstable]
+              svg_root
+              text "保存人物"
+            button "让 Agent 修改人物 周泊" [ref=54656, loc=css:button[aria-label="让 Agent 修改人物 周泊"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+            text "陆衡"
+            text "核心配角·恩人与责任调查对象"
+            table
+              table_row
+                table_cell
+            table
+              table_row
+                table_cell
+                  text "姓名"
+                  text ":"
+                  textbox "陆衡 姓名" [ref=53457, loc=css:input[aria-label="陆衡 姓名"]]
+                    text "陆衡"
+              table_row
+                table_cell
+                  text "角色定位"
+                  text ":"
+                  textbox "陆衡 角色定位" [ref=53458, loc=css:input[aria-label="陆衡 角色定位"]]
+                    text "核心配角·恩人与责任调查对象"
+              table_row
+                table_cell
+                  text "性格"
+                  text ":"
+                  textbox "陆衡 性格" [ref=53459, loc=css:textarea[aria-label="陆衡 性格"]]
+                    text "温和周到，习惯用程序与报表控制风险，面对旧责任会回避。"
+              table_row
+                table_cell
+                  text "能力"
+                  text ":"
+                  textbox "陆衡 能力" [ref=53460, loc=css:textarea[aria-label="陆衡 能力"]]
+                    text "52岁水利副局长，熟悉工程与调度程序，专业判断同样可能出错；无超能力。"
+              table_row
+                table_cell
+                  text "动机"
+                  text ":"
+                  textbox "陆衡 动机" [ref=53461, loc=css:textarea[aria-label="陆衡 动机"]]
+                    text "推动堤防改造并保护自身名誉，在防汛责任与旧案真相之间反复选择。"
+              table_row
+                table_cell
+                  text "外貌"
+                  text ":"
+                  textbox "陆衡 外貌" [ref=53462, loc=css:textarea[aria-label="陆衡 外貌"]]
+                    text "短发，常穿浅色衬衣，左膝旧伤，雨天走路略慢。"
+              table_row
+                table_cell
+                  text "关系"
+                  text ":"
+                  textbox "陆衡 关系" [ref=53463, loc=css:textarea[aria-label="陆衡 关系"]]
+                    text "与许知微：从“救过的孩子”发展为隔着办公桌对峙的核实者与被核实者。他主动唤醒共同记忆，用亲历细节证明自己有资格评价她的性格，以长辈式�..."
+              table_row
+                table_cell
+                  text "成长弧"
+                  text ":"
+                  textbox "陆衡 成长弧" [ref=53464, loc=css:textarea[aria-label="陆衡 成长弧"]]
+                    text "陆衡已从“用救援结果解释一切记录改动”的封闭立场，转入主动开放档案、承认旧日个人关联的新阶段。他不再回避提及2005年7月16日的具体细节——�..."
+            button [ref=54703, loc=unstable]
+              svg_root
+              text "保存人物"
+            button "让 Agent 修改人物 陆衡" [ref=54706, loc=css:button[aria-label="让 Agent 修改人物 陆衡"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+            text "吕艳秋"
+            text "配角/盟友"
+            table
+              table_row
+                table_cell
+            table
+              table_row
+                table_cell
+                  text "姓名"
+                  text ":"
+                  textbox "吕艳秋 姓名" [ref=53465, loc=css:input[aria-label="吕艳秋 姓名"]]
+                    text "吕艳秋"
+              table_row
+                table_cell
+                  text "角色定位"
+                  text ":"
+                  textbox "吕艳秋 角色定位" [ref=53466, loc=css:input[aria-label="吕艳秋 角色定位"]]
+                    text "配角/盟友"
+              table_row
+                table_cell
+                  text "性格"
+                  text ":"
+                  textbox "吕艳秋 性格" [ref=53467, loc=css:textarea[aria-label="吕艳秋 性格"]]
+                    text "- 寡言谨慎：看见许知微蹲着查看那截缆绳，目光顿了又停，嘴唇动了动，终究没提那绳子的事，也不问缘由"
+              table_row
+                table_cell
+                  text "能力"
+                  text ":"
+                  textbox "吕艳秋 能力" [ref=53468, loc=css:textarea[aria-label="吕艳秋 能力"]]
+                    text "- 经营通勤船，兼收废铁——能在废旧物资夹层里翻出被时间掩埋的纸件并认出其可能的价值"
+              table_row
+                table_cell
+                  text "动机"
+                  text ":"
+                  textbox "吕艳秋 动机" [ref=53469, loc=css:textarea[aria-label="吕艳秋 动机"]]
+                    text "- 不追是非，只求该留的纸片别烂在自己手里；等可靠人来了就递出去"
+              table_row
+                table_cell
+                  text "外貌"
+                  text ":"
+                  textbox "吕艳秋 外貌" [ref=53470, loc=css:textarea[aria-label="吕艳秋 外貌"]]
+                    text "- 包着头巾，侧身挤门而入"
+              table_row
+                table_cell
+                  text "关系"
+                  text ":"
+                  textbox "吕艳秋 关系" [ref=53471, loc=css:textarea[aria-label="吕艳秋 关系"]]
+                    text "与许知微：从“被点明身份后才接受其正当性”的疏淡关系，发展为有默契的交接搭档。她不再需要姜隔川从旁提示来确认许知微的权限，已能自然地�..."
+              table_row
+                table_cell
+                  text "成长弧"
+                  text ":"
+                  textbox "吕艳秋 成长弧" [ref=53472, loc=css:textarea[aria-label="吕艳秋 成长弧"]]
+                    text "从“被动等待他人来辨识物件价值”转变为“主动留存、清理、护持水底旧物，并向制度性档案渠道交付”。她不再仅是在姜隔川面前拿出压舱纸片，�..."
+            button [ref=54753, loc=unstable]
+              svg_root
+              text "保存人物"
+            button "让 Agent 修改人物 吕艳秋" [ref=54756, loc=css:button[aria-label="让 Agent 修改人物 吕艳秋"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+            text "顾小囡"
+            text "配角（以档案记录形式出现，未直接登场）"
+            table
+              table_row
+                table_cell
+            table
+              table_row
+                table_cell
+                  text "姓名"
+                  text ":"
+                  textbox "顾小囡 姓名" [ref=53473, loc=css:input[aria-label="顾小囡 姓名"]]
+                    text "顾小囡"
+              table_row
+                table_cell
+                  text "角色定位"
+                  text ":"
+                  textbox "顾小囡 角色定位" [ref=53474, loc=css:input[aria-label="顾小囡 角色定位"]]
+                    text "配角（以档案记录形式出现，未直接登场）"
+              table_row
+                table_cell
+                  text "性格"
+                  text ":"
+                  textbox "顾小囡 性格" [ref=53475, loc=css:textarea[aria-label="顾小囡 性格"]]
+                    text "无法直接判断。仅能从其父顾堰声书写字迹“急急收笔”推测其身世仓促，而“夭”字备注暗示幼年早亡，无具体性格描写。"
+              table_row
+                table_cell
+                  text "能力"
+                  text ":"
+                  textbox "顾小囡 能力" [ref=53476, loc=css:textarea[aria-label="顾小囡 能力"]]
+                    text "无。正文中仅呈现为档案条目，未展示任何行动或技能。"
+              table_row
+                table_cell
+                  text "动机"
+                  text ":"
+                  textbox "顾小囡 动机" [ref=53477, loc=css:textarea[aria-label="顾小囡 动机"]]
+                    text "无。作为逝者，不具备驱动故事的行为动机。"
+              table_row
+                table_cell
+                  text "外貌"
+                  text ":"
+                  textbox "顾小囡 外貌" [ref=53478, loc=css:textarea[aria-label="顾小囡 外貌"]]
+                    text "无描写。仅知为女童，死亡年龄未明（“夭”通常指未成年）。"
+              table_row
+                table_cell
+                  text "关系"
+                  text ":"
+                  textbox "顾小囡 关系" [ref=53479, loc=css:textarea[aria-label="顾小囡 关系"]]
+                    text "与父亲顾堰声：父女关系，且因死亡而永久定格。近期章节中，档案上“顾堰声之女”的记载与“顾小囡”之名并置，“姓写得很重，名字后两个字却�..."
+              table_row
+                table_cell
+                  text "成长弧"
+                  text ":"
+                  textbox "顾小囡 成长弧" [ref=53480, loc=css:textarea[aria-label="顾小囡 成长弧"]]
+                    text "无。角色已殁于一九七一年汛期，近期章节仍未呈现其生前的成长轨迹，仅通过病册条目侧面确认其死亡事实与“夭”的定性，未发生任何成长层面的�..."
+            button [ref=54803, loc=unstable]
+              svg_root
+              text "保存人物"
+            button "让 Agent 修改人物 顾小囡" [ref=54806, loc=css:button[aria-label="让 Agent 修改人物 顾小囡"]]
+              text "让 Agent 修改"
+            table
+              table_row
+                table_cell
+            text "许敬川"
+            text "配角（以“已故／失踪的关键当事人”身份存在于回溯线索中）"
+            table
+              table_row
+                table_cell
+            table
+              table_row
+                table_cell
+                  text "姓名"
+                  text ":"
+                  textbox "许敬川 姓名" [ref=53481, loc=css:input[aria-label="许敬川 姓名"]]
+                    text "许敬川"
+              table_row
+                table_cell
+                  text "角色定位"
+                  text ":"
+                  textbox "许敬川 角色定位" [ref=53482, loc=css:input[aria-label="许敬川 角色定位"]]
+                    text "配角（以“已故／失踪的关键当事人”身份存在于回溯线索中）"
+              table_row
+                table_cell
+                  text "性格"
+                  text ":"
+                  textbox "许敬川 性格" [ref=53483, loc=css:textarea[aria-label="许敬川 性格"]]
+                    text "缜密克制、惜字如金、行事留痕却极轻、具有高度职业自律、深藏不露的布局者"
+              table_row
+                table_cell
+                  text "能力"
+                  text ":"
+                  textbox "许敬川 能力" [ref=53484, loc=css:textarea[aria-label="许敬川 能力"]]
+                    text "精通机械钟表机芯的拆卸、调校与复原；能通过调整钟摆铅坠改变走时误差（拆下铅块可使钟慢约两个时辰）；熟悉水闸调度室设备与维修记录格式；�..."
+              table_row
+                table_cell
+                  text "动机"
+                  text ":"
+                  textbox "许敬川 动机" [ref=53485, loc=css:textarea[aria-label="许敬川 动机"]]
+                    text "推断：他所做的“2005年7月15日机件调校”，与7月16日夜第一批水抵达下游的时间记录存在直接关联；他有意通过调钟手段在官方时间记录中制造错位或�..."
+              table_row
+                table_cell
+                  text "外貌"
+                  text ":"
+                  textbox "许敬川 外貌" [ref=53486, loc=css:textarea[aria-label="许敬川 外貌"]]
+                    text "正文中无外貌描写，仅留下在维修记录上的签名与该签名所体现的书写特征：竖钩正直、不带回锋，落笔利落，不属于铺张外露之人。"
+              table_row
+                table_cell
+                  text "关系"
+                  text ":"
+                  textbox "许敬川 关系" [ref=53487, loc=css:textarea[aria-label="许敬川 关系"]]
+                    text "许知微：父女关系，其遗留的笔迹与维修记录成为许知微追查旧案的关键线索。女儿通过“查水的人”间接与他的过去相撞。陆衡：旧识，至少熟悉其�..."
+              table_row
+                table_cell
+                  text "成长弧"
+                  text ":"
+                  textbox "许敬川 成长弧" [ref=53488, loc=css:textarea[aria-label="许敬川 成长弧"]]
+                    text "本段落内不构成完整成长弧。许敬川始终以“记录中的名字”出现，其状态是从一纸常规维修签名，随调查推进逐渐浮现为旧案时间链上的关键齿轮；�..."
+            button [ref=54853, loc=unstable]
+              svg_root
+              text "保存人物"
+            button "让 Agent 修改人物 许敬川" [ref=54856, loc=css:button[aria-label="让 Agent 修改人物 许敬川"]]
+              text "让 Agent 修改"
+            heading
+              text "📜 真典"
+            textbox [ref=53489, loc=css:input[placeholder="新增铁律，如：嘉靖年间不得出现望远镜"]]
+              text "新增铁律，如：嘉靖年间不得出现望远镜"
+              container
+            button [ref=54862, loc=unstable]
+              text "添 加"
+            unordered_list
+              list_item
+                text "WORLD_RULE"
+                text "白沙城"
+                textbox [ref=53490, loc=unstable]
+                  text "【HUMAN_PATCH】长江下游支流与海潮交汇，江水半咸，受潮汐顶托，老城坐落在低于河面的低洼冲积地上，全靠一线旧堤“白砂埭”圈住。城与水之间有南..."
+                unordered_list
+                  list_item
+                    button [ref=54872, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=54875, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "人补丁"
+                textbox [ref=53491, loc=unstable]
+                  text "【HUMAN_PATCH】城市正式名称为白沙城；许知微与周泊没有超能力，周泊的单耳听力损伤持续影响其行动。"
+                unordered_list
+                  list_item
+                    button [ref=54884, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=54887, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "沈照夜"
+                textbox [ref=53492, loc=unstable]
+                  text "【HUMAN_PATCH】角色：普通退休档案员／许知微身世线索的整理者；性格：1. 档案员式的严谨——她只承认有物证的结论。凡是无法被原件、登记表、笔迹..."
+                  text
+                  text "2. 整理癖的温柔——她会为故去的人整理一册纸质档案，夹入登记表、手写便签和一张旧照片。唯独不为许知微做：怕一旦立卷，许多尚未查证的事就�..."
+                  text
+                  text "3. 清醒的克制——她从不吝啬说出难听的实情，但只说有据可查的那部分，并会在说完后补一句“这是卷宗里的样子，不一定全貌”。"
+                  text
+                  text "4. 对名字的执念——她习惯用旧登记名、当年通行的称呼来指代熟人，因为这能帮助她快速检索本地旧档，也避免同名者混淆。"
+                  text
+                  text "5. 极其罕见的软弱——她无法拒绝宗亲中某个孤儿的请求，即便明知对方可能只是在利用她的退休时间。；能力/境界：当前能力：无超自然能力，仅有�..."
+                  text
+                  text "- 能系统整理纸质档案，按时间、来源、人物关系等线索建立索引。"
+                  text
+                  text "- 能访询问证人，擅长从细节中捕捉口述与书面证据的相互印证点。"
+                  text
+                  text "- 能通过比对笔迹、印章、纸张及墨水痕迹辅助鉴别档案年代和真伪。"
+                  text
+                  text "局限：一切结论都有赖于残存资料；若档案佚失或证据链不全，她也只能如实说明自己所知到此为止。；动机：表象动机——希望赶在退休后的时间里�..."
+                unordered_list
+                  list_item
+                    button [ref=54912, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=54915, loc=unstable]
+                      text "废止"
+              list_item
+                text "RELATIONSHIP_STATE"
+                text "沈照夜"
+                textbox [ref=53493, loc=unstable]
+                  text "【HUMAN_PATCH】血亲——她是许知微名义上的姑祖母，终生未婚，在宗谱里曾作为许知微一脉归宗时的证明人。实际关系远比谱系复杂：她是许知微身世线..."
+                unordered_list
+                  list_item
+                    button [ref=54924, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=54927, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "总纲"
+                textbox [ref=53494, loc=unstable]
+                  text "【HUMAN_PATCH】《潮痕档案》作者修订总纲。全书200章，8卷，每卷25章。严格现实主义、第三人称限知。故事发生于2025年，旧洪灾为2005年7月16日。白沙城�..."
+                  text
+                  text "主角许知微是28岁水文档案员。周泊44岁、左耳全聋，靠船工经验与可核验记录协助调查，听障持续带来行动限制。陆衡52岁水利副局长，救过许知微，�..."
+                  text
+                  text "核心真相：2005年上游口头预排令未按规定留痕，陆衡在后续险情中自行开闸，事后倒填时间以遮掩上游指令缺位与下游撤离迟滞。许父许敬川发现记录�..."
+                  text
+                  text "三条核心线索：缺页水文簿证明记录事后被抽换；铜牌日期为7月15日，来自汛前预备抢险制作，与7月16日才启动的公开记录冲突，须与采购、模具和签�..."
+                  text
+                  text "卷1【档案异常】第1—25章：移交档案、缺页、水位异常、铜牌初现、周泊与陆衡登场。结束时证明一份记录被事后替换，仅锁定程序异常，不提前破案�..."
+                  text
+                  text "卷2【旧城证人】第26—50章：三组普通人的证词相互冲突，实地核对高程、照明与报时，厘清共同经历，保护首位愿公开作证者。铜牌签领记录指向预先..."
+                  text
+                  text "卷3【上游调查】第51—75章：追查青瓦湖调度、降雨与电话记录，发现未落纸的预排令。取得经多来源验证的时间差，许知微的调查权限被收回。"
+                  text
+                  text "卷4【工程利益】第76—100章：检验旧堤拆迁、蓝线调整和安置利益。证据保全与居民生计冲突，团队因公开范围分裂；找到连接旧案与当前工程的责任�..."
+                  text
+                  text "卷5【证据反噬】第101—125章：关键材料真伪遭质疑，合法来源和保管链经受审查。以原卷页码、材质、签收与第三方记录排除伪造，承認己方推理错误�..."
+                  text
+                  text "卷6【群像抉择】第126—150章：核实许父2005—2007年轨迹及病逝，解释未归原因而不替他洗白；普通证人、陆衡和顾堰声各做代价明确的选择，三条核心�..."
+                  text
+                  text "卷7【新汛危机】第151—175章：新洪水检验旧调度制度，主角以事前证据争取提前撤离，救援服从专业指挥，不拿群众安全做实验。周泊听障导致行动险�..."
+                  text
+                  text "卷8【公开对质】第176—200章：按既有证据逐步公开，交叉质询与独立复核，明确每人责任、保护普通居民正当利益。父亲去向、缺页、铜牌日期及三次�..."
+                  text
+                  text "每卷需有独立的小闭环、主线进展与人物代价。所有章号连续，章标题2至10字、梗概独立。禁止重复查账拖延、全知切镜和不可核验的专业断言。"
+                unordered_list
+                  list_item
+                    button [ref=54960, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=54963, loc=unstable]
+                      text "废止"
+              list_item
+                text "RELATIONSHIP_STATE"
+                text "许知微"
+                textbox [ref=53495, loc=unstable]
+                  text "【HUMAN_PATCH】周泊是有边界的调查伙伴；陆衡既是救命恩人又是被核查者；沈照夜提供有限档案协助；姑母抚养她长大。"
+                unordered_list
+                  list_item
+                    button [ref=54972, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=54975, loc=unstable]
+                      text "废止"
+              list_item
+                text "RELATIONSHIP_STATE"
+                text "周泊"
+                textbox [ref=53496, loc=unstable]
+                  text "【HUMAN_PATCH】许知微的调查伙伴，无感情线；认识陆衡与旧船民，但不替任何人保证清白。"
+                unordered_list
+                  list_item
+                    button [ref=54984, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=54987, loc=unstable]
+                      text "废止"
+              list_item
+                text "RELATIONSHIP_STATE"
+                text "陆衡"
+                textbox [ref=53497, loc=unstable]
+                  text "【HUMAN_PATCH】救过幼年许知微，2005年曾任林溪闸技术员；与顾堰声共同经手灾后整理，对周泊等救援者负有旧债。"
+                unordered_list
+                  list_item
+                    button [ref=54996, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=54999, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "顾堰声"
+                textbox [ref=53498, loc=unstable]
+                  text "【HUMAN_PATCH】角色：配角 / 深层对手（非终极反派，但贯穿全书的灰色对立者）；性格：1. 寡言而善于倾听。在饭桌上永远最后一个放下筷子，在会议上..."
+                  text
+                  text "2. 自我道德感极强，却不断自认“做过脏事”。他从不标榜奉献，只是每年清明都会独自去白沙老闸口站一刻钟。熟人问起，只说“透口气”。"
+                  text
+                  text "3. 对“记忆”近乎偏执的守护。随身带着一只牛皮面笔记本，不记工作，只记河流的呓语——某年某月的水色、气味、闸门下泡沫的形状。他认为河水�..."
+                  text
+                  text "4. 对许知微有隐蔽的爱护之心，但这种爱护以“试探”面目出现。他不会直接告诉她危险，只会把一份泛黄的施工安全手册“遗忘”在她常去的阅览室�..."
+                  text
+                  text "5. 恐惧“被完全理解”。他的所有选择都建立在“只要没人看穿我当年的真实意图，我就能继续保住这二十年来用谎言维系的一切”之上。；能力/境界�..."
+                unordered_list
+                  list_item
+                    button [ref=55016, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55019, loc=unstable]
+                      text "废止"
+              list_item
+                text "RELATIONSHIP_STATE"
+                text "顾堰声"
+                textbox [ref=53499, loc=unstable]
+                  text "【HUMAN_PATCH】名义上的“长辈同僚”——他是许知微父亲当年在水文站的老同事。表面上：多次在她问询时给出简短而精确的技术解答，甚至帮她指认过..."
+                unordered_list
+                  list_item
+                    button [ref=55028, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55031, loc=unstable]
+                      text "废止"
+              list_item
+                text "RELATIONSHIP_STATE"
+                text "唐挽柁"
+                textbox [ref=53500, loc=unstable]
+                  text "【HUMAN_PATCH】盟友，但非同类："
+                  text
+                  text "- 许知微求“真话重见天日”，他在前期不过求“罪人瞑目”。两条路线在第七卷前若即若离。"
+                  text
+                  text "- 他对许知微是感激与戒备的混合体：感激她查父亲的事，戒备她查得太透会碰碎自己的“安全壳”。"
+                  text
+                  text "- 他手里有一本里正留下的老堤检修手记，记着许知微父亲失踪前最后一次夜巡的路线——这东西他藏了二十年，要到第十卷前才交出来。交出后就意味..."
+                  text
+                  text "- 他和沈照夜是一条暗线：沈照夜资助过他学潜水，他帮她照顾过旧宅，二人联手瞒着一件事——但这与许知微所求并不冲突，只是让关系更黏稠。"
+                unordered_list
+                  list_item
+                    button [ref=55048, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55051, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "杜若洲"
+                textbox [ref=53501, loc=unstable]
+                  text "【HUMAN_PATCH】角色：配角／历史证人／体制内迷宫的职业向导——她不是对手，却把许知微引入最绕的路；不是盟友，却替许知微保管了最后一把锁的钥..."
+                  text
+                  text
+                  text "一、习惯性“对账”。别人追忆旧事用“我记得”，她说“按编号，那天应该在第三卷。”她从不以叙述为准，所有事都必须落到纸张编号、留痕日期�..."
+                  text
+                  text
+                  text "二、答非所问的礼貌。别人问东，她答西，答得完整详尽、笑容温和，令对方不好意思再追问。这是多年在信访与安置窗口磨出来的话术，她以此保护�..."
+                  text
+                  text
+                  text "三、对“数字缺口”的病态敏感。她接人待物只看数目是否对得上。账单、名单、赔偿金、安置人数，任何账面错误都会令她瞬间安静，像鱼线被扯断�..."
+                  text
+                  text
+                  text "独特记忆点：她永远随身带一份自己手写的“白沙灾后四十日逐日账”，从粮食调入、帐篷分配、死亡登记，到开水桶几只、饼干数错三块，事无巨细�..."
+                  text
+                  text "终点：承认妹妹的名字被划掉的一刻不是档案录入错误，而是一次真实、具体的疏忽——她签下作为知情人的证言，亲手将“二十四年前的自己”从账�..."
+                unordered_list
+                  list_item
+                    button [ref=55074, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55077, loc=unstable]
+                      text "废止"
+              list_item
+                text "RELATIONSHIP_STATE"
+                text "杜若洲"
+                textbox [ref=53502, loc=unstable]
+                  text "【HUMAN_PATCH】间接引路人与灰色纵容者。杜若洲是许知微在档案馆查证的必经关卡，她最初以娴熟的“抽屉规则”和“编号口径”将许知微的每一次查阅..."
+                unordered_list
+                  list_item
+                    button [ref=55086, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55089, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "岑半潮"
+                textbox [ref=53503, loc=unstable]
+                  text "【HUMAN_PATCH】角色：配角／亦敌亦友的码头掮客——游走于许知微与顾堰声两边，信息两头卖，谁都不真正效忠。；性格：- 市井精明：办任何事先谈“�..."
+                  text
+                  text "- 分寸感极强：说话永远带三分笑，称呼人从不大声，但每句话都在掂量对方的底牌。"
+                  text
+                  text "- 对“欠下的命”有隐秘执念：平日里最忌讳谈论死在水里的人，年纪越大越信“水会记账”。"
+                  text
+                  text "- 重利却不贪得无厌：顾堰声开高价让他彻底倒向一方，他却始终不接满，只肯收“半份钱”，保持进退空间。；能力/境界：熟悉旧码头和部分河道，�..."
+                unordered_list
+                  list_item
+                    button [ref=55104, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55107, loc=unstable]
+                      text "废止"
+              list_item
+                text "RELATIONSHIP_STATE"
+                text "岑半潮"
+                textbox [ref=53504, loc=unstable]
+                  text "【HUMAN_PATCH】许知微查明父亲事件牵扯到顾堰声的物资渠道后，经人指点找到岑半潮“问水路”。岑供给许真消息，同一份情报也卖给顾堰声那边。他是..."
+                unordered_list
+                  list_item
+                    button [ref=55116, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55119, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "姜隔川"
+                textbox [ref=53505, loc=unstable]
+                  text "【HUMAN_PATCH】角色：配角·旧城日常层底景人物——不推主线、不掌关键证据，却是主角进入老街区时的街巷活地图，也是各条线索人物旧日生活的共同�..."
+                  text
+                  text
+                  text "2. 守物如守人。铺面最里头一张老木台，摆一尊缺了手指的瓷财神、一个黄铜顶针、一块看不出年份的船名牌，旁人来看都是破烂，只有他自己知道那�..."
+                  text
+                  text
+                  text "3. 有水必避的隐痛。他开修车摊，兼补轮胎、焊铁件，岸上的活计样样利索，唯独从不下水，连码头栈桥都不踩上去。每逢涨水季节便话少，坐在门口�..."
+                  text
+                  text
+                  text "4. 慢热但待小辈体恤。对陌生人与公家人提防多话，对街坊孩子很宽厚。许知微儿时常在他铺前等父亲寄放的自行车，他会塞给小孩一块姜糖，并不攀�..."
+                  text
+                  text "深层动机：二十年前洪灾中，他因怕水未能参与一线救援，在岸上仅做了搬运和看管物资的事。他存一柜子杂物、修一柜子旧物，实则是在等一个机会�..."
+                  text
+                  text "终点：拆迁前夜，他最后一次走到水边，把丢掉的那枚（其实是捡来的）银耳扣投进河里，然后回铺子坐至天明——不证明什么，只是不再闪躲那条河�..."
+                unordered_list
+                  list_item
+                    button [ref=55141, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55144, loc=unstable]
+                      text "废止"
+              list_item
+                text "RELATIONSHIP_STATE"
+                text "姜隔川"
+                textbox [ref=53506, loc=unstable]
+                  text "【HUMAN_PATCH】并非结盟，而是“旧街坊中的引路星”。他认得许知微的父亲——那人生前常把自行车推来补胎，也会在他柜台前多站一支烟工夫。这种关..."
+                unordered_list
+                  list_item
+                    button [ref=55153, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55156, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "许知微"
+                textbox [ref=53507, loc=unstable]
+                  text "【HUMAN_PATCH】许知微：28岁，白沙市水文档案局助理馆员，现借调至旧堤拆迁办做资料移交。瘦，常年戴一副银框眼镜，指节有翻旧卷磨出的茧。性格克�..."
+                unordered_list
+                  list_item
+                    button [ref=55165, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55168, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "周泊"
+                textbox [ref=53508, loc=unstable]
+                  text "【HUMAN_PATCH】周泊：44岁，白沙内河驳船船工，左耳全聋。十七岁顶替亡父上船，常年运送砂石，水性极佳；七一六洪灾时他驾小机动船往返闸下浅滩救�..."
+                unordered_list
+                  list_item
+                    button [ref=55177, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55180, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "陆衡"
+                textbox [ref=53509, loc=unstable]
+                  text "【HUMAN_PATCH】陆衡：52岁，白沙市水利局副局长，堤防改造工程常务副指挥。二十年前是林溪闸管理所技术员，七一六当夜轮值；许知微幼时落水，是他�..."
+                unordered_list
+                  list_item
+                    button [ref=55189, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55192, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "白沙城与林溪闸"
+                textbox [ref=53510, loc=unstable]
+                  text "【HUMAN_PATCH】白沙城与林溪闸：白沙是江南运河支流的河港城，城区沿白沙溪呈弯月展开，城西旧堤建于上世纪五十年代，堤后地势低洼的“滩下区”住..."
+                unordered_list
+                  list_item
+                    button [ref=55201, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55204, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "现行闸口调度铁律与档案逻辑"
+                textbox [ref=53511, loc=unstable]
+                  text "【HUMAN_PATCH】现行闸口调度铁律与档案逻辑：林溪闸实行“三票一录”——书面调度单、闸位运行记录、电话录音缺一不可；凡水库泄洪必须有上游防办..."
+                unordered_list
+                  list_item
+                    button [ref=55213, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55216, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "七一六洪灾与二十年悬差"
+                textbox [ref=53512, loc=unstable]
+                  text "【HUMAN_PATCH】七一六洪灾与二十年悬差：故事起始年份为2025年7月，距七一六洪灾整二十年。2005年7月16日，青瓦湖流域连续暴雨，上游防办未发书面泄洪..."
+                unordered_list
+                  list_item
+                    button [ref=55225, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55228, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "滩下利益网络与改造工程的四方角力"
+                textbox [ref=53513, loc=unstable]
+                  text "【HUMAN_PATCH】滩下利益网络与改造工程的四方角力：一是市水利局改造办（陆衡方），主导旧堤景观化，资金源于省水利专项与土地出让金，保工程质量..."
+                unordered_list
+                  list_item
+                    button [ref=55237, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55240, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "鬼夹弯沉索缆绳"
+                textbox [ref=53514, loc=unstable]
+                  text "从鬼夹弯清淤中挖出的两指粗缆绳，经姜隔川识别为旧闸起闭机高压尼龙吊索（约1992年前后备品），断口系拉力拉断而非水磨断，绳端绑有水泥料石；�..."
+                unordered_list
+                  list_item
+                    button [ref=55249, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55252, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "林溪闸1998年内部电话表"
+                textbox [ref=53515, loc=unstable]
+                  text "吕艳秋从待拆旧船夹层中翻出并交给许知微；纸张为1998年4月制，起闭机室分机号码被人用圆珠笔划除但背面压痕可辨；许知微拍照留证后暂收，承诺不..."
+                unordered_list
+                  list_item
+                    button [ref=55261, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55264, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "七一六当夜未登记呼叫"
+                textbox [ref=53516, loc=unstable]
+                  text "2005年7月16日22时47分至23时05分，林溪闸起闭机室发生一次内线呼叫，未被记入话务记录簿，周边数日通讯日志亦无记载；许知微据此建立检索标签“2005...."
+                unordered_list
+                  list_item
+                    button [ref=55273, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55276, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "起闭机室线索悬念"
+                textbox [ref=53517, loc=unstable]
+                  text "鬼夹弯拉断的沉索、电话表上被刻意划除的起闭机室分机号，与2005年当夜未能接通的内线呼叫指向同一待查真相；后续需查明缆绳另一端攥在谁手中、�..."
+                unordered_list
+                  list_item
+                    button [ref=55285, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55288, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "中闸管理所旧电话表"
+                textbox [ref=53518, loc=unstable]
+                  text "吕艳秋从旧船隔舱板夹层中取出并交给许知微；表上起闭机室分机8040被人用圆珠笔划除，背面压痕可辨；许知微留原件作修旧记录，复印留档。"
+                unordered_list
+                  list_item
+                    button [ref=55297, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55300, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "2005年7月16日起闭机室通讯记录"
+                textbox [ref=53519, loc=unstable]
+                  text "当夜值班调度记录最晚一条为20时40分，而起闭机室有人签到，但调度通讯日志中无8040分机当夜任何通话登记。"
+                unordered_list
+                  list_item
+                    button [ref=55309, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55312, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "断缆与起闭机室分机线索"
+                textbox [ref=53520, loc=unstable]
+                  text "断缆疑似闸门吊索、被划除的起闭机室内线分机，与2005年7月16日夜起闭机室无人登记通话共同构成待查线索，需进一步核验来源、埋置时间与通讯缺失�..."
+                unordered_list
+                  list_item
+                    button [ref=55321, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55324, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "未知断缆"
+                textbox [ref=53521, loc=unstable]
+                  text "经姜隔川辨认原为旧闸门起闭机备用的高压尼龙吊索，断口呈拉断状而非水磨断；从鬼夹弯清淤滩涂随旧水泥料石一起被翻出，长约数米，许知微将其�..."
+                unordered_list
+                  list_item
+                    button [ref=55333, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55336, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "林溪闸1998年4月内部电话表原件"
+                textbox [ref=53522, loc=unstable]
+                  text "此表来自吕艳秋旧通勤船夹层，原物已交给许知微；“起闭机室”分机号码一栏被圆珠笔划除，正面难以辨认，纸背仍留有可辨压痕；许知微拍照留证�..."
+                unordered_list
+                  list_item
+                    button [ref=55345, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55348, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "2005年7月16日22时47分至23时05分起闭机室内线呼叫"
+                textbox [ref=53523, loc=unstable]
+                  text "当夜有一次内线呼叫打进打不通的起闭机室分机，话务记录簿与前后数日通讯日志均未登记；许知微据此建立检索标签“2005.7.16 起闭机室内线未登记”"
+                unordered_list
+                  list_item
+                    button [ref=55357, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55360, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "起闭机室旧分机与断缆线索"
+                textbox [ref=53524, loc=unstable]
+                  text "被划除的起闭机室分机号码、当夜22时47分至23时05分的未登记呼叫，与鬼夹弯水下绑石拉断的闸门起闭备索指向同一待核验的旧案环节，须查明呼叫来自..."
+                unordered_list
+                  list_item
+                    button [ref=55369, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55372, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "吕艳秋从鬼夹弯捞出的铜件"
+                textbox [ref=53525, loc=unstable]
+                  text "被周泊和许知微识别为旧闸门开度指示器的定位插销，非钥匙；孔沿磨痕为硬物擦磨而非绳磨，疑曾被用于拨动刻度盘指针后销死位置"
+                unordered_list
+                  list_item
+                    button [ref=55381, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55384, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "吕艳秋的旧通勤船与维修铺"
+                textbox [ref=53526, loc=unstable]
+                  text "周泊将旧通勤船编号信息与维修铺墙面拆下的旧闸启闭机手动柄并排比对，确认铜件与手动柄断面匹配不上"
+                unordered_list
+                  list_item
+                    button [ref=55393, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55396, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "旧闸管所库房木箱"
+                textbox [ref=53527, loc=unstable]
+                  text "吕艳秋用去年翻出的库房钥匙打开木箱，箱内四只铁盒中一只少了一枚原配插销；锁芯并非原装而是被换过；其中一只盒盖右侧有近半年内被打开过的�..."
+                unordered_list
+                  list_item
+                    button [ref=55405, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55408, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "木箱中带绳结的插销"
+                textbox [ref=53528, loc=unstable]
+                  text "周泊判定该插销上绳结不是库房原配打法，而是三圈勒死、反手压一道、绳尾烧过的防解开打法，说明有人怕绳结被解开"
+                unordered_list
+                  list_item
+                    button [ref=55417, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55420, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "褪色纸烟盒与纸片"
+                textbox [ref=53529, loc=unstable]
+                  text "木箱底部油纸包旁有一只均匀积灰但表面有凹痕的纸烟盒，内裹一张浸过水又晾干的纸片，钢笔字迹含“按不住”三字，吕艳秋认出烟盒为其父生前惯�..."
+                unordered_list
+                  list_item
+                    button [ref=55429, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55432, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "吕艳秋父亲遗物木箱"
+                textbox [ref=53530, loc=unstable]
+                  text "吕艳秋承认去年清理旧船时翻出库房钥匙，钥匙与电话表同藏在船底隔板夹层；她打开过木箱并发现缺了一枚插销，其余物件未碰"
+                unordered_list
+                  list_item
+                    button [ref=55441, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55444, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "闸门开度指示器定位插销"
+                textbox [ref=53531, loc=unstable]
+                  text "定位插销插在齿盘与指针轴之间用于销死位置，抽掉后齿轮与指针脱离，可将指针拨到任意数值，因此掌握插销就等于能伪造闸门开度读数"
+                unordered_list
+                  list_item
+                    button [ref=55453, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55456, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "“按不住”纸片与吕艳秋父亲"
+                textbox [ref=53532, loc=unstable]
+                  text "纸片笔迹含义未明，疑为吕艳秋之父留下的线索；他藏在木箱中的不是插销本身，而是“有人换过插销”这件事，后续需查明谁换过锁芯、谁在近半年�..."
+                unordered_list
+                  list_item
+                    button [ref=55465, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55468, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "缺失的原配插销"
+                textbox [ref=53533, loc=unstable]
+                  text "木箱中四只油纸包少了一只，缺失插销为原配；吕艳秋从鬼夹弯捞出的铜件疑即被取走的那枚，需进一步核验其来源与拨表针事件"
+                unordered_list
+                  list_item
+                    button [ref=55477, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55480, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "旧河道的走向与「水关」地名"
+                textbox [ref=53534, loc=unstable]
+                  text "水关拆除后，原来走船的旧河道改走闸口外新道；旧河道的走向可能不在现行河系图、航道图、防汛图等任何现行地图上。"
+                unordered_list
+                  list_item
+                    button [ref=55489, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55492, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "字钉铁牌「水关廿二」"
+                textbox [ref=53535, loc=unstable]
+                  text "姜隔川认出该铁牌曾挂在「水关」，水关拆除后即被摘下。"
+                unordered_list
+                  list_item
+                    button [ref=55501, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55504, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "断缆、铜插销、铁牌"
+                textbox [ref=53536, loc=unstable]
+                  text "三件旧物分属同一套闸门系统的不同构件，暗示曾被拆散并分别放置于不同环境中。"
+                unordered_list
+                  list_item
+                    button [ref=55513, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55516, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "被人重新钉过的地名牌「水关廿二」"
+                textbox [ref=53537, loc=unstable]
+                  text "铁牌并非单纯被遗弃，而是被人从旧位置摘下后重新钻孔、钉回水面位置；它的原始挂靠地点与真正旧河道方向尚未查明。"
+                unordered_list
+                  list_item
+                    button [ref=55525, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55528, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "顾堰声暗示「船不在河里」"
+                textbox [ref=53538, loc=unstable]
+                  text "许知微重新解读顾堰声在矮墙上所说「船不在河里」，怀疑他所指是水面下/旧河道中不在任何现行地图上的水道，而非单纯劝告不要追查。"
+                unordered_list
+                  list_item
+                    button [ref=55537, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55540, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "沙洲泥滩上的船底痕印"
+                textbox [ref=53539, loc=unstable]
+                  text "傍晚从维修铺窗外望见泥滩上横越浅滩、穿过芦苇旧根茬直指旧驳岸断口的船底痕印，表明旧河道的痕迹仍在当地实存。"
+                unordered_list
+                  list_item
+                    button [ref=55549, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55552, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "方阙"
+                textbox [ref=53540, loc=unstable]
+                  text "角色：档案馆东侧旧楼二层阅览室/库房管理人员；掌握出库登记簿，确认许知微所查件号上午与下午均出过库，上午出库经手人并非许知微。"
+                unordered_list
+                  list_item
+                    button [ref=55561, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55564, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "方阙"
+                textbox [ref=53541, loc=unstable]
+                  text "向许知微出示2008年9月的档案整理交接单复印件，交接单上有修正液涂改痕迹，涂痕下可见“七月十五日水位记录……重录，页号为空”等内容。"
+                unordered_list
+                  list_item
+                    button [ref=55573, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55576, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "2008年9月档案整理交接单"
+                textbox [ref=53542, loc=unstable]
+                  text "许知微从方阙处取得该交接单复印件；单上有修正液涂改痕迹，用于把两个不同日期的记录接成同一天；背面有一行受潮洇开的铅笔字，可辨“拆——�..."
+                unordered_list
+                  list_item
+                    button [ref=55585, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55588, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "中闸管理所2005年7月原始水情记录前半卷"
+                textbox [ref=53543, loc=unstable]
+                  text "前半卷未进库，卷内目录条目仍在但正文缺页；原件曾被人翻动过，需从目录登记与实体档案之间的缝隙查明在哪一环节被拆散/移动。"
+                unordered_list
+                  list_item
+                    button [ref=55597, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55600, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "交接单背面铅笔字"
+                textbox [ref=53544, loc=unstable]
+                  text "铅笔字笔迹与许知微父亲留在旧档案背面的草算字迹出自同一只手；含义尚未完全辨清，许知微暂不对此下结论，待证据进一步核验。"
+                unordered_list
+                  list_item
+                    button [ref=55609, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55612, loc=unstable]
+                      text "废止"
+              list_item
+                text "RELATIONSHIP_STATE"
+                text "方阙与许知微"
+                textbox [ref=53545, loc=unstable]
+                  text "方阙以“我只管这间库里的事”划定权限边界，允许许知微在库房之外自行追查，不阻止也不承诺配合。"
+                unordered_list
+                  list_item
+                    button [ref=55621, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55624, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "档案借阅与实体保存规则"
+                textbox [ref=53546, loc=unstable]
+                  text "档案在整理时可能被拆分为多个保管单元；卷内目录条目可以与实体正文页缺页并存；复印件来源不同（留底复制与原件复印）会使页码格式不一致，�..."
+                unordered_list
+                  list_item
+                    button [ref=55633, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55636, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "顾小囡"
+                textbox [ref=53547, loc=unstable]
+                  text "初始能力：无。正文中仅呈现为档案条目，未展示任何行动或技能。；初始动机：无。作为逝者，不具备驱动故事的行为动机。"
+                unordered_list
+                  list_item
+                    button [ref=55645, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55648, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "李冬生"
+                textbox [ref=53548, loc=unstable]
+                  text "作为甲方施工工头，迫于工期压力急于拆除旧墙；与许知微谈判后同意给予30分钟记录和取样时间，要求8点半前完成交还作业面，但态度以保工期为前�..."
+                unordered_list
+                  list_item
+                    button [ref=55657, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55660, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "旧标尺底座料石"
+                textbox [ref=53549, loc=unstable]
+                  text "料石底面四角凿有方孔并嵌有铁屑，被姜隔川确认系从女儿滩旧闸站运来、翻面改作标尺底座的旧铁轨螺栓孔石；姜隔川剔开侧面灰浆后露出非人工刻�..."
+                unordered_list
+                  list_item
+                    button [ref=55669, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55672, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "标尺底座石侧隐蔽记号"
+                textbox [ref=53550, loc=unstable]
+                  text "底部边缘刻痕距手掌高度可及、从正面不可见，两竖一横无笔锋；刻痕边缘锐利未明显风化，表明其刻下时间可能远比二十年前更近，且许知微推测近�..."
+                unordered_list
+                  list_item
+                    button [ref=55681, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55684, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "尺座石内暗藏物"
+                textbox [ref=53551, loc=unstable]
+                  text "周泊以铁丝探入标尺底座侧缝约两寸处碰触到金属硬物，发出金属相击脆响，底座疑似并非实心、内部可能藏有未知物件，尚待进一步探查与认定。"
+                unordered_list
+                  list_item
+                    button [ref=55693, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55696, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "标尺零点基准"
+                textbox [ref=53552, loc=unstable]
+                  text "原用作标尺底座的女儿滩铁路轨道垫石被翻转改装后，整根标尺的测量零点并非原始标定的水准零点，而是女儿滩旧运料轨道面，因此以该标尺取得的�..."
+                unordered_list
+                  list_item
+                    button [ref=55705, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55708, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "旧港区地层煤渣层"
+                textbox [ref=53553, loc=unstable]
+                  text "旧港区若地基下层出现夹有碎煤渣的黑土层，则表明该处曾有蒸汽机车碾压的运料道基铺筑过——周泊探得底座覆土下即为煤渣旧基层，姜隔川据此反�..."
+                unordered_list
+                  list_item
+                    button [ref=55717, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55720, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "女儿滩旧轨料石改作标尺底座"
+                textbox [ref=53554, loc=unstable]
+                  text "李冬生率挖掘机进场前，许知微一行核验旧堤东段标尺底座；发现图纸标注位置（第七根灯杆处）与实际（北侧第三根桩位）不符，经姜隔川指认确认�..."
+                unordered_list
+                  list_item
+                    button [ref=55729, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55732, loc=unstable]
+                      text "废止"
+              list_item
+                text "RELATIONSHIP_STATE"
+                text "付清荷与许知微"
+                textbox [ref=53555, loc=unstable]
+                  text "许知微找到付清荷补签调阅申请，两人首次接触，付清荷透露2005年7月调度记录后半卷在移交清册中挂账但实物从未到库，并请求许知微不要把备注页内..."
+                unordered_list
+                  list_item
+                    button [ref=55741, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55744, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "付清荷"
+                textbox [ref=53556, loc=unstable]
+                  text "她任闸史馆分库保管组组长，每周一三五在闸史馆、二四在改造办；签收清册二百零七卷在库二百零六卷，缺的正是2005年7月调度记录后半卷。"
+                unordered_list
+                  list_item
+                    button [ref=55753, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55756, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "2005年7月调度记录·后半卷"
+                textbox [ref=53557, loc=unstable]
+                  text "该卷在闸史馆分库移交清册的编号末端被划去登记但无旁注，实物从未到库，入库时由付清荷签字，另在2006年工作日志中夹有说明备注页。"
+                unordered_list
+                  list_item
+                    button [ref=55765, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55768, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "顾堰声"
+                textbox [ref=53558, loc=unstable]
+                  text "顾堰声是闸史馆分库上一任保管员，2006年前在原闸管所任职，付清荷从其抽屉中翻出缺卷备注页；他调走后手机号更换，无法联系。"
+                unordered_list
+                  list_item
+                    button [ref=55777, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55780, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "顾堰声与缺卷关联"
+                textbox [ref=53559, loc=unstable]
+                  text "2005年7月调度记录后半卷的去向与顾堰声在保管链条上的前任身份紧密相关；许知微打算继续查明顾堰声当时是否兼管档案和签收章，缺卷实物与备注页..."
+                unordered_list
+                  list_item
+                    button [ref=55789, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55792, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "调度单/接收登记/运行小票三份档案"
+                textbox [ref=53560, loc=unstable]
+                  text "许知微用三张纸列出调度单03时20分、接收登记01时20分、运行小票栏空白，两小时差。接收登记仅见复印件、原件未见，调度单原件纸页装订异于同期卷..."
+                unordered_list
+                  list_item
+                    button [ref=55801, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55804, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "陆衡"
+                textbox [ref=53561, loc=unstable]
+                  text "主动向许知微提供2005年7月旧钟维护记录复印件，引导她查看姜隔川处留存旧挂钟，主张纸面记录与实际时间之间存在计量工具偏差；同时提醒她区分发..."
+                unordered_list
+                  list_item
+                    button [ref=55813, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55816, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "时间记录证据链规则"
+                textbox [ref=53562, loc=unstable]
+                  text "记录时间与实际时间之间隔着的计量工具本身也在时间轴上，可能被人为调校产生系统偏差；若计量工具被调快两小时，凡照其钟面记录的时间均须向�..."
+                unordered_list
+                  list_item
+                    button [ref=55825, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55828, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "陆衡向许知微出示旧钟维护记录"
+                textbox [ref=53563, loc=unstable]
+                  text "陆衡在办公室取出设备科调出的2005年7月旧钟维护记录复印件，日期栏为7月15日，备注栏写“机件调校”，维修人签名是许敬川，由此把调查引向闸房挂..."
+                unordered_list
+                  list_item
+                    button [ref=55837, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55840, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "姜隔川揭示挂钟铅砣与磨损"
+                textbox [ref=53564, loc=unstable]
+                  text "姜隔川在修车铺拆卸旧挂钟，指认摆轴与轴承间隙不匀属长年走快留下的磨损，木制后盖内侧补过木片压着一层铅砣，铅块为后加之物，厂配摆杆上无�..."
+                unordered_list
+                  list_item
+                    button [ref=55849, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55852, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "旧闸房挂钟"
+                textbox [ref=53565, loc=unstable]
+                  text "三年前旧闸管理房改造时被拆下当废品卖到滩下回收站，经姜隔川留存未拆；钟面白搪瓷、刻度泛黄，分针停在11点位置。"
+                unordered_list
+                  list_item
+                    button [ref=55861, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55864, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "姜隔川发现挂钟后盖铅笔字"
+                textbox [ref=53566, loc=unstable]
+                  text "挂钟木质后盖内侧木纹背面有极轻的铅笔字，写“7·15 22:00起校——两小时零三分”，无签名；表明7月15日22时起曾有人精确校钟。"
+                unordered_list
+                  list_item
+                    button [ref=55873, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55876, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "挂钟铅砣调速规则"
+                textbox [ref=53567, loc=unstable]
+                  text "旧式挂钟摆杆上加挂铅块可令钟走快；该钟取掉铅砣后实测每天慢两小时（二十四小时慢两刻），即挂砣运行时每日快约两小时。"
+                unordered_list
+                  list_item
+                    button [ref=55885, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55888, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "陆衡辨认笔迹"
+                textbox [ref=53568, loc=unstable]
+                  text "陆衡判断挂钟后盖“7·15 22:00起校——两小时零三分”那行铅笔字不是许敬川笔迹：许敬川写字竖钩直、不带回锋，此字“校”末笔往左带；陆衡没有说..."
+                unordered_list
+                  list_item
+                    button [ref=55897, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55900, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "挂钟调校人与调校时间待查"
+                textbox [ref=53569, loc=unstable]
+                  text "谁在7月15日22时校准挂钟、为何精确到两小时零三分、铅砣何时挂上又何时取下、钟后来又被谁经手，均无实测与执行记录；需追查挂钟来源链条及当日..."
+                unordered_list
+                  list_item
+                    button [ref=55909, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55912, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "调度时间与钟面偏差逻辑"
+                textbox [ref=53570, loc=unstable]
+                  text "若开闸实际发生在7月15日深夜，当夜水情记录标为“16日凌晨”可能系照快两小时的钟面倒推；铜牌23时45分若照同一快钟敲出，则真实时刻为21时42分。"
+                unordered_list
+                  list_item
+                    button [ref=55921, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55924, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "周泊"
+                textbox [ref=53571, loc=unstable]
+                  text "陪同许知微前往建安街见梁师傅，后从船上取出亡父签领册供查看，确认第一行时刻被涂改"
+                unordered_list
+                  list_item
+                    button [ref=55933, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55936, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "梁师傅"
+                textbox [ref=53572, loc=unstable]
+                  text "指认许知微所持铜牌为白沙河工五金制品厂白水零一七号汛期闸牌模具所制；展示生产记录表：七月十四日压一百二十枚、七月十五日晨被闸管所来人�..."
+                unordered_list
+                  list_item
+                    button [ref=55945, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55948, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "许知微与周泊查看签领册"
+                textbox [ref=53573, loc=unstable]
+                  text "周泊亡父的签领册第一页领牌时刻首行原写15:40被涂改为18:20，且该页无日期，疑为与十六日值班记录对齐而被改晚两个多小时"
+                unordered_list
+                  list_item
+                    button [ref=55957, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55960, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "梁师傅存放的生产记录表"
+                textbox [ref=53574, loc=unstable]
+                  text "为白沙河工五金制品厂散厂时遗落的一页生产记录表，显示七月十四日加急压一百二十枚、七月十五日晨提清，现仍由梁师傅锁存"
+                unordered_list
+                  list_item
+                    button [ref=55969, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55972, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "铜牌实物与账目去向"
+                textbox [ref=53575, loc=unstable]
+                  text "铜牌生产记录显示汛前已提货，而上报账目记为汛后补制，矛盾待查；许知微需进一步核查闸管所当月的入库时间与实物验收记录，并追查签发领取记�..."
+                unordered_list
+                  list_item
+                    button [ref=55981, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55984, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "城西白砂老埭清淤挖出的锈铁盒"
+                textbox [ref=53576, loc=unstable]
+                  text "城建施工队在白砂老埭西头清淤时挖出一只锈铁盒，内码十七块与许知微此前所见同批的铜牌，牌面日期为七月十四"
+                unordered_list
+                  list_item
+                    button [ref=55993, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=55996, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "许敬川"
+                textbox [ref=53577, loc=unstable]
+                  text "初始能力：精通机械钟表机芯的拆卸、调校与复原；能通过调整钟摆铅坠改变走时误差（拆下铅块可使钟慢约两个时辰）；熟悉水闸调度室设备与维修�..."
+                unordered_list
+                  list_item
+                    button [ref=56005, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56008, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "7月14日手抄出库记录"
+                textbox [ref=53578, loc=unstable]
+                  text "郭福生保存一张无公章的黄脆纸页，记录7月14日发出铜质防汛标识牌一百四十面，签领栏为许敬川代领，纸页右侧有极淡的'衡'字压痕；该记录被郭福生..."
+                unordered_list
+                  list_item
+                    button [ref=56017, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56020, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "郭福生与许知微"
+                textbox [ref=53579, loc=unstable]
+                  text "郭福生约定明日带许知微去认一个东西，要求不得带旁人，否则他将消失。"
+                unordered_list
+                  list_item
+                    button [ref=56029, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56032, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "许知微"
+                textbox [ref=53580, loc=unstable]
+                  text "许知微前往鬼夹弯周泊驳船见证并抄录中闸值班簿，未携带相机和录音设备"
+                unordered_list
+                  list_item
+                    button [ref=56041, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56044, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "吕艳秋"
+                textbox [ref=53581, loc=unstable]
+                  text "吕艳秋同意向许知微展示其父留下的中闸值班簿，但要求不写姓名、不带走、不拍照，并禁止追问其父撕页原因"
+                unordered_list
+                  list_item
+                    button [ref=56053, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56056, loc=unstable]
+                      text "废止"
+              list_item
+                text "CHARACTER_STATE"
+                text "唐挽柁"
+                textbox [ref=53582, loc=unstable]
+                  text "唐挽柁在船上提出其父名字出现在中闸值班簿及相关名单中，并要求记录时封存姓名"
+                unordered_list
+                  list_item
+                    button [ref=56065, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56068, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "私人钟面记录"
+                textbox [ref=53583, loc=unstable]
+                  text "值班簿中“钟面”栏头读数不能直接作为实际启闭时间证据，需先校验记录性质与计量工具状态"
+                unordered_list
+                  list_item
+                    button [ref=56077, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56080, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "档案缺页"
+                textbox [ref=53584, loc=unstable]
+                  text "缺页、空白页和撕口本身构成档案记录状态，应作为边界记录而非直接推断"
+                unordered_list
+                  list_item
+                    button [ref=56089, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56092, loc=unstable]
+                      text "废止"
+              list_item
+                text "WORLD_RULE"
+                text "闸上吊索与船用缆"
+                textbox [ref=53585, loc=unstable]
+                  text "船用缆有股、闸上吊索无股，可据以区分缆绳来源"
+                unordered_list
+                  list_item
+                    button [ref=56101, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56104, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "沈照夜"
+                textbox [ref=53586, loc=unstable]
+                  text "沈照夜提醒许知微不得把私人记录当官方记录，并要求抄完后写清限制"
+                unordered_list
+                  list_item
+                    button [ref=56113, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56116, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "吕艳秋"
+                textbox [ref=53587, loc=unstable]
+                  text "吕艳秋口述涉及二十三时零五分未登记呼叫、起闭机室联络，且其父不敢报谁替他按了“无人接听”"
+                unordered_list
+                  list_item
+                    button [ref=56125, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56128, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "唐挽柁"
+                textbox [ref=53588, loc=unstable]
+                  text "唐挽柁称鬼夹弯露出的缆绳不是船用，而是闸上吊索"
+                unordered_list
+                  list_item
+                    button [ref=56137, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56140, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "姜隔川"
+                textbox [ref=53589, loc=unstable]
+                  text "姜隔川在岸上指出鬼夹弯退水后露出缆绳，并提醒船上众人暂勿离开"
+                unordered_list
+                  list_item
+                    button [ref=56149, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56152, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "周泊"
+                textbox [ref=53590, loc=unstable]
+                  text "周泊向许知微转述许敬川当年曾说“先保护，再查”，并称许敬川后来没有回来"
+                unordered_list
+                  list_item
+                    button [ref=56161, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56164, loc=unstable]
+                      text "废止"
+              list_item
+                text "TIMELINE_EVENT"
+                text "许知微"
+                textbox [ref=53591, loc=unstable]
+                  text "许知微抄录后把表格折成两折压在牛皮纸包下，并让吕艳秋将值班簿原件原样带回"
+                unordered_list
+                  list_item
+                    button [ref=56173, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56176, loc=unstable]
+                      text "废止"
+              list_item
+                text "RELATIONSHIP_STATE"
+                text "许知微与吕艳秋"
+                textbox [ref=53592, loc=unstable]
+                  text "二人达成抄录值班簿的边界约定：不写吕艳秋父亲姓名、原件不带走不拍照、许知微只留见证记录"
+                unordered_list
+                  list_item
+                    button [ref=56185, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56188, loc=unstable]
+                      text "废止"
+              list_item
+                text "RELATIONSHIP_STATE"
+                text "唐挽柁与许知微"
+                textbox [ref=53593, loc=unstable]
+                  text "唐挽柁主动要求许知微记录其父与值班簿及相关名单的关联，但坚持姓名封存"
+                unordered_list
+                  list_item
+                    button [ref=56197, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56200, loc=unstable]
+                      text "废止"
+              list_item
+                text "RELATIONSHIP_STATE"
+                text "周泊与许知微"
+                textbox [ref=53594, loc=unstable]
+                  text "周泊以许敬川旧话“先保护，再查”提醒许知微，形成调查伦理上的传承"
+                unordered_list
+                  list_item
+                    button [ref=56209, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56212, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "二十三时零五分未登记呼叫"
+                textbox [ref=53595, loc=unstable]
+                  text "吕艳秋口述涉及起闭机室未登记呼叫及按“无人接听”者身份，待独立记录佐证"
+                unordered_list
+                  list_item
+                    button [ref=56221, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56224, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "顾堰声"
+                textbox [ref=53596, loc=unstable]
+                  text "吕艳秋父亲口述撕掉的值班簿页中涉及顾堰声，该指认待独立证据核验"
+                unordered_list
+                  list_item
+                    button [ref=56233, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56236, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "中闸值班簿四时三十分后空白页"
+                textbox [ref=53597, loc=unstable]
+                  text "中闸值班簿四时三十分后整页空白且页边有撕口，吕艳秋称由其父撕掉，形成时间与原因待核"
+                unordered_list
+                  list_item
+                    button [ref=56245, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56248, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "唐挽柁父亲烈士身份"
+                textbox [ref=53598, loc=unstable]
+                  text "唐挽柁称写出父亲名字会使父亲从烈士变回被追问未拦住缆绳的人，烈士身份与缆绳事件关联待核"
+                unordered_list
+                  list_item
+                    button [ref=56257, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56260, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "旧电话表纸背压痕"
+                textbox [ref=53599, loc=unstable]
+                  text "旧电话表纸背压痕来源不明，姜隔川称由别的东西顶出，待查顶出物与分机号关系"
+                unordered_list
+                  list_item
+                    button [ref=56269, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56272, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "1992年前后尼龙吊索"
+                textbox [ref=53600, loc=unstable]
+                  text "姜隔川称1992年前后进过一批预检退回、无出库单的尼龙吊索，该批吊索与闸上缆绳关系待查"
+                unordered_list
+                  list_item
+                    button [ref=56281, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56284, loc=unstable]
+                      text "废止"
+              list_item
+                text "PLOT_COMMITMENT"
+                text "鬼夹弯中闸湿纸"
+                textbox [ref=53601, loc=unstable]
+                  text "吕艳秋称鬼夹弯缆绳断口缠着的“中闸”湿纸不该在河里，其来源与值班簿缺页关系待查"
+                unordered_list
+                  list_item
+                    button [ref=56293, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56296, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "中闸值班簿"
+                textbox [ref=53602, loc=unstable]
+                  text "许知微抄录后，中闸值班簿原件由吕艳秋带回，许知微只留见证记录"
+                unordered_list
+                  list_item
+                    button [ref=56305, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56308, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "旧电话表复印件"
+                textbox [ref=53603, loc=unstable]
+                  text "吕艳秋持有旧电话表复印件，纸背有压痕，姜隔川称分机号非后来划掉"
+                unordered_list
+                  list_item
+                    button [ref=56317, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56320, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "鬼夹弯缆绳与中闸湿纸"
+                textbox [ref=53604, loc=unstable]
+                  text "鬼夹弯退水后泥中露出深色缆绳，断口缠有半张印有“中闸”字样的湿纸"
+                unordered_list
+                  list_item
+                    button [ref=56329, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56332, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "牛皮纸包"
+                textbox [ref=53605, loc=unstable]
+                  text "吕艳秋父亲留下的牛皮纸包用旧《新华字典》书签作包纸，由吕艳秋带至船上并随后带回"
+                unordered_list
+                  list_item
+                    button [ref=56341, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56344, loc=unstable]
+                      text "废止"
+              list_item
+                text "OBJECT_STATE"
+                text "吕艳秋父亲存放值班簿的箱柜"
+                textbox [ref=53606, loc=unstable]
+                  text "姜隔川称箱锁去年由其更换、钥匙两把；樟木底柜在堂屋东墙且潮气重，值班簿未放在最上面"
+                unordered_list
+                  list_item
+                    button [ref=56353, loc=unstable]
+                      text "保存"
+                  list_item
+                    button [ref=56356, loc=unstable]
+                      text "废止"
+            heading
+              text "🧵 伏笔"
+            textbox [ref=53607, loc=css:input[placeholder="种下伏笔，如：账册缺页尚未对上人"]]
+              text "种下伏笔，如：账册缺页尚未对上人"
+              container
+            button [ref=56362, loc=unstable]
+              text "种下伏笔"
+            unordered_list
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "沉在鬼夹弯底部的缆绳另一端绑着水泥料石，断面是拉断的，暗示有人曾借闸门启闭或水流之力拉拽重物，可能关联闸门事故或隐藏行为。"
+                unordered_list
+                  list_item
+                    button [ref=56371, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "吕艳秋发现断缆材质疑为闸门起闭机专用的高压尼龙吊索，而非护岸系缆，暗示该缆绳来源特殊，与闸门系统相关。"
+                unordered_list
+                  list_item
+                    button [ref=56379, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "姜隔川判断缆绳断口是被人硬生生拉断的，而非水流磨断，暗示可能曾发生人为强力拉扯或隐藏行为。"
+                unordered_list
+                  list_item
+                    button [ref=56387, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "许知微从鬼夹弯水底打捞上来的铜件，实为闸门开度指示器的定位插销，可拔出后人为调整表中指针以虚报泄洪量，是当年有人篡改闸门记录的直接物�..."
+                unordered_list
+                  list_item
+                    button [ref=56395, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "库房木箱的锁芯曾被更换过，且里面少了一枚原配定位插销——而这枚缺失的插销很可能就是许知微从水底带出的那一枚，预示有人曾在吕父死后取走�..."
+                unordered_list
+                  list_item
+                    button [ref=56403, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "顾堰声曾为夭折女儿迁坟立碑后又自行拔碑抱回，墙拆后碑不知下落，暗示碑或其痕迹可能藏有关键信息。"
+                unordered_list
+                  list_item
+                    button [ref=56411, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "顾小囡殁于七月廿二而汛期已退，死因仅记为急病，与铜牌刻错日期早于官方洪灾日形成时间矛盾，暗示其死可能与水闸泄洪或人为过水相关。"
+                unordered_list
+                  list_item
+                    button [ref=56419, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "姜隔川称水关未拆前老河仍在走船，却拒绝告知老河道走向；窗下泥滩上留下的船底斜痕穿过芦苇根茬直指旧驳岸断口，暗示废弃填平的老河道仍可通�..."
+                unordered_list
+                  list_item
+                    button [ref=56427, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "许知微推断铁牌是被人重新放回让她‘恰好’看到的，说明幕后有人早已知道她的调查方向，并可能主动将物证摆放出来引导她继续往下查。"
+                unordered_list
+                  list_item
+                    button [ref=56435, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "签领册页间发现金属丝状压痕，周泊联想其父曾用黄铜锁线拴表，表与锁线灾后头两年同时消失，暗示压痕对应物可能被人取走或与关键事件关联"
+                unordered_list
+                  list_item
+                    button [ref=56443, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "周泊承诺'册子认船不认馆'，将来许知微若需将签领册作为正式证据，他会拎箱坐镇到场，暗示这一承诺将在后续关键披露时兑现"
+                unordered_list
+                  list_item
+                    button [ref=56451, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "匿名电话称2005年7月16日那夜第一批到下游的水并非从林溪闸出来，暗示存在第二个未经记录的出水口或人为放水路径"
+                unordered_list
+                  list_item
+                    button [ref=56459, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "神秘收旧书男人在汛后深秋找白佩兰核实报时时间并询问节目中是否有空白段，且沈照夜知道此人、对其身份避而不谈，暗示此人参与当年事件调查或�..."
+                unordered_list
+                  list_item
+                    button [ref=56467, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "旧标尺底座内部藏有未知硬物，周泊探到金属碰击声，尚未取出，暗示底座中可能封存有与旧闸站相关的关键物证。"
+                unordered_list
+                  list_item
+                    button [ref=56475, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "标尺底座实为女儿滩废弃铁轨垫石翻面改置，导致标尺零点偏离原始基准，疑有人为改动以便篡改标尺高程读数或掩盖真实水位记录。"
+                unordered_list
+                  list_item
+                    button [ref=56483, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "闸史馆分库签收清册显示在库二百零六卷而记载二百零七卷，缺失实物卷恰为“2005年7月调度记录·后半卷”，与许知微查证目标同名，暗示该卷被故意�..."
+                unordered_list
+                  list_item
+                    button [ref=56491, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "缺失卷的备注页夹在顾堰声2006年工作日志中，并非付清荷所制，暗示顾堰声当年为后人留下关于此卷的说明或某种待发现线索"
+                unordered_list
+                  list_item
+                    button [ref=56499, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "挂钟后盖内铅笔字'7·15 22:00起校——两小时零三分'，无签名且非许敬川笔迹，暗示调钟者另有其人，此事与两小时差核心事件直接相关"
+                unordered_list
+                  list_item
+                    button [ref=56507, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "陆衡能认出许敬川笔迹并断定那行字非其所写，却拒绝透露怀疑对象，暗示他对当年调钟人或内情有所知但不愿言明"
+                unordered_list
+                  list_item
+                    button [ref=56515, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "挂钟后盖内加装的木片与铅砣证明钟被懂机芯的人为调快，但铅块何时所挂、谁人所挂、调快后是否又被调回均未知，指向一桩旧闸管理室内部的人为�..."
+                unordered_list
+                  list_item
+                    button [ref=56523, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "许敬川在2005年7月15日维修挂钟的记录上签名，备注'机件调校'，他与调钟事件的关系尚未明确，其当年具体参与程度是关键悬念"
+                unordered_list
+                  list_item
+                    button [ref=56531, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "铁锈盒中铜牌数量由十七块变为十六块，并被自称市局项目管理科的姓陆人员以材质比对名义取走，此人是否真实存在、为何恰好取走一块，形成新悬�..."
+                unordered_list
+                  list_item
+                    button [ref=56539, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "姑母翻出2005年9月18日宜禾镇卫生所门诊收据，姓名栏为许敬川，而许敬川在当年七月已失踪或死亡，暗示他可能活着或有人冒名就医。"
+                unordered_list
+                  list_item
+                    button [ref=56547, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "万春堂红章收据日期在9月但日期模糊，药名栏被水渍洇去仅留一个'川'字，字迹与卫生所票据不同，暗示两张票据之间可能隐藏不同书写者或秘密信息�..."
+                unordered_list
+                  list_item
+                    button [ref=56555, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "顾堰声提到许敬川遗留私人水文记录蓝布薄册，嘱咐'只能给你一个人认'，但顾堰声将该册上交调查组后下落不明，暗示该册可能仍在某处或被人取走。"
+                unordered_list
+                  list_item
+                    button [ref=56563, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "顾堰声保存了许敬川2005年7月16日在闸房借电话的签字便笺，但只允许许知微目视比对不能带走，暗示这张笔迹样本将是验证票据真伪的关键对照物。"
+                unordered_list
+                  list_item
+                    button [ref=56571, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "郭福生说'你明天再来。我带你去认一个东西'，且强调带旁人来'我就不在了'，暗示他掌握关键物证或信息，愿意单独向许知微揭示，但存在风险"
+                unordered_list
+                  list_item
+                    button [ref=56579, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "出库单底单上签领栏'许敬川'右侧半寸处有极淡压痕，是落笔时透过纸背留下的名字轮廓，最后一笔像'衡'字上半部分，暗示当时还有另一张写有含'衡'�..."
+                unordered_list
+                  list_item
+                    button [ref=56587, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "郭福生说2005年7月14日提货的人不是许敬川，而是一个右手虎口有疤、站门口没进来的人，许敬川签完字跟他一路走了，再没来过仓库，暗示此人身份关�..."
+                unordered_list
+                  list_item
+                    button [ref=56595, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "郭福生说许敬川当年说过“我签的字够多了，多一笔就有多一个人睡不着”，暗示许敬川曾被迫签下某些关键文件，且可能因此而死；他提到“被人一�..."
+                unordered_list
+                  list_item
+                    button [ref=56603, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "郭福生故意把出库单原件留在门框灰砖缝里，又随身带复印件去仓库——他已在做两手自保准备，但原件现留在门口暴露位置，可能被清场人员或其他�..."
+                unordered_list
+                  list_item
+                    button [ref=56611, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "周泊听到许知微说“不打算打报告”后才提起七月十五牌子经手人“岑半潮”——他此前刻意未说，直到确认许知微不会把消息写入正式材料才透露，�..."
+                unordered_list
+                  list_item
+                    button [ref=56619, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "七月十五日页背面铅笔手绘曲线中两小时零三分的时间差与挂钟调校时间完全吻合，证明时间差从现场记录之初就存在，而非事后篡改，成为指向当年�..."
+                unordered_list
+                  list_item
+                    button [ref=56627, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "纸背水位曲线左下角裁剪残留一个带垂露回锋收笔的'许'字残笔，许知微认出这是许敬川独有的笔迹习惯，暗示许敬川本人与七月十五日现场记录有直接..."
+                unordered_list
+                  list_item
+                    button [ref=56635, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "许知微判断当前卷中这页是替页，'真正的那一页'仍未被找到，原件去向形成新悬念——可能被当年调钟者或许敬川本人取走保存"
+                unordered_list
+                  list_item
+                    button [ref=56643, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "牛皮纸盒盖内蓝墨水手迹署名'岑'字配日期'7·15'，内容劝拿到册子的人'退回去只当没见过'，并称许敬川当年退过一次后再无机会解释，暗示岑半潮仍在..."
+                unordered_list
+                  list_item
+                    button [ref=56651, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "陆衡自称'来收尾的'而非来看原卷，且主动提醒许知微翻看纸背，暗示他事前知道纸背内容，他对许知微调查的掌控程度和对真相的态度成谜"
+                unordered_list
+                  list_item
+                    button [ref=56659, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "吕艳秋父亲撕页并警告“再记就要害死岸上的人”，撕页原因和“岸上的人”身份未明，暗示记录本身会触发对活人的报复或牵连。"
+                unordered_list
+                  list_item
+                    button [ref=56667, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "唐挽柁称父亲名字也在值班簿和当年救七人名单上，若写名会让父亲“从烈士变回人”，暗示唐父与那截缆绳事故或七人救援存在未公开责任。"
+                unordered_list
+                  list_item
+                    button [ref=56675, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "吕父记录二十三时零五分起闭机室未登记呼叫，并称“谁替他按了无人接听，他不敢报”，暗示关键通话背后存在接线人或操控者。"
+                unordered_list
+                  list_item
+                    button [ref=56683, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "吕父称撕掉的那页里有顾堰声的字，且顾堰声不是当夜值班却“不该在那页里”，暗示顾堰声曾出现在现场或记录中。"
+                unordered_list
+                  list_item
+                    button [ref=56691, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "姜隔川说旧电话表分机号不是后来划掉的，纸背压痕是“别的东西顶出来的”，暗示电话表下隐藏另一张纸、文字或物证。"
+                unordered_list
+                  list_item
+                    button [ref=56699, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "姜隔川认得一九九二年前后进过一批预检退回、没有出库单的尼龙吊索，唐挽柁称事故缆绳是闸上自己的且无股，暗示缆绳来源异常。"
+                unordered_list
+                  list_item
+                    button [ref=56707, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "退水后鬼夹弯露出断口缠着半张“中闸”纸的缆绳，吕艳秋说“那页不该在河里”，暗示河中纸页与值班簿缺页或撕页直接相关。"
+                unordered_list
+                  list_item
+                    button [ref=56715, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "周泊转述许敬川当年说过“先保护，再查”，并说他后来就没回来，暗示许敬川的死亡或失踪与其保护证据的方式有关。"
+                unordered_list
+                  list_item
+                    button [ref=56723, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "姜隔川对缆绳细节异常熟悉，且不愿靠近或触碰缆绳，猜测曾参与1992年批次相关事务或隐瞒所知信息。"
+                unordered_list
+                  list_item
+                    button [ref=56730, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "姜隔川提及白佩兰所说的'瘦高收旧书男人'是他从未见过的人，只凭白佩兰转述，暗示该神秘人物可能并未真正出现或身份需要进一步证实"
+                unordered_list
+                  list_item
+                    button [ref=56737, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "原保管员顾堰声调走后手机号更换且失联，付清荷曾两次寻找而未果，暗示其人为隐匿行踪或受到某种势力控制"
+                unordered_list
+                  list_item
+                    button [ref=56744, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "挂钟分针停在11点位置且日历停在7月15日，钟面停走的时间点可能记录着它被废弃或停用日期，有待解释"
+                unordered_list
+                  list_item
+                    button [ref=56751, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "铁桥巷12号的新门牌与1996年旧地址错位，暗示整个片区门牌重编造成历史档案地址无法对应现址，可能还有更多旧地址信息因类似原因而失真"
+                unordered_list
+                  list_item
+                    button [ref=56758, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "唐挽柁说“水知道纸什么时候泡过”，暗示值班簿或河中纸页的浸泡史后续可能成为鉴定关键。"
+                unordered_list
+                  list_item
+                    button [ref=56765, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "姜隔川表示1992年前后林溪闸进过一批高压尼龙缆，预检未过退回仓库后无出库单，暗示这批缆绳可能被非正式渠道取用或藏匿。"
+                unordered_list
+                  list_item
+                    button [ref=56773, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "许知微父亲曾在吕艳秋船上留过一张同类电话表，暗示其父与林溪闸或起闭机室有工作关联，可能涉及后续真相。"
+                unordered_list
+                  list_item
+                    button [ref=56781, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "备用插销上系着“三圈勒死、尾烧过”的防解绳结，区别于闸管所老规矩“两头穿、对折后留两指”的原配打法，暗示曾有人刻意重新捆绑并隐藏被打�..."
+                unordered_list
+                  list_item
+                    button [ref=56789, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "周泊对定位插销的功能、闸管所内绳结打法及其用途了如指掌，暗示他并非普通水文人，而曾深度接触闸门系统及旧管所内的人事秘密。"
+                unordered_list
+                  list_item
+                    button [ref=56796, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "姜隔川铺子底下有旧水道通暗涵，上盖条石未动，暗示地下旧系统仍有通路或可通达关键位置。"
+                unordered_list
+                  list_item
+                    button [ref=56804, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "沈照夜将顾小囡的旧册推入抽屉最里头且欲言又止，暗示她知道更多关于该档案或顾堰声女儿的隐情。"
+                unordered_list
+                  list_item
+                    button [ref=56812, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "姜隔川和沈照夜均提到“填方不清基，根不断，水认得路”，暗示被掩埋的旧事/系统仍能通过残余渠道回归，指向后续真相浮出的方式。"
+                unordered_list
+                  list_item
+                    button [ref=56819, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "顾堰声当日坐在墙头时视线偏了约二十度，不是朝下游主槽，而是朝向那段已填平的旧驳岸，与“船不在河里”一语结合，暗示他清楚存在一条不在现�..."
+                unordered_list
+                  list_item
+                    button [ref=56827, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "吕艳秋提到坑东头墙根有根旧铁管一直通到水边，尚未检查，可能是一条通往隐藏水道或闸门系统的管道入口，后续可能成为探路关键。"
+                unordered_list
+                  list_item
+                    button [ref=56834, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "签领册前半本与后半本纸色不同，前半是汛前旧纸、后半是汛后新纸，暗示该册可能是由两部分拼合或存在补录可能"
+                unordered_list
+                  list_item
+                    button [ref=56842, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "许知微担心签领册上十五个名字一旦被记录，会动摇当年灾后安置与补偿的时间口径，影响当事人的安置资格，暗示十五户人家的命运可能成为后续伦�..."
+                unordered_list
+                  list_item
+                    button [ref=56850, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "许知微与周泊约定只能在双方在场条件下读取签领册，不单独向陆衡提交结论，暗示许知微与陆衡之间可能存在信任或程序上的裂隙"
+                unordered_list
+                  list_item
+                    button [ref=56858, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "签领册压痕中被蜡纸带出的油迹，指向黄铜锁线曾在夹入前接触过机油或机械装置，暗示压痕对应物（可能是怀表或某项仪表）曾在机械环境中工作过"
+                unordered_list
+                  list_item
+                    button [ref=56866, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "匿名电话拨打时间恰在许知微查明三条时间线相互咬合之后，且对方直接称呼她为'许敬川的女儿'，暗示有人对许知微的查证进度实时掌握并意图在关键..."
+                unordered_list
+                  list_item
+                    button [ref=56874, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "底座底部隐蔽处发现两竖一横刻痕，边缘锐利不像旧刻，暗示是近年有人暗中留下以标记此石或导向底座内物，且可能关联幕后引导者。"
+                unordered_list
+                  list_item
+                    button [ref=56882, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "同一份调阅申请两次退文理由不同且红章下缘墨色有异，暗示递交过程中有人故意改变审核口径或代盖不同印章，存在人为阻挠与暗中操作"
+                unordered_list
+                  list_item
+                    button [ref=56890, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "付清荷讲解“缺卷若找到可凭移交备注直接补签，不用重走整批移交”，暗示备注页可能成为将来有人将缺卷合法化塞回库房的制度漏洞"
+                unordered_list
+                  list_item
+                    button [ref=56897, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "陆衡引导许知微看钟并强调'钟不准记录不可靠'，暗示他可能想让她放弃追查两小时差；他对幕后真相的态度和行为动机成疑"
+                unordered_list
+                  list_item
+                    button [ref=56905, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "许知微申请调阅父亲档案时手续卡在人事科盖章处，沈照夜提示有其他途径取得签名样本，暗示档案系统中仍有人为阻碍调查。"
+                unordered_list
+                  list_item
+                    button [ref=56913, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "郭福生见许知微第一面就认出她是许敬川的女儿，说'你像他'，并主动拿出保存多年的出库单底单，暗示郭福生与许敬川关系不一般，可能知道更多当年..."
+                unordered_list
+                  list_item
+                    button [ref=56920, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "郭福生保存底单的原因自称是'为了记一个人'，而非记数量，暗示他留底单的真正目的是记录那个提货人的身份或行踪"
+                unordered_list
+                  list_item
+                    button [ref=56927, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "郭福生声称底单上没有抬头、没有公章，但格式完整且签领栏为许敬川笔迹，暗示这份底单可能是需与局里正式账目比对才能定真伪的民间留存"
+                unordered_list
+                  list_item
+                    button [ref=56934, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "郭福生手指虎口贴着脏创可贴，且曾常年摸铁件，与提货人'右手虎口有疤'特征形成潜在呼应，暗示郭福生可能隐瞒自己作为提货人的身份或相关经历"
+                unordered_list
+                  list_item
+                    button [ref=56941, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "沈照夜发来消息'档案里的地址，跟水位一样，是有时间的'，暗示调查需要采用特定年份的坐标系，未来核对更多证据时需注意时间基准"
+                unordered_list
+                  list_item
+                    button [ref=56948, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "郭福生说“你往码头那边走，看看有没有人等你”，暗示他知道周泊在跟踪或守候，也暗示郭福生对许知微身边人的动向有所掌握，或周边存在其他监�..."
+                unordered_list
+                  list_item
+                    button [ref=56955, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "周泊在五点半看见郭福生夹着灰布包袱去闸管所仓库旧址旧岗亭，出来后包袱换成信封——旧岗亭内可能藏有其他证物或有人接应，郭福生与仓库旧址�..."
+                unordered_list
+                  list_item
+                    button [ref=56962, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "周泊提到仓库旧址今明两天清场，旧岗亭不在保留范围内——暗示清场可能毁掉郭福生曾藏匿或往来岗亭的其他痕迹，或有人故意借着清场清除证据。"
+                unordered_list
+                  list_item
+                    button [ref=56970, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "出库单存根右下角补注“此页为正式出库单存根，附发货单第二联”——郭福生特意注明“附发货单第二联”，暗示当年有人抽走过某一联或存根联有�..."
+                unordered_list
+                  list_item
+                    button [ref=56978, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "许知微手机备忘录先记“郭福生, 七月十五, 出库单存根, 原件下落不明”，但没有立刻记录“岑半潮”——她有意绝口不提名字，暗示她可能意识到自�..."
+                unordered_list
+                  list_item
+                    button [ref=56985, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "方阙说出'你爸当年复核记录时，就坐在你坐的位置上'，暗示许敬川曾在同一阅档室核验同一卷宗并发现过什么，直接衔接许敬川之死与卷宗被换的关系"
+                unordered_list
+                  list_item
+                    button [ref=56993, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "许知微选择不做笔迹鉴定、不将两小时零三分与挂钟调校记录直接连接、只作客观记录，她出于保护父亲可能涉案的顾虑，这一回避决定可能在后续因�..."
+                unordered_list
+                  list_item
+                    button [ref=57001, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "陆衡在结尾欲言又止地请求许知微'答应我一件事'但话未说完，许知微没有回应承诺，这一未完成的对话可能在后续成为陆衡立场转向暗处或摊牌的关键..."
+                unordered_list
+                  list_item
+                    button [ref=57009, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "方阙作为档案保管人看似恪守制度却接连主动提供关键提示：从测量孔距、告知纸纹反差、提及许敬川坐过同一位置，到出示岑半潮的警告纸条，暗示�..."
+                unordered_list
+                  list_item
+                    button [ref=57016, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "沈照夜提醒许知微“看见数字就会想接进时间线里”的毛病，许知微刻意写下“不证明实际启闭时间”的限制，暗示她未来可能被迫突破这一边界。"
+                unordered_list
+                  list_item
+                    button [ref=57024, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "吕艳秋坚持簿子不能下船、不写名字不带走，并称若周泊漏字就只能把簿子压回箱底，暗示簿子一旦进入正式程序可能再次被藏匿或销毁。"
+                unordered_list
+                  list_item
+                    button [ref=57032, loc=unstable]
+                      text "回收"
+              list_item
+                text "未回收"
+                text "必须回收"
+                text "姜隔川提到吕父东西放在樟木底柜东墙、箱锁去年换芯且钥匙两把，暗示吕家仍藏有未公开材料或第二把钥匙线索。"
+                unordered_list
+                  list_item
+                    button [ref=57040, loc=unstable]
+                      text "回收"
+              list_item
+                text "已回收"
+                text "必须回收"
+                text "被划掉的1998年电话表上林溪闸管理所起闭机室分机号，对应2005年7月16日22:47-23:05间一次未登记内线呼叫，暗示与缆绳来源存在关联。"
+              list_item
+                text "已回收"
+                text "必须回收"
+                text "吕艳秋从旧船隔舱板夹缝中发现的旧电话表上，中闸管理所起闭机室分机被圆珠笔重重划掉，背面仍可辨认为8040，暗示有人刻意抹去这一内部联络痕迹�..."
+              list_item
+                text "已回收"
+                text "必须回收"
+                text "许知微将断缆和旧电话表并列，联想两者像一段从两头同时被拽断的缆绳，暗示它们共同指向同一件被隐瞒的往事。"
+              list_item
+                text "已回收"
+                text "必须回收"
+                text "吕艳秋父亲木箱中纸烟盒里写着“按不住”的纸条，是吕父当年深感泄量之事难以掩盖、疑似留下的临终证言。"
+              list_item
+                text "已回收"
+                text "必须回收"
+                text "许知微父亲旧档案背面的铅笔字“泄量”与“按不住”遥遥对应，暗示许父与吕父共同知悉并分别留下了同一件水的真相碎片。"
+              list_item
+                text "已回收"
+                text "必须回收"
+                text "铁牌‘水关廿二’是被人重新钻孔钉回新位置的，铆钉氧化层显示重钉至多二十年，而字口氧化层却有四五十年，暗示有人故意移动并重新立起这块牌�..."
+              list_item
+                text "已回收"
+                text "必须回收"
+                text "白佩兰家的收音机在2005年7月16日凌晨4点整报时，但供电简报显示南郊线4:12即转供恢复，而白佩兰坚称整夜未来电，暗示供电记录与实际不符或有人为�..."
+              list_item
+                text "已回收"
+                text "必须回收"
+                text "顾堰声曾是原闸管所档案室副主任并保管签收章，结合其此前反常行为，暗示他有能力伪造签字、借卷不还或暗中留下记录，是缺失卷宗的关键关联人"
+              list_item
+                text "已回收"
+                text "必须回收"
+                text "铜牌刻错的日期比官方洪灾日期早一天，终局必须用事前出现的证据解释时间差。"
+              list_item
+                text "已回收"
+                text "必须回收"
+                text "吕艳秋说“起闭机室的人换过后，外线都不往那儿打了”，暗示1998年前后起闭机室人员变动或有事发生。"
+              list_item
+                text "已回收"
+                text "必须回收"
+                text "吕艳秋看到许知微手中缆绳时目光停顿两秒，嘴唇动了动却未提及，暗示她认得或知道该缆绳的来历，隐瞒了相关信息"
+              list_item
+                text "已回收"
+                text "姜隔川对高压尼龙吊索的材质、来源和断口特征异常熟悉，且不愿触碰缆绳，暗示他可能参与或知晓1992年批次相关事务。"
+              list_item
+                text "已回收"
+                text "吕艳秋提到父亲曾说“越是急着划掉的，越是想留在心里”，暗示她对旧事可能有隐情或情感关联，未来可能提供更多线索。"
+              list_item
+                text "已回收"
+                text "吕艳秋谎称箱子从未动过后又承认去年已开箱检查，且发现锁芯被换却不曾告知许知微，暗示她在父亲事件中隐瞒了自己早已接触真相的程度。"
+              list_item
+                text "已回收"
+                text "必须回收"
+                text "断缆、铜插销与铁牌三件旧物同属一套闸门系统，却被人为分散在不同地点，像是同一份档案被撕开分别藏匿，需在后续将三者拼合才能还原完整事件�..."
+  text "::1"

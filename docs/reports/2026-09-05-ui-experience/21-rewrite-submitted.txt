@@ -1,0 +1,145 @@
+root
+  container
+    container
+      heading
+        text "📖 长篇小说写作系统"
+    container
+      container
+        button [ref=3223, loc=unstable]
+          svg_root
+          text "返回列表"
+        button [ref=3230, loc=unstable]
+          svg_root
+          text "新建"
+        container
+          text "潮痕档案｜全流程体验0905"
+          table
+            table_row
+              table_cell
+                text "待审核"
+                text "人机协作"
+            table_row
+              table_cell
+                text "进度"
+                text "0"
+                text "章"
+          container [ref=3264, loc=unstable]
+            text "💡"
+            text "当代虚构江南河港城白沙，旧堤拆迁前，水文档案员许知微发现二十年前洪灾的水位记录被人更改，父亲当年的失踪并非意外。她与曾参与救援、如今�..."
+        button [ref=3270, loc=unstable]
+          image "collapsed"
+            svg_root
+          container
+            image "setting"
+              svg_root
+            text "写作偏好"
+      container
+        text "一起完成这本书"
+        text "正在处理内容"
+        text "等待作者审阅 · 已写 0 / 目标 200 章 · 0 字"
+        button [ref=3297, loc=unstable]
+          text "等待内容处理完成"
+        button [ref=3301, loc=unstable]
+          text "审阅内容（1 项待审核）"
+        text "Agent 会自动搭建框架、撰写正文并检查质量。你可以阅读已有内容，随时接手修改。"
+        container
+          text "审核节奏"
+          container "审核节奏"
+            container
+              comboboxgrouping "审核节奏" [ref=3206, loc=css:input[aria-label="审核节奏"]]
+              text "卷末审阅"
+              text " "
+            svg_root
+        textbox "创作要求" [ref=3207, loc=css:textarea[placeholder="给 Agent 的创作要求（继续时生效，留空可清除）"]]
+          text "给 Agent 的创作要求（继续时生效，留空可清除）"
+          container
+        container
+          tablist
+            container
+            container
+              tab [ref=3335, loc=unstable]
+                text "创作工具"
+              tab [ref=3338, loc=unstable]
+                text "🌍 世界观与人物"
+              tab [ref=3341, loc=unstable]
+                text "📋 大纲"
+              tab [ref=3344, loc=unstable]
+                text "📖 章节管理"
+              tab [ref=3347, loc=unstable]
+                text "🔍 质量评价"
+          tabpanel "📖 章节管理" [ref=5976, loc=role:tabpanel[name="📖 章节管理"]]
+            alert
+              text "⏸ 待审核：初始设定生成完成，待审核"
+              container
+                container
+                  text "审核目标："
+                  text "AFTER_INITIAL_SETUP"
+                container
+                  container
+                    text "世界观摘要"
+                    text "【白沙城】长江下游支流与海潮交汇，江水半咸，受潮汐顶托，老城坐落在低于河面的低洼冲积地上，全靠一线旧堤“白砂埭”圈住。城与水之间有南�..."
+                  container
+                    text "人物摘要"
+                    text "许知微（主角 · 调查者） 性格：1. 对纸张的信任 顾堰声（配角 / 深层对手（非终极反派，但贯穿全书的灰色对立者）） 性格：1. 寡言而善于倾听。在�..."
+                  container
+                    text "原旨与大纲摘要"
+                    text "当代虚构江南河港城白沙，旧堤拆迁前，水文档案员许知微发现二十年前洪灾的水位记录被人更改，父亲当年的失踪并非意外。她与曾参与救援、如今�..."
+                  container
+                    button [ref=6010, loc=unstable]
+                      text "查看世界观与人物"
+                    button [ref=6013, loc=unstable]
+                      text "查看大纲"
+                container
+                  button [ref=6015, loc=unstable]
+                    image "check-circle"
+                      svg_root
+                    text "✅ 批准"
+                  button [ref=6018, loc=unstable]
+                    image "close-circle"
+                      svg_root
+                    text "❌ 拒绝并重写"
+                  button [ref=6021, loc=unstable]
+                    image "edit"
+                      svg_root
+                    text "📝 修改意见重写"
+            button [ref=5967, loc=unstable]
+              image "plus"
+                svg_root
+              text "新增章节"
+            container
+              container
+                container
+                  table
+                    table_row
+                      table_cell
+                  text "📖 章节 (0)"
+                  table
+                    table_row
+                      table_cell
+                container
+                  svg_root
+                  text "暂无数据"
+              text "暂无章节。点击"写一章"开始创作。"
+            button [ref=5974, loc=unstable]
+              image "reload"
+                svg_root
+              text "刷新"
+  text "::1"
+  container
+    container
+    container [ref=6082, loc=unstable]
+      button "Close" [ref=6084, loc=css:button[aria-label="Close"]]
+        container "关闭"
+          image "close"
+            svg_root
+      text "修改意见"
+      textbox [ref=6078, loc=unstable]
+        text "本次初始设定未达标，请先修改完整设定与总纲。1）严格当代现实主义，所有人均无超能力：沈照夜的影名录、抽取念头、愿力交换、忘川和残念全部�..."
+      container
+        button [ref=6096, loc=unstable]
+          text "取 消"
+        button [ref=6099, loc=unstable]
+          container
+          image "loading"
+            svg_root
+          text "重写后批准"

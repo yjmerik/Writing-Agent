@@ -1,0 +1,150 @@
+root
+  container
+    container
+      heading
+        text "📖 长篇小说写作系统"
+    container
+      container
+        container
+          button [ref=1018, loc=unstable]
+            image "arrow-left"
+              svg_root
+            text "返回列表"
+          button [ref=1025, loc=unstable]
+            image "plus"
+              svg_root
+            text "新建"
+        container
+          text "潮痕档案｜全流程体验0905"
+          table
+            table_row
+              table_cell
+                text "构思中"
+                text "人机协作"
+            table_row
+              table_cell
+                text "进度"
+                container
+                  text "0"
+                  text "章"
+          container [ref=1059, loc=unstable]
+            text "💡"
+            text "当代虚构江南河港城白沙，旧堤拆迁前，水文档案员许知微发现二十年前洪灾的水位记录被人更改，父亲当年的失踪并非意外。她与曾参与救援、如今�..."
+        button [ref=1065, loc=unstable]
+          image "collapsed"
+            svg_root
+          container
+            image "setting"
+              svg_root
+            text "写作偏好"
+      container
+        container
+          container
+            container
+              text "一起完成这本书"
+              text "创作遇到问题"
+              text "搭建世界、人物与全书框架 · 已写 0 / 目标 200 章 · 0 字"
+            container
+              button [ref=1010, loc=unstable]
+                text "继续协作"
+              button [ref=1094, loc=unstable]
+                text "审阅内容"
+          text "你可以直接编辑世界观、人物、大纲和正文，也可以让 Agent 按要求修改。审阅完成后继续协作。"
+          alert
+            text "Embedding 调用失败: HTTP 401 {"error":{"message":"You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY)..."
+          container
+            container
+              text "审核节奏"
+              container "审核节奏"
+                container
+                  comboboxgrouping "审核节奏" [ref=1007, loc=css:input[aria-label="审核节奏"]]
+                  text "仅主动接手"
+                  text " "
+                svg_root
+            textbox "创作要求" [ref=1008, loc=css:textarea[placeholder="给 Agent 的创作要求（继续时生效，留空可清除）"]]
+              text "写作始终遵守：限知视角；所有关键证据在解答前出现；每卷推进核心谜团并支付人物代价；同类调查场景不得连续复用。许知微不具超能力，周泊单�..."
+        container
+          tablist
+            container
+            container
+              tab [ref=1127, loc=unstable]
+                text "创作工具"
+              tab [ref=1130, loc=unstable]
+                text "🌍 世界观与人物"
+              tab [ref=1133, loc=unstable]
+                text "📋 大纲"
+              tab [ref=1136, loc=unstable]
+                text "📖 章节管理"
+              tab [ref=1139, loc=unstable]
+                text "🔍 质量评价"
+          tabpanel "🔍 质量评价" [ref=1193, loc=role:tabpanel[name="🔍 质量评价"]]
+            button [ref=1198, loc=unstable]
+              image "safety-certificate"
+                svg_root
+              text "🔍 开始质量评价"
+            alert
+              text "质量评价说明"
+              text "AI 将从 7 个维度（长程一致性 / 风格统一 / 情节质量 / 人物塑造 / 世界观完整 / 对话质量 / 模式多样性）评价已生成的小说，发现具体问题并给出改进�..."
+            container
+              alert
+                image "check-circle"
+                  svg_root
+                text "评价完成"
+              container
+                heading
+                  text "总评分："
+                  text "1"
+                  text "/ 10"
+                text "本次评审缺少核心材料——无正文章节、人物卡、大纲、前情摘要和已确立事实，仅有一段地理设定，无法对小说质量做出有效评分。该地理设定本身�..."
+              splitter
+              heading
+                text "📊 各维度评分"
+              container
+                text "人物塑造"
+                progressindicator
+                  container
+                  text "1/10"
+              text "世界观完整"
+              container
+              text "5/10"
+              text "情节质量"
+              container
+              text "1/10"
+              text "对话质量"
+              container
+              text "1/10"
+              text "风格统一"
+              container
+              text "1/10"
+              text "模式多样性"
+              container
+              text "1/10"
+              text "长程一致性"
+              container
+              text "1/10"
+              heading
+                text "⚠️ 发现的问题（"
+                text "7"
+                text "个）"
+              text "严重"
+              text "长程一致性"
+              text "缺少正文、人物卡、大纲与前情摘要，无法验证任何长程一致性信息，如人物姓名、性格、能力、世界观前后是否矛盾；章节序号也无法检查。"
+              text "严重"
+              text "风格统一"
+              text "无章节文本，无法评估文风统一性与类型元素是否越界。"
+              text "严重"
+              text "情节质量"
+              text "无大纲和正文，无法判断情节节奏、爽点密度、新颖性或是否存在流水账/套路化问题。"
+              text "严重"
+              text "人物塑造"
+              text "人物卡为空，正文无采样，无法评估角色立体度、动机自洽性与对话区分度。"
+              text "中等"
+              text "世界观完整"
+              text "仅有地理设定段，局部描述细腻（如白砂埭、鬼夹弯、五道涨水漆线），有现实感与空间叙事潜力；但缺乏与其他设定互证的文本，无法判断世界观整�..."
+              text "严重"
+              text "对话质量"
+              text "无对话文本，无法评估占比、区分度、推进作用或引用增色等。"
+              text "严重"
+              text "模式多样性"
+              text "无正文，无法判断爽点轮换、场景结构、对话模式或叙事手法是否重复或单一。"
+  text "::1"

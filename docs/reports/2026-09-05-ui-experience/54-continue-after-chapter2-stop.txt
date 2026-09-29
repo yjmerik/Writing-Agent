@@ -1,0 +1,131 @@
+root
+  container
+    container
+      heading
+        text "📖 长篇小说写作系统"
+    container
+      container
+        container
+          button [ref=25724, loc=unstable]
+            image "arrow-left"
+              svg_root
+            text "返回列表"
+          button [ref=25731, loc=unstable]
+            image "plus"
+              svg_root
+            text "新建"
+        container
+          text "潮痕档案｜全流程体验0905"
+          table
+            table_row
+              table_cell
+                text "创作中"
+                text "人机协作"
+            table_row
+              table_cell
+                text "进度"
+                container
+                  text "2"
+                  text "章"
+          container [ref=25765, loc=unstable]
+            text "💡"
+            text "当代虚构江南河港城白沙，旧堤拆迁前，水文档案员许知微发现二十年前洪灾的水位记录被人更改，父亲当年的失踪并非意外。她与曾参与救援、如今�..."
+        button [ref=25771, loc=unstable]
+          image "collapsed"
+            svg_root
+          container
+            image "setting"
+              svg_root
+            text "写作偏好"
+      container
+        container
+          container
+            container
+              text "一起完成这本书"
+              text "Agent 正在创作"
+              text "撰写与检查正文 · 已写 2 / 目标 200 章 · 5,627 字"
+            container
+              button [ref=25678, loc=unstable]
+                container
+                image "loading"
+                  svg_root
+                text "我要接手编辑"
+              button [ref=25799, loc=unstable]
+                text "审阅内容"
+          text "Agent 会自动搭建框架、撰写正文并检查质量。你可以阅读已有内容，随时接手修改。"
+          container
+            container
+              text "审核节奏"
+              container "审核节奏"
+                container
+                  comboboxgrouping "审核节奏" [ref=25691, loc=css:input[aria-label="审核节奏"]]
+                  text "卷末审阅"
+                  text " "
+                svg_root
+            textbox "创作要求" [ref=25692, loc=css:textarea[placeholder="给 Agent 的创作要求（继续时生效，留空可清除）"]]
+              text "从下一未写章继续，保留已确认第1章v5正文。遵循作者保存的200章八卷修订总纲和卷1第1—25章计划，不再使用旧41—48章计划。时间2025年、洪灾2005年7月..."
+        container
+          tablist
+            container
+            container
+              tab [ref=25818, loc=unstable]
+                text "创作工具"
+              tab [ref=25821, loc=unstable]
+                text "🌍 世界观与人物"
+              tab [ref=25824, loc=unstable]
+                text "📋 大纲"
+              tab [ref=25827, loc=unstable]
+                text "📖 章节管理"
+              tab [ref=25830, loc=unstable]
+                text "🔍 质量评价"
+          tabpanel "创作工具" [ref=26849, loc=role:tabpanel[name="创作工具"]]
+            container
+              container
+                image "check"
+                  svg_root
+                container
+                  text "构思"
+                  container
+              container
+                image "check"
+                  svg_root
+                container
+                  text "规划"
+                  container
+              container
+                text "3"
+                container
+                  text "创作中"
+                  container
+              container
+                text "4"
+                container
+                  text "卷完结"
+                  container
+              container
+                text "5"
+                text "完结"
+            alert
+              text "单步创作工具"
+              unordered_list
+                list_item
+                  text "推进"
+                  text "：从当前状态前进一步（构思→规划→写作）。首次运行会生成世界观/人物/大纲。"
+                list_item
+                  text "写一章"
+                  text "：在写作阶段，生成下一章正文。每次调用 LLM，可能耗时 30-60 秒。"
+                list_item
+                  text "日常创作请使用上方协作栏；以下工具供需要单独执行某一步时使用。"
+            textbox [ref=26844, loc=unstable]
+              text "写前指令（可选）：对本章/本次连续写作的定向要求，如『本章重点写主角与师父的诀别』"
+              container
+            container
+              button [ref=26922, loc=unstable]
+                image "file-add"
+                  svg_root
+                text "写一章"
+              button [ref=26930, loc=unstable]
+                image "thunderbolt"
+                  svg_root
+                text "⚡ 连续写作（最多 50 章）"
+  text "::1"

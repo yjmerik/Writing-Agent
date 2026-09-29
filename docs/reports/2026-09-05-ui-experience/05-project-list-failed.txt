@@ -1,0 +1,81 @@
+root
+  container
+    container
+      heading
+        text "📖 长篇小说写作系统"
+    container
+      container
+        container
+          heading
+            text "📖 长篇小说写作系统"
+          paragraph
+            text "AI 驱动的多 Agent 协作创作 · 已有"
+            text "1"
+            text "个项目"
+        container
+          button [ref=935, loc=unstable]
+            text "刷 新"
+          button [ref=938, loc=unstable]
+            image "rocket"
+              svg_root
+            text "新建项目"
+      container
+        table
+          table_row
+            table_cell
+        container [ref=952, loc=unstable]
+          table
+            table_row
+              table_cell
+                container
+                text "项目"
+              table_cell
+                text "构思"
+              table_cell
+                text "标签"
+              table_cell
+                text "进度"
+              table_cell
+                text "操作"
+            table_row [ref=960, loc=unstable]
+              table_cell
+                text "项目"
+              table_cell
+                text "构思"
+              table_cell
+                text "标签"
+              table_cell
+                text "进度"
+              table_cell
+                text "操作"
+            button "打开项目 潮痕档案｜全流程体验0905" [ref=971, loc=role:button[name="打开项目 潮痕档案｜全流程体验0905"]]
+              table_cell
+                text "潮痕档案｜全流程体验0905"
+                container
+                  text "构思中"
+                  text "主动接手"
+              table_cell
+                text "当代虚构江南河港城白沙，旧堤拆迁前，水文档案员许知微发现二十年前洪灾的水位记录被人更改，父亲当年的失踪并非意外。她与曾参与救援、如今�..."
+              table_cell
+                text "悬疑"
+                text "现实主义"
+                text "群像"
+                text "水利"
+              table_cell
+                text "0"
+                text "/"
+                text "200"
+                text "章 ·"
+                text "10"
+                text "%"
+                container
+              table_cell
+                button [ref=1001, loc=unstable]
+                  svg_root
+                  text "进入"
+                button "删除项目「潮痕档案｜全流程体验0905」" [ref=1004, loc=css:button[aria-label="删除项目「潮痕档案｜全流程体验0905」"]]
+                  svg_root
+        table
+          table_row
+            table_cell
+  text "::1"

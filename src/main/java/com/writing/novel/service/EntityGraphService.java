@@ -48,11 +48,34 @@ public class EntityGraphService {
      * 3. 上述两集合的联合，按 recency > 关系权重 > 类型优先级排序
      */
     public String recallConsistencySection(String projectId, int currentChapter) {
-        List<Entity> entities = new ArrayList<>();
+        return recallConsistencySection(projectId, currentChapter, null);
+    }
 
-        // 1. 最近 N 章出现过的实体
+    /**
+     * NCS-113: 带本章 cast 的召回——cast 命中（名称/别名）的实体优先注入，
+     * 本章大纲核心实体不再因 5 章滚动窗错过（旧纯 recency 的盲区）。
+     */
+    public String recallConsistencySection(String projectId, int currentChapter, List<String> cast) {
+        List<Entity> all = repository.findEntitiesByProject(projectId);
+        List<Entity> entities = new ArrayList<>();
+        // 0. cast 命中实体（名称或别名精确/包含）——本章相关性最高
+        if (cast != null && !cast.isEmpty() && !all.isEmpty()) {
+            for (Entity e : all) {
+                if (entities.size() >= MAX_TOTAL_ENTITIES) break;
+                boolean hit = cast.stream().anyMatch(name -> name != null && !name.isBlank()
+                        && (e.getName().contains(name)
+                            || (e.getAliases() != null && e.getAliases().stream()
+                                .anyMatch(a -> a.contains(name) || name.contains(a)))));
+                if (hit) entities.add(e);
+            }
+        }
+
+        // 1. 最近 N 章出现过的实体（去重合并）
         int fromChapter = Math.max(1, currentChapter - RECENT_CHAPTER_WINDOW);
-        entities.addAll(repository.findEntitiesInChapterRange(projectId, fromChapter, currentChapter));
+        for (Entity e : repository.findEntitiesInChapterRange(projectId, fromChapter, currentChapter)) {
+            if (entities.size() >= MAX_TOTAL_ENTITIES) break;
+            if (entities.stream().noneMatch(x -> x.getId().equals(e.getId()))) entities.add(e);
+        }
 
         // 2. 尝试扩展: 从最近实体的 1 跳邻居补充（图遍历）
         Set<String> entityIds = entities.stream().map(Entity::getId).collect(Collectors.toSet());

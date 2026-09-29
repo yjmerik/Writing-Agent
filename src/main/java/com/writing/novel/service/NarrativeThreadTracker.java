@@ -62,15 +62,34 @@ public class NarrativeThreadTracker {
         }
     }
 
+    /** NCS-113: 线索相关性分——cast 命中 +100；悬挂>20 章且非 cast 相关 -50（僵尸降权）；悬挂时长封顶 20 */
+    public static int threadScore(NarrativeThread t, List<String> cast) {
+        int score = Math.min(t.getSuspenseChapters(), 20);
+        boolean castHit = cast != null && cast.stream().anyMatch(name -> name != null && !name.isBlank()
+                && ((t.getName() != null && t.getName().contains(name))
+                    || (t.getDescription() != null && t.getDescription().contains(name))));
+        if (castHit) score += 100;
+        if (!castHit && t.getSuspenseChapters() > 20) score -= 50;
+        return score;
+    }
+
     /**
      * 生成叙事线索追踪文本，注入写作上下文。
      */
     public String getThreadSection(String projectId) {
+        return getThreadSection(projectId, null);
+    }
+
+    /**
+     * NCS-113: 带本章 cast 的线索召回——排序 = cast 相关 > 僵尸降权（悬挂>20 章且与本章无关
+     * 不再霸榜）> 悬挂时长；cap 10 语义不变。旧纯 staleness 排序让最老线索永久挤占预算。
+     */
+    public String getThreadSection(String projectId, List<String> cast) {
         var threads = repository.findAllNarrativeThreads(projectId);
         var active = threads.stream()
                 .filter(t -> t.getStatus() != ThreadStatus.RESOLVED)
-                // p10-w3-07: cap 未回收线索（百万字下无界增长会塞满上下文），优先 suspenseChapters 高的
-                .sorted((a, b) -> Integer.compare(b.getSuspenseChapters(), a.getSuspenseChapters()))
+                // p10-w3-07: cap 未回收线索（百万字下无界增长会塞满上下文）
+                .sorted((a, b) -> Integer.compare(threadScore(b, cast), threadScore(a, cast)))
                 .limit(10)
                 .collect(Collectors.toList());
 

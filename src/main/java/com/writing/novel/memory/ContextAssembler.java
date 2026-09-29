@@ -151,7 +151,7 @@ public class ContextAssembler {
                 .limit(3)
                 .toList();
         assembleRetrievedContext(projectId, queryText, cast, foreshadowHints, ctx, maxContextTokens, manifest);
-        ctx.setRelevantForeshadowings(buildForeshadowings(projectId, chapterIndex, manifest));
+        ctx.setRelevantForeshadowings(buildForeshadowings(projectId, chapterIndex, cast, manifest));
         ctx.setBibleSection(buildBibleSection(projectId, chapterIndex, fullSynopsis, manifest));
         ctx.setTaskSection(buildTaskSection(chapterTitle, chapterSynopsis, writingNotes, fullSynopsis));
 
@@ -183,8 +183,8 @@ public class ContextAssembler {
             }
         }
 
-        // 实体一致性注入
-        ctx.setEntityConsistencySection(buildEntityConsistencySection(projectId, chapterIndex));
+        // 实体一致性注入（NCS-113: 带本章 cast）
+        ctx.setEntityConsistencySection(buildEntityConsistencySection(projectId, chapterIndex, cast));
 
         // 写作偏好：对话约束（含密度目标）+ 原有的量化约束
         ctx.setWritingConstraints(buildWritingConstraints(projectId, chapterIndex, fullSynopsis));
@@ -195,8 +195,8 @@ public class ContextAssembler {
         // 引用素材注入（与角色知识领域匹配的世界观条目）
         ctx.setKnowledgeQuoteSection(buildKnowledgeQuoteSection(projectId));
 
-        // 叙事线索追踪
-        ctx.setNarrativeThreadSection(buildNarrativeThreadSection(projectId));
+        // 叙事线索追踪（NCS-113: 带本章 cast）
+        ctx.setNarrativeThreadSection(buildNarrativeThreadSection(projectId, cast));
 
         // p11-H4: 角色关系网络注入
         String relationshipWeb = buildRelationshipWeb(projectId, fullSynopsis);
@@ -768,13 +768,24 @@ public class ContextAssembler {
         return role != null && (role.contains("主角") || role.contains("男主") || role.contains("女主"));
     }
 
-    /** 兼容旧签名（既有测试反射调用）；生产路径走带清单的三参版本 */
+    /** NCS-113: 伏笔相关性分——本章 cast 命中 +100（相关但不够老的伏笔不再被纯悬置排序挤出）；僵尸（>25 章且无关）-50 */
+    public static int foreshadowScore(Foreshadowing f, List<String> cast, int currentChapter) {
+        int score = Math.min(f.suspenseChapters(currentChapter), 25);
+        boolean castHit = cast != null && cast.stream().anyMatch(name -> name != null && !name.isBlank()
+                && f.getDescription() != null && f.getDescription().contains(name));
+        if (castHit) score += 100;
+        if (!castHit && f.suspenseChapters(currentChapter) > 25) score -= 50;
+        return score;
+    }
+
+    /** 兼容旧签名（既有测试反射调用）；生产路径走带 cast 与清单的四参版本 */
     private String buildForeshadowings(String projectId, int chapterIndex) {
-        return buildForeshadowings(projectId, chapterIndex,
+        return buildForeshadowings(projectId, chapterIndex, null,
                 new InjectionManifest(projectId, chapterIndex, 0, 0));
     }
 
-    private String buildForeshadowings(String projectId, int chapterIndex, InjectionManifest manifest) {
+    private String buildForeshadowings(String projectId, int chapterIndex, List<String> cast,
+                                       InjectionManifest manifest) {
         List<Foreshadowing> unresolved = repository.findUnresolvedForeshadowings(projectId).stream()
                 .filter(f -> f.getPlantedAtChapter() <= chapterIndex)
                 .toList();
@@ -785,13 +796,13 @@ public class ContextAssembler {
         var mustInclude = unresolved.stream()
                 .filter(f -> f.getPriority() == Foreshadowing.Priority.HIGH || f.isMustResolve())
                 .sorted((a, b) -> Integer.compare(
-                        b.suspenseChapters(currentChapter), a.suspenseChapters(currentChapter)))
+                        foreshadowScore(b, cast, currentChapter), foreshadowScore(a, cast, currentChapter)))
                 .limit(8)
                 .toList();
         var others = unresolved.stream()
                 .filter(f -> f.getPriority() != Foreshadowing.Priority.HIGH && !f.isMustResolve())
                 .sorted((a, b) -> Integer.compare(
-                        b.suspenseChapters(currentChapter), a.suspenseChapters(currentChapter)))
+                        foreshadowScore(b, cast, currentChapter), foreshadowScore(a, cast, currentChapter)))
                 .limit(Math.max(0, LIMIT - mustInclude.size()))
                 .toList();
         // NCS-096: 伏笔注入选取点记录（mustInclude + others 即实际注入集）
@@ -892,9 +903,9 @@ public class ContextAssembler {
 
     // --- 图数据库：实体一致性注入 ---
 
-    private String buildEntityConsistencySection(String projectId, int chapterIndex) {
+    private String buildEntityConsistencySection(String projectId, int chapterIndex, List<String> cast) {
         if (entityGraphService == null) return "";
-        return entityGraphService.recallConsistencySection(projectId, chapterIndex);
+        return entityGraphService.recallConsistencySection(projectId, chapterIndex, cast);
     }
 
     // --- 量化写作约束（含对话密度） ---
@@ -1244,9 +1255,9 @@ public class ContextAssembler {
 
     // --- 反馈闭环：注入历史 ContinuityIssue ---
 
-    private String buildNarrativeThreadSection(String projectId) {
+    private String buildNarrativeThreadSection(String projectId, List<String> cast) {
         if (narrativeThreadTracker == null) return "";
-        return narrativeThreadTracker.getThreadSection(projectId);
+        return narrativeThreadTracker.getThreadSection(projectId, cast);
     }
 
     /**

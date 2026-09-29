@@ -3,6 +3,7 @@ import { Table, Button, Modal, Form, Input, InputNumber, Select, Switch, Tag, Sp
 import { PlusOutlined, DeleteOutlined, EditOutlined, ReloadOutlined } from '@ant-design/icons';
 import { api } from '../api/client';
 import type { LlmModelEntry, LlmModelOverview, LlmProtocolType } from '../types';
+import ModelLibrary from '../components/ModelLibrary';
 
 const { Title, Text } = Typography;
 
@@ -239,8 +240,10 @@ export default function ModelConfigPage() {
   ];
 
   return (
+    <>
+    <ModelLibrary />
     <Card
-      title={<Title level={4} style={{ margin: 0 }}>🤖 模型配置</Title>}
+      title={<Title level={4} style={{ margin: 0 }}>🤖 模型配置（任务类型明细）</Title>}
       extra={
         <Space>
           <Button icon={<ReloadOutlined />} onClick={load}>刷新</Button>
@@ -358,5 +361,6 @@ export default function ModelConfigPage() {
         </Form>
       </Modal>
     </Card>
+    </>
   );
 }

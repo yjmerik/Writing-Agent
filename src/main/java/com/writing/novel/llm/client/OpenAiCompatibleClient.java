@@ -1,5 +1,6 @@
 package com.writing.novel.llm.client;
 
+import java.util.concurrent.ThreadLocalRandom;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -28,6 +29,9 @@ public class OpenAiCompatibleClient implements LlmClient {
 
     /** p10-w1-05: 退避时长（可被测试调小避免长睡）——5xx/网络 基数 */
     static volatile long backoffUnitMs = 1000L;
+
+    /** 测试钩子：调整退避基数 */
+    public static void setBackoffUnitMs(long v) { backoffUnitMs = v; }
     /** p10-w1-05: 429 限流退避基数（更长：指数到分钟级） */
     static volatile long rateLimitBackoffMs = 30_000L;
 
@@ -66,7 +70,8 @@ public class OpenAiCompatibleClient implements LlmClient {
         // 429/5xx 重试（3次，指数退避）；内容审查(1301)首次温和化原位重试（不消耗次数）
         boolean softened = false;
         int attempt = 0;
-        while (attempt < 3) {
+        final int maxAttempts = config.effectiveRetryAttempts();   // NCS-129: 按任务配置
+        while (attempt < maxAttempts) {
             Request httpRequest = new Request.Builder()
                     .url(url)
                     .header("Authorization", "Bearer " + config.getApiKey())
@@ -86,8 +91,8 @@ public class OpenAiCompatibleClient implements LlmClient {
                     String finishReason = choice.path("finish_reason").asText("");
                     // p16-replay-fix: 空响应是服务端故障（瞬时空响应会覆盖非空 fixture、
                     // 使后处理产出漂移）——视为可重试失败，与 ChapterWriter 空内容重试同语义
-                    if (content.isBlank() && attempt < 2) {
-                        log.warn("LLM 空响应(尝试{}/3): {}，重试", attempt + 1, request.getTaskType());
+                    if (content.isBlank() && attempt < maxAttempts - 1) {
+                        log.warn("LLM 空响应(尝试{}/{}): {}，重试", attempt + 1, maxAttempts, request.getTaskType());
                         sleepBackoff(attempt, false);
                         attempt++;
                         continue;
@@ -113,7 +118,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                     throw new RuntimeException("LLM 调用失败: HTTP " + response.code() + " " + errBody);
                 }
                 // 429/5xx 可重试
-                if (attempt < 2) {
+                if (attempt < maxAttempts - 1) {
                     boolean rateLimited = response.code() == 429;
                     response.close();
                     sleepBackoff(attempt, rateLimited);
@@ -131,7 +136,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                 log.warn("LLM 调用 IOException(尝试{}/3, {}ms): {} — {}: {}",
                         attempt + 1, elapsed, request.getTaskType(),
                         e.getClass().getSimpleName(), e.getMessage());
-                if (attempt < 2) {
+                if (attempt < maxAttempts - 1) {
                     sleepBackoff(attempt, false);
                     attempt++;
                     continue;
@@ -268,9 +273,16 @@ public class OpenAiCompatibleClient implements LlmClient {
      * 限流(429)：rateLimitBackoffMs * (attempt+1)，更长（指数到分钟级）；
      * 5xx/网络：backoffUnitMs * (attempt+1)。
      */
+    /**
+     * NCS-129: 指数退避 + 全抖动 jitter——旧线性退避（unit×(attempt+1)）在 429 风暴下
+     * 多线程同步重放；jitter 打散，基数可按任务配置。
+     */
     private void sleepBackoff(int attempt, boolean rateLimited) {
         long unit = rateLimited ? rateLimitBackoffMs : backoffUnitMs;
-        try { Thread.sleep(unit * (attempt + 1)); } catch (InterruptedException ignored) {
+        long exponential = unit * (1L << Math.min(attempt, 10));
+        long jitter = (long) (exponential * 0.5 * ThreadLocalRandom.current().nextDouble());
+        long sleep = exponential - jitter;   // [50%, 100%) of exponential
+        try { Thread.sleep(Math.max(1, sleep)); } catch (InterruptedException ignored) {
             Thread.currentThread().interrupt();
         }
     }

@@ -8,10 +8,24 @@ public class ModelConfig {
     private int requestTimeoutSeconds = 180;
     // Resolved by the gateway for named routes; legacy calls retain their retry policy.
     private boolean singleAttempt;
+    /** NCS-129: 传输层重试次数上限（含首次）；0 = 用默认 3 */
+    private int retryAttempts = 0;
+    /** NCS-129: 退避基数毫秒（0 = 用默认）；退避 = 基数 × 2^attempt × (0.5~1.5 jitter) */
+    private int backoffBaseMs = 0;
     public int getRequestTimeoutSeconds() { return requestTimeoutSeconds; }
     public void setRequestTimeoutSeconds(int value) { requestTimeoutSeconds = value; }
     public boolean isSingleAttempt() { return singleAttempt; }
     public void setSingleAttempt(boolean value) { singleAttempt = value; }
+    public int getRetryAttempts() { return retryAttempts; }
+    public void setRetryAttempts(int v) { retryAttempts = v; }
+    public int getBackoffBaseMs() { return backoffBaseMs; }
+    public void setBackoffBaseMs(int v) { backoffBaseMs = v; }
+
+    /** NCS-129: 生效重试次数（含首次）——0/负值回退默认 3 */
+    public int effectiveRetryAttempts() { return retryAttempts > 0 ? retryAttempts : 3; }
+
+    /** NCS-129: 生效退避基数 */
+    public int effectiveBackoffBaseMs() { return backoffBaseMs > 0 ? backoffBaseMs : 1000; }
 
     private String baseUrl;
     private String apiKey;

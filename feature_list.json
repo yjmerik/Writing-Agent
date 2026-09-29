@@ -9583,13 +9583,14 @@
    "description": "关系状态双轨（EntityEdge 时间作用域 vs StoryFact.RELATIONSHIP_STATE）建立交叉校验与 canonical 口径；统一 EntityExtractor 对称边过期与 RelationshipEvolutionTracker 有向边过期策略；CharacterAsOfService 口径统一（当前只读边表）",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: f9761fe534d8（ff-merge=main 提交 f9761fe534d8）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：同一关系两轨冲突时产生校验信号，N 时点关系查询与真典关系事实口径一致",
    "verify_cmd": "mvn test -Dtest=RelationshipDualTrackTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-122-verified"
   },
   {
    "id": "NCS-123",

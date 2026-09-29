@@ -1,0 +1,20 @@
+{
+ "commit": "f9761fe534d815fdaa7cba425a93df017fd15c3f",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-122"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：RelationshipDualTrackTest 3 项（交叉校验零重叠矛盾信号+关键词桥接/统一口径边表优先真典补充/时点区间外不注入）；对称过期统一；ARC 阶段挂接纯规则校验；分支与 main 全量 1357/0F/0E/1S 严格门禁",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-122; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-122-relationship-dual-track"
+}

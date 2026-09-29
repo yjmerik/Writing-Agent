@@ -2739,8 +2739,19 @@
    "implementation_commit": "c981b5938f4b83015982f45ef232d8414e59ea37",
    "main_commit": "c981b5938f4b83015982f45ef232d8414e59ea37",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-135.json"
+  },
+  {
+   "id": "ncs-136-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-136"
+   ],
+   "branch": "codex/ncs-136-agent-harness-removal",
+   "implementation_commit": "ca57eb719d02f02b214950784e553a503b772b3d",
+   "main_commit": "ca57eb719d02f02b214950784e553a503b772b3d",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-136.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "c981b5938f4b83015982f45ef232d8414e59ea37"
+ "main_commit": "ca57eb719d02f02b214950784e553a503b772b3d"
 }

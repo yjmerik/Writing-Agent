@@ -9797,13 +9797,14 @@
    "description": "AgentHarness.executeWithRetry 号称通用 harness 但生产零消费（各 Agent 手写重试行为发散，与 NCS-129 单一重试所有权冲突）：删除死代码或收编为唯一重试入口",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: ca57eb719d02（ff-merge=main 提交 ca57eb719d02）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：executeWithRetry 无生产引用（删除）或成为唯一消费入口（收编），全量测试通过",
    "verify_cmd": "bash -c '! grep -rn \"executeWithRetry\" src/main/java'",
-   "type": "maintenance"
+   "type": "maintenance",
+   "completion_record": "ncs-136-verified"
   },
   {
    "id": "NCS-137",

@@ -1,0 +1,20 @@
+{
+ "commit": "e93d42bc5092e2f8c9ab392ac3bf287061ce62bd",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-112"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：ContextBudgetAdaptiveTest 4 项（缩放只放大不缩小/settings 截断保留/盲区溢出暴露/预算充足无溢出）；SummaryLayeredTrim/InjectionManifest 既有断言随新语义更新；分支与 main 全量 1323/0F/0E/1S 严格门禁",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-112; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-112-budget-adaptive"
+}

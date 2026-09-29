@@ -9429,13 +9429,14 @@
    "description": "applyTokenBudget 的 relevantSettings 从整体置空改为按预算截断（当前第 5 级置空与长程召回目标矛盾）；各硬编码截断常量随 budget 线性缩放；组装结束后兜底校验，估算超窗发 CONTEXT_BUDGET_EXCEEDED 事件，消灭不可裁盲区静默超窗",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: e93d42bc5092（ff-merge=main 提交 e93d42bc5092）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：小预算场景下 relevantSettings 保留截断内容而非空、七段不可裁区总和超预算时产生事件、大预算场景截断常量放大",
    "verify_cmd": "mvn test -Dtest=ContextBudgetAdaptiveTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-112-verified"
   },
   {
    "id": "NCS-113",

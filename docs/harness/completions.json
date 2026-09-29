@@ -2475,8 +2475,19 @@
    "implementation_commit": "f3c42f2e0d118922da076824debfe466bd8a24ff",
    "main_commit": "0755c715d5c0aab2625a73642e38d1ee3dea4d58",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-111.json"
+  },
+  {
+   "id": "ncs-112-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-112"
+   ],
+   "branch": "codex/ncs-112-budget-adaptive",
+   "implementation_commit": "e93d42bc5092e2f8c9ab392ac3bf287061ce62bd",
+   "main_commit": "e93d42bc5092e2f8c9ab392ac3bf287061ce62bd",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-112.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "0755c715d5c0aab2625a73642e38d1ee3dea4d58"
+ "main_commit": "e93d42bc5092e2f8c9ab392ac3bf287061ce62bd"
 }

@@ -75,6 +75,8 @@ public class StyleGuardianAgent {
         if (existing.isEmpty()) return null;
 
         StyleProfile profile = existing.get();
+        // NCS-128: 首次卷末更新前锁定意图快照（preset/作者定调的固定基准）
+        profile.lockIntent();
 
         String systemPrompt = promptService.render("style-establish", Map.of());
         String userMessage = "请根据以下近期章节正文，更新风格基线（保留原有核心特征，融入最新趋势）：\n"
@@ -97,7 +99,8 @@ public class StyleGuardianAgent {
         String newVoice = extractField(resp.getContent(), "叙事");
         String newDosAndDonts = extractField(resp.getContent(), "注意事项");
 
-        // 合并：只更新非空的字段（不覆写为空值）
+        // NCS-128: 只更新可演化状态字段（tone/voice/dosAndDonts 作为「state」随卷演化），
+        // 意图快照不触碰——检测器追随正文的"漂移合法化"回路自此斩断
         if (!newTone.isBlank()) profile.setTone(newTone);
         if (!newVoice.isBlank()) profile.setVoice(newVoice);
         if (!newDosAndDonts.isBlank()) profile.setDosAndDonts(newDosAndDonts);

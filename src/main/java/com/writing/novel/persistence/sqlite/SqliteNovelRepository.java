@@ -2698,19 +2698,39 @@ public class SqliteNovelRepository implements NovelRepository {
     public void saveStyleProfile(StyleProfile p) {
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO style_profiles (project_id,tone,voice,dos_and_donts,sample_chapter_indices,style_samples,updated_at) " +
-                     "VALUES (?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET tone=excluded.tone, " +
+                     "INSERT INTO style_profiles (project_id,tone,voice,dos_and_donts,sample_chapter_indices,style_samples,updated_at,intent_tone,intent_voice,intent_dos_and_donts) " +
+                     "VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET tone=excluded.tone, " +
                      "voice=excluded.voice, dos_and_donts=excluded.dos_and_donts, " +
                      "sample_chapter_indices=excluded.sample_chapter_indices, " +
-                     "style_samples=excluded.style_samples, updated_at=excluded.updated_at")) {
+                     "style_samples=excluded.style_samples, updated_at=excluded.updated_at, " +
+                     "intent_tone=excluded.intent_tone, intent_voice=excluded.intent_voice, " +
+                     "intent_dos_and_donts=excluded.intent_dos_and_donts")) {
             ps.setString(1, p.getProjectId()); ps.setString(2, p.getTone());
             ps.setString(3, p.getVoice()); ps.setString(4, p.getDosAndDonts());
             ps.setString(5, String.join(",", p.getSampleChapterIndices().stream()
                     .map(String::valueOf).toList()));
             ps.setString(6, serializeStyleSamples(p.getStyleSamples()));
             ps.setString(7, p.getUpdatedAt().toString());
+            try {
+                // NCS-128: 只持久化真实意图字段（未锁定为 null——经回退访问器会把当前值误固化成锁定态）
+                ps.setString(8, getIntent(p, "tone"));
+                ps.setString(9, getIntent(p, "voice"));
+                ps.setString(10, getIntent(p, "dos"));
+            } catch (Exception ignoreColumn) { throw new RuntimeException(ignoreColumn); }
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** NCS-128: 未锁定的意图字段持久化为 null（经反射读私有字段，避免回退访问器固化当前值） */
+    private static String getIntent(StyleProfile p, String field) {
+        try {
+            var f = StyleProfile.class.getDeclaredField(
+                    "intent" + String.valueOf(field.charAt(0)).toUpperCase() + field.substring(1));
+            f.setAccessible(true);
+            return (String) f.get(p);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /** NCS-102: style_samples 列以 JSON 数组持久化（例文含换行等任意文本） */
@@ -2747,6 +2767,17 @@ public class SqliteNovelRepository implements NovelRepository {
                     p.setStyleSamples(new com.fasterxml.jackson.databind.ObjectMapper()
                             .readValue(samplesJson,
                                     new com.fasterxml.jackson.core.type.TypeReference<java.util.List<String>>() {}));
+                }
+            } catch (Exception ignored) {}
+            // NCS-128: 意图快照恢复（旧库列为空 → 未锁定）
+            try {
+                String it = rs.getString("intent_tone");
+                String iv = rs.getString("intent_voice");
+                String idn = rs.getString("intent_dos_and_donts");
+                if (it != null || iv != null || idn != null) {
+                    if (it != null) p.setIntentToneRestore(it);
+                    if (iv != null) p.setIntentVoiceRestore(iv);
+                    if (idn != null) p.setIntentDosAndDontsRestore(idn);
                 }
             } catch (Exception ignored) {}
             return Optional.of(p);

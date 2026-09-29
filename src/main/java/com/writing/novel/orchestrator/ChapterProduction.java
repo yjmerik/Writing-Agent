@@ -266,9 +266,10 @@ public class ChapterProduction {
             var styleOpt = repository.findStyleProfileByProject(projectId);
             if (styleOpt.isEmpty()) return null;
             var style = styleOpt.get();
-            String baseline = "基调：" + (style.getTone() != null ? style.getTone() : "")
-                    + "，叙事：" + (style.getVoice() != null ? style.getVoice() : "")
-                    + "，注意事项：" + (style.getDosAndDonts() != null ? style.getDosAndDonts() : "");
+            // NCS-128: 漂移检测基准 = 意图快照（锁定值优先），不是随正文演化的 state
+            String baseline = "基调：" + style.intentTone()
+                    + "，叙事：" + style.intentVoice()
+                    + "，注意事项：" + style.intentDosAndDonts();
             String report = styleGuardian.checkConsistency(projectId, chapter.getContent(), baseline);
             if (report == null) {
                 EventLog.emit("STYLE_SCORE_PARSE_FAILED", Map.of("projectId", projectId,

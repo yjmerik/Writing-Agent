@@ -96,6 +96,8 @@ public class ContextAssembler {
     private com.writing.novel.service.DirectiveContextService directiveContextService;
     /** NCS-096: 注入清单持久化出口（可选；未注入时清单仍随 WritingContext 返回，仅不落库） */
     private InjectionManifest.Store manifestStore;
+    /** NCS-114: 召回反馈服务（可选；未注入时真典 cap 不受命中率调节） */
+    private RecallFeedbackService recallFeedbackService;
 
     /** p37-10: 注入作者要求选取服务（生产装配用）。 */
     public void setDirectiveContextService(com.writing.novel.service.DirectiveContextService s) {
@@ -105,6 +107,11 @@ public class ContextAssembler {
     /** NCS-096: 注入清单持久化出口（生产装配用）。 */
     public void setManifestStore(InjectionManifest.Store store) {
         this.manifestStore = store;
+    }
+
+    /** NCS-114: 注入召回反馈服务（生产装配用）。 */
+    public void setRecallFeedbackService(RecallFeedbackService service) {
+        this.recallFeedbackService = service;
     }
 
     public WritingContext assemble(String projectId, int chapterIndex,
@@ -329,12 +336,14 @@ public class ContextAssembler {
     private String buildBibleSection(String projectId, int chapterIndex, ChapterSynopsis synopsis,
                                      InjectionManifest manifest) {
         List<String> cast = parseCast(synopsis);
+        int factCap = recallFeedbackService != null
+                ? recallFeedbackService.recommendedFactCap(projectId, 40) : 40;
         List<StoryFact> facts;
         if (relevanceGateway != null) {
-            facts = relevanceGateway.relevantFacts(projectId, cast, chapterIndex, 40);
+            facts = relevanceGateway.relevantFacts(projectId, cast, chapterIndex, factCap);
         } else if (storyCanon != null) {
             facts = storyCanon.recall(projectId);
-            if (facts.size() > 40) facts = facts.subList(0, 40);
+            if (facts.size() > factCap) facts = facts.subList(0, factCap);
         } else {
             return "";
         }

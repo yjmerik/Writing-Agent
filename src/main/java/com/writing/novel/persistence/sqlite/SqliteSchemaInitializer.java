@@ -245,6 +245,12 @@ public class SqliteSchemaInitializer {
             "status TEXT DEFAULT 'PENDING', updated_at TEXT, " +
             "PRIMARY KEY (project_id, chapter_index, stage))",
 
+        // NCS-114: 召回使用反馈——manifest×harvest 命中统计（每 project/chapter/kind 一行）
+        "CREATE TABLE IF NOT EXISTS recall_feedback (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, project_id TEXT NOT NULL, " +
+            "chapter_index INTEGER NOT NULL, kind TEXT NOT NULL, " +
+            "injected INTEGER NOT NULL, hit INTEGER NOT NULL)",
+
         // NCS-096: 上下文注入清单——组装时同源记录"实际注入了什么"，追加式历史
         "CREATE TABLE IF NOT EXISTS context_injection_manifest (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT, project_id TEXT NOT NULL, " +

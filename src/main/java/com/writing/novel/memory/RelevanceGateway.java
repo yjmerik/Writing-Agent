@@ -114,6 +114,23 @@ public class RelevanceGateway {
             if (out.size() >= cap) break;
             if (!containsFact(out, f)) out.add(f);
         }
+        // NCS-114: 探索配额——importance>=4 且长窗（60 章）未验证的 ACTIVE 事实保底注入 1 条，
+        // 打破 VALIDATED-recency 马太效应（从未被复述的重要事实不再永久沉底）
+        final List<StoryFact> pool = all;
+        final List<StoryFact> injected = out;
+        boolean hasExploration = injected.stream().anyMatch(f ->
+                f.getImportance() >= 4 && chapterIndex - f.getLastValidatedChapter() >= 60);
+        if (!hasExploration && chapterIndex > 0) {
+            StoryFact candidate = pool.stream()
+                    .filter(f -> !containsFact(injected, f))
+                    .filter(f -> f.getImportance() >= 4 && chapterIndex - f.getLastValidatedChapter() >= 60)
+                    .max(java.util.Comparator.comparingInt(StoryFact::getImportance))
+                    .orElse(null);
+            if (candidate != null) {
+                if (out.size() >= cap && !out.isEmpty()) out.remove(out.size() - 1);
+                out.add(candidate);
+            }
+        }
         return out;
     }
 

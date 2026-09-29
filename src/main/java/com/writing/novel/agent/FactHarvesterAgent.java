@@ -65,6 +65,11 @@ public class FactHarvesterAgent {
         }
     }
 
+    /** NCS-114: 召回反馈（可选）——收割结果对注入清单的命中率统计 */
+    private com.writing.novel.memory.RecallFeedbackService recallFeedback;
+    /** NCS-114: 注入清单仓库（可选）——反馈回路数据源 */
+    private com.writing.novel.persistence.sqlite.InjectionManifestRepository manifestRepository;
+
     public FactHarvesterAgent(LlmGateway gateway, StoryCanon canon, PromptTemplateService promptService) {
         this.gateway = gateway;
         this.canon = canon;
@@ -88,6 +93,13 @@ public class FactHarvesterAgent {
 
     public HarvestResult harvest(String projectId, Chapter chapter) {
         return harvest(projectId, chapter, null);
+    }
+
+    /** NCS-114: 反馈回路装配（可选） */
+    public void setRecallFeedback(com.writing.novel.memory.RecallFeedbackService feedback,
+                                  com.writing.novel.persistence.sqlite.InjectionManifestRepository manifests) {
+        this.recallFeedback = feedback;
+        this.manifestRepository = manifests;
     }
 
     public HarvestResult harvest(String projectId, Chapter chapter,
@@ -158,6 +170,12 @@ public class FactHarvesterAgent {
             // NCS-099: 重写稿收割前先撤回旧稿派生事实——被重写删除的情节不再以 ACTIVE 污染长程记忆；
             // 新事实随后带当前稿版本号落库，同稿重复收割幂等（withdraw < 同版本为空操作）
             canon.withdrawDraftFacts(projectId, chapter.getChapterIndex(), chapter.getVersion());
+            // NCS-114: 反馈回路——收割主体对注入清单的命中统计（清单缺失/服务未装配时跳过）
+            if (recallFeedback != null && manifestRepository != null) {
+                manifestRepository.latest(projectId, chapter.getChapterIndex()).ifPresent(m ->
+                        recallFeedback.recordHarvestOutcome(projectId, chapter.getChapterIndex(), m,
+                                batch.stream().map(n -> n.path("subject").asText("")).toList()));
+            }
             final int draftVersion = chapter.getVersion();
             var write = (java.util.function.Supplier<HarvestResult>) () ->
                     applyFacts(batch, projectId, chapter.getChapterIndex(), draftVersion);

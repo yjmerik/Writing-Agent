@@ -139,11 +139,21 @@ public class OrchestratorConfig {
             com.writing.novel.llm.LlmGateway llmGateway,
             com.writing.novel.spi.StoryCanon storyCanon,
             com.writing.novel.llm.prompt.PromptTemplateService promptTemplateService,
-            EntityGraphService entityGraphService) {
+            EntityGraphService entityGraphService,
+            com.writing.novel.memory.RecallFeedbackService recallFeedbackService,
+            com.writing.novel.persistence.sqlite.InjectionManifestRepository injectionManifestRepository) {
         com.writing.novel.agent.FactHarvesterAgent factHarvester =
                 new com.writing.novel.agent.FactHarvesterAgent(llmGateway, storyCanon, promptTemplateService);
         factHarvester.setEntityGraphService(entityGraphService); // p19-02: subject 别名规范化
+        // NCS-114: 反馈回路——收割结果对注入清单的命中率统计
+        factHarvester.setRecallFeedback(recallFeedbackService, injectionManifestRepository);
         // p20-07 的 HUMAN_PATCH 保护已内置于 StoryCanon.harvest（p22-01/02 迁移）
         return factHarvester;
+    }
+
+    @Bean
+    public com.writing.novel.memory.RecallFeedbackService recallFeedbackService(
+            com.writing.novel.persistence.sqlite.RecallFeedbackRepository repository) {
+        return new com.writing.novel.memory.RecallFeedbackService(repository);
     }
 }

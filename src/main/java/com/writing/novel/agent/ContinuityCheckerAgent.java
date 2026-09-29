@@ -105,7 +105,8 @@ public class ContinuityCheckerAgent {
                 .systemPrompt(systemPrompt)
                 .userMessage(msg.toString())
                 .temperature(0.2)
-                .maxTokens(1000)
+                // NCS-121: 1000→2000——多问题章节输出被截断→INVALID→整章人工（实测高频介入源）
+                .maxTokens(2000)
                 .build();
 
         var resp = gateway.complete(req);

@@ -37,12 +37,16 @@ public record CheckResultEnvelope(Status status, List<ContinuityIssue> issues, S
             // 临时占位 projectId/chapterIndex 由调用方重建（信封只做分类与文本抽取）
             return new CheckResultEnvelope(Status.SUCCESS, issues, "");
         }
-        boolean clean = CLEAN_MARKERS.stream().anyMatch(rawContent::contains);
-        if (clean) {
+        // NCS-121: VALID_EMPTY 收紧——输出必须"整体是干净声明"（短文本且含干净标记）才判无问题；
+        // 旧逻辑仅 contains 标记，混合输出（第1项未发现+其余2项真问题但未按格式）会被吞成干净
+        String trimmed = rawContent.trim();
+        boolean cleanStatement = trimmed.length() <= 30
+                && CLEAN_MARKERS.stream().anyMatch(trimmed::contains);
+        if (cleanStatement) {
             return new CheckResultEnvelope(Status.VALID_EMPTY, List.of(), "");
         }
         return new CheckResultEnvelope(Status.INVALID, List.of(),
-                "检查输出不可解析（截断/协议错误/拒绝），不能当作无问题");
+                "检查输出不可解析（截断/协议错误/拒绝/混合输出），不能当作无问题");
     }
 
     private static ContinuityIssue.Type parseType(String s) {
@@ -52,6 +56,9 @@ public record CheckResultEnvelope(Status status, List<ContinuityIssue> issues, S
             case "时间线" -> ContinuityIssue.Type.TIMELINE;
             case "伏笔" -> ContinuityIssue.Type.FORESHADOWING;
             case "文风" -> ContinuityIssue.Type.STYLE;
+            case "结构" -> ContinuityIssue.Type.STRUCTURE;   // NCS-121: 枚举对齐 prompt 承诺
+            case "节奏" -> ContinuityIssue.Type.PACING;
+            case "密度" -> ContinuityIssue.Type.DENSITY;
             default -> ContinuityIssue.Type.WORLDBUILDING;
         };
     }
@@ -60,6 +67,8 @@ public record CheckResultEnvelope(Status status, List<ContinuityIssue> issues, S
         return switch (s) {
             case "高" -> ContinuityIssue.Severity.HIGH;
             case "中" -> ContinuityIssue.Severity.MEDIUM;
+            // NCS-121: prompt 承诺的「已回收」——按 LOW 解析且描述保留原词（统计不再静默扭曲）
+            case "已回收" -> ContinuityIssue.Severity.LOW;
             default -> ContinuityIssue.Severity.LOW;
         };
     }

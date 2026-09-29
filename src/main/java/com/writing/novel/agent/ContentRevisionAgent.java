@@ -40,6 +40,19 @@ public class ContentRevisionAgent {
     private final LlmGateway gateway;
     private final PromptTemplateService promptService;
 
+    /** NCS-127: 风格段供给函数（projectId → styleGuide 文本）；null 时空段——不依赖仓库抽象 */
+    private java.util.function.BiFunction<String, String, String> styleGuideSupplier;
+
+    /** NCS-127: 修订风格段——经供给函数（不持有仓库引用，满足既有隔离契约） */
+    private String styleGuideFor() {
+        return styleGuideSupplier != null ? styleGuideSupplier.apply(null, null) : "";
+    }
+
+    /** NCS-127: 注入风格段供给（生产装配用；函数内自行读 StyleProfile） */
+    public void setStyleGuideSupplier(java.util.function.BiFunction<String, String, String> supplier) {
+        this.styleGuideSupplier = supplier;
+    }
+
     public ContentRevisionAgent(LlmGateway gateway, PromptTemplateService promptService) {
         this.gateway = Objects.requireNonNull(gateway, "gateway");
         this.promptService = Objects.requireNonNull(promptService, "promptService");
@@ -57,7 +70,8 @@ public class ContentRevisionAgent {
         String prompt = promptService.render("content-revision", Map.of(
                 "targetType", type.name(),
                 "currentJson", currentJson,
-                "instructions", instructions));
+                "instructions", instructions,
+                "styleGuide", styleGuideFor()));
 
         LlmRequest request = LlmRequest.builder()
                 .taskType(LlmTaskType.GENERAL)

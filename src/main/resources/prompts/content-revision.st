@@ -19,3 +19,6 @@
 
 输出格式：
 {"targetType":"{{targetType}}","title":"候选标题","content":"完整候选正文","structuredJson":"经过 JSON 转义的完整对象字符串","summary":"一句话修改摘要"}
+
+全书风格约束（修订产出必须服从；含风格范本时模仿其语感）：
+{{styleGuide}}

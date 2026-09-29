@@ -3129,8 +3129,9 @@ public class NovelOrchestrator {
         String contextAfter = extractContext(paragraphs, resolvedIndex, 1, 2);
 
         // 调用 PassageEditor
+        // NCS-127: 段落编辑携带全书风格约束（与写作路径同标准）
         String editedPassage = passageEditor.editPassage(
-                targetParagraph, contextBefore, contextAfter, instruction, mode);
+                projectId, targetParagraph, contextBefore, contextAfter, instruction, mode);
         if (editedPassage == null || editedPassage.isBlank()) {
             log.warn("段落编辑失败(章{}段{}): LLM返回空", chapterIndex, paragraphIndex);
             return chapter;

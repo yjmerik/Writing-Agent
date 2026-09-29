@@ -78,6 +78,12 @@ class EditPassageReturnsBeforeHarvestTest {
                                       String instruction, String mode) {
                 return passageText + "屋檐滴水成串。";
             }
+            // NCS-127: 生产路径改调带 projectId 的六参版本——同步覆写
+            @Override
+            public String editPassage(String projectId, String passageText, String contextBefore,
+                                      String contextAfter, String instruction, String mode) {
+                return passageText + "屋檐滴水成串。";
+            }
         };
 
         // p22-05: 收割桩经策略包组合期注入（原后置 setter）

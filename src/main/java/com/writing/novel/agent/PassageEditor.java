@@ -21,10 +21,43 @@ public class PassageEditor {
 
     private final LlmGateway gateway;
     private final PromptTemplateService promptService;
+    /** NCS-127: 可选仓库——携带全书风格约束（含范本），null 时风格段为空（行为不变） */
+    private com.writing.novel.spi.NovelRepository repository;
 
     public PassageEditor(LlmGateway gateway, PromptTemplateService promptService) {
         this.gateway = gateway;
         this.promptService = promptService;
+    }
+
+    /** NCS-127: 注入仓库以读取 StyleProfile（生产装配用） */
+    public void setRepository(com.writing.novel.spi.NovelRepository repository) {
+        this.repository = repository;
+    }
+
+    /** NCS-127: 风格约束段（含 NCS-102 范本 few-shot；无档案时为空串） */
+    private String styleGuideFor(String projectId) {
+        if (repository == null || projectId == null) return "";
+        var opt = repository.findStyleProfileByProject(projectId);
+        if (opt.isEmpty()) return "";
+        var style = opt.get();
+        StringBuilder sb = new StringBuilder();
+        if (style.getTone() != null) sb.append(style.getTone());
+        if (style.getVoice() != null && !style.getVoice().isBlank()) {
+            if (sb.length() > 0) sb.append("。");
+            sb.append(style.getVoice());
+        }
+        if (style.getDosAndDonts() != null) {
+            if (sb.length() > 0) sb.append("。");
+            sb.append(style.getDosAndDonts());
+        }
+        var samples = style.getStyleSamples();
+        if (samples != null && !samples.isEmpty()) {
+            sb.append("\n【风格范本（模仿语感，不得照抄）】\n");
+            for (int i = 0; i < samples.size(); i++) {
+                sb.append("——范本").append(i + 1).append("——\n").append(samples.get(i)).append('\n');
+            }
+        }
+        return sb.toString();
     }
 
     /**
@@ -38,6 +71,12 @@ public class PassageEditor {
      */
     public String editPassage(String passageText, String contextBefore, String contextAfter,
                                String instruction, String mode) {
+        return editPassage(null, passageText, contextBefore, contextAfter, instruction, mode);
+    }
+
+    /** NCS-127: 带 projectId 的编辑——prompt 携带全书风格约束与范本 */
+    public String editPassage(String projectId, String passageText, String contextBefore,
+                               String contextAfter, String instruction, String mode) {
         if (passageText == null || passageText.isBlank()) return null;
         if (mode == null) mode = "REWRITE";
 
@@ -45,6 +84,7 @@ public class PassageEditor {
                 "mode", mode,
                 "contextBefore", contextBefore != null ? contextBefore : "（本章开头）",
                 "passageText", passageText,
+                "styleGuide", styleGuideFor(projectId),
                 "contextAfter", contextAfter != null ? contextAfter : "（本章结尾）",
                 "instruction", instruction != null ? instruction : "改善这段文字的质量"));
 

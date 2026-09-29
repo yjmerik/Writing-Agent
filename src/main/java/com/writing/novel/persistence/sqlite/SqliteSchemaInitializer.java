@@ -245,6 +245,12 @@ public class SqliteSchemaInitializer {
             "status TEXT DEFAULT 'PENDING', updated_at TEXT, " +
             "PRIMARY KEY (project_id, chapter_index, stage))",
 
+        // NCS-133: 长任务持久化——重启后终态可查、RUNNING 孤儿标记取消、过期清理
+        "CREATE TABLE IF NOT EXISTS long_task_job (" +
+            "job_id TEXT PRIMARY KEY, project_id TEXT NOT NULL, kind TEXT NOT NULL, " +
+            "label TEXT, status TEXT NOT NULL, result_json TEXT, error TEXT, " +
+            "phase TEXT, percent INTEGER, started_at TEXT, finished_at TEXT, updated_at TEXT)",
+
         // NCS-114: 召回使用反馈——manifest×harvest 命中统计（每 project/chapter/kind 一行）
         "CREATE TABLE IF NOT EXISTS recall_feedback (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT, project_id TEXT NOT NULL, " +

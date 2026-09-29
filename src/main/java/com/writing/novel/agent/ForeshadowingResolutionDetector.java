@@ -23,6 +23,8 @@ public class ForeshadowingResolutionDetector {
     private final LlmGateway gateway;
     private final NovelRepository repository;
     private final PromptTemplateService promptService;
+    /** NCS-120: 真典端口（可选）——伏笔回收同步 PLOT_COMMITMENT */
+    private com.writing.novel.spi.StoryCanon storyCanon;
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     public ForeshadowingResolutionDetector(LlmGateway gateway, NovelRepository repository,
@@ -30,6 +32,36 @@ public class ForeshadowingResolutionDetector {
         this.gateway = gateway;
         this.repository = repository;
         this.promptService = promptService;
+    }
+
+    /** NCS-120: 注入真典端口（生产装配用；null 跳过同步） */
+    public void setStoryCanon(com.writing.novel.spi.StoryCanon canon) {
+        this.storyCanon = canon;
+    }
+
+    /**
+     * NCS-120: 伏笔回收 → 真典 PLOT_COMMITMENT 同步——描述前缀匹配的活跃承诺事实
+     * 刷新确认章（承诺已兑现不再作为悬置约束反复注入）。
+     */
+    private void syncPlotCommitment(String projectId, int chapterIndex, Foreshadowing resolved) {
+        if (storyCanon == null) return;
+        try {
+            String prefix = resolved.getDescription().length() > 4
+                    ? resolved.getDescription().substring(0, 4) : resolved.getDescription();
+
+            for (var fact : storyCanon.recall(projectId)) {
+                if (fact.getFactType() == com.writing.novel.domain.StoryFact.FactType.PLOT_COMMITMENT
+                        && fact.getAssertion() != null && fact.getAssertion().contains(prefix)) {
+                    storyCanon.validate(fact, chapterIndex);
+                    com.writing.novel.telemetry.EventLog.emit("FORESHADOW_CANON_SYNCED",
+                            java.util.Map.of("projectId", projectId, "chapterIndex", chapterIndex,
+                                    "foreshadowId", resolved.getId(), "factId", fact.getId()));
+                }
+            }
+        } catch (Exception e) {
+            System.getLogger(ForeshadowingResolutionDetector.class.getName())
+                    .log(System.Logger.Level.WARNING, "伏笔-真典同步失败: " + e);
+        }
     }
 
     /**
@@ -43,9 +75,11 @@ public class ForeshadowingResolutionDetector {
         if (unresolved.isEmpty()) return 0;
 
         // 构建伏笔列表文本（标注重要性和过期状态）
+        // NCS-120: id 引用链——列表携带 id，回收对账以 id 为主键（同义改写不再错位/互误回收）
         String foreshadowingList = unresolved.stream()
                 .map(f -> {
-                    StringBuilder line = new StringBuilder("- ").append(f.getDescription());
+                    StringBuilder line = new StringBuilder("- [").append(f.getId()).append("] ")
+                            .append(f.getDescription());
                     line.append("（埋于第").append(f.getPlantedAtChapter()).append("章");
                     if (f.getPriority() == Foreshadowing.Priority.HIGH) line.append("，★重要");
                     if (f.isMustResolve()) line.append("，必须回收");
@@ -75,7 +109,8 @@ public class ForeshadowingResolutionDetector {
                 unresolved = repository.findUnresolvedForeshadowings(projectId);
                 if (unresolved.isEmpty()) break;
                 foreshadowingList = unresolved.stream()
-                        .map(f -> "- " + f.getDescription() + "（埋于第" + f.getPlantedAtChapter() + "章）")
+                        .map(f -> "- [" + f.getId() + "] " + f.getDescription()
+                                + "（埋于第" + f.getPlantedAtChapter() + "章）")
                         .collect(Collectors.joining("\n"));
             }
         }
@@ -111,20 +146,28 @@ public class ForeshadowingResolutionDetector {
             int count = 0;
             for (JsonNode node : resolvedArray) {
                 String desc = node.path("description").asText("");
-                if (desc.isBlank()) continue;
+                String id = node.path("id").asText("").trim();
+                // NCS-120: id 对账——id 不在台账中的条目直接拒绝（防幻觉引用）
+                if (!id.isBlank() && unresolved.stream().noneMatch(f -> f.getId().equals(id))) {
+                    continue;
+                }
+                if (desc.isBlank() && id.isBlank()) continue;
                 // p32-08（体验报告 #4/P1）: 回收必须给出证据——reason 缺失/空白
                 // 视为"再次提及"而非回收，不得置 resolved（报告实测：仅再出现日期被误判回收）
                 String evidence = node.path("reason").asText("").trim();
                 if (evidence.isEmpty()) continue;
 
-                // p10-c1: 改进匹配——从前 6 字模糊匹配升级为语义匹配
-                // 策略：取 LLM 返回描述的关键词（≥2字），与库存伏笔描述做关键词交集
+                // NCS-120: id 优先匹配；无 id（旧输出兼容）降级语义匹配
                 for (var f : unresolved) {
                     if (f.isResolved()) continue;
-                    if (descriptionsMatch(f.getDescription(), desc)) {
+                    boolean matched = !id.isBlank() ? f.getId().equals(id)
+                            : descriptionsMatch(f.getDescription(), desc);
+                    if (matched) {
                         f.resolve(chapterIndex, evidence);
                         repository.saveForeshadowing(f);
                         count++;
+                        // NCS-120: 与真典 PLOT_COMMITMENT 同步——双承诺系统不再脱节
+                        syncPlotCommitment(projectId, chapterIndex, f);
                         break;
                     }
                 }

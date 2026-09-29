@@ -165,7 +165,8 @@ public class AgentConfig {
     @Bean
     public ForeshadowingResolutionDetector foreshadowingResolutionDetector(LlmGateway gateway,
                                                                              NovelRepository repo,
-                                                                             PromptTemplateService promptService) {
+                                                                             PromptTemplateService promptService,
+            com.writing.novel.spi.StoryCanon storyCanon) {
         return new ForeshadowingResolutionDetector(gateway, repo, promptService);
     }
 

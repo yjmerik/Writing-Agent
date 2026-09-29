@@ -3043,12 +3043,24 @@ public class SqliteNovelRepository implements NovelRepository {
     /** p16-01: 老化归档更早的未复发 HIGH（resolved=1），防止 400 章尺度下历史 HIGH 无界累积锁死 FINAL 门禁 */
     @Override
     public int archiveAgedHighIssues(String projectId, int beforeChapter) {
-        String sql = "UPDATE continuity_issues SET resolved=1 WHERE project_id=? AND resolved=0 "
-                + "AND severity='HIGH' AND detected_at_chapter<?";
+        // NCS-124: HIGH 老化前置条件——已显式处置（resolved=1 不在此列）或「无同型复发」：
+        // 同 type + 描述前 30 字存在窗口内（>= beforeChapter）未处置行 = 检查器复验复现，不得归档。
+        // 旧逻辑纯时间老化（30 章未复发即归档）依赖"复发必然产生新行"，把未复验确认的矛盾
+        // 用遗忘替代了修复。
+        String sql = "UPDATE continuity_issues SET resolved=1 WHERE id IN ( "
+                + "SELECT a.id FROM continuity_issues a WHERE a.project_id=? AND a.resolved=0 "
+                + "AND a.severity='HIGH' AND a.detected_at_chapter<? "
+                + "AND NOT EXISTS ( "
+                + "  SELECT 1 FROM continuity_issues r "
+                + "  WHERE r.project_id=a.project_id AND r.id!=a.id "
+                + "  AND r.type=a.type AND r.resolved=0 "
+                + "  AND r.description LIKE (substr(a.description,1,30) || '%') "
+                + "  AND r.detected_at_chapter>=? ) )";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, projectId);
             ps.setInt(2, beforeChapter);
+            ps.setInt(3, beforeChapter);
             return ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }

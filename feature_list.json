@@ -9508,13 +9508,14 @@
    "description": "新增共享分段策略：FactHarvester（当前截 4000 字且不告知）/EntityExtractor（3000）/ConsistencyGuard（5000）统一为全文有界分段（长章分段处理），prompt 声明所见范围，消除同章不同抽取器台账互矛盾与后半章事实系统性丢失",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: 4a5c9c68eb47（ff-merge=main 提交 4a5c9c68eb47）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：超长章节全部抽取器覆盖全文（分段合并），prompt 携带所见范围声明，短章行为不变",
    "verify_cmd": "mvn test -Dtest=ExcerptPolicyTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-117-verified"
   },
   {
    "id": "NCS-118",

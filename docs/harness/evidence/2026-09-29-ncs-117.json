@@ -1,0 +1,20 @@
+{
+ "commit": "4a5c9c68eb47dbf96edb7ac74a5c2328cd90619e",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-117"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：ExcerptPolicyTest 2 项（窗口/声明口径+第8000字事实收割回归——旧4000窗口丢失）；三抽取器统一走 ExcerptPolicy（4000/3000/5000→12000+声明）；分支与 main 全量 1337/0F/0E/1S 严格门禁。抽取 prompt 变化分叉旧语料——收尾统一重建",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-117; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-117-excerpt-policy"
+}

@@ -9814,13 +9814,14 @@
    "dependencies": [
     "NCS-097"
    ],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: 5f13e39d75d6（ff-merge=main 提交 5f13e39d75d6）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：金标集回放断言检查器召回率≥阈值、误报率≤阈值（初始阈值以首轮实测校准记录于 evidence）",
    "verify_cmd": "mvn test -Dtest=CheckerGoldenSetTest",
-   "type": "test"
+   "type": "test",
+   "completion_record": "ncs-137-verified"
   }
  ],
  "schema_version": 2,

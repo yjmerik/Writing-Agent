@@ -1,0 +1,20 @@
+{
+ "commit": "5f13e39d75d65ceaba60459522e5ae0e59ab5966",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-137"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：CheckerGoldenSetTest 4 项（6 类植入矛盾召回≥0.99/干净对照零误报/同源 cast 真典进检查输入/真实链路落库）；确定性金标（无 LLM 回放依赖）进 CI；分支与 main 全量 1399/0F/0E/1S 严格门禁。首轮阈值以协议层实测校准（信封解析口径）；接入真实 LLM 检查输出后的阈值收敛留 NCS-057 检索/检查双评测",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-137; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-137-checker-golden-set"
+}

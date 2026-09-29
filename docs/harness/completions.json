@@ -2750,8 +2750,19 @@
    "implementation_commit": "ca57eb719d02f02b214950784e553a503b772b3d",
    "main_commit": "ca57eb719d02f02b214950784e553a503b772b3d",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-136.json"
+  },
+  {
+   "id": "ncs-137-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-137"
+   ],
+   "branch": "codex/ncs-137-checker-golden-set",
+   "implementation_commit": "5f13e39d75d65ceaba60459522e5ae0e59ab5966",
+   "main_commit": "5f13e39d75d65ceaba60459522e5ae0e59ab5966",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-137.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "ca57eb719d02f02b214950784e553a503b772b3d"
+ "main_commit": "5f13e39d75d65ceaba60459522e5ae0e59ab5966"
 }

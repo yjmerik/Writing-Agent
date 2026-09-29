@@ -9613,13 +9613,14 @@
    "description": "ArchiveCompactor 当前 30 章未复发即归档 HIGH（用遗忘替代修复，且复发依赖检查器每次都能再检出）：归档前置条件改为「检查器复验未复现或显式处置记录（豁免/修复引用）」；与成书门禁 60 章窗口一致性对齐",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: d43254c02e2c（ff-merge=main 提交 d43254c02e2c）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：无复验/处置记录的 HIGH 不被老化归档，有记录的正常归档",
    "verify_cmd": "mvn test -Dtest=IssueAgingPolicyTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-124-verified"
   },
   {
    "id": "NCS-125",

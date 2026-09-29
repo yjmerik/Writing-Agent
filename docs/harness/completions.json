@@ -2607,8 +2607,19 @@
    "implementation_commit": "fc67a973de05be663dc2c357d0d9e6036a2d09ad",
    "main_commit": "fc67a973de05be663dc2c357d0d9e6036a2d09ad",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-123.json"
+  },
+  {
+   "id": "ncs-124-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-124"
+   ],
+   "branch": "codex/ncs-124-issue-aging",
+   "implementation_commit": "d43254c02e2ce270341327a8bea9fcbe84a1e798",
+   "main_commit": "d43254c02e2ce270341327a8bea9fcbe84a1e798",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-124.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "fc67a973de05be663dc2c357d0d9e6036a2d09ad"
+ "main_commit": "d43254c02e2ce270341327a8bea9fcbe84a1e798"
 }

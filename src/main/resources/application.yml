@@ -36,6 +36,9 @@ llm:
       # 推理模型 reasoning_content 消耗大量输出 token；8192 会截断 3000+ 字正文
       max-tokens: 20000
       context-window: 64000
+      # NCS-129/108: 命名 provider 路径应用 requestTimeoutSeconds（默认 180s 低于
+      # 20k-token 真实生成耗时，Token Plan 实测构思期 CHARACTER_DESIGN 单次即 >120s）
+      request-timeout-seconds: 900
       streaming: true
       style-guide: "严格遵循世界观设定中已确立的类型风格。人物名字必须与【出场人物】完全一致，绝对不得改名。不得引入与世界观不兼容的元素。"
     qwen-flash-plan:
@@ -45,6 +48,7 @@ llm:
       temperature: 0.7
       # op-fix: 推理模型 reasoning_content 耗 token，8192 致总纲正文为空
       max-tokens: 16000
+      request-timeout-seconds: 600
       context-window: 64000
       streaming: true
     qwen-flash-worldbuild:
@@ -53,6 +57,7 @@ llm:
       model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.7
       max-tokens: 8192
+      request-timeout-seconds: 600
       context-window: 64000
       streaming: true
     qwen-flash-check:
@@ -61,6 +66,7 @@ llm:
       model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.3
       max-tokens: 4096
+      request-timeout-seconds: 300
       context-window: 64000
       streaming: true
     qwen-flash-general:
@@ -69,6 +75,7 @@ llm:
       model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.3
       max-tokens: 4096
+      request-timeout-seconds: 300
       context-window: 64000
       streaming: true
     # NCS-066: 结构化提取（实体/事实/校验 JSON 输出）独立路由——输出需求远超 4096
@@ -80,6 +87,7 @@ llm:
       model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.1
       max-tokens: 16000
+      request-timeout-seconds: 600
       context-window: 64000
       streaming: true
       thinking-enabled: false

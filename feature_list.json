@@ -9478,13 +9478,14 @@
    "description": "主角判定从 role.contains(\"主角\") 改结构化判定（\"女主角之妹\"不再被当主角锚定）；relationshipWeb 与 entityConsistencySection 两段重复关系注入去重统一；stableSectionCache 增淘汰（当前永不清除）；applyTokenBudget 每级全量重渲染改增量计算",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: 16899b1f7a19（ff-merge=main 提交 16899b1f7a19）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：误判主角场景不再强制注入、关系信息单次注入、缓存有界、大上下文组装耗时不随裁剪级数线性放大",
    "verify_cmd": "mvn test -Dtest=ContextAssemblerHygieneTest",
-   "type": "maintenance"
+   "type": "maintenance",
+   "completion_record": "ncs-115-verified"
   },
   {
    "id": "NCS-116",

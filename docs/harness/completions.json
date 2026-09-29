@@ -2508,8 +2508,19 @@
    "implementation_commit": "4bd8df84f917b3205971ce2778ca1873bc0d7a65",
    "main_commit": "4bd8df84f917b3205971ce2778ca1873bc0d7a65",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-114.json"
+  },
+  {
+   "id": "ncs-115-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-115"
+   ],
+   "branch": "codex/ncs-115-assembler-hygiene",
+   "implementation_commit": "16899b1f7a19892f86c18032760f4dc6653a2485",
+   "main_commit": "16899b1f7a19892f86c18032760f4dc6653a2485",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-115.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "4bd8df84f917b3205971ce2778ca1873bc0d7a65"
+ "main_commit": "16899b1f7a19892f86c18032760f4dc6653a2485"
 }

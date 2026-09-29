@@ -13,6 +13,7 @@ public class ReviewReport {
     private int coherence;              // 连贯性 1-10
     private int character;              // 角色塑造 1-10
     private int hook;                   // 章末钩子 1-10
+    private int style;                  // NCS-125: 文风一致性 1-10
     private String summary;             // 简评
     private List<String> issues;        // 具体问题
     private String improvementSuggestion; // 改进建议
@@ -29,11 +30,19 @@ public class ReviewReport {
     public ReviewReport(int chapterIndex, int score, int engagement, int coherence,
                         int character, int hook, String summary,
                         List<String> issues, String improvementSuggestion) {
+        this(chapterIndex, score, engagement, coherence, character, hook, 0, summary, issues, improvementSuggestion);
+    }
+
+    /** NCS-125: 带 style 维度的构造 */
+    public ReviewReport(int chapterIndex, int score, int engagement, int coherence,
+                        int character, int hook, int style, String summary,
+                        List<String> issues, String improvementSuggestion) {
         this.chapterIndex = chapterIndex;
         this.score = score;
         this.engagement = engagement;
         this.coherence = coherence;
         this.character = character;
+        this.style = style;
         this.hook = hook;
         this.summary = summary;
         this.issues = issues;
@@ -49,6 +58,7 @@ public class ReviewReport {
     public int getCoherence() { return coherence; }
     public int getCharacter() { return character; }
     public int getHook() { return hook; }
+    public int getStyle() { return style; }
     public String getSummary() { return summary; }
     public List<String> getIssues() { return issues; }
     public String getImprovementSuggestion() { return improvementSuggestion; }

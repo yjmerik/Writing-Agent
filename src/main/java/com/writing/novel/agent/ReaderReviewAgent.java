@@ -76,7 +76,11 @@ public class ReaderReviewAgent {
             int coherence = root.path("scores").path("coherence").asInt(5);
             int character = root.path("scores").path("character").asInt(5);
             int hook = root.path("scores").path("hook").asInt(5);
+            // NCS-125: style 可选维度——缺失=未评（0），不参与拉低（旧格式输出兼容）
+            int style = root.path("scores").path("style").asInt(0);
             int overall = root.path("overall").asInt(5);
+            // 文风显著漂移（已评且 <6）时 overall 至少降 1（LLM 已被要求计入，解析侧兜底）
+            if (style > 0 && style < 6 && overall > style) overall = Math.max(style, overall - 1);
 
             String summary = root.path("summary").asText("");
             String improvement = root.path("improvement").asText("");
@@ -90,9 +94,9 @@ public class ReaderReviewAgent {
             }
 
             return new ReviewReport(chapterIndex, overall, engagement, coherence,
-                    character, hook, summary, issues, improvement);
+                    character, hook, style, summary, issues, improvement);
         } catch (Exception e) {
-            return new ReviewReport(chapterIndex, 5, 5, 5, 5, 5, "检验解析失败", List.of(), "");
+            return new ReviewReport(chapterIndex, 5, 5, 5, 5, 5, 0, "检验解析失败", List.of(), "");
         }
     }
 

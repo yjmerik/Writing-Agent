@@ -1,0 +1,20 @@
+{
+ "commit": "25b9bb402ed537d83360ad5a275c9419522809ae",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-118"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：ForeshadowFailLoudTest 5 项（三检测器终态失败抛阶段异常/成功路径不受影响/异常携带阶段名）；ledger 失败不标 COMPLETED+POST_PROCESS_STAGE_UNKNOWN 事件；recovery 测试装配缺陷（null extractor 靠 NPE 吞掉凑 COMPLETED——正是本特性消除形态）已修；分支与 main 全量 1342/0F/0E/1S 严格门禁",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-118; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-118-foreshadow-fail-loud"
+}

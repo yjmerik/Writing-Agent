@@ -9523,13 +9523,14 @@
    "description": "ForeshadowingExtractor/ForeshadowingResolutionDetector/ForeshadowingImportanceAuditor 当前 catch 后静默返回空（伏笔提取失败=该章伏笔永久丢失且无人知晓，ledger 照标 COMPLETED）：改为显式重试一次→仍失败置 UNKNOWN 信封+事件，ledger 保持可恢复状态",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: 25b9bb402ed5（ff-merge=main 提交 25b9bb402ed5）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：构造解析失败场景产生重试与 UNKNOWN 信封事件，阶段 ledger 不标 COMPLETED",
    "verify_cmd": "mvn test -Dtest=ForeshadowFailLoudTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-118-verified"
   },
   {
    "id": "NCS-119",

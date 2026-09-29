@@ -1,45 +1,50 @@
-# 架构质量深化设计与登记（NCS-096..137）— 2026-09-29
+# 架构质量深化实现收尾（NCS-096..137 全部完成）— 2026-09-29
 
 Last Updated: 2026-09-29
 
 ## Current
 
-应用户要求对现有架构做深度审查（长程一致性/风格一致性/内容召回/LLM harness
-四域五路代码深扫），按需求拆分协议完成方案设计与 backlog 登记，未动业务代码。
+架构质量深化 42 项 feature（NCS-096..137，P0×13 + P1×20 + P2×9）全部实现、
+合入 main 并 verified 登记；测试 1257→1399（净增 142），全程严格门禁
+（BUILD SUCCESS 检查，一次 grep 掩盖回归事故后修正）。
 
-- 审查结论：长程记忆是四条平行管线（级联摘要/真典/向量 chunk/台账图）无统一
-  相关性裁决与使用反馈；检查多闭环少（RepairArbiter 死代码、重写不回滚派生事实、
-  检查器漏检被固化为真典）；风格无例文锚点、styleScore 生产恒 null、基线追随正文；
-  LLM 两套路由语义并存、结构化解析 12+ 处复制、半章可入库、严格串行。
-- 方案：两个横切地基（上下文注入清单 NCS-096、check-the-checker 金标集 NCS-137）
-  + 四域 42 个 feature，分 P0（13 项止血闭环）/P1（19 项上限提升）/
-  P2（10 项规模化与成本）三波；与既有 not-started NCS-034..058 划清边界
-  （成本持久化=054/055、租约=036..038、outbox=041..044、检索评测=057 不重复登记）。
+收尾 e2e（真实 LLM record）暴露并修复三个收尾期缺陷：
+1. 命名 provider 路径 180s 默认超时低于真实生成耗时（CHAPTER_WRITING 实测 312s）
+   → 分层 request-timeout-seconds（write 900 / plan+worldbuild+extract 600 / check+general 600）
+2. NCS-120 回收检测 prompt 嵌入随机 UUID 破坏 record→replay 指纹确定性
+   → 稳定 F 标号（埋设章+描述排序派生），JSON 契约兼容 F 标号/真实 UUID
+3. NCS-104 期合成验证脚本的 --bless 泄漏覆写真实 golden.json
+   → 恢复 2026-09-22 生产 bless 值 + 设计的宽松风格上限
+
+回放语料已重建：data/e2e-fixtures/mystery-20260929（¥0.2 量级/次），
+连续两次 replay 完全一致（4592 字/风格指标全等）——确定性达标。
 
 ## Files
 
-- spec（设计全文+边界映射+风险）：docs/specs/2026-09-29-arch-quality-deepening.md
-- 登记：feature_list.json 追加 NCS-096..NCS-137（phase 51，全部 not-started，
-  含 acceptance/verify_cmd/依赖），current_phase=51
-- 归档：docs/harness/archive/2026-09-26-{progress,session-handoff}.md
-- 本分支：codex/docs-arch-quality-deepening（纯文档，无业务代码改动）
+- 实现提交 42 份（codex/ncs-096..137-* 分支，全部 ff-only 合入 main）
+- evidence：docs/harness/evidence/2026-09-29-ncs-09*.json … 137（42 份 verified）
+- 语料：data/e2e-fixtures/mystery-20260929（record 第4次，冒烟通过）
+- 基线：baselines/golden.json 恢复正确值
 
 ## Verification
 
-- python3 scripts/check-harness.py 通过（468 features，42 项新增 not-started，
-  无依赖环，active_feature=None）
-- 纯文档维护：按协议执行既有编译与测试门禁（mvn compile && mvn test），
-  结果见本次合并提交说明；不新增业务测试
+- 干净 main 全量：mvn test 1399/0F/0E/1S 严格门禁
+- e2e：record 冒烟通过（1 章 4592 字入账，第 1 章触发复验 UNRESOLVED
+  人工复核屏障——fail-loud 设计行为，replay 确定性复现同一暂停点）
+- compare-baseline：FAIL 于 章节数(1<2)/总字数(4592<5865)——结构差异源于
+  新语料在第 1 章即停人工复核（旧语料 2 章）；风格维度全过
+  （n-gram 0.0557<=0.10，cliche 0<=15）
 
 ## Blockers
 
-无（业务）。ncs-070 检查器 schema 遗留待用户裁决（沿用）。
+- compare-baseline --bless 需人工确认：新语料第 1 章复验屏障是真实质量
+  判断（伏笔提前回收但重写未通过逐项复验），按 DoD 不得自动 bless
+- ncs-070 检查器 schema 遗留待用户裁决（沿用）
 
 ## Next Steps
 
-1. 人工 UI 验收（18100，《沉钟记》NEEDS_REVISION 现场保留）仍待执行——
-   与本 spec 实施并行不冲突。
-2. P0 波次逐 feature 闭环（一次一个，从 NCS-096 注入清单起步——它是
-   NCS-097/114/137 的共同地基）；改注入上下文的 feature 合入时按 DoD
-   重建回放语料并记录理由。
-3. ncs-070 检查器 schema 遗留待用户裁决。
+1. 人工决策 A：认可新语料行为（第 1 章屏障为 fail-loud 正常形态）→
+   python3 scripts/compare-baseline.py --bless 更新基线；或
+   重录一次语料期望无屏障 3 章流（约 ¥0.2-0.5）
+2. 人工决策 B：ncs-070 schema 遗留裁决
+3. 18100 《沉钟记》人工 UI 验收仍待执行（沿用）

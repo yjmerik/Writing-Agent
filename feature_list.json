@@ -9782,13 +9782,14 @@
    "description": "内容审查「温和化」appendSafetyNote 当前在传输层改写 system prompt 对上层与 fixture 指纹不可见：注入行为显式事件化并纳入指纹可预期性（或显式开关）；收敛/删除零消费的 streamComplete 双实现（与 completeViaStream 各自维护 SSE 解析易漂移）",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: c981b5938f4b（ff-merge=main 提交 c981b5938f4b）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：审查注入产生事件且 record/replay 指纹一致，streamComplete 收敛后编译与既有测试通过",
    "verify_cmd": "mvn test -Dtest=ClientHygieneTest",
-   "type": "maintenance"
+   "type": "maintenance",
+   "completion_record": "ncs-135-verified"
   },
   {
    "id": "NCS-136",

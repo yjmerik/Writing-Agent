@@ -9463,13 +9463,14 @@
    "dependencies": [
     "NCS-096"
    ],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: 4bd8df84f917（ff-merge=main 提交 4bd8df84f917）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：命中率统计可计算且低命中 kind 配额下调，长窗未注入的高重要度事实经探索配额出现",
    "verify_cmd": "mvn test -Dtest=RecallFeedbackLoopTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-114-verified"
   },
   {
    "id": "NCS-115",

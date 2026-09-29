@@ -2497,8 +2497,19 @@
    "implementation_commit": "03c5ed7ee2a45a3b89f838a1d5abeead976d9081",
    "main_commit": "03c5ed7ee2a45a3b89f838a1d5abeead976d9081",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-113.json"
+  },
+  {
+   "id": "ncs-114-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-114"
+   ],
+   "branch": "codex/ncs-114-recall-feedback",
+   "implementation_commit": "4bd8df84f917b3205971ce2778ca1873bc0d7a65",
+   "main_commit": "4bd8df84f917b3205971ce2778ca1873bc0d7a65",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-114.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "03c5ed7ee2a45a3b89f838a1d5abeead976d9081"
+ "main_commit": "4bd8df84f917b3205971ce2778ca1873bc0d7a65"
 }

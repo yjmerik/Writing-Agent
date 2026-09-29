@@ -1,0 +1,20 @@
+{
+ "commit": "4bd8df84f917b3205971ce2778ca1873bc0d7a65",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-114"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：RecallFeedbackLoopTest 3 项（命中率统计+低命中降 cap/探索配额保底注入/收割自动落库反馈）；分支与 main 全量 1329/0F/0E/1S 严格门禁。备注：提交一度误落 main，已重整为分支+ff-only 协议形态（树内容不变）",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-114; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-114-recall-feedback"
+}

@@ -9598,13 +9598,14 @@
    "description": "桥段重复/说明文密度/多样性检测产出当前只落 ContinuityIssue 永不触发修复（issue 通胀根因）：改为卷级聚合趋势门禁（超阈值进卷末评价必读+警告）+去重聚合后注入 qualityFeedback 段参与下一卷",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: fc67a973de05（ff-merge=main 提交 fc67a973de05）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：超阈值趋势产生卷级警告与聚合反馈注入，未超阈值不产生逐章噪音 issue",
    "verify_cmd": "mvn test -Dtest=DetectorTrendGateTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-123-verified"
   },
   {
    "id": "NCS-124",

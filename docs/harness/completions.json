@@ -2596,8 +2596,19 @@
    "implementation_commit": "f9761fe534d815fdaa7cba425a93df017fd15c3f",
    "main_commit": "f9761fe534d815fdaa7cba425a93df017fd15c3f",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-122.json"
+  },
+  {
+   "id": "ncs-123-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-123"
+   ],
+   "branch": "codex/ncs-123-detector-trend",
+   "implementation_commit": "fc67a973de05be663dc2c357d0d9e6036a2d09ad",
+   "main_commit": "fc67a973de05be663dc2c357d0d9e6036a2d09ad",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-123.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "f9761fe534d815fdaa7cba425a93df017fd15c3f"
+ "main_commit": "fc67a973de05be663dc2c357d0d9e6036a2d09ad"
 }

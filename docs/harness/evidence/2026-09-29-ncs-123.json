@@ -1,0 +1,20 @@
+{
+ "commit": "fc67a973de05be663dc2c357d0d9e6036a2d09ad",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-123"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：DetectorTrendGateTest 3 项（卷级门禁超阈告警未超静默/聚合反馈同类一句话去重/高危与窗外不参与）；分支与 main 全量 1360/0F/0E/1S 严格门禁。备注：提交一度误落 main，已重整为分支+ff-only 协议形态（树内容不变）。反馈段新增可能分叉语料——收尾统一重建",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-123; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-123-detector-trend"
+}

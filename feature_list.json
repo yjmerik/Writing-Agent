@@ -9493,13 +9493,14 @@
    "description": "updateBookSnapshot 当前复用 memory-summary 模板（指令为纯文本摘要）却期望 JSON{mainlineProgress}，大概率从不更新且失败无事件：改用专用 book-snapshot 模板、失败发事件；MemoryManagerAgent.summarize 输入加 token 预算（当前固定 maxTokens=1500 输入不截断，长卷爆窗）",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: 3d383cae36b0（ff-merge=main 提交 3d383cae36b0）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：快照模板输出可解析 JSON 且解析失败产生事件，超长卷摘要输入被有界截断",
    "verify_cmd": "mvn test -Dtest=BookSnapshotGenerationTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-116-verified"
   },
   {
    "id": "NCS-117",

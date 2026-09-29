@@ -2519,8 +2519,19 @@
    "implementation_commit": "16899b1f7a19892f86c18032760f4dc6653a2485",
    "main_commit": "16899b1f7a19892f86c18032760f4dc6653a2485",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-115.json"
+  },
+  {
+   "id": "ncs-116-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-116"
+   ],
+   "branch": "codex/ncs-116-book-snapshot",
+   "implementation_commit": "3d383cae36b092425e419a3323d51d23c6338c46",
+   "main_commit": "3d383cae36b092425e419a3323d51d23c6338c46",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-116.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "16899b1f7a19892f86c18032760f4dc6653a2485"
+ "main_commit": "3d383cae36b092425e419a3323d51d23c6338c46"
 }

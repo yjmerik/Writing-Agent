@@ -1,0 +1,20 @@
+{
+ "commit": "3d383cae36b092425e419a3323d51d23c6338c46",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-116"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：BookSnapshotGenerationTest 3 项（专用模板指令 JSON+变量注入/extractSnapshotJson 合法通过纯文本拒绝/卷摘要输入有界截断）；既有 BookSnapshotTest 桩随 draftSnapshot 口径更新 4 项仍绿；分支与 main 全量 1335/0F/0E/1S 严格门禁",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-116; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-116-book-snapshot"
+}

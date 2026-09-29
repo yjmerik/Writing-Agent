@@ -2552,8 +2552,19 @@
    "implementation_commit": "25b9bb402ed537d83360ad5a275c9419522809ae",
    "main_commit": "25b9bb402ed537d83360ad5a275c9419522809ae",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-118.json"
+  },
+  {
+   "id": "ncs-119-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-119"
+   ],
+   "branch": "codex/ncs-119-tracker-fail-loud",
+   "implementation_commit": "756a554b729655addbbd0e4d6a20063c75f5fb9a",
+   "main_commit": "756a554b729655addbbd0e4d6a20063c75f5fb9a",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-119.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "25b9bb402ed537d83360ad5a275c9419522809ae"
+ "main_commit": "756a554b729655addbbd0e4d6a20063c75f5fb9a"
 }

@@ -9538,13 +9538,14 @@
    "description": "RelationshipEvolutionTracker（detectAndApply/applyEvolutions 当前 catch→0）/PlotMotifTracker（catch→空）同 NCS-118 fail-loud 语义：显式重试或 UNKNOWN 信封+事件，静默空返回清零",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: 756a554b7296（ff-merge=main 提交 756a554b7296）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：构造异常场景两追踪器产生可见失败信号而非空结果",
    "verify_cmd": "mvn test -Dtest=TrackerFailLoudTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-119-verified"
   },
   {
    "id": "NCS-120",

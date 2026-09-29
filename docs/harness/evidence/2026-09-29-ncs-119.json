@@ -1,0 +1,20 @@
+{
+ "commit": "756a554b729655addbbd0e4d6a20063c75f5fb9a",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-119"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：TrackerFailLoudTest 4 项（关系演化/桥段提取终态失败抛阶段异常/成功路径不变/短正文门槛不变）；ARC_TRACKING ledger 失败不标 COMPLETED；分支与 main 全量 1346/0F/0E/1S 严格门禁",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-119; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-119-tracker-fail-loud"
+}

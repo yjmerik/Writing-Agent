@@ -39,7 +39,7 @@ class EntityGraphValidityTest {
 
     private ChapterPostProcessor processor(EntityGraphService graph) {
         return new ChapterPostProcessor(mock(NovelOrchestrator.class), repo, null, graph,
-                null, null, null, null, null, null, null, null, null, null, null, null, ledger);
+                null, null, null, null, null, null, null, null, null, null, null, null, null, ledger);
     }
 
     @Test void 截断JSON保留未完成账本且恢复不重复图数据() {

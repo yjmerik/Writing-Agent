@@ -56,7 +56,7 @@ class PostProcessLeaseGuardTest {
         var ledger = new com.writing.novel.persistence.sqlite.PostProcessLedgerRepository(cp);
         ChapterPostProcessor processor = new ChapterPostProcessor(
                 orch, repo, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, ledger);
+                null, null, null, null, null, null, null, null, ledger);
 
         Chapter chapter = new Chapter(projectId, 1, "第一章");
         assertThrows(WriteLeaseStaleException.class,

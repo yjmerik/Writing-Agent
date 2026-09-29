@@ -58,7 +58,7 @@ class FactHarvestValidityTest {
         var orch = mock(NovelOrchestrator.class);
         when(orch.factHarvester()).thenReturn(agent);
         var processor = new ChapterPostProcessor(orch, repo, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, ledger);
+                null, null, null, null, null, null, null, null, null, null, ledger);
         // NCS-068: 首次无效 → 带因重试仍无效 → 才失败保留账本；恢复轮拿到合法响应
         when(gateway.complete(any())).thenReturn(new LlmResponse("[", 1, 1),
                 new LlmResponse("[", 1, 1),

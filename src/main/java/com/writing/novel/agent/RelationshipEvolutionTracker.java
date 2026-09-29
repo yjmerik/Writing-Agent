@@ -128,11 +128,14 @@ public class RelationshipEvolutionTracker {
                 Entity entityB = nameToEntity.get(nameB);
                 if (entityA == null || entityB == null) continue;
 
-                // 过期旧的 A→B 边
+                // 过期旧的 A→B 边（NCS-122: 对称过期 B→A——对齐 EntityExtractor 的
+                // 对称关系处理策略，两处过期口径不一致是双轨漂移的根因之一）
                 for (var edge : existingEdges) {
-                    if (edge.getSourceId().equals(entityA.getId())
-                            && edge.getTargetId().equals(entityB.getId())
-                            && edge.isCurrent()) {
+                    boolean forward = edge.getSourceId().equals(entityA.getId())
+                            && edge.getTargetId().equals(entityB.getId());
+                    boolean backward = edge.getSourceId().equals(entityB.getId())
+                            && edge.getTargetId().equals(entityA.getId());
+                    if ((forward || backward) && edge.isCurrent()) {
                         edge.expire(chapterIndex);
                         repository.saveEntityEdge(edge);
                     }

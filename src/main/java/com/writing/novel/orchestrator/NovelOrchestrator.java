@@ -244,7 +244,11 @@ public class NovelOrchestrator {
                 entityGraphService, narrativeThreadExtractor, readerReviewAgent,
                 foreshadowingExtractor, climaxDiversityTracker, diversityTracker,
                 sceneClassifier, arcScheduler, relationshipEvolutionTracker, plotMotifTracker,
-                plotProgressionDetector, characterProfileUpgrader, arcUpdater, pol.postProcessLedger());
+                plotProgressionDetector, characterProfileUpgrader, arcUpdater,
+                // NCS-122: 关系双轨交叉校验（canon 为 null 的测试装配跳过）
+                storyCanon == null ? null
+                        : new com.writing.novel.service.RelationshipConsistencyService(repository, storyCanon),
+                pol.postProcessLedger());
     }
 
     /** p20-02: 后处理模块（正文落库后阶段编排） */

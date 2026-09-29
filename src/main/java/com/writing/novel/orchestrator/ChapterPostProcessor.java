@@ -55,6 +55,8 @@ public class ChapterPostProcessor {
     private final com.writing.novel.service.PlotProgressionDetector plotProgressionDetector;
     private final com.writing.novel.agent.CharacterProfileUpgrader characterProfileUpgrader;
     private final com.writing.novel.agent.ArcUpdater arcUpdater;
+    /** NCS-122: 关系双轨交叉校验（可选；null 跳过） */
+    private final com.writing.novel.service.RelationshipConsistencyService relationshipConsistencyService;
     /** p20-04/p22-05: 阶段账本——组合期显式给定；null 时不记账（仅测试） */
     private final com.writing.novel.persistence.sqlite.PostProcessLedgerRepository ledger;
 
@@ -74,6 +76,7 @@ public class ChapterPostProcessor {
                          com.writing.novel.service.PlotProgressionDetector plotProgressionDetector,
                          com.writing.novel.agent.CharacterProfileUpgrader characterProfileUpgrader,
                          com.writing.novel.agent.ArcUpdater arcUpdater,
+                         com.writing.novel.service.RelationshipConsistencyService relationshipConsistencyService,
                          com.writing.novel.persistence.sqlite.PostProcessLedgerRepository ledger) {
         this.orch = orch;
         this.repository = repository;
@@ -91,6 +94,7 @@ public class ChapterPostProcessor {
         this.plotProgressionDetector = plotProgressionDetector;
         this.characterProfileUpgrader = characterProfileUpgrader;
         this.arcUpdater = arcUpdater;
+        this.relationshipConsistencyService = relationshipConsistencyService;
         this.ledger = ledger;
     }
 
@@ -327,6 +331,18 @@ public class ChapterPostProcessor {
             throw e;
         } catch (Exception e) {
             throw new com.writing.novel.agent.util.PostProcessStageFailure("plot-motif", "桥段追踪失败: " + e.getMessage(), e);
+        }
+
+        // NCS-122: 关系双轨交叉校验（纯规则，零 LLM）——边表 vs 真典关系事实矛盾信号
+        try {
+            if (relationshipConsistencyService != null) {
+                for (var issue : relationshipConsistencyService.crossCheck(projectId, chapterIndex)) {
+                    repository.saveContinuityIssue(issue);
+                    log.warn("关系双轨(章{}): {}", chapterIndex, issue.getDescription());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("关系双轨校验失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
         // 剧情停滞检测：基于张力曲线，连续低张力触发警告

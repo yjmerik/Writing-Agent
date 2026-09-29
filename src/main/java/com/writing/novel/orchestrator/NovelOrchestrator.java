@@ -2310,6 +2310,20 @@ public class NovelOrchestrator {
      * p19-03: 全书结构化快照——卷末用上一版快照+本卷摘要+关键真典增量更新。
      * 失败/非 JSON 输出保留旧版，不阻塞写作；包级可见供测试。
      */
+    /**
+     * NCS-116: 快照 JSON 提取（含 mainlineProgress 校验；无效返回 null）。
+     * 旧逻辑 readTree 异常直接进外层 catch（与其它失败混在一起无事件）。
+     */
+    public static String extractSnapshotJson(String content) {
+        if (content == null || content.isBlank()) return null;
+        var parsed = com.writing.novel.llm.LlmJson.parse(content);
+        if (!parsed.ok() || !parsed.node().isObject()
+                || parsed.node().path("mainlineProgress").isMissingNode()) {
+            return null;
+        }
+        return parsed.node().toString();
+    }
+
     void updateBookSnapshot(String projectId, int toChapter, String volumeSummary) {
         try {
             Project p = loadProject(projectId);
@@ -2327,24 +2341,20 @@ public class NovelOrchestrator {
             }
             var mm = memoryManager;
             if (mm == null) return;
-            var temp = mm.summarize(projectId, 1, toChapter,
-                    previous + "\n\n" + (volumeSummary != null ? volumeSummary : "") + "\n\n" + keyFacts);
-            String content = temp != null ? temp.getContent() : null;
-            if (content == null || content.isBlank()) return;
-            // 校验 JSON 含必需字段，坏输出保留旧版
-            int start = content.indexOf('{');
-            int end = content.lastIndexOf('}');
-            if (start < 0 || end <= start) return;
-            String json = content.substring(start, end + 1);
-            var node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(json);
-            if (node.path("mainlineProgress").isMissingNode()) return;
-            repository.deleteSummary(temp.getId());
+            // NCS-116: 专用 book-snapshot 模板（旧路径复用纯文本摘要模板，JSON 期望靠运气）
+            String content = mm.draftSnapshot(previous, volumeSummary, keyFacts);
+            String json = extractSnapshotJson(content);
+            if (json == null) {
+                EventLog.emit("BOOK_SNAPSHOT_FAILED", Map.of(
+                        "projectId", projectId, "chapterIndex", toChapter,
+                        "reason", content == null || content.isBlank() ? "blank"
+                                : EventLog.truncate(content, 120)));
+                return;
+            }
             p.setBookSnapshot(json);
             repository.saveProject(p);
-            log.info("全书快照已更新(ch{}): {}", toChapter,
-                    node.path("mainlineProgress").asText().length() > 40
-                            ? node.path("mainlineProgress").asText().substring(0, 40) + "..."
-                            : node.path("mainlineProgress").asText());
+            log.info("全书快照已更新(ch{}): {}",
+                    toChapter, EventLog.truncate(json, 120));
         } catch (Exception e) {
             log.warn("全书快照更新失败(保留旧版): {}", e.getMessage());
         }

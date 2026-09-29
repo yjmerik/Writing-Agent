@@ -85,8 +85,9 @@ class BookSnapshotTest {
         String json = """
                 {"mainlineProgress":"主角已查出灭门真凶","activeFactions":"青云门、漕帮","keyCharacters":"林凡(重伤)、叶秋(叛变)","timelineAnchors":"第1卷冬至、第2卷春闱","milestones":"夺回剑谱"}
                 """;
-        when(memoryManager.summarize(eq(p.getId()), eq(1), anyInt(), anyString()))
-                .thenReturn(llmSummary(json));
+        // NCS-116: 快照走专用 draftSnapshot（旧 summarize 复用路径已移除）
+        when(memoryManager.draftSnapshot(anyString(), anyString(), anyString()))
+                .thenReturn(json);
 
         orchestrator.updateBookSnapshot(p.getId(), 8, "本卷：主角与漕帮决战，重伤获胜。");
 
@@ -103,7 +104,7 @@ class BookSnapshotTest {
         Project p = new Project("快照容错", "构思", "武侠");
         p.setBookSnapshot("{\"mainlineProgress\":\"旧状态\"}");
         repo.saveProject(p);
-        when(memoryManager.summarize(anyString(), anyInt(), anyInt(), anyString()))
+        when(memoryManager.draftSnapshot(anyString(), anyString(), anyString()))
                 .thenThrow(new RuntimeException("LLM 故障"));
 
         orchestrator.updateBookSnapshot(p.getId(), 8, "本卷摘要");
@@ -118,8 +119,8 @@ class BookSnapshotTest {
         Project p = new Project("快照坏输出", "构思", "武侠");
         p.setBookSnapshot("{\"mainlineProgress\":\"旧\"}");
         repo.saveProject(p);
-        when(memoryManager.summarize(anyString(), anyInt(), anyInt(), anyString()))
-                .thenReturn(llmSummary("这不是JSON"));
+        when(memoryManager.draftSnapshot(anyString(), anyString(), anyString()))
+                .thenReturn("这不是JSON");
 
         orchestrator.updateBookSnapshot(p.getId(), 8, "摘要");
 

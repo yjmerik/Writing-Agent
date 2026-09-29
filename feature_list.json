@@ -9767,13 +9767,14 @@
    "description": "EmbeddedVectorStore 当前全项目单文件+O(全表)扫描+全量 Java 序列化+换 embedding 模型旧向量静默失联（cosine 返回 0）：改按项目分索引文件、维度校验不匹配自动重建并发事件、增量持久化",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: 20b26e047f10（ff-merge=main 提交 20b26e047f10）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：多项目索引隔离，维度不匹配触发重建事件且重建后可检索，写入增量持久化",
    "verify_cmd": "mvn test -Dtest=VectorStoreEngineeringTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-134-verified"
   },
   {
    "id": "NCS-135",

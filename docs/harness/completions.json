@@ -2717,8 +2717,19 @@
    "implementation_commit": "ebf2fc7ab1e820880229ff6c983a458c6793c639",
    "main_commit": "ebf2fc7ab1e820880229ff6c983a458c6793c639",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-133.json"
+  },
+  {
+   "id": "ncs-134-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-134"
+   ],
+   "branch": "codex/ncs-134-vector-store-eng",
+   "implementation_commit": "20b26e047f10451c83d48ef854e4764808c9a606",
+   "main_commit": "20b26e047f10451c83d48ef854e4764808c9a606",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-134.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "ebf2fc7ab1e820880229ff6c983a458c6793c639"
+ "main_commit": "20b26e047f10451c83d48ef854e4764808c9a606"
 }

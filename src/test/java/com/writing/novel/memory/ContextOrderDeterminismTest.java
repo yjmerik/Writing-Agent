@@ -17,6 +17,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.Mockito.*;
 
 /**
@@ -37,7 +38,7 @@ class ContextOrderDeterminismTest {
         new SqliteSchemaInitializer(cp).initialize();
         repo = new SqliteNovelRepository(cp);
         vr = mock(VectorRetrievalService.class);
-        when(vr.search(anyString(), anyString(), anyInt())).thenReturn(List.of());
+        when(vr.search(anyString(), anyString(), anyInt(), anyDouble())).thenReturn(List.of());
 
         Project p = new Project("顺序书", "构思", "悬疑");
         repo.saveProject(p);
@@ -52,7 +53,7 @@ class ContextOrderDeterminismTest {
     void 检索命中顺序不影响relevantCharacters规范序() {
         String mengYaiId = idOf("祝青崖");
         String shenId = idOf("沈六娘");
-        when(vr.search(anyString(), anyString(), anyInt()))
+        when(vr.search(anyString(), anyString(), anyInt(), anyDouble()))
                 .thenReturn(List.of(new VectorSearchResult(mengYaiId, 0.9),
                                     new VectorSearchResult(shenId, 0.8)));
 

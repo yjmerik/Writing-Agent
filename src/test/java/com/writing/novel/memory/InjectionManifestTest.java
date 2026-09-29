@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.Mockito.*;
 
 /**
@@ -83,7 +84,7 @@ class InjectionManifestTest {
         charId = protagonist.getId();
 
         // 向量检索命中知识条目
-        when(vectorRetrieval.search(anyString(), anyString(), anyInt()))
+        when(vectorRetrieval.search(anyString(), anyString(), anyInt(), anyDouble()))
                 .thenReturn(List.of(new VectorSearchResult(entryId, 0.9)));
         when(vectorRetrieval.getText(anyString())).thenReturn(null);
 

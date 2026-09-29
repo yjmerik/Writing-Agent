@@ -1,0 +1,20 @@
+{
+ "commit": "05e54d20f9f124ab2ae81f5faa8bb14b6422d1a2",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-131"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：SemanticCacheGatewayTest 3 项（同 prompt 命中零下游+LLM_CACHE_HIT 事件/章稿推进失效/创意任务绝不缓存）；默认关闭（-Dllm.semantic-cache.enabled=true 开启，replay/record 不叠加）；分支与 main 全量 1382/0F/0E/1S 严格门禁",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-131; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-131-semantic-cache"
+}

@@ -9722,13 +9722,14 @@
    "description": "复用 RecordReplay 的归一化 prompt 指纹实现生产语义缓存装饰网关：键=(taskType,provider,model,指纹,temperature)，仅低温度确定性任务白名单启用（CONTINUITY_CHECK/EXTRACTION/STYLE_GUARDIAN 等），失效键=projectId+chapterVersion，命中发 LLM_CACHE_HIT 事件（重检同章等场景降本）",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: 05e54d20f9f1（ff-merge=main 提交 05e54d20f9f1）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：同键请求命中缓存零下游调用且事件记录，章稿版本推进后失效，白名单外任务不缓存",
    "verify_cmd": "mvn test -Dtest=SemanticCacheGatewayTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-131-verified"
   },
   {
    "id": "NCS-132",

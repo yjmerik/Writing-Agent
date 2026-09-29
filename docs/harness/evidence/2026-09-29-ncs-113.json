@@ -1,0 +1,20 @@
+{
+ "commit": "03c5ed7ee2a45a3b89f838a1d5abeead976d9081",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-113"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：LedgerRelevanceTest 3 项（cast 命中旧实体召回/伏笔 cast 相关优先+僵尸降权/线索 cast 相关优先僵尸不霸榜）；分支与 main 全量 1326/0F/0E/1S 严格门禁。注入排序变化分叉旧语料——收尾统一重建",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-113; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-113-ledger-relevance"
+}

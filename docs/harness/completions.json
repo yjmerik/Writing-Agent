@@ -2486,8 +2486,19 @@
    "implementation_commit": "e93d42bc5092e2f8c9ab392ac3bf287061ce62bd",
    "main_commit": "e93d42bc5092e2f8c9ab392ac3bf287061ce62bd",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-112.json"
+  },
+  {
+   "id": "ncs-113-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-113"
+   ],
+   "branch": "codex/ncs-113-ledger-relevance",
+   "implementation_commit": "03c5ed7ee2a45a3b89f838a1d5abeead976d9081",
+   "main_commit": "03c5ed7ee2a45a3b89f838a1d5abeead976d9081",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-113.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "e93d42bc5092e2f8c9ab392ac3bf287061ce62bd"
+ "main_commit": "03c5ed7ee2a45a3b89f838a1d5abeead976d9081"
 }

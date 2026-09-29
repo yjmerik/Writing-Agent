@@ -9446,13 +9446,14 @@
    "dependencies": [
     "NCS-109"
    ],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: 03c5ed7ee2a4（ff-merge=main 提交 03c5ed7ee2a4）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：构造大纲点名旧实体的场景召回该实体及其 1 跳邻居，无关长期悬置线索排后/隔离",
    "verify_cmd": "mvn test -Dtest=LedgerRelevanceTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-113-verified"
   },
   {
    "id": "NCS-114",

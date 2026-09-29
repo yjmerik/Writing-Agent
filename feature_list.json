@@ -9553,13 +9553,14 @@
    "description": "伏笔回收检测从「描述 8 字前缀 contains/关键词交集≥2」启发式（同义改写即错位、含「秘密」「父亲」即互误回收）改为 prompt 携带台账 id 列表、LLM 返回 id+证据引文对账；伏笔去重含 id；与真典 PLOT_COMMITMENT 建立同步点，双承诺系统不再脱节",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: d2f7ca03eafe（ff-merge=main 提交 d2f7ca03eafe）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：同义改写的回收描述按 id 正确对账，无 id 匹配的回收判定被拒绝",
    "verify_cmd": "mvn test -Dtest=ForeshadowIdChainTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-120-verified"
   },
   {
    "id": "NCS-121",

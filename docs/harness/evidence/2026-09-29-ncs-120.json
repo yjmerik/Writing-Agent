@@ -1,0 +1,20 @@
+{
+ "commit": "d2f7ca03eafe896ee87d685c90c8fdaa6debe838",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-120"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：ForeshadowIdChainTest 4 项（列表携 id+模板契约/id 对账同义改写命中/幻觉 id 与无证据拒绝/回收同步真典 PLOT_COMMITMENT 确认章刷新）；分支与 main 全量 1350/0F/0E/1S 严格门禁。resolve-check prompt 变化分叉旧语料——收尾统一重建",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-120; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-120-foreshadow-id-chain"
+}

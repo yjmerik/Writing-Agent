@@ -2563,8 +2563,19 @@
    "implementation_commit": "756a554b729655addbbd0e4d6a20063c75f5fb9a",
    "main_commit": "756a554b729655addbbd0e4d6a20063c75f5fb9a",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-119.json"
+  },
+  {
+   "id": "ncs-120-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-120"
+   ],
+   "branch": "codex/ncs-120-foreshadow-id-chain",
+   "implementation_commit": "d2f7ca03eafe896ee87d685c90c8fdaa6debe838",
+   "main_commit": "d2f7ca03eafe896ee87d685c90c8fdaa6debe838",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-120.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "756a554b729655addbbd0e4d6a20063c75f5fb9a"
+ "main_commit": "d2f7ca03eafe896ee87d685c90c8fdaa6debe838"
 }

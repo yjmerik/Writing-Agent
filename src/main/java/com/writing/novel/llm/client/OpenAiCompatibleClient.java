@@ -109,6 +109,12 @@ public class OpenAiCompatibleClient implements LlmClient {
                         if (!softened) {
                             softened = true;
                             appendSafetyNote(body);
+                            // NCS-135: 传输层审查温和化显式事件化——对上层与
+                            // fixture 指纹可预期（此前偷偷改写 prompt 无任何信号）
+                            com.writing.novel.telemetry.EventLog.emit("CONTENT_SOFTENED", java.util.Map.of(
+                                    "taskType", request.getTaskType().name(),
+                                    "httpStatus", response.code(),
+                                    "phase", "non-stream"));
                             log.warn("内容审查拦截({}), 温和化 system prompt 后原位重试: {}",
                                     response.code(), request.getTaskType());
                             continue; // 不消耗重试次数
@@ -177,6 +183,10 @@ public class OpenAiCompatibleClient implements LlmClient {
                             || errBody.contains("contentFilter")) && attempt < 2) {
                         appendSafetyNoteBody(body);
                         attempt++;
+                        com.writing.novel.telemetry.EventLog.emit("CONTENT_SOFTENED", java.util.Map.of(
+                                "taskType", request.getTaskType().name(),
+                                "httpStatus", response.code(),
+                                "phase", "stream"));
                         log.warn("内容审查拦截（流式），温和化后重试: {}", request.getTaskType());
                         continue;
                     }
@@ -323,16 +333,12 @@ public class OpenAiCompatibleClient implements LlmClient {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     if (line.startsWith("data: ")) {
-                        String data = line.substring(6).trim();
-                        if ("[DONE]".equals(data)) { terminated = true; break; }
-                        JsonNode chunk = MAPPER.readTree(data);
-                        if (!chunk.path("choices").path(0).path("finish_reason").asText("").isEmpty()) {
-                            terminated = true;
-                        }
-                        String delta = chunk.path("choices").path(0)
-                                .path("delta").path("content").asText("");
-                        if (!delta.isEmpty()) {
-                            handler.onToken(delta);
+                        // NCS-135: 共享帧解析（与聚合路径同源，防双实现漂移）
+                        SseChunk chunk = parseSseData(line.substring(6).trim());
+                        if (chunk.doneMarker()) { terminated = true; break; }
+                        if (chunk.terminated()) terminated = true;
+                        if (chunk.delta() != null && !chunk.delta().isEmpty()) {
+                            handler.onToken(chunk.delta());
                         }
                     }
                 }
@@ -345,6 +351,35 @@ public class OpenAiCompatibleClient implements LlmClient {
         } catch (Exception e) {
             handler.onError(e);
         }
+    }
+
+    /**
+     * NCS-135: 共享 SSE 帧记录——聚合 completeViaStream 与回调 streamComplete
+     * 此前各自维护解析逻辑易漂移；统一帧结构由各实现消费。
+     */
+    public record SseChunk(String delta, String finishReason, Integer promptTokens, Integer completionTokens,
+                    boolean doneMarker) {
+        public boolean terminated() {
+            return doneMarker || (finishReason != null && !finishReason.isEmpty());
+        }
+    }
+
+    public static SseChunk parseSseData(String data) {
+        if ("[DONE]".equals(data)) return new SseChunk(null, null, null, null, true);
+        JsonNode chunk;
+        try {
+            chunk = MAPPER.readTree(data);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        String delta = chunk.path("choices").path(0).path("delta").path("content").asText("");
+        String finish = chunk.path("choices").path(0).path("finish_reason").asText("");
+        JsonNode usage = chunk.path("usage");
+        Integer pt = usage.isObject() && usage.hasNonNull("prompt_tokens")
+                ? usage.path("prompt_tokens").asInt() : null;
+        Integer ct = usage.isObject() && usage.hasNonNull("completion_tokens")
+                ? usage.path("completion_tokens").asInt() : null;
+        return new SseChunk(delta, finish, pt, ct, false);
     }
 
     /** Named providers have one bounded attempt; retry/cooldown is owned by the gateway. */

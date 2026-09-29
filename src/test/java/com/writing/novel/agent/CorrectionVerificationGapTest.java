@@ -112,6 +112,7 @@ class CorrectionVerificationGapTest {
 
     private String readEvents() {
         try {
+            com.writing.novel.telemetry.EventLog.awaitFlush();   // NCS-130: 异步落盘
             return Files.exists(eventsFile) ? Files.readString(eventsFile) : "";
         } catch (Exception e) {
             return "";

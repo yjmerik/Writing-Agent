@@ -9415,7 +9415,7 @@
    "phase": 51,
    "dependencies": [],
    "status": "completed",
-   "evidence": "2026-09-28 verified: f3c42f2e0d11（ff-merge=main 提交 f3c42f2e0d11）; ",
+   "evidence": "2026-09-29 verified: f3c42f2e0d11+回归修复b6ae2b7（ff-merge=main 提交 0755c71 合入）; VectorSearchQuotaTest 4 项（绝对阈值/两桶配额/相邻 chunk 链式去重/桶不足补足）；既有三参 search 桩随四参口径更新；最终 main 全量 1319/0F/0E/1S（严格 BUILD SUCCESS 门禁）",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：混排场景下三类来源各占配额、低于阈值不注入、相邻 chunk 单次注入",
@@ -9799,6 +9799,6 @@
   }
  ],
  "schema_version": 2,
- "updated_at": "2026-09-28",
+ "updated_at": "2026-09-29",
  "active_feature": null
 }

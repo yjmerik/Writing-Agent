@@ -1,6 +1,6 @@
-# 架构质量深化设计与登记（NCS-096..137）— 2026-09-28
+# 架构质量深化设计与登记（NCS-096..137）— 2026-09-29
 
-Last Updated: 2026-09-28
+Last Updated: 2026-09-29
 
 ## Current
 
@@ -18,7 +18,7 @@ Last Updated: 2026-09-28
 
 ## Files
 
-- spec（设计全文+边界映射+风险）：docs/specs/2026-09-28-arch-quality-deepening.md
+- spec（设计全文+边界映射+风险）：docs/specs/2026-09-29-arch-quality-deepening.md
 - 登记：feature_list.json 追加 NCS-096..NCS-137（phase 51，全部 not-started，
   含 acceptance/verify_cmd/依赖），current_phase=51
 - 归档：docs/harness/archive/2026-09-26-{progress,session-handoff}.md

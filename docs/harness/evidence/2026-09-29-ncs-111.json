@@ -1,5 +1,5 @@
 {
- "commit": "f3c42f2e0d118922da076824debfe466bd8a24ff",
+ "commit": "0755c715d5c0aab2625a73642e38d1ee3dea4d58",
  "cleanCheckout": true,
  "feature_ids": [
   "NCS-111"
@@ -16,5 +16,5 @@
    "exitCode": 0
   }
  ],
- "notes": "scope: NCS-111; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-111-vector-quota-threshold"
+ "notes": "scope: NCS-111; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-111-vector-quota-threshold | 修正：首个实现提交因 grep 门禁掩盖 3 个桩过期回归（InjectionManifestTest/ContextOrderDeterminismTest 三参 search 桩），已以 b6ae2b7 修复并严格门禁复验：分支与合并后 main 全量 1319/0F/0E/1S GREEN"
 }

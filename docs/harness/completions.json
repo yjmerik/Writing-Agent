@@ -2640,8 +2640,19 @@
    "implementation_commit": "8e1468acfea19e5eb572a5a0533fee85189f67df",
    "main_commit": "8e1468acfea19e5eb572a5a0533fee85189f67df",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-126.json"
+  },
+  {
+   "id": "ncs-127-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-127"
+   ],
+   "branch": "codex/ncs-127-revision-style",
+   "implementation_commit": "2956d2212a4738e6fe4ba7d5a732283be5b21407",
+   "main_commit": "2956d2212a4738e6fe4ba7d5a732283be5b21407",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-127.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "8e1468acfea19e5eb572a5a0533fee85189f67df"
+ "main_commit": "2956d2212a4738e6fe4ba7d5a732283be5b21407"
 }

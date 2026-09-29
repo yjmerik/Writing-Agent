@@ -1,0 +1,20 @@
+{
+ "commit": "2956d2212a4738e6fe4ba7d5a732283be5b21407",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-127"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：RevisionStyleInjectionTest 2 项（段落编辑携基调+范本/未配置时空段行为不变）；三修订模板加 styleGuide 块；ContentRevisionAgent 经供给函数注入保持无仓库契约；分支与 main 全量 1371/0F/0E/1S 严格门禁",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-127; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-127-revision-style"
+}

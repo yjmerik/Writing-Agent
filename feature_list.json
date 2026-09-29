@@ -9660,13 +9660,14 @@
    "dependencies": [
     "NCS-102"
    ],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: 2956d2212a47（ff-merge=main 提交 2956d2212a47）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：修订与纠偏 prompt 含风格约束与例文，NCS-102 未配置时行为不变",
    "verify_cmd": "mvn test -Dtest=RevisionStyleInjectionTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-127-verified"
   },
   {
    "id": "NCS-128",

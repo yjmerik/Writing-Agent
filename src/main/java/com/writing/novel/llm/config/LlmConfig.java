@@ -52,6 +52,14 @@ public class LlmConfig {
                     gateway, RecordReplayLlmGateway.Mode.REPLAY, Path.of(replayDir));
             default -> { /* off：直连真实网关 */ }
         }
+        // NCS-131: 语义缓存——live/off 模式且显式开启时包一层（白名单任务命中免下游调用）；
+        // record/replay 已是零成本回放，不叠加
+        boolean semanticCache = "off".equalsIgnoreCase(replayMode)
+                && Boolean.parseBoolean(System.getProperty("llm.semantic-cache.enabled", "false"));
+        if (semanticCache) {
+            gateway = new com.writing.novel.llm.gateway.SemanticCacheLlmGateway(
+                    gateway, "primary", "routed", 2000);
+        }
         // p10-w1-04: 注入 pricing + 成本累计，按 taskType 模型真实计价
         return new ObservedLlmGateway(gateway, properties, costBudgetMonitor);
     }

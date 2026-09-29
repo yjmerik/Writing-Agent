@@ -3,6 +3,7 @@ import { Card, Button, Spin, Empty, Progress, Tag, Alert, Divider, Typography, S
 import { SafetyCertificateOutlined } from '@ant-design/icons';
 import { api, type QualityEvaluationResult } from '../api/client';
 import ReviewClassificationView from './ReviewClassificationView';
+import ReaderReviewCard from './ReaderReviewCard';
 
 const { Paragraph, Title } = Typography;
 
@@ -74,6 +75,7 @@ export default function QualityView({ projectId }: { projectId: string }) {
   return (
     <>
       <ReviewClassificationView projectId={projectId} />
+      <ReaderReviewCard projectId={projectId} />
     <Card>
       {messageContextHolder}
       <Space style={{ marginBottom: 16 }}>

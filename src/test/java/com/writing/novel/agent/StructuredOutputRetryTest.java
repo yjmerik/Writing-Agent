@@ -69,6 +69,7 @@ class StructuredOutputRetryTest {
         assertNull(result.error(), "重试成功后不得遗留错误");
         assertEquals(1, result.newEntities());
         verify(gateway, times(3)).complete(any()); // 实体重试2次 + 关系1次
+        com.writing.novel.telemetry.EventLog.awaitFlush();
         String events = Files.readString(eventsFile);
         assertTrue(events.contains("\"event\":\"STRUCTURED_OUTPUT_RETRY\""), "重试必须可观测: " + events);
         assertTrue(events.contains("\"phase\":\"entity-extraction.entities\""), events);
@@ -98,6 +99,7 @@ class StructuredOutputRetryTest {
 
         assertNull(result.error());
         verify(gateway, times(1)).complete(any());
+        com.writing.novel.telemetry.EventLog.awaitFlush();
         String events = Files.exists(eventsFile) ? Files.readString(eventsFile) : "";
         assertFalse(events.contains("STRUCTURED_OUTPUT_RETRY"), "合法空结果不得触发重试: " + events);
     }
@@ -115,6 +117,7 @@ class StructuredOutputRetryTest {
 
         assertEquals(0, result.total(), "合法空事实为成功");
         verify(gateway, times(2)).complete(any());
+        com.writing.novel.telemetry.EventLog.awaitFlush();
         String events = Files.readString(eventsFile);
         assertTrue(events.contains("\"phase\":\"fact-harvest\""), "事实重试必须可观测: " + events);
     }

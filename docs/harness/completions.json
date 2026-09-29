@@ -2651,8 +2651,19 @@
    "implementation_commit": "2956d2212a4738e6fe4ba7d5a732283be5b21407",
    "main_commit": "2956d2212a4738e6fe4ba7d5a732283be5b21407",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-127.json"
+  },
+  {
+   "id": "ncs-128-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-128"
+   ],
+   "branch": "codex/ncs-128-style-baseline-split",
+   "implementation_commit": "334d3af49f4cd44b64fb06f4d38a72ecef1a4d96",
+   "main_commit": "334d3af49f4cd44b64fb06f4d38a72ecef1a4d96",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-128.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "2956d2212a4738e6fe4ba7d5a732283be5b21407"
+ "main_commit": "334d3af49f4cd44b64fb06f4d38a72ecef1a4d96"
 }

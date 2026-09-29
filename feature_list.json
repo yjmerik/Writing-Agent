@@ -9677,13 +9677,14 @@
    "dependencies": [
     "NCS-103"
    ],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: 334d3af49f4c（ff-merge=main 提交 334d3af49f4c）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：updateProfile 后 intent 不变，漂移检测基准来自 intent 而非最近正文",
    "verify_cmd": "mvn test -Dtest=StyleBaselineSplitTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-128-verified"
   },
   {
    "id": "NCS-129",

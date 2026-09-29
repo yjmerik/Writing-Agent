@@ -2618,8 +2618,19 @@
    "implementation_commit": "d43254c02e2ce270341327a8bea9fcbe84a1e798",
    "main_commit": "d43254c02e2ce270341327a8bea9fcbe84a1e798",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-124.json"
+  },
+  {
+   "id": "ncs-125-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-125"
+   ],
+   "branch": "codex/ncs-125-reader-style",
+   "implementation_commit": "6c554b3bb9ff7e379e5778f79ed1bd7691601a33",
+   "main_commit": "6c554b3bb9ff7e379e5778f79ed1bd7691601a33",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-125.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "d43254c02e2ce270341327a8bea9fcbe84a1e798"
+ "main_commit": "6c554b3bb9ff7e379e5778f79ed1bd7691601a33"
 }

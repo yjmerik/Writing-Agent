@@ -9628,13 +9628,14 @@
    "description": "reader-review.st 评分维度（当前 engagement/coherence/character/hook/overall 无文风）增加 style 维度并计入 overall，使风格获得每章可门禁的廉价信号",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: 6c554b3bb9ff（ff-merge=main 提交 6c554b3bb9ff）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：评审输出含 style 维度且低 style 分拉低 overall，触发既有重写路径",
    "verify_cmd": "mvn test -Dtest=ReaderReviewStyleTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-125-verified"
   },
   {
    "id": "NCS-126",

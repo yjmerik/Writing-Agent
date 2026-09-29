@@ -9737,13 +9737,14 @@
    "description": "ChapterPostProcessor 的实体/伏笔/叙事线索/关系四提取阶段从顺序执行改并行（CompletableFuture，SQLite 写经既有串行执行器保持单写者），缩短单章后处理墙钟时间（串行是 recheck 4.5 分钟的根因之一）",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: 48216494aee1（ff-merge=main 提交 48216494aee1）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：四阶段并行执行且写库串行化不变，结果与顺序执行等价，耗时下降",
    "verify_cmd": "mvn test -Dtest=PostProcessFanOutTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-132-verified"
   },
   {
    "id": "NCS-133",

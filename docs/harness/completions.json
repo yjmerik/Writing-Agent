@@ -2695,8 +2695,19 @@
    "implementation_commit": "05e54d20f9f124ab2ae81f5faa8bb14b6422d1a2",
    "main_commit": "05e54d20f9f124ab2ae81f5faa8bb14b6422d1a2",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-131.json"
+  },
+  {
+   "id": "ncs-132-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-132"
+   ],
+   "branch": "codex/ncs-132-postprocess-fanout",
+   "implementation_commit": "48216494aee105f792e979eb6f75240dba5d2641",
+   "main_commit": "48216494aee105f792e979eb6f75240dba5d2641",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-132.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "05e54d20f9f124ab2ae81f5faa8bb14b6422d1a2"
+ "main_commit": "48216494aee105f792e979eb6f75240dba5d2641"
 }

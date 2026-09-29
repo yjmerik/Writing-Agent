@@ -1,0 +1,20 @@
+{
+ "commit": "48216494aee105f792e979eb6f75240dba5d2641",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-132"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "RED→GREEN：PostProcessFanOutTest（并发峰值≥2+ledger 全 COMPLETED）；恢复/租赁等 6 个既有后处理测试仍绿（顺带修复 CONTINUITY 分支 return 跳过 markCompleted 的潜伏排序缺陷）；分支与 main 全量 1383/0F/0E/1S 严格门禁",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-132; spec docs/specs/2026-09-28-arch-quality-deepening.md; branch codex/ncs-132-postprocess-fanout"
+}

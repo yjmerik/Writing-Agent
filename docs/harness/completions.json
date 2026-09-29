@@ -2673,8 +2673,19 @@
    "implementation_commit": "cba7fe2e13c1b812b4ca616cc64c629f428f980f",
    "main_commit": "cba7fe2e13c1b812b4ca616cc64c629f428f980f",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-129.json"
+  },
+  {
+   "id": "ncs-130-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-130"
+   ],
+   "branch": "codex/ncs-130-llm-observability",
+   "implementation_commit": "44293c1e7ee34ee1e825925ecf6a7c8e8bd08e43",
+   "main_commit": "44293c1e7ee34ee1e825925ecf6a7c8e8bd08e43",
+   "evidence": "docs/harness/evidence/2026-09-29-ncs-130.json"
   }
  ],
  "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "cba7fe2e13c1b812b4ca616cc64c629f428f980f"
+ "main_commit": "44293c1e7ee34ee1e825925ecf6a7c8e8bd08e43"
 }

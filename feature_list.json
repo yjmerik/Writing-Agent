@@ -9707,13 +9707,14 @@
    "description": "每逻辑调用 correlationId 贯穿 ObservedLlmGateway→Client 全部事件（当前两层事件无关联）；LLM_ERROR 增 provider/model/attempt/promptFingerprint（当前仅 errorClass+200 字 message，无法聚类同一 prompt 反复失败）；EventLog 从全局锁串行写盘改为异步有界队列批量刷盘",
    "phase": 51,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-09-29 verified: 44293c1e7ee3（ff-merge=main 提交 44293c1e7ee3）; ",
    "files": [],
    "spec": "docs/specs/2026-09-28-arch-quality-deepening.md",
    "acceptance": "运行 verify_cmd 通过：同一次调用的 LLM_CALL/LLM_ERROR/STRUCTURED_OUTPUT_RETRY 共享 correlationId，错误事件含四字段，事件写入不再阻塞调用线程",
    "verify_cmd": "mvn test -Dtest=LlmObservabilityTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-130-verified"
   },
   {
    "id": "NCS-131",

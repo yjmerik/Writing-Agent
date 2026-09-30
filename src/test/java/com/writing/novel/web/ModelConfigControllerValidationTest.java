@@ -27,7 +27,18 @@ class ModelConfigControllerValidationTest {
         def.setModel("local-model");
         props.setDefaultModel(def);
         return new ModelConfigController(
-                new LlmModelConfigStore(props, tempDir.resolve("cfg.json").toString()));
+                new LlmModelConfigStore(props, tempDir.resolve("cfg.json").toString()),
+                new com.writing.novel.llm.client.LlmClient() {
+                    @Override public com.writing.novel.llm.LlmResponse complete(
+                            ModelConfig c, com.writing.novel.llm.LlmRequest r) {
+                        throw new UnsupportedOperationException("校验测试不触网");
+                    }
+                    @Override public void streamComplete(ModelConfig c,
+                            com.writing.novel.llm.LlmRequest r,
+                            com.writing.novel.llm.client.StreamHandler h) {
+                        throw new UnsupportedOperationException("校验测试不触网");
+                    }
+                });
     }
 
     @Test

@@ -116,6 +116,31 @@ export default function ModelLibrary() {
     }
   };
 
+  // NCS-142: 连通性自检——保存前以表单候选值发一次微型补全，坏端点/坏 key 当场可见
+  const [testing, setTesting] = useState(false);
+  const handleTest = async () => {
+    try {
+      const values = await form.validateFields(['protocol', 'baseUrl', 'apiKey', 'model']);
+      setTesting(true);
+      const resp = await fetch('/api/llm/library/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+      const body = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(body.error || body.message || `HTTP ${resp.status}`);
+      if (body.ok) {
+        messageApi.success(`连通正常：${body.model}（${body.latencyMs}ms）`);
+      } else {
+        messageApi.error(`连通失败：${body.error}`);
+      }
+    } catch (e) {
+      if (e instanceof Error && e.message) messageApi.error(`连通失败：${e.message}`);
+    } finally {
+      setTesting(false);
+    }
+  };
+
   // === 路由 ===
   const handleRoute = async (taskType: string, providerName: string) => {
     try {
@@ -304,6 +329,15 @@ export default function ModelLibrary() {
         okText="保存"
         cancelText="取消"
         width={560}
+        footer={[(
+          <Button key="test" data-testid="model-test" loading={testing} onClick={() => void handleTest()}>
+            测试连接
+          </Button>
+        ), (
+          <Button key="cancel" onClick={() => setModalOpen(false)}>取消</Button>
+        ), (
+          <Button key="save" type="primary" loading={saving} onClick={() => void handleSave()}>保存</Button>
+        )]}
       >
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
           {!editingName && (

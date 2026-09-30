@@ -1,5 +1,6 @@
 package com.writing.novel.web;
 
+import com.writing.novel.llm.LlmProbe;
 import com.writing.novel.llm.config.LlmModelConfigStore;
 import com.writing.novel.llm.config.LlmProperties;
 import com.writing.novel.llm.config.LlmProtocol;
@@ -33,9 +34,11 @@ public class ModelConfigController {
     }
 
     private final LlmModelConfigStore store;
+    private final com.writing.novel.llm.client.LlmClient client;
 
-    public ModelConfigController(LlmModelConfigStore store) {
+    public ModelConfigController(LlmModelConfigStore store, com.writing.novel.llm.client.LlmClient client) {
         this.store = store;
+        this.client = client;
     }
 
     public record EntryView(String scope, String label, String source, String protocol, String baseUrl,
@@ -102,6 +105,28 @@ public class ModelConfigController {
         requireValidScope(scope);
         store.delete(scope);
         return entryView(scope, SCOPES.get(scope));
+    }
+
+    /**
+     * NCS-142：连通性自检——以候选配置（body 未提供的字段取当前生效值）发一次微型补全。
+     * 永不抛 HTTP 错误（探测失败是正常结果）：{ok, model, latencyMs, sample|error}。
+     * 探测请求强制单次尝试 + 短超时 + 受限 maxTokens，不产生可观测成本。
+     */
+    @PostMapping("/{scope}/test")
+    public Map<String, Object> test(@PathVariable String scope,
+                                    @RequestBody(required = false) UpdateRequest body) {
+        requireValidScope(scope);
+        ModelConfig candidate = LlmModelConfigStore.copy(store.effectiveForScope(scope));
+        if (body != null) {
+            if (body.protocol() != null && !body.protocol().isBlank()) {
+                candidate.setProtocol(parseProtocol(body.protocol()));
+            }
+            if (body.baseUrl() != null) candidate.setBaseUrl(body.baseUrl().trim());
+            if (body.model() != null) candidate.setModel(body.model().trim());
+            if (body.apiKey() != null && !body.apiKey().isBlank()) candidate.setApiKey(body.apiKey().trim());
+            if (body.streaming() != null) candidate.setStreaming(body.streaming());
+        }
+        return LlmProbe.run(client, candidate);
     }
 
     private EntryView entryView(String scope, String label) {

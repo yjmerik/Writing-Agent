@@ -25,9 +25,11 @@ import java.util.*;
 public class ModelLibraryController {
 
     private final LlmProperties properties;
+    private final com.writing.novel.llm.client.LlmClient client;
 
-    public ModelLibraryController(LlmProperties properties) {
+    public ModelLibraryController(LlmProperties properties, com.writing.novel.llm.client.LlmClient client) {
         this.properties = properties;
+        this.client = client;
     }
 
     // === DTO ===
@@ -121,10 +123,39 @@ public class ModelLibraryController {
         return toView(name, cfg, List.of());
     }
 
+    /**
+     * NCS-142：连通性自检（已存条目）——以库中该模型的当前配置发一次微型补全。
+     * 空 apiKey 保留原值；探测强制单次尝试 + 短超时 + 受限 maxTokens。
+     */
+    @org.springframework.web.bind.annotation.PostMapping("/{name}/test")
+    public Map<String, Object> testSaved(@PathVariable String name) {
+        ModelConfig cfg = properties.getProviders().get(name);
+        if (cfg == null) {
+            throw new IllegalArgumentException("模型库中不存在: " + name);
+        }
+        return com.writing.novel.llm.LlmProbe.run(client, copyConfig(cfg));
+    }
+
+    /** NCS-142：连通性自检（表单候选）——保存前以表单值探测，坏端点/坏 key 当场可见 */
+    @org.springframework.web.bind.annotation.PostMapping("/test")
+    public Map<String, Object> testCandidate(@RequestBody SaveModelRequest body) {
+        ModelConfig candidate = new ModelConfig();
+        if (body.protocol() != null && !body.protocol().isBlank()) {
+            candidate.setProtocol(parseProtocol(body.protocol()));
+        }
+        candidate.setBaseUrl(body.baseUrl() == null ? "" : body.baseUrl().trim());
+        candidate.setModel(body.model() == null ? "" : body.model().trim());
+        if (body.apiKey() != null) candidate.setApiKey(body.apiKey().trim());
+        candidate.setContextWindow(body.contextWindow() == null ? 0 : body.contextWindow());
+        if (candidate.getBaseUrl().isBlank() || candidate.getModel().isBlank()) {
+            throw new IllegalArgumentException("探测候选必须提供 baseUrl 与 model");
+        }
+        return com.writing.novel.llm.LlmProbe.run(client, candidate);
+    }
+
     /** 删除模型（被路由引用时拒绝） */
     @DeleteMapping("/{name}")
-    public Map<String, Object> delete(@PathVariable String name) {
-        var providers = properties.getProviders();
+    public Map<String, Object> delete(@PathVariable String name) {        var providers = properties.getProviders();
         if (!providers.containsKey(name)) {
             throw new IllegalArgumentException("模型不存在: " + name);
         }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Card, Button, Space, List, Typography, Tag, Modal, Input, message, Row, Col, Alert, Spin, Progress, Collapse, Drawer, Grid, Select, Tooltip } from 'antd';
+import { Card, Button, Space, List, Typography, Tag, Modal, Input, InputNumber, message, Row, Col, Alert, Spin, Progress, Collapse, Drawer, Grid, Select, Tooltip } from 'antd';
 import {
   saveDraft, loadDraft, loadConflictDraft, clearDraft, clearConflictDraft,
   contentHashHex, localStorageAdapter,
@@ -10,7 +10,7 @@ import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, HistoryOutlined
 import { ApiError, api } from '../api/client';
 import type { AgentRevisionTarget, CheckpointRevision } from '../api/client';
 import { renderContent } from '../utils/renderContent';
-import type { Chapter, ChapterVersion, Checkpoint, CheckpointPayload, ProjectStatus, ChapterQualityReport } from '../types';
+import type { Chapter, ChapterVersion, Checkpoint, CheckpointPayload, ProjectStatus, ChapterQualityReport, ReviewClassification, ReviewCard } from '../types';
 import AgentRevisionDialog from './AgentRevisionDialog';
 
 const { Text } = Typography;
@@ -924,6 +924,90 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
     }
   };
 
+  // ===== NCS-163: 被拒提示内联逐条裁决入口（走既有 dispositions 端点，无新后端） =====
+  const [inlineAdjData, setInlineAdjData] = useState<ReviewClassification | null>(null);
+  const [inlineAdjForm, setInlineAdjForm] = useState<
+    { card: ReviewCard; action: 'FALSE_POSITIVE' | 'EXCEPTION' | 'DEFER' } | null>(null);
+  const [inlineAdjReason, setInlineAdjReason] = useState('');
+  const [inlineAdjDeferUntil, setInlineAdjDeferUntil] = useState<number>(1);
+  const [inlineAdjBusy, setInlineAdjBusy] = useState(false);
+
+  // 被拒提示出现时拉取分类卡，供逐条裁决（仅当前章、未裁决、现行版本可内联处置）
+  useEffect(() => {
+    if (!approveBlockReason || !currentChapter) return;
+    let cancelled = false;
+    api.getReviewClassification(projectId)
+      .then((data) => { if (!cancelled) setInlineAdjData(data); })
+      .catch(() => { if (!cancelled) setInlineAdjData(null); });
+    return () => { cancelled = true; };
+  }, [approveBlockReason, currentChapter?.chapterIndex, projectId]);
+
+  const inlineAdjItems: ReviewCard[] = (() => {
+    if (!inlineAdjData || !currentChapter) return [];
+    return inlineAdjData.mustFix.filter((item) =>
+      item.kind === 'ISSUE' && item.issueId
+      && item.chapterIndex === currentChapter.chapterIndex
+      && item.adjudicated !== true && item.stale !== true);
+  })();
+
+  const submitInlineAdjudication = async () => {
+    if (!inlineAdjForm || !currentChapter || !currentReviewContext) return;
+    setInlineAdjBusy(true);
+    try {
+      await api.createDisposition(projectId, {
+        issueId: inlineAdjForm.card.issueId!,
+        action: inlineAdjForm.action,
+        reason: inlineAdjReason,
+        deferUntilChapter: inlineAdjForm.action === 'DEFER' ? inlineAdjDeferUntil : undefined,
+        identity: {
+          projectId,
+          chapterIndex: currentReviewContext.identity.chapterIndex,
+          version: currentReviewContext.identity.version,
+          contentHash: currentReviewContext.identity.contentHash,
+        },
+      });
+      message.success('已裁决并记入处置台账，可重试批准');
+      setInlineAdjForm(null);
+      setInlineAdjReason('');
+      setApproveBlockReason(null);
+      await refresh(true, currentChapter.chapterIndex);
+      void loadReviewContext(currentChapter.chapterIndex);
+      onChanged();
+    } catch (e) {
+      message.error(`裁决失败: ${(e as Error).message}`);
+    } finally { setInlineAdjBusy(false); }
+  };
+
+  const actionText = (action: 'FALSE_POSITIVE' | 'EXCEPTION' | 'DEFER') =>
+    action === 'FALSE_POSITIVE' ? '误报' : action === 'EXCEPTION' ? '创作例外' : '暂挂';
+
+  const renderInlineAdjudication = () => {
+    if (!approveBlockReason || !currentChapter) return null;
+    if (inlineAdjItems.length === 0) return null;
+    return (
+      <div style={{ marginTop: 8 }}>
+        <Typography.Text type="secondary" style={{ fontSize: 12 }}>逐条裁决（记入处置台账，裁决后重试批准）：</Typography.Text>
+        {inlineAdjItems.map((item) => (
+          <div key={item.issueId} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 4 }}>
+            <Typography.Text style={{ fontSize: 12, flex: 1 }}>
+              <Tag color="red" style={{ fontSize: 10 }}>{item.severity}</Tag>{item.description}
+            </Typography.Text>
+            <Space size={4}>
+              {(['FALSE_POSITIVE', 'EXCEPTION', 'DEFER'] as const).map((action) => (
+                <Button key={action} size="small" style={{ fontSize: 11 }}
+                  onClick={() => {
+                    setInlineAdjForm({ card: item, action });
+                    setInlineAdjReason('');
+                    setInlineAdjDeferUntil(currentChapter.chapterIndex + 1);
+                  }}>{actionText(action)}</Button>
+              ))}
+            </Space>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const openCheckpointRewrite = (
     checkpoint: Checkpoint,
     action: Extract<RewriteTarget, { kind: 'checkpoint' }>['action'],
@@ -1474,8 +1558,13 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                     <Alert
                       type="warning" showIcon style={{ marginTop: 8, marginBottom: 8 }}
                       message="批准未生效：当前稿存在阻塞项"
-                      description={`${approveBlockReason}
-处理路径：到「质量」页查看未解决项（重新检查 / 作为创作例外保留），或修订正文后重试批准；处理完成后本提示自动消失。`} />
+                      description={<>
+                        {`${approveBlockReason}
+处理路径：到「质量」页查看未解决项（重新检查 / 作为创作例外保留），或修订正文后重试批准；处理完成后本提示自动消失。`}
+                        {renderInlineAdjudication()}
+                      </>
+                      }
+                    />
                   )}
                 {currentBody ? (
                   <>
@@ -1797,7 +1886,12 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
               <Alert
                 type="warning" showIcon style={{ marginTop: 8 }}
                 message="批准未生效：当前稿存在阻塞项"
-                description={approveBlockReason} />
+                description={<>
+                  {approveBlockReason}
+                  {renderInlineAdjudication()}
+                </>
+                }
+              />
             )}
             {currentChapter && ['DONE', 'NEEDS_MANUAL_REVIEW'].includes(currentChapter.status ?? '') && !currentApproveReady && (
               <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
@@ -2077,6 +2171,38 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
             </Row>
           )}
         </Spin>
+      </Modal>
+      {/* NCS-163: 内联裁决表单 */}
+      <Modal
+        title={`裁决：${inlineAdjForm ? actionText(inlineAdjForm.action) : ''}`}
+        open={!!inlineAdjForm}
+        confirmLoading={inlineAdjBusy}
+        onOk={() => void submitInlineAdjudication()}
+        onCancel={() => setInlineAdjForm(null)}
+        okButtonProps={{ disabled: !inlineAdjReason.trim() || (inlineAdjForm?.action === 'DEFER' && !inlineAdjDeferUntil) }}
+      >
+        {inlineAdjForm && (
+          <div>
+            <Typography.Paragraph type="secondary" style={{ fontSize: 12 }}>
+              {inlineAdjForm.card.description}
+            </Typography.Paragraph>
+            <Input.TextArea
+              aria-label="裁决理由"
+              placeholder="裁决理由（必填，记入处置台账）"
+              value={inlineAdjReason}
+              onChange={(e) => setInlineAdjReason(e.target.value)}
+              rows={3}
+            />
+            {inlineAdjForm.action === 'DEFER' && (
+              <div style={{ marginTop: 8 }}>
+                <Typography.Text style={{ fontSize: 12 }}>暂挂至章：</Typography.Text>
+                <InputNumber min={(currentChapter?.chapterIndex || 0) + 1}
+                  value={inlineAdjDeferUntil}
+                  onChange={(v) => setInlineAdjDeferUntil(Number(v) || 1)} />
+              </div>
+            )}
+          </div>
+        )}
       </Modal>
 
       <AgentRevisionDialog

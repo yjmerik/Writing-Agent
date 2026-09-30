@@ -1,31 +1,34 @@
-# 旅程三修复批次（NCS-139..153）实现中 — 2026-09-30
+# 旅程三修复批次（NCS-139..153）— 2026-09-30
 
 Last Updated: 2026-09-30
 
 ## Current
 
-第三轮 UI 旅程（《剑冢守夜人》修真 9 章/32,006 字）产出 F-1..F-11 缺陷与
-O-1..O-5 观察项；优化方案经用户确认，登记 NCS-139..153 共 15 项（phase 53）。
-用户决策：O-1 大纲自由规划不设 24 章硬上限（NCS-150）、O-5 卷边界需前台呈现（NCS-151）。
+phase 53 已完成 9 项并合入 main（139 统一长任务轮询端点 / 140 网关逻辑调用
+墙钟上限+fallback 单次 / 141 工作权锁死线程接管 / 142 模型连通性自检 / 143
+带簿放行 / 145 长任务冷却重投 / 146 批准后自动恢复 / 148 分层计数 / 149
+桥段自匹配修复）。NCS-150（大纲自由规划）in-progress 于分支
+codex/ncs-150-outline-free-planning：record+replay 确定性已达标，
+compare-baseline 结构项差异呈报，待人工 --bless 后合并。
+其余 backlog：144 定向修卡 / 147 偏好竞态 / 152 人物多样性 / 153 场景锚点。
 
-按协议逐项实现中（每项独立分支→TDD→合并→登记）。
+18095 实例已换新包重启（去代理），《剑冢守夜人》推进至第 10 章检查点。
 
 ## Files
 
-- docs/reports/2026-09-30-ui-journey-3/（使用报告 + 优化方案，已合入 main face356）
-- feature_list.json（NCS-139..153 backlog；current_phase=53）
-- 实例 18095 运行中（data/ui-archtest-20260929，旧包；全部实现完成后统一换包重启）
+- main：8 个实现提交 + 8 个登记提交（ face356..当前）
+- 分支：codex/ncs-150-outline-free-planning（90c7728）
+- 语料：data/e2e-fixtures/mystery-20260930（32 fixture，确定性达标）
 
 ## Verification
 
-- 全量 mvn test 待各 feature 门禁（需 bash source scripts/load-env.sh）
-- ncs-070-e2e-verified 历史条目 init.sh FAIL 为遗留（b8a1f36 即存在），本批次不回写历史
+- 每项全量 mvn test 绿（1398→1435，净增 37 项）；npm build 通过
+- 实况冒烟：统一轮询端点 404 结构化返回；模型探测真实调用 qwen 返回"通"
 
 ## Blockers
 
-- 无
+- NCS-150 的 --bless 需人工确认（结构差异=屏障停点+record 期网络重试计数）
 
 ## Next Steps
 
-- NCS-139 统一长任务轮询端点 → 141 锁 TTL → 140 后处理重试上限 → 142 模型自检
-- Phase2/3 按 feature_list.json 依赖顺序推进
+- 人工 bless → 合并 NCS-150 → 144/147 →（可选）152/153 各自 e2e

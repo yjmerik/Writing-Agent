@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Card, Input, Modal, Tag, Space, Typography, Spin, Button, Tooltip, message } from 'antd';
+import { Card, Input, Modal, Tag, Space, Typography, Spin, Button, Tooltip, message, Collapse } from 'antd';
 import { AlertOutlined, EditOutlined, ForkOutlined, QuestionCircleOutlined, ReadOutlined, SafetyOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
@@ -98,17 +98,16 @@ export default function ReviewClassificationView({ projectId }: { projectId: str
   };
 
   const column = (title: string, icon: React.ReactNode, color: string, cards: ReviewCard[],
-                  hint: string) => (
-    <div style={{ flex: 1, minWidth: 260, background: '#fafaf8', borderRadius: 6, padding: 10 }}>
-      <Space size={6} style={{ marginBottom: 8 }}>
-        {icon}
-        <Text strong>{title}</Text>
-        <Tag color={color} style={{ fontSize: 11 }}>{cards.length}</Tag>
-      </Space>
-      <Paragraph type="secondary" style={{ fontSize: 11, marginBottom: 8 }}>{hint}</Paragraph>
-      {cards.length === 0 ? (
-        <Text type="secondary" style={{ fontSize: 12 }}>（空——没有此类条目时如实显示为空，不显示"0 个问题"的完成假象）</Text>
-      ) : cards.map((c, i) => (
+                  hint: string) => {
+    // NCS-148（旅程三 F-8）：分层计数——现行 / 过期（折叠）/ 已裁决（折叠），不再混计
+    const issues = cards.filter(c => c.kind === 'ISSUE');
+    const current = cards.filter(c => !(c.adjudicated) && !(c.stale));
+    const stale = issues.filter(c => c.adjudicated !== true && c.stale === true);
+    const adjudicated = issues.filter(c => c.adjudicated === true);
+    const countLabel = `${current.length}`
+        + (stale.length ? ` + 过期${stale.length}` : '')
+        + (adjudicated.length ? ` + 已裁决${adjudicated.length}` : '');
+    const renderCard = (c: ReviewCard, i: number) => (
         <div key={i} style={{ background: '#fff', border: '1px solid #eee', borderRadius: 4,
           padding: '6px 8px', marginBottom: 6, fontSize: 12 }}>
           <Paragraph style={{ marginBottom: 4, fontSize: 12 }}>{c.description}</Paragraph>
@@ -117,6 +116,8 @@ export default function ReviewClassificationView({ projectId }: { projectId: str
             {c.chapterVersion != null && <Tag style={{ fontSize: 10 }}>v{c.chapterVersion} 稿</Tag>}
             {c.stale && <Tooltip title="该问题针对旧稿——正文已推进，复核前结论可能过期">
               <Tag color="default" style={{ fontSize: 10 }}>过期</Tag></Tooltip>}
+            {c.adjudicated === true && <Tooltip title="处置台账已有裁决（误报/例外/暂挂）——门禁按台账语义处理">
+              <Tag color="blue" style={{ fontSize: 10 }}>已裁决</Tag></Tooltip>}
             {c.severity && <Tag color={c.severity === 'HIGH' ? 'red' : 'orange'} style={{ fontSize: 10 }}>
               {c.severity === 'HIGH' ? '严重' : '中等'}</Tag>}
           </Space>
@@ -160,9 +161,35 @@ export default function ReviewClassificationView({ projectId }: { projectId: str
             </Space>
           </div>
         </div>
-      ))}
+    );
+    return (
+    <div style={{ flex: 1, minWidth: 260, background: '#fafaf8', borderRadius: 6, padding: 10 }}>
+      <Space size={6} style={{ marginBottom: 8 }}>
+        {icon}
+        <Text strong>{title}</Text>
+        <Tag color={color} style={{ fontSize: 11 }}>{countLabel}</Tag>
+      </Space>
+      <Paragraph type="secondary" style={{ fontSize: 11, marginBottom: 8 }}>{hint}</Paragraph>
+      {cards.length === 0 ? (
+        <Text type="secondary" style={{ fontSize: 12 }}>（空——没有此类条目时如实显示为空，不显示"0 个问题"的完成假象）</Text>
+      ) : (
+        <>
+          {current.map((c, i) => renderCard(c, i))}
+          {stale.length > 0 && (
+            <Collapse size="small" style={{ marginBottom: 6, background: 'transparent' }}
+              items={[{ key: 'stale', label: `过期（针对旧稿）${stale.length} 条`,
+                children: stale.map((c, i) => renderCard(c, i)) }]} />
+          )}
+          {adjudicated.length > 0 && (
+            <Collapse size="small" style={{ background: 'transparent' }}
+              items={[{ key: 'adj', label: `已裁决（台账留档）${adjudicated.length} 条`,
+                children: adjudicated.map((c, i) => renderCard(c, i)) }]} />
+          )}
+        </>
+      )}
     </div>
-  );
+    );
+  };
 
   return (
     <Card size="small" title="🗂 三类信息分层审阅" style={{ marginBottom: 12 }}

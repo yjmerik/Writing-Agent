@@ -63,7 +63,16 @@ class ApproveAutoResumeTest {
     }
 
     @AfterEach
-    void tearDown() {
+    void tearDown() throws Exception {
+        // 自动恢复的后台协作线程仍持有临时库文件——先停任务并等它退出再关执行器，
+        // 否则 JUnit @TempDir 清理与后台写入竞争（偶发 Failed to delete temp directory）
+        executor.cancelByProject(project.getId());
+        for (int i = 0; i < 300; i++) {
+            boolean running = repo.findWritingTasksByProject(project.getId()).stream()
+                    .anyMatch(t -> t.getStatus() == com.writing.novel.domain.WritingTask.Status.RUNNING);
+            if (!running) break;
+            Thread.sleep(50);
+        }
         executor.shutdown();
     }
 

@@ -78,4 +78,34 @@ class ReviewClassificationTest {
         assertTrue(((java.util.List<?>) result.get("unknown")).isEmpty());
         assertTrue(((java.util.List<?>) result.get("suggestions")).isEmpty());
     }
+
+    /** NCS-148（旅程三 F-8）：台账已裁决的问题卡必须带 adjudicated 标记，
+     *  供前端分层计数（现行 X / 过期 Y / 已裁决 Z），不再新旧混计。 */
+    @Test
+    void 已裁决问题卡携带adjudicated标记() {
+        Chapter ch = new Chapter(projectId, 3, "第三章");
+        ch.setContent("裁决标记测试正文。".repeat(60));
+        ch.setStatus(Chapter.Status.DONE);
+        repo.saveChapter(ch);
+        ContinuityIssue issue = new ContinuityIssue(projectId, 3,
+                ContinuityIssue.Type.WORLDBUILDING, ContinuityIssue.Severity.HIGH, "用语与设定冲突");
+        issue.setChapterVersion(1);
+        repo.saveContinuityIssue(issue);
+
+        var before = service.classify(projectId);
+        var cardBefore = ((java.util.List<?>) before.get("mustFix")).stream()
+                .map(c -> (java.util.Map<?, ?>) c)
+                .filter(c -> "ISSUE".equals(c.get("kind"))).findFirst().orElseThrow();
+        assertEquals(Boolean.FALSE, cardBefore.get("adjudicated"), "未裁决时标记为 false");
+
+        var identity = new ChapterApproval.Identity(projectId, 3, 1, "hash");
+        repo.saveDisposition(new ReviewDisposition("disp-1", projectId, issue.getId(), "fp-1",
+                identity, ReviewDisposition.Action.EXCEPTION, "创作例外：属人物动机",
+                null, java.time.Instant.now()));
+        var after = service.classify(projectId);
+        var cardAfter = ((java.util.List<?>) after.get("mustFix")).stream()
+                .map(c -> (java.util.Map<?, ?>) c)
+                .filter(c -> "ISSUE".equals(c.get("kind"))).findFirst().orElseThrow();
+        assertEquals(Boolean.TRUE, cardAfter.get("adjudicated"), "台账有裁决即标记 adjudicated");
+    }
 }

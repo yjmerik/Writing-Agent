@@ -519,6 +519,7 @@ export interface ReviewCard {
   description: string;
   chapterVersion?: number;
   stale?: boolean;
+  adjudicated?: boolean;
   checker?: string;
   reason?: string;
 }

@@ -1428,6 +1428,18 @@ public class SqliteNovelRepository implements NovelRepository {
     }
 
     @Override
+    public java.util.Set<String> findAdjudicatedIssueIds(String projectId) {
+        java.util.Set<String> ids = new java.util.HashSet<>();
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT DISTINCT issue_id FROM review_dispositions WHERE project_id=?")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) ids.add(rs.getString(1));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return ids;
+    }
+
+    @Override
     public List<com.writing.novel.domain.ReviewDisposition> findDispositions(
             String projectId, int chapterIndex, int chapterVersion, String contentHash) {
         List<com.writing.novel.domain.ReviewDisposition> list = new ArrayList<>();

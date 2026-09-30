@@ -32,13 +32,21 @@ public class ReviewClassificationService {
         for (Chapter c : repository.findChaptersByProject(projectId)) {
             currentVersions.put(c.getChapterIndex(), c.getVersion());
         }
+        // NCS-148：台账已裁决的 issueId 集合——卡片打 adjudicated 标记供前端分层计数
+        java.util.Set<String> adjudicated;
+        try {
+            adjudicated = repository.findAdjudicatedIssueIds(projectId);
+        } catch (RuntimeException e) {
+            adjudicated = java.util.Set.of();
+        }
 
         List<Map<String, Object>> mustFix = new ArrayList<>();
         List<Map<String, Object>> unknowns = new ArrayList<>();
         List<Map<String, Object>> suggestions = new ArrayList<>();
 
         for (ContinuityIssue issue : repository.findUnresolvedIssues(projectId)) {
-            Map<String, Object> card = issueCard(issue, currentVersions);
+            Map<String, Object> card = issueCard(issue, currentVersions,
+                    adjudicated.contains(issue.getId()));
             switch (issue.getSeverity()) {
                 case HIGH, MEDIUM -> mustFix.add(card);
                 case LOW -> suggestions.add(card);
@@ -78,7 +86,8 @@ public class ReviewClassificationService {
         return result;
     }
 
-    private Map<String, Object> issueCard(ContinuityIssue issue, Map<Integer, Integer> currentVersions) {
+    private Map<String, Object> issueCard(ContinuityIssue issue, Map<Integer, Integer> currentVersions,
+                                          boolean adjudicated) {
         Map<String, Object> card = new LinkedHashMap<>();
         card.put("kind", "ISSUE");
         card.put("issueId", issue.getId());
@@ -90,6 +99,7 @@ public class ReviewClassificationService {
         card.put("chapterVersion", bound);
         Integer current = currentVersions.get(issue.getDetectedAtChapter());
         card.put("stale", bound != null && current != null && bound < current);
+        card.put("adjudicated", adjudicated);
         return card;
     }
 

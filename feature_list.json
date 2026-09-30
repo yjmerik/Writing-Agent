@@ -9972,12 +9972,17 @@
    "phase": 53,
    "dependencies": [],
    "status": "completed",
-   "evidence": "",
-   "files": [],
+   "evidence": "2026-09-30 verified: be4f202 (ff-merge=main); 3 用例（批准自恢复+清过期错误/剩余待审不恢复/屏障不另起）；全量 1421/0F/0E/1S",
+   "files": [
+    "src/main/java/com/writing/novel/web/ReviewDecisionController.java",
+    "src/test/java/com/writing/novel/web/ApproveAutoResumeTest.java"
+   ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
    "acceptance": "ApproveAutoResumeTest：批准后项目回 WRITING；errorMessage 已清空/重算",
    "verify_cmd": "mvn test -Dtest=ApproveAutoResumeTest",
-   "type": "feature"
+   "type": "feature",
+   "branch": "codex/ncs-146-approve-autoresume",
+   "completion_record": "ncs-146-verified"
   },
   {
    "id": "NCS-147",

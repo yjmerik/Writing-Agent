@@ -82,4 +82,23 @@ class PlotMotifScopeTest {
         List<ContinuityIssue> rerun = tracker.trackAndDetect("p-motif3", 1, content());
         assertTrue(rerun.isEmpty(), "同章重跑（修订后重检）不得与自身上一条记录比对报重复");
     }
+
+    /** NCS-161（review 整改）：同章排除按提取的章号整数比较，不依赖前缀字面拼接——
+     *  零填充变体（"第02章桥段"）也识别为同章；异章（第12章 vs 当前2章）不误排除。 */
+    @Test
+    void 同章排除按章号整数比较_格式变体不误判() {
+        String keys = "[\"公堂对峙\",\"真相揭露\"]";
+        repo.saveGenerationLog(new com.writing.novel.domain.GenerationLog(
+                "p-motif4", "CHAPTER_MOTIF", "第02章桥段：" + keys, keys, 0));
+        List<ContinuityIssue> issues = tracker.trackAndDetect("p-motif4", 2, content());
+        assertTrue(issues.isEmpty(),
+                "第02章桥段记录应按章号 2 识别为同章而排除，实际: "
+                        + issues.stream().map(ContinuityIssue::getDescription).toList());
+
+        // 异章记录（第12章）对当前第 2 章仍是有效重复来源
+        repo.saveGenerationLog(new com.writing.novel.domain.GenerationLog(
+                "p-motif5", "CHAPTER_MOTIF", "第12章桥段：" + keys, keys, 0));
+        List<ContinuityIssue> cross = tracker.trackAndDetect("p-motif5", 2, content());
+        assertEquals(2, cross.size(), "第12章桥段对当前第2章必须检出重复");
+    }
 }

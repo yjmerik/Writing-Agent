@@ -128,6 +128,13 @@ public class PlotMotifTracker {
         }
     }
 
+    /** NCS-161: 同章记录身份 = 严格提取 summary 前缀章号做整数比较
+     *  （"第02章桥段" 与 "第2章桥段" 同章；字面 startsWith 无法识别零填充变体） */
+    private static boolean isSameChapterRecord(String summary, int currentChapter) {
+        var m = java.util.regex.Pattern.compile("^第(\\d+)章桥段").matcher(summary);
+        return m.find() && Integer.parseInt(m.group(1)) == currentChapter;
+    }
+
     private Set<String> collectRecentMotifs(String projectId, int currentChapter) {
         Set<String> motifs = new HashSet<>();
         try {
@@ -136,8 +143,7 @@ public class PlotMotifTracker {
             var logs = repository.findRecentGenerationLogs(projectId, "CHAPTER_MOTIF",
                     RECENT_WINDOW + 4);
             for (var log : logs) {
-                if (log.getSummary() != null
-                        && log.getSummary().startsWith("第" + currentChapter + "章桥段")) {
+                if (log.getSummary() != null && isSameChapterRecord(log.getSummary(), currentChapter)) {
                     continue;
                 }
                 String keys = log.getKeyElements();

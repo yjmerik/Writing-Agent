@@ -95,4 +95,54 @@ class ProjectWorkCoordinatorTest {
         worker.join(5000);
         assertTrue(coordinator.tryAcquire("p1", "w2").isPresent(), "worker 释放后可重新获取");
     }
+
+    /** NCS-141：持有者线程已死（finally 泄漏路径）时新请求可原子接管 */
+    @Test
+    void 死线程持有者可被接管() throws Exception {
+        Thread deadHolder = new Thread(() -> {
+            var token = coordinator.tryAcquire("p-dead", "zombie-worker");
+            assertTrue(token.isPresent());
+            // 不释放直接退出——模拟 finally 未执行的泄漏
+        });
+        deadHolder.start();
+        deadHolder.join(5000);
+        assertTrue(!deadHolder.isAlive());
+        assertTrue(coordinator.tryAcquire("p-dead", "new-worker").isPresent(),
+                "持有者线程已死后新请求必须能接管");
+        assertTrue(coordinator.isOwner("p-dead", "new-worker"));
+    }
+
+    /** NCS-141：接管后 zombie 的迟到条件释放不得清掉新 owner */
+    @Test
+    void 接管后zombie迟到释放不伤新owner() throws Exception {
+        var zombieToken = new java.util.concurrent.atomic.AtomicReference<ProjectWorkCoordinator.OwnerToken>();
+        Thread deadHolder = new Thread(() ->
+                zombieToken.set(coordinator.tryAcquire("p-z", "zombie").orElseThrow()));
+        deadHolder.start();
+        deadHolder.join(5000);
+        assertTrue(coordinator.tryAcquire("p-z", "new-owner").isPresent(), "先接管");
+        coordinator.release(zombieToken.get());
+        assertTrue(coordinator.isOwner("p-z", "new-owner"), "zombie 迟到释放不能清除新 owner");
+    }
+
+    /** NCS-141：活线程持有者语义不变——不可接管（不引入重叠执行） */
+    @Test
+    void 活线程持有者不可被接管() throws Exception {
+        CountDownLatch release = new CountDownLatch(1);
+        Thread liveHolder = new Thread(() -> {
+            var token = coordinator.tryAcquire("p-live", "live-worker");
+            assertTrue(token.isPresent());
+            try { release.await(10, TimeUnit.SECONDS); } catch (InterruptedException e) { /* exit */ }
+            coordinator.release(token.orElseThrow());
+        });
+        liveHolder.start();
+        // 等到持有者完成注册（轮询 currentOwner，不用 sleep 竞争断言）
+        for (int i = 0; i < 200 && coordinator.currentOwner("p-live").isEmpty(); i++) {
+            TimeUnit.MILLISECONDS.sleep(10);
+        }
+        assertTrue(coordinator.tryAcquire("p-live", "intruder").isEmpty(),
+                "活线程持有者必须保持互斥语义");
+        release.countDown();
+        liveHolder.join(5000);
+    }
 }

@@ -1,0 +1,27 @@
+{
+ "verifiedAt": "2026-09-30T21:53:02+08:00",
+ "commit": "10987286f19403ac629faf6901d91a7a3fbc8d3b",
+ "cleanCheckout": true,
+ "branch": "codex/ncs-164-registry-corrections",
+ "scope": "NCS-164 实现提交（登记修正+台账+脚本）上的验收：双校验零 FAIL/全过 + 全量套件。",
+ "checks": [
+  {
+   "command": "python3 scripts/check-harness.py",
+   "result": "PASS: harness consistent; 495 features; 零 FAIL（仅 legacy historical WARN）",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T21:53:02+08:00"
+  },
+  {
+   "command": "python3 scripts/check-verify-cmds.py",
+   "result": "PASS: 271 个 verify_cmd 引用全部存在",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T21:53:02+08:00"
+  },
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn compile && mvn test'",
+   "result": "BUILD SUCCESS；Tests run: 1443, Failures: 0, Errors: 0, Skipped: 1",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T21:56:36+08:00"
+  }
+ ]
+}

@@ -2929,6 +2929,17 @@
    "main_commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",
    "evidence": "docs/harness/evidence/2026-09-30-phase53-batch-verified.json",
    "note": "2026-09-30 NCS-164 补建：原完成轮仅写 completion_record 指针未落台账；main_commit 为补验时干净 main（含全部 13 实现），实现提交经 merge-base 校验为其祖先。"
+  },
+  {
+   "id": "ncs-164-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-164"
+   ],
+   "branch": "codex/ncs-164-registry-corrections",
+   "implementation_commit": "10987286f19403ac629faf6901d91a7a3fbc8d3b",
+   "main_commit": "10987286f19403ac629faf6901d91a7a3fbc8d3b",
+   "evidence": "docs/harness/evidence/2026-09-30-ncs-164-verified.json"
   }
  ],
  "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",

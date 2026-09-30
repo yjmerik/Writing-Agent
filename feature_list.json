@@ -10283,13 +10283,20 @@
    "description": "恢复登记可信度：更正 10 处失效 verify_cmd（NCS-140/141/144/147/148/149/150 批次内 + p32-13/p33-07/NCS-093/NCS-095 历史失效，其中 NCS-148 补缺后端测试）；NCS-149 description 移除未实现降级条款；NCS-143 审计标识对齐 APPROVE_WITH_DEFER；补全 NCS-139..151 共 13 条 completions 台账记录与证据文件；修复 ncs-070-e2e-verified 记录（branch/40位sha/checks/commit/cleanCheckout）；新增 scripts/check-verify-cmds.py 对全部非 historical 的 completed feature 校验 verify_cmd 引用的测试类与脚本存在",
    "phase": 54,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30T21:53:02+08:00 verified: 1098728；check-harness.py 零 FAIL（exit 0，仅历史 WARN）；check-verify-cmds.py 271 引用全过（exit 0）；全量 mvn test 1443/0F/0E/1S 见批次证据",
+   "files": [
+    "feature_list.json",
+    "docs/harness/completions.json",
+    "docs/harness/evidence/2026-09-30-phase53-batch-verified.json",
+    "docs/harness/evidence/2026-09-21-ncs-070-e2e.json",
+    "scripts/check-verify-cmds.py"
+   ],
    "spec": "docs/specs/2026-09-30-phase53-review-remediation.md",
    "acceptance": "check-harness.py 零 FAIL；check-verify-cmds.py 对全部 completed feature 校验通过退出码 0；手工抽查 6 处更正与实际测试类一致",
    "verify_cmd": "python3 scripts/check-harness.py && python3 scripts/check-verify-cmds.py",
-   "type": "harness"
+   "type": "harness",
+   "completion_record": "ncs-164-verified"
   }
  ],
  "schema_version": 2,

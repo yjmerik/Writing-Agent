@@ -10139,13 +10139,21 @@
    "description": "修 NCS-144 批准制缺口：reviseNamedExistingCharacters 不再 design 后直接 saveCharacter，改为产出待确认预览（逐字段原/候选 diff，内存态存储）；新增 confirm/discard 端点（挂 CheckpointController）；copyIfPresent/describeCard 人物卡领域逻辑下沉出 orchestrator。落库时序变化影响后续章写注入 → 合入前 e2e 对比，分叉按协议重建语料",
    "phase": 54,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30T22:18:42+08:00 verified: 9dc81cc；CharacterRevisionPreviewTest 5 例 + ReviseNamedCharacterTest 5 例绿（确认前库中零变动、confirm 按 id 落库、discard 清空、未点名卡逐字不变、无 diff 幂等）；全量 1450/0F/0E/1S；e2e replay 与干净 main 产出逐字节一致（ch1 v2 3288字 sha=b8742f985e1f8b1f）、compare-baseline 双侧 PASS（7 项全绿）→ 语料零分叉无需重建",
+   "files": [
+    "src/main/java/com/writing/novel/service/CharacterRevisionPreviewService.java",
+    "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+    "src/main/java/com/writing/novel/web/CheckpointController.java",
+    "src/test/java/com/writing/novel/service/CharacterRevisionPreviewTest.java",
+    "src/test/java/com/writing/novel/orchestrator/ReviseNamedCharacterTest.java",
+    "src/test/java/com/writing/novel/web/CheckpointRevisionControllerTest.java"
+   ],
    "spec": "docs/specs/2026-09-30-phase53-review-remediation.md",
    "acceptance": "CharacterRevisionPreviewTest：点名卡生成待确认预览且库中未变，confirm 后生效、discard 后清空；未点名卡逐字不变；ReviseNamedCharacterTest 更新后通过",
    "verify_cmd": "mvn test -Dtest=CharacterRevisionPreviewTest && mvn test -Dtest=ReviseNamedCharacterTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-154-verified"
   },
   {
    "id": "NCS-155",

@@ -2940,6 +2940,17 @@
    "implementation_commit": "10987286f19403ac629faf6901d91a7a3fbc8d3b",
    "main_commit": "10987286f19403ac629faf6901d91a7a3fbc8d3b",
    "evidence": "docs/harness/evidence/2026-09-30-ncs-164-verified.json"
+  },
+  {
+   "id": "ncs-154-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-154"
+   ],
+   "branch": "codex/ncs-154-character-revision-preview",
+   "implementation_commit": "9dc81cceff73e629d01ae09135de7c3f88877ec2",
+   "main_commit": "9dc81cceff73e629d01ae09135de7c3f88877ec2",
+   "evidence": "docs/harness/evidence/2026-09-30-ncs-154-verified.json"
   }
  ],
  "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",

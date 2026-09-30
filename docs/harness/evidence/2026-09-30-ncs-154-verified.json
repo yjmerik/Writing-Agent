@@ -1,0 +1,33 @@
+{
+ "verifiedAt": "2026-09-30T22:18:42+08:00",
+ "commit": "9dc81cceff73e629d01ae09135de7c3f88877ec2",
+ "cleanCheckout": true,
+ "branch": "codex/ncs-154-character-revision-preview",
+ "scope": "人物卡修订预览-确认链（修 NCS-144 批准制缺口）；e2e 对照含干净 main 同场景基线。",
+ "checks": [
+  {
+   "command": "mvn test -Dtest=CharacterRevisionPreviewTest,ReviseNamedCharacterTest",
+   "result": "10/0F/0E（另 InitialSetupRevisionCharacterTest 2 例、CheckpointRevisionControllerTest 7 例同绿）",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T22:18:42+08:00"
+  },
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+   "result": "Tests run: 1450, Failures: 0, Errors: 0, Skipped: 1",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T22:18:42+08:00"
+  },
+  {
+   "command": "E2E_FIXTURE_DIR=data/e2e-fixtures/mystery-20260930 ./scripts/e2e.sh --mode replay（分支与干净 main 各一次）",
+   "result": "产出逐字节一致：ch1 v2 3288字 sha256=b8742f985e1f8b1f；两侧行为相同=零分叉，无需重建语料。注：e2e.sh --acceptance full 在两侧行为一致地因第1章人审屏障失败（语料稳态，非本 feature 引入）",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T22:18:42+08:00"
+  },
+  {
+   "command": "python3 scripts/compare-baseline.py",
+   "result": "PASS — 章节数1≥1/总字数3288≥2630/均值3288≥2301/0失败/0LLM错误/n-gram 0.0387≤0.0426/套路词1.0≤1.1（双侧）",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T22:18:42+08:00"
+  }
+ ]
+}

@@ -49,5 +49,6 @@ Last Updated: 2026-09-30
 
 ## 合并后验证
 
-- 待填：合并后在干净 main 检出运行 `bash -c 'source scripts/load-env.sh &&
-  mvn compile && mvn test'`，结果回填于此
+- 2026-09-30 main=7ed056c 干净检出：`bash -c 'source scripts/load-env.sh &&
+  mvn compile && mvn test'` → BUILD SUCCESS，1443 tests / 0 failures / 0 errors / 1 skipped
+- python3 scripts/check-harness.py：本轮新增项零 FAIL（历史遗留项同前，归 NCS-164）

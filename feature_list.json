@@ -10018,13 +10018,18 @@
    "description": "桥段重复检测仅统计已写正文 beats；章序 < 窗口宽度时降级为文学建议不入必须处理（修 O-4）",
    "phase": 53,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30 verified: ff-merge=main; 根因实为自匹配（先入库后比对+无章节排除）非窗口口径；3 用例（首章零报/真重复检出/同章重跑排除）；全量 1430/0F/0E/1S",
+   "files": [
+    "src/main/java/com/writing/novel/agent/PlotMotifTracker.java",
+    "src/test/java/com/writing/novel/agent/PlotMotifScopeTest.java"
+   ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
    "acceptance": "确定性单测：第2章无已写重复不产生必须处理条目；正文真重复仍检出",
    "verify_cmd": "mvn test -Dtest=BridgeRepeatScopeTest",
-   "type": "feature"
+   "type": "feature",
+   "branch": "codex/ncs-149-motif-scope",
+   "completion_record": "ncs-149-verified"
   },
   {
    "id": "NCS-150",

@@ -10163,13 +10163,17 @@
    "dependencies": [
     "NCS-154"
    ],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30T22:29:08+08:00 verified: 1c9e545；npm run build 通过（tsc+vite，含 3 轮类型修正）；待确认卡片渲染 field before→after 对照 + 确认/放弃按钮，previewId 经 pending 端点补取；后端全量 1450/0F/0E/1S。实机走查备注：未做浏览器实机点击（需真实 checkpoint 修订场景，涉真实 LLM 调用），以代码路径核对代替——下次实机 checkpoint 修订时补走查",
+   "files": [
+    "frontend/src/api/client.ts",
+    "frontend/src/components/InteractiveReview.tsx"
+   ],
    "spec": "docs/specs/2026-09-30-phase53-review-remediation.md",
    "acceptance": "前端构建通过且待确认卡片含原/候选字段对照与确认/放弃按钮（手工走查记录于 evidence）",
    "verify_cmd": "cd frontend && npm run build",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-155-verified"
   },
   {
    "id": "NCS-156",

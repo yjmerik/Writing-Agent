@@ -1,0 +1,27 @@
+{
+ "verifiedAt": "2026-09-30T22:29:08+08:00",
+ "commit": "1c9e54557ec650cba001dc9db865accd98371599",
+ "cleanCheckout": true,
+ "branch": "codex/ncs-155-character-preview-ui",
+ "scope": "人物卡修订预览 UI（依赖 NCS-154 端点）",
+ "checks": [
+  {
+   "command": "cd frontend && npm run build",
+   "result": "✓ built（tsc 类型检查+vite 构建通过）",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T22:29:08+08:00"
+  },
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+   "result": "Tests run: 1450, Failures: 0, Errors: 0, Skipped: 1（后端无改动回归）",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T22:29:08+08:00"
+  },
+  {
+   "command": "手工走查（代码路径核对）",
+   "result": "卡片渲染 changes 对照（before 删除线/after 高亮）+ 确认/放弃按钮 + previewId 补取链；浏览器实机走查留待下次真实 checkpoint 修订场景（evidence 偏差已记录）",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T22:29:08+08:00"
+  }
+ ]
+}

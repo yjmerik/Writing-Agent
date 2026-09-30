@@ -2951,6 +2951,17 @@
    "implementation_commit": "9dc81cceff73e629d01ae09135de7c3f88877ec2",
    "main_commit": "9dc81cceff73e629d01ae09135de7c3f88877ec2",
    "evidence": "docs/harness/evidence/2026-09-30-ncs-154-verified.json"
+  },
+  {
+   "id": "ncs-155-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-155"
+   ],
+   "branch": "codex/ncs-155-character-preview-ui",
+   "implementation_commit": "1c9e54557ec650cba001dc9db865accd98371599",
+   "main_commit": "1c9e54557ec650cba001dc9db865accd98371599",
+   "evidence": "docs/harness/evidence/2026-09-30-ncs-155-verified.json"
   }
  ],
  "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",

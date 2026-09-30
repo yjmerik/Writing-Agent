@@ -223,17 +223,17 @@ public class ReviewDecisionController {
                                                  @RequestBody Map<String, Object> body) {
         ChapterApproval.Request request = parseRequest(id, chapterIndex, body);
         String workId = "review-decision-" + UUID.randomUUID();
+        ChapterApproval.Result result;
         if (writingTaskExecutor != null) {
             writingTaskExecutor.beginWork(id, workId);
         }
         try {
-            ChapterApproval.Result result = repository.approveChapter(request);
+            result = repository.approveChapter(request);
             // NCS-088：批准 = 作者已读当前稿并担责放行——新批准（非幂等重放）自动把该章
             // 未查清信封追加 AUTHOR_WAIVED 行，门禁不再被无出口的 unknown 卡死。
             if (!result.replayed() && checkWaiverService != null) {
                 checkWaiverService.waiveForApproval(id, chapterIndex, result.approvalId());
             }
-            return result;
         } catch (IllegalStateException e) {
             // NCS-081: 满足性门禁失败（未解决 HIGH / 作者要求未落实）→ 结构化 409 + code，
             // 前端据此常驻展示阻塞原因（此前裸 {error} 只换来 3 秒 toast）
@@ -242,6 +242,36 @@ public class ReviewDecisionController {
             if (writingTaskExecutor != null) {
                 writingTaskExecutor.endWork(id, workId);
             }
+        }
+        // NCS-146（旅程三 F-4）：批准 = 复核完成——无剩余待审时自动继续协作，
+        // 不再要求作者二次点击「继续协作」；须在工作权释放后执行。
+        if (!result.replayed()) {
+            autoResumeIfUnblocked(id);
+        }
+        return result;
+    }
+
+    /** NCS-146：批准后无剩余阻塞且有暂停中的协作任务时自动恢复；失败不回滚批准。 */
+    private void autoResumeIfUnblocked(String projectId) {
+        if (writingTaskExecutor == null) return;
+        try {
+            if (!repository.findPendingCheckpoints(projectId).isEmpty()) return;
+            if (!repository.findActiveReviewBarriers(projectId).isEmpty()) return;
+            var previous = writingTaskExecutor.latestCollaborativeTask(projectId);
+            if (previous == null || previous.getStatus() != com.writing.novel.domain.WritingTask.Status.PAUSED) {
+                return;
+            }
+            // 阻塞已解除，过期错误信息不再展示
+            previous.setErrorMessage(null);
+            repository.saveWritingTask(previous);
+            writingTaskExecutor.startCollaborative(projectId, null);
+            com.writing.novel.telemetry.EventLog.emit("APPROVE_AUTO_RESUMED",
+                    Map.of("projectId", projectId));
+        } catch (Exception e) {
+            com.writing.novel.telemetry.EventLog.emit("APPROVE_AUTO_RESUME_FAILED",
+                    Map.of("projectId", projectId,
+                            "message", com.writing.novel.telemetry.EventLog.truncate(
+                                    String.valueOf(e.getMessage()), 160)));
         }
     }
 

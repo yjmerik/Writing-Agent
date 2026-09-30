@@ -9971,7 +9971,7 @@
    "description": "review-decisions 批准成功且无其他 pending 检查点时自动 resume；writing-tasks errorMessage 随状态转移清理（修 F-4）",
    "phase": 53,
    "dependencies": [],
-   "status": "not-started",
+   "status": "completed",
    "evidence": "",
    "files": [],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",

@@ -10260,13 +10260,20 @@
    "description": "LlmProbe.run 内部防御性拷贝不再突变入参；ModelConfigController/ModelLibraryController 候选合并逻辑统一为共享 helper；修复 ModelLibraryController:158 签名行格式破坏；探针硬编码 prompt 加豁免注释",
    "phase": 54,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30T23:23:58+08:00 verified: b6dc070；先红后绿 探测不突变入参配置（红：maxTokens 被改为64）→ copyOf 内部拷贝（绿）；四模型测试类 23/0F/0E；全量见合并后验证",
+   "files": [
+    "src/main/java/com/writing/novel/llm/LlmProbe.java",
+    "src/main/java/com/writing/novel/web/ModelCandidateMerger.java",
+    "src/main/java/com/writing/novel/web/ModelLibraryController.java",
+    "src/main/java/com/writing/novel/web/ModelConfigController.java",
+    "src/test/java/com/writing/novel/web/ModelConnectivityCheckTest.java"
+   ],
    "spec": "docs/specs/2026-09-30-phase53-review-remediation.md",
    "acceptance": "ModelConnectivityCheckTest + ModelConfigControllerValidationTest 通过；调用方对入参的防御性拷贝删除后行为不变",
    "verify_cmd": "mvn test -Dtest=ModelConnectivityCheckTest && mvn test -Dtest=ModelConfigControllerValidationTest",
-   "type": "maintenance"
+   "type": "maintenance",
+   "completion_record": "ncs-160-verified"
   },
   {
    "id": "NCS-161",

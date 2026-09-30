@@ -3028,6 +3028,17 @@
    "implementation_commit": "45d989b7bed44b7894f3d484ff97d0152e68bf1c",
    "main_commit": "45d989b7bed44b7894f3d484ff97d0152e68bf1c",
    "evidence": "docs/harness/evidence/2026-09-30-ncs-159-verified.json"
+  },
+  {
+   "id": "ncs-160-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-160"
+   ],
+   "branch": "codex/ncs-160-llmprobe-contract",
+   "implementation_commit": "b6dc070562e89139728d03a2fcd96cba79e711f9",
+   "main_commit": "b6dc070562e89139728d03a2fcd96cba79e711f9",
+   "evidence": "docs/harness/evidence/2026-09-30-ncs-160-verified.json"
   }
  ],
  "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",

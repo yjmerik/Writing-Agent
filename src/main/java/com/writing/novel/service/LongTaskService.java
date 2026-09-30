@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
@@ -76,6 +77,24 @@ public class LongTaskService {
         return t;
     });
 
+    /** NCS-145：冷却/瞬态网络失败的延迟重投（≤2 次）——重投等待期保持项目工作权占用 */
+    private static final java.util.concurrent.ScheduledExecutorService RETRY_SCHEDULER =
+            java.util.concurrent.Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread t = new Thread(r, "long-task-retry");
+                t.setDaemon(true);
+                return t;
+            });
+    static volatile long retryDelayMs = 60_000L;
+    static void setRetryDelayMs(long v) { retryDelayMs = v; }
+    static void resetRetryDelayMs() { retryDelayMs = 60_000L; }
+    private static final int MAX_REQUEUES = 2;
+
+    private static boolean isProviderCooldown(Exception e) {
+        String msg = String.valueOf(e.getMessage());
+        return msg.contains("No available LLM provider")
+                && (msg.contains("cooling until") || msg.contains("retry at"));
+    }
+
     public LongTaskService(WritingTaskExecutor writingTaskExecutor) {
         this(writingTaskExecutor, null);
     }
@@ -129,30 +148,50 @@ public class LongTaskService {
                 log.warn("长任务登记落库失败(继续执行): {}", e.getMessage());
             }
         }
-        worker.submit(() -> {
-            try {
-                Object result = work.get();
-                job.result = result;
-                job.status = "DONE";
-            } catch (Exception e) {
-                job.error = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
-                job.status = "FAILED";
-                log.warn("长任务失败({}/{}): {}", kind, projectId, job.error);
-            } finally {
-                job.finishedAt = Instant.now();
-                writingTaskExecutor.endWork(projectId, jobId);
-                if (jobRepository != null) {
-                    try {
-                        jobRepository.save(jobId, projectId, kind, label, job.status,
-                                serializeResult(job.result), job.error, job.phase, job.percent,
-                                job.startedAt, job.finishedAt);
-                    } catch (Exception e) {
-                        log.warn("长任务终态落库失败: {}", e.getMessage());
-                    }
-                }
-            }
-        });
+        worker.submit(() -> runJob(job, work, projectId, kind, 0));
         return jobId;
+    }
+
+    /** NCS-145：任务体执行 + provider 冷却延迟重投（重投等待期不释放项目工作权） */
+    private void runJob(Job job, java.util.function.Supplier<?> work, String projectId,
+                        String kind, int attempt) {
+        try {
+            Object result = work.get();
+            job.result = result;
+            job.status = "DONE";
+        } catch (Exception e) {
+            String detail = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+            if (attempt < MAX_REQUEUES && isProviderCooldown(e)) {
+                job.phase = "retry-waiting-" + (attempt + 1) + "/" + MAX_REQUEUES;
+                job.error = detail;
+                log.warn("长任务遇 provider 冷却({}/{}), {}ms 后重投: kind={}, projectId={}",
+                        attempt + 1, MAX_REQUEUES, retryDelayMs, kind, projectId);
+                persistTerminal(job);
+                RETRY_SCHEDULER.schedule(() -> runJob(job, work, projectId, kind, attempt + 1),
+                        retryDelayMs, TimeUnit.MILLISECONDS);
+                return;
+            }
+            job.error = attempt > 0 ? "已重试 " + attempt + " 次后仍失败: " + detail : detail;
+            job.status = "FAILED";
+            log.warn("长任务失败({}/{}): {}", kind, projectId, job.error);
+        } finally {
+            if (!"RUNNING".equals(job.status)) {
+                job.finishedAt = Instant.now();
+                writingTaskExecutor.endWork(projectId, job.jobId);
+                persistTerminal(job);
+            }
+        }
+    }
+
+    private void persistTerminal(Job job) {
+        if (jobRepository == null) return;
+        try {
+            jobRepository.save(job.jobId, job.projectId, job.kind, job.label, job.status,
+                    serializeResult(job.result), job.error, job.phase, job.percent,
+                    job.startedAt, job.finishedAt);
+        } catch (Exception e) {
+            log.warn("长任务终态落库失败: {}", e.getMessage());
+        }
     }
 
     private String serializeResult(Object result) {

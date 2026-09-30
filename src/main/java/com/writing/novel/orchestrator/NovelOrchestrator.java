@@ -882,8 +882,14 @@ public class NovelOrchestrator {
         boolean characterIntent = instructions != null
                 && (instructions.contains("人物") || instructions.contains("配角")
                     || instructions.contains("角色"));
+        // NCS-144：意见点名既有卡 → 定向原地修订（保留 id/姓名）；与补卡同步并行
+        String namedSync = characterIntent
+                ? reviseNamedExistingCharacters(projectId, instructions) : "";
         String characterSync = characterIntent
                 ? syncCharactersFromOutline(projectId, instructions) : "";
+        if (!namedSync.isBlank()) {
+            characterSync = characterSync.isBlank() ? namedSync : namedSync + " " + characterSync;
+        }
 
         boolean worldChanged = !before.equals(after);
         if (!worldChanged && characterSync.isBlank()) {
@@ -906,6 +912,59 @@ public class NovelOrchestrator {
      * 零出场既有卡不静默删除，仅在返回摘要中点名，处置留给作者。
      * 单个补卡失败不回滚整体，逐条记录并继续。
      */
+    /**
+     * NCS-144（旅程三 F-2，NCS-090 续）：修改意见点名既有卡 → 定向原地修订。
+     * 旅程实测：意见要求"合并殷素更/裴无秤、骨更去记账腔"，执行后原卡逐字未变。
+     * 语义：意见文本包含既有卡姓名（2-8 字）即视为点名该卡；design 出候选卡后
+     * 保留原卡 id/姓名落库（saveCharacter 按 id upsert），未点名卡零变动。
+     */
+    private String reviseNamedExistingCharacters(String projectId, String instructions) {
+        if (characterDesigner == null) return "";
+        List<com.writing.novel.domain.Character> existing =
+                repository.findCharactersByProject(projectId);
+        List<com.writing.novel.domain.Character> named = existing.stream()
+                .filter(c -> c.getName() != null && c.getName().length() >= 2
+                        && c.getName().length() <= 8 && instructions.contains(c.getName()))
+                .toList();
+        if (named.isEmpty()) return "";
+        StringBuilder summary = new StringBuilder();
+        for (com.writing.novel.domain.Character original : named) {
+            try {
+                String requirement = "修订人物卡：" + original.getName()
+                        + "。原卡设定：" + describeCard(original)
+                        + "。作者要求：" + instructions
+                        + "。保持姓名「" + original.getName() + "」与主线定位不变，仅按作者要求修订对应字段。";
+                com.writing.novel.domain.Character candidate =
+                        characterDesigner.design(projectId, requirement, existing);
+                if (candidate == null) continue;
+                // 原地修订：候选字段拷回原卡对象（保留 id/姓名/项目绑定，saveCharacter 按 id upsert）；
+                // 候选为空的字段保留原值，不因模型漏输出而清空既有设定
+                copyIfPresent(candidate.getRole(), original::setRole);
+                copyIfPresent(candidate.getPersonality(), original::setPersonality);
+                copyIfPresent(candidate.getAbility(), original::setAbility);
+                copyIfPresent(candidate.getMotivation(), original::setMotivation);
+                copyIfPresent(candidate.getAppearance(), original::setAppearance);
+                copyIfPresent(candidate.getRelationships(), original::setRelationships);
+                copyIfPresent(candidate.getGrowthArc(), original::setGrowthArc);
+                copyIfPresent(candidate.getSpeakingStyle(), original::setSpeakingStyle);
+                repository.saveCharacter(original);
+                summary.append("已按作者要求修订人物卡「").append(original.getName()).append("」。");
+            } catch (Exception e) {
+                log.warn("人物卡修订失败({}): {}", original.getName(), e.getMessage());
+            }
+        }
+        return summary.toString();
+    }
+
+    private static void copyIfPresent(String value, java.util.function.Consumer<String> setter) {
+        if (value != null && !value.isBlank()) setter.accept(value);
+    }
+
+    private static String describeCard(com.writing.novel.domain.Character c) {
+        return "定位:" + c.getRole() + ";性格:" + c.getPersonality() + ";能力:" + c.getAbility()
+                + ";动机:" + c.getMotivation() + ";外貌:" + c.getAppearance();
+    }
+
     private String syncCharactersFromOutline(String projectId, String instructions) {
         if (characterDesigner == null) return "";
         Outline outline = repository.findOutlineByProject(projectId).orElse(null);

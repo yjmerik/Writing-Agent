@@ -110,23 +110,13 @@ public class ModelLibraryController {
         ModelConfig existing = properties.getProviders().get(name);
         ModelConfig cfg = existing != null ? copyConfig(existing) : new ModelConfig();
 
-        if (body.protocol() != null && !body.protocol().isBlank()) {
-            cfg.setProtocol(parseProtocol(body.protocol()));
-        }
-        if (body.baseUrl() != null) cfg.setBaseUrl(body.baseUrl().trim());
-        if (body.model() != null) cfg.setModel(body.model().trim());
-        if (body.apiKey() != null && !body.apiKey().isBlank()) {
-            cfg.setApiKey(body.apiKey().trim());
-        }
-        if (body.temperature() != null) cfg.setTemperature(body.temperature());
-        if (body.maxTokens() != null) cfg.setMaxTokens(body.maxTokens());
-        if (body.contextWindow() != null) cfg.setContextWindow(body.contextWindow());
-        if (body.streaming() != null) cfg.setStreaming(body.streaming());
-        if (body.requestTimeoutSeconds() != null) cfg.setRequestTimeoutSeconds(body.requestTimeoutSeconds());
+        ModelCandidateMerger.merge(cfg, body.protocol(), body.baseUrl(), body.model(),
+                body.apiKey(), body.temperature(), body.maxTokens(), body.contextWindow(),
+                body.streaming(), body.requestTimeoutSeconds());
 
         validate(cfg);
         if (!force) {
-            Map<String, Object> probe = com.writing.novel.llm.LlmProbe.run(client, copyConfig(cfg));
+            Map<String, Object> probe = com.writing.novel.llm.LlmProbe.run(client, cfg);
             if (!Boolean.TRUE.equals(probe.get("ok"))) {
                 return org.springframework.http.ResponseEntity.status(
                         org.springframework.http.HttpStatus.BAD_REQUEST).body(Map.of(
@@ -150,20 +140,20 @@ public class ModelLibraryController {
         if (cfg == null) {
             throw new IllegalArgumentException("模型库中不存在: " + name);
         }
-        return com.writing.novel.llm.LlmProbe.run(client, copyConfig(cfg));
+        return com.writing.novel.llm.LlmProbe.run(client, cfg);
     }
 
     /** NCS-142：连通性自检（表单候选）——保存前以表单值探测，坏端点/坏 key 当场可见 */
     @org.springframework.web.bind.annotation.PostMapping("/test")
     public Map<String, Object> testCandidate(@RequestBody SaveModelRequest body) {
         ModelConfig candidate = new ModelConfig();
-        if (body.protocol() != null && !body.protocol().isBlank()) {
-            candidate.setProtocol(parseProtocol(body.protocol()));
-        }
-        candidate.setBaseUrl(body.baseUrl() == null ? "" : body.baseUrl().trim());
-        candidate.setModel(body.model() == null ? "" : body.model().trim());
-        if (body.apiKey() != null) candidate.setApiKey(body.apiKey().trim());
-        candidate.setContextWindow(body.contextWindow() == null ? 0 : body.contextWindow());
+        ModelCandidateMerger.merge(candidate, body.protocol(), body.baseUrl(), body.model(),
+                body.apiKey(), body.temperature(), body.maxTokens(), body.contextWindow(),
+                body.streaming(), body.requestTimeoutSeconds());
+        // 探测候选必须明确指向一个端点；空字段不回退（表单候选语义）
+        if (candidate.getBaseUrl() == null) candidate.setBaseUrl("");
+        if (candidate.getModel() == null) candidate.setModel("");
+        if (body.contextWindow() == null) candidate.setContextWindow(0);
         if (candidate.getBaseUrl().isBlank() || candidate.getModel().isBlank()) {
             throw new IllegalArgumentException("探测候选必须提供 baseUrl 与 model");
         }
@@ -172,7 +162,8 @@ public class ModelLibraryController {
 
     /** 删除模型（被路由引用时拒绝） */
     @DeleteMapping("/{name}")
-    public Map<String, Object> delete(@PathVariable String name) {        var providers = properties.getProviders();
+    public Map<String, Object> delete(@PathVariable String name) {
+        var providers = properties.getProviders();
         if (!providers.containsKey(name)) {
             throw new IllegalArgumentException("模型不存在: " + name);
         }
@@ -257,14 +248,6 @@ public class ModelLibraryController {
     private static void requireValidName(String name) {
         if (name == null || !name.matches("[A-Za-z0-9_\\-.]{1,64}")) {
             throw new IllegalArgumentException("模型名只能包含字母/数字/_/-/.，长度 1~64: " + name);
-        }
-    }
-
-    private static LlmProtocol parseProtocol(String value) {
-        try {
-            return LlmProtocol.valueOf(value.trim());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("未知协议: " + value);
         }
     }
 

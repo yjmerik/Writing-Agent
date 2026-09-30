@@ -79,21 +79,9 @@ public class ModelConfigController {
         requireValidScope(scope);
         ModelConfig current = store.effectiveForScope(scope);
         ModelConfig merged = LlmModelConfigStore.copy(current);
-        if (body.protocol() != null && !body.protocol().isBlank()) {
-            merged.setProtocol(parseProtocol(body.protocol()));
-        }
-        if (body.baseUrl() != null) merged.setBaseUrl(body.baseUrl().trim());
-        if (body.model() != null) merged.setModel(body.model().trim());
-        // api_key：空值或原样掩码 = 保留现有 key
-        if (body.apiKey() != null && !body.apiKey().isBlank()
-                && !body.apiKey().equals(mask(current.getApiKey()))) {
-            merged.setApiKey(body.apiKey().trim());
-        }
-        if (body.temperature() != null) merged.setTemperature(body.temperature());
-        if (body.maxTokens() != null) merged.setMaxTokens(body.maxTokens());
-        if (body.contextWindow() != null) merged.setContextWindow(body.contextWindow());
-        if (body.streaming() != null) merged.setStreaming(body.streaming());
-        if (body.requestTimeoutSeconds() != null) merged.setRequestTimeoutSeconds(body.requestTimeoutSeconds());
+        ModelCandidateMerger.merge(merged, body.protocol(), body.baseUrl(), body.model(),
+                body.apiKey(), body.temperature(), body.maxTokens(), body.contextWindow(),
+                body.streaming(), body.requestTimeoutSeconds());
         validate(merged);
         store.save(scope, merged);
         return entryView(scope, SCOPES.get(scope));

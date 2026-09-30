@@ -96,6 +96,29 @@ class ModelConnectivityCheckTest {
                 .andExpect(jsonPath("$.latencyMs").isNumber());
     }
 
+    /** NCS-160（review 整改）：LlmProbe.run 内部防御性拷贝，不得突变调用方入参。 */
+    @Test
+    void 探测不突变入参配置() throws Exception {
+        ModelConfig candidate = new ModelConfig();
+        candidate.setBaseUrl("http://127.0.0.1:9999/v1");
+        candidate.setModel("input-model");
+        candidate.setMaxTokens(8000);
+        candidate.setStreaming(true);
+        candidate.setSingleAttempt(false);
+        var before = Map.entry(candidate.getMaxTokens(), candidate.isSingleAttempt());
+
+        var result = com.writing.novel.llm.LlmProbe.run(client, candidate);
+
+        assertEquals(true, result.get("ok"));
+        assertEquals(8000, candidate.getMaxTokens(), "入参 maxTokens 不得被探测改为受限值");
+        assertTrue(candidate.isStreaming(), "入参 streaming 不得被探测关闭");
+        assertFalse(candidate.isSingleAttempt(), "入参 singleAttempt 不得被探测改动");
+        assertEquals(before, Map.entry(candidate.getMaxTokens(), candidate.isSingleAttempt()));
+        // 探测本身仍受限
+        assertTrue(client.configs.get(0).getMaxTokens() <= 64);
+        assertTrue(client.configs.get(0).isSingleAttempt());
+    }
+
     @Test
     void 探测使用候选覆盖而非仅已存配置() throws Exception {
         mvc.perform(post("/api/llm/models/DEFAULT/test")

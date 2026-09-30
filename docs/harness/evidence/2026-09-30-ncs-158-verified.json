@@ -13,7 +13,7 @@
   },
   {
    "command": "bash -c 'source scripts/load-env.sh && mvn test'",
-   "result": "结果回填合并后验证（同树 ff-merge）",
+   "result": "Tests run: 1458, Failures: 0, Errors: 0, Skipped: 1（干净 main 合并后检出）（同树 ff-merge，合并后验证）",
    "exitCode": 0,
    "verifiedAt": "2026-09-30T23:03:39+08:00"
   }

@@ -234,7 +234,9 @@ export default function ProjectWorkspace() {
                         onChange={async (v) => {
                           try {
                             setPrefs(await api.updatePreferences(id!, { dialogueDensity: v / 100 }));
-                          } catch { /* ignore */ }
+                          } catch (e) {
+                            message.error(`对话密度保存失败: ${(e as Error).message}`);
+                          }
                         }}
                       />
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
@@ -245,7 +247,9 @@ export default function ProjectWorkspace() {
                           onChange={async (v) => {
                             try {
                               setPrefs(await api.updatePreferences(id!, { enableClimaxRotation: v }));
-                            } catch { /* ignore */ }
+                            } catch (e) {
+                              message.error(`爽点轮换保存失败: ${(e as Error).message}`);
+                            }
                           }}
                         />
                       </div>
@@ -257,7 +261,9 @@ export default function ProjectWorkspace() {
                           onChange={async (v) => {
                             try {
                               setPrefs(await api.updatePreferences(id!, { enableCharacterVoice: v }));
-                            } catch { /* ignore */ }
+                            } catch (e) {
+                              message.error(`角色声音保存失败: ${(e as Error).message}`);
+                            }
                           }}
                         />
                       </div>
@@ -269,7 +275,9 @@ export default function ProjectWorkspace() {
                           onChange={async (v) => {
                             try {
                               setPrefs(await api.updatePreferences(id!, { enableKnowledgeQuotes: v }));
-                            } catch { /* ignore */ }
+                            } catch (e) {
+                              message.error(`引用素材保存失败: ${(e as Error).message}`);
+                            }
                           }}
                         />
                       </div>

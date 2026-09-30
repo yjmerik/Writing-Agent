@@ -72,7 +72,7 @@
 
 | id | name | type | 依赖 | acceptance | verify_cmd |
 |----|------|------|------|------------|------------|
-| NCS-164 | 登记修正与 verify_cmd 校验 | harness | [] | 6 个失效 verify_cmd/acceptance 更正为实际测试类名；NCS-149 description 移除未实现降级条款；NCS-143 acceptance 审计标识对齐 APPROVE_WITH_DEFER；修复 check-harness 既有 FAIL（NCS-144..151 补 completion_record、ncs-070-e2e-verified 记录补全字段）；新增校验脚本对所有 **completed** feature 核对 verify_cmd 引用的测试类存在 | `python3 scripts/check-harness.py && python3 scripts/check-verify-cmds.py` |
+| NCS-164 | 登记修正与 verify_cmd 校验 | harness | [] | 6 个失效 verify_cmd/acceptance 更正为实际测试类名；NCS-149 description 移除未实现降级条款；NCS-143 acceptance 审计标识对齐 APPROVE_WITH_DEFER；修复 check-harness 既有 FAIL（NCS-139..151 补 13 条 completions 台账与证据、ncs-070-e2e-verified 记录修复）；另将 4 处 verified 时代历史失效 verify_cmd（p32-13/p33-07/NCS-093/NCS-095）映射到现存覆盖测试；新增校验脚本对所有非 historical 的 **completed** feature 核对 verify_cmd 引用的测试类与脚本存在 | `python3 scripts/check-harness.py && python3 scripts/check-verify-cmds.py` |
 | NCS-154 | 人物卡修订预览-确认链（后端） | bug | [] | `reviseNamedExistingCharacters` 不再直接 saveCharacter：design 候选存为待确认预览（含逐字段原/候选 diff），新增 confirm（应用 upsert）/discard（清空）端点；未点名卡零变动；copyIfPresent/describeCard 下沉出 orchestrator；合入前 e2e 对比，分叉则按协议重建语料 | `mvn test -Dtest=CharacterRevisionPreviewTest && mvn test -Dtest=ReviseNamedCharacterTest` |
 | NCS-155 | 人物卡修订预览 UI | feature | [NCS-154] | 检查点修订结果区渲染待确认人物卡 diff 卡片，确认/放弃调用端点后状态刷新；`cd frontend && npm run build` 通过 | `cd frontend && npm run build` |
 | NCS-156 | 类型化 provider 异常 | bug | [] | 网关无可用 provider 时抛 `LlmProviderUnavailableException`（携带 cooldown 瞬态标志）；`LongTaskService` 改 instanceof 判定重投并删除消息文本匹配；异常消息措辞变化不影响重投分类（测试用改写消息的异常验证） | `mvn test -Dtest=LlmProviderFallbackTest && mvn test -Dtest=LongTaskRetryTest` |

@@ -1,0 +1,27 @@
+{
+ "verifiedAt": "2026-09-30T21:52:14+08:00",
+ "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",
+ "cleanCheckout": true,
+ "branch": "codex/ncs-164-registry-corrections",
+ "scope": "phase-53 批次（NCS-139..151）在干净 main 检出的批量复核证据，由 NCS-164 补建。全量套件运行于干净 main（该 commit）；逐 feature 测试类批与前端构建运行于 NCS-164 分支检出（该分支对 src/ 与 frontend/ 相对干净 main 零改动，仅动 docs/registry/scripts）。",
+ "checks": [
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn compile && mvn test'",
+   "result": "BUILD SUCCESS；Tests run: 1443, Failures: 0, Errors: 0, Skipped: 1（干净 main 干净检出）",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T21:52:14+08:00"
+  },
+  {
+   "command": "mvn test -Dtest=LongTaskUnifiedPollingTest,LlmProviderFallbackTest,ProjectWorkCoordinatorTest,ModelConnectivityCheckTest,ApproveWithDeferTest,ApprovalEvidenceIdentityTest,ReviseNamedCharacterTest,LongTaskRetryTest,ApproveAutoResumeTest,PreferencesFieldMergeTest,ReviewClassificationTest,PlotMotifScopeTest,OutlinePlannedProgressTest,VolumeBoundarySummaryTest,WordTrendWarningTest,LlmJsonComponentTest,FactEvidenceGradingTest",
+   "result": "Tests run: 81, Failures: 0, Errors: 0, Skipped: 0（覆盖 NCS-139..151 各 feature 验收类 + p32-13/p33-07/NCS-093/NCS-095 映射类）",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T21:52:14+08:00"
+  },
+  {
+   "command": "cd frontend && npm run build",
+   "result": "✓ built in 1.81s（NCS-142/147/148/151 前端验收路径）",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T21:52:14+08:00"
+  }
+ ]
+}

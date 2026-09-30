@@ -4843,7 +4843,7 @@
    ],
    "spec": "docs/specs/2026-09-08-author-trust-closed-loop.md",
    "acceptance": "mvn test -Dtest=WorkOwnershipLeakTest：协作任务交还+回退+再回退后 hasActiveTask=false，第二次回退不再 409。",
-   "verify_cmd": "mvn test -Dtest=WorkOwnershipLeakTest",
+   "verify_cmd": "mvn test -Dtest=ProjectWorkCoordinatorTest",
    "evidence": "2026-09-16 verified: 87962e48cda0c877f2c7a73bd44b7d844a078853; record p32-13-p32",
    "completion_record": "p32-13-author-trust",
    "branch": "main"
@@ -5024,7 +5024,7 @@
    ],
    "spec": "docs/specs/2026-09-11-review-barrier-workspace.md",
    "acceptance": "backlog（设计 5.5）：事实来源版本/原文锚点、属性细分、知情者边界、影响追踪。",
-   "verify_cmd": "mvn test -Dtest=FactEvidenceModelTest",
+   "verify_cmd": "mvn test -Dtest=FactEvidenceGradingTest",
    "evidence": "2026-09-16 verified: 4437b5a5a7b6044c18053340c5f6a1026d36ae1e; record p33-07-p33",
    "completion_record": "p33-07-p33",
    "branch": "main"
@@ -9139,7 +9139,7 @@
    "files": [],
    "spec": "docs/specs/2026-09-26-journey2-fixes.md",
    "acceptance": "运行 verify_cmd 通过：truncated 响应抛出含指引文案的错误而非泛化解析错误；前端 npm run build 通过",
-   "verify_cmd": "mvn test -Dtest=RevisionPreviewTruncationGuardTest",
+   "verify_cmd": "mvn test -Dtest=LlmJsonComponentTest",
    "type": "bug",
    "completion_record": "ncs-093-verified"
   },
@@ -9171,7 +9171,7 @@
    "files": [],
    "spec": "docs/specs/2026-09-26-journey2-fixes.md",
    "acceptance": "运行 verify_cmd 通过：构造字数骤降场景时报告/视图携带警示标记，正常场景不出现",
-   "verify_cmd": "mvn test -Dtest=ChapterWordTrendWarningTest",
+   "verify_cmd": "mvn test -Dtest=WordTrendWarningTest",
    "type": "bug",
    "completion_record": "ncs-095-verified"
   },
@@ -9873,7 +9873,7 @@
    ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
    "acceptance": "LlmProviderFallbackTest#logicalCallDeadlineStopsTryingRemainingProviders：3 provider×40min/次 超限后停止并在异常注明；全量回归绿",
-   "verify_cmd": "mvn test -Dtest=ChapterPostProcessRetryTest",
+   "verify_cmd": "mvn test -Dtest=LlmProviderFallbackTest",
    "type": "feature",
    "branch": "codex/ncs-140-postprocess-retrycap",
    "completion_record": "ncs-140-verified"
@@ -9891,8 +9891,8 @@
     "src/test/java/com/writing/novel/service/ProjectWorkCoordinatorTest.java"
    ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
-   "acceptance": "WorkCoordinatorTtlTest：死线程持有者可被接管（含接管后释放不伤新 owner）；活线程持有者仍 409 语义；既有协调器测试全绿",
-   "verify_cmd": "mvn test -Dtest=WorkCoordinatorTtlTest",
+   "acceptance": "ProjectWorkCoordinatorTest：死线程持有者可被接管（含接管后释放不伤新 owner）；活线程持有者仍 409 语义；既有协调器测试全绿",
+   "verify_cmd": "mvn test -Dtest=ProjectWorkCoordinatorTest",
    "type": "feature",
    "branch": "codex/ncs-141-worklock-ttl",
    "completion_record": "ncs-141-verified"
@@ -9922,7 +9922,7 @@
   {
    "id": "NCS-143",
    "name": "阻塞批准内联裁决+带簿放行",
-   "description": "批准被拒提示内联逐条裁决入口；引入 approve-with-defer：全部 HIGH 均有效 DEFER 时可放行，台账落 DEFER_BLOCKED_OVERRIDE 审计行（修 F-9）",
+   "description": "批准被拒提示内联逐条裁决入口；引入 approve-with-defer：全部 HIGH 均有效 DEFER 时可放行，台账落 APPROVE_WITH_DEFER 审计行（审计标识以代码实际为准，2026-09-30 review 对齐）（修 F-9）",
    "phase": 53,
    "dependencies": [
     "NCS-139"
@@ -9954,8 +9954,8 @@
     "src/test/java/com/writing/novel/orchestrator/ReviseNamedCharacterTest.java"
    ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
-   "acceptance": "ReviseInitialSetupCharacterTest：点名卡内容更新、未点名卡逐字不变",
-   "verify_cmd": "mvn test -Dtest=ReviseInitialSetupCharacterTest",
+   "acceptance": "ReviseNamedCharacterTest：点名卡内容更新、未点名卡逐字不变",
+   "verify_cmd": "mvn test -Dtest=ReviseNamedCharacterTest",
    "type": "feature",
    "branch": "codex/ncs-144-revise-named-characters",
    "completion_record": "ncs-144-verified"
@@ -10014,7 +10014,7 @@
    ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
    "acceptance": "PreferencesFieldMergeTest：单字段 PUT 后其它字段保留；前端构建通过",
-   "verify_cmd": "mvn test -Dtest=PreferencesMergeTest",
+   "verify_cmd": "mvn test -Dtest=PreferencesFieldMergeTest",
    "type": "feature",
    "branch": "codex/ncs-147-pref-merge-errors",
    "completion_record": "ncs-147-verified"
@@ -10037,7 +10037,7 @@
    ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
    "acceptance": "前端构建通过 + 组件测试（若无可手测证据）：24 条混计 → 现行X/过期Y/已裁决Z",
-   "verify_cmd": "cd frontend && npm run build",
+   "verify_cmd": "mvn test -Dtest=ReviewClassificationTest && cd frontend && npm run build",
    "type": "feature",
    "branch": "codex/ncs-148-tiered-classification",
    "completion_record": "ncs-148-verified"
@@ -10045,7 +10045,7 @@
   {
    "id": "NCS-149",
    "name": "桥段重复检测口径修正",
-   "description": "桥段重复检测仅统计已写正文 beats；章序 < 窗口宽度时降级为文学建议不入必须处理（修 O-4）",
+   "description": "桥段重复检测仅统计已写正文 beats，并排除当前章自身历史记录（同章重跑不自比为重复，修 O-4；root cause 为 self-match）",
    "phase": 53,
    "dependencies": [],
    "status": "completed",
@@ -10056,7 +10056,7 @@
    ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
    "acceptance": "确定性单测：第2章无已写重复不产生必须处理条目；正文真重复仍检出",
-   "verify_cmd": "mvn test -Dtest=BridgeRepeatScopeTest",
+   "verify_cmd": "mvn test -Dtest=PlotMotifScopeTest",
    "type": "feature",
    "branch": "codex/ncs-149-motif-scope",
    "completion_record": "ncs-149-verified"
@@ -10077,8 +10077,8 @@
     "baselines/golden.json"
    ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
-   "acceptance": "Plotter 输出章数与 targetChapters 解耦的确定性测试 + e2e record/replay + compare-baseline（bless 附理由）",
-   "verify_cmd": "mvn test -Dtest=OutlineFreePlanningTest && ./scripts/e2e.sh && python3 scripts/compare-baseline.py",
+   "acceptance": "OutlinePlannedProgressTest：Plotter 输出章数与 targetChapters 解耦 + e2e record/replay + compare-baseline（bless 附理由）",
+   "verify_cmd": "mvn test -Dtest=OutlinePlannedProgressTest && ./scripts/e2e.sh && python3 scripts/compare-baseline.py",
    "type": "feature",
    "branch": "codex/ncs-150-outline-free-planning",
    "completion_record": "ncs-150-verified"
@@ -10280,7 +10280,7 @@
   {
    "id": "NCS-164",
    "name": "登记修正与 verify_cmd 校验",
-   "description": "恢复登记可信度：更正 NCS-140/141/144/147/149/150 六个失效 verify_cmd 与 acceptance 为实际测试类名；NCS-149 description 移除未实现降级条款；NCS-143 acceptance 审计标识对齐代码实际 APPROVE_WITH_DEFER；修复 check-harness.py 既有 FAIL（NCS-144..151 补 completion_record、ncs-070-e2e-verified 记录补全字段）；新增 scripts/check-verify-cmds.py 对所有 completed feature 校验 verify_cmd 引用的测试类存在",
+   "description": "恢复登记可信度：更正 10 处失效 verify_cmd（NCS-140/141/144/147/148/149/150 批次内 + p32-13/p33-07/NCS-093/NCS-095 历史失效，其中 NCS-148 补缺后端测试）；NCS-149 description 移除未实现降级条款；NCS-143 审计标识对齐 APPROVE_WITH_DEFER；补全 NCS-139..151 共 13 条 completions 台账记录与证据文件；修复 ncs-070-e2e-verified 记录（branch/40位sha/checks/commit/cleanCheckout）；新增 scripts/check-verify-cmds.py 对全部非 historical 的 completed feature 校验 verify_cmd 引用的测试类与脚本存在",
    "phase": 54,
    "dependencies": [],
    "status": "not-started",

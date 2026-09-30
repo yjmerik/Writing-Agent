@@ -1,52 +1,71 @@
 {
-  "feature": "NCS-070",
-  "date": "2026-09-22",
-  "title": "真实重录稳定验收（含人工确认 bless）",
-  "spec": "docs/specs/2026-09-21-llm-output-stabilization.md",
-  "runs": {
-    "supplementary-run1": {
-      "dir": "data/e2e-evidence/ncs065-070-20260921/supplementary-run1/",
-      "shape": "标准3章record被e2e.sh 5400s轮询预算掐断（两次30分钟网关超时耗尽），手工续跑又写至第4章；保留为补充真实运行证据",
-      "outcome": "62次LLM调用/0错误/0截断/0结构化重试；实体26、关系42、真典28条；CORRECTION_VERIFIED×5覆盖完整；3章正文完整（另第4章部分）"
-    },
-    "acceptance-record2": {
-      "dir": "data/e2e-evidence/ncs065-070-20260921/record2-replay/",
-      "fixtureDir": "data/e2e-fixtures/ncs065-070/mystery-20260922/（46条，本地）",
-      "shape": "干净main导出+author-intent注入+轮询上限放宽至6h的标准3章record",
-      "outcome": "46次调用/0错误/0截断（LLM_TRUNCATED=0）/0结构化重试；EXTRACTION 6次平均10.1s（关思考生效）；2章7332字；第1章HIGH经纠偏复验RESOLVED（含原文证据）；第2章HIGH（凭空证据：盐引脚钱混旧铜无铺垫）→复核屏障→任务PAUSED；完整验收诚实判FAIL（屏障+未满3章）",
-      "replay1": "报告与record完全一致（仅generatedAt/projectId不同）；正文SHA-256前缀 ch1=0cf80aa11bfe5965 ch2=c3bdd5a058defd5a；实体27/关系40/真典21",
-      "replay2": "报告与replay1完全一致；正文哈希与DB计数与replay1相同",
-      "diagnose": "失败分类0条；读者检验通过率100%（4/4）；质量阻断信号2条（人审屏障1+写作暂停1，即上述第2章屏障）；总成本¥0.8971",
-      "baselineComparison": "compare-baseline.py PASS（章节数2≥1、总字数7332≥3144、平均3666≥2751、0失败、0 LLM错误）"
-    }
+ "feature": "NCS-070",
+ "date": "2026-09-22",
+ "title": "真实重录稳定验收（含人工确认 bless）",
+ "spec": "docs/specs/2026-09-21-llm-output-stabilization.md",
+ "runs": {
+  "supplementary-run1": {
+   "dir": "data/e2e-evidence/ncs065-070-20260921/supplementary-run1/",
+   "shape": "标准3章record被e2e.sh 5400s轮询预算掐断（两次30分钟网关超时耗尽），手工续跑又写至第4章；保留为补充真实运行证据",
+   "outcome": "62次LLM调用/0错误/0截断/0结构化重试；实体26、关系42、真典28条；CORRECTION_VERIFIED×5覆盖完整；3章正文完整（另第4章部分）"
   },
-  "guardRetest": {
-    "claim": "NCS-033修复后守卫按前文判断的直接证据：第2章问题描述明确写『前文与本章均未交代盐引脚钱与灶底旧铜、庚辰案之间的物证或账证来源』——守卫已检索并引用前文，不再是修复前『第2章正文已有场景仍称凭空』的模式",
-    "boundary": "第2章该项HIGH是否真为情节问题待人工复核判断，未自动解除屏障"
-  },
-  "extractionHealth": {
-    "entities": "27（CHARACTER/ITEM/FACTION/LOCATION/CONCEPT/EVENT/TECHNIQUE均有）",
-    "edges": 40,
-    "facts": 21,
-    "note": "修复前三章实体/关系恒为0、第3章真典单字符[——本轮两批真实运行均非零且零截断"
-  },
-  "pending": [
-    "第2章复核屏障的后续写作处理（其人为模型对『盐引脚钱混旧铜』凭空证据的判断，人工确认验收通过；屏障属临时运行库状态，仓库无待办）",
-    "观察项：纠偏复验响应整体格式无效时仍直接屏障（NCS-069只覆盖缺项补问）——后续候选feature"
-  ],
-  "acceptanceState": "completed：机器可验证项全部达成；bless 经人工确认执行，golden 已更新并复验",
-  "bless": {
-    "confirmedBy": "用户 2026-09-22 人工复核确认",
-    "command": "python3 scripts/compare-baseline.py data/e2e-evidence/ncs065-070-20260921/record2-replay/e2e-report-record.json baselines/golden.json --bless",
-    "result": {
-      "blessedAt": "2026-09-22T06:03:58",
-      "minChapters": 2,
-      "minTotalWords": 5865,
-      "minAvgWordCount": 2566,
-      "maxChapterFailures": 0,
-      "maxLlmErrors": 0
-    },
-    "rebuildReason": "NCS-065..069 改变注入请求与产出（EXTRACTION 路由/思考关闭/实体两阶段拆分/重试反馈语），旧 golden（2026-09-12，1章3144字）对应修复前语料；新语料 record+replay×2 一致、诊断零失败分类、提取非零、复验覆盖完整，经人工确认后以验收轮 record 报告重建，并以 replay1 报告复验 PASS",
-    "postVerify": "compare-baseline.py 以 replay1 报告对新 golden 复验 PASS"
+  "acceptance-record2": {
+   "dir": "data/e2e-evidence/ncs065-070-20260921/record2-replay/",
+   "fixtureDir": "data/e2e-fixtures/ncs065-070/mystery-20260922/（46条，本地）",
+   "shape": "干净main导出+author-intent注入+轮询上限放宽至6h的标准3章record",
+   "outcome": "46次调用/0错误/0截断（LLM_TRUNCATED=0）/0结构化重试；EXTRACTION 6次平均10.1s（关思考生效）；2章7332字；第1章HIGH经纠偏复验RESOLVED（含原文证据）；第2章HIGH（凭空证据：盐引脚钱混旧铜无铺垫）→复核屏障→任务PAUSED；完整验收诚实判FAIL（屏障+未满3章）",
+   "replay1": "报告与record完全一致（仅generatedAt/projectId不同）；正文SHA-256前缀 ch1=0cf80aa11bfe5965 ch2=c3bdd5a058defd5a；实体27/关系40/真典21",
+   "replay2": "报告与replay1完全一致；正文哈希与DB计数与replay1相同",
+   "diagnose": "失败分类0条；读者检验通过率100%（4/4）；质量阻断信号2条（人审屏障1+写作暂停1，即上述第2章屏障）；总成本¥0.8971",
+   "baselineComparison": "compare-baseline.py PASS（章节数2≥1、总字数7332≥3144、平均3666≥2751、0失败、0 LLM错误）"
   }
+ },
+ "guardRetest": {
+  "claim": "NCS-033修复后守卫按前文判断的直接证据：第2章问题描述明确写『前文与本章均未交代盐引脚钱与灶底旧铜、庚辰案之间的物证或账证来源』——守卫已检索并引用前文，不再是修复前『第2章正文已有场景仍称凭空』的模式",
+  "boundary": "第2章该项HIGH是否真为情节问题待人工复核判断，未自动解除屏障"
+ },
+ "extractionHealth": {
+  "entities": "27（CHARACTER/ITEM/FACTION/LOCATION/CONCEPT/EVENT/TECHNIQUE均有）",
+  "edges": 40,
+  "facts": 21,
+  "note": "修复前三章实体/关系恒为0、第3章真典单字符[——本轮两批真实运行均非零且零截断"
+ },
+ "pending": [
+  "第2章复核屏障的后续写作处理（其人为模型对『盐引脚钱混旧铜』凭空证据的判断，人工确认验收通过；屏障属临时运行库状态，仓库无待办）",
+  "观察项：纠偏复验响应整体格式无效时仍直接屏障（NCS-069只覆盖缺项补问）——后续候选feature"
+ ],
+ "acceptanceState": "completed：机器可验证项全部达成；bless 经人工确认执行，golden 已更新并复验",
+ "bless": {
+  "confirmedBy": "用户 2026-09-22 人工复核确认",
+  "command": "python3 scripts/compare-baseline.py data/e2e-evidence/ncs065-070-20260921/record2-replay/e2e-report-record.json baselines/golden.json --bless",
+  "result": {
+   "blessedAt": "2026-09-22T06:03:58",
+   "minChapters": 2,
+   "minTotalWords": 5865,
+   "minAvgWordCount": 2566,
+   "maxChapterFailures": 0,
+   "maxLlmErrors": 0
+  },
+  "rebuildReason": "NCS-065..069 改变注入请求与产出（EXTRACTION 路由/思考关闭/实体两阶段拆分/重试反馈语），旧 golden（2026-09-12，1章3144字）对应修复前语料；新语料 record+replay×2 一致、诊断零失败分类、提取非零、复验覆盖完整，经人工确认后以验收轮 record 报告重建，并以 replay1 报告复验 PASS",
+  "postVerify": "compare-baseline.py 以 replay1 报告对新 golden 复验 PASS"
+ },
+ "commit": "4445c042481a3ef515781746528a9b840e4895f7",
+ "main_commit": "4445c042481a3ef515781746528a9b840e4895f7",
+ "cleanCheckout": true,
+ "checks": [
+  {
+   "command": "python3 scripts/compare-baseline.py",
+   "result": "PASS（验收轮 record 报告对 golden：章节数2≥1、总字数7332≥3144、平均3666≥2751、0失败、0 LLM错误）——引自原证据叙事 baselineComparison 字段，未重跑",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-22",
+   "source": "historical-narrative"
+  },
+  {
+   "command": "replay ×2 与 record 报告/正文SHA-256/DB计数 指纹比对",
+   "result": "三次一致（replay1==record，replay2==replay1；ch1=0cf80aa11bfe5965 ch2=c3bdd5a058defd5a）——引自原证据叙事，未重跑",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-22",
+   "source": "historical-narrative"
+  }
+ ]
 }

@@ -2020,10 +2020,11 @@
    "feature_ids": [
     "NCS-070"
    ],
-   "branch": "main(e2e-acceptance)",
-   "implementation_commit": "5a016c6",
-   "main_commit": "aa2cc09",
-   "evidence": "docs/harness/evidence/2026-09-21-ncs-070-e2e.json"
+   "branch": "codex/ncs-069-verification-gap",
+   "implementation_commit": "aa2cc090b4f025e90db8b2712b8fa79d42f6f9bd",
+   "main_commit": "4445c042481a3ef515781746528a9b840e4895f7",
+   "evidence": "docs/harness/evidence/2026-09-21-ncs-070-e2e.json",
+   "note": "验收型 feature（真实重录+bless），无独立实现分支：2026-09-22 reflog 证实其两个登记/bless 提交（aa2cc09、4445c04）直接落在 main；branch 字段记录被验收批次（NCS-065..069）最后一个 feature 分支。原记录的 implementation_commit 5a016c6 误指 NCS-069 feat 提交，已改为证据登记提交 aa2cc09。2026-09-30 NCS-164 修复，历史运行结果引自原证据叙事，未重跑。"
   },
   {
    "id": "ncs-071-verified",
@@ -2772,8 +2773,164 @@
    "implementation_commit": "095422032444f893522d9681314aee220c0f1281",
    "main_commit": "095422032444f893522d9681314aee220c0f1281",
    "evidence": "docs/harness/evidence/2026-09-29-ncs-138.json"
+  },
+  {
+   "id": "ncs-139-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-139"
+   ],
+   "branch": "codex/ncs-139-longtask-polling",
+   "implementation_commit": "9b1b40c4731b9e9f75d1489d29ee7d6381769645",
+   "main_commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",
+   "evidence": "docs/harness/evidence/2026-09-30-phase53-batch-verified.json",
+   "note": "2026-09-30 NCS-164 补建：原完成轮仅写 completion_record 指针未落台账；main_commit 为补验时干净 main（含全部 13 实现），实现提交经 merge-base 校验为其祖先。"
+  },
+  {
+   "id": "ncs-140-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-140"
+   ],
+   "branch": "codex/ncs-140-postprocess-retrycap",
+   "implementation_commit": "9c096c6a71e63180f675e305ea3f9474b5f801c2",
+   "main_commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",
+   "evidence": "docs/harness/evidence/2026-09-30-phase53-batch-verified.json",
+   "note": "2026-09-30 NCS-164 补建：原完成轮仅写 completion_record 指针未落台账；main_commit 为补验时干净 main（含全部 13 实现），实现提交经 merge-base 校验为其祖先。"
+  },
+  {
+   "id": "ncs-141-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-141"
+   ],
+   "branch": "codex/ncs-141-worklock-ttl",
+   "implementation_commit": "9286b3bf0a2b8fc243713adf58d8adb9aa0ba875",
+   "main_commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",
+   "evidence": "docs/harness/evidence/2026-09-30-phase53-batch-verified.json",
+   "note": "2026-09-30 NCS-164 补建：原完成轮仅写 completion_record 指针未落台账；main_commit 为补验时干净 main（含全部 13 实现），实现提交经 merge-base 校验为其祖先。"
+  },
+  {
+   "id": "ncs-142-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-142"
+   ],
+   "branch": "codex/ncs-142-model-connectivity",
+   "implementation_commit": "c1a1426e9c11016f0d5e822e999a1c291b0873ea",
+   "main_commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",
+   "evidence": "docs/harness/evidence/2026-09-30-phase53-batch-verified.json",
+   "note": "2026-09-30 NCS-164 补建：原完成轮仅写 completion_record 指针未落台账；main_commit 为补验时干净 main（含全部 13 实现），实现提交经 merge-base 校验为其祖先。"
+  },
+  {
+   "id": "ncs-143-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-143"
+   ],
+   "branch": "codex/ncs-143-approve-with-defer",
+   "implementation_commit": "dee6670ff11bfa349c838f21565f811e3c128c3d",
+   "main_commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",
+   "evidence": "docs/harness/evidence/2026-09-30-phase53-batch-verified.json",
+   "note": "2026-09-30 NCS-164 补建：原完成轮仅写 completion_record 指针未落台账；main_commit 为补验时干净 main（含全部 13 实现），实现提交经 merge-base 校验为其祖先。"
+  },
+  {
+   "id": "ncs-144-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-144"
+   ],
+   "branch": "codex/ncs-144-revise-named-characters",
+   "implementation_commit": "a73ad4c9165698db0a0af140424ac3043d9f9795",
+   "main_commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",
+   "evidence": "docs/harness/evidence/2026-09-30-phase53-batch-verified.json",
+   "note": "2026-09-30 NCS-164 补建：原完成轮仅写 completion_record 指针未落台账；main_commit 为补验时干净 main（含全部 13 实现），实现提交经 merge-base 校验为其祖先。"
+  },
+  {
+   "id": "ncs-145-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-145"
+   ],
+   "branch": "codex/ncs-145-longtask-retry",
+   "implementation_commit": "430d9a4f88f3f3aacfab0d4c1c598f08f04fbf3b",
+   "main_commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",
+   "evidence": "docs/harness/evidence/2026-09-30-phase53-batch-verified.json",
+   "note": "2026-09-30 NCS-164 补建：原完成轮仅写 completion_record 指针未落台账；main_commit 为补验时干净 main（含全部 13 实现），实现提交经 merge-base 校验为其祖先。"
+  },
+  {
+   "id": "ncs-146-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-146"
+   ],
+   "branch": "codex/ncs-146-approve-autoresume",
+   "implementation_commit": "be4f2023a23ea3068b52769e29c711ee862163ee",
+   "main_commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",
+   "evidence": "docs/harness/evidence/2026-09-30-phase53-batch-verified.json",
+   "note": "2026-09-30 NCS-164 补建：原完成轮仅写 completion_record 指针未落台账；main_commit 为补验时干净 main（含全部 13 实现），实现提交经 merge-base 校验为其祖先。"
+  },
+  {
+   "id": "ncs-147-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-147"
+   ],
+   "branch": "codex/ncs-147-pref-merge-errors",
+   "implementation_commit": "7146c8fa5ab14a9b181865b5cc6d850b64078938",
+   "main_commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",
+   "evidence": "docs/harness/evidence/2026-09-30-phase53-batch-verified.json",
+   "note": "2026-09-30 NCS-164 补建：原完成轮仅写 completion_record 指针未落台账；main_commit 为补验时干净 main（含全部 13 实现），实现提交经 merge-base 校验为其祖先。"
+  },
+  {
+   "id": "ncs-148-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-148"
+   ],
+   "branch": "codex/ncs-148-tiered-classification",
+   "implementation_commit": "a0c4fd32c4515e91fe358abdcb593a970581becc",
+   "main_commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",
+   "evidence": "docs/harness/evidence/2026-09-30-phase53-batch-verified.json",
+   "note": "2026-09-30 NCS-164 补建：原完成轮仅写 completion_record 指针未落台账；main_commit 为补验时干净 main（含全部 13 实现），实现提交经 merge-base 校验为其祖先。"
+  },
+  {
+   "id": "ncs-149-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-149"
+   ],
+   "branch": "codex/ncs-149-motif-scope",
+   "implementation_commit": "20da66e79b6889cb2b0d0e60239bed8c082289f3",
+   "main_commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",
+   "evidence": "docs/harness/evidence/2026-09-30-phase53-batch-verified.json",
+   "note": "2026-09-30 NCS-164 补建：原完成轮仅写 completion_record 指针未落台账；main_commit 为补验时干净 main（含全部 13 实现），实现提交经 merge-base 校验为其祖先。"
+  },
+  {
+   "id": "ncs-150-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-150"
+   ],
+   "branch": "codex/ncs-150-outline-free-planning",
+   "implementation_commit": "89daf355206b9a5ae35253b061803cab2bdeafa7",
+   "main_commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",
+   "evidence": "docs/harness/evidence/2026-09-30-phase53-batch-verified.json",
+   "note": "2026-09-30 NCS-164 补建：原完成轮仅写 completion_record 指针未落台账；main_commit 为补验时干净 main（含全部 13 实现），实现提交经 merge-base 校验为其祖先。"
+  },
+  {
+   "id": "ncs-151-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-151"
+   ],
+   "branch": "codex/ncs-151-volume-boundary",
+   "implementation_commit": "c198248561fc050a8c0ee0e8a5ea0c964cca5571",
+   "main_commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",
+   "evidence": "docs/harness/evidence/2026-09-30-phase53-batch-verified.json",
+   "note": "2026-09-30 NCS-164 补建：原完成轮仅写 completion_record 指针未落台账；main_commit 为补验时干净 main（含全部 13 实现），实现提交经 merge-base 校验为其祖先。"
   }
  ],
- "commit": "2b4116199d7fd9ca954f32e4da5e119723828404",
- "main_commit": "095422032444f893522d9681314aee220c0f1281"
+ "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",
+ "main_commit": "fe30ca3e502b28b8a757724f01147ee648819ef0"
 }

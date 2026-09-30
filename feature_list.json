@@ -9879,13 +9879,18 @@
    "description": "ProjectWorkCoordinator 锁持有者绑定线程凭证：tryAcquire 时持有者线程已死（!isAlive，finally 泄漏路径）可被新请求原子接管并告警；活线程持有者语义不变；重启清扫由 NCS-133 cancelOrphans 覆盖（旅程核实 F-7 横幅为重启后真实任务，非残留）",
    "phase": 53,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30 verified: 9286b3b (ff-merge=main); 协调器 8 用例（含死线程接管/zombie迟到释放/活线程互斥）；全量 1411/0F/0E/1S；旅程核实重启清扫已由 NCS-133 覆盖，本项聚焦可证明死锁接管",
+   "files": [
+    "src/main/java/com/writing/novel/service/ProjectWorkCoordinator.java",
+    "src/test/java/com/writing/novel/service/ProjectWorkCoordinatorTest.java"
+   ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
    "acceptance": "WorkCoordinatorTtlTest：死线程持有者可被接管（含接管后释放不伤新 owner）；活线程持有者仍 409 语义；既有协调器测试全绿",
    "verify_cmd": "mvn test -Dtest=WorkCoordinatorTtlTest",
-   "type": "feature"
+   "type": "feature",
+   "branch": "codex/ncs-141-worklock-ttl",
+   "completion_record": "ncs-141-verified"
   },
   {
    "id": "NCS-142",

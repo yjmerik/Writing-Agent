@@ -1,33 +1,37 @@
-# 架构质量深化实现收尾（NCS-096..137 全部完成）— 2026-09-29
+# 交接：旅程三修复批次（NCS-139..153）— 2026-09-30
 
-Last Updated: 2026-09-29
+Last Updated: 2026-09-30
 
 ## Current
 
-NCS-096..137 共 42 项全部合入 main 并 verified（分支/提交/验证证据齐全，
-evidence 42 份）。收尾期三修复：provider 分层超时（163dcec 前序 9d48789/9c0a72a）、
-回收检测 F 标号确定性（163dcec）、golden.json 恢复（本分支）。
-回放语料 mystery-20260929 重建完成，双 replay 一致性达标。
+phase 53 已开批：NCS-139..153 登记完毕（not-started），按方案
+docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md 实施。
+main=face356（报告+登记）。此前 NCS-096..137 全部 completed（见 progress.md 归档）。
 
 ## Files
 
-- 42 份实现+登记提交（NCS-096 注入清单 → NCS-137 金标集）
-- data/e2e-fixtures/mystery-20260929（新语料）；e2e-report.json（最新 replay）
-- baselines/golden.json（恢复）
+- feature_list.json（NCS-139..153，phase 53）
+- docs/reports/2026-09-30-ui-journey-3/（报告+方案）
+- /tmp/approve_ch.py（旅程现场批准脚本，临时）
+
+## 环境注意
+
+- mvn test 必须 `bash -c 'source scripts/load-env.sh && mvn test ...'`，否则 Spring 上下文全错
+- 实例 18095 运行旧包（journey 现场保留）：禁止在运行中重建 fat jar；
+  全部完成后 stop → mvn package → 重启
+- data/logs/events.jsonl 为多实例共享，按 projectId 过滤
 
 ## Verification
 
-- mvn test 1399/0F/0E/1S（严格 BUILD SUCCESS 门禁）
-- 双 replay：4592 字/章节/styleMetrics 完全一致
-- compare-baseline FAIL（章节数/总字数）——第 1 章人工复核屏障所致，
-  属 fail-loud 设计行为；--bless 待人工确认
+- 尚无新 feature 完成；每项完成时在此登记分支/提交/验证
 
 ## Blockers
 
-- --bless 与 ncs-070 均待用户决策（见 Next Steps）
+- ncs-070 历史条目 FAIL + --bless 待人工确认（上批遗留，与本批无关）
 
 ## Next Steps
 
-1. 决策 A：bless 新语料基线 或 重录无屏障语料
-2. 决策 B：ncs-070 检查器 schema 遗留
-3. 18100 人工 UI 验收（沿用）；确认后可清除本轮临时分支（codex/ncs-096..137 已合并）
+1. NCS-139 统一长任务轮询端点（LongTaskController）
+2. NCS-141 锁 TTL/启动清扫 → NCS-140 后处理重试上限 → NCS-142 模型自检
+3. Phase2: 143 带簿放行 / 144 定向修卡 / 145 冷却重试 / 146 批准自恢复
+4. Phase3: 147/148/149/150（大纲自由规划，用户已决策）/151（卷边界呈现）/152/153

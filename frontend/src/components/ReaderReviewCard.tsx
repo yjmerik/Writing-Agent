@@ -30,6 +30,7 @@ export default function ReaderReviewCard({ projectId }: { projectId: string }) {
   const [parsed, setParsed] = useState<ReaderReport | null>(null);
   const [running, setRunning] = useState(false);
   const [jobId, setJobId] = useState('');
+  const [retryableId, setRetryableId] = useState(''); // NCS-157: FAILED_RETRYABLE 待手动重投任务
   const [error, setError] = useState('');
   const [messageApi, ctx] = message.useMessage();
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -64,6 +65,14 @@ export default function ReaderReviewCard({ projectId }: { projectId: string }) {
           // 重新拉取最新报告
           fetch(`/api/projects/${projectId}/reader-review`).then(r => r.ok ? r.json() : null).then(parseReport);
           messageApi.success('读者评审完成');
+        } else if (job.status === 'FAILED_RETRYABLE') {
+          // NCS-157: provider 冷却重投耗尽——保留 jobId 供手动重试
+          clearInterval(pollRef.current!);
+          pollRef.current = null;
+          setRunning(false);
+          setJobId('');
+          setRetryableId(id);
+          setError(job.error || '评审暂停（provider 冷却），可稍后重试');
         } else if (job.status === 'FAILED' || job.status === 'CANCELLED') {
           clearInterval(pollRef.current!);
           pollRef.current = null;
@@ -79,6 +88,7 @@ export default function ReaderReviewCard({ projectId }: { projectId: string }) {
   const handleReview = async () => {
     setRunning(true);
     setError('');
+    setRetryableId('');
     try {
       const resp = await fetch(`/api/projects/${projectId}/reader-review`, { method: 'POST' });
       if (!resp.ok) {
@@ -150,7 +160,33 @@ export default function ReaderReviewCard({ projectId }: { projectId: string }) {
         </div>
       )}
 
-      {error && !running && <Alert type="error" showIcon message="评审失败" description={error} style={{ marginBottom: 16 }} />}
+      {retryableId && !running && (
+        <Alert
+          type="warning" showIcon
+          message="评审暂停（provider 冷却）"
+          description={error}
+          action={
+            <Button size="small" onClick={async () => {
+              try {
+                const resp = await fetch(`/api/projects/${projectId}/long-tasks/${retryableId}/retry`, { method: 'POST' });
+                if (!resp.ok) {
+                  const body = await resp.json().catch(() => ({}));
+                  throw new Error(body.error || `HTTP ${resp.status}`);
+                }
+                setRetryableId('');
+                setError('');
+                setRunning(true);
+                startPoll(retryableId);
+                messageApi.info('已重新入队，继续阅读…');
+              } catch (e) {
+                messageApi.error(`重试失败: ${(e as Error).message}`);
+              }
+            }}>重试</Button>
+          }
+          style={{ marginBottom: 16 }}
+        />
+      )}
+      {error && !running && !retryableId && <Alert type="error" showIcon message="评审失败" description={error} style={{ marginBottom: 16 }} />}
       {!running && !parsed && !error && <Empty description="尚未进行读者评审——写几章后试试，看看读者怎么说" />}
 
       {parsed && !running && (

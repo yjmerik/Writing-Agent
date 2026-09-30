@@ -4,6 +4,7 @@ import com.writing.novel.service.LongTaskService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,5 +35,21 @@ public class LongTaskController {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                         "error", "任务不存在或已过期: " + jobId,
                         "code", "LONG_TASK_NOT_FOUND")));
+    }
+
+    /** NCS-157: 手动重投 FAILED_RETRYABLE 任务（重新占用工作权，重试预算重新计算） */
+    @PostMapping("/{jobId}/retry")
+    public ResponseEntity<Object> retry(@PathVariable String id, @PathVariable String jobId) {
+        try {
+            longTasks.retry(id, jobId);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of("status", "RUNNING", "jobId", jobId));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "error", e.getMessage(), "code", "LONG_TASK_NOT_FOUND"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "error", e.getMessage(), "code", "LONG_TASK_NOT_RETRYABLE"));
+        }
     }
 }

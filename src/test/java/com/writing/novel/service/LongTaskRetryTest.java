@@ -75,14 +75,15 @@ class LongTaskRetryTest {
         });
         for (int i = 0; i < 400; i++) {
             var st = service.get("p-r2", jobId);
-            if (st.isPresent() && "FAILED".equals(st.get().status())) {
+            // NCS-157: 冷却耗尽终态为 FAILED_RETRYABLE（可手动重投），错误注明重试耗尽
+            if (st.isPresent() && "FAILED_RETRYABLE".equals(st.get().status())) {
                 assertTrue(st.get().error().contains("已重试"),
                         "终态错误必须注明重试耗尽: " + st.get().error());
                 return;
             }
             TimeUnit.MILLISECONDS.sleep(30);
         }
-        throw new AssertionError("重试耗尽后应进入 FAILED 终态");
+        throw new AssertionError("重试耗尽后应进入 FAILED_RETRYABLE 终态");
     }
 
     @Test
@@ -142,6 +143,63 @@ class LongTaskRetryTest {
             TimeUnit.MILLISECONDS.sleep(30);
         }
         throw new AssertionError("非冷却异常应直接 FAILED");
+    }
+
+    /** NCS-157：自动重投耗尽后进入 FAILED_RETRYABLE（可见、区别于普通 FAILED），可手动重投。 */
+    @Test
+    void 超限进入FAILED_RETRYABLE且手动重投可恢复() throws Exception {
+        AtomicInteger attempts = new AtomicInteger();
+        String jobId = service.submit("p-fr", "reader-review", "读者评审", () -> {
+            if (attempts.incrementAndGet() <= 3) throw cooldown(); // 1 次首发 + 2 次自动重投耗尽
+            return "报告";
+        });
+        String terminal = null;
+        for (int i = 0; i < 400; i++) {
+            var st = service.get("p-fr", jobId);
+            if (st.isPresent() && !"RUNNING".equals(st.get().status())
+                    && !"DONE".equals(st.get().status())) {
+                terminal = st.get().status();
+                break;
+            }
+            TimeUnit.MILLISECONDS.sleep(30);
+        }
+        assertEquals("FAILED_RETRYABLE", terminal, "耗尽后必须是可重试终态而非 FAILED");
+        assertEquals(3, attempts.get());
+        assertTrue(String.valueOf(service.get("p-fr", jobId).orElseThrow().error()).contains("手动重试"),
+                "错误信息应提示可手动重试");
+
+        // 手动重投：第 4 次尝试成功，重试预算重新计算
+        service.retry("p-fr", jobId);
+        for (int i = 0; i < 300; i++) {
+            var st = service.get("p-fr", jobId);
+            if (st.isPresent() && "DONE".equals(st.get().status())) {
+                assertEquals(4, attempts.get(), "手动重投后第四次成功");
+                return;
+            }
+            TimeUnit.MILLISECONDS.sleep(30);
+        }
+        throw new AssertionError("手动重投应重新入队并执行成功");
+    }
+
+    @Test
+    void 非FAILED_RETRYABLE状态与未知任务不可重投() throws Exception {
+        AtomicInteger attempts = new AtomicInteger();
+        String jobId = service.submit("p-nr", "reader-review", "读者评审", () -> {
+            attempts.incrementAndGet();
+            return "ok";
+        });
+        for (int i = 0; i < 200; i++) {
+            var st = service.get("p-nr", jobId);
+            if (st.isPresent() && "DONE".equals(st.get().status())) break;
+            TimeUnit.MILLISECONDS.sleep(30);
+        }
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
+                () -> service.retry("p-nr", jobId), "DONE 任务不可重投");
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> service.retry("p-nr", "不存在的job"), "未知任务不可重投");
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> service.retry("别的项目", jobId), "跨项目不可重投");
+        assertEquals(1, attempts.get(), "拒绝重投不得触发执行");
     }
 
     @Test

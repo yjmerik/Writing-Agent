@@ -51,6 +51,7 @@ public class LongTaskService {
         volatile Instant finishedAt;
         volatile String phase;          // NCS-133: 阶段级进度
         volatile Integer percent;
+        volatile Supplier<?> work;      // NCS-157: 保留任务体供 FAILED_RETRYABLE 手动重投
 
         Job(String jobId, String projectId, String kind, String label) {
             this.jobId = jobId;
@@ -137,6 +138,7 @@ public class LongTaskService {
     public String submit(String projectId, String kind, String label, Supplier<?> work) {
         String jobId = kind + "-" + UUID.randomUUID();
         Job job = new Job(jobId, projectId, kind, label);
+        job.work = work;
         jobs.put(jobId, job);
         writingTaskExecutor.beginWork(projectId, jobId);
         if (jobRepository != null) {
@@ -149,6 +151,35 @@ public class LongTaskService {
         }
         worker.submit(() -> runJob(job, work, projectId, kind, 0));
         return jobId;
+    }
+
+    /**
+     * NCS-157：手动重投 FAILED_RETRYABLE 任务——重新占用项目工作权、重试预算重新计算。
+     * 仅进程内存态任务可重投（任务体 Supplier 不持久化，重启后请从 UI 重新发起）。
+     */
+    public void retry(String projectId, String jobId) {
+        Job job = jobs.get(jobId);
+        if (job == null || !job.projectId.equals(projectId)) {
+            throw new IllegalArgumentException("任务不存在或已过期: " + jobId);
+        }
+        if (!"FAILED_RETRYABLE".equals(job.status)) {
+            throw new IllegalStateException("任务当前状态不可重试: " + job.status);
+        }
+        job.status = "RUNNING";
+        job.error = null;
+        job.phase = null;
+        job.finishedAt = null;
+        writingTaskExecutor.beginWork(projectId, jobId);
+        if (jobRepository != null) {
+            try {
+                jobRepository.save(job.jobId, job.projectId, job.kind, job.label, "RUNNING",
+                        null, null, null, null, job.startedAt, null);
+            } catch (Exception e) {
+                log.warn("长任务重投落库失败(继续执行): {}", e.getMessage());
+            }
+        }
+        log.info("长任务手动重投: kind={}, projectId={}", job.kind, projectId);
+        worker.submit(() -> runJob(job, job.work, projectId, job.kind, 0));
     }
 
     /** NCS-145：任务体执行 + provider 冷却延迟重投（重投等待期不释放项目工作权） */
@@ -170,8 +201,16 @@ public class LongTaskService {
                         retryDelayMs, TimeUnit.MILLISECONDS);
                 return;
             }
-            job.error = attempt > 0 ? "已重试 " + attempt + " 次后仍失败: " + detail : detail;
-            job.status = "FAILED";
+            if (isProviderCooldown(e)) {
+                // NCS-157: 自动重投耗尽 → 可重试终态（轮询可见、可经 retry 端点手动重投）
+                job.error = "已重试 " + attempt + " 次后仍遇 provider 冷却: " + detail
+                        + "（可稍后手动重试）";
+                job.status = "FAILED_RETRYABLE";
+                log.warn("长任务冷却重投耗尽, 进入 FAILED_RETRYABLE: kind={}, projectId={}", kind, projectId);
+            } else {
+                job.error = attempt > 0 ? "已重试 " + attempt + " 次后仍失败: " + detail : detail;
+                job.status = "FAILED";
+            }
             log.warn("长任务失败({}/{}): {}", kind, projectId, job.error);
         } finally {
             if (!"RUNNING".equals(job.status)) {

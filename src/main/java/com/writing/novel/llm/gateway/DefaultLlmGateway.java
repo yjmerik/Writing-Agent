@@ -1,6 +1,7 @@
 package com.writing.novel.llm.gateway;
 
 import com.writing.novel.llm.LlmGateway;
+import com.writing.novel.llm.LlmProviderUnavailableException;
 import com.writing.novel.llm.LlmRequest;
 import com.writing.novel.llm.LlmResponse;
 import com.writing.novel.llm.client.LlmClient;
@@ -76,6 +77,7 @@ public class DefaultLlmGateway implements LlmGateway {
 
     private LlmResponse completeWithProviders(LlmRequest request, List<String> ids) {
         List<String> failures = new ArrayList<>();
+        boolean anyCooldown = false; // NCS-156: 冷却跳过/失败进入冷却 → 瞬态标志
         String previous = null;
         LlmUnavailableException previousFailure = null;
         RequestBudgetExceededException budgetFailure = null;
@@ -94,6 +96,7 @@ public class DefaultLlmGateway implements LlmGateway {
             ProviderHealthTracker.Lease lease = health.acquire(id);
             if (lease == null) {
                 failures.add(id + ": cooling until " + health.nextAttempt(id));
+                anyCooldown = true;
                 continue;
             }
             long start = System.nanoTime();
@@ -117,13 +120,15 @@ public class DefaultLlmGateway implements LlmGateway {
                 checkCancelled();
                 recordFailure(request, id, lease, e, index + 1, start);
                 failures.add(id + ": " + e.getReason() + ", retry at " + health.nextAttempt(id));
+                anyCooldown = true;
+                anyCooldown = true;
                 previous = id; previousFailure = e;
             } finally {
                 health.release(lease);
             }
         }
         if (budgetFailure != null) throw budgetFailure;
-        throw exhausted(failures);
+        throw exhausted(failures, anyCooldown);
     }
 
     private static LlmResponse withExecution(LlmResponse response, String id, ModelConfig config) {
@@ -164,8 +169,10 @@ public class DefaultLlmGateway implements LlmGateway {
                 "reason", error.getReason().name(), "status", error.getStatus()));
     }
 
-    private static IllegalStateException exhausted(List<String> failures) {
-        return new IllegalStateException("No available LLM provider: " + String.join("; ", failures));
+    /** NCS-156: 类型化不可用异常——cooldown 标志供长任务重投分类读取，替代消息文本匹配 */
+    private static LlmProviderUnavailableException exhausted(List<String> failures, boolean anyCooldown) {
+        return new LlmProviderUnavailableException(
+                "No available LLM provider: " + String.join("; ", failures), anyCooldown);
     }
 
     private static void checkCancelled() {
@@ -194,6 +201,7 @@ public class DefaultLlmGateway implements LlmGateway {
 
     private void streamWithProviders(LlmRequest request, StreamHandler handler, List<String> ids) {
         List<String> failures = new ArrayList<>();
+        boolean anyCooldown = false; // NCS-156: 冷却跳过/失败进入冷却 → 瞬态标志
         String previous = null;
         LlmUnavailableException previousFailure = null;
         RequestBudgetExceededException budgetFailure = null;
@@ -206,6 +214,7 @@ public class DefaultLlmGateway implements LlmGateway {
             ProviderHealthTracker.Lease lease = health.acquire(id);
             if (lease == null) {
                 failures.add(id + ": cooling until " + health.nextAttempt(id));
+                anyCooldown = true;
                 continue;
             }
             StreamAttempt attempt = new StreamAttempt(handler);
@@ -234,6 +243,8 @@ public class DefaultLlmGateway implements LlmGateway {
                 if (attempt.failure instanceof LlmUnavailableException e) {
                     recordFailure(request, id, lease, e, index + 1, start);
                     failures.add(id + ": " + e.getReason() + ", retry at " + health.nextAttempt(id));
+                anyCooldown = true;
+                anyCooldown = true;
                     if (!attempt.emitted) {
                         previous = id; previousFailure = e;
                         continue;
@@ -251,7 +262,7 @@ public class DefaultLlmGateway implements LlmGateway {
             return;
         }
         if (budgetFailure != null) handler.onError(budgetFailure);
-        else handler.onError(exhausted(failures));
+        else handler.onError(exhausted(failures, anyCooldown));
     }
 
     /** Client callbacks are synchronous; capture terminal events until the attempt returns. */

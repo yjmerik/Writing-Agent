@@ -89,10 +89,9 @@ public class LongTaskService {
     static void resetRetryDelayMs() { retryDelayMs = 60_000L; }
     private static final int MAX_REQUEUES = 2;
 
+    /** NCS-156: 冷却分类改读类型化异常标志位，消息措辞变化不再影响重投 */
     private static boolean isProviderCooldown(Exception e) {
-        String msg = String.valueOf(e.getMessage());
-        return msg.contains("No available LLM provider")
-                && (msg.contains("cooling until") || msg.contains("retry at"));
+        return e instanceof com.writing.novel.llm.LlmProviderUnavailableException p && p.isCooldown();
     }
 
     public LongTaskService(WritingTaskExecutor writingTaskExecutor) {

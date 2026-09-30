@@ -80,6 +80,17 @@ class LlmProviderFallbackTest {
                 "超限后必须在异常中注明deadline: "+e.getMessage());
     }
 
+    /** NCS-156（review 整改）：穷尽路由抛类型化异常并携带 cooldown 瞬态标志。 */
+    @Test void exhaustedThrowsTypedExceptionWithCooldownFlag() {
+        // 全部 provider SERVER 失败 → 进入冷却 → cooldown=true
+        var p=properties();
+        var g=new DefaultLlmGateway(p,client((c,r)->{throw down();}));
+        var e=assertThrows(LlmProviderUnavailableException.class,()->g.complete(REQUEST));
+        assertTrue(e.isCooldown(), "provider 失败进入冷却属瞬态，cooldown 必须为 true");
+        assertTrue(e.getMessage().startsWith("No available LLM provider:"),
+                "消息格式保持向后兼容: "+e.getMessage());
+    }
+
     /** 时钟桩：可手动设定，供 deadline 语义测试 */
     static final class MutableClock extends java.time.Clock {
         private long millis;

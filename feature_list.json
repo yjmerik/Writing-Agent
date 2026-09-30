@@ -10181,13 +10181,20 @@
    "description": "修消息文本分类脆弱性：DefaultLlmGateway 无可用 provider 时抛 LlmProviderUnavailableException（携带 cooldown 瞬态标志），LongTaskService.isProviderCooldown 改 instanceof 判定并删除 contains 消息匹配；措辞变化不再影响重投分类",
    "phase": 54,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30T22:37:10+08:00 verified: dea6e65；先红后绿：exhaustedThrowsTypedExceptionWithCooldownFlag + 类型化冷却异常措辞无关仍重投（红）→ 网关两个循环追踪 anyCooldown、exhausted 抛类型化异常、LongTaskService instanceof+isCooldown（绿）；消息措辞无关重投 + 非冷却不重投双验证；全量 1453/0F/0E/1S",
+   "files": [
+    "src/main/java/com/writing/novel/llm/LlmProviderUnavailableException.java",
+    "src/main/java/com/writing/novel/llm/gateway/DefaultLlmGateway.java",
+    "src/main/java/com/writing/novel/service/LongTaskService.java",
+    "src/test/java/com/writing/novel/llm/LlmProviderFallbackTest.java",
+    "src/test/java/com/writing/novel/service/LongTaskRetryTest.java"
+   ],
    "spec": "docs/specs/2026-09-30-phase53-review-remediation.md",
    "acceptance": "LlmProviderFallbackTest + LongTaskRetryTest：网关抛类型化异常；用改写消息的同类型异常验证重投分类仍生效",
    "verify_cmd": "mvn test -Dtest=LlmProviderFallbackTest && mvn test -Dtest=LongTaskRetryTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-156-verified"
   },
   {
    "id": "NCS-157",

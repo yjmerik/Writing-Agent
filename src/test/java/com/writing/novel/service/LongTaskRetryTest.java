@@ -43,8 +43,9 @@ class LongTaskRetryTest {
     }
 
     private static RuntimeException cooldown() {
-        return new RuntimeException(
-                "No available LLM provider: qwen-flash-general: cooling until 2026-09-30T01:25:33Z");
+        // NCS-156: 网关真实抛出的类型化冷却异常（标志位驱动重投，消息为真实形状）
+        return new com.writing.novel.llm.LlmProviderUnavailableException(
+                "No available LLM provider: qwen-flash-general: cooling until 2026-09-30T01:25:33Z", true);
     }
 
     @Test
@@ -100,6 +101,47 @@ class LongTaskRetryTest {
             TimeUnit.MILLISECONDS.sleep(30);
         }
         throw new AssertionError("应直接 FAILED");
+    }
+
+    /** NCS-156（review 整改）：冷却分类改读类型化异常标志位——消息措辞与旧匹配串完全无关仍须重投。 */
+    @Test
+    void 类型化冷却异常措辞无关仍重投() throws Exception {
+        AtomicInteger attempts = new AtomicInteger();
+        String jobId = service.submit("p-typed", "reader-review", "读者评审", () -> {
+            if (attempts.incrementAndGet() == 1) {
+                throw new com.writing.novel.llm.LlmProviderUnavailableException(
+                        "所有候选暂不可用（措辞与旧匹配串无关）", true);
+            }
+            return "报告";
+        });
+        for (int i = 0; i < 300; i++) {
+            var st = service.get("p-typed", jobId);
+            if (st.isPresent() && "DONE".equals(st.get().status())) {
+                assertEquals(2, attempts.get(), "类型化冷却应重投一次后成功");
+                return;
+            }
+            TimeUnit.MILLISECONDS.sleep(30);
+        }
+        throw new AssertionError("类型化冷却异常应触发重投");
+    }
+
+    @Test
+    void 类型化非冷却异常不重投() throws Exception {
+        AtomicInteger attempts = new AtomicInteger();
+        String jobId = service.submit("p-typed2", "agent-revision-preview", "候选生成", () -> {
+            attempts.incrementAndGet();
+            throw new com.writing.novel.llm.LlmProviderUnavailableException(
+                    "无任何已配置 provider", false);
+        });
+        for (int i = 0; i < 200; i++) {
+            var st = service.get("p-typed2", jobId);
+            if (st.isPresent() && "FAILED".equals(st.get().status())) {
+                assertEquals(1, attempts.get(), "非冷却不可用不得重投");
+                return;
+            }
+            TimeUnit.MILLISECONDS.sleep(30);
+        }
+        throw new AssertionError("非冷却异常应直接 FAILED");
     }
 
     @Test

@@ -2962,6 +2962,17 @@
    "implementation_commit": "1c9e54557ec650cba001dc9db865accd98371599",
    "main_commit": "1c9e54557ec650cba001dc9db865accd98371599",
    "evidence": "docs/harness/evidence/2026-09-30-ncs-155-verified.json"
+  },
+  {
+   "id": "ncs-156-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-156"
+   ],
+   "branch": "codex/ncs-156-typed-provider-exception",
+   "implementation_commit": "dea6e65f0f86e50b6da55ea65c3f484eeea91077",
+   "main_commit": "dea6e65f0f86e50b6da55ea65c3f484eeea91077",
+   "evidence": "docs/harness/evidence/2026-09-30-ncs-156-verified.json"
   }
  ],
  "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",

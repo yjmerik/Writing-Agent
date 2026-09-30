@@ -3006,6 +3006,17 @@
    "implementation_commit": "9c1c4427a253003e9421772b2cb3e0415e66861e",
    "main_commit": "9c1c4427a253003e9421772b2cb3e0415e66861e",
    "evidence": "docs/harness/evidence/2026-09-30-ncs-163-verified.json"
+  },
+  {
+   "id": "ncs-158-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-158"
+   ],
+   "branch": "codex/ncs-158-defer-query-convergence",
+   "implementation_commit": "038a604f92ec54ac6f0008e941a2744599117fd9",
+   "main_commit": "038a604f92ec54ac6f0008e941a2744599117fd9",
+   "evidence": "docs/harness/evidence/2026-09-30-ncs-158-verified.json"
   }
  ],
  "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",

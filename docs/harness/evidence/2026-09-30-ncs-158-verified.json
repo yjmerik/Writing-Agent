@@ -1,0 +1,21 @@
+{
+ "verifiedAt": "2026-09-30T23:03:39+08:00",
+ "commit": "038a604f92ec54ac6f0008e941a2744599117fd9",
+ "cleanCheckout": true,
+ "branch": "codex/ncs-158-defer-query-convergence",
+ "scope": "NCS-143 查询族收敛（行为不变的 maintenance）",
+ "checks": [
+  {
+   "command": "mvn test -Dtest=ApproveWithDeferTest,ApprovalEvidenceIdentityTest",
+   "result": "16/0F/0E",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T23:03:39+08:00"
+  },
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+   "result": "结果回填合并后验证（同树 ff-merge）",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T23:03:39+08:00"
+  }
+ ]
+}

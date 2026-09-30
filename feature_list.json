@@ -10224,13 +10224,16 @@
    "description": "消除 SqliteNovelRepository 三段重复 WHERE 与手工位置绑定：count/maxDeferredUntil/描述三类查询共用一条行集 SQL，Java 端聚合；参数绑定统一走 bindDeferredHigh；行为不变",
    "phase": 54,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30T23:03:39+08:00 verified: 038a604；ApproveWithDeferTest+ApprovalEvidenceIdentityTest 16/0F/0E 行为回归锁定；全量见合并后验证",
+   "files": [
+    "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java"
+   ],
    "spec": "docs/specs/2026-09-30-phase53-review-remediation.md",
    "acceptance": "ApproveWithDeferTest + ApprovalEvidenceIdentityTest 全部通过（行为回归锁定）",
    "verify_cmd": "mvn test -Dtest=ApproveWithDeferTest && mvn test -Dtest=ApprovalEvidenceIdentityTest",
-   "type": "maintenance"
+   "type": "maintenance",
+   "completion_record": "ncs-158-verified"
   },
   {
    "id": "NCS-159",

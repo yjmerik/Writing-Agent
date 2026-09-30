@@ -9865,13 +9865,18 @@
    "dependencies": [
     "NCS-141"
    ],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30 verified: 9c096c6 (ff-merge=main); deadline 用例+全量 1412/0F/0E/1S；descoped：阶段级重试上限（调查证实阶段已 fail-fast）与 POST_PROCESS_FAILED 终态（观察到的卡死均为网关层挂钟，deadline 已消除该模式）",
+   "files": [
+    "src/main/java/com/writing/novel/llm/gateway/DefaultLlmGateway.java",
+    "src/test/java/com/writing/novel/llm/LlmProviderFallbackTest.java"
+   ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
    "acceptance": "LlmProviderFallbackTest#logicalCallDeadlineStopsTryingRemainingProviders：3 provider×40min/次 超限后停止并在异常注明；全量回归绿",
    "verify_cmd": "mvn test -Dtest=ChapterPostProcessRetryTest",
-   "type": "feature"
+   "type": "feature",
+   "branch": "codex/ncs-140-postprocess-retrycap",
+   "completion_record": "ncs-140-verified"
   },
   {
    "id": "NCS-141",

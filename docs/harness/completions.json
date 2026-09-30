@@ -2995,6 +2995,17 @@
    "implementation_commit": "ec108a23123298fc6bc23baa814f96cbd01f7700",
    "main_commit": "ec108a23123298fc6bc23baa814f96cbd01f7700",
    "evidence": "docs/harness/evidence/2026-09-30-ncs-162-verified.json"
+  },
+  {
+   "id": "ncs-163-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-163"
+   ],
+   "branch": "codex/ncs-163-inline-adjudication",
+   "implementation_commit": "9c1c4427a253003e9421772b2cb3e0415e66861e",
+   "main_commit": "9c1c4427a253003e9421772b2cb3e0415e66861e",
+   "evidence": "docs/harness/evidence/2026-09-30-ncs-163-verified.json"
   }
  ],
  "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",

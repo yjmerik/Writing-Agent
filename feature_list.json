@@ -10299,13 +10299,16 @@
    "description": "落 NCS-143 前端半边：批准被拒提示在 InteractiveReview 支持逐条 FALSE_POSITIVE/EXCEPTION/DEFER 快捷裁决提交（走既有裁决端点，无后端新端点）",
    "phase": 54,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30T22:58:30+08:00 verified: 9c1c442；npm run build 通过（tsc+vite）；被拒 Alert 挂逐条误报/例外/暂挂入口→裁决 Modal→dispositions 端点→刷新。实机走查同 NCS-155 备注：留待下次真实批准被拒场景（evidence 偏差已记录）",
+   "files": [
+    "frontend/src/components/InteractiveReview.tsx"
+   ],
    "spec": "docs/specs/2026-09-30-phase53-review-remediation.md",
    "acceptance": "前端构建通过且被拒提示卡片含逐条裁决操作（手工走查记录于 evidence）",
    "verify_cmd": "cd frontend && npm run build",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-163-verified"
   },
   {
    "id": "NCS-164",

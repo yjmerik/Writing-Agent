@@ -1,0 +1,21 @@
+{
+ "verifiedAt": "2026-09-30T22:58:30+08:00",
+ "commit": "9c1c4427a253003e9421772b2cb3e0415e66861e",
+ "cleanCheckout": true,
+ "branch": "codex/ncs-163-inline-adjudication",
+ "scope": "被拒提示内联逐条裁决入口（纯前端，走既有端点）",
+ "checks": [
+  {
+   "command": "cd frontend && npm run build",
+   "result": "✓ built in 1.57s",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T22:58:30+08:00"
+  },
+  {
+   "command": "手工走查（代码路径核对）",
+   "result": "被拒→面板→Modal→createDisposition→清提示刷新链路核对；实机走查留待真实批准被拒场景",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T22:58:30+08:00"
+  }
+ ]
+}

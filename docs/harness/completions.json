@@ -3017,6 +3017,17 @@
    "implementation_commit": "038a604f92ec54ac6f0008e941a2744599117fd9",
    "main_commit": "038a604f92ec54ac6f0008e941a2744599117fd9",
    "evidence": "docs/harness/evidence/2026-09-30-ncs-158-verified.json"
+  },
+  {
+   "id": "ncs-159-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-159"
+   ],
+   "branch": "codex/ncs-159-silent-catch-logging",
+   "implementation_commit": "45d989b7bed44b7894f3d484ff97d0152e68bf1c",
+   "main_commit": "45d989b7bed44b7894f3d484ff97d0152e68bf1c",
+   "evidence": "docs/harness/evidence/2026-09-30-ncs-159-verified.json"
   }
  ],
  "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",

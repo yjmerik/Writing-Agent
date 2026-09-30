@@ -10241,13 +10241,18 @@
    "description": "NovelOrchestrator 卷小结 catch(Exception ignored) 记 debug、ReviewClassificationService 裁决查询失败记 warn（降级行为保留），ListAppender 断言日志出现",
    "phase": 54,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30T23:12:57+08:00 verified: 45d989b；先红后绿 SilentCatchLoggingTest 2 例（ListAppender 断言两处日志出现、主流程/降级行为不变）；全量见合并后验证",
+   "files": [
+    "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+    "src/main/java/com/writing/novel/service/ReviewClassificationService.java",
+    "src/test/java/com/writing/novel/orchestrator/SilentCatchLoggingTest.java"
+   ],
    "spec": "docs/specs/2026-09-30-phase53-review-remediation.md",
    "acceptance": "SilentCatchLoggingTest：注入失败后主流程返回不变且两条日志均出现",
    "verify_cmd": "mvn test -Dtest=SilentCatchLoggingTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-159-verified"
   },
   {
    "id": "NCS-160",

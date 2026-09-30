@@ -1,0 +1,21 @@
+{
+ "verifiedAt": "2026-09-30T23:12:57+08:00",
+ "commit": "45d989b7bed44b7894f3d484ff97d0152e68bf1c",
+ "cleanCheckout": true,
+ "branch": "codex/ncs-159-silent-catch-logging",
+ "scope": "静默吞异常治理（bugfix gate：先红后绿）",
+ "checks": [
+  {
+   "command": "mvn test -Dtest=SilentCatchLoggingTest",
+   "result": "2/0F/0E",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T23:12:57+08:00"
+  },
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+   "result": "结果回填合并后验证（同树 ff-merge）",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T23:12:57+08:00"
+  }
+ ]
+}

@@ -19,10 +19,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * NCS-144（旅程三 F-2，NCS-090 续）：框架审阅「修改意见」点名既有卡时必须定向修订该卡——
- * 旅程实测：意见明确要求"合并殷素更/裴无秤、骨更去记账腔"，执行后原 8 卡逐字未变，
- * 系统只补了大纲新配角卡。本特性：instructions 精确点名既有卡姓名 → 该卡原地修订
- * （保留原卡 id 与姓名，仅按作者要求更新内容）；未点名卡逐字不变。
+ * NCS-144（旅程三 F-2）+ NCS-154（review 整改）：框架审阅「修改意见」点名既有卡时，
+ * 生成该卡的修订预览（逐字段 diff）等待作者确认——确认前库中零变动（NCS-144 实现曾
+ * design 后直接落库、绕过作者批准制，NCS-154 修正）；未点名卡全程逐字不变。
  */
 class ReviseNamedCharacterTest {
 
@@ -101,40 +100,82 @@ class ReviseNamedCharacterTest {
     }
 
     @Test
-    void 点名既有卡被原地修订_未点名卡逐字不变() {
+    void 点名既有卡生成待确认预览_确认前库中零变动() {
         var result = orchestrator.reviseCheckpoint(pid, checkpoint,
                 "人物修订：沈铁衣去掉守时如命的强迫感，改为寡言而烈");
 
+        // NCS-154 核心断言：修订不再自动落库
+        Character inRepo = repo.findCharactersByProject(pid).stream()
+                .filter(c -> c.getName().equals("沈铁衣")).findFirst().orElseThrow();
+        assertEquals("旧性格：守时如命", inRepo.getPersonality(),
+                "作者确认前，点名卡必须保持原值（批准制）");
+
+        // 预览随修订结果返回，含逐字段 diff
+        assertNotNull(result.characterRevisions(), "修订结果应携带待确认人物卡预览");
+        assertEquals(1, result.characterRevisions().size());
+        var card = result.characterRevisions().get(0);
+        assertEquals(shen.getId(), card.characterId());
+        assertTrue(card.changes().stream().anyMatch(ch ->
+                        "personality".equals(ch.field()) && ch.after().contains("寡言而烈")),
+                "diff 应含 personality 变更: " + card.changes());
+        assertTrue(result.afterSummary().contains("待作者确认"), "摘要应说明待确认状态");
+    }
+
+    @Test
+    void 确认后按原卡id落库() {
+        orchestrator.reviseCheckpoint(pid, checkpoint,
+                "人物修订：沈铁衣去掉守时如命的强迫感，改为寡言而烈");
+        String previewId = orchestrator.characterRevisionPreviews().find(pid).orElseThrow().previewId();
+
+        orchestrator.characterRevisionPreviews().confirm(pid, previewId);
         Character revised = repo.findCharactersByProject(pid).stream()
                 .filter(c -> c.getName().equals("沈铁衣")).findFirst().orElseThrow();
         assertEquals(shen.getId(), revised.getId(), "必须原地修订（同 id），不得另立新卡");
         assertTrue(String.valueOf(revised.getPersonality()).contains("寡言而烈"),
-                "点名卡内容应被修订: " + revised.getPersonality());
-
+                "确认后点名卡内容生效: " + revised.getPersonality());
         Character untouched = repo.findCharactersByProject(pid).stream()
                 .filter(c -> c.getName().equals("蒲慎川")).findFirst().orElseThrow();
-        assertEquals(pu.getPersonality(), untouched.getPersonality(),
-                "意见未点名蒲慎川，必须逐字不变");
-        assertTrue(result.afterSummary().contains("沈铁衣"), "修订摘要应点名已修订卡");
+        assertEquals("旧性格：谨慎过人", untouched.getPersonality(), "未点名卡逐字不变");
+        // 确认后预览清空；同候选再次修订无 diff，不再产生预览（幂等）
+        assertTrue(orchestrator.characterRevisionPreviews().find(pid).isEmpty());
+    }
+
+    @Test
+    void 放弃则库中不变且预览清空() {
+        orchestrator.reviseCheckpoint(pid, checkpoint,
+                "人物修订：沈铁衣去掉守时如命的强迫感，改为寡言而烈");
+        String previewId = orchestrator.characterRevisionPreviews().find(pid).orElseThrow().previewId();
+
+        orchestrator.characterRevisionPreviews().discard(pid, previewId);
+        Character afterDiscard = repo.findCharactersByProject(pid).stream()
+                .filter(c -> c.getName().equals("沈铁衣")).findFirst().orElseThrow();
+        assertEquals("旧性格：守时如命", afterDiscard.getPersonality(),
+                "放弃后点名卡保持原值");
+        assertTrue(orchestrator.characterRevisionPreviews().find(pid).isEmpty(), "放弃后预览清空");
     }
 
     @Test
     void 未点名卡零变动_点名单独成立() {
         var result = orchestrator.reviseCheckpoint(pid, checkpoint,
                 "人物修订：只改沈铁衣的性格，其余人物一律不动");
+        var previewCards = result.characterRevisions() == null
+                ? java.util.Collections.<com.writing.novel.service.CharacterRevisionPreviewService.CardRevision>emptyList()
+                : result.characterRevisions();
+        assertTrue(previewCards.stream().allMatch(c -> c.characterId().equals(shen.getId())),
+                "预览只含点名卡");
         Character untouched = repo.findCharactersByProject(pid).stream()
                 .filter(c -> c.getName().equals("蒲慎川")).findFirst().orElseThrow();
-        assertEquals("旧性格：谨慎过人", untouched.getPersonality(),
-                "未点名卡必须逐字不变");
+        assertEquals("旧性格：谨慎过人", untouched.getPersonality(), "未点名卡必须逐字不变");
     }
 
     @Test
     void 不点名任何既有卡时不触发修订调用() {
         var before = repo.findCharactersByProject(pid).stream()
                 .map(c -> c.getName() + ":" + c.getPersonality()).toList();
-        orchestrator.reviseCheckpoint(pid, checkpoint, "世界观增加河工号子的设定");
+        var result = orchestrator.reviseCheckpoint(pid, checkpoint, "世界观增加河工号子的设定");
         var after = repo.findCharactersByProject(pid).stream()
                 .map(c -> c.getName() + ":" + c.getPersonality()).toList();
         assertEquals(before, after, "未点名时人物层零变动");
+        assertNull(result.characterRevisions(), "未点名时无人物卡预览");
     }
 }

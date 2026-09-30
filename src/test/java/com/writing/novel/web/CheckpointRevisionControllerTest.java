@@ -176,6 +176,6 @@ class CheckpointRevisionControllerTest {
 
     private NovelOrchestrator.CheckpointRevisionResult revision() {
         return new NovelOrchestrator.CheckpointRevisionResult(
-                "VOLUME_OUTLINE", "before", "after", 1, 2);
+                "VOLUME_OUTLINE", "before", "after", 1, 2, null);
     }
 }

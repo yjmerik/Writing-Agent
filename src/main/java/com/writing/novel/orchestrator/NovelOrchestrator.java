@@ -37,6 +37,8 @@ public class NovelOrchestrator {
             });
 
     private final NovelRepository repository;
+    /** NCS-154: 人物卡修订预览-确认链（内存态；web 层经访问器使用同一实例） */
+    private final com.writing.novel.service.CharacterRevisionPreviewService characterRevisionPreviews;
     private final ProjectService projectService;
     private final WorldBuilderAgent worldBuilder;
     private final CharacterDesignerAgent characterDesigner;
@@ -157,6 +159,11 @@ public class NovelOrchestrator {
         }
     }
 
+    /** NCS-154: 人物卡修订预览-确认链访问器（web 层 confirm/discard 入口） */
+    public com.writing.novel.service.CharacterRevisionPreviewService characterRevisionPreviews() {
+        return characterRevisionPreviews;
+    }
+
     public NovelOrchestrator(NovelRepository repository,
                               ProjectService projectService,
                               WorldBuilderAgent worldBuilder,
@@ -194,6 +201,7 @@ public class NovelOrchestrator {
                               com.writing.novel.service.ExpositionDetector expositionDetector,
                               OrchestratorPolicies policies) {
         this.repository = repository;
+        this.characterRevisionPreviews = new com.writing.novel.service.CharacterRevisionPreviewService(repository);
         this.projectService = projectService;
         this.worldBuilder = worldBuilder;
         this.characterDesigner = characterDesigner;
@@ -837,9 +845,11 @@ public class NovelOrchestrator {
         repository.saveProject(p);
     }
 
-    /** Result returned to checkpoint review clients after the target content has been replaced. */
+    /** Result returned to checkpoint review clients after the target content has been replaced.
+     *  NCS-154: characterRevisions 携带点名卡的待确认修订预览（无则 null）。 */
     public record CheckpointRevisionResult(String targetType, String beforeSummary, String afterSummary,
-                                           int beforeVersion, int afterVersion) {}
+                                           int beforeVersion, int afterVersion,
+                                           List<com.writing.novel.service.CharacterRevisionPreviewService.CardRevision> characterRevisions) {}
 
     /**
      * Route a pending checkpoint to its real revision target. This method deliberately does not
@@ -882,9 +892,10 @@ public class NovelOrchestrator {
         boolean characterIntent = instructions != null
                 && (instructions.contains("人物") || instructions.contains("配角")
                     || instructions.contains("角色"));
-        // NCS-144：意见点名既有卡 → 定向原地修订（保留 id/姓名）；与补卡同步并行
-        String namedSync = characterIntent
-                ? reviseNamedExistingCharacters(projectId, instructions) : "";
+        // NCS-144：意见点名既有卡 → 定向修订预览（NCS-154：不再直接落库，待作者确认）；与补卡同步并行
+        com.writing.novel.service.CharacterRevisionPreviewService.PendingRevisions namedRevisions =
+                characterIntent ? reviseNamedExistingCharacters(projectId, instructions) : null;
+        String namedSync = namedRevisions == null ? "" : namedRevisionSummary(namedRevisions);
         String characterSync = characterIntent
                 ? syncCharactersFromOutline(projectId, instructions) : "";
         if (!namedSync.isBlank()) {
@@ -903,7 +914,8 @@ public class NovelOrchestrator {
         if (contextAssembler != null) contextAssembler.invalidateProject(projectId);
         String afterFull = (worldChanged ? after : before)
                 + (characterSync.isBlank() ? "" : "\n【人物层同步】" + characterSync);
-        return revisionResult("INITIAL_SETUP", before, afterFull);
+        return revisionResult("INITIAL_SETUP", before, afterFull,
+                namedRevisions == null ? null : namedRevisions.cards());
     }
 
     /**
@@ -913,56 +925,58 @@ public class NovelOrchestrator {
      * 单个补卡失败不回滚整体，逐条记录并继续。
      */
     /**
-     * NCS-144（旅程三 F-2，NCS-090 续）：修改意见点名既有卡 → 定向原地修订。
+     * NCS-144（旅程三 F-2，NCS-090 续）：修改意见点名既有卡 → 定向修订。
      * 旅程实测：意见要求"合并殷素更/裴无秤、骨更去记账腔"，执行后原卡逐字未变。
      * 语义：意见文本包含既有卡姓名（2-8 字）即视为点名该卡；design 出候选卡后
-     * 保留原卡 id/姓名落库（saveCharacter 按 id upsert），未点名卡零变动。
+     * 阶段化为待确认预览（NCS-154：作者确认前不落库），未点名卡零变动。
+     * 返回 null = 未点名或候选全部无效。
      */
-    private String reviseNamedExistingCharacters(String projectId, String instructions) {
-        if (characterDesigner == null) return "";
+    private com.writing.novel.service.CharacterRevisionPreviewService.PendingRevisions
+            reviseNamedExistingCharacters(String projectId, String instructions) {
+        if (characterDesigner == null) return null;
         List<com.writing.novel.domain.Character> existing =
                 repository.findCharactersByProject(projectId);
         List<com.writing.novel.domain.Character> named = existing.stream()
                 .filter(c -> c.getName() != null && c.getName().length() >= 2
                         && c.getName().length() <= 8 && instructions.contains(c.getName()))
                 .toList();
-        if (named.isEmpty()) return "";
-        StringBuilder summary = new StringBuilder();
+        if (named.isEmpty()) return null;
+        List<com.writing.novel.domain.Character> originals = new java.util.ArrayList<>();
+        List<com.writing.novel.domain.Character> candidates = new java.util.ArrayList<>();
         for (com.writing.novel.domain.Character original : named) {
             try {
                 String requirement = "修订人物卡：" + original.getName()
-                        + "。原卡设定：" + describeCard(original)
+                        + "。原卡设定：" + com.writing.novel.service.CharacterRevisionPreviewService
+                                .describeCard(original)
                         + "。作者要求：" + instructions
                         + "。保持姓名「" + original.getName() + "」与主线定位不变，仅按作者要求修订对应字段。";
                 com.writing.novel.domain.Character candidate =
                         characterDesigner.design(projectId, requirement, existing);
                 if (candidate == null) continue;
-                // 原地修订：候选字段拷回原卡对象（保留 id/姓名/项目绑定，saveCharacter 按 id upsert）；
-                // 候选为空的字段保留原值，不因模型漏输出而清空既有设定
-                copyIfPresent(candidate.getRole(), original::setRole);
-                copyIfPresent(candidate.getPersonality(), original::setPersonality);
-                copyIfPresent(candidate.getAbility(), original::setAbility);
-                copyIfPresent(candidate.getMotivation(), original::setMotivation);
-                copyIfPresent(candidate.getAppearance(), original::setAppearance);
-                copyIfPresent(candidate.getRelationships(), original::setRelationships);
-                copyIfPresent(candidate.getGrowthArc(), original::setGrowthArc);
-                copyIfPresent(candidate.getSpeakingStyle(), original::setSpeakingStyle);
-                repository.saveCharacter(original);
-                summary.append("已按作者要求修订人物卡「").append(original.getName()).append("」。");
+                originals.add(original);
+                candidates.add(candidate);
             } catch (Exception e) {
                 log.warn("人物卡修订失败({}): {}", original.getName(), e.getMessage());
             }
         }
-        return summary.toString();
+        if (originals.isEmpty()) return null;
+        try {
+            return characterRevisionPreviews.stage(projectId, originals, candidates);
+        } catch (IllegalStateException e) {
+            // 候选与原卡逐字段相同：无有效变化，视同未点名
+            return null;
+        }
     }
 
-    private static void copyIfPresent(String value, java.util.function.Consumer<String> setter) {
-        if (value != null && !value.isBlank()) setter.accept(value);
-    }
-
-    private static String describeCard(com.writing.novel.domain.Character c) {
-        return "定位:" + c.getRole() + ";性格:" + c.getPersonality() + ";能力:" + c.getAbility()
-                + ";动机:" + c.getMotivation() + ";外貌:" + c.getAppearance();
+    /** NCS-154：点名卡预览的摘要文案（进入人物层同步拼接与 afterSummary） */
+    private static String namedRevisionSummary(
+            com.writing.novel.service.CharacterRevisionPreviewService.PendingRevisions revisions) {
+        String names = revisions.cards().stream()
+                .map(com.writing.novel.service.CharacterRevisionPreviewService.CardRevision::name)
+                .collect(java.util.stream.Collectors.joining("、"));
+        int fieldCount = revisions.cards().stream()
+                .mapToInt(c -> c.changes().size()).sum();
+        return "已为人物卡「" + names + "」生成修订预览（" + fieldCount + " 处字段变化），待作者确认后生效";
     }
 
     private String syncCharactersFromOutline(String projectId, String instructions) {
@@ -1113,7 +1127,7 @@ public class NovelOrchestrator {
             }
             String after = outline.getVolumes().contains(target) ? canonicalVolume(target) : "（卷已移除）";
             return new CheckpointRevisionResult("VOLUME_OUTLINE", displaySummary(before),
-                    displaySummary(after), contentVersion(before), contentVersion(before) + 1);
+                    displaySummary(after), contentVersion(before), contentVersion(before) + 1, null);
         }
         validateVolumeCandidate(target, candidate, project.getCurrentChapterIndex());
 
@@ -1143,7 +1157,7 @@ public class NovelOrchestrator {
             throw new IllegalStateException("章节改写未产生有效变化");
         }
         return new CheckpointRevisionResult("CHAPTER", displaySummary(before), displaySummary(after),
-                beforeVersion, afterChapter.getVersion());
+                beforeVersion, afterChapter.getVersion(), null);
     }
 
     private Volume findCheckpointVolume(Outline outline, Checkpoint checkpoint, int writtenBoundary) {
@@ -1201,8 +1215,14 @@ public class NovelOrchestrator {
     }
 
     private CheckpointRevisionResult revisionResult(String targetType, String before, String after) {
+        return revisionResult(targetType, before, after, null);
+    }
+
+    /** NCS-154: 带 待确认人物卡预览 的修订结果 */
+    private CheckpointRevisionResult revisionResult(String targetType, String before, String after,
+            List<com.writing.novel.service.CharacterRevisionPreviewService.CardRevision> characterRevisions) {
         return new CheckpointRevisionResult(targetType, displaySummary(before), displaySummary(after),
-                contentVersion(before), contentVersion(after));
+                contentVersion(before), contentVersion(after), characterRevisions);
     }
 
     private String canonicalWorld(List<KnowledgeEntry> entries) {

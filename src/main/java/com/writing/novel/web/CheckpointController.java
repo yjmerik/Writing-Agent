@@ -139,6 +139,42 @@ public class CheckpointController {
         };
     }
 
+    // ===== NCS-154: 人物卡修订预览-确认链（确认前不落库） =====
+
+    /** 当前待确认的人物卡修订预览（无则空 cards） */
+    @GetMapping("/character-revisions")
+    public Map<String, Object> pendingCharacterRevisions(@PathVariable String id) {
+        requireProject(id);
+        return orchestrator.characterRevisionPreviews().find(id)
+                .<Map<String, Object>>map(p -> Map.of(
+                        "previewId", p.previewId(), "cards", p.cards()))
+                .orElseGet(() -> Map.of("cards", List.of()));
+    }
+
+    /** 确认：合并卡按原卡 id 落库，清空预览 */
+    @PostMapping("/character-revisions/{previewId}/confirm")
+    public Map<String, Object> confirmCharacterRevisions(@PathVariable String id,
+                                                         @PathVariable String previewId) {
+        requireProject(id);
+        String summary = orchestrator.characterRevisionPreviews().confirm(id, previewId);
+        return Map.of("applied", true, "summary", summary);
+    }
+
+    /** 放弃：清空预览，库中零变动 */
+    @PostMapping("/character-revisions/{previewId}/discard")
+    public Map<String, Object> discardCharacterRevisions(@PathVariable String id,
+                                                         @PathVariable String previewId) {
+        requireProject(id);
+        orchestrator.characterRevisionPreviews().discard(id, previewId);
+        return Map.of("applied", false);
+    }
+
+    private void requireProject(String projectId) {
+        if (repository.findProject(projectId).isEmpty()) {
+            throw new IllegalArgumentException("项目不存在: " + projectId);
+        }
+    }
+
     private <T> T withRevisionWork(String projectId, java.util.function.Supplier<T> work) {
         // NCS-091: checkpoint 修订（重写初始设定/卷计划/章节）的 LLM 调用携带 projectId
         com.writing.novel.telemetry.EventContext.setProjectId(projectId);

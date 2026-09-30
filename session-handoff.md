@@ -14,6 +14,13 @@ ReaderReviewCard 重试横幅；162 模型库保存探测门禁（force 逃生�
 161 桥段章号整数比较。164 登记：10 处 verify_cmd 修正、13 条台账补建、
 ncs-070 记录修复、scripts/check-verify-cmds.py 防再发。
 
+## Files
+
+- 11 个 feature 分支（codex/ncs-154..164-*）各自 ff-merge 进 main；
+  台账 docs/harness/completions.json + evidence 2026-09-30-ncs-1xx-verified.json
+- 新文件：CharacterRevisionPreviewService、LlmProviderUnavailableException、
+  ModelCandidateMerger、scripts/check-verify-cmds.py、前端 3 处组件改动
+
 ## 环境注意
 
 - mvn test 必须 `bash -c 'source scripts/load-env.sh && mvn test ...'`

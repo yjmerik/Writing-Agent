@@ -217,6 +217,15 @@ export interface CheckpointPayload {
   worldSummary?: string;
   characterSummary?: string;
   premiseSummary?: string;
+  volumeSummary?: {
+    volumeIndex: number;
+    volumeTitle: string;
+    firstChapter: number;
+    lastChapter: number;
+    totalWords: number;
+    foreshadowPlanted: number;
+    foreshadowResolved: number;
+  };
   links?: Array<{
     label: string;
     target: 'world' | 'outline';

@@ -717,6 +717,14 @@ public class NovelOrchestrator {
             m.put("title", chapter.getTitle() != null ? chapter.getTitle() : "");
             m.put("wordCount", chapter.getWordCount() > 0 ? chapter.getWordCount() : content.length());
             m.put("preview", preview);
+            // NCS-151（旅程三 O-5）：卷末章携带卷小结，作者在检查点即见"第 N 卷完"
+            try {
+                repository.findOutlineByProject(projectId).ifPresent(outline ->
+                        VolumeBoundarySupport.appendSummaryIfVolumeEnd(repository, outline,
+                                chapter.getChapterIndex(), m));
+            } catch (Exception ignored) {
+                // 卷小结失败不影响检查点主流程
+            }
             return m.toString();
         } catch (Exception e) {
             return null;

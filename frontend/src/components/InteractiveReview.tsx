@@ -1083,6 +1083,15 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
               )}
               {payload && (
                 <div style={{ marginBottom: 8, fontSize: 13 }}>
+                  {payload.volumeSummary && (
+                    <Alert
+                      type="success"
+                      showIcon
+                      style={{ marginBottom: 8 }}
+                      message={`🎉 第 ${payload.volumeSummary.volumeIndex} 卷《${payload.volumeSummary.volumeTitle}》完`}
+                      description={`第 ${payload.volumeSummary.firstChapter}-${payload.volumeSummary.lastChapter} 章 · 共 ${payload.volumeSummary.totalWords.toLocaleString()} 字 · 本卷埋设伏笔 ${payload.volumeSummary.foreshadowPlanted} 条 / 回收 ${payload.volumeSummary.foreshadowResolved} 条`}
+                    />
+                  )}
                   {payload.score != null && (
                     <span style={{ marginRight: 12 }}>
                       读者评分：<b style={{ color: payload.score >= 8 ? '#52c41a' : payload.score >= 7 ? '#faad14' : '#ff4d4f' }}>{payload.score}/10</b>

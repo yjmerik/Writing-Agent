@@ -52,21 +52,11 @@ public class PlotMotifTracker {
         List<String> motifs = extractMotifs(chapterContent);
         if (motifs.isEmpty()) return issues;
 
-        // 2. 记录到 GenerationLog（使用 CHAPTER_MOTIF 类型）
-        String motifJson = motifs.stream().reduce((a, b) -> a + ";" + b).orElse("");
-        try {
-            repository.saveGenerationLog(new GenerationLog(
-                    projectId, "CHAPTER_MOTIF",
-                    "第" + chapterIndex + "章桥段：" + motifJson,
-                    "[" + motifs.stream().map(m -> "\"" + m + "\"")
-                            .reduce((a, b) -> a + "," + b).orElse("") + "]",
-                    0));
-        } catch (Exception ignored) {}
-
-        // 3. 查询最近 N 章的桥段标签
+        // 2. NCS-149（旅程三 O-4）：先比对后入库——此前本章记录先落库再参与
+        //    "最近8章"比对，当前章永远与自身重复（第 2 章即报 3 条假重复）。
         Set<String> recentMotifs = collectRecentMotifs(projectId, chapterIndex);
 
-        // 4. 检测重复
+        // 3. 检测重复
         for (String motif : motifs) {
             if (recentMotifs.contains(motif)) {
                 issues.add(new ContinuityIssue(projectId, chapterIndex,
@@ -76,6 +66,17 @@ public class PlotMotifTracker {
                         "章内已使用过。建议改用不同的叙事手法或场景类型。"));
             }
         }
+
+        // 4. 检测完成后记录到 GenerationLog（供后续章比对）
+        String motifJson = motifs.stream().reduce((a, b) -> a + ";" + b).orElse("");
+        try {
+            repository.saveGenerationLog(new GenerationLog(
+                    projectId, "CHAPTER_MOTIF",
+                    "第" + chapterIndex + "章桥段：" + motifJson,
+                    "[" + motifs.stream().map(m -> "\"" + m + "\"")
+                            .reduce((a, b) -> a + "," + b).orElse("") + "]",
+                    0));
+        } catch (Exception ignored) {}
 
         return issues;
     }
@@ -130,8 +131,15 @@ public class PlotMotifTracker {
     private Set<String> collectRecentMotifs(String projectId, int currentChapter) {
         Set<String> motifs = new HashSet<>();
         try {
-            var logs = repository.findRecentGenerationLogs(projectId, "CHAPTER_MOTIF", RECENT_WINDOW);
+            // NCS-149：多取几条再过滤——排除当前章自身的历史记录（同章重跑场景），
+            // 防止"上一轮自己"被当作重复来源
+            var logs = repository.findRecentGenerationLogs(projectId, "CHAPTER_MOTIF",
+                    RECENT_WINDOW + 4);
             for (var log : logs) {
+                if (log.getSummary() != null
+                        && log.getSummary().startsWith("第" + currentChapter + "章桥段")) {
+                    continue;
+                }
                 String keys = log.getKeyElements();
                 if (keys != null && !keys.equals("[]")) {
                     // 解析 JSON 数组

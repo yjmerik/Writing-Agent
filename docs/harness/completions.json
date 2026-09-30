@@ -3039,6 +3039,17 @@
    "implementation_commit": "b6dc070562e89139728d03a2fcd96cba79e711f9",
    "main_commit": "b6dc070562e89139728d03a2fcd96cba79e711f9",
    "evidence": "docs/harness/evidence/2026-09-30-ncs-160-verified.json"
+  },
+  {
+   "id": "ncs-161-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-161"
+   ],
+   "branch": "codex/ncs-161-motif-chapter-parse",
+   "implementation_commit": "d15244b1c2af92fe1869e0bd04d390335c9043c6",
+   "main_commit": "d15244b1c2af92fe1869e0bd04d390335c9043c6",
+   "evidence": "docs/harness/evidence/2026-09-30-ncs-161-verified.json"
   }
  ],
  "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",

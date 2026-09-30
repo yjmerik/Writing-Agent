@@ -1,0 +1,33 @@
+{
+ "verifiedAt": "2026-09-30T23:33:26+08:00",
+ "commit": "d15244b1c2af92fe1869e0bd04d390335c9043c6",
+ "cleanCheckout": true,
+ "branch": "codex/ncs-161-motif-chapter-parse",
+ "scope": "桥段记录章号显式解析（bugfix gate：先红后绿；影响注入上下文故带 e2e 对照）",
+ "checks": [
+  {
+   "command": "mvn test -Dtest=PlotMotifScopeTest",
+   "result": "4/0F/0E（含第02章变体排除 + 第12章异章检出）",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T23:33:26+08:00"
+  },
+  {
+   "command": "E2E_FIXTURE_DIR=data/e2e-fixtures/mystery-20260930 ./scripts/e2e.sh --mode replay",
+   "result": "产出与干净 main 基线逐字节一致（ch1 v2 3288字 sha=b8742f985e1f8b1f）= 零分叉；acceptance-full 屏障失败与 main 行为一致（语料稳态）",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T23:33:26+08:00"
+  },
+  {
+   "command": "python3 scripts/compare-baseline.py",
+   "result": "PASS — 质量未退化",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T23:33:26+08:00"
+  },
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+   "result": "结果回填合并后验证（同树 ff-merge）",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T23:33:26+08:00"
+  }
+ ]
+}

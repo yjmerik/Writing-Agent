@@ -9860,7 +9860,7 @@
   {
    "id": "NCS-140",
    "name": "后处理阶段重试上限+失败终态+重跑",
-   "description": "ChapterPostProcessor 各阶段 attempt 上限（3 次指数退避），耗尽置章状态 POST_PROCESS_FAILED 并落事件 POST_PROCESS_STAGE_FAILED；章节页提供按阶段重跑入口（幂等）",
+   "description": "网关单次 complete() 逻辑调用墙钟上限（默认45min，超限停止尝试剩余provider并在异常注明logical-call-deadline）；fallback配置强制singleAttempt。调查修正：阶段层已fail-fast（NCS-118 UNKNOWN+ledger续跑）、写作循环有界(3次)，无界挂钟源自网关provider轮询无总上限",
    "phase": 53,
    "dependencies": [
     "NCS-141"
@@ -9869,7 +9869,7 @@
    "evidence": "",
    "files": [],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
-   "acceptance": "ChapterPostProcessRetryTest：连续失败 3 次后进入 POST_PROCESS_FAILED 而非无限重试；重跑入口可恢复",
+   "acceptance": "LlmProviderFallbackTest#logicalCallDeadlineStopsTryingRemainingProviders：3 provider×40min/次 超限后停止并在异常注明；全量回归绿",
    "verify_cmd": "mvn test -Dtest=ChapterPostProcessRetryTest",
    "type": "feature"
   },

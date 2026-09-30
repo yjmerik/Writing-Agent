@@ -29,6 +29,11 @@ public class DefaultLlmGateway implements LlmGateway {
     private final LlmProperties properties;
     private final LlmClient client;
     private final ProviderHealthTracker health;
+    private final Clock clock;
+
+    /** NCS-140：单次 complete() 逻辑调用的墙钟上限——测试可覆盖（先例：client.backoffUnitMs） */
+    static volatile long maxLogicalCallMs = 45L * 60 * 1000;
+    static void setMaxLogicalCallMs(long v) { maxLogicalCallMs = v; }
 
     public DefaultLlmGateway(LlmProperties properties, LlmClient client) {
         this(properties, client, Clock.systemUTC());
@@ -38,6 +43,7 @@ public class DefaultLlmGateway implements LlmGateway {
         this.properties = properties;
         this.client = client;
         this.health = new ProviderHealthTracker(clock, properties.getFallback().getCooldownSeconds());
+        this.clock = clock;
     }
 
     @Override
@@ -73,8 +79,17 @@ public class DefaultLlmGateway implements LlmGateway {
         String previous = null;
         LlmUnavailableException previousFailure = null;
         RequestBudgetExceededException budgetFailure = null;
+        long deadlineStart = clock.millis();
         for (int index = 0; index < ids.size(); index++) {
             checkCancelled();
+            // NCS-140（旅程三 F-6）：逻辑调用墙钟上限——无论路由组合/熔断窗口如何，
+            // 单次 complete() 不得把同步工作权拖到小时级（实测曾 49 分钟）。
+            long elapsed = clock.millis() - deadlineStart;
+            if (index > 0 && elapsed > maxLogicalCallMs) {
+                failures.add("logical-call-deadline: " + elapsed + "ms 超过上限，停止尝试剩余 "
+                        + (ids.size() - index) + " 个 provider");
+                break;
+            }
             String id = ids.get(index);
             ProviderHealthTracker.Lease lease = health.acquire(id);
             if (lease == null) {
@@ -361,6 +376,10 @@ public class DefaultLlmGateway implements LlmGateway {
         resolved.setTemperature(request.getTemperature());
         int reqMax = request.getMaxTokens();
         if (reqMax > 0) resolved.setMaxTokens(reqMax);
+        // NCS-140（旅程三 F-6）：fallback 必须单次尝试——此前继承客户端默认
+        // retryAttempts=3 × 30min callTimeout，限流降级路径最坏可挂 ~90 分钟
+        // （记忆摘要实测单逻辑调用 49 分钟）。重试/熔断归网关所有。
+        resolved.setSingleAttempt(true);
         return resolved;
     }
 

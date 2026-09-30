@@ -62,6 +62,33 @@ class LlmProviderFallbackTest {
             assertFalse(c.isSingleAttempt());return new LlmResponse("ok",0,0);
         }));g.complete(REQUEST);
     }
+    /** NCS-140（旅程三 F-6）：单次 complete() 逻辑调用有墙钟上限——
+     *  超限后停止尝试剩余 provider（实测曾单逻辑调用挂 49 分钟拖住整个项目工作权）。 */
+    @Test void logicalCallDeadlineStopsTryingRemainingProviders() {
+        var p=properties();
+        p.getRouting().setDefaultProviders(List.of("a","b","c"));
+        p.getProviders().put("c",p.getProviders().get("b"));
+        var clock=new MutableClock();
+        long[] base={0L};
+        var g=new DefaultLlmGateway(p,client((c,r)->{
+            base[0]+=40L*60*1000; // 每次尝试消耗 40 分钟
+            clock.set(base[0]);
+            throw down();
+        }),clock);
+        var e=assertThrows(RuntimeException.class,()->g.complete(REQUEST));
+        assertTrue(e.getMessage().contains("logical-call-deadline"),
+                "超限后必须在异常中注明deadline: "+e.getMessage());
+    }
+
+    /** 时钟桩：可手动设定，供 deadline 语义测试 */
+    static final class MutableClock extends java.time.Clock {
+        private long millis;
+        void set(long ms) { millis = ms; }
+        @Override public long millis() { return millis; }
+        @Override public java.time.ZoneId getZone() { return java.time.ZoneOffset.UTC; }
+        @Override public java.time.Clock withZone(java.time.ZoneId zone) { return this; }
+        @Override public java.time.Instant instant() { return java.time.Instant.ofEpochMilli(millis); }
+    }
     @Test void requestAndPolicyAndCancellationFailuresDoNotTryBackupOrPoisonHealth() {
         for(RuntimeException failure:List.of(new IllegalArgumentException("invalid"),new ContentFilterException("filtered"),new CancellationException("cancel"),new IllegalStateException("bug"))) {
             var attempts=new ArrayList<String>();var g=new DefaultLlmGateway(properties(),client((c,r)->{attempts.add(c.getModel());throw failure;}));

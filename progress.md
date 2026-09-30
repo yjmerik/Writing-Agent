@@ -1,32 +1,33 @@
-# 旅程三修复批次（NCS-139..153）— 2026-09-30
+# Phase-53 Review 整改登记 — 2026-09-30
 
 Last Updated: 2026-09-30
 
 ## Current
 
-phase 53 全部 11 项完成并合入 main：139/140/141/142/143/144/145/146/147/
-148/149/150/151（含 NCS-150 大纲自由规划——plotting 软参考+进度分母=规划
-章数，语料 mystery-20260930 重录、replay×2 确定性、bless 后 PASS；
-NCS-144 定向修卡；NCS-147 偏好吞错修复+F-5 复盘为自动化误点）。
-剩余 backlog：152 人物多样性 / 153 场景锚点（各自独立 e2e）。
-
-18095 实例已换新包重启（去代理），《剑冢守夜人》推进至第 10 章检查点。
+对 phase-53 批次（face356...HEAD，11 features）完成 Standards/Spec 双轴 review，
+发现 1 个语义相反（NCS-144 绕过批准制）、1 个承诺状态未实现（NCS-145
+FAILED_RETRYABLE）、6 个失效 verify_cmd、2 个需求半成品（NCS-142 拒存 /
+NCS-143 内联裁决）及若干代码卫生问题。整改方案已落 spec
+（docs/specs/2026-09-30-phase53-review-remediation.md）并登记 phase 54
+共 11 个 feature（NCS-154..164），全部 not-started。
 
 ## Files
 
-- main：8 个实现提交 + 8 个登记提交（ face356..当前）
-- 分支：codex/ncs-150-outline-free-planning（90c7728）
-- 语料：data/e2e-fixtures/mystery-20260930（32 fixture，确定性达标）
+- docs/specs/2026-09-30-phase53-review-remediation.md（新 spec，含拆分表）
+- feature_list.json（+11 条，current_phase=54）
+- progress.md / session-handoff.md（本文件）
 
 ## Verification
 
-- 每项全量 mvn test 绿（1398→1435，净增 37 项）；npm build 通过
-- 实况冒烟：统一轮询端点 404 结构化返回；模型探测真实调用 qwen 返回"通"
+- 登记 won't 触碰业务代码：python3 scripts/check-harness.py 输出与干净 main
+  完全一致（既有 FAIL 均为历史遗留，已纳入 NCS-164 修复范围）
+- 合并后 main：mvn compile && mvn test 全绿（见 session-handoff）
 
 ## Blockers
 
-- NCS-150 的 --bless 需人工确认（结构差异=屏障停点+record 期网络重试计数）
+- 无。NCS-154/161 完成时需按 DoD 重跑 e2e，若语料分叉需人工确认 bless
 
 ## Next Steps
 
-- 人工 bless → 合并 NCS-150 → 144/147 →（可选）152/153 各自 e2e
+- 按建议顺序推进：NCS-164（登记修正）→ 154→155 → 156→157 → 162 → 163 → 158/159/160/161
+- NCS-152/153（O-2/O-3 prompt 项）独立，可穿插

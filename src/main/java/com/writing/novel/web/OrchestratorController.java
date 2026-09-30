@@ -263,6 +263,15 @@ final class ProjectProgressSupport {
                 .map(WritingPreferences::getTargetChapters)
                 .orElse(domainDefault);
         int targetChapters = configuredTarget > 0 ? configuredTarget : domainDefault;
+        // NCS-150（旅程三 O-1）：大纲已规划时以规划章数为进度分母——
+        // 规划是自由适配故事需要的（软参考），不再呈现"18/24 欠账"错觉
+        int planned = repository.findOutlineByProject(project.getId())
+                .map(o -> o.getVolumes().stream()
+                        .mapToInt(v -> v.getSynopses().size()).sum())
+                .orElse(0);
+        if (planned > 0 && project.getCurrentChapterIndex() <= planned) {
+            targetChapters = planned;
+        }
 
         Checkpoint checkpoint = repository.findLatestPendingCheckpoint(project.getId()).orElse(null);
         String pauseStage = checkpoint == null ? null : switch (checkpoint.getType()) {

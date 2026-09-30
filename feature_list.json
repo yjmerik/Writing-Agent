@@ -9903,13 +9903,21 @@
    "description": "模型库保存/编辑提供测试按钮：以给定配置发小请求验证连通与鉴权，失败提示不入库（修 F-3 产品化收尾）",
    "phase": 53,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30 verified: c1a1426 (ff-merge=main); LlmProbe 3端点(scope/库存/表单候选)+前端测试连接按钮; 6用例+回归 19/19; 全量 1418/0F/0E/1S; npm build 通过",
+   "files": [
+    "src/main/java/com/writing/novel/llm/LlmProbe.java",
+    "src/main/java/com/writing/novel/web/ModelConfigController.java",
+    "src/main/java/com/writing/novel/web/ModelLibraryController.java",
+    "frontend/src/components/ModelLibrary.tsx",
+    "src/test/java/com/writing/novel/web/ModelConnectivityCheckTest.java"
+   ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
    "acceptance": "ModelConnectivityCheckTest：坏端点/坏 key 返回结构化错误；正常 mock 返回 ok",
    "verify_cmd": "mvn test -Dtest=ModelConnectivityCheckTest",
-   "type": "feature"
+   "type": "feature",
+   "branch": "codex/ncs-142-model-connectivity",
+   "completion_record": "ncs-142-verified"
   },
   {
    "id": "NCS-143",

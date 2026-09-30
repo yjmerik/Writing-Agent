@@ -9947,13 +9947,18 @@
    "description": "reviseInitialSetup 意图门控扩展：instructions 精确点名既有卡姓名时对该卡走预览-确认修订链；未点名卡零变动（修 F-2，NCS-090 续）",
    "phase": 53,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30 verified: a73ad4c (ff-merge=main, worktree 并行)；3 用例（点名原地修订同 id/未点名零变动/不点名不触发）+ NCS-090 回归 2 绿；全量 1438/0F/0E/1S",
+   "files": [
+    "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+    "src/test/java/com/writing/novel/orchestrator/ReviseNamedCharacterTest.java"
+   ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
    "acceptance": "ReviseInitialSetupCharacterTest：点名卡内容更新、未点名卡逐字不变",
    "verify_cmd": "mvn test -Dtest=ReviseInitialSetupCharacterTest",
-   "type": "feature"
+   "type": "feature",
+   "branch": "codex/ncs-144-revise-named-characters",
+   "completion_record": "ncs-144-verified"
   },
   {
    "id": "NCS-145",

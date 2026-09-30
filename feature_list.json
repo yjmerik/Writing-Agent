@@ -10067,13 +10067,21 @@
    "description": "Plotter 以 targetChapters 为软参考自由规划卷章结构（不强制凑满/预留固定差值）；项目进度按已规划章数呈现，UI 不再显示 18/24 欠账（O-1 用户决策：自由规划，不限制 24 章）；涉及 prompt 改动需 e2e 基线",
    "phase": 53,
    "dependencies": [],
-   "status": "in-progress",
-   "evidence": "2026-09-30 in-progress（分支 89daf35，未合入）：单元 3 用例绿+全量 1438 绿；语料 mystery-20260930 已重建并 --bless（用户确认）；**replay 在第2章 fixture miss**——指纹 CHAPTER_WRITING-f233249e，漂移=第2章第二次写作调用的质检反馈注入清单不同（record=桥段重复清单[重写链长]，replay=时代用语清单[链短]），属重写链不确定性的语料分叉（p32-15 同类），需专项定位重写决策/反馈链的确定性后再重建语料；compare-baseline 因硬零门（章节失败3/LLM错误4，均为 miss 引发）保持 FAIL",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30 verified: merge 583606f (main 含 Reapply 89daf35 + bless 587e231)；语料 mystery-20260930 重录（新 prompt，0 LLM 错误，ch1 3288 字停人审屏障=设计行为）；replay×2 指纹一致 17806e7b 零 miss；compare-baseline PASS（bless 值=新语料，用户预确认）；全量 1443/0F/0E/1S",
+   "files": [
+    "src/main/resources/prompts/plotting.st",
+    "src/main/java/com/writing/novel/agent/PlotterAgent.java",
+    "src/main/java/com/writing/novel/web/OrchestratorController.java",
+    "src/test/java/com/writing/novel/web/OutlinePlannedProgressTest.java",
+    "baselines/golden.json"
+   ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
    "acceptance": "Plotter 输出章数与 targetChapters 解耦的确定性测试 + e2e record/replay + compare-baseline（bless 附理由）",
    "verify_cmd": "mvn test -Dtest=OutlineFreePlanningTest && ./scripts/e2e.sh && python3 scripts/compare-baseline.py",
-   "type": "feature"
+   "type": "feature",
+   "branch": "codex/ncs-150-outline-free-planning",
+   "completion_record": "ncs-150-verified"
   },
   {
    "id": "NCS-151",
@@ -10128,5 +10136,5 @@
  ],
  "schema_version": 2,
  "updated_at": "2026-09-30",
- "active_feature": "NCS-150"
+ "active_feature": null
 }

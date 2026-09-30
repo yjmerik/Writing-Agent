@@ -941,6 +941,9 @@ public class SqliteNovelRepository implements NovelRepository {
             throw new IllegalArgumentException("批准请求缺少 identity/reviewSetHash/idempotencyKey，服务端不补填");
         }
         ChapterApproval.Identity requested = request.identity();
+        // NCS-143: 带簿放行时批准理由追加审计标注（record 不可变，经 holder 替换）
+        java.util.concurrent.atomic.AtomicReference<ChapterApproval.Request> effectiveRequest =
+                new java.util.concurrent.atomic.AtomicReference<>(request);
         return runInTransaction(conn -> {
             Chapter chapter = selectChapterByIndex(conn, requested.projectId(), requested.chapterIndex());
             if (chapter == null) {
@@ -990,17 +993,31 @@ public class SqliteNovelRepository implements NovelRepository {
                         + String.join(", ", unsatisfiedDirectives));
             }
             // (b) 未解决 HIGH 问题且无有效裁决 → 阻塞
-            List<String> blockingIssues = selectBlockingHighIssues(
-                    conn, currentIdentity);
+            //     NCS-143（旅程三 F-9）：例外——全部阻塞项都已有"有效暂挂"裁决
+            //     （DEFER 且 defer_until_chapter > 本章）时带簿放行，批准审计行标注
+            //     APPROVE_WITH_DEFER；只要有一条完全无裁决仍阻塞。
+            List<String> blockingIssues = selectBlockingHighIssues(conn, currentIdentity);
             if (!blockingIssues.isEmpty()) {
-                throw new IllegalStateException("存在未解决的 HIGH 级问题（无有效裁决）: "
-                        + String.join(", ", blockingIssues));
+                int deferCovered = countFutureDeferredHighIssues(conn, currentIdentity);
+                if (deferCovered == blockingIssues.size()) {
+                    int maxUntil = maxDeferredUntil(conn, currentIdentity);
+                    effectiveRequest.set(withDeferOverride(effectiveRequest.get(),
+                            blockingIssues.size(), maxUntil));
+                    com.writing.novel.telemetry.EventLog.emit("APPROVE_WITH_DEFER", Map.of(
+                            "projectId", requested.projectId(),
+                            "chapterIndex", requested.chapterIndex(),
+                            "deferredHigh", blockingIssues.size(),
+                            "deferUntilChapter", maxUntil));
+                } else {
+                    throw new IllegalStateException("存在未解决的 HIGH 级问题（无有效裁决）: "
+                            + String.join(", ", selectBlockingWithoutFutureDefer(conn, currentIdentity)));
+                }
             }
 
             // 5. 写批准审计（不可变行）
             String approvalId = UUID.randomUUID().toString();
             Instant now = Instant.now();
-            insertChapterApproval(conn, approvalId, request, currentReviewSetHash, now);
+            insertChapterApproval(conn, approvalId, effectiveRequest.get(), currentReviewSetHash, now);
 
             // 6. 标记精确版本 DONE——版本不匹配（并发已变）即整体回滚
             try (PreparedStatement ps = conn.prepareStatement(
@@ -1428,6 +1445,18 @@ public class SqliteNovelRepository implements NovelRepository {
     }
 
     @Override
+    public java.util.Set<String> findAdjudicatedIssueIds(String projectId) {
+        java.util.Set<String> ids = new java.util.HashSet<>();
+        try (Connection conn = cp.getConnection(); PreparedStatement ps = conn.prepareStatement(
+                "SELECT DISTINCT issue_id FROM review_dispositions WHERE project_id=?")) {
+            ps.setString(1, projectId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) ids.add(rs.getString(1));
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return ids;
+    }
+
+    @Override
     public List<com.writing.novel.domain.ReviewDisposition> findDispositions(
             String projectId, int chapterIndex, int chapterVersion, String contentHash) {
         List<com.writing.novel.domain.ReviewDisposition> list = new ArrayList<>();
@@ -1704,6 +1733,113 @@ public class SqliteNovelRepository implements NovelRepository {
             throw new RuntimeException(e);
         }
         return blocking;
+    }
+
+    /** NCS-143：阻塞 HIGH 中已有"有效暂挂"（DEFER 且 defer_until_chapter > 本章）的数量 */
+    private int countFutureDeferredHighIssues(Connection conn, ChapterApproval.Identity identity) {
+        String sql = "SELECT COUNT(*) FROM continuity_issues i " +
+                "WHERE i.project_id=? AND i.detected_at_chapter=? AND i.resolved=0 " +
+                "AND i.severity='HIGH' AND (i.chapter_version IS NULL OR i.chapter_version = ?) " +
+                "AND NOT EXISTS (SELECT 1 FROM review_dispositions rd2 " +
+                "  WHERE rd2.issue_id = i.id AND rd2.project_id = i.project_id " +
+                "  AND rd2.chapter_index = ? AND rd2.chapter_version = ? AND rd2.content_hash = ? " +
+                "  AND rd2.action IN ('FALSE_POSITIVE','EXCEPTION')) " +
+                "AND EXISTS (SELECT 1 FROM review_dispositions rd " +
+                "  WHERE rd.issue_id = i.id AND rd.project_id = i.project_id " +
+                "  AND rd.chapter_index = ? AND rd.chapter_version = ? AND rd.content_hash = ? " +
+                "  AND rd.action='DEFER' AND rd.defer_until_chapter IS NOT NULL " +
+                "  AND rd.defer_until_chapter > ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            bindDeferredHigh(ps, identity);
+            ps.setInt(10, identity.chapterIndex());
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getInt(1) : 0;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** NCS-143：有效暂挂覆盖的最大 defer_until_chapter（调用前须确认覆盖全部阻塞项） */
+    private int maxDeferredUntil(Connection conn, ChapterApproval.Identity identity) {
+        String sql = "SELECT COALESCE(MAX(rd.defer_until_chapter), 0) FROM continuity_issues i " +
+                "JOIN review_dispositions rd ON rd.issue_id = i.id AND rd.project_id = i.project_id " +
+                "WHERE i.project_id=? AND i.detected_at_chapter=? AND i.resolved=0 " +
+                "AND i.severity='HIGH' AND (i.chapter_version IS NULL OR i.chapter_version = ?) " +
+                "AND NOT EXISTS (SELECT 1 FROM review_dispositions rd2 " +
+                "  WHERE rd2.issue_id = i.id AND rd2.project_id = i.project_id " +
+                "  AND rd2.chapter_index = ? AND rd2.chapter_version = ? AND rd2.content_hash = ? " +
+                "  AND rd2.action IN ('FALSE_POSITIVE','EXCEPTION')) " +
+                "AND rd.action='DEFER' AND rd.defer_until_chapter IS NOT NULL " +
+                "AND rd.defer_until_chapter > ? " +
+                "AND rd.chapter_index = ? AND rd.chapter_version = ? AND rd.content_hash = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, identity.projectId());
+            ps.setInt(2, identity.chapterIndex());
+            ps.setInt(3, identity.version());
+            ps.setInt(4, identity.chapterIndex());
+            ps.setInt(5, identity.version());
+            ps.setString(6, identity.contentHash());
+            ps.setInt(7, identity.chapterIndex());
+            ps.setInt(8, identity.chapterIndex());
+            ps.setInt(9, identity.version());
+            ps.setString(10, identity.contentHash());
+            ResultSet rs = ps.executeQuery();
+            return rs.next() ? rs.getInt(1) : 0;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** NCS-143：完全无裁决的阻塞 HIGH 描述（用于混合场景的阻塞提示）——
+     *  即 selectBlockingHighIssues 减去"有未来暂挂"的项 */
+    private List<String> selectBlockingWithoutFutureDefer(Connection conn, ChapterApproval.Identity identity) {
+        List<String> all = selectBlockingHighIssues(conn, identity);
+        List<String> deferred = new ArrayList<>();
+        String sql = "SELECT i.description FROM continuity_issues i " +
+                "WHERE i.project_id=? AND i.detected_at_chapter=? AND i.resolved=0 " +
+                "AND i.severity='HIGH' AND (i.chapter_version IS NULL OR i.chapter_version = ?) " +
+                "AND NOT EXISTS (SELECT 1 FROM review_dispositions rd2 " +
+                "  WHERE rd2.issue_id = i.id AND rd2.project_id = i.project_id " +
+                "  AND rd2.chapter_index = ? AND rd2.chapter_version = ? AND rd2.content_hash = ? " +
+                "  AND rd2.action IN ('FALSE_POSITIVE','EXCEPTION')) " +
+                "AND EXISTS (SELECT 1 FROM review_dispositions rd " +
+                "  WHERE rd.issue_id = i.id AND rd.project_id = i.project_id " +
+                "  AND rd.chapter_index = ? AND rd.chapter_version = ? AND rd.content_hash = ? " +
+                "  AND rd.action='DEFER' AND rd.defer_until_chapter IS NOT NULL " +
+                "  AND rd.defer_until_chapter > ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            bindDeferredHigh(ps, identity);
+            ps.setInt(10, identity.chapterIndex());
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) deferred.add(rs.getString("description"));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return all.stream().filter(d -> !deferred.contains(d)).toList();
+    }
+
+    /** NCS-143：阻塞 HIGH + 有效暂挂裁决联接的参数绑定（9 个身份参数） */
+    private void bindDeferredHigh(PreparedStatement ps, ChapterApproval.Identity identity)
+            throws SQLException {
+        ps.setString(1, identity.projectId());
+        ps.setInt(2, identity.chapterIndex());
+        ps.setInt(3, identity.version());
+        ps.setInt(4, identity.chapterIndex());
+        ps.setInt(5, identity.version());
+        ps.setString(6, identity.contentHash());
+        ps.setInt(7, identity.chapterIndex());
+        ps.setInt(8, identity.version());
+        ps.setString(9, identity.contentHash());
+    }
+
+    /** NCS-143：带簿放行的批准理由审计标注 */
+    private static ChapterApproval.Request withDeferOverride(ChapterApproval.Request request,
+                                                             int deferredHigh, int deferUntil) {
+        String annotated = request.reason() == null || request.reason().isBlank()
+                ? "" : request.reason() + "；";
+        return new ChapterApproval.Request(request.identity(), request.reviewSetHash(),
+                request.idempotencyKey(),
+                annotated + "[APPROVE_WITH_DEFER: " + deferredHigh + " 条 HIGH 暂挂至第 " + deferUntil + " 章]");
     }
 
     /** 审计 P1-1: 补偿回退——CONFIRMED 回退为 PENDING 并删除已写入的 decisions。 */

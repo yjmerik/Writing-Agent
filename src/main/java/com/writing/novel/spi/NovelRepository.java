@@ -285,6 +285,11 @@ public interface NovelRepository {
         throw new UnsupportedOperationException("saveDisposition 未实现");
     }
 
+    /** NCS-148：该项目下出现过任意裁决（误报/例外/暂挂）的 issueId 集合——分类视图分层计数用 */
+    default java.util.Set<String> findAdjudicatedIssueIds(String projectId) {
+        throw new UnsupportedOperationException("findAdjudicatedIssueIds 未实现");
+    }
+
     default List<com.writing.novel.domain.ReviewDisposition> findDispositions(
             String projectId, int chapterIndex, int chapterVersion, String contentHash) {
         throw new UnsupportedOperationException("findDispositions 未实现");

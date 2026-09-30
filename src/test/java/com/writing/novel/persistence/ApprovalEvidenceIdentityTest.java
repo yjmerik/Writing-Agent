@@ -40,7 +40,7 @@ class ApprovalEvidenceIdentityTest {
         assertEquals(Chapter.Status.NEEDS_MANUAL_REVIEW, repo.findChapterByIndex(pid, 1).orElseThrow().getStatus());
         assertEquals(NovelState.PAUSED_AT_CHECKPOINT, repo.findProject(pid).orElseThrow().getState());
     }
-    @ParameterizedTest @ValueSource(strings={"project","chapter","version","hash","defer"})
+    @ParameterizedTest @ValueSource(strings={"project","chapter","version","hash"})
     void mismatchedDispositionCannotReleaseHighIssue(String wrong) {
         var issue = new ContinuityIssue(pid, 1, ContinuityIssue.Type.TIMELINE, ContinuityIssue.Severity.HIGH, "先后矛盾");
         repo.saveContinuityIssue(issue);
@@ -48,12 +48,23 @@ class ApprovalEvidenceIdentityTest {
         var bad = new ChapterApproval.Identity(dispositionProject, wrong.equals("chapter") ? 2 : 1,
                 wrong.equals("version") ? 999 : identity.version(), wrong.equals("hash") ? "fake" : identity.contentHash());
         repo.saveDisposition(new ReviewDisposition(UUID.randomUUID().toString(), dispositionProject, issue.getId(), "fp",
-                bad, wrong.equals("defer") ? ReviewDisposition.Action.DEFER : ReviewDisposition.Action.EXCEPTION,
-                "旧错误记录", 5, Instant.now()));
+                bad, ReviewDisposition.Action.EXCEPTION, "旧错误记录", 5, Instant.now()));
         blocked();
         repo.saveDisposition(new ReviewDisposition(UUID.randomUUID().toString(), pid, issue.getId(), "fp", identity,
                 ReviewDisposition.Action.EXCEPTION, "当前稿复核", null, Instant.now()));
         assertNotNull(repo.approveChapter(request()).approvalId());
+    }
+
+    /** NCS-143：身份完全匹配的"未来暂挂"（DEFER+deferUntil>本章）现为带簿放行——
+     *  批准成功且审计行标注 APPROVE_WITH_DEFER（原断言"DEFER 一律不放行"已被本特性有意取代）。 */
+    @Test
+    void matchingFutureDeferReleasesHighIssueWithDeferOverride() {
+        var issue = new ContinuityIssue(pid, 1, ContinuityIssue.Type.TIMELINE, ContinuityIssue.Severity.HIGH, "先后矛盾");
+        repo.saveContinuityIssue(issue);
+        repo.saveDisposition(new ReviewDisposition(UUID.randomUUID().toString(), pid, issue.getId(), "fp",
+                identity, ReviewDisposition.Action.DEFER, "暂挂至卷末统一修订", 5, Instant.now()));
+        var approvalId = repo.approveChapter(request()).approvalId();
+        assertNotNull(approvalId, "全阻塞项均有有效暂挂时应带簿放行");
     }
     @ParameterizedTest @ValueSource(strings={"project","revision","chapter","version","hash","nullHash","status"})
     void mismatchedDirectiveEvidenceCannotSatisfyCurrentRequirement(String wrong) {

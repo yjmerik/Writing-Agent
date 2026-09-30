@@ -9927,13 +9927,19 @@
    "dependencies": [
     "NCS-139"
    ],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30 verified: dee6670 (ff-merge=main); 3 用例（全暂挂放行+审计/混合仍阻塞/到期仍阻塞）；原 ApprovalEvidenceIdentityTest 的 DEFER-不放行断言被本特性有意取代并新增对应断言；全量 1435/0F/0E/1S",
+   "files": [
+    "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+    "src/test/java/com/writing/novel/web/ApproveWithDeferTest.java",
+    "src/test/java/com/writing/novel/persistence/ApprovalEvidenceIdentityTest.java"
+   ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
    "acceptance": "ApproveWithDeferTest：全 DEFER 可批准且审计行落库；存在未裁决 HIGH 仍 409",
    "verify_cmd": "mvn test -Dtest=ApproveWithDeferTest",
-   "type": "feature"
+   "type": "feature",
+   "branch": "codex/ncs-143-approve-with-defer",
+   "completion_record": "ncs-143-verified"
   },
   {
    "id": "NCS-144",
@@ -9957,13 +9963,18 @@
    "dependencies": [
     "NCS-139"
    ],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30 verified: ff-merge=main; 4 用例（冷却重投成功/耗尽终态注明/非冷却不重投/等待期占权）；终态状态串保持 FAILED 前端兼容；全量 1432/0F/0E/1S",
+   "files": [
+    "src/main/java/com/writing/novel/service/LongTaskService.java",
+    "src/test/java/com/writing/novel/service/LongTaskRetryTest.java"
+   ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
    "acceptance": "LongTaskRetryTest：冷却期提交延迟重投成功；超限进入 FAILED_RETRYABLE 可见可重试",
    "verify_cmd": "mvn test -Dtest=LongTaskRetryTest",
-   "type": "feature"
+   "type": "feature",
+   "branch": "codex/ncs-145-longtask-retry",
+   "completion_record": "ncs-145-verified"
   },
   {
    "id": "NCS-146",
@@ -10004,13 +10015,22 @@
    "description": "「必须处理」按 现行/过期（默认折叠）/已裁决 分层计数显示，消除新旧稿混计（修 F-8）",
    "phase": 53,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30 verified: a0c4fd3 (ff-merge=main); 后端 adjudicated 标记（3用例含未裁决/已裁决）+前端 现行X+过期Y+已裁决Z 分层折叠；全量 1431/0F/0E/1S; npm build 通过",
+   "files": [
+    "src/main/java/com/writing/novel/service/ReviewClassificationService.java",
+    "src/main/java/com/writing/novel/spi/NovelRepository.java",
+    "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
+    "frontend/src/components/ReviewClassificationView.tsx",
+    "frontend/src/types.ts",
+    "src/test/java/com/writing/novel/service/ReviewClassificationTest.java"
+   ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
    "acceptance": "前端构建通过 + 组件测试（若无可手测证据）：24 条混计 → 现行X/过期Y/已裁决Z",
    "verify_cmd": "cd frontend && npm run build",
-   "type": "feature"
+   "type": "feature",
+   "branch": "codex/ncs-148-tiered-classification",
+   "completion_record": "ncs-148-verified"
   },
   {
    "id": "NCS-149",

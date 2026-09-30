@@ -59,10 +59,9 @@ public class PlotterAgent {
                 "genreRules", genreRules != null ? genreRules : "",
                 "diversityGuide", diversityGuide != null ? diversityGuide : ""));
 
-        // NCS-150（旅程三 O-1）：预计总章数为软参考——按故事需要自由规划，不强制凑满
         String userMessage = "构思：" + concept + "\n主题：" + theme
-                + "\n预计总章数（软参考，可按故事需要增减）：" + totalChapters
-                + "\n请按叙事节奏自由规划卷数与每卷章数（每卷 4-8 章），故事自然收尾即可。";
+                + "\n预计总章数：" + totalChapters
+                + "\n请规划足够多的卷和章节以达到这个章节数。每卷 5-8 章。";
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.PLOTTING)

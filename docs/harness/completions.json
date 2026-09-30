@@ -2984,6 +2984,17 @@
    "implementation_commit": "c0bacd9c1ce3f5b004a561fe5a13d0b0fab3af1c",
    "main_commit": "c0bacd9c1ce3f5b004a561fe5a13d0b0fab3af1c",
    "evidence": "docs/harness/evidence/2026-09-30-ncs-157-verified.json"
+  },
+  {
+   "id": "ncs-162-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-162"
+   ],
+   "branch": "codex/ncs-162-model-save-gate",
+   "implementation_commit": "ec108a23123298fc6bc23baa814f96cbd01f7700",
+   "main_commit": "ec108a23123298fc6bc23baa814f96cbd01f7700",
+   "evidence": "docs/harness/evidence/2026-09-30-ncs-162-verified.json"
   }
  ],
  "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",

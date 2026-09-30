@@ -1,0 +1,27 @@
+{
+ "verifiedAt": "2026-09-30T22:54:09+08:00",
+ "commit": "ec108a23123298fc6bc23baa814f96cbd01f7700",
+ "cleanCheckout": true,
+ "branch": "codex/ncs-162-model-save-gate",
+ "scope": "模型库保存连通性门禁（落 NCS-142「失败即时不入库」）",
+ "checks": [
+  {
+   "command": "mvn test -Dtest=ModelLibrarySaveGateTest,ModelConnectivityCheckTest",
+   "result": "9/0F/0E",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T22:54:09+08:00"
+  },
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+   "result": "Tests run: 1458, Failures: 0, Errors: 0, Skipped: 1",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T22:54:09+08:00"
+  },
+  {
+   "command": "cd frontend && npm run build",
+   "result": "✓ built in 1.58s",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T22:54:09+08:00"
+  }
+ ]
+}

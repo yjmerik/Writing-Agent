@@ -10280,13 +10280,18 @@
    "description": "落 NCS-142「失败即时不入库」：PUT /api/models/{name} 保存前探测候选，失败返回 400 结构化错误且不入库；?force=true 离线逃生门；成功路径与既有校验不变",
    "phase": 54,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30T22:54:09+08:00 verified: ec108a2；ModelLibrarySaveGateTest 3 例（失败拒存不入库/force 入库/成功入库+已存条目拒存保原值）；前端强制保存确认框；全量 1458/0F/0E/1S；npm build 过",
+   "files": [
+    "src/main/java/com/writing/novel/web/ModelLibraryController.java",
+    "src/test/java/com/writing/novel/web/ModelLibrarySaveGateTest.java",
+    "frontend/src/components/ModelLibrary.tsx"
+   ],
    "spec": "docs/specs/2026-09-30-phase53-review-remediation.md",
    "acceptance": "ModelLibrarySaveGateTest：探测失败拒存（库中无该配置、响应含失败明细）；force=true 可存；探测成功正常入库",
    "verify_cmd": "mvn test -Dtest=ModelLibrarySaveGateTest",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-162-verified"
   },
   {
    "id": "NCS-163",

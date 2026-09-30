@@ -26,12 +26,17 @@ active_feature=NCS-150。
 
 ## Blockers
 
-- NCS-150 bless 待人工（--bless 后 ff 合并、注册 completed、bump phase 收尾）
+- NCS-150：用户已确认 bless（golden 已在分支更新），但 replay 在第 2 章
+  fixture miss——漂移=第2章第二次写作调用的质检反馈注入清单不同
+  （record=桥段重复清单，replay=时代用语清单，重写链长不确定性），
+  compare-baseline 硬零门 FAIL。需语料取证专项后重建语料才能合并。
 
 ## Next Steps
 
-1. 人工确认 compare-baseline 差异 → `python3 scripts/compare-baseline.py --bless`
-   → 合并 codex/ncs-150-outline-free-planning → 登记 NCS-150 completed
+1. NCS-150 语料取证：对比 CHAPTER_WRITING-f233249e*.miss.json 与
+   6363749f*.json 的 systemPrompt 差异段，定位重写决策/反馈链的非确定性源
+   （疑点：质检反馈注入取"上一轮问题清单"，随重写链长度变化）→ 修复确定性
+   → 重录语料 → replay×2 → bless（用户已预确认）→ 合并
 2. backlog：144（框架意见点名修卡）/147（偏好竞态，先复现）
 3. 可选：152/153（prompt 类，各自独立 e2e 基线）
 4. 批准《剑冢守夜人》第 10 章续跑（UI 或 /tmp/approve_ch.py 10）

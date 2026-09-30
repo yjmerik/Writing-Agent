@@ -10003,16 +10003,21 @@
   {
    "id": "NCS-147",
    "name": "写作偏好开关竞态修复",
-   "description": "复现并修复「引用素材」开关偶发不生效：去除静默吞错、服务端偏好改字段级 merge、chatPreferences 整包覆写竞态消除（修 F-5）",
+   "description": "旅程复盘：F-5 引用素材开关不生效系自动化误点（紧凑面板按祖先文本匹配开关存在歧义，API 直调始终正常）；真实残留缺陷=前端开关/滑杆 onChange 静默吞 PUT 错误。修复：失败显式 message.error 提示；后端补字段级合并回归测试（部分字段 PUT 不清空其它字段）",
    "phase": 53,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30 verified: 7146c8f (ff-merge=main)；F-5 复盘为自动化误点（祖先文本匹配歧义），API 路径一直正常；修复=前端 4 处静默吞错改为显式 error toast + PreferencesFieldMergeTest 字段级合并回归 2 用例；全量 1440/0F/0E/1S; npm build 通过",
+   "files": [
+    "frontend/src/pages/ProjectWorkspace.tsx",
+    "src/test/java/com/writing/novel/web/PreferencesFieldMergeTest.java"
+   ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
-   "acceptance": "先有复现脚本/测试（failing）再修：单字段 PUT 与并发整包更新交错后目标字段保留",
+   "acceptance": "PreferencesFieldMergeTest：单字段 PUT 后其它字段保留；前端构建通过",
    "verify_cmd": "mvn test -Dtest=PreferencesMergeTest",
-   "type": "feature"
+   "type": "feature",
+   "branch": "codex/ncs-147-pref-merge-errors",
+   "completion_record": "ncs-147-verified"
   },
   {
    "id": "NCS-148",

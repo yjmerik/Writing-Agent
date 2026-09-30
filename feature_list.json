@@ -10058,7 +10058,7 @@
    "phase": 53,
    "dependencies": [],
    "status": "in-progress",
-   "evidence": "2026-09-30 in-progress（分支 2b8330d，未合入 main——prompt 改动需过 e2e 门禁）：单元 3 用例绿；语料已重建 data/e2e-fixtures/mystery-20260930（32 fixture，record 因第2章人审屏障 fail-loud 停点，设计行为）；replay×2 章节内容指纹一致 b14a80b2（确定性达标）；compare-baseline 结构项 FAIL（章节数1<2/总字数4152<5865/失败计数含record期网络重试）+ 风格维度全过（n-gram 0.0472≤0.10，套路词 1≤15）——与 0929 重建同形态，待人工 --bless 后方可合入",
+   "evidence": "2026-09-30 in-progress（分支 89daf35，未合入）：单元 3 用例绿+全量 1438 绿；语料 mystery-20260930 已重建并 --bless（用户确认）；**replay 在第2章 fixture miss**——指纹 CHAPTER_WRITING-f233249e，漂移=第2章第二次写作调用的质检反馈注入清单不同（record=桥段重复清单[重写链长]，replay=时代用语清单[链短]），属重写链不确定性的语料分叉（p32-15 同类），需专项定位重写决策/反馈链的确定性后再重建语料；compare-baseline 因硬零门（章节失败3/LLM错误4，均为 miss 引发）保持 FAIL",
    "files": [],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
    "acceptance": "Plotter 输出章数与 targetChapters 解耦的确定性测试 + e2e record/replay + compare-baseline（bless 附理由）",

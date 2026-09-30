@@ -50,7 +50,9 @@ type RewriteTarget =
     sourceVersion: number;
   };
 
-type ReviewResult = Extract<RewriteTarget, { kind: 'checkpoint' }> & { revision: CheckpointRevision };
+type ReviewResult = Extract<RewriteTarget, { kind: 'checkpoint' }> & {
+  revision: CheckpointRevision & { previewId?: string };
+};
 type BodyLoadState = { loading: boolean; error: string };
 type ReviewNavigationTarget = 'world' | 'outline';
 type ChapterEditorTarget =
@@ -948,7 +950,17 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
         ? await api.rejectCheckpoint(projectId, rewriteTarget.checkpoint.id, rewriteInstructions)
         : await api.modifyCheckpoint(projectId, rewriteTarget.checkpoint.id, rewriteInstructions);
       if (result.revision) {
-        setReviewResult({ ...rewriteTarget, revision: result.revision });
+        // NCS-155: 修订带人物卡预览时补取 previewId（预览不随响应返回自身 id）
+        let revision: CheckpointRevision & { previewId?: string } = result.revision;
+        if (revision.characterRevisions && revision.characterRevisions.length > 0) {
+          try {
+            const pending = await api.pendingCharacterRevisions(projectId);
+            if (pending.previewId) {
+              revision = { ...revision, previewId: pending.previewId };
+            }
+          } catch { /* 预览查询失败不阻断主流程，确认时再取 */ }
+        }
+        setReviewResult({ ...rewriteTarget, revision });
       }
       if (rewriteTarget.action === 'reject') {
         message.success('已拒绝并重写');
@@ -963,6 +975,79 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
     } finally { setRewriting(false); }
   };
 
+  // NCS-155: 人物卡修订预览卡片区——逐字段原/候选对照 + 确认/放弃（确认前不落库）
+  const [characterRevisionBusy, setCharacterRevisionBusy] = useState(false);
+  const renderCharacterRevisionPreview = () => {
+    const cards = reviewResult?.revision.characterRevisions;
+    if (!cards || cards.length === 0) return null;
+    const settle = (applied: boolean, summaryText: string) => {
+      setReviewResult((current) => current
+        ? { ...current, revision: { ...current.revision, characterRevisions: null } }
+        : current);
+      if (applied) message.success(summaryText);
+      onChanged();
+    };
+    const withPreviewId = async <T,>(action: (previewId: string) => Promise<T>): Promise<T> => {
+      let previewId = reviewResult?.revision.previewId;
+      if (!previewId) {
+        const pending = await api.pendingCharacterRevisions(projectId);
+        previewId = pending.previewId;
+      }
+      if (!previewId) throw new Error('待确认预览不存在或已失效，请重新发起修订');
+      return action(previewId);
+    };
+    return (
+      <div style={{ marginTop: 8 }}>
+        <Typography.Text strong>人物卡修订预览（{cards.length} 张，待作者确认后生效）</Typography.Text>
+        {cards.map((card) => (
+          <div key={card.characterId} style={{ margin: '8px 0', padding: '8px', border: '1px solid #f0f0f0', borderRadius: 4 }}>
+            <Typography.Text strong>{card.name}</Typography.Text>
+            {card.changes.map((change) => (
+              <div key={change.field} style={{ fontSize: 12, marginTop: 2 }}>
+                <Tag>{change.field}</Tag>
+                <Typography.Text type="secondary" delete={!!change.before}>
+                  {change.before || '（原为空）'}
+                </Typography.Text>
+                {' → '}
+                <Typography.Text>{change.after}</Typography.Text>
+              </div>
+            ))}
+          </div>
+        ))}
+        <Space>
+          <Button
+            type="primary"
+            size="small"
+            loading={characterRevisionBusy}
+            onClick={async () => {
+              setCharacterRevisionBusy(true);
+              try {
+                const res = await withPreviewId((previewId) =>
+                  api.confirmCharacterRevisions(projectId, previewId));
+                settle(true, res.summary || '人物卡修订已应用');
+              } catch (e) {
+                message.error(`确认失败: ${(e as Error).message}`);
+              } finally { setCharacterRevisionBusy(false); }
+            }}
+          >确认修订</Button>
+          <Button
+            size="small"
+            loading={characterRevisionBusy}
+            onClick={async () => {
+              setCharacterRevisionBusy(true);
+              try {
+                await withPreviewId((previewId) =>
+                  api.discardCharacterRevisions(projectId, previewId));
+                settle(false, '已放弃人物卡修订');
+              } catch (e) {
+                message.error(`放弃失败: ${(e as Error).message}`);
+              } finally { setCharacterRevisionBusy(false); }
+            }}
+          >放弃</Button>
+        </Space>
+      </div>
+    );
+  };
 
 
   const submitChapterRewrite = async (target: Extract<RewriteTarget, { kind: 'chapter' }>) => {
@@ -1191,6 +1276,7 @@ export default function InteractiveReview({ projectId, onChanged, onNavigateTab,
                 <div>审核目标：{reviewResult.revision.targetType}</div>
                 <div>修改前摘要（v{reviewResult.revision.beforeVersion}）：{reviewResult.revision.beforeSummary}</div>
                 <div>修改后摘要（v{reviewResult.revision.afterVersion}）：{reviewResult.revision.afterSummary}</div>
+                {renderCharacterRevisionPreview()}
               </div>
             }
             style={{ marginBottom: 16 }}

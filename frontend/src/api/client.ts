@@ -70,6 +70,27 @@ export interface CheckpointRevision {
   afterSummary: string;
   beforeVersion: number;
   afterVersion: number;
+  /** NCS-154: 点名卡的待确认人物卡修订预览（无则 null/缺省） */
+  characterRevisions?: CharacterRevisionCard[] | null;
+}
+
+/** NCS-154/155: 人物卡修订预览的逐字段变更 */
+export interface CharacterRevisionFieldChange {
+  field: string;
+  before: string | null;
+  after: string;
+}
+
+/** NCS-154/155: 单张卡的待确认修订（characterId 为原卡 id，确认后按其 upsert） */
+export interface CharacterRevisionCard {
+  characterId: string;
+  name: string;
+  changes: CharacterRevisionFieldChange[];
+}
+
+export interface PendingCharacterRevisions {
+  previewId?: string;
+  cards: CharacterRevisionCard[];
 }
 
 export interface CheckpointOperationResponse {
@@ -941,6 +962,24 @@ export const api = {
       `/projects/${id}/checkpoints/${checkpointId}/modify`,
       { method: 'POST', body: JSON.stringify({ instructions }) },
       300000,
+    ),
+
+  /** NCS-155: 当前待确认的人物卡修订预览 */
+  pendingCharacterRevisions: (id: string) =>
+    request<PendingCharacterRevisions>(`/projects/${id}/checkpoints/character-revisions`),
+
+  /** NCS-155: 确认人物卡修订（合并卡按原卡 id 落库） */
+  confirmCharacterRevisions: (id: string, previewId: string) =>
+    request<{ applied: boolean; summary: string }>(
+      `/projects/${id}/checkpoints/character-revisions/${previewId}/confirm`,
+      { method: 'POST' },
+    ),
+
+  /** NCS-155: 放弃人物卡修订（清空预览，库中零变动） */
+  discardCharacterRevisions: (id: string, previewId: string) =>
+    request<{ applied: boolean }>(
+      `/projects/${id}/checkpoints/character-revisions/${previewId}/discard`,
+      { method: 'POST' },
     ),
 
   /** 重写指定章节 */

@@ -97,9 +97,15 @@ public class ModelLibraryController {
                 currentRouting, defaultProvider);
     }
 
-    /** 新增/更新模型（PUT 空 apiKey 保留原值） */
+    /**
+     * 新增/更新模型（PUT 空 apiKey 保留原值）。
+     * NCS-162（落 NCS-142「失败即时不入库」）：保存前连通性探测，失败返回 400
+     * 结构化错误且配置不入库；?force=true 离线逃生门跳过探测。
+     */
     @PutMapping("/{name}")
-    public LibraryModel save(@PathVariable String name, @RequestBody SaveModelRequest body) {
+    public org.springframework.http.ResponseEntity<Object> save(@PathVariable String name,
+            @org.springframework.web.bind.annotation.RequestParam(required = false, defaultValue = "false") boolean force,
+            @RequestBody SaveModelRequest body) {
         requireValidName(name);
         ModelConfig existing = properties.getProviders().get(name);
         ModelConfig cfg = existing != null ? copyConfig(existing) : new ModelConfig();
@@ -119,8 +125,19 @@ public class ModelLibraryController {
         if (body.requestTimeoutSeconds() != null) cfg.setRequestTimeoutSeconds(body.requestTimeoutSeconds());
 
         validate(cfg);
+        if (!force) {
+            Map<String, Object> probe = com.writing.novel.llm.LlmProbe.run(client, copyConfig(cfg));
+            if (!Boolean.TRUE.equals(probe.get("ok"))) {
+                return org.springframework.http.ResponseEntity.status(
+                        org.springframework.http.HttpStatus.BAD_REQUEST).body(Map.of(
+                        "saved", false,
+                        "code", "MODEL_PROBE_FAILED",
+                        "error", "连通性探测未通过，配置未入库（离线场景可在保存时选择强制保存）",
+                        "probe", probe));
+            }
+        }
         properties.getProviders().put(name, cfg);
-        return toView(name, cfg, List.of());
+        return org.springframework.http.ResponseEntity.ok(toView(name, cfg, List.of()));
     }
 
     /**

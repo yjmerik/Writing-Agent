@@ -78,21 +78,33 @@ export default function ModelLibrary() {
     setModalOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (force = false) => {
     try {
       const values = await form.validateFields();
       setSaving(true);
       const name = editingName || values.name;
-      const resp = await fetch(`/api/llm/library/${encodeURIComponent(name)}`, {
+      const resp = await fetch(`/api/llm/library/${encodeURIComponent(name)}${force ? '?force=true' : ''}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
       if (!resp.ok) {
         const body = await resp.json().catch(() => ({}));
+        // NCS-162: 保存前探测失败——提供"强制保存"逃生门（离线场景）
+        if (body.code === 'MODEL_PROBE_FAILED' && !force) {
+          Modal.confirm({
+            title: `连通性探测未通过（${body.probe?.error || '未知原因'}）`,
+            content: '配置未入库。离线环境可以先强制保存，待网络恢复后再用「测试连接」验证。',
+            okText: '强制保存',
+            okButtonProps: { danger: true },
+            cancelText: '返回修改',
+            onOk: () => handleSave(true),
+          });
+          return;
+        }
         throw new Error(body.error || body.message || `HTTP ${resp.status}`);
       }
-      messageApi.success(`模型「${name}」已保存`);
+      messageApi.success(`模型「${name}」已保存${force ? '（跳过探测）' : ''}`);
       setModalOpen(false);
       reload();
     } catch (e) {
@@ -323,7 +335,7 @@ export default function ModelLibrary() {
       <Modal
         title={editingName ? `编辑模型：${editingName}` : '新增模型'}
         open={modalOpen}
-        onOk={handleSave}
+        onOk={() => void handleSave()}
         onCancel={() => setModalOpen(false)}
         confirmLoading={saving}
         okText="保存"

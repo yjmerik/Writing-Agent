@@ -4,11 +4,10 @@ Last Updated: 2026-09-30
 
 ## Current
 
-NCS-139/140/141/142/143/145/146/148/149/151 共 10 项 completed 并合入 main
-（各项 evidence 见 feature_list.json，分支/提交/全量计数齐全）。
-NCS-150 in-progress（分支 codex/ncs-150-outline-free-planning，90c7728）：
-代码+prompt 完成，e2e 确定性达标，仅剩人工 --bless 后 ff 合并。
-active_feature=NCS-150。
+phase 53 全部 11 项 completed 合入 main（active_feature=None）：
+139/140/141/142/143/144/145/146/147/148/149/150/151。
+main=1936911+；合并后验证 compare-baseline PASS + 全量 1443/0F/0E/1S。
+18095 实例已换含 NCS-150 的新包重启（17:4x）。
 
 ## 环境注意
 
@@ -33,10 +32,7 @@ active_feature=NCS-150。
 
 ## Next Steps
 
-1. NCS-150 语料取证：对比 CHAPTER_WRITING-f233249e*.miss.json 与
-   6363749f*.json 的 systemPrompt 差异段，定位重写决策/反馈链的非确定性源
-   （疑点：质检反馈注入取"上一轮问题清单"，随重写链长度变化）→ 修复确定性
-   → 重录语料 → replay×2 → bless（用户已预确认）→ 合并
-2. backlog：144（框架意见点名修卡）/147（偏好竞态，先复现）
-3. 可选：152/153（prompt 类，各自独立 e2e 基线）
-4. 批准《剑冢守夜人》第 10 章续跑（UI 或 /tmp/approve_ch.py 10）
+1. backlog：152（人物性格母题去重）/153（场景锚点约束）——各自独立 e2e 基线
+2. 批准《剑冢守夜人》第 10 章续跑（UI 或 /tmp/approve_ch.py 10）
+3. 经验：多 worktree/分支共用一个物理目录时，切分支后必须 mvn clean compile
+   再跑 e2e（本轮 replay 假分叉即 target/classes 陈旧所致）

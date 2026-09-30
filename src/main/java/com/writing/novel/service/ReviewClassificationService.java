@@ -19,6 +19,9 @@ import java.util.Map;
  */
 public class ReviewClassificationService {
 
+    private static final org.slf4j.Logger log =
+            org.slf4j.LoggerFactory.getLogger(ReviewClassificationService.class);
+
     private final NovelRepository repository;
     private final CheckResultRepository checkResults;
 
@@ -37,6 +40,9 @@ public class ReviewClassificationService {
         try {
             adjudicated = repository.findAdjudicatedIssueIds(projectId);
         } catch (RuntimeException e) {
+            // NCS-159: 降级为空集（分层计数缺已裁决标记），但必须留下失败痕迹
+            log.warn("裁决台账查询失败，已裁决标记降级为空: projectId={}, err={}",
+                    projectId, e.getMessage());
             adjudicated = java.util.Set.of();
         }
 

@@ -730,8 +730,10 @@ public class NovelOrchestrator {
                 repository.findOutlineByProject(projectId).ifPresent(outline ->
                         VolumeBoundarySupport.appendSummaryIfVolumeEnd(repository, outline,
                                 chapter.getChapterIndex(), m));
-            } catch (Exception ignored) {
-                // 卷小结失败不影响检查点主流程
+            } catch (Exception e) {
+                // NCS-159: 卷小结失败不影响检查点主流程，但须留可观测痕迹（DEBUG）
+                log.debug("卷小结生成失败（不影响检查点主流程）: projectId={}, ch={}, err={}",
+                        projectId, chapter.getChapterIndex(), e.getMessage());
             }
             return m.toString();
         } catch (Exception e) {

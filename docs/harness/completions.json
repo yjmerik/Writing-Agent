@@ -2973,6 +2973,17 @@
    "implementation_commit": "dea6e65f0f86e50b6da55ea65c3f484eeea91077",
    "main_commit": "dea6e65f0f86e50b6da55ea65c3f484eeea91077",
    "evidence": "docs/harness/evidence/2026-09-30-ncs-156-verified.json"
+  },
+  {
+   "id": "ncs-157-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-157"
+   ],
+   "branch": "codex/ncs-157-failed-retryable",
+   "implementation_commit": "c0bacd9c1ce3f5b004a561fe5a13d0b0fab3af1c",
+   "main_commit": "c0bacd9c1ce3f5b004a561fe5a13d0b0fab3af1c",
+   "evidence": "docs/harness/evidence/2026-09-30-ncs-157-verified.json"
   }
  ],
  "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",

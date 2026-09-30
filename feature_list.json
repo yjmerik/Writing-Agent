@@ -10204,13 +10204,19 @@
    "dependencies": [
     "NCS-156"
    ],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-09-30T22:44:28+08:00 verified: c0bacd9；LongTaskRetryTest 8 例（含超限进入 FAILED_RETRYABLE、手动重投恢复、非该状态/未知/跨项目拒绝）+ LongTaskUnifiedPollingTest 4 例；npm build 过；全量 1455/0F/0E/1S",
+   "files": [
+    "src/main/java/com/writing/novel/service/LongTaskService.java",
+    "src/main/java/com/writing/novel/web/LongTaskController.java",
+    "frontend/src/components/ReaderReviewCard.tsx",
+    "src/test/java/com/writing/novel/service/LongTaskRetryTest.java"
+   ],
    "spec": "docs/specs/2026-09-30-phase53-review-remediation.md",
    "acceptance": "LongTaskRetryTest：超限进入 FAILED_RETRYABLE（非 FAILED）且轮询可见；retry 端点重新入队并执行成功；非该状态 retry 返回 409",
    "verify_cmd": "mvn test -Dtest=LongTaskRetryTest",
-   "type": "feature"
+   "type": "feature",
+   "completion_record": "ncs-157-verified"
   },
   {
    "id": "NCS-158",

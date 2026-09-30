@@ -1,0 +1,27 @@
+{
+ "verifiedAt": "2026-09-30T22:44:28+08:00",
+ "commit": "c0bacd9c1ce3f5b004a561fe5a13d0b0fab3af1c",
+ "cleanCheckout": true,
+ "branch": "codex/ncs-157-failed-retryable",
+ "scope": "FAILED_RETRYABLE 终态与手动重投（落 NCS-145 未兑现承诺）",
+ "checks": [
+  {
+   "command": "mvn test -Dtest=LongTaskRetryTest,LongTaskUnifiedPollingTest",
+   "result": "12/0F/0E",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T22:44:28+08:00"
+  },
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+   "result": "Tests run: 1455, Failures: 0, Errors: 0, Skipped: 1",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T22:44:28+08:00"
+  },
+  {
+   "command": "cd frontend && npm run build",
+   "result": "✓ built in 1.59s",
+   "exitCode": 0,
+   "verifiedAt": "2026-09-30T22:44:28+08:00"
+  }
+ ]
+}

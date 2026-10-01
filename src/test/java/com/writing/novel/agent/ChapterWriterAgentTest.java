@@ -87,4 +87,43 @@ class ChapterWriterAgentTest {
 
         assertTrue(saved[0], "写完后应保存章节到仓库");
     }
+
+    /** NCS-153（O-3）：章写 prompt 必须携带场景锚点硬约束（抑制对白密度 0.5+ 的剧本腔）。 */
+    @Test
+    void 章写prompt携带场景锚点硬约束() {
+        WritingContext mockCtx = new WritingContext();
+        mockCtx.setStyleSection("热血风格");
+        mockCtx.setTaskSection("第一章 张三登场");
+        ContextAssembler mockAssembler = new ContextAssembler(null, null, null, null, null, null, null, null, null) {
+            @Override
+            public WritingContext assemble(String projectId, int chapterIndex,
+                                           String chapterTitle, String chapterSynopsis,
+                                           String writingNotes) {
+                return mockCtx;
+            }
+            @Override
+            public WritingContext assemble(String projectId, int chapterIndex,
+                                           String chapterTitle, String chapterSynopsis,
+                                           String writingNotes, int maxContextTokens) {
+                return mockCtx;
+            }
+        };
+        final java.util.List<String> prompts = new java.util.ArrayList<>();
+        LlmGateway mockGateway = new LlmGateway() {
+            @Override
+            public LlmResponse complete(LlmRequest req) {
+                prompts.add(req.getSystemPrompt());
+                return new LlmResponse("张三踏入青云宗山门，剑意凛然，这是正文内容。".repeat(120), 200, 800);
+            }
+            @Override
+            public void streamComplete(LlmRequest req, StreamHandler handler) {}
+        };
+        var agent = new ChapterWriterAgent(mockGateway, mockAssembler, new TestNovelRepositoryStub(), TestPromptHelper.create());
+        agent.write("proj-1", 1, "第一章 张三登场", "张三拜入山门", "3000字");
+
+        String prompt = prompts.get(0);
+        assertTrue(prompt.contains("场景锚点"),
+                "章写 prompt 必须含场景锚点硬约束: " + prompt.substring(0, Math.min(400, prompt.length())));
+        assertTrue(prompt.contains("连续对白"), "约束应限定连续对白上限");
+    }
 }

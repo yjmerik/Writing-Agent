@@ -37,9 +37,14 @@ public class CharacterDesignerAgent {
                 existing.stream().map(c -> c.getName() + "（" + c.getRole() + "）")
                         .reduce((a, b) -> a + "、" + b).orElse("");
 
+        // NCS-152（O-2）：既有卡性格母题摘要 + 去重硬约束——抑制"8卡6母题"式系统性同质化。
+        // 在 Agent 内统一构建，保证初始构思/重规划/定向修订全部 design 路径都带上。
+        String motifGuide = buildMotifGuide(existing);
+
         String systemPrompt = promptService.render("character-design", Map.of(
                 "styleGuide", "",
-                "diversityGuide", diversityGuide != null ? diversityGuide : ""));
+                "diversityGuide", diversityGuide != null ? diversityGuide : "",
+                "motifGuide", motifGuide));
 
         String userMessage = "剧情需求：" + requirement
                 + "\n已有人物：" + existingDesc
@@ -61,6 +66,26 @@ public class CharacterDesignerAgent {
         }
         knowledgeBase.saveCharacter(c);
         return c;
+    }
+
+    /** NCS-152: 既有卡母题摘要（性格/动机截断）+ 硬约束文案；无既有卡返回空（模板块跳过） */
+    static String buildMotifGuide(List<Character> existing) {
+        if (existing == null || existing.isEmpty()) return "";
+        String summary = existing.stream()
+                .map(c -> c.getName() + "（" + c.getRole() + "）："
+                        + "性格=" + truncate(c.getPersonality(), 40)
+                        + "；动机=" + truncate(c.getMotivation(), 40))
+                .reduce((a, b) -> a + "\n" + b).orElse("");
+        return "既有人物性格母题摘要（去重依据）：\n" + summary
+                + "\n去重硬约束：新卡的核心特质（性格母题、核心动机、说话风格）不得与上述 ≥2 张既有卡"
+                + "的核心母题重叠；若某特质组合已被既有卡覆盖，必须给出差异化反转（立场/处境/表达方式相反），"
+                + "不得再产出相似定位的重复人物。";
+    }
+
+    private static String truncate(String value, int limit) {
+        if (value == null) return "待定";
+        String v = value.strip();
+        return v.length() <= limit ? v : v.substring(0, limit) + "…";
     }
 
     private Character parseCharacter(String text, String projectId) {

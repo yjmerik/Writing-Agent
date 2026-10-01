@@ -50,4 +50,65 @@ class CharacterDesignerAgentTest {
         assertTrue(c.getAbility().contains("剑骨"));
         assertTrue(c.getMotivation().contains("复仇"));
     }
+
+    /** NCS-152（O-2）：注入既有卡性格母题摘要 + 去重硬约束——新卡核心特质不与 ≥2 既有卡重叠。 */
+    @Test
+    void 有既有卡时注入母题摘要与去重硬约束() {
+        final java.util.List<String> prompts = new java.util.ArrayList<>();
+        LlmGateway mockGateway = new LlmGateway() {
+            @Override public LlmResponse complete(LlmRequest request) {
+                prompts.add(request.getSystemPrompt());
+                return new LlmResponse("""
+                    【姓名】李四
+                    【角色定位】配角
+                    【性格】沉默寡言，观察入微。
+                    【能力】账房算学，过目不忘。
+                    【动机】为兄弟讨回公道。
+                    """, 100, 300);
+            }
+            @Override public void streamComplete(LlmRequest request, StreamHandler handler) {}
+        };
+        KnowledgeBaseService mockKb = new KnowledgeBaseService(null, null) {
+            @Override public void saveCharacter(Character c) {}
+        };
+
+        Character existing = new Character("proj-1", "张三", "主角");
+        existing.setPersonality("火爆冲动，重情重义，宁折不弯");
+        existing.setMotivation("为师门复仇");
+        CharacterDesignerAgent agent = new CharacterDesignerAgent(mockGateway, mockKb, TestPromptHelper.create());
+        agent.design("proj-1", "新配角", List.of(existing));
+
+        String prompt = prompts.get(0);
+        assertTrue(prompt.contains("性格母题摘要"), "必须注入既有卡母题摘要段: " + prompt);
+        assertTrue(prompt.contains("张三"), "摘要须含既有卡姓名");
+        assertTrue(prompt.contains("火爆冲动"), "摘要须含既有卡性格关键词");
+        assertTrue(prompt.contains("为师门复仇"), "摘要须含既有卡动机");
+        assertTrue(prompt.contains("≥2 张既有卡") && prompt.contains("重叠"),
+                "必须含 ≥2 卡重叠去重硬约束: " + prompt);
+    }
+
+    @Test
+    void 无既有卡时不注入母题摘要块() {
+        final java.util.List<String> prompts = new java.util.ArrayList<>();
+        LlmGateway mockGateway = new LlmGateway() {
+            @Override public LlmResponse complete(LlmRequest request) {
+                prompts.add(request.getSystemPrompt());
+                return new LlmResponse("""
+                    【姓名】王五
+                    【角色定位】主角
+                    【性格】沉稳。
+                    """, 100, 300);
+            }
+            @Override public void streamComplete(LlmRequest request, StreamHandler handler) {}
+        };
+        KnowledgeBaseService mockKb = new KnowledgeBaseService(null, null) {
+            @Override public void saveCharacter(Character c) {}
+        };
+
+        CharacterDesignerAgent agent = new CharacterDesignerAgent(mockGateway, mockKb, TestPromptHelper.create());
+        agent.design("proj-1", "主角", List.of());
+
+        assertFalse(prompts.get(0).contains("性格母题摘要"),
+                "无既有卡时不得出现空的母题摘要段");
+    }
 }

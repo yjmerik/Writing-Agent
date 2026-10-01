@@ -30,6 +30,10 @@
 {{diversityGuide}}
 {{/if}}
 
+{{#if motifGuide}}
+{{motifGuide}}
+{{/if}}
+
 {{#if styleGuide}}
 风格约束：{{styleGuide}}
 {{/if}}

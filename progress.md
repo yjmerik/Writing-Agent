@@ -1,38 +1,32 @@
-# Phase-54 review 整改批次完成 — 2026-09-30
+# NCS-152 in-progress（bless 待决策）+ NCS-165 阻塞发现 — 2026-10-01
 
-Last Updated: 2026-09-30
+Last Updated: 2026-10-01
 
 ## Current
 
-phase 54（review 整改）全部 11 项完成并合入 main（NCS-154..164，active_feature=None）：
-批准制修复（154 预览-确认链 + 155 UI）、FAILED_RETRYABLE（156 类型化异常 +
-157 终态/手动重投）、保存门禁（162）、内联裁决（163）、卫生类（158/159/160/161）、
-登记可信度（164：10 处 verify_cmd 修正 + 13 条台账补建 + ncs-070 修复 +
-check-verify-cmds.py 校验脚本）。backlog 剩 NCS-152/153（O-2/O-3 prompt 项，
-各自独立 e2e）。
+NCS-152（人物性格母题去重）实现完成在分支 codex/ncs-152-character-motif-diversity：
+先红后绿 3 单测、全量 1464 绿、语料 mystery-20261001 已重建（真实 LLM 3 章 11672 字
+0 失败，比旧语料多写 2 章）、replay×2 相互逐字节一致。ch3 组装分叉（record prompt
+为 replay 严格子集）阻断 compare-baseline —— 已登记 NCS-165 专项（bug）。
+NCS-153 因 one-feature-at-a-time 未开始。
 
 ## Files
 
-- main 提交：154→6a72d5a、155→dea6e65、156→0146765(+157 5723c35 同分支链)、
-  162→ef9ca6b、163→6bba0e6、158→5dcd77d、159→072520e、160→33c0e57、161→81885b9
-  （各 feature 独立 codex 分支 ff-merge，台账/evidence 随每个 docs 提交落库）
-- spec：docs/specs/2026-09-30-phase53-review-remediation.md
+- 分支 codex/ncs-152-character-motif-diversity（实现 + 语料 + 诊断证据）
+- docs/harness/evidence/2026-10-01-replay-ch3-divergence.json（分叉取证）
 
 ## Verification
 
-- 全量 mvn test 1462/0F/0E/1S（main=81885b9）；npm build 通过
-- python3 scripts/check-harness.py PASS（零 FAIL）；check-verify-cmds.py 285 引用全过
-- e2e（154/161 各对照干净 main 基线）：产出逐字节一致（ch1 v2 3288字
-  sha=b8742f985e1f8b1f）= 零分叉，语料未重建；compare-baseline 双侧 PASS
-- 已知稳态：e2e.sh --acceptance full 在 replay 因第 1 章人审屏障失败，
-  与 golden（minChapters=1，含人审屏障验收轮）一致，属语料验收态非回归
+- 全量 1464/0F/0E/1S（分支）；check-harness / check-verify-cmds PASS
+- compare-baseline：结构/套路词项过；FAIL=失败3+错误3（ch3 miss 退避）+
+  n-gram 0.0785>0.0426（2 章样本 vs golden 1 章样本口径差）
 
 ## Blockers
 
-- 无
+- NCS-165：≥3 章语料的 ch3 组装分叉未定位（需带组装级诊断重录复现）
+- NCS-152 bless 需人工：接受 NCS-150 同形态门禁缺口，或先修 NCS-165 重录闭环
 
 ## Next Steps
 
-- NCS-152（人物性格母题去重）/153（场景锚点）：prompt 项，各自 e2e record+对比
-- 155/163 的浏览器实机走查待下次真实 checkpoint 修订 / 批准被拒场景补录
-- 《剑冢守夜人》第 10 章批准续跑待用户操作（18095 实例旧包，重载需重建 jar）
+- 用户决策后：a) bless 152 → 合并 → 153（同样会遇到分叉）或 b) 修 NCS-165 →
+  重录 152 语料闭环 → 153（推荐，一次修复惠及所有未来语料重建）

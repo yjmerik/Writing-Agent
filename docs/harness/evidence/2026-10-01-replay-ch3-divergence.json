@@ -1,0 +1,21 @@
+{
+ "capturedAt": "2026-10-01T20:56:22+08:00",
+ "kind": "e2e-corpus-divergence-diagnosis",
+ "corpus": "data/e2e-fixtures/mystery-20261001（NCS-152 record，49 fixtures，真实 LLM 3 章）",
+ "summary": "record 后 replay×2 相互逐字节一致（ch1/ch2 与 record 正文一致，sha 04f723717e3071eb/784f03fe2bfb332d），但 ch3 写作调用指纹分叉（replay 524f60f7 ≠ record c90a6a94）→ fixture miss×3 → replay 停在第 2 章。replay 两轮失败点一致=稳定分叉，非随机竞态。",
+ "evidence": [
+  "record 期调用时序（fixtures recordedAt）：11:49 ch1 写作 → 后处理 8 GENERAL+3 EXTRACTION → 12:05 ch2 → 后处理 → 12:21 ch3",
+  "miss 转储 vs record ch3 fixture（CHAPTER_WRITING-c90a6a94）对比：replay prompt 是 record 的严格超集——replay 多 13 类注入段（[CHARACTER_STATE]/[RELATIONSHIP_STATE]/[PLOT_COMMITMENT]/[TIMELINE_EVENT]/[OBJECT_STATE]/【上一章结尾】【精确衔接点】【历史反馈】【叙事线索追踪】【角色出场建议】【事件结构多样性】等），record 无任何独有段",
+  "record ch3 systemPrompt 13237 字节（36 状态行→6）/ user 2246；replay 15213（36 行）/ 5608",
+  "ch1/ch2 组装与回放同指纹 → 分叉仅发生在第 3 章的组装",
+  "NCS-152 的 motifGuide 注入两侧均在且一致（character-design 8 fixtures，构造期确定性无损）",
+  "compare-baseline（replay 报告 vs golden）：章节数 2≥1 ✓、总字数 9364≥2630 ✓、均值 4682≥2301 ✓、套路词 1.0≤1.1 ✓；FAIL：章节失败 3、LLM错误 3（均为 ch3 miss 退避重试）、n-gram 0.0785>0.0426（2 章样本 vs golden 1 章样本口径差）"
+ ],
+ "hypotheses": [
+  "预算裁剪：record 期 ch3 组装 total 超预算 → 低优先级段逐段裁剪（与子集关系吻合）；但 total 输入差异未定位",
+  "条件组装路径：某注入段的存在性条件在 record 期判否（与挂钟/运行时序相关），replay 期判真",
+  "后处理产物入库时序：record 期真实 LLM 慢，ch3 组装时 ch2 部分派生行未落库（但 postProcessor.process 为同步 awaitFanout，存疑）"
+ ],
+ "next": "带组装级诊断（逐 section 存在性 + total/budget 数值）重录复现，定位确切开关后修复；修前所有 ≥3 章语料重建的 replay 完整性不可保证",
+ "impact": "阻塞 NCS-152 bless（结构项 FAIL 不可解释为质量退化）与 NCS-153 语料重建；NCS-150 时代 handoff 记录过同类『重写链长不确定性』"
+}

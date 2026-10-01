@@ -103,6 +103,13 @@ public class EntityGraphService {
 
         if (entities.isEmpty()) return "";
 
+        // NCS-165: 注入确定性——召回列表来自多个无次级保证的查询与邻居扩展，
+        // 同 last_seen_chapter 的实体顺序跨运行不稳定，会使本段文本（及写作 prompt 指纹）
+        // 在 record/replay 间分叉。统一稳定排序：lastSeenChapter 降序 → 名称升序 → id 兜底。
+        entities.sort(java.util.Comparator.comparingInt(Entity::getLastSeenChapter).reversed()
+                .thenComparing(Entity::getName, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()))
+                .thenComparing(Entity::getId));
+
         // 3. 按类型分组 + 限流
         Map<EntityType, List<Entity>> byType = entities.stream()
                 .collect(Collectors.groupingBy(Entity::getType));
@@ -121,8 +128,10 @@ public class EntityGraphService {
             List<Entity> typed = byType.getOrDefault(type, List.of());
             if (typed.isEmpty()) continue;
 
-            // 按 last_seen_chapter 降序排序
-            typed.sort((a, b) -> Integer.compare(b.getLastSeenChapter(), a.getLastSeenChapter()));
+            // 按 last_seen_chapter 降序排序（NCS-165: 等章内按名称升序，保证确定性）
+            typed.sort(java.util.Comparator
+                    .comparingInt(Entity::getLastSeenChapter).reversed()
+                    .thenComparing(Entity::getName, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())));
 
             List<Entity> limited = typed.subList(0, Math.min(typed.size(), MAX_ENTITIES_PER_TYPE));
             String typeLabel = switch (type) {

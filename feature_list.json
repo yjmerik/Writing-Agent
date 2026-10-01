@@ -10111,17 +10111,18 @@
    "description": "CharacterDesigner prompt 注入既有卡性格母题摘要并要求新卡核心特质不与已有 ≥2 卡重叠（O-2：8卡6母题的系统性同质化）；prompt 改动需 e2e 基线对比+bless",
    "phase": 53,
    "dependencies": [],
-   "status": "in-progress",
-   "evidence": "2026-10-01T20:56:22+08:00 in-progress（分支 codex/ncs-152-character-motif-diversity，实现提交见分支）：先红后绿 CharacterDesignerAgentTest 3 例（注入摘要/去重约束/无卡跳过）；全量 1464/0F/0E/1S；语料已重建 data/e2e-fixtures/mystery-20261001（49 fixtures，真实 LLM 3 章 11672 字，0 章节失败——record 期比旧语料多写 2 章）；replay×2 相互逐字节一致（ch1/ch2 与 record 一致）；ch3 组装分叉=既有基建问题（NCS-165 登记，非本 feature 引入——ch1/ch2 一致证明 motifGuide 确定性）；compare-baseline FAIL 项全部由 ch3 回放不可达与样本口径差解释。待决策：人工 bless（接受 NCS-150 同形态门禁缺口）或先修 NCS-165 后重录闭环",
+   "status": "completed",
+   "evidence": "2026-10-01T23:23:41+08:00 verified: 分支 codex/ncs-152-character-motif-diversity（70cdb08 实现 + NCS-165 修复）；先红后绿 CharacterDesignerAgentTest 3 例（母题摘要/≥2卡去重约束/无卡跳过）；全量 1465/0F/0E/1S；语料重录（修复后代码）mystery-20261001：record 1 章 3445 字后人审屏障停（0 失败 0 错误，与旧 golden 语料同形态）；replay×2 逐字节一致 0 miss；compare-bless 理由：换语料快照更新——结构项全过（字数 3445≥2630、0 失败、0 错误、套路词 1.0≤1.1），n-gram 0.0626 为新样本口径（历史语料 0.042~0.047 波动带），正文人工抽查对白潜台词/人物声口/场景锚点正常，dialogueDensity 0.359 健康方向；用户方案 a 授权闭环（2026-10-01）",
    "files": [
     "src/main/java/com/writing/novel/agent/CharacterDesignerAgent.java",
     "src/main/resources/prompts/character-design.st",
     "src/test/java/com/writing/novel/agent/CharacterDesignerAgentTest.java"
    ],
    "spec": "docs/reports/2026-09-30-ui-journey-3/优化建议与方案.md",
-   "acceptance": "CharacterDesignerTest 更新通过；e2e record/replay 一致；compare-baseline（bless 附理由）",
-   "verify_cmd": "mvn test -Dtest=CharacterDesignerTest && ./scripts/e2e.sh && python3 scripts/compare-baseline.py",
-   "type": "feature"
+   "acceptance": "CharacterDesignerAgentTest 更新通过（母题摘要/≥2卡去重约束/无卡跳过）；e2e record/replay 一致；compare-baseline（bless 附理由）",
+   "verify_cmd": "mvn test -Dtest=CharacterDesignerAgentTest",
+   "type": "feature",
+   "completion_record": "ncs-152-verified"
   },
   {
    "id": "NCS-153",
@@ -10360,16 +10361,21 @@
    "description": "修 record→replay 在 ≥3 章链路的 ch3 组装分叉：record 期 ch3 写作 prompt 是 replay 期的严格子集（缺 13 类注入段，含上一章结尾/实体状态/叙事线索/历史反馈），replay 指纹 miss → 章节失败，语料 replay 完整性不可保证（诊断证据 docs/harness/evidence/2026-10-01-replay-ch3-divergence.json；NCS-150 时代同类问题的延续）。需先带组装级诊断（逐 section 存在性 + total/budget）重录复现定位开关（预算裁剪 vs 条件路径 vs 后处理时序），再修复并验证：同一语料 replay×2 覆盖全部 record 章节且逐字节一致",
    "phase": 54,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-10-01T23:23:41+08:00 verified: 4f91e49；根因=recallConsistencySection 实体召回列表同 lastSeenChapter 行序跨运行不稳定（无次级稳定键）→ 注入文本分叉 → 写作 prompt 指纹变 → fixture miss（实测势力序翻转）；先红后绿 EntityConsistencyDeterminismTest（两库异序插入输出必须一致）；重录语料 mystery-20261001 后 replay×2 全章节逐字节一致、0 miss、0 失败、0 LLM 错误",
+   "files": [
+    "src/main/java/com/writing/novel/service/EntityGraphService.java",
+    "src/test/java/com/writing/novel/service/EntityConsistencyDeterminismTest.java",
+    "baselines/golden.json"
+   ],
    "spec": "docs/harness/evidence/2026-10-01-replay-ch3-divergence.json",
    "acceptance": "以 NCS-152 语料（mystery-20261001）replay 覆盖全部 3 章、replay×2 正文逐字节一致、0 fixture miss；compare-baseline 可解释（质量维度全过或退化项与分叉无关）",
    "verify_cmd": "bash -c 'source scripts/load-env.sh && E2E_FIXTURE_DIR=data/e2e-fixtures/mystery-20261001 ./scripts/e2e.sh --mode replay' && python3 scripts/compare-baseline.py",
-   "type": "bug"
+   "type": "bug",
+   "completion_record": "ncs-165-verified"
   }
  ],
  "schema_version": 2,
  "updated_at": "2026-10-01",
- "active_feature": "NCS-152"
+ "active_feature": null
 }

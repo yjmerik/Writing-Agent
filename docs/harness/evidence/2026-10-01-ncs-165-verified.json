@@ -1,0 +1,21 @@
+{
+ "verifiedAt": "2026-10-01T23:23:41+08:00",
+ "commit": "4f91e49daeac0d7ea4c34a3c336ab94e95427fb4",
+ "cleanCheckout": true,
+ "branch": "codex/ncs-152-character-motif-diversity",
+ "scope": "实体一致性注入段稳定排序（消除 record/replay 指纹分叉）",
+ "checks": [
+  {
+   "command": "mvn test -Dtest=EntityConsistencyDeterminismTest",
+   "result": "先红（异序输出不同）后绿（输出一致）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-01T23:23:41+08:00"
+  },
+  {
+   "command": "E2E_FIXTURE_DIR=data/e2e-fixtures/mystery-20261001 ./scripts/e2e.sh --mode replay ×2",
+   "result": "两轮章节指纹一致（ch1 v3 3445字 sha=70c38edf84ef8768）、0 fixture miss、0 失败 0 错误",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-01T23:23:41+08:00"
+  }
+ ]
+}

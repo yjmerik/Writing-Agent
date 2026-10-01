@@ -1,0 +1,33 @@
+{
+ "verifiedAt": "2026-10-01T23:23:41+08:00",
+ "commit": "4f91e49daeac0d7ea4c34a3c336ab94e95427fb4",
+ "cleanCheckout": true,
+ "branch": "codex/ncs-152-character-motif-diversity",
+ "scope": "CharacterDesigner 性格母题去重约束（prompt 注入）",
+ "checks": [
+  {
+   "command": "mvn test -Dtest=CharacterDesignerAgentTest",
+   "result": "先红后绿 3 例",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-01T23:23:41+08:00"
+  },
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+   "result": "Tests run: 1465, Failures: 0, Errors: 0, Skipped: 1",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-01T23:23:41+08:00"
+  },
+  {
+   "command": "E2E_FIXTURE_DIR=data/e2e-fixtures/mystery-20261001 ./scripts/e2e.sh --mode record",
+   "result": "1 章 3445 字（人审屏障停，语料设计行为）；构思期 8 次 CHARACTER_DESIGN 全部携带 motifGuide",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-01T23:23:41+08:00"
+  },
+  {
+   "command": "python3 scripts/compare-baseline.py --bless",
+   "result": "bless 完成（理由见 feature evidence）；复验 PASS",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-01T23:23:41+08:00"
+  }
+ ]
+}

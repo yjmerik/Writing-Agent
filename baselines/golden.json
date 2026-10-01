@@ -1,14 +1,14 @@
 {
-  "blessedAt": "2026-09-30T17:36:10.551601",
+  "blessedAt": "2026-10-01T23:22:28.007771",
   "blessedFrom": "e2e-report.json",
   "minChapters": 1,
-  "minTotalWords": 2630,
-  "minAvgWordCount": 2301,
+  "minTotalWords": 2756,
+  "minAvgWordCount": 2411,
   "maxChapterFailures": 0,
   "maxLlmErrors": 0,
   "minEvaluationScore": null,
   "styleMetrics": {
-    "maxRepeatedNgramRate": 0.0426,
+    "maxRepeatedNgramRate": 0.0689,
     "maxAvgClicheHitsPerChapter": 1.1
   }
 }

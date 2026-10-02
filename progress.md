@@ -1,28 +1,28 @@
-# Backlog 清空（NCS-152/153/165 完成）— 2026-10-02
+# Backlog 清空 + 实机走查闭环 — 2026-10-02
 
 Last Updated: 2026-10-02
 
 ## Current
 
-phase 54 backlog 全部清空：NCS-152（人物性格母题去重）、NCS-153（场景锚点
-铁律约束）、NCS-165（replay 组装分叉修复）均 completed 合入 main。
-golden 现行基线=mystery-20261001 语料（2026-10-01 bless）；NCS-153 语料
-mystery-20261002 replay×2 一致且全项优于 golden 门槛（未 bless，golden 保持
-更严下限）。backlog 无剩余项——下一个需求入口：诊断脚本无失败分类时向用户请求。
+NCS-152/153/165 闭环后完成实机走查（本地 18096 新包，INTERACTIVE，真实 LLM）：
+- NCS-154/155 预览-确认链 API 全链路通过（reject 点名→diff 预览库不变→
+  discard 拦截过度改写→二次 reject→confirm 按 id 落库）
+- 走查撞出并修复 2 个真缺陷：NCS-166（构思线程静默死亡→Throwable 兜底落
+  FAILED+事件；复验 30 秒可见 vs 旧 46 分钟挂起）、NCS-167（PLANNING 断头路
+  →runPlanning 幂等补跑大纲）
+- 新登记 NCS-168：初建检查点 reject 后无新一轮 PENDING（每轮仅一次修订机会）
+- NCS-152 直接受益目击：三轮构思 8 卡性格母题各异
+- 18095 实例仍旧包；《剑冢守夜人》停第 10 章（作者决策保留）
 
 ## Files
 
-- main：a15bbb9（152+165）、620c0fe（153）
-- 语料：data/e2e-fixtures/mystery-20261001（152/165 用）、mystery-20261002（153 用）
-- evidence：docs/harness/evidence/2026-10-0{1,2}-ncs-15x-verified.json 等
+- main：da71947（166/167）、c87551c（incident 取证）+ 本轮走查证据
+- docs/harness/evidence/2026-10-02-ncs-155-walkthrough.json
 
 ## Verification
 
-- 全量 1466/0F/0E/1S（main 合并后）；双校验 PASS
-- 152/165：replay×2 全章节逐字节一致 0 miss（分叉根因=实体一致性段无稳定
-  次级排序，已修）；golden rebless（n-gram 0.0626 样本口径，理由在 evidence）
-- 153：replay×2 逐字节一致；compare-baseline 全 PASS（n-gram 0.0515，
-  铁律 12 生效后首轮 0.1042→正常带）
+- 全量 1470/0F/0E/1S（main 合并后）；双校验 PASS（499 features）
+- 走查全链路见 evidence；153 语料 replay×2 一致且全项优于 golden 门槛
 
 ## Blockers
 
@@ -30,6 +30,5 @@ mystery-20261002 replay×2 一致且全项优于 golden 门槛（未 bless，gol
 
 ## Next Steps
 
-- 155/163 实机走查补录（下次真实 checkpoint 修订 / 批准被拒场景）
-- 18095 实例重载新包（含 152/153/165）——先处置《剑冢守夜人》第 10 章检查点
-- 新需求入口：./scripts/diagnose.sh + compare-baseline 无异常时向用户请求
+- NCS-168（reject 再审核闭环）+ 163 浏览器级走查（批准被拒场景）
+- 18095 重载新包（含 152/153/165/166/167）；先处置第 10 章检查点

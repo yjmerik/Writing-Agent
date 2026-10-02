@@ -1,0 +1,17 @@
+{
+ "capturedAt": "2026-10-02T19:04:20.885202+08:00",
+ "kind": "ncs-154/155-live-walkthrough",
+ "env": "本地 18096 实例（main da71947 新包，INTERACTIVE 模式，真实 LLM）",
+ "chain": [
+  "INTERACTIVE 项目构思 → AFTER_INITIAL_SETUP 检查点（~13 分钟，8 卡性格母题各异=NCS-152 直接受益）",
+  "reject 点名主角：修改意见含人物关键词+真实主角名 → 修订执行（~3 分钟）",
+  "响应携带 characterRevisions 逐字段 diff（role/personality/relationships/growthArc/speakingStyle），库中该卡逐字未变",
+  "GET /checkpoints/character-revisions 可查待确认预览（previewId+cards）",
+  "discard 坏候选（首轮候选把主角改成配角=过度改写，确认门禁正确拦截）：applied=false、预览清空、库仍原值",
+  "第二轮 reject 只微调说话风格 → 预览 4 字段 diff → confirm → {applied:true, 摘要点名沈渡}；id 不变、speakingStyle 更新为愿单术语风格",
+  " incident A 复验：无 embedding stub 的实例构思在真典播种后立即 FAILED（错误=Embedding 401）——旧代码同场景线程静默死亡挂 46 分钟，NCS-166 修复后 30 秒内可见可诊"
+ ],
+ "gaps_found": [
+  "NCS-168：初建检查点 reject 后终态（无新一轮 PENDING），作者每轮只有一次修订机会"
+ ]
+}

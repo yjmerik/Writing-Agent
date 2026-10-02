@@ -10173,7 +10173,7 @@
     "NCS-154"
    ],
    "status": "completed",
-   "evidence": "2026-09-30T22:29:08+08:00 verified: 1c9e545；npm run build 通过（tsc+vite，含 3 轮类型修正）；待确认卡片渲染 field before→after 对照 + 确认/放弃按钮，previewId 经 pending 端点补取；后端全量 1450/0F/0E/1S。实机走查备注：未做浏览器实机点击（需真实 checkpoint 修订场景，涉真实 LLM 调用），以代码路径核对代替——下次实机 checkpoint 修订时补走查",
+   "evidence": "2026-09-30T22:29:08+08:00 verified: 1c9e545；npm run build 通过（tsc+vite，含 3 轮类型修正）；待确认卡片渲染 field before→after 对照 + 确认/放弃按钮，previewId 经 pending 端点补取；后端全量 1450/0F/0E/1S。实机走查备注：未做浏览器实机点击（需真实 checkpoint 修订场景，涉真实 LLM 调用），以代码路径核对代替——下次实机 checkpoint 修订时补走查；2026-10-02 实机走查补录（API 全链路，docs/harness/evidence/2026-10-02-ncs-155-walkthrough.json）：reject 点名→diff 预览（库不变）→discard 拦截过度改写→二次 reject→confirm 按 id 落库，全链路通过",
    "files": [
     "frontend/src/api/client.ts",
     "frontend/src/components/InteractiveReview.tsx"
@@ -10415,6 +10415,21 @@
    "verify_cmd": "mvn test -Dtest=PlanningRecoveryTest && mvn test -Dtest=TerminalStateCommandGateTest",
    "branch": "codex/ncs-167-cancel-resume-semantics",
    "completion_record": "ncs-167-verified"
+  },
+  {
+   "id": "NCS-168",
+   "name": "初建检查点 reject 后的新一轮再审核",
+   "type": "bug",
+   "phase": 54,
+   "dependencies": [],
+   "status": "not-started",
+   "evidence": "",
+   "files": [],
+   "spec": "docs/harness/evidence/2026-10-02-walkthrough-incident.json",
+   "description": "走查实测：AFTER_INITIAL_SETUP 检查点 reject 后 status=REJECTED（终态），pending 列表为空——作者每轮只有一次修订机会，无法基于修订结果继续提意见（reject 流程注释宣称『重新进入 PAUSED_AT_CHECKPOINT 等待再次审核』但实现未生成新检查点）。修复语义：reject 完成内容改写并回到 PAUSED 后，生成新一轮 PENDING 检查点（携带修订后 payload），作者可继续批准/再修订；集成测试覆盖 reject→再 reject→approve 链路",
+   "acceptance": "INTERACTIVE 项目 reject 初建检查点后：存在新一轮 PENDING 检查点；连续两轮修订后可 approve 推进；测试覆盖",
+   "verify_cmd": "mvn test -Dtest=CheckpointRevisionRoutingTest",
+   "branch": ""
   }
  ],
  "schema_version": 2,

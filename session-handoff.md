@@ -1,37 +1,40 @@
-# 交接：NCS-152 待 bless / NCS-165 分叉取证 — 2026-10-01
+# 交接：backlog 清空 — 2026-10-02
 
-Last Updated: 2026-10-01
+Last Updated: 2026-10-02
 
 ## Current
 
-- NCS-152 in-progress（active_feature），分支 codex/ncs-152-character-motif-diversity
-  未合入：实现+单测+全量+语料重建+replay×2 确定性完成，compare-baseline 结构项 FAIL
-  根因=ch3 组装分叉（NCS-165），bless 待人工
-- NCS-153 未开始（152 占用 active_feature）
+NCS-152/153/165 全部 completed 合入 main（main=620c0fe，active_feature=None）。
+152：CharacterDesigner 注入既有卡性格母题摘要+≥2卡去重硬约束（motifGuide 条件块）；
+165：实体一致性注入段稳定排序（根因=同 lastSeenChapter 行序跨运行不稳定 →
+prompt 指纹分叉 → fixture miss；EntityConsistencyDeterminismTest 锁定）；
+153：chapter-writing 场景锚点约束（铁律第 12 条，两轮语料迭代后生效）。
 
 ## Files
 
-- docs/specs/2026-09-30-phase53-review-remediation.md（152/153 需求出处）
-- docs/harness/evidence/2026-10-01-replay-ch3-divergence.json（分叉取证）
-- data/e2e-fixtures/mystery-20261001/（49 fixtures；含 3 个 .miss.json 转储）
+- 语料：mystery-20261001（152/165，golden 配套）、mystery-20261002（153）
+- evidence：docs/harness/evidence/2026-10-01-ncs-15x / 2026-10-02-ncs-153
 
 ## 环境注意
 
 - mvn test 必须 source scripts/load-env.sh；切分支后先 clean compile 再 e2e
-- e2e record 单次约 50 分钟（构思 18 分 + 3 章）；replay 单次约 6 分钟
-- NCS-152 分支包含 character-design.st 的 motifGuide 条件块（新变量，
-  既有变量未动）；NCS-153 计划为 chapter-writing.st 静态纪律条目（无新变量）
+- golden=mystery-20261001 bless（2026-10-01，n-gram 0.0689 上限带）；153 语料
+  全项优于该门槛故未 bless——未来 e2e 默认用 20261002 亦可（报告对 golden 判）
+- e2e record 单次 40-50 分钟（屏障停点=语料设计行为）；replay 约 6 分钟
+- 18095 实例仍旧包；《剑冢守夜人》停第 10 章，重载前先处置检查点
 
 ## Verification
 
-- 见 progress.md Verification 段；双校验 PASS（496 features，in-progress=1）
+- 全量 1466/0F/0E/1S（main 合并后干净检出）；双校验 PASS（469 completed）
+- 152/165、153 语料各自 replay×2 逐字节一致 0 miss；compare-baseline PASS
 
 ## Blockers
 
-- NCS-165 取证修复（推荐先行）或 152 人工 bless——两者决定 153 的推进路径
+- 无
 
 ## Next Steps
 
-1. 决策 a/b（见 progress.md）
-2. b 路径：组装级诊断日志 → 重录 → 定位 → 修 → replay×2 全 3 章一致 →
-   152 闭环 → 153 同流程
+1. 155/163 实机走查补录；18095 重载新包（含 152/153/165）
+2. 新需求入口：diagnose.sh + compare-baseline 无异常时向用户请求
+3. 经验：语料必须在注入确定性修复之后录制（先修分叉再录，否则 record 期
+   偶然序会被固化）；质量要求区约束力弱于写作铁律区（153 两轮迭代实证）

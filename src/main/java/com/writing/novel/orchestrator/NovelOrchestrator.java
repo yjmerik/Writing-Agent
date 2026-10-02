@@ -533,88 +533,9 @@ public class NovelOrchestrator {
             }
         }
 
-        // 大纲（幂等：已有有效大纲则跳过，fallback 大纲需重新生成）
-        if (repository.findOutlineByProject(projectId).isEmpty()
-                || isFallbackOutline(projectId)) {
-            String protagonistName = "";
-            var chars = repository.findCharactersByProject(projectId);
-            for (var c : chars) {
-                if (c.getRole() != null && c.getRole().contains("主角")) {
-                    protagonistName = c.getName();
-                    break;
-                }
-            }
-            String worldSummary = collectWorldbuildingSummary(projectId);
-            String charSummary = collectCharacterSummary(projectId);
-            String theme = (protagonistName.isEmpty() ? "" : "主角名为「" + protagonistName + "」。")
-                    + "主题：" + p.getConcept()
-                    + (worldSummary.isEmpty() ? "" : "\n世界观设定：\n" + worldSummary)
-                    + (charSummary.isEmpty() ? "" : "\n已有人物：\n" + charSummary);
-            String genreRules = genreRuleProvider != null
-                    ? genreRuleProvider.getPlottingRules(p.getGenre()) : "";
-            String climaxSuggestions = genreRuleProvider != null
-                    ? genreRuleProvider.getClimaxSuggestions(p.getGenre()) : "";
-            if (!climaxSuggestions.isBlank()) {
-                genreRules = genreRules + "\n本题材推荐爽点类型：" + climaxSuggestions;
-            }
-            String plotDiversity = creativeDiversityService != null
-                    ? creativeDiversityService.getGlobalDiversityGuide(projectId) : "";
-
-            // p12-K1: 从 prefs 读取目标章数（默认 24，百万字可设 240）
-            int targetChapters = repository.findWritingPreferences(projectId)
-                    .map(prefs -> prefs.getTargetChapters()).orElse(24);
-            boolean useLayered = repository.findWritingPreferences(projectId)
-                    .map(prefs -> prefs.isLayeredOutline()).orElse(false);
-
-            if (useLayered && targetChapters > 40) {
-                // p12-K1: 分层大纲模式——先生成总纲，第一卷详细大纲
-                String wbSummaryForOutline = collectWorldbuildingSummary(projectId);
-                // cn-01: 把主角名 + 人物摘要传给 master outline，避免大纲自创名字漂移
-                String masterOutline = plotter.planMasterOutline(
-                        projectId, p.getConcept(), targetChapters, wbSummaryForOutline, genreRules,
-                        protagonistName, charSummary);
-                // 存储总纲到 outline.premise（临时存储，后续按卷扩展）
-                Outline masterOutlineObj = new Outline(projectId, masterOutline);
-                repository.saveOutline(masterOutlineObj);
-                log.info("分层大纲总纲生成完成: {} 卷规划", Math.max(2, targetChapters / 20));
-            } else {
-                // 传统模式——一次性生成全部大纲（≤40章适用）
-                plotter.plan(projectId, p.getConcept(), theme, targetChapters, theme, genreRules, plotDiversity);
-            }
-
-            // p11-q1-02: Outline 门禁——总纲/分卷校验，不过关重 plan 一次（传统模式）
-            if (conceiveGate != null) {
-                var outlineOpt = repository.findOutlineByProject(projectId);
-                if (outlineOpt.isPresent()) {
-                    var outlineGate = conceiveGate.checkOutline(outlineOpt.get());
-                    if (!outlineGate.pass()) {
-                        markQualityRisk(projectId, "Outline", outlineGate.feedback());
-                        if (!useLayered || targetChapters <= 40) {
-                            plotter.plan(projectId, p.getConcept(), theme, targetChapters, theme,
-                                    genreRules + "【门禁反馈】" + outlineGate.feedback(), plotDiversity);
-                        }
-                    }
-                }
-            }
-
-            // 记录大纲生成
-            if (creativeDiversityService != null) {
-                var outline = repository.findOutlineByProject(projectId);
-                if (outline.isPresent()) {
-                    String plotSummary = outline.get().getVolumes().stream()
-                            .map(v -> "卷" + v.getVolumeIndex() + ":" + v.getTitle())
-                            .reduce((a, b) -> a + ", " + b).orElse("无");
-                    creativeDiversityService.record(projectId, "PLOTTER",
-                            "剧情结构：" + plotSummary,
-                            outline.get().getVolumes().stream()
-                                    .map(v -> "卷" + v.getVolumeIndex() + ":" + v.getTitle())
-                                    .reduce((a, b) -> a + ";" + b).orElse("[]"), 0);
-                }
-            }
-
-            // p11-H1: 角色群像扩展——根据篇幅动态设计更多配角
-            expandCharacterEnsemble(projectId, p);
-        }
+        // NCS-167: 大纲生成抽为共享方法——构思期与 PLANNING 断头路恢复（线程死亡在大纲前）
+        // 都走这一条幂等路径（无大纲/fallback 大纲才生成）
+        ensureOutlineGenerated(p);
 
         // 伏笔抽取：从大纲文本中提取伏笔条目（p3-03）
         extractForeshadowingsFromOutline(projectId);
@@ -1341,8 +1262,100 @@ public class NovelOrchestrator {
         repository.saveProject(p);
     }
 
+    /**
+     * NCS-167: 大纲生成（幂等）——无大纲或 fallback 大纲时补跑 Plotter（含门禁重试与多样性记录）。
+     * 原 runConceiving 内联段；PLANNING 断头路（构思线程在大纲前死亡）经 runPlanning 复用恢复。
+     */
+    private void ensureOutlineGenerated(Project p) {
+        String projectId = p.getId();
+        if (repository.findOutlineByProject(projectId).isEmpty()
+                || isFallbackOutline(projectId)) {
+            String protagonistName = "";
+            var chars = repository.findCharactersByProject(projectId);
+            for (var c : chars) {
+                if (c.getRole() != null && c.getRole().contains("主角")) {
+                    protagonistName = c.getName();
+                    break;
+                }
+            }
+            String worldSummary = collectWorldbuildingSummary(projectId);
+            String charSummary = collectCharacterSummary(projectId);
+            String theme = (protagonistName.isEmpty() ? "" : "主角名为「" + protagonistName + "」。")
+                    + "主题：" + p.getConcept()
+                    + (worldSummary.isEmpty() ? "" : "\n世界观设定：\n" + worldSummary)
+                    + (charSummary.isEmpty() ? "" : "\n已有人物：\n" + charSummary);
+            String genreRules = genreRuleProvider != null
+                    ? genreRuleProvider.getPlottingRules(p.getGenre()) : "";
+            String climaxSuggestions = genreRuleProvider != null
+                    ? genreRuleProvider.getClimaxSuggestions(p.getGenre()) : "";
+            if (!climaxSuggestions.isBlank()) {
+                genreRules = genreRules + "\n本题材推荐爽点类型：" + climaxSuggestions;
+            }
+            String plotDiversity = creativeDiversityService != null
+                    ? creativeDiversityService.getGlobalDiversityGuide(projectId) : "";
+
+            // p12-K1: 从 prefs 读取目标章数（默认 24，百万字可设 240）
+            int targetChapters = repository.findWritingPreferences(projectId)
+                    .map(prefs -> prefs.getTargetChapters()).orElse(24);
+            boolean useLayered = repository.findWritingPreferences(projectId)
+                    .map(prefs -> prefs.isLayeredOutline()).orElse(false);
+
+            if (useLayered && targetChapters > 40) {
+                // p12-K1: 分层大纲模式——先生成总纲，第一卷详细大纲
+                String wbSummaryForOutline = collectWorldbuildingSummary(projectId);
+                // cn-01: 把主角名 + 人物摘要传给 master outline，避免大纲自创名字漂移
+                String masterOutline = plotter.planMasterOutline(
+                        projectId, p.getConcept(), targetChapters, wbSummaryForOutline, genreRules,
+                        protagonistName, charSummary);
+                // 存储总纲到 outline.premise（临时存储，后续按卷扩展）
+                Outline masterOutlineObj = new Outline(projectId, masterOutline);
+                repository.saveOutline(masterOutlineObj);
+                log.info("分层大纲总纲生成完成: {} 卷规划", Math.max(2, targetChapters / 20));
+            } else {
+                // 传统模式——一次性生成全部大纲（≤40章适用）
+                plotter.plan(projectId, p.getConcept(), theme, targetChapters, theme, genreRules, plotDiversity);
+            }
+
+            // p11-q1-02: Outline 门禁——总纲/分卷校验，不过关重 plan 一次（传统模式）
+            if (conceiveGate != null) {
+                var outlineOpt = repository.findOutlineByProject(projectId);
+                if (outlineOpt.isPresent()) {
+                    var outlineGate = conceiveGate.checkOutline(outlineOpt.get());
+                    if (!outlineGate.pass()) {
+                        markQualityRisk(projectId, "Outline", outlineGate.feedback());
+                        if (!useLayered || targetChapters <= 40) {
+                            plotter.plan(projectId, p.getConcept(), theme, targetChapters, theme,
+                                    genreRules + "【门禁反馈】" + outlineGate.feedback(), plotDiversity);
+                        }
+                    }
+                }
+            }
+
+            // 记录大纲生成
+            if (creativeDiversityService != null) {
+                var outline = repository.findOutlineByProject(projectId);
+                if (outline.isPresent()) {
+                    String plotSummary = outline.get().getVolumes().stream()
+                            .map(v -> "卷" + v.getVolumeIndex() + ":" + v.getTitle())
+                            .reduce((a, b) -> a + ", " + b).orElse("无");
+                    creativeDiversityService.record(projectId, "PLOTTER",
+                            "剧情结构：" + plotSummary,
+                            outline.get().getVolumes().stream()
+                                    .map(v -> "卷" + v.getVolumeIndex() + ":" + v.getTitle())
+                                    .reduce((a, b) -> a + ";" + b).orElse("[]"), 0);
+                }
+            }
+
+            // p11-H1: 角色群像扩展——根据篇幅动态设计更多配角
+            expandCharacterEnsemble(projectId, p);
+        }
+    }
+
     private void runPlanning(String projectId) {
         Project p = loadProject(projectId);
+        // NCS-167: PLANNING 可能是断头路（构思线程在大纲生成前死亡，项目停 PLANNING 无大纲）——
+        // 幂等补跑大纲生成；恢复后照常推进 WRITING，run/resume 不再被终态门禁卡死
+        ensureOutlineGenerated(p);
         p.setState(NovelState.WRITING);
         repository.saveProject(p);
     }

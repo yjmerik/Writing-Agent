@@ -3072,6 +3072,17 @@
    "implementation_commit": "4f91e49daeac0d7ea4c34a3c336ab94e95427fb4",
    "main_commit": "4f91e49daeac0d7ea4c34a3c336ab94e95427fb4",
    "evidence": "docs/harness/evidence/2026-10-01-ncs-152-verified.json"
+  },
+  {
+   "id": "ncs-153-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-153"
+   ],
+   "branch": "codex/ncs-153-scene-anchor",
+   "implementation_commit": "39850b0f664627041c5d7518dd104e7705f98aac",
+   "main_commit": "39850b0f664627041c5d7518dd104e7705f98aac",
+   "evidence": "docs/harness/evidence/2026-10-02-ncs-153-verified.json"
   }
  ],
  "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",

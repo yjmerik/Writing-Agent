@@ -1,0 +1,39 @@
+{
+ "verifiedAt": "2026-10-02T09:57:34.787322+08:00",
+ "commit": "39850b0f664627041c5d7518dd104e7705f98aac",
+ "cleanCheckout": true,
+ "branch": "codex/ncs-153-scene-anchor",
+ "scope": "章写场景锚点硬约束（prompt 迭代两轮，铁律区生效）",
+ "checks": [
+  {
+   "command": "mvn test -Dtest=ChapterWriterAgentTest",
+   "result": "先红后绿 3 例",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-02T09:57:34.787322+08:00"
+  },
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+   "result": "Tests run: 1466, Failures: 0, Errors: 0, Skipped: 1",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-02T09:57:34.787322+08:00"
+  },
+  {
+   "command": "E2E_FIXTURE_DIR=data/e2e-fixtures/mystery-20261002 ./scripts/e2e.sh --mode record（第二轮）",
+   "result": "1 章 3919 字 0 失败；中段对峙戏锚点生效（对白间隙动作/感官描写）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-02T09:57:34.787322+08:00"
+  },
+  {
+   "command": "E2E_FIXTURE_DIR=data/e2e-fixtures/mystery-20261002 ./scripts/e2e.sh --mode replay ×2",
+   "result": "两轮逐字节一致（ch1 v2 3919字 sha=915d1c335bb6a838）、0 miss",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-02T09:57:34.787322+08:00"
+  },
+  {
+   "command": "python3 scripts/compare-baseline.py",
+   "result": "PASS 全项（未破 golden，无需 bless）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-02T09:57:34.787322+08:00"
+  }
+ ]
+}

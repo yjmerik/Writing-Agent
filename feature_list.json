@@ -8021,7 +8021,7 @@
    "dependencies": [
     "NCS-001"
    ],
-   "status": "not-started",
+   "status": "deferred",
    "files": [
     "src/main/java/com/writing/novel/service/WriteLeaseService.java",
     "src/main/java/com/writing/novel/agent/ChapterWriterAgent.java",
@@ -8030,7 +8030,8 @@
    "spec": "docs/specs/2026-09-20-ncs-completion.md",
    "acceptance": "运行 verify_cmd 通过：模型调用期间取消并结束旧任务或启新任务，旧结果仍被拒。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
    "verify_cmd": "mvn test -Dtest=WriteLeaseIdentityTest",
-   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。",
+   "deferred_reason": "疑似被 NCS-001 持久写入门禁与 epoch 租约覆盖（WriteLeaseService/WriteLeaseStaleException 已交付）；恢复前需核对『取消/接手后旧调用结果被拒』场景覆盖完整性"
   },
   {
    "id": "NCS-037",
@@ -8041,7 +8042,7 @@
    "dependencies": [
     "NCS-036"
    ],
-   "status": "not-started",
+   "status": "deferred",
    "files": [
     "src/main/java/com/writing/novel/persistence/sqlite/WriteLeaseRepository.java",
     "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
@@ -8050,7 +8051,8 @@
    "spec": "docs/specs/2026-09-20-ncs-completion.md",
    "acceptance": "运行 verify_cmd 通过：owner和到期时间跨重启有效；原子校验失效租约不得写入。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
    "verify_cmd": "mvn test -Dtest=WriteLeaseOwnershipTest",
-   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。",
+   "deferred_reason": "疑似被 NCS-001 epoch 租约覆盖（owner+epoch 持久化于租约表）；恢复前需核对跨重启有效期与原子失效写拦截"
   },
   {
    "id": "NCS-038",
@@ -8061,7 +8063,7 @@
    "dependencies": [
     "NCS-037"
    ],
-   "status": "not-started",
+   "status": "deferred",
    "files": [
     "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java",
     "src/main/java/com/writing/novel/service/WriteLeaseService.java",
@@ -8070,7 +8072,8 @@
    "spec": "docs/specs/2026-09-20-ncs-completion.md",
    "acceptance": "运行 verify_cmd 通过：后处理模型晚返回不写真典、摘要或投影；不能借用新任务身份。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
    "verify_cmd": "mvn test -Dtest=PostProcessLeaseTest",
-   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。",
+   "deferred_reason": "疑似被 NCS-001 覆盖（Agent 侧写入提交前校验 epoch，后处理落库走同一门禁）；恢复前需核对逐阶段借用身份场景"
   },
   {
    "id": "NCS-039",
@@ -8261,7 +8264,7 @@
    "dependencies": [
     "NCS-018"
    ],
-   "status": "not-started",
+   "status": "deferred",
    "files": [
     "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
     "src/main/java/com/writing/novel/orchestrator/OrchestratorConfig.java",
@@ -8270,7 +8273,8 @@
    "spec": "docs/specs/2026-09-20-ncs-completion.md",
    "acceptance": "运行 verify_cmd 通过：近期规划完成前生成合同；无效输出不伪装就绪；重复调度不重建有效合同。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
    "verify_cmd": "mvn test -Dtest=SceneContractPipelineTest",
-   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。",
+   "deferred_reason": "已被 SceneContractService + scene-contract.st 覆盖（正常规划生成场景合同）；恢复前需核对无效输出不伪装就绪/重复调度不重建"
   },
   {
    "id": "NCS-049",
@@ -8281,7 +8285,7 @@
    "dependencies": [
     "NCS-019"
    ],
-   "status": "not-started",
+   "status": "deferred",
    "files": [
     "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java",
     "src/main/java/com/writing/novel/service/PlanDeviationService.java",
@@ -8290,7 +8294,8 @@
    "spec": "docs/specs/2026-09-20-ncs-completion.md",
    "acceptance": "运行 verify_cmd 通过：章后自动分析且结果绑定版本；失败可恢复；旧分析不覆盖新稿。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
    "verify_cmd": "mvn test -Dtest=PlanDeviationPipelineTest",
-   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。",
+   "deferred_reason": "已被 PlanDeviationService + plan-deviation.st 覆盖（章后自动偏离分析）；恢复前需核对结果绑定版本与失败可恢复"
   },
   {
    "id": "NCS-050",
@@ -8301,7 +8306,7 @@
    "dependencies": [
     "NCS-020"
    ],
-   "status": "not-started",
+   "status": "deferred",
    "files": [
     "src/main/java/com/writing/novel/service/VolumeReadbackService.java",
     "src/main/java/com/writing/novel/persistence/sqlite/VolumeReadbackRepository.java",
@@ -8310,7 +8315,8 @@
    "spec": "docs/specs/2026-09-20-ncs-completion.md",
    "acceptance": "运行 verify_cmd 通过：回读绑定全部来源章稿；改任一来源使旧批准失效。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
    "verify_cmd": "mvn test -Dtest=VolumeReadbackManifestTest",
-   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。",
+   "deferred_reason": "疑似被 NCS-020 + VolumeReadbackService/Controller 覆盖（卷末回读报告持久化并进入审阅）；恢复前需核对来源版本绑定"
   },
   {
    "id": "NCS-051",
@@ -8321,7 +8327,7 @@
    "dependencies": [
     "NCS-050"
    ],
-   "status": "not-started",
+   "status": "deferred",
    "files": [
     "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
     "src/main/java/com/writing/novel/service/VolumeReadbackService.java",
@@ -8330,7 +8336,8 @@
    "spec": "docs/specs/2026-09-20-ncs-completion.md",
    "acceptance": "运行 verify_cmd 通过：到卷末自动生成回读；缺失失败或未确认均不得自动进入下卷。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
    "verify_cmd": "mvn test -Dtest=VolumeReadbackPipelineTest",
-   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。",
+   "deferred_reason": "疑似被 NCS-020 覆盖（VOLUME_DONE 自动生成回读）；恢复前需核对缺失/未确认不得自动进入下卷"
   },
   {
    "id": "NCS-052",
@@ -8381,7 +8388,7 @@
    "dependencies": [
     "NCS-030"
    ],
-   "status": "not-started",
+   "status": "deferred",
    "files": [
     "src/main/java/com/writing/novel/telemetry/CostBudgetMonitor.java",
     "src/main/java/com/writing/novel/persistence/sqlite/BudgetLedgerRepository.java",
@@ -8390,7 +8397,8 @@
    "spec": "docs/specs/2026-09-20-ncs-completion.md",
    "acceptance": "运行 verify_cmd 通过：并发预约不越上限；未知费用不清零；重启保持项目运行步骤账本。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
    "verify_cmd": "mvn test -Dtest=BudgetReservationTest",
-   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。",
+   "deferred_reason": "疑似被 CostBudgetMonitor（p10-w1-04 成本预算熔断）覆盖；恢复前需核对并发预约不越上限与重启账本"
   },
   {
    "id": "NCS-055",
@@ -8401,7 +8409,7 @@
    "dependencies": [
     "NCS-054"
    ],
-   "status": "not-started",
+   "status": "deferred",
    "files": [
     "src/main/java/com/writing/novel/llm/gateway/ObservedLlmGateway.java",
     "src/main/java/com/writing/novel/service/WritingTaskExecutor.java",
@@ -8410,7 +8418,8 @@
    "spec": "docs/specs/2026-09-20-ncs-completion.md",
    "acceptance": "运行 verify_cmd 通过：调用前预约返回后结算；失败未知费用保留；取消不再派发收费请求。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
    "verify_cmd": "mvn test -Dtest=LlmBudgetAdmissionTest",
-   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+   "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。",
+   "deferred_reason": "疑似被 NCS-002 调用前预算核算（guardFinalBudget）+ CostBudgetMonitor 覆盖；恢复前需核对失败未知费用保留与取消停派"
   },
   {
    "id": "NCS-056",

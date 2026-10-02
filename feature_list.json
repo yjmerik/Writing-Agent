@@ -10377,6 +10377,36 @@
    "verify_cmd": "bash -c 'source scripts/load-env.sh && E2E_FIXTURE_DIR=data/e2e-fixtures/mystery-20261001 ./scripts/e2e.sh --mode replay' && python3 scripts/compare-baseline.py",
    "type": "bug",
    "completion_record": "ncs-165-verified"
+  },
+  {
+   "id": "NCS-166",
+   "name": "构思工作线程死亡可观测与自愈",
+   "type": "bug",
+   "phase": 54,
+   "dependencies": [],
+   "status": "not-started",
+   "evidence": "",
+   "files": [],
+   "spec": "docs/harness/evidence/2026-10-02-walkthrough-incident.json",
+   "description": "构思/规划任务的工作线程静默死亡时（无异常日志、无失败事件、任务永远 RUNNING，NCS-141 接管仅在有人再请求时触发）：写任务执行加终局审计——线程出口无论正常/异常必须发任务终结事件并落任务终态；对 RUNNING 超过逻辑调用上限+裕量的任务提供看门狗标记 STALLED；用户可见状态不再无限转圈",
+   "acceptance": "模拟线程抛 Error/静默退出后：任务终态落库（FAILED/STALLED 而非永久 RUNNING）、事件可见；WritingTaskExecutor 相关测试更新通过",
+   "verify_cmd": "mvn test -Dtest=WritingTaskExecutorTest",
+   "branch": ""
+  },
+  {
+   "id": "NCS-167",
+   "name": "取消/恢复状态机恢复语义",
+   "type": "bug",
+   "phase": 54,
+   "dependencies": [],
+   "status": "not-started",
+   "evidence": "",
+   "files": [],
+   "spec": "docs/harness/evidence/2026-10-02-walkthrough-incident.json",
+   "description": "取消 CONCEIVING/PLANNING 期任务后项目状态被置 WRITING（实测：大纲未生成却进入 WRITING），随后 run/resume 被『WRITING 不允许推进』拒绝——项目不可恢复。语义应为：取消构思/规划任务后回退到该阶段未完成前的状态（按 DB 实际产物判定：无大纲→保持 PLANNING 可重跑；幂等续跑已有产物），恢复后 resume 能继续到初始设定检查点",
+   "acceptance": "PLANNING 期取消任务后：状态不误置 WRITING；resume 能续跑到 AFTER_INITIAL_SETUP 检查点；集成测试覆盖取消→恢复→检查点链路",
+   "verify_cmd": "mvn test -Dtest=TerminalStateCommandGateTest",
+   "branch": ""
   }
  ],
  "schema_version": 2,

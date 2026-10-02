@@ -1,0 +1,24 @@
+{
+ "capturedAt": "2026-10-02T11:14:58.015479+08:00",
+ "kind": "walkthrough-incident-diagnosis",
+ "context": "NCS-155 实机走查（本地 18096 新包实例，测试项目 a34dfdf0）",
+ "timeline": [
+  "10:10 实例启动，10:11 项目创建（SOLO/mystery/6章）并触发 CONCEIVE",
+  "10:20-10:27 构思正常推进（世界观→主角→群像扩展 8 卡【NCS-152 motifGuide 全程生效】→真典播种）",
+  "10:27:36 最后一条日志（真典播种完成）；此后 46 分钟无任何日志/事件，状态停 PLANNING",
+  "11:05 jstack：无任何构思/写作工作线程存活（线程静默死亡），任务状态仍 RUNNING",
+  "11:13 cancel 成功（响应 CANCELLED），但项目状态被置 WRITING（大纲未生成）",
+  "11:13 resume → 状态 WRITING 无任务启动；POST /run → 409『当前状态 WRITING 不允许推进』——项目不可恢复"
+ ],
+ "findings": [
+  {
+   "id": "A",
+   "desc": "构思工作线程静默死亡：无异常日志、无失败事件、任务永远 RUNNING——NCS-141 的死线程接管仅在『新请求 tryAcquire』时触发，无人再来则无限挂起（用户视角=无限转圈）"
+  },
+  {
+   "id": "B",
+   "desc": "cancel/恢复状态机缺陷：取消 PLANNING 期任务后状态被置 WRITING（大纲未生成），resume/step 均被终态门禁拒绝——项目进入不可恢复状态（须直接改 DB）"
+  }
+ ],
+ "incidental": "NCS-152 motifGuide 在真实构思 8 次 CHARACTER_DESIGN 调用全程注入（正向观察）"
+}

@@ -1,0 +1,21 @@
+{
+ "verifiedAt": "2026-10-02T19:57:41.208320+08:00",
+ "commit": "9a0c620fdbf7744fb0786160fb34c529939dd6eb",
+ "cleanCheckout": true,
+ "branch": "codex/ncs-168-reject-reopen",
+ "scope": "初建检查点 reject 后的新一轮再审核",
+ "checks": [
+  {
+   "command": "mvn test -Dtest=CheckpointReopenTest",
+   "result": "3/0F/0E（单轮 reopen/两轮 approve 推进/非 PAUSED 不重开）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-02T19:57:41.208320+08:00"
+  },
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+   "result": "Tests run: 1473, Failures: 0, Errors: 0, Skipped: 1",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-02T19:57:41.208320+08:00"
+  }
+ ]
+}

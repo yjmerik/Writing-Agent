@@ -3105,6 +3105,17 @@
    "implementation_commit": "c812ff39903fd19d587a5199f6468ddea4a88f9a",
    "main_commit": "c812ff39903fd19d587a5199f6468ddea4a88f9a",
    "evidence": "docs/harness/evidence/2026-10-02-ncs-167-verified.json"
+  },
+  {
+   "id": "ncs-168-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-168"
+   ],
+   "branch": "codex/ncs-168-reject-reopen",
+   "implementation_commit": "9a0c620fdbf7744fb0786160fb34c529939dd6eb",
+   "main_commit": "9a0c620fdbf7744fb0786160fb34c529939dd6eb",
+   "evidence": "docs/harness/evidence/2026-10-02-ncs-168-verified.json"
   }
  ],
  "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",

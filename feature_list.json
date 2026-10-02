@@ -10422,14 +10422,19 @@
    "type": "bug",
    "phase": 54,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-10-02T19:57:41.208320+08:00 verified: 9a0c620；先红（reopen 方法不存在+缺陷现场断言）后绿；两轮 reject→reopen→approve 链路测试覆盖；全量 1473/0F/0E/1S",
+   "files": [
+    "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+    "src/main/java/com/writing/novel/web/CheckpointController.java",
+    "src/test/java/com/writing/novel/orchestrator/CheckpointReopenTest.java"
+   ],
    "spec": "docs/harness/evidence/2026-10-02-walkthrough-incident.json",
    "description": "走查实测：AFTER_INITIAL_SETUP 检查点 reject 后 status=REJECTED（终态），pending 列表为空——作者每轮只有一次修订机会，无法基于修订结果继续提意见（reject 流程注释宣称『重新进入 PAUSED_AT_CHECKPOINT 等待再次审核』但实现未生成新检查点）。修复语义：reject 完成内容改写并回到 PAUSED 后，生成新一轮 PENDING 检查点（携带修订后 payload），作者可继续批准/再修订；集成测试覆盖 reject→再 reject→approve 链路",
-   "acceptance": "INTERACTIVE 项目 reject 初建检查点后：存在新一轮 PENDING 检查点；连续两轮修订后可 approve 推进；测试覆盖",
-   "verify_cmd": "mvn test -Dtest=CheckpointRevisionRoutingTest",
-   "branch": ""
+   "acceptance": "INTERACTIVE 项目 reject 初建检查点后：存在新一轮 PENDING 检查点；连续两轮修订后可 approve 推进；测试覆盖（CheckpointReopenTest 3 例）",
+   "verify_cmd": "mvn test -Dtest=CheckpointReopenTest",
+   "branch": "codex/ncs-168-reject-reopen",
+   "completion_record": "ncs-168-verified"
   }
  ],
  "schema_version": 2,

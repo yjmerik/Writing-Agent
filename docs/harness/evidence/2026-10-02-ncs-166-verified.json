@@ -1,0 +1,21 @@
+{
+ "verifiedAt": "2026-10-02T17:21:00.478655+08:00",
+ "commit": "c812ff39903fd19d587a5199f6468ddea4a88f9a",
+ "cleanCheckout": true,
+ "branch": "codex/ncs-167-cancel-resume-semantics",
+ "scope": "构思线程死亡可观测与自愈",
+ "checks": [
+  {
+   "command": "mvn test -Dtest=WritingTaskExecutorTest",
+   "result": "先红后绿/回归绿（见 feature evidence）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-02T17:21:00.478655+08:00"
+  },
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+   "result": "Tests run: 1470, Failures: 0, Errors: 0, Skipped: 1",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-02T17:21:00.478655+08:00"
+  }
+ ]
+}

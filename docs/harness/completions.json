@@ -3083,6 +3083,28 @@
    "implementation_commit": "39850b0f664627041c5d7518dd104e7705f98aac",
    "main_commit": "39850b0f664627041c5d7518dd104e7705f98aac",
    "evidence": "docs/harness/evidence/2026-10-02-ncs-153-verified.json"
+  },
+  {
+   "id": "ncs-166-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-166"
+   ],
+   "branch": "codex/ncs-167-cancel-resume-semantics",
+   "implementation_commit": "c812ff39903fd19d587a5199f6468ddea4a88f9a",
+   "main_commit": "c812ff39903fd19d587a5199f6468ddea4a88f9a",
+   "evidence": "docs/harness/evidence/2026-10-02-ncs-166-verified.json"
+  },
+  {
+   "id": "ncs-167-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-167"
+   ],
+   "branch": "codex/ncs-167-cancel-resume-semantics",
+   "implementation_commit": "c812ff39903fd19d587a5199f6468ddea4a88f9a",
+   "main_commit": "c812ff39903fd19d587a5199f6468ddea4a88f9a",
+   "evidence": "docs/harness/evidence/2026-10-02-ncs-167-verified.json"
   }
  ],
  "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",

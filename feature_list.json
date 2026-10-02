@@ -10384,14 +10384,18 @@
    "type": "bug",
    "phase": 54,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-10-02T17:21:00.478655+08:00 verified: c812ff3（与 NCS-167 同分支闭环）；先红后绿 WritingTaskExecutorTest 2 例（Error 穿透后 FAILED+工作权立即可复用 / 正常路径不受影响）；全量 1470/0F/0E/1S",
+   "files": [
+    "src/main/java/com/writing/novel/service/WritingTaskExecutor.java",
+    "src/test/java/com/writing/novel/service/WritingTaskExecutorTest.java"
+   ],
    "spec": "docs/harness/evidence/2026-10-02-walkthrough-incident.json",
    "description": "构思/规划任务的工作线程静默死亡时（无异常日志、无失败事件、任务永远 RUNNING，NCS-141 接管仅在有人再请求时触发）：写任务执行加终局审计——线程出口无论正常/异常必须发任务终结事件并落任务终态；对 RUNNING 超过逻辑调用上限+裕量的任务提供看门狗标记 STALLED；用户可见状态不再无限转圈",
    "acceptance": "模拟线程抛 Error/静默退出后：任务终态落库（FAILED/STALLED 而非永久 RUNNING）、事件可见；WritingTaskExecutor 相关测试更新通过",
    "verify_cmd": "mvn test -Dtest=WritingTaskExecutorTest",
-   "branch": ""
+   "branch": "codex/ncs-167-cancel-resume-semantics",
+   "completion_record": "ncs-166-verified"
   },
   {
    "id": "NCS-167",
@@ -10399,14 +10403,18 @@
    "type": "bug",
    "phase": 54,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-10-02T17:21:00.478655+08:00 verified: b830da4；根因澄清：状态误置 WRITING 来自旧 runPlanning（置 WRITING 不生成大纲），取消端点本身不改项目状态；修复=大纲生成段抽为幂等 ensureOutlineGenerated 供 runPlanning 复用，PLANNING 断头路 resume/step 即恢复；PlanningRecoveryTest 先红后绿 2 例 + TerminalStateCommandGateTest 回归绿；全量 1468/0F/0E/1S（该提交点）",
+   "files": [
+    "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+    "src/test/java/com/writing/novel/orchestrator/PlanningRecoveryTest.java"
+   ],
    "spec": "docs/harness/evidence/2026-10-02-walkthrough-incident.json",
    "description": "取消 CONCEIVING/PLANNING 期任务后项目状态被置 WRITING（实测：大纲未生成却进入 WRITING），随后 run/resume 被『WRITING 不允许推进』拒绝——项目不可恢复。语义应为：取消构思/规划任务后回退到该阶段未完成前的状态（按 DB 实际产物判定：无大纲→保持 PLANNING 可重跑；幂等续跑已有产物），恢复后 resume 能继续到初始设定检查点",
    "acceptance": "PLANNING 期取消任务后：状态不误置 WRITING；resume 能续跑到 AFTER_INITIAL_SETUP 检查点；集成测试覆盖取消→恢复→检查点链路",
-   "verify_cmd": "mvn test -Dtest=TerminalStateCommandGateTest",
-   "branch": ""
+   "verify_cmd": "mvn test -Dtest=PlanningRecoveryTest && mvn test -Dtest=TerminalStateCommandGateTest",
+   "branch": "codex/ncs-167-cancel-resume-semantics",
+   "completion_record": "ncs-167-verified"
   }
  ],
  "schema_version": 2,

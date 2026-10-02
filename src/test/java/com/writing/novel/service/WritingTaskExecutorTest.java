@@ -31,7 +31,9 @@ import static org.mockito.Mockito.mock;
  */
 class WritingTaskExecutorTest {
 
-    @TempDir Path tempDir;
+    /** NCS-166: 不用 @TempDir——worker 线程的 SQLite 连接池可能晚于测试释放文件锁，
+     *  JUnit 的强制清理会与全量合跑产生删除竞态；改用 target/ 下独立目录 + 尽力清理 */
+    private Path tempDir;
     private NovelRepository repo;
     private NovelOrchestrator orchestrator;
     private WritingTaskExecutor executor;
@@ -41,7 +43,9 @@ class WritingTaskExecutorTest {
     static final class SimulatedThreadDeath extends Error {}
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        tempDir = java.nio.file.Files.createTempDirectory(
+                Path.of("target"), "wte-");
         var cp = new ConnectionProvider(tempDir.resolve("wte.db").toString());
         new SqliteSchemaInitializer(cp).initialize();
         repo = new SqliteNovelRepository(cp);
@@ -54,8 +58,13 @@ class WritingTaskExecutorTest {
     }
 
     @AfterEach
-    void tearDown() {
+    void tearDown() throws Exception {
         executor.shutdown();
+        // 尽力清理（失败不误报——文件锁可能由已退出的 worker 线程延迟释放）
+        try (var walk = java.nio.file.Files.walk(tempDir)) {
+            walk.sorted(java.util.Comparator.reverseOrder())
+                    .forEach(p -> { try { java.nio.file.Files.deleteIfExists(p); } catch (Exception ignored) {} });
+        } catch (Exception ignored) {}
     }
 
     private boolean taskTerminal(String taskId) {

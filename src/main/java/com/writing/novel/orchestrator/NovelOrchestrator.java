@@ -1263,6 +1263,40 @@ public class NovelOrchestrator {
     }
 
     /**
+     * NCS-168: 修订后重开检查点——reject 把旧检查点置 REJECTED（终态），若不生成
+     * 新一轮 PENDING，作者每轮只有一次修订机会（走查实测第二轮 reject 报「已处理」）。
+     * 在 PAUSED_AT_CHECKPOINT 下按原类型生成携带修订后 payload 的新 PENDING 检查点。
+     */
+    public Checkpoint reopenCheckpointAfterRevision(String projectId, Checkpoint previous) {
+        Project p = loadProject(projectId);
+        if (p.getState() != NovelState.PAUSED_AT_CHECKPOINT) return null;
+        Checkpoint next = new Checkpoint(projectId, previous.getType(),
+                "修订后待审核（上一轮已拒绝）");
+        next.setPayload(buildCheckpointPayload(projectId, p, previous.getType()));
+        repository.saveCheckpoint(next);
+        return next;
+    }
+
+    /** NCS-168: 按类型构造修订后 payload（供重开检查点携带最新内容快照） */
+    private String buildCheckpointPayload(String projectId, Project project, Checkpoint.Type type) {
+        try {
+            return switch (type) {
+                case AFTER_INITIAL_SETUP -> buildInitialSetupCheckpointPayload(projectId, project);
+                case AFTER_CHAPTER -> repository
+                        .findChapterByIndex(projectId, project.getCurrentChapterIndex())
+                        .map(ch -> buildChapterCheckpointPayload(projectId, ch))
+                        .orElse(null);
+                case AFTER_VOLUME_OUTLINE -> null; // 卷纲修订 payload 暂无既有构造器，留空
+                case ON_CONTINUITY_FIX -> null;
+            };
+        } catch (Exception e) {
+            log.warn("重开检查点 payload 构造失败（不阻断 reopen）: projectId={}, type={}",
+                    projectId, type, e);
+            return null;
+        }
+    }
+
+    /**
      * NCS-167: 大纲生成（幂等）——无大纲或 fallback 大纲时补跑 Plotter（含门禁重试与多样性记录）。
      * 原 runConceiving 内联段；PLANNING 断头路（构思线程在大纲前死亡）经 runPlanning 复用恢复。
      */

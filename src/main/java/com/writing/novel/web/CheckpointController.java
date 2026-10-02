@@ -66,6 +66,11 @@ public class CheckpointController {
             cp.reject();
             repository.saveCheckpoint(cp);
 
+            // NCS-168: reject 后重开一轮 PENDING 检查点——否则检查点终态、作者无法再次修订
+            if (cp.getType() != Checkpoint.Type.ON_CONTINUITY_FIX) {
+                orchestrator.reopenCheckpointAfterRevision(id, cp);
+            }
+
             // 重新进入 PAUSED_AT_CHECKPOINT 等待再次审核
             if (revision == null) {
                 return Map.of("status", "rejected", "checkpointId", checkpointId,

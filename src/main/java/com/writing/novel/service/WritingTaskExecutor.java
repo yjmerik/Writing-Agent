@@ -246,6 +246,26 @@ public class WritingTaskExecutor {
             task.setErrorMessage(e.getMessage() != null
                     ? e.getMessage().substring(0, Math.min(200, e.getMessage().length())) : "未知错误");
             repository.saveWritingTask(task);
+        } catch (Throwable t) {
+            // NCS-166: Error 穿透曾致线程静默死亡——任务永远 RUNNING、工作权泄漏、
+            // 用户无限转圈（走查 incident A）。线程出口兜底：落 FAILED 终态 + 事件，
+            // 再按 JVM 语义重抛 Error。
+            log.error("构思任务线程异常死亡（Throwable 兜底）: {}", task.getId(), t);
+            try {
+                task.setStatus(WritingTask.Status.FAILED);
+                task.setErrorMessage("任务线程异常终止: "
+                        + (t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName()));
+                repository.saveWritingTask(task);
+            } catch (Exception ignored) {
+                // 终态落库失败也不能吞掉原始 Error
+            }
+            com.writing.novel.telemetry.EventLog.emit("TASK_THREAD_DIED", java.util.Map.of(
+                    "taskId", task.getId(),
+                    "projectId", task.getProjectId(),
+                    "type", task.getType().name(),
+                    "errorClass", t.getClass().getSimpleName()));
+            if (t instanceof Error err) throw err;
+            throw new IllegalStateException(t);
         } finally {
             // p15-05/p20-05: 条件释放——旧 worker 退出时不得移除已被新任务接管的映射
             coordinator.release(task.getProjectId(), task.getId());
@@ -335,6 +355,24 @@ public class WritingTaskExecutor {
             task.setErrorMessage(e.getMessage() != null ?
                     e.getMessage().substring(0, Math.min(200, e.getMessage().length())) : "未知错误");
             repository.saveWritingTask(task);
+        } catch (Throwable t) {
+            // NCS-166: 同构思路径——Error 穿透必须落 FAILED 终态 + 事件，再按 JVM 语义重抛
+            log.error("写作任务线程异常死亡（Throwable 兜底）: {}", task.getId(), t);
+            try {
+                task.setStatus(WritingTask.Status.FAILED);
+                task.setErrorMessage("任务线程异常终止: "
+                        + (t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName()));
+                repository.saveWritingTask(task);
+            } catch (Exception ignored) {
+                // 终态落库失败也不能吞掉原始 Error
+            }
+            com.writing.novel.telemetry.EventLog.emit("TASK_THREAD_DIED", java.util.Map.of(
+                    "taskId", task.getId(),
+                    "projectId", task.getProjectId(),
+                    "type", task.getType().name(),
+                    "errorClass", t.getClass().getSimpleName()));
+            if (t instanceof Error err) throw err;
+            throw new IllegalStateException(t);
         } finally {
             // mc-p0-05/p20-05: 条件释放工作权——不得移除已被新任务接管的映射
             coordinator.release(task.getProjectId(), task.getId());

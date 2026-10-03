@@ -10555,8 +10555,8 @@
    "dependencies": [
     "NCS-173"
    ],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "分支 codex/NCS-175-preview-progress；实现提交 6d0435f；主分支 ff-only 包含。验证：npm run build 通过（2026-10-03）。实现期复核修订范围：批准409常驻展示已由 NCS-081/NCS-163 存在（approveBlockReason + 内联裁决），预览重试本身可用；真实缺口为异步预览静默期无进度反馈——已加已等待时长常驻条与候选持久化说明",
    "files": [
     "frontend/src/components/AgentRevisionDialog.tsx"
    ],
@@ -10571,8 +10571,8 @@
    "type": "bug",
    "phase": 55,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "分支 codex/NCS-176-candidate-entry-instruction-draft；实现提交 17316a4；主分支 ff-only 包含。验证：WorkspaceViewTest 3/3（candidateChapters failing-test 先行）+ 主分支 mvn test 全绿（BUILD SUCCESS 2026-10-03）+ npm run build 通过。workspace-view 新增 candidateChapters；候选 Tag 可点击直达审阅面板；创作要求 localStorage 暂存/恢复/提交清除",
    "files": [
     "frontend/src"
    ],

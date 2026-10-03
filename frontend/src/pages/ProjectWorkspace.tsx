@@ -314,9 +314,10 @@ export default function ProjectWorkspace() {
             setReviewPanelOpen(true);
           }} />
         <IdentityBar projectId={project.id} onOpenCandidates={(chapterIndex) => {
-          // NCS-176: 状态条候选计数一键直达首个候选章节的审阅面板
+          // NCS-176: 章节路由即审阅 tab（activeTab 缺省 review）——只推章节路径；
+          // 不可再叠加 setSearchParams：它按调用时的旧 pathname 生成导航，
+          // 会把刚推入的 /chapter/N 深链覆盖回当前章（实测弹回 currentChapter）
           if (chapterIndex != null) navigate(`/project/${project.id}/chapter/${chapterIndex}`);
-          handleTabChange('review');
           setReviewPanelOpen(true);
         }} />
         <Tabs

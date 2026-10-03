@@ -10536,8 +10536,8 @@
    "type": "bug",
    "phase": 55,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "分支 codex/NCS-174-llm-client-timeout；实现提交 74f4cb5；主分支 ff-only 包含。验证：mvn test 全绿（2026-10-03 后台日志 BUILD SUCCESS）；verify_cmd OpenAiCompatibleClientTimeoutTest 3 用例主分支通过（属性生效/默认保持/非法回落）。spec 已按实现期发现修订：生产 named-provider 路径本就按 request-timeout-seconds 生效，故不做全局收紧",
    "files": [
     "src/main/java/com/writing/novel/llm/client/OpenAiCompatibleClient.java",
     "src/main/resources/application.yml"
@@ -10558,11 +10558,11 @@
    "status": "not-started",
    "evidence": "",
    "files": [
-    "frontend/src"
+    "frontend/src/components/AgentRevisionDialog.tsx"
    ],
    "spec": "docs/specs/2026-10-03-pipeline-resilience-and-review-ux.md",
-   "description": "1003验证轮：①让Agent修改预览被409拒绝后前端状态不复位，重试点击不发请求无提示；②批准409（ApprovalBlockedException 结构化原因）仅短暂toast，原因未常驻展示。修复：预览失败复位重试状态并常驻显示原因；批准409原因常驻错误条",
-   "acceptance": "预览任何409后再次点击必然重新发请求（单测覆盖状态复位）；批准409时页面出现常驻错误条含reason，解除后消失",
+   "description": "实现期修订（1003验证轮复核）：①批准409常驻展示与内联裁决已由 NCS-081/NCS-163 实现（InteractiveReview.approveBlockReason），验证轮未观察到系面板未展开所致——核实无需改动；②预览被拒后重试本身可发请求（409 错误有显示），真实缺口是 NCS-094 异步预览的弹窗内无轮询进度反馈（4-6分钟静默，作者无法区分进行中/卡死，刷新丢弃轮询）。修复：预览轮询期在弹窗内显示已等待时长与'候选会持久保存'提示",
+   "acceptance": "预览任务提交后弹窗内出现进度提示（已等待秒数，每3s更新）与持久化说明；npm run build 通过",
    "verify_cmd": "cd frontend && npx vitest run && npm run build"
   },
   {

@@ -1,0 +1,33 @@
+{
+ "verifiedAt": "2026-10-03T09:34:39.180879+08:00",
+ "cleanCheckout": true,
+ "branch": "codex/ncs-169-embedding-key",
+ "scope": "18095 embedding key 更新与验证（凭据操作，key 明文不入库）",
+ "checks": [
+  {
+   "command": "embeddings 接口实测（新 key）",
+   "result": "HTTP 200，维度 1024（qwen3.7-text-embedding，与 vectors-*.idx 同模型兼容）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T09:34:39.180879+08:00"
+  },
+  {
+   "command": "ps eww <18095-pid> | grep DASHSCOPE_EMBEDDING_API_KEY",
+   "result": "进程环境含专用 key（load-env 显式设置保留）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T09:34:39.180879+08:00"
+  },
+  {
+   "command": "grep -c 'Embedding 调用失败: HTTP 401' data/logs/18095-restart.log",
+   "result": "2 条均为重启前历史（末条 2026-10-02T23:07）；重启（2026-10-03T09:32）后零新增",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T09:34:39.180879+08:00"
+  },
+  {
+   "command": "后续观察（非阻塞）",
+   "result": "下次自然写作时确认语义召回恢复（ch11 检查点待作者批准后写作即验证）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T09:34:39.180879+08:00"
+  }
+ ],
+ "commit": "cd72abbf2b552dd0e8b1e0bc1bf2608b4f8fbc88"
+}

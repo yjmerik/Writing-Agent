@@ -3116,6 +3116,17 @@
    "implementation_commit": "9a0c620fdbf7744fb0786160fb34c529939dd6eb",
    "main_commit": "9a0c620fdbf7744fb0786160fb34c529939dd6eb",
    "evidence": "docs/harness/evidence/2026-10-02-ncs-168-verified.json"
+  },
+  {
+   "id": "ncs-169-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-169"
+   ],
+   "branch": "codex/ncs-169-embedding-key",
+   "implementation_commit": "cd72abbf2b552dd0e8b1e0bc1bf2608b4f8fbc88",
+   "main_commit": "cd72abbf2b552dd0e8b1e0bc1bf2608b4f8fbc88",
+   "evidence": "docs/harness/evidence/2026-10-03-ncs-169-verified.json"
   }
  ],
  "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",

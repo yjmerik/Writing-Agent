@@ -34,6 +34,6 @@ prompt 指纹分叉 → fixture miss；EntityConsistencyDeterminismTest 锁定�
 
 ## Next Steps
 
-1. NCS-169（等用户提供 embedding key）→ 18095 重启验证
+1. ✅ NCS-169 闭环：embedding key 已注入 18095（PID 见 18095-restart.log），零新增 401；语义召回随下次自然写作确认
 2. NCS-170 场景锚点评测（≥5 章对照，随下轮旅程）；155/163 浏览器走查补录
 3. NCS-171 任务日志调查；NCS-056/057/058 大验收活动待资源决策

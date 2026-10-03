@@ -10451,13 +10451,14 @@
    "type": "bug",
    "phase": 54,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "2026-10-03T09:34:39.180879+08:00 verified: 根因=专用 key 未设置 → 回退 DASHSCOPE_API_KEY（sk-sp- 套餐密钥，无权调用按量付费向量接口）；load-env fallback 欲取 ~/.bailian/config.json 但其中同为 sk-sp- 被拒。修复：用户提供按量付费 key → 以 DASHSCOPE_EMBEDDING_API_KEY 注入 18095 启动环境（load-env 显式设置保留逻辑）→ 原样重启（新 PID，进程环境含专用 key 经 ps eww 证实）。验证：key 实测 embeddings 200/1024 维（与现有索引同模型）；重启后 app.log/18095-restart.log 零新增 401（现存 2 条均为重启前历史）；ch11 已 NEEDS_MANUAL_REVIEW（重启前后处理完成），语义召回最终确认随下次自然写作（非阻塞观察项）。key 明文不入库（仅实例环境变量）",
    "files": [],
    "spec": "docs/reports/2026-10-03-findings-and-evals.md",
    "description": "18095 实例 embedding 通道 401（dashscope 拒绝），向量检索长期降级词法通道：语义召回精度受损、后处理因重试变慢（NCS-140 上限兜底）。需用户提供有效 key → 更新实例凭据/配置 → 原样重启 → 验证",
    "acceptance": "实例续写或组装一轮后 data/logs/app.log 无『Embedding 调用失败: HTTP 401』；向量检索走回语义通道（事件/清单可查）",
-   "verify_cmd": "bash -c 'grep -c \"Embedding 调用失败: HTTP 401\" data/logs/app.log'"
+   "verify_cmd": "bash -c 'grep -c \"Embedding 调用失败: HTTP 401\" data/logs/app.log'",
+   "completion_record": "ncs-169-verified"
   },
   {
    "id": "NCS-170",

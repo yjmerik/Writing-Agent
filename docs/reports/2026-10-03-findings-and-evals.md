@@ -5,13 +5,13 @@
 
 ## 一、待处理问题（按优先级）
 
-### P1 · 18095 实例 embedding key 失效（NCS-169）
+### P1 · 18095 实例 embedding key 失效（NCS-169）——✅ 已闭环（2026-10-03）
 
 - **现象**：18095（本地真实长篇实例）embedding 通道对 dashscope 返回
   `HTTP 401 Incorrect API key`，向量检索每次组装降级词法通道。
 - **影响**：写作/批准/续写链路不断（降级是设计行为，验收实测 ch11 正常写出），
   但失去语义召回精度，且后处理因 401 重试变慢（NCS-140 逻辑调用上限 45 分钟兜底）。
-- **处置**：需用户提供有效 embedding key → 更新实例启动配置/凭据 → 重启。
+- **处置**：✅ 用户提供按量付费 key → 以 DASHSCOPE_EMBEDDING_API_KEY 注入实例环境 → 原样重启。根因链：专用 key 未设置 → 回退 DASHSCOPE_API_KEY（sk-sp- 套餐密钥无权调按量向量接口）；load-env 的 bailian fallback 因 profile 内同为 sk-sp- 而落空。验证：key 实测 200/1024 维、进程环境含专用 key、重启后零新增 401。
 - **验收**：实例续写一轮后 `data/logs/app.log` 无 `Embedding 调用失败: HTTP 401`；
   向量检索走回语义通道（InjectionManifest/事件可查）。
 

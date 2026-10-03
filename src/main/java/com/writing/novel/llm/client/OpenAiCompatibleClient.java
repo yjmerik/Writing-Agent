@@ -36,18 +36,39 @@ public class OpenAiCompatibleClient implements LlmClient {
     static volatile long rateLimitBackoffMs = 30_000L;
 
     public OpenAiCompatibleClient() {
+        // NCS-174: 三超时可经系统属性覆盖（novel.llm.connect/read/call-timeout-seconds）——
+        // 运维 escape hatch。默认值不变：30 分钟兜底是 p10-w1 实证的 glm 网关排队方差对策；
+        // 生产 named-provider 路径实际走 singleAttempt，按 provider request-timeout-seconds 生效。
         this.httpClient = new OkHttpClient.Builder()
-                .connectTimeout(Duration.ofSeconds(30))
-                .readTimeout(Duration.ofMinutes(30))
+                .connectTimeout(Duration.ofSeconds(propSeconds("novel.llm.connect-timeout-seconds", 30)))
+                .readTimeout(Duration.ofSeconds(propSeconds("novel.llm.read-timeout-seconds", 1800)))
                 // glm-5.3-flash 长生成（20k max_tokens 非流式）网关侧偶发 >10 分钟排队；
                 // e2e 实证 CHAPTER_WRITING 3×600s 整齐超时而同 prompt 独立进程 44s——网关排队方差大，
                 // 超时必须给足：单次请求上限 30 分钟
-                .callTimeout(Duration.ofMinutes(30))
+                .callTimeout(Duration.ofSeconds(propSeconds("novel.llm.call-timeout-seconds", 1800)))
                 .retryOnConnectionFailure(true)      // 网络抖动自动重试
                 // e2e 实证：复用 keep-alive 连接发送 >10 分钟的长响应请求会被对端重置
                 // （StreamResetException: CANCEL），而新连接稳定成功——LLM 长生成必须每请求新连接
                 .connectionPool(new okhttp3.ConnectionPool(0, 1, java.util.concurrent.TimeUnit.MILLISECONDS))
                 .build();
+    }
+
+    /** NCS-174: 秒级系统属性解析——非法/缺失回落默认，不阻断构造 */
+    private static long propSeconds(String key, long defaultSeconds) {
+        String raw = System.getProperty(key);
+        if (raw == null || raw.isBlank()) return defaultSeconds;
+        try {
+            long v = Long.parseLong(raw.trim());
+            return v > 0 ? v : defaultSeconds;
+        } catch (NumberFormatException e) {
+            log.warn("LLM 超时属性 {} 非法值 '{}'，回落默认 {}s", key, raw, defaultSeconds);
+            return defaultSeconds;
+        }
+    }
+
+    /** NCS-174: 包内测试访问器——断言默认构造超时装配 */
+    OkHttpClient httpClient() {
+        return httpClient;
     }
 
     /** 测试用：可注入自定义 OkHttpClient */

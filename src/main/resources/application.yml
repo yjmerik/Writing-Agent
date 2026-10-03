@@ -87,7 +87,9 @@ llm:
       model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.1
       max-tokens: 16000
-      request-timeout-seconds: 600
+      # NCS-174: 提取类调用（max 16k token）实测最慢 <2min——预算 600→300s 收紧，
+      # 上游停滞时扇出阶段等待上限由此与 NCS-173 fanout 超时共同兜底
+      request-timeout-seconds: 300
       context-window: 64000
       streaming: true
       thinking-enabled: false

@@ -3146,7 +3146,7 @@
     "NCS-173"
    ],
    "branch": "codex/NCS-173-fanout-timeout",
-   "implementation_commit": "b48babb9f9845799b7664ab7d597fa6197329154",
+   "implementation_commit": "be96efe09ce7ff5b38c0971484d1c95e35174b5b",
    "main_commit": "be96efe09ce7ff5b38c0971484d1c95e35174b5b",
    "evidence": "docs/harness/evidence/2026-10-03-ncs-173-verified.json"
   },

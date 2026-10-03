@@ -42,7 +42,9 @@ Last Updated: 2026-10-03
 
 ## Blockers
 
-- 无
+- 无（既有数据问题备忘：`--check-git` 下 ncs-077-verified 的提交对象已不在仓库
+  历史（27d1511 无法解析，疑早期 reset/rebase 丢失），本轮未篡改历史证据；
+  后续如需修复应单独 feature 处理）
 
 ## Next Steps
 

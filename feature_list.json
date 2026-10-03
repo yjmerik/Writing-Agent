@@ -10520,8 +10520,8 @@
    "type": "bug",
    "phase": 55,
    "dependencies": [],
-   "status": "not-started",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "分支 codex/NCS-173-fanout-timeout；实现提交 b48babb；主分支包含 be96efe (ff-only)。验证：mvn test 1481 run / 0 fail / 1 skip（2026-10-03）；verify_cmd ChapterPostProcessorFanoutTimeoutTest 主分支重跑通过。复现→修复：修复前 process() 无限挂死（30s 守护超时判定），修复后 1s 超时放弃+POST_PROCESS_STAGE_TIMEOUT 事件+账本保持未完成。1003 验证轮 P1（15分钟冻结）对应根因。",
    "files": [
     "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java"
    ],

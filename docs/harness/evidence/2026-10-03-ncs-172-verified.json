@@ -1,0 +1,27 @@
+{
+ "verifiedAt": "2026-10-03T10:00:55.652183+08:00",
+ "commit": "b3f62565c72410e998fd6c44383706d510629b66",
+ "cleanCheckout": true,
+ "branch": "codex/ncs-172-session-log",
+ "scope": "全链路 Session 日志（模型调用/返回值/操作 + 150MB 滚动）",
+ "checks": [
+  {
+   "command": "mvn test -Dtest=SessionLogTest,SessionGatewayLogTest",
+   "result": "7/0F/0E",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T10:00:55.652183+08:00"
+  },
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+   "result": "Tests run: 1480, Failures: 0, Errors: 0, Skipped: 1（连续两次；其间一次 Historical 偶发已记录观察）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T10:00:55.652183+08:00"
+  },
+  {
+   "command": "滚动语义验证",
+   "result": "1KB 上限 + max-files=2 下 5 大行：.1/.2 存在、.3 删除、主文件最新、总条数守恒",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T10:00:55.652183+08:00"
+  }
+ ]
+}

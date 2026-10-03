@@ -10494,14 +10494,25 @@
    "type": "feature",
    "phase": 54,
    "dependencies": [],
-   "status": "in-progress",
-   "evidence": "",
-   "files": [],
+   "status": "completed",
+   "evidence": "2026-10-03T10:00:55.652183+08:00 verified: b3f6256；SessionLogTest 5 例 + SessionGatewayLogTest 2 例（llm 全文/session 串联/错误路径/1KB 上限滚动守恒+最旧删除/网关成败两路）；全量 1480/0F/0E/1S（连续两次；其间一次 HistoricalFactEvidenceApiTest 偶发 500 单独复现失败=flaky 观察，非本特性改动路径）",
+   "files": [
+    "src/main/java/com/writing/novel/telemetry/SessionLog.java",
+    "src/main/java/com/writing/novel/telemetry/EventContext.java",
+    "src/main/java/com/writing/novel/llm/gateway/ObservedLlmGateway.java",
+    "src/main/java/com/writing/novel/service/WritingTaskExecutor.java",
+    "src/main/java/com/writing/novel/service/LongTaskService.java",
+    "src/main/java/com/writing/novel/web/ReviewDecisionController.java",
+    "src/main/java/com/writing/novel/web/CheckpointController.java",
+    "src/test/java/com/writing/novel/telemetry/SessionLogTest.java",
+    "src/test/java/com/writing/novel/llm/gateway/SessionGatewayLogTest.java"
+   ],
    "spec": "docs/specs/2026-10-03-session-log.md",
    "description": "以 session（任务/操作）为单位落完整日志：LLM 调用记录 taskType/model/耗时/tokens/prompt 全文/response 全文（或错误），关键操作（任务生命周期/批准/检查点/长任务）落操作条目；EventContext 扩展 sessionId/operation 串联；session.log 默认 150MB 超限序号滚动（保留数可配）；写入失败只 warn 不影响业务",
    "acceptance": "SessionLogTest：llm 记录含 sessionId/model/prompt/response 全文；op 记录落盘；max-bytes 调小触发滚动且最旧被删；ObservedLlmGateway complete 后行含 sessionId；全量 mvn test 绿（无 e2e 基线要求）",
    "verify_cmd": "mvn test -Dtest=SessionLogTest,SessionGatewayLogTest",
-   "branch": "codex/ncs-172-session-log"
+   "branch": "codex/ncs-172-session-log",
+   "completion_record": "ncs-172-verified"
   }
  ],
  "schema_version": 2,

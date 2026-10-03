@@ -84,6 +84,8 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
   const [latest, setLatest] = useState<Record<string, unknown> | null>(null);
   // p37-04: 持久候选恢复入口（刷新/重启后候选仍在 DB）
   const [candidates, setCandidates] = useState<RevisionCandidateRecord[]>([]);
+  // NCS-175: 预览轮询已等待秒数（null=未在轮询）
+  const [elapsedSeconds, setElapsedSeconds] = useState<number | null>(null);
   const requestSequence = useRef(0);
 
   const targetKey = target
@@ -127,20 +129,26 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
     setPreview(null);
     setStale(false); setLatest(null);
     setError('');
+    // NCS-175: 轮询进度可视化——异步预览常需数分钟，静默期作者无法区分进行中/卡死
+    const submittedAt = Date.now();
+    setElapsedSeconds(0);
     try {
       // NCS-094: 预览异步化——提交任务后轮询，不再受前端/代理超时制约
       const { jobId } = await api.previewAgentRevisionAsync(target, instructions.trim());
       for (;;) {
         await new Promise(r => setTimeout(r, 3000));
         if (requestSequence.current !== requestId) return;
+        setElapsedSeconds(Math.round((Date.now() - submittedAt) / 1000));
         const st = await api.getLongTask(target.projectId, jobId);
         if (st.status === 'DONE') {
           setPreview(st.result as Parameters<typeof setPreview>[0]);
+          setElapsedSeconds(null);
           return;
         }
         if (st.status === 'FAILED') {
           setError(`预览生成失败：${st.error ?? '任务失败'}`);
           setGenerating(false);
+          setElapsedSeconds(null);
           return;
         }
       }
@@ -148,6 +156,7 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
       if (requestSequence.current === requestId) {
         setError(`预览生成失败：${(cause as Error).message}`);
         setGenerating(false);
+        setElapsedSeconds(null);
       }
     }
   };
@@ -338,6 +347,11 @@ export default function AgentRevisionDialog({ open, target, onApplied, onCancel 
         }}
       />
       {error && <Alert type="error" showIcon message={error} style={{ marginTop: 16 }} />}
+      {generating && (
+        <Alert type="info" showIcon style={{ marginTop: 16 }}
+          message={`预览生成中${elapsedSeconds != null ? `（已等待 ${elapsedSeconds >= 90 ? `${Math.max(1, Math.round(elapsedSeconds / 60))} 分钟` : `${elapsedSeconds} 秒`}` : ''}）`}
+          description="整章预览通常需要数分钟；生成结果会持久保存为候选，即使关闭页面或刷新，也可在重新打开本弹窗后恢复。" />
+      )}
       {preview && target && (
         <div style={{ marginTop: 16 }}>
           <Alert type="info" showIcon message={preview.summary} style={{ marginBottom: 12 }} />

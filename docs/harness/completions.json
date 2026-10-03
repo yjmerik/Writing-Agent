@@ -3138,8 +3138,52 @@
    "implementation_commit": "b3f62565c72410e998fd6c44383706d510629b66",
    "main_commit": "b3f62565c72410e998fd6c44383706d510629b66",
    "evidence": "docs/harness/evidence/2026-10-03-ncs-172-verified.json"
+  },
+  {
+   "id": "ncs-173-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-173"
+   ],
+   "branch": "codex/NCS-173-fanout-timeout",
+   "implementation_commit": "b48babb9f9845799b7664ab7d597fa6197329154",
+   "main_commit": "be96efe09ce7ff5b38c0971484d1c95e35174b5b",
+   "evidence": "docs/harness/evidence/2026-10-03-ncs-173-verified.json"
+  },
+  {
+   "id": "ncs-174-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-174"
+   ],
+   "branch": "codex/NCS-174-llm-client-timeout",
+   "implementation_commit": "74f4cb53a6d49465a24270766919b59cdb3e2ec4",
+   "main_commit": "74f4cb53a6d49465a24270766919b59cdb3e2ec4",
+   "evidence": "docs/harness/evidence/2026-10-03-ncs-174-verified.json"
+  },
+  {
+   "id": "ncs-175-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-175"
+   ],
+   "branch": "codex/NCS-175-preview-progress",
+   "implementation_commit": "6d0435f30bc884a2aa450f7da4f09436e566abca",
+   "main_commit": "6d0435f30bc884a2aa450f7da4f09436e566abca",
+   "evidence": "docs/harness/evidence/2026-10-03-ncs-175-verified.json"
+  },
+  {
+   "id": "ncs-176-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-176"
+   ],
+   "branch": "codex/NCS-176-candidate-entry-instruction-draft",
+   "implementation_commit": "5ac7fc2d4c019c962f7d110f47874958ba499ab2",
+   "main_commit": "2293ce5c2bf1e393925e2c7fd76bf6001d74a7ef",
+   "evidence": "docs/harness/evidence/2026-10-03-ncs-176-verified.json"
   }
  ],
- "commit": "fe30ca3e502b28b8a757724f01147ee648819ef0",
- "main_commit": "fe30ca3e502b28b8a757724f01147ee648819ef0"
+ "commit": "2026-10-03T23:59:00.000000+08:00",
+ "main_commit": "2293ce5c2bf1e393925e2c7fd76bf6001d74a7ef"
 }

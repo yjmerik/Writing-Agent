@@ -1,0 +1,21 @@
+{
+ "verifiedAt": "2026-10-03T23:59:00.000000+08:00",
+ "cleanCheckout": true,
+ "branch": "codex/NCS-174-llm-client-timeout",
+ "scope": "LLM 客户端超时可配置 + extract 预算收紧 300s",
+ "checks": [
+  {
+   "command": "mvn test -Dtest=OpenAiCompatibleClientTimeoutTest",
+   "result": "3/0F/0E（属性生效/默认保持/非法值回落）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T23:59:00.000000+08:00"
+  },
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+   "result": "Tests run: 1481, Failures: 0, Errors: 0, Skipped: 1（main 合并后）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T23:59:00.000000+08:00"
+  }
+ ],
+ "commit": "74f4cb53a6d49465a24270766919b59cdb3e2ec4"
+}

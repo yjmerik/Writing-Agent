@@ -1,0 +1,27 @@
+{
+ "verifiedAt": "2026-10-03T23:59:00.000000+08:00",
+ "cleanCheckout": true,
+ "branch": "codex/NCS-173-fanout-timeout",
+ "scope": "后处理扇出阶段超时防护（P1：上游停滞冻结写作循环）",
+ "checks": [
+  {
+   "command": "mvn test -Dtest=ChapterPostProcessorFanoutTimeoutTest",
+   "result": "1/0F/0E（修复前：process() 无限挂死，30s 守护超时判定复现）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T23:59:00.000000+08:00"
+  },
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+   "result": "Tests run: 1481, Failures: 0, Errors: 0, Skipped: 1（main 合并后）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T23:59:00.000000+08:00"
+  },
+  {
+   "command": "扇出池语义",
+   "result": "定长3改缓存池——被超时放弃的停滞线程不占坑排队后续章节；账本 COMPLETED 终态不变：中断后真实完成的阶段按完成记账",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T23:59:00.000000+08:00"
+  }
+ ],
+ "commit": "be96efe09ce7ff5b38c0971484d1c95e35174b5b"
+}

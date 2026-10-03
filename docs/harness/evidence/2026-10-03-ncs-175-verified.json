@@ -1,0 +1,27 @@
+{
+ "verifiedAt": "2026-10-03T23:59:00.000000+08:00",
+ "cleanCheckout": true,
+ "branch": "codex/NCS-175-preview-progress",
+ "scope": "Agent 修改预览轮询进度可视化",
+ "checks": [
+  {
+   "command": "cd frontend && npm run build",
+   "result": "tsc -b + vite build 通过（✓ built）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T23:59:00.000000+08:00"
+  },
+  {
+   "command": "浏览器端到端（18095 新包 PID 88899）",
+   "result": "候选 chip→/chapter/5 审查面板定位第5章候选线索区；创作要求输入→刷新→恢复；预览进度常驻显示",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T23:59:00.000000+08:00"
+  },
+  {
+   "command": "实现期复核",
+   "result": "批准409常驻展示已由 NCS-081/NCS-163 存在（approveBlockReason+内联裁决）；预览重试本身可用；真实缺口=异步预览静默期无进度反馈",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T23:59:00.000000+08:00"
+  }
+ ],
+ "commit": "6d0435f30bc884a2aa450f7da4f09436e566abca"
+}

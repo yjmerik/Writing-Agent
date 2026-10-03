@@ -1,0 +1,39 @@
+{
+ "verifiedAt": "2026-10-03T23:59:00.000000+08:00",
+ "cleanCheckout": true,
+ "branch": "codex/NCS-176-candidate-entry-instruction-draft",
+ "scope": "候选计数一键直达 + 创作要求本地持久化",
+ "checks": [
+  {
+   "command": "mvn test -Dtest=WorkspaceViewTest",
+   "result": "3/0F/0E（candidateChapters failing-test 先行）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T23:59:00.000000+08:00"
+  },
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+   "result": "Tests run: 1481, Failures: 0, Errors: 0, Skipped: 1（main 合并后）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T23:59:00.000000+08:00"
+  },
+  {
+   "command": "cd frontend && npm run build",
+   "result": "tsc -b + vite build 通过（✓ built）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T23:59:00.000000+08:00"
+  },
+  {
+   "command": "浏览器端到端（18095 新包 PID 88899）",
+   "result": "候选 chip→/chapter/5 审查面板定位第5章候选线索区；创作要求输入→刷新→恢复；预览进度常驻显示",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T23:59:00.000000+08:00"
+  },
+  {
+   "command": "深链覆写修复 5ac7fc2",
+   "result": "history 追踪定位：navigate(chapter/5) 后 setSearchParams 按旧 pathname 推 chapter/12 覆写；改为只推章节路径后端到端通过",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-03T23:59:00.000000+08:00"
+  }
+ ],
+ "commit": "2293ce5c2bf1e393925e2c7fd76bf6001d74a7ef"
+}

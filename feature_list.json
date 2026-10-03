@@ -10572,7 +10572,7 @@
    "phase": 55,
    "dependencies": [],
    "status": "completed",
-   "evidence": "分支 codex/NCS-176-candidate-entry-instruction-draft；实现提交 17316a4；主分支 ff-only 包含。验证：WorkspaceViewTest 3/3（candidateChapters failing-test 先行）+ 主分支 mvn test 全绿（BUILD SUCCESS 2026-10-03）+ npm run build 通过。workspace-view 新增 candidateChapters；候选 Tag 可点击直达审阅面板；创作要求 localStorage 暂存/恢复/提交清除",
+   "evidence": "分支 codex/NCS-176-candidate-entry-instruction-draft；实现提交 17316a4 + 覆写修复 5ac7fc2；主分支包含 2293ce5。验证：WorkspaceViewTest 3/3（candidateChapters failing-test 先行）；主分支 mvn test 全绿（1481 run BUILD SUCCESS 2026-10-03）；npm run build 通过；浏览器端到端：候选 chip → /chapter/5 审查面板定位第5章候选线索区；创作要求输入→刷新→恢复+提交清除。修复 5ac7fc2：实测发现 handleTabChange 的 setSearchParams 按旧 pathname 覆写深链（push chapter/5→立即 push chapter/12），改为只推章节路径",
    "files": [
     "frontend/src"
    ],
@@ -10580,6 +10580,23 @@
    "description": "1003验证轮：①状态条'N个待采纳候选'不可点击，实际入口藏在审查面板候选线索区；②'给Agent的创作要求'textarea刷新即丢。修复：候选计数可点击直达当前章审查面板候选区；创作要求失焦持久化localStorage并恢复",
    "acceptance": "候选计数可点击打开审查面板并定位候选线索区；创作要求输入后刷新页面内容保留",
    "verify_cmd": "cd frontend && npx vitest run && npm run build"
+  },
+  {
+   "id": "NCS-177",
+   "name": "index.html 缓存控制——升级后浏览器拿到旧 bundle",
+   "type": "bug",
+   "phase": 55,
+   "dependencies": [],
+   "status": "not-started",
+   "evidence": "",
+   "files": [
+    "src/main/java/com/writing/novel/web/",
+    "src/main/resources/application.yml"
+   ],
+   "spec": "docs/specs/2026-10-03-pipeline-resilience-and-review-ux.md",
+   "description": "NCS-176 验证时实测：服务升级换 jar 后，浏览器仍从 HTTP 缓存读旧 index.html→加载旧 JS bundle，新功能不可见需手动绕过缓存。Spring Boot 静态资源未对 index.html 设置 no-cache；assets 带 hash 可长缓存。应为 index.html 配置 no-store（或 ETag+must-revalidate），assets/* 配置 immutable 长缓存",
+   "acceptance": "浏览器带缓存重访升级后的服务，首屏加载新 bundle（index.html 响应头含 no-store 或等效）；mvn test 全绿",
+   "verify_cmd": "mvn test -Dtest=PersistenceSmokeTest && curl -sI http://127.0.0.1:18095/ | grep -i cache"
   }
  ],
  "schema_version": 2,

@@ -10513,6 +10513,73 @@
    "verify_cmd": "mvn test -Dtest=SessionLogTest,SessionGatewayLogTest",
    "branch": "codex/ncs-172-session-log",
    "completion_record": "ncs-172-verified"
+  },
+  {
+   "id": "NCS-173",
+   "name": "后处理扇出阶段超时防护",
+   "type": "bug",
+   "phase": 55,
+   "dependencies": [],
+   "status": "not-started",
+   "evidence": "",
+   "files": [
+    "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java"
+   ],
+   "spec": "docs/specs/2026-10-03-pipeline-resilience-and-review-ux.md",
+   "description": "P1挂死（1003验证轮两次）：上游LLM停滞时 ForeshadowingExtractor 等扇出子任务阻塞在读，ChapterPostProcessor.awaitFanout 以无超时 f.get() 等待→写作循环冻结最长15分钟，任务RUNNING持工作权，作者批准/重写全 409。修复：扇出 Future 带阶段名+可配置超时（默认600s），超时 cancel 并标记 ledger 阶段失败（保持'未完成不视为无问题'语义）",
+   "acceptance": "mvn test -Dtest=ChapterPostProcessorFanoutTimeoutTest：模拟永不完成扇出任务，process() 在时限内返回且该阶段 ledger 失败；默认超时600s可配置",
+   "verify_cmd": "mvn test -Dtest=ChapterPostProcessorFanoutTimeoutTest"
+  },
+  {
+   "id": "NCS-174",
+   "name": "LLM 客户端超时可配置化与默认收紧",
+   "type": "bug",
+   "phase": 55,
+   "dependencies": [],
+   "status": "not-started",
+   "evidence": "",
+   "files": [
+    "src/main/java/com/writing/novel/llm/client/OpenAiCompatibleClient.java",
+    "src/main/resources/application.yml"
+   ],
+   "spec": "docs/specs/2026-10-03-pipeline-resilience-and-review-ux.md",
+   "description": "实现期修订：生产 named-provider 路径已按 request-timeout-seconds 生效（15分钟冻结=900s预算到期属正常行为），不做全局收紧（30min legacy 默认有其网关排队历史原因）。改为：①qwen-flash-extract 预算 600→300s（小提取调用收紧）；②默认构造器三超时支持系统属性覆盖（默认不变，escape hatch）；③单测验证属性生效",
+   "acceptance": "mvn test -Dtest=OpenAiCompatibleClientTimeoutTest：系统属性覆盖三超时生效，未设置时保持既有默认（30s/30min/30min）；yml extract=300s",
+   "verify_cmd": "mvn test -Dtest=OpenAiCompatibleClientTimeoutTest"
+  },
+  {
+   "id": "NCS-175",
+   "name": "审阅冲突与409原因前端透明化",
+   "type": "bug",
+   "phase": 55,
+   "dependencies": [
+    "NCS-173"
+   ],
+   "status": "not-started",
+   "evidence": "",
+   "files": [
+    "frontend/src"
+   ],
+   "spec": "docs/specs/2026-10-03-pipeline-resilience-and-review-ux.md",
+   "description": "1003验证轮：①让Agent修改预览被409拒绝后前端状态不复位，重试点击不发请求无提示；②批准409（ApprovalBlockedException 结构化原因）仅短暂toast，原因未常驻展示。修复：预览失败复位重试状态并常驻显示原因；批准409原因常驻错误条",
+   "acceptance": "预览任何409后再次点击必然重新发请求（单测覆盖状态复位）；批准409时页面出现常驻错误条含reason，解除后消失",
+   "verify_cmd": "cd frontend && npx vitest run && npm run build"
+  },
+  {
+   "id": "NCS-176",
+   "name": "候选入口可发现性与创作要求持久化",
+   "type": "bug",
+   "phase": 55,
+   "dependencies": [],
+   "status": "not-started",
+   "evidence": "",
+   "files": [
+    "frontend/src"
+   ],
+   "spec": "docs/specs/2026-10-03-pipeline-resilience-and-review-ux.md",
+   "description": "1003验证轮：①状态条'N个待采纳候选'不可点击，实际入口藏在审查面板候选线索区；②'给Agent的创作要求'textarea刷新即丢。修复：候选计数可点击直达当前章审查面板候选区；创作要求失焦持久化localStorage并恢复",
+   "acceptance": "候选计数可点击打开审查面板并定位候选线索区；创作要求输入后刷新页面内容保留",
+   "verify_cmd": "cd frontend && npx vitest run && npm run build"
   }
  ],
  "schema_version": 2,

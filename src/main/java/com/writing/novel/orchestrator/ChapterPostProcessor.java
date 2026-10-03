@@ -136,18 +136,18 @@ public class ChapterPostProcessor {
         // FACT_HARVEST 依赖实体规范名，保持在其后串行；ledger/失败语义逐阶段不变。
         java.util.Set<Stage> fanout = java.util.Set.of(Stage.ENTITY_GRAPH, Stage.NARRATIVE_THREADS,
                 Stage.FORESHADOWING);
-        java.util.List<java.util.concurrent.Future<?>> fanoutFutures = new java.util.ArrayList<>();
+        java.util.List<FanoutTask> fanoutFutures = new java.util.ArrayList<>();
         for (Stage stage : Stage.values()) {
             if (only != null && !only.contains(stage)) continue;
             if (fanout.contains(stage) && (only == null || only.size() > 1)) {
                 final Stage st = stage;
-                fanoutFutures.add(FANOUT_EXECUTOR.submit(() ->
-                        runSingleStage(st, projectId, chapter, chapterIndex, synopsis, outline, false)));
+                fanoutFutures.add(new FanoutTask(st, FANOUT_EXECUTOR.submit(() ->
+                        runSingleStage(st, projectId, chapter, chapterIndex, synopsis, outline, false))));
                 continue;
             }
             // FACT_HARVEST 依赖实体规范名——必须等扇出组完成；其余串行阶段不阻塞扇出（继续并行）
             if (!fanoutFutures.isEmpty() && stage == Stage.FACT_HARVEST) {
-                awaitFanout(fanoutFutures);
+                awaitFanout(projectId, chapterIndex, fanoutFutures);
                 fanoutFutures.clear();
             }
             var result = runSingleStage(stage, projectId, chapter, chapterIndex, synopsis, outline,
@@ -156,24 +156,77 @@ public class ChapterPostProcessor {
                 rewrittenByContinuity = b;
             }
         }
-        awaitFanout(fanoutFutures);
+        awaitFanout(projectId, chapterIndex, fanoutFutures);
         return chapter;
     }
 
     /**
      * NCS-132: 等待扇出组。阶段级业务失败已在线程内按 ledger 语义处理；
      * 但 Error（模拟进程死亡/严重故障）必须逃逸到调用方——不被线程边界吞掉。
+     *
+     * <p>NCS-173: 每个扇出任务限时等待（{@link #fanoutTimeoutMillis()}，默认 600s，可经
+     * {@code novel.postprocess.fanout-timeout-seconds} 配置）。超时即 cancel 并抛待恢复异常——
+     * 防止上游 LLM 停滞（流式读阻塞）时整个写作循环无限冻结、任务长期持有项目工作权。
+     * 停滞阶段不入完成账（重启续跑补齐），健康阶段正常完成不受拖累。
      */
-    private void awaitFanout(java.util.List<java.util.concurrent.Future<?>> futures) {
-        for (var f : futures) {
+    private void awaitFanout(String projectId, int chapterIndex, java.util.List<FanoutTask> tasks) {
+        java.util.List<String> timedOut = new java.util.ArrayList<>();
+        for (var task : tasks) {
             try {
-                f.get();
+                task.future().get(fanoutTimeoutMillis(), java.util.concurrent.TimeUnit.MILLISECONDS);
+            } catch (java.util.concurrent.TimeoutException te) {
+                task.future().cancel(true);
+                awaitCancelledQuietly(task.future());
+                // 账本以 COMPLETED 为终态：若阶段线程在中断后实际完成了工作（账本已 COMPLETED），
+                // 结果有效、按完成记账不判失败；只有确实未完成的阶段才进入超时失败——
+                // 保证"超时"只针对真实停滞，不误伤慢而完成的健康阶段
+                var status = ledger == null ? null
+                        : ledger.statusOf(projectId, chapterIndex, task.stage()).orElse(null);
+                if (status == com.writing.novel.persistence.sqlite.PostProcessLedgerRepository.StageStatus.COMPLETED) {
+                    log.info("后处理扇出阶段超时但已完成(章{}, {})——按完成记账", chapterIndex, task.stage());
+                    continue;
+                }
+                timedOut.add(task.stage().name());
+                String reason = "扇出阶段超过 " + (fanoutTimeoutMillis() / 1000) + "s 未完成，已放弃待恢复";
+                com.writing.novel.telemetry.EventLog.emit("POST_PROCESS_STAGE_TIMEOUT", java.util.Map.of(
+                        "projectId", projectId, "chapterIndex", chapterIndex,
+                        "stage", task.stage().name(),
+                        "reason", com.writing.novel.telemetry.EventLog.truncate(reason, 200)));
+                log.warn("后处理扇出阶段超时(章{}, {}): {}", chapterIndex, task.stage(), reason);
             } catch (java.util.concurrent.ExecutionException e) {
                 if (e.getCause() instanceof Error err) throw err;
                 if (e.getCause() instanceof RuntimeException re) throw re;
-            } catch (Exception ignored) {
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("后处理扇出等待被中断", ie);
             }
         }
+        if (!timedOut.isEmpty()) {
+            throw new IllegalStateException(
+                    "后处理扇出阶段超时(" + String.join(",", timedOut) + ")，待恢复");
+        }
+    }
+
+    /** NCS-173: 扇出等待记录——阶段名用于超时事件定位与待恢复语义 */
+    private record FanoutTask(Stage stage, java.util.concurrent.Future<?> future) {}
+
+    /** NCS-173: cancel 后短暂等待阶段线程终止（中断响应通常毫秒级；真不可中断则限时放弃） */
+    private static void awaitCancelledQuietly(java.util.concurrent.Future<?> future) {
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(2);
+        while (!future.isDone() && System.nanoTime() < deadline) {
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+    }
+
+    /** NCS-173: 扇出阶段时限（毫秒）——{@code novel.postprocess.fanout-timeout-seconds}，默认 600s */
+    static long fanoutTimeoutMillis() {
+        long seconds = Long.getLong("novel.postprocess.fanout-timeout-seconds", 600);
+        return Math.max(1, seconds) * 1000L;
     }
 
     /** 单阶段执行（含 ledger 与失败语义）——串行/并行共用 */
@@ -213,13 +266,18 @@ public class ChapterPostProcessor {
         }
     }
 
-    /** NCS-132: 扇出线程池（守护线程，有界）——独立提取器并行 */
+    /** NCS-132: 扇出线程池（守护线程）——独立提取器并行。
+     *  NCS-173: 用缓存池而非定长池——被超时放弃的停滞线程（HTTP 读阻塞直至客户端超时）
+     *  不再占坑排队，后续章节的扇出任务可即时获得新线程，避免级联超时。 */
     private static final java.util.concurrent.ExecutorService FANOUT_EXECUTOR =
-            java.util.concurrent.Executors.newFixedThreadPool(3, r -> {
-                Thread t = new Thread(r, "postprocess-fanout");
-                t.setDaemon(true);
-                return t;
-            });
+            new java.util.concurrent.ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                    60L, java.util.concurrent.TimeUnit.SECONDS,
+                    new java.util.concurrent.SynchronousQueue<>(),
+                    r -> {
+                        Thread t = new Thread(r, "postprocess-fanout");
+                        t.setDaemon(true);
+                        return t;
+                    });
 
 
 

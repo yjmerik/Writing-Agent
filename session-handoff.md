@@ -1,6 +1,6 @@
 # 交接：backlog 清空 — 2026-10-02
 
-Last Updated: 2026-10-02
+Last Updated: 2026-10-03
 
 ## Current
 
@@ -34,7 +34,6 @@ prompt 指纹分叉 → fixture miss；EntityConsistencyDeterminismTest 锁定�
 
 ## Next Steps
 
-1. 155/163 实机走查补录；18095 重载新包（含 152/153/165）
-2. 新需求入口：diagnose.sh + compare-baseline 无异常时向用户请求
-3. 经验：语料必须在注入确定性修复之后录制（先修分叉再录，否则 record 期
-   偶然序会被固化）；质量要求区约束力弱于写作铁律区（153 两轮迭代实证）
+1. NCS-169（等用户提供 embedding key）→ 18095 重启验证
+2. NCS-170 场景锚点评测（≥5 章对照，随下轮旅程）；155/163 浏览器走查补录
+3. NCS-171 任务日志调查；NCS-056/057/058 大验收活动待资源决策

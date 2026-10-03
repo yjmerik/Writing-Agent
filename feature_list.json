@@ -10444,9 +10444,51 @@
    "verify_cmd": "mvn test -Dtest=CheckpointReopenTest",
    "branch": "codex/ncs-168-reject-reopen",
    "completion_record": "ncs-168-verified"
+  },
+  {
+   "id": "NCS-169",
+   "name": "18095 embedding key 更新与验证",
+   "type": "bug",
+   "phase": 54,
+   "dependencies": [],
+   "status": "not-started",
+   "evidence": "",
+   "files": [],
+   "spec": "docs/reports/2026-10-03-findings-and-evals.md",
+   "description": "18095 实例 embedding 通道 401（dashscope 拒绝），向量检索长期降级词法通道：语义召回精度受损、后处理因重试变慢（NCS-140 上限兜底）。需用户提供有效 key → 更新实例凭据/配置 → 原样重启 → 验证",
+   "acceptance": "实例续写或组装一轮后 data/logs/app.log 无『Embedding 调用失败: HTTP 401』；向量检索走回语义通道（事件/清单可查）",
+   "verify_cmd": "bash -c 'grep -c \"Embedding 调用失败: HTTP 401\" data/logs/app.log'"
+  },
+  {
+   "id": "NCS-170",
+   "name": "场景锚点真实长篇遵从度评测与强化",
+   "type": "feature",
+   "phase": 54,
+   "dependencies": [],
+   "status": "not-started",
+   "evidence": "",
+   "files": [],
+   "spec": "docs/reports/2026-10-03-findings-and-evals.md",
+   "description": "铁律 12 在测试语料达标（dialogueDensity 0.3591）但真实长篇 ch11 中段实测 18 连对白（粗口径行占比 0.66）：单章样本不足定论。需连续 N 章（建议 ≥5）正式对照评测（quality 评估 dialogueDensity，升级前后对比）；若确认退化则强化（候选：锚点行数下限/对峙戏专项指令/评估门禁挂阈值），强化属 prompt 改动需 e2e 语料流程",
+   "acceptance": "产出 ≥5 章对照评测报告（dialogueDensity 逐章 + 与 20261002 语料基线对比）；若超阈值（>0.5 持续）则含强化实现 + e2e record/replay/bless 全流程",
+   "verify_cmd": "bash -c 'source scripts/load-env.sh && ./scripts/e2e.sh && python3 scripts/compare-baseline.py'"
+  },
+  {
+   "id": "NCS-171",
+   "name": "任务生命周期日志缺失调查与修复",
+   "type": "bug",
+   "phase": 54,
+   "dependencies": [],
+   "status": "not-started",
+   "evidence": "",
+   "files": [],
+   "spec": "docs/reports/2026-10-03-findings-and-evals.md",
+   "description": "18095 验收轮：批准后 AUTO_RUN 任务续写 ch11 的生命周期日志未出现在 app.log/stdout（均停在 22:48:42，而数据链路正确）。假说：logback 异步 appender 缓冲未刷或协作任务线程 logger 上下文差异。调查根因并保证任务启动/终态等关键日志落 app.log",
+   "acceptance": "批准→自动恢复→写章→暂停链路中，任务启动/终态日志在 app.log 可见（ListAppender 或实例日志取证）；根因写入 evidence",
+   "verify_cmd": "mvn test -Dtest=WritingTaskExecutorTest"
   }
  ],
  "schema_version": 2,
- "updated_at": "2026-10-02",
+ "updated_at": "2026-10-03",
  "active_feature": null
 }

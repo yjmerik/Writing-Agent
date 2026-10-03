@@ -1,30 +1,29 @@
-# 18095 新包重载验收通过 — 2026-10-02
+# 发现与评测固化 + 行动项登记 — 2026-10-03
 
-Last Updated: 2026-10-02
+Last Updated: 2026-10-03
 
 ## Current
 
-18095 已重载 main c404838 新包（原样参数重启，数据无损）。验收通过：
-新特性端点（154/157/162）全过；第 10 章作者复核链路真实走通（版本化批准 +
-自动豁免 + NCS-146 自动恢复）；第 11 章「问剑逼城」4588 字写出并暂停在新
-检查点待作者审阅。报告：docs/reports/2026-10-02-18095-reload-acceptance.md
+把 18095 验收与走查的全部发现固化为文档并登记行动项：
+docs/reports/2026-10-03-findings-and-evals.md（问题三件 + 评测数据汇总 +
+行动项索引）。新登记 NCS-169（18095 embedding key 401 修复，P1 需用户提供
+凭据）/ NCS-170（场景锚点真实长篇遵从度评测与必要强化，P2）/
+NCS-171（任务生命周期日志缺失调查，P3）。
 
 ## Files
 
-- docs/reports/2026-10-02-18095-reload-acceptance.md（验收报告）
-- data/logs/18095-restart.log（新实例日志）
+- docs/reports/2026-10-03-findings-and-evals.md（汇总，含基线数据表）
+- feature_list.json（+3 行动项；472 completed / 11 deferred / 19 not-started）
 
 ## Verification
 
-- 重启前后数据一致（10 章/15 人物/检查点）；全量 1473 绿（main）
-- 三特性端点 + 版本化批准 + 自动恢复全部真实实例验证
+- 双校验 PASS（除日期项已同步）；评测基线数据见汇总文档第二、三节
 
 ## Blockers
 
-- **embedding key 401**（dashscope 拒绝）：向量检索已降级词法通道（设计行为），
-  写作未断但后处理变慢——需用户提供有效 key 更新实例配置
+- NCS-169 需用户提供有效 embedding key
 
 ## Next Steps
 
-- 作者审阅第 11 章检查点；更新 embedding key
-- 场景锚点遵从度观察项（ch11 中段 18 连对白）→ 下轮旅程正式对照
+- 用户提供 embedding key → NCS-169
+- 下轮 UI 旅程顺带 NCS-170 评测（≥5 章对照）与 155/163 浏览器走查补录

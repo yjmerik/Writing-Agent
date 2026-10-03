@@ -1,30 +1,32 @@
-# 发现与评测固化 + 行动项登记 — 2026-10-03
+# 全链路 Session 日志（NCS-172）+ NCS-169 闭环 — 2026-10-03
 
 Last Updated: 2026-10-03
 
 ## Current
 
-把 18095 验收与走查的全部发现固化为文档并登记行动项：
-docs/reports/2026-10-03-findings-and-evals.md（问题三件 + 评测数据汇总 +
-行动项索引）。新登记 NCS-169（18095 embedding key 401 修复，P1 需用户提供
-凭据）/ NCS-170（场景锚点真实长篇遵从度评测与必要强化，P2）/
-NCS-171（任务生命周期日志缺失调查，P3）。
+- NCS-169 闭环：用户提供的按量付费 embedding key 注入 18095 并重启，
+  零新增 401；语义召回最终确认随下次自然写作
+- NCS-172 完成合入：全链路 Session 日志（data/logs/session.log）——LLM 调用
+  prompt/response 全文 + model/tokens/耗时 + 任务生命周期/批准/检查点/长任务
+  操作条目，sessionId 串联（taskId/workId）；默认 150MB 超限序号滚动
+  （novel.session.max-bytes/max-files 可配，滚动件保留 3 个）
+- 18095 新包为合并后版本时需再重启一次以获得 session 日志能力
 
 ## Files
 
-- docs/reports/2026-10-03-findings-and-evals.md（汇总，含基线数据表）
-- feature_list.json（+3 行动项；472 completed / 11 deferred / 19 not-started）
+- main：090af32（169）、b3f6256+eef8f48（172）
+- spec：docs/specs/2026-10-03-session-log.md
 
 ## Verification
 
-- 双校验 PASS（除日期项已同步）；评测基线数据见汇总文档第二、三节
+- 全量 1480/0F/0E/1S（main 合并后，连续两次绿；一次 Historical 偶发已记录观察）
+- 滚动语义测试：1KB 上限 5 大行守恒滚动；网关串联成败两路
 
 ## Blockers
 
-- 无（NCS-169 已闭环：用户提供按量付费 key 已注入 18095 并重启验证）
-- 后续观察：18095 下次自然写作确认语义召回（非阻塞）
+- 无
 
 ## Next Steps
 
-- ✅ NCS-169 闭环（key 注入 + 重启 + 零新增 401）；NCS-170 评测随下轮旅程
-- 下轮 UI 旅程顺带 NCS-170 评测（≥5 章对照）与 155/163 浏览器走查补录
+- 18095 下次重启后即具备 session 日志；ch11 检查点待作者审阅
+- NCS-170（场景锚点评测）/171（任务日志调查）随下轮旅程

@@ -227,6 +227,10 @@ public class ReviewDecisionController {
         if (writingTaskExecutor != null) {
             writingTaskExecutor.beginWork(id, workId);
         }
+        // NCS-172: 批准操作入 session 日志（workId 作 sessionId）
+        com.writing.novel.telemetry.EventContext.setSession(workId, "review-decision");
+        com.writing.novel.telemetry.SessionLog.op("approval-requested", java.util.Map.of(
+                "chapterIndex", chapterIndex, "workId", workId));
         try {
             result = repository.approveChapter(request);
             // NCS-088：批准 = 作者已读当前稿并担责放行——新批准（非幂等重放）自动把该章
@@ -242,7 +246,11 @@ public class ReviewDecisionController {
             if (writingTaskExecutor != null) {
                 writingTaskExecutor.endWork(id, workId);
             }
+            com.writing.novel.telemetry.EventContext.clear();
         }
+        com.writing.novel.telemetry.SessionLog.op("approval-settled", java.util.Map.of(
+                "chapterIndex", chapterIndex, "replayed", result.replayed(),
+                "approvalId", result.approvalId()));
         // NCS-146（旅程三 F-4）：批准 = 复核完成——无剩余待审时自动继续协作，
         // 不再要求作者二次点击「继续协作」；须在工作权释放后执行。
         if (!result.replayed()) {

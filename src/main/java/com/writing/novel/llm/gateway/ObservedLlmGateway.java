@@ -9,6 +9,7 @@ import com.writing.novel.llm.config.ModelConfig;
 import com.writing.novel.telemetry.CostBudgetMonitor;
 import com.writing.novel.telemetry.EventLog;
 import com.writing.novel.telemetry.EventContext;
+import com.writing.novel.telemetry.SessionLog;
 
 import java.util.Map;
 
@@ -47,6 +48,11 @@ public class ObservedLlmGateway implements LlmGateway {
         try {
             LlmResponse response = delegate.complete(request);
             recordResponse(request, response, start, false);
+            // NCS-172: session 日志——调用全文现场（prompt/response），排障可还原问答
+            SessionLog.llm(request.getTaskType().name(), model, provider, correlationId,
+                    System.currentTimeMillis() - start,
+                    response.getPromptTokens(), response.getCompletionTokens(),
+                    fullPrompt(request), response.getContent(), null);
             return response;
         } catch (RuntimeException e) {
             EventLog.emit("LLM_ERROR", Map.of(
@@ -58,8 +64,24 @@ public class ObservedLlmGateway implements LlmGateway {
                     "durationMs", System.currentTimeMillis() - start,
                     "errorClass", e.getClass().getSimpleName(),
                     "message", EventLog.truncate(e.getMessage(), 200)));
+            // NCS-172: 失败同样留全文现场（response 为 null，error 记录）
+            SessionLog.llm(request.getTaskType().name(), model, provider, correlationId,
+                    System.currentTimeMillis() - start, null, null,
+                    fullPrompt(request), null,
+                    e.getClass().getSimpleName() + ": " + EventLog.truncate(e.getMessage(), 500));
             throw e;
         }
+    }
+
+    /** NCS-172: session 日志用完整 prompt（system + user 分段） */
+    private static String fullPrompt(LlmRequest request) {
+        StringBuilder sb = new StringBuilder();
+        if (request.getSystemPrompt() != null) sb.append("[system]\n").append(request.getSystemPrompt());
+        if (request.getUserMessage() != null) {
+            if (sb.length() > 0) sb.append("\n\n[user]\n");
+            sb.append(request.getUserMessage());
+        }
+        return sb.toString();
     }
 
     /** NCS-130: prompt SHA-256 前 12 位——"同一 prompt 反复失败"可聚类 */
@@ -112,12 +134,20 @@ public class ObservedLlmGateway implements LlmGateway {
                         "taskType", request.getTaskType().name(),
                         "durationMs", System.currentTimeMillis() - start,
                         "streaming", true));
+                // NCS-172: 流式无累积 response 全文，记录调用元数据
+                SessionLog.llm(request.getTaskType().name(), resolveModel(request), resolveProvider(request),
+                        null, System.currentTimeMillis() - start, null, null,
+                        fullPrompt(request), "(streaming, 无累积响应)", null);
                 handler.onComplete();
             }
 
             @Override
             public void onComplete(LlmResponse response) {
                 recordResponse(request, response, start, true);
+                SessionLog.llm(request.getTaskType().name(), resolveModel(request), resolveProvider(request),
+                        null, System.currentTimeMillis() - start,
+                        response.getPromptTokens(), response.getCompletionTokens(),
+                        fullPrompt(request), response.getContent(), null);
                 handler.onComplete(response);
             }
 

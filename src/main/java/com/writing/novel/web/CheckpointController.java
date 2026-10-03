@@ -185,9 +185,13 @@ public class CheckpointController {
         com.writing.novel.telemetry.EventContext.setProjectId(projectId);
         String workId = "checkpoint-revision-" + java.util.UUID.randomUUID();
         writingTaskExecutor.beginWork(projectId, workId);
+        // NCS-172: 修订操作入 session 日志
+        com.writing.novel.telemetry.EventContext.setSession(workId, "checkpoint-revision");
+        com.writing.novel.telemetry.SessionLog.op("checkpoint-revision-started", java.util.Map.of("workId", workId));
         try {
             return work.get();
         } finally {
+            com.writing.novel.telemetry.SessionLog.op("checkpoint-revision-finished", java.util.Map.of("workId", workId));
             com.writing.novel.telemetry.EventContext.clear();
             writingTaskExecutor.endWork(projectId, workId);
         }

@@ -10487,9 +10487,24 @@
    "description": "18095 验收轮：批准后 AUTO_RUN 任务续写 ch11 的生命周期日志未出现在 app.log/stdout（均停在 22:48:42，而数据链路正确）。假说：logback 异步 appender 缓冲未刷或协作任务线程 logger 上下文差异。调查根因并保证任务启动/终态等关键日志落 app.log",
    "acceptance": "批准→自动恢复→写章→暂停链路中，任务启动/终态日志在 app.log 可见（ListAppender 或实例日志取证）；根因写入 evidence",
    "verify_cmd": "mvn test -Dtest=WritingTaskExecutorTest"
+  },
+  {
+   "id": "NCS-172",
+   "name": "全链路 Session 日志（模型调用/返回值/操作）",
+   "type": "feature",
+   "phase": 54,
+   "dependencies": [],
+   "status": "in-progress",
+   "evidence": "",
+   "files": [],
+   "spec": "docs/specs/2026-10-03-session-log.md",
+   "description": "以 session（任务/操作）为单位落完整日志：LLM 调用记录 taskType/model/耗时/tokens/prompt 全文/response 全文（或错误），关键操作（任务生命周期/批准/检查点/长任务）落操作条目；EventContext 扩展 sessionId/operation 串联；session.log 默认 150MB 超限序号滚动（保留数可配）；写入失败只 warn 不影响业务",
+   "acceptance": "SessionLogTest：llm 记录含 sessionId/model/prompt/response 全文；op 记录落盘；max-bytes 调小触发滚动且最旧被删；ObservedLlmGateway complete 后行含 sessionId；全量 mvn test 绿（无 e2e 基线要求）",
+   "verify_cmd": "mvn test -Dtest=SessionLogTest,SessionGatewayLogTest",
+   "branch": "codex/ncs-172-session-log"
   }
  ],
  "schema_version": 2,
  "updated_at": "2026-10-03",
- "active_feature": null
+ "active_feature": "NCS-172"
 }

@@ -212,12 +212,21 @@ public class LongTaskService {
                 job.status = "FAILED";
             }
             log.warn("长任务失败({}/{}): {}", kind, projectId, job.error);
-        } finally {
+        }
+        // NCS-172: 长任务终态操作条目（RUNNING 阶段的 retry-waiting 不记终态）
+        if (!"RUNNING".equals(job.status)) {
+            com.writing.novel.telemetry.SessionLog.op("long-task-finished", java.util.Map.of(
+                    "jobId", job.jobId, "kind", kind, "status", job.status,
+                    "error", String.valueOf(job.error)));
+        }
+        try {
             if (!"RUNNING".equals(job.status)) {
                 job.finishedAt = Instant.now();
                 writingTaskExecutor.endWork(projectId, job.jobId);
                 persistTerminal(job);
             }
+        } finally {
+            com.writing.novel.telemetry.EventContext.clear();
         }
     }
 

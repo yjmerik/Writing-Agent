@@ -223,6 +223,10 @@ public class WritingTaskExecutor {
     }
 
     private void executeConceive(WritingTask task) {
+        // NCS-172: 任务生命周期即 session——调用与操作经 EventContext 串联到 session.log
+        com.writing.novel.telemetry.EventContext.setSession(task.getId(), "CONCEIVE");
+        com.writing.novel.telemetry.SessionLog.op("task-started", java.util.Map.of(
+                "taskId", task.getId(), "type", task.getType().name()));
         try {
             if (isCancelled(task.getId())) {
                 task.setStatus(WritingTask.Status.CANCELLED);
@@ -270,10 +274,18 @@ public class WritingTaskExecutor {
             // p15-05/p20-05: 条件释放——旧 worker 退出时不得移除已被新任务接管的映射
             coordinator.release(task.getProjectId(), task.getId());
             cancelFlags.remove(task.getId());
+            // NCS-172: 终态操作条目（status 已在 try/catch 中落库）
+            com.writing.novel.telemetry.SessionLog.op("task-finished", java.util.Map.of(
+                    "taskId", task.getId(), "status", String.valueOf(task.getStatus()),
+                    "error", String.valueOf(task.getErrorMessage())));
+            com.writing.novel.telemetry.EventContext.clear();
         }
     }
 
     private void executeWriting(WritingTask task, int maxChapters) {
+        com.writing.novel.telemetry.EventContext.setSession(task.getId(), "WRITE");
+        com.writing.novel.telemetry.SessionLog.op("task-started", java.util.Map.of(
+                "taskId", task.getId(), "type", task.getType().name(), "maxChapters", maxChapters));
         try {
             log.info("写作任务开始: {}", task.getId());
             final String taskId = task.getId();
@@ -377,6 +389,10 @@ public class WritingTaskExecutor {
             // mc-p0-05/p20-05: 条件释放工作权——不得移除已被新任务接管的映射
             coordinator.release(task.getProjectId(), task.getId());
             cancelFlags.remove(task.getId());
+            com.writing.novel.telemetry.SessionLog.op("task-finished", java.util.Map.of(
+                    "taskId", task.getId(), "status", String.valueOf(task.getStatus()),
+                    "error", String.valueOf(task.getErrorMessage())));
+            com.writing.novel.telemetry.EventContext.clear();
         }
     }
 

@@ -26,7 +26,11 @@ const ACTION_LABELS: Record<string, string> = {
   ADVANCE: '推进阶段', WRITE_CHAPTER: '写下一章', WRITE_ALL: '连续写作', FINAL_AUDIT: '重新终审',
 };
 
-export default function IdentityBar({ projectId }: { projectId: string }) {
+export default function IdentityBar({ projectId, onOpenCandidates }: {
+  projectId: string;
+  /** NCS-176: 候选计数一键直达——携带首个候选章节索引打开对应审阅面板 */
+  onOpenCandidates?: (chapterIndex?: number) => void;
+}) {
   const [view, setView] = useState<WorkspaceView | null>(null);
   const requestRef = useRef(0);
 
@@ -79,7 +83,12 @@ export default function IdentityBar({ projectId }: { projectId: string }) {
           <Text type="secondary" style={{ fontSize: 12 }}>尚无正文——可先构思或直接建立约定</Text>
         )}
         {view.contentStatus.pendingCandidates > 0 && (
-          <Tag color="purple" style={{ fontSize: 11 }}>{view.contentStatus.pendingCandidates} 个待采纳候选</Tag>
+          <Tooltip title="有待采纳的 Agent 修改候选——点击打开对应章节审阅面板（候选线索在「审 查」抽屉内裁决）">
+            <Tag color="purple" style={{ fontSize: 11, cursor: 'pointer' }}
+              onClick={() => onOpenCandidates?.(view.contentStatus.candidateChapters?.[0])}>
+              {view.contentStatus.pendingCandidates} 个待采纳候选 →
+            </Tag>
+          </Tooltip>
         )}
       </Space>
 

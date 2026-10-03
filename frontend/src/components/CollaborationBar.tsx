@@ -3,6 +3,7 @@ import { Alert, Button, Card, Input, Select, Space, Tag, Typography } from 'antd
 import { api } from '../api/client';
 import type { WorkspaceStatus } from '../api/client';
 import type { CollaborationStatus, ReviewPolicy } from '../types';
+import { clearInstructionDraft, loadInstructionDraft, localStorageAdapter, saveInstructionDraft } from '../lib/instructionDraft';
 
 const STAGES: Record<string, string> = {
   CONCEIVING: '搭建世界、人物与全书框架', PLANNING: '准备章节计划',
@@ -20,6 +21,7 @@ export default function CollaborationBar({ projectId, onChanged, onReview, onSel
   const [acting, setActing] = useState(false);
   const [instruction, setInstruction] = useState('');
   const [dirty, setDirty] = useState(false);
+  const [draftPersistFailed, setDraftPersistFailed] = useState(false);
   const [retry, setRetry] = useState(0);
   const changedRef = useRef(onChanged);
   changedRef.current = onChanged;
@@ -60,6 +62,27 @@ export default function CollaborationBar({ projectId, onChanged, onReview, onSel
     if (!dirty) setInstruction(status?.task?.instruction ?? '');
   }, [status?.task?.instruction, dirty]);
 
+  // NCS-176: 首次加载时恢复本地暂存的创作要求（刷新不丢）；服务端已有指令则不覆盖
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current || !status) return;
+    restoredRef.current = true;
+    const saved = loadInstructionDraft(localStorageAdapter, projectId);
+    if (saved != null && !status.task?.instruction) {
+      setInstruction(saved);
+      setDirty(true);
+    }
+  }, [status, projectId]);
+
+  /** NCS-176: 输入即本地暂存（留空即清除暂存）；存储失败时提示未暂存 */
+  const updateInstruction = (text: string) => {
+    setInstruction(text);
+    setDirty(true);
+    if (!saveInstructionDraft(localStorageAdapter, projectId, text)) {
+      setDraftPersistFailed(true);
+    }
+  };
+
   const act = async (work: () => Promise<unknown>, clearDirty = false) => {
     setActing(true); setError(null);
     ++refreshRef.current;
@@ -68,7 +91,11 @@ export default function CollaborationBar({ projectId, onChanged, onReview, onSel
       const next = await api.collaboration(projectId);
       if (!mountedRef.current) return;
       setStatus(next);
-      if (clearDirty) setDirty(false);
+      if (clearDirty) {
+        setDirty(false);
+        // NCS-176: 创作要求已随任务提交——清除本地暂存
+        clearInstructionDraft(localStorageAdapter, projectId);
+      }
       changedRef.current();
     } catch (e) {
       if (mountedRef.current) setError((e as Error).message);
@@ -156,10 +183,19 @@ export default function CollaborationBar({ projectId, onChanged, onReview, onSel
               style={{ width: 160 }} onChange={policy => void act(() => api.setReviewPolicy(projectId, policy))}
               options={[{ value: 'MANUAL', label: '仅主动接手' }, { value: 'CHAPTER', label: '每章审阅' }, { value: 'VOLUME', label: '卷末审阅' }]} />
           </label>
-          <Input.TextArea aria-label="创作要求" placeholder="给 Agent 的创作要求（继续时生效，留空可清除）"
-            value={instruction} onChange={e => { setInstruction(e.target.value); setDirty(true); }}
+          <Input.TextArea aria-label="创作要求" placeholder="给 Agent 的创作要求（继续时生效，留空可清除；输入后本地暂存，刷新不丢）"
+            value={instruction} onChange={e => updateInstruction(e.target.value)}
             disabled={acting} autoSize={{ minRows: 1, maxRows: 4 }} maxLength={2000} style={{ flex: '1 1 280px', minWidth: 0 }} />
         </div>
+        {instruction.trim() !== '' && dirty && !draftPersistFailed && (
+          <Typography.Text type="secondary" style={{ fontSize: 12 }} data-instruction-draft-saved>
+            创作要求已本地暂存，刷新页面不丢失；点击「开始/继续协作」后随任务提交。
+          </Typography.Text>
+        )}
+        {draftPersistFailed && (
+          <Alert type="warning" showIcon style={{ marginTop: 4 }}
+            message="创作要求未能写入本地暂存（隐私模式/存储配额）——刷新页面将丢失，请尽快提交" />
+        )}
       </Space>
     </Card>
   );

@@ -345,6 +345,8 @@ export interface WorkspaceView {
     totalChapters: number;
     doneChapters: number;
     pendingCandidates: number;
+    /** NCS-176: READY 候选归属章节去重升序——候选计数一键直达 */
+    candidateChapters?: number[];
   };
   run?: {
     taskId: string;

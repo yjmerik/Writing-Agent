@@ -122,6 +122,8 @@ class WorkspaceViewTest {
                 .andExpect(jsonPath("$.contentStatus.totalChapters").value(2))
                 .andExpect(jsonPath("$.contentStatus.doneChapters").value(2))
                 .andExpect(jsonPath("$.contentStatus.pendingCandidates").value(1))
+                // NCS-176: READY 候选归属章节去重升序——状态条候选计数一键直达所需
+                .andExpect(jsonPath("$.contentStatus.candidateChapters").value(2))
                 .andExpect(jsonPath("$.run.taskId").value(task.getId()))
                 .andExpect(jsonPath("$.run.status").value("RUNNING"))
                 .andExpect(jsonPath("$.run.chaptersWritten").value(2))

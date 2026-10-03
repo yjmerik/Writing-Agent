@@ -81,6 +81,12 @@ public class WorkspaceViewService {
         m.put("pendingCandidates", repository.listProposals(projectId).stream()
                 .filter(p -> p.getStatus() == com.writing.novel.domain.RevisionProposal.Status.READY)
                 .count());
+        // NCS-176: READY 候选归属章节去重升序——状态条候选计数一键直达对应审阅面板
+        m.put("candidateChapters", repository.listProposals(projectId).stream()
+                .filter(p -> p.getStatus() == com.writing.novel.domain.RevisionProposal.Status.READY)
+                .map(com.writing.novel.domain.RevisionProposal::getChapterIndex)
+                .filter(java.util.Objects::nonNull)
+                .distinct().sorted().toList());
         return m;
     }
 

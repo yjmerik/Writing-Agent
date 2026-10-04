@@ -66,7 +66,7 @@ llm:
       model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.3
       max-tokens: 4096
-      request-timeout-seconds: 900
+      request-timeout-seconds: 1500
       context-window: 64000
       streaming: true
     qwen-flash-general:

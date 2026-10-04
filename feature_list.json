@@ -10607,9 +10607,27 @@
    "description": "NCS-176 验证时实测：服务升级换 jar 后，浏览器仍从 HTTP 缓存读旧 index.html→加载旧 JS bundle，新功能不可见需手动绕过缓存。Spring Boot 静态资源未对 index.html 设置 no-cache；assets 带 hash 可长缓存。应为 index.html 配置 no-store（或 ETag+must-revalidate），assets/* 配置 immutable 长缓存",
    "acceptance": "浏览器带缓存重访升级后的服务，首屏加载新 bundle（index.html 响应头含 no-store 或等效）；mvn test 全绿",
    "verify_cmd": "mvn test -Dtest=PersistenceSmokeTest && curl -sI http://127.0.0.1:18095/ | grep -i cache"
+  },
+  {
+   "id": "NCS-178",
+   "name": "check provider 超时预算随台账规模上调",
+   "type": "bug",
+   "phase": 55,
+   "dependencies": [
+    "NCS-174"
+   ],
+   "status": "in-progress",
+   "evidence": "",
+   "files": [
+    "src/main/resources/application.yml"
+   ],
+   "spec": "docs/specs/2026-10-03-pipeline-resilience-and-review-ux.md",
+   "description": "1004 监控实测：连续性检查耗时随真典/伏笔台账增长膨胀（ch13:740s→ch14:900s TIMEOUT→屏障），每章屏障人工周期约30分钟成为长跑瓶颈。qwen-flash-check request-timeout-seconds 900→1500 给足预算",
+   "acceptance": "yml 生效（重启后 provider 配置载入 1500s）；后续章节连续性检查不再因预算耗尽超时屏障",
+   "verify_cmd": "grep -A8 'qwen-flash-check' src/main/resources/application.yml | grep 1500"
   }
  ],
  "schema_version": 2,
- "updated_at": "2026-10-03",
+ "updated_at": "2026-10-04",
  "active_feature": null
 }

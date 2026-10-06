@@ -10644,9 +10644,28 @@
    "description": "1004-1005 监控实测：CONTINUITY_CHECK 完成 token 随台账增长爆炸——ch14 45k→ch13 57k→ch18 96,859 token 且 finishReason=length 截断（时间预算 NCS-178 已不够，输出侧失控）。检查器对全量真典/伏笔/关系台账逐项展开分析导致。方向：约束检查输出为紧凑结构化问题清单（禁止分析过程叙述）、或按本章实体切片注入台账、或分片检查",
    "acceptance": "连续性检查完成 token 稳定在可控上限（如 <20k）且不再 length 截断；检查仍能发现已知类真实问题（以历史问题为回归集）；mvn test 全绿",
    "verify_cmd": "grep LLM_TRUNCATED data/logs/events.jsonl | grep CONTINUITY | wc -l"
+  },
+  {
+   "id": "NCS-180",
+   "name": "真典修正的级联失效——章节约束缓存不随典目更新",
+   "type": "bug",
+   "phase": 55,
+   "dependencies": [
+    "NCS-179"
+   ],
+   "status": "not-started",
+   "evidence": "",
+   "files": [
+    "src/main/java/com/writing/novel/memory/",
+    "src/main/java/com/writing/novel/orchestrator/"
+   ],
+   "spec": "docs/specs/2026-10-03-pipeline-resilience-and-review-ux.md",
+   "description": "1006 实测：作者修正真典（辰时二刻取代卯时三刻，HUMAN_PATCH+旧目废止）后，ch30 的章节约束清单（写作期派生缓存）仍持旧值，导致批准门禁反复以「正文与约束清单矛盾」阻塞，需 6 次人工裁决才放行；且检查器将「修复」标为「与已确立事实矛盾」（修复-典记自指）。方向：典目 HUMAN_PATCH/废止时按引用主题失效受影响章节的约束缓存；或门禁在约束与真典冲突时提示「约束过期」而非「正文矛盾」",
+   "acceptance": "真典典目修正/废止后，受影响章节的约束缓存标记过期并在下次写作/重检时刷新；门禁报错区分「正文错」与「约束过期」；mvn test 全绿",
+   "verify_cmd": "mvn test -Dtest=ContextAssemblerTest"
   }
  ],
  "schema_version": 2,
- "updated_at": "2026-10-05",
+ "updated_at": "2026-10-06",
  "active_feature": null
 }

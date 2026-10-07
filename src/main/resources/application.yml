@@ -27,81 +27,75 @@ llm:
   fallback:
     cooldown-seconds: 60
   providers:
-    # 2026-09-07：百炼 Token Plan 专用套餐（与向量按量凭据隔离），qwen3.8-flash 单模型多参数档
-    qwen-flash-write:
-      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
-      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
-      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
+    # NCS-181: 2026-10-07 全量切换 glm-5.3-flash（智谱 coding 订阅通道，推理模型——
+    # reasoning_content 消耗输出 token，max-tokens 按历史 GLM 配置放大）。
+    # embedding 仍走百炼 qwen3.7-text-embedding（独立配置，不受影响）。
+    glm-flash-write:
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
+      api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
+      model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.8
-      # 推理模型 reasoning_content 消耗大量输出 token；8192 会截断 3000+ 字正文
       max-tokens: 20000
-      context-window: 64000
-      # NCS-129/108: 命名 provider 路径应用 requestTimeoutSeconds（默认 180s 低于
-      # 20k-token 真实生成耗时，Token Plan 实测构思期 CHARACTER_DESIGN 单次即 >120s）
+      context-window: 128000
       request-timeout-seconds: 900
       streaming: true
       style-guide: "严格遵循世界观设定中已确立的类型风格。人物名字必须与【出场人物】完全一致，绝对不得改名。不得引入与世界观不兼容的元素。"
-    qwen-flash-plan:
-      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
-      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
-      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
+    glm-flash-plan:
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
+      api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
+      model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.7
-      # op-fix: 推理模型 reasoning_content 耗 token，8192 致总纲正文为空
-      max-tokens: 16000
-      request-timeout-seconds: 600
-      context-window: 64000
-      streaming: true
-    qwen-flash-worldbuild:
-      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
-      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
-      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
-      temperature: 0.7
-      max-tokens: 8192
-      request-timeout-seconds: 600
-      context-window: 64000
-      streaming: true
-    qwen-flash-check:
-      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
-      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
-      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
-      temperature: 0.3
-      max-tokens: 4096
-      request-timeout-seconds: 1500
-      context-window: 64000
-      streaming: true
-    qwen-flash-general:
-      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
-      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
-      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
-      temperature: 0.3
-      max-tokens: 4096
+      max-tokens: 20000
       request-timeout-seconds: 900
-      context-window: 64000
+      context-window: 128000
       streaming: true
-    # NCS-066: 结构化提取（实体/事实/校验 JSON 输出）独立路由——输出需求远超 4096
-    # （实体图谱实测 ~9.4k 字符截断）；提取不需要创意推理，关思考（DashScope enable_thinking:false）
-    # 既释放输出预算又提速。实测质量劣化时可先调回 thinking-enabled: true。
-    qwen-flash-extract:
-      base-url: ${DASHSCOPE_TOKEN_PLAN_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
-      api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
-      model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
+    glm-flash-worldbuild:
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
+      api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
+      model: ${GLM_MODEL:glm-5.3-flash}
+      temperature: 0.7
+      max-tokens: 16000
+      request-timeout-seconds: 900
+      context-window: 128000
+      streaming: true
+    glm-flash-check:
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
+      api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
+      model: ${GLM_MODEL:glm-5.3-flash}
+      temperature: 0.3
+      max-tokens: 16000
+      request-timeout-seconds: 1500
+      context-window: 128000
+      streaming: true
+    glm-flash-general:
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
+      api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
+      model: ${GLM_MODEL:glm-5.3-flash}
+      temperature: 0.3
+      max-tokens: 16000
+      request-timeout-seconds: 900
+      context-window: 128000
+      streaming: true
+    glm-flash-extract:
+      base-url: ${GLM_END_POINT:https://open.bigmodel.cn/api/coding/paas/v4}
+      api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
+      model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.1
       max-tokens: 16000
-      # NCS-174: 提取类调用（max 16k token）实测最慢 <2min——预算 600→300s 收紧，
-      # 上游停滞时扇出阶段等待上限由此与 NCS-173 fanout 超时共同兜底
+      # NCS-174: 提取类调用收紧预算
       request-timeout-seconds: 300
-      context-window: 64000
+      context-window: 128000
       streaming: true
       thinking-enabled: false
   routing:
-    default-providers: [qwen-flash-general]
+    default-providers: [glm-flash-general]
     tasks:
-      CHAPTER_WRITING: [qwen-flash-write]
-      PLOTTING: [qwen-flash-plan]
-      WORLDBUILDING: [qwen-flash-worldbuild]
-      CHARACTER_DESIGN: [qwen-flash-worldbuild]
-      CONTINUITY_CHECK: [qwen-flash-check]
-      STYLE_GUARDIAN: [qwen-flash-check]
-      MEMORY_SUMMARY: [qwen-flash-check]
-      GENERAL: [qwen-flash-general]
-      EXTRACTION: [qwen-flash-extract]
+      CHAPTER_WRITING: [glm-flash-write]
+      PLOTTING: [glm-flash-plan]
+      WORLDBUILDING: [glm-flash-worldbuild]
+      CHARACTER_DESIGN: [glm-flash-worldbuild]
+      CONTINUITY_CHECK: [glm-flash-check]
+      STYLE_GUARDIAN: [glm-flash-check]
+      MEMORY_SUMMARY: [glm-flash-check]
+      GENERAL: [glm-flash-general]
+      EXTRACTION: [glm-flash-extract]

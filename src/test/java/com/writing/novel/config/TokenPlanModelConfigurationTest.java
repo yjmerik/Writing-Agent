@@ -35,20 +35,19 @@ class TokenPlanModelConfigurationTest {
     }
 
     @Test
-    void allRoutesUseGlmCodingChannelAndKeepBudgets() throws Exception {
-        var env = environment(Map.of());
+    void allRoutesUseTokenPlanAndKeepExistingBudgets() throws Exception {
+        var env = environment(Map.of("DASHSCOPE_TOKEN_PLAN_API_KEY", "test-plan-key"));
         var properties = Binder.get(env).bind("llm", LlmProperties.class).get();
         properties.validateKeys();
-        // NCS-181: providers/routing 唯一形态——六参数档全走智谱 coding 通道，九任务显式路由
+        // NCS-108: providers/routing 唯一形态——六参数档全走 Token Plan，九任务显式路由
         assertFalse(properties.isLegacyRouting());
         assertEquals(6, properties.getProviders().size());
         assertEquals(9, properties.getRouting().getTasks().size());
         for (var config : properties.getProviders().values()) {
-            assertEquals("https://open.bigmodel.cn/api/coding/paas/v4", config.getBaseUrl());
-            assertEquals("glm-5.3-flash", config.getModel());
-            assertFalse(config.getApiKey() == null || config.getApiKey().isBlank(),
-                    "GLM key 以 yml 内置默认供给，无 env 也可启动");
-            assertEquals(128000, config.getContextWindow());
+            assertEquals("https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1", config.getBaseUrl());
+            assertEquals("qwen3.8-flash", config.getModel());
+            assertEquals("test-plan-key", config.getApiKey());
+            assertEquals(64000, config.getContextWindow());
             assertTrue(config.isStreaming());
         }
         assertEquals(20000, properties.forTaskType("CHAPTER_WRITING").getMaxTokens());
@@ -57,35 +56,29 @@ class TokenPlanModelConfigurationTest {
         assertEquals(16000, extraction.getMaxTokens());
         assertEquals(0.1, extraction.getTemperature());
         assertFalse(extraction.isThinkingEnabled());
-        // NCS-178: check 预算放大（推理模型输出上限提升后仍需余量）
-        assertEquals(1500, properties.forTaskType("CONTINUITY_CHECK").getRequestTimeoutSeconds());
     }
 
     @Test
-    void unrelatedKeysDoNotLeakIntoLlmOrEmbeddingChannels() throws Exception {
+    void unrelatedKeysCannotSilentlySelectAnotherBillingChannel() throws Exception {
         var env = environment(Map.of("DEEPSEEK_API_KEY", "test-old-key", "DASHSCOPE_API_KEY", "test-payg-key"));
         var properties = Binder.get(env).bind("llm", LlmProperties.class).get();
-        properties.validateKeys();
-        // NCS-181: 无 GLM_API_KEY 时 provider 走 yml 内置 GLM coding 凭据，
-        // 无关 key（DeepSeek/按量百炼）不得给任何 provider 供钥
+        assertThrows(IllegalStateException.class, properties::validateKeys);
+        // NCS-108: providers 形态下无关 key 不得给任何 provider 供钥
         for (var config : properties.getProviders().values()) {
-            assertNotEquals("test-old-key", config.getApiKey());
-            assertNotEquals("test-payg-key", config.getApiKey());
-            assertTrue(config.getApiKey().startsWith("03f6e85375e147d89e375af960b67a64"),
-                    "应回落到内置 GLM coding key");
+            assertTrue(config.getApiKey() == null || config.getApiKey().isBlank());
         }
         assertEquals("test-payg-key", env.getProperty("persistence.embedding-cfg.api-key"));
         assertEquals("qwen3.7-text-embedding", env.getProperty("persistence.embedding-cfg.model"));
     }
 
     @Test
-    void configuredClientSendsGlmKeyUsingOpenAiStreamPath() throws Exception {
+    void configuredClientSendsQwenAndPlanKeyUsingOpenAiStreamPath() throws Exception {
         try (var server = new MockWebServer()) {
             server.start();
-            var env = environment(Map.of("GLM_API_KEY", "test-glm-key",
-                    "GLM_END_POINT", server.url("/api/coding/paas/v4").toString()));
+            var env = environment(Map.of("DASHSCOPE_TOKEN_PLAN_API_KEY", "test-plan-key",
+                    "DASHSCOPE_TOKEN_PLAN_BASE_URL", server.url("/compatible-mode/v1").toString()));
             var properties = Binder.get(env).bind("llm", LlmProperties.class).get();
-            assertEquals(server.url("/api/coding/paas/v4").toString(),
+            assertEquals(server.url("/compatible-mode/v1").toString(),
                     properties.forTaskType("CHAPTER_WRITING").getBaseUrl());
             server.enqueue(new MockResponse().setHeader("Content-Type", "text/event-stream")
                     .setBody("data: {\"choices\":[{\"delta\":{\"content\":\"配置验证通过\"}}]}\n\ndata: [DONE]\n\n"));
@@ -95,10 +88,10 @@ class TokenPlanModelConfigurationTest {
             assertEquals("配置验证通过", response.getContent());
             var request = server.takeRequest(2, TimeUnit.SECONDS);
             assertNotNull(request);
-            assertEquals("/api/coding/paas/v4/chat/completions", request.getPath());
-            assertEquals("Bearer test-glm-key", request.getHeader("Authorization"));
+            assertEquals("/compatible-mode/v1/chat/completions", request.getPath());
+            assertEquals("Bearer test-plan-key", request.getHeader("Authorization"));
             var body = new ObjectMapper().readTree(request.getBody().readUtf8());
-            assertEquals("glm-5.3-flash", body.path("model").asText());
+            assertEquals("qwen3.8-flash", body.path("model").asText());
             assertTrue(body.path("stream").asBoolean());
         }
     }

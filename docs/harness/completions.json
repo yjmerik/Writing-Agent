@@ -3193,6 +3193,17 @@
    "implementation_commit": "80914c459c4d97382f80a4a5561f471095e5f278",
    "main_commit": "80914c459c4d97382f80a4a5561f471095e5f278",
    "evidence": "docs/harness/evidence/2026-10-07-ncs-182-verified.json"
+  },
+  {
+   "id": "ncs-181-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-181"
+   ],
+   "branch": "codex/NCS-181-switch-glm53flash",
+   "implementation_commit": "99fe6e0f7406aefc185db960adbb0b6109f100a7",
+   "main_commit": "d910ccaebdea3a6012f805f58c1c584ee599c29f",
+   "evidence": "docs/harness/evidence/2026-10-07-ncs-181-verified.json"
   }
  ],
  "commit": "2026-10-03T23:59:00.000000+08:00",

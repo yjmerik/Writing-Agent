@@ -10665,6 +10665,26 @@
    "verify_cmd": "mvn test -Dtest=ContextAssemblerTest"
   },
   {
+   "id": "NCS-181",
+   "name": "全任务类型切换 glm-5.3-flash（评估轮）",
+   "type": "feature",
+   "phase": 55,
+   "dependencies": [
+    "NCS-178"
+   ],
+   "status": "completed",
+   "completion_record": "ncs-181-verified",
+   "evidence": "分支 codex/NCS-181-switch-glm53flash；实现提交 99fe6e0+d910cca；主分支包含。验证：mvn test 1484/0F/1S；GLM 首章 ch36（726s/26,985 out/¥0.091）+ ch37-39 全 GLM 完成。评估结论：文风场景质感更丰，但速度慢 2-3 倍/成本 2 倍/check 空响应率高，ch36/ch38 两次检查中断——由 NCS-182 回切。要点：glm-5.3-flash 始终思考，20000 max_tokens 被思考耗尽截断，需放大至 write 40000/check 24000",
+   "files": [
+    "src/main/resources/application.yml",
+    "src/test/java/com/writing/novel/config/TokenPlanModelConfigurationTest.java"
+   ],
+   "spec": "docs/specs/2026-10-03-pipeline-resilience-and-review-ux.md",
+   "description": "九类模型调用全量切换 glm-5.3-flash（智谱 coding 通道）做整章评估；含始终思考模型输出预算放大与 TokenPlan 守卫测试按新计费通道重写",
+   "acceptance": "yml 六档 provider 全部 glm-5.3-flash 且实测调用/写作成功；守卫测试更新；mvn test 全绿",
+   "verify_cmd": "mvn test -Dtest=TokenPlanModelConfigurationTest"
+  },
+  {
    "id": "NCS-182",
    "name": "回切 qwen3.8-flash（GLM 评估轮结束）",
    "type": "feature",

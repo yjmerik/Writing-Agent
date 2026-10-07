@@ -1,0 +1,27 @@
+{
+ "verifiedAt": "2026-10-07T09:00:00.000000+08:00",
+ "commit": "d910ccaebdea3a6012f805f58c1c584ee599c29f",
+ "cleanCheckout": true,
+ "branch": "codex/NCS-181-switch-glm53flash",
+ "scope": "全任务类型切换 glm-5.3-flash 评估轮（ch36-39 后由 NCS-182 回切）",
+ "checks": [
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+   "result": "1484/0F/1S（切换后）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-07T09:00:00.000000+08:00"
+  },
+  {
+   "command": "GLM 实测写作",
+   "result": "ch36 726s/26,985 out/¥0.091 未截断（预算放大后）；ch37-39 全 GLM 完成",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-07T09:00:00.000000+08:00"
+  },
+  {
+   "command": "评估结论",
+   "result": "文风场景质感更丰但慢 2-3 倍/成本约 2 倍/check 空响应率高——用户决定回切（NCS-182）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-07T09:00:00.000000+08:00"
+  }
+ ]
+}

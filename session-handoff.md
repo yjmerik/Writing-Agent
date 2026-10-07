@@ -1,56 +1,46 @@
-# 交接：验证轮修复 NCS-173..176 闭环 — 2026-10-03
+# 交接：50万字长跑护航 + 模型评估轮（GLM→qwen 回切） — 2026-10-07
 
-Last Updated: 2026-10-03
+Last Updated: 2026-10-07
 
 ## Current
 
-1003 创作者验证轮（《山河执棋人》项目 37353224，历史权谋·200章）发现的
-1 个 P1 + 3 个 UX 问题全部修复并合入 main（active_feature=None）：
+《山河执棋人》长跑护航至 ch40 / 151,673 字（30.3%）。1003 修复轮 NCS-173..176、
+1005-1006 运行时修复 NCS-178、模型评估 NCS-181/182 全部闭环合入 main：
 
-- NCS-173（P1）：上游 LLM 停滞时后处理扇出无超时 f.get() 冻结写作循环
-  （实测两次、最长15分钟，期间批准/重写全 409）。修复=限时等待+超时事件化
-  （POST_PROCESS_STAGE_TIMEOUT）+账本保持未完成+扇出池改缓存
-- NCS-174：LLM 客户端超时属性逃逸口（novel.llm.{connect,read,call}-timeout-seconds，
-  默认不变）+ qwen-flash-extract 预算 600→300s
-- NCS-175：Agent 修改预览轮询进度可视化（异步预览 4-6 分钟静默期不再像卡死）
-- NCS-176：候选计数一键直达（workspace-view 新增 candidateChapters + chip 深链，
-  实测追加修复 setSearchParams 覆写深链 bug）+ 创作要求 localStorage 持久化
-- 新 backlog NCS-177：index.html 缓存控制（升级后浏览器拿旧 bundle，实测）
+- NCS-173 扇出超时防护 / 174 客户端超时可配置 / 175 预览进度 / 176 候选直达+创作要求持久化
+- NCS-178 check 预算 1500s（消除检查超时屏障，验证有效）
+- NCS-181 全通道切 glm-5.3-flash 评估（ch36-39）→ NCS-182 按用户决定回切 qwen3.8-flash
+  （GLM：文风更丰但慢 2-3 倍、成本 2 倍、空响应率高；两轮切换均实测验证调用）
+- 新 backlog：NCS-177（index.html 缓存）/ NCS-179（检查输出爆炸 45k→97k，根因=
+  悬置伏笔 69+ 条全量复查）/ NCS-180（真典修正不级联章节约束缓存，ch30 六次裁决实测）
 
 ## Files
 
 - spec：docs/specs/2026-10-03-pipeline-resilience-and-review-ux.md
-- main：be96efe(173) → 74f4cb5(174) → 6d0435f(175) → 17316a4+5ac7fc2(176) → 2293ce5
-- 归档：docs/harness/archive/progress-2026-10-03-pre-ncs173.md / handoff-2026-10-02-backlog-clear.md
+- main：be96efe(173)/74f4cb5(174)/6d0435f(175)/17316a4+5ac7fc2(176)/0d57090(178 登记)/
+  99fe6e0+d910cca(181)/80914c4(182 revert)
+- 证据：docs/harness/evidence/2026-10-0{3,7}-ncs-*.json
 
 ## Verification
 
-- 全量 mvn test：1481 run / 0 fail / 0 error / 1 skip（main，2026-10-03）
-- npm run build 通过；浏览器端到端（18095 新包 PID 88899）：
-  候选 chip→/chapter/5 审查面板定位第5章候选线索区；创作要求刷新恢复；
-  复现测试 ChapterPostProcessorFanoutTimeoutTest（修复前无限挂死→修复后限时放弃）
+- 全量 mvn test 1484/0F/1S（qwen 回切后，2026-10-07）
+- 18095 = PID 88352（qwen 新包）；ch40 由 qwen-flash-write 完成（225s/¥0.064）
+- 屏障处置方法论沉淀在记忆 novel-50w-verification-run（API 补查/逐条裁决/补桥模式）
 
 ## 环境注意
 
-- mvn test 必须 bash -c 'source scripts/load-env.sh && mvn test'（zsh 直接 source 会 bad substitution）
-- 18095 启动命令：env 加载 /tmp/novel18095.env（47 个变量，含三个 DASHSCOPE key）
-  java -jar target/writing-agent-0.1.0-SNAPSHOT.jar --server.port=18095
+- mvn test 必须 bash -c 'source scripts/load-env.sh && mvn test'（zsh 直接 source 报错）
+- 18095 启动：env 加载 /tmp/novel18095.env + java -jar target/...jar --server.port=18095
   --persistence.sqlite.db-path=./data/ui-archtest-20260929/novel.db
   --persistence.vector-store.index-path=./data/ui-archtest-20260929/vectors.idx
-- 已清理三个遗留实例：18095 旧包(51851)、18099 九天孤儿(13108)、8080 孤儿(37302)
-- 浏览器升级服务后需强刷（Ctrl+Shift+R）：index.html 无 no-cache 头（NCS-177）
+- GLM 通道配置在 git 历史（99fe6e0），需要时可直接 revert NCS-182 恢复
 
 ## Blockers
 
-- 无（既有数据问题备忘：`--check-git` 下 ncs-077-verified 的提交对象已不在仓库
-  历史（27d1511 无法解析，疑早期 reset/rebase 丢失），本轮未篡改历史证据；
-  后续如需修复应单独 feature 处理）
+- 无（既有数据问题：ncs-077-verified 提交对象已不在仓库历史，--check-git FAIL，未篡改）
 
 ## Next Steps
 
-1. 《山河执棋人》继续协作推进 50 万字：当前 12 章 / 55,273 字，ch12 待人工复核
-   （打开审阅→裁决候选线索→批准）；创作要求已预写「增加喘息章与场景多样性」
-2. NCS-177 index.html 缓存控制（小改动）
-3. NCS-170 场景锚点评测 / NCS-171 任务日志调查仍在 backlog
-4. 系统性风格观察（未登记）：对白乒乓 vs 说明文密度两头摆，连续4章对抗博弈
-   ——后续可并入 NCS-170 评测或单开 prompt 调优 feature
+1. 《山河执棋人》继续护航至 50 万字（ch40 起，qwen 时代；剩余约 19-24 小时）
+2. backlog 三项：NCS-179（检查输出治理，最影响长跑效率）/ NCS-180（约束缓存级联）/ NCS-177（缓存头）
+3. 章节风格观察（未登记）：qwen 对白乒乓 vs GLM 场景丰盈——后续可在 prompt 层融合

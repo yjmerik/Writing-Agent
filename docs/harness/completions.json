@@ -3182,8 +3182,19 @@
    "implementation_commit": "5ac7fc2d4c019c962f7d110f47874958ba499ab2",
    "main_commit": "2293ce5c2bf1e393925e2c7fd76bf6001d74a7ef",
    "evidence": "docs/harness/evidence/2026-10-03-ncs-176-verified.json"
+  },
+  {
+   "id": "ncs-182-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-182"
+   ],
+   "branch": "codex/NCS-182-revert-qwen38flash",
+   "implementation_commit": "80914c459c4d97382f80a4a5561f471095e5f278",
+   "main_commit": "80914c459c4d97382f80a4a5561f471095e5f278",
+   "evidence": "docs/harness/evidence/2026-10-07-ncs-182-verified.json"
   }
  ],
  "commit": "2026-10-03T23:59:00.000000+08:00",
- "main_commit": "2293ce5c2bf1e393925e2c7fd76bf6001d74a7ef"
+ "main_commit": "80914c459c4d97382f80a4a5561f471095e5f278"
 }

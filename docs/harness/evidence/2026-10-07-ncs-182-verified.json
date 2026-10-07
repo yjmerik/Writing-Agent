@@ -1,0 +1,27 @@
+{
+ "verifiedAt": "2026-10-07T08:20:00.000000+08:00",
+ "commit": "80914c459c4d97382f80a4a5561f471095e5f278",
+ "cleanCheckout": true,
+ "branch": "codex/NCS-182-revert-qwen38flash",
+ "scope": "回切 qwen3.8-flash（GLM-5.3-flash 评估轮 ch36-39 结束）",
+ "checks": [
+  {
+   "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+   "result": "Tests run: 1484, Failures: 0, Errors: 0, Skipped: 1",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-07T08:20:00.000000+08:00"
+  },
+  {
+   "command": "grep qwen-flash-write 配置",
+   "result": "qwen3.8-flash 恢复全路由；check 1500s（NCS-178）与 extract 300s（NCS-174）保留",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-07T08:20:00.000000+08:00"
+  },
+  {
+   "command": "重启后 ch40 写作调用",
+   "result": "model=qwen3.8-flash provider=qwen-flash-write 225s/12,465 out/¥0.064",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-07T08:20:00.000000+08:00"
+  }
+ ]
+}

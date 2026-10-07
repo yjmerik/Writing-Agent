@@ -1,0 +1,21 @@
+{
+ "verifiedAt": "2026-10-07T09:10:00.000000+08:00",
+ "commit": "9787ef499c21f1f7e7df624e3fb3d47663531df3",
+ "cleanCheckout": true,
+ "branch": "codex/NCS-178-check-timeout-budget",
+ "scope": "qwen-flash-check 超时预算 900→1500s（台账增长致检查耗时膨胀的运行时对策）",
+ "checks": [
+  {
+   "command": "grep yml",
+   "result": "request-timeout-seconds: 1500 生效（历经 NCS-181/182 两轮模型切换后仍在）",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-07T09:10:00.000000+08:00"
+  },
+  {
+   "command": "长跑效果观测（ch17-40）",
+   "result": "连续性检查零超时屏障；检查耗时 242-744s 区间；ch17/ch23/24/25/31/32 首评通过",
+   "exitCode": 0,
+   "verifiedAt": "2026-10-07T09:10:00.000000+08:00"
+  }
+ ]
+}

@@ -10616,15 +10616,16 @@
    "dependencies": [
     "NCS-174"
    ],
-   "status": "in-progress",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "分支 codex/NCS-178-check-timeout-budget；实现提交见 completions；验证：yml qwen-flash-check request-timeout-seconds=1500 生效；效果实测（1005-1007 长跑）：ch17 首评 7 分通过、ch19/29/30/32 检查耗时回落 242-644s、连续性检查零超时屏障（切换 GLM 期间的屏障均为空响应类，非超时）",
    "files": [
     "src/main/resources/application.yml"
    ],
    "spec": "docs/specs/2026-10-03-pipeline-resilience-and-review-ux.md",
    "description": "1004 监控实测：连续性检查耗时随真典/伏笔台账增长膨胀（ch13:740s→ch14:900s TIMEOUT→屏障），每章屏障人工周期约30分钟成为长跑瓶颈。qwen-flash-check request-timeout-seconds 900→1500 给足预算",
    "acceptance": "yml 生效（重启后 provider 配置载入 1500s）；后续章节连续性检查不再因预算耗尽超时屏障",
-   "verify_cmd": "grep -A8 'qwen-flash-check' src/main/resources/application.yml | grep 1500"
+   "verify_cmd": "grep -A8 'qwen-flash-check' src/main/resources/application.yml | grep 1500",
+   "completion_record": "ncs-178-verified"
   },
   {
    "id": "NCS-179",

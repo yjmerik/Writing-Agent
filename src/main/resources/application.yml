@@ -35,8 +35,7 @@ llm:
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
       model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.8
-      # glm-5.3-flash 始终思考，reasoning_content 大量消耗输出预算（实测 20000 全被思考耗尽截断）
-      max-tokens: 40000
+      max-tokens: 20000
       context-window: 128000
       request-timeout-seconds: 900
       streaming: true
@@ -46,7 +45,7 @@ llm:
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
       model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.7
-      max-tokens: 32000
+      max-tokens: 20000
       request-timeout-seconds: 900
       context-window: 128000
       streaming: true
@@ -55,7 +54,7 @@ llm:
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
       model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.7
-      max-tokens: 32000
+      max-tokens: 16000
       request-timeout-seconds: 900
       context-window: 128000
       streaming: true
@@ -64,7 +63,7 @@ llm:
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
       model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.3
-      max-tokens: 24000
+      max-tokens: 16000
       request-timeout-seconds: 1500
       context-window: 128000
       streaming: true
@@ -73,7 +72,7 @@ llm:
       api-key: ${GLM_API_KEY:03f6e85375e147d89e375af960b67a64.DnaPiga9EnuZZxmR}
       model: ${GLM_MODEL:glm-5.3-flash}
       temperature: 0.3
-      max-tokens: 24000
+      max-tokens: 16000
       request-timeout-seconds: 900
       context-window: 128000
       streaming: true

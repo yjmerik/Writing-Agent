@@ -51,8 +51,7 @@ class TokenPlanModelConfigurationTest {
             assertEquals(128000, config.getContextWindow());
             assertTrue(config.isStreaming());
         }
-        // NCS-181: 始终思考模型 reasoning 消耗输出预算——写作档放大到 40000（实测 20000 全被思考耗尽）
-        assertEquals(40000, properties.forTaskType("CHAPTER_WRITING").getMaxTokens());
+        assertEquals(20000, properties.forTaskType("CHAPTER_WRITING").getMaxTokens());
         // NCS-066: 提取路由独立预算且关思考（输出不被 reasoning 挤占）
         var extraction = properties.forTaskType("EXTRACTION");
         assertEquals(16000, extraction.getMaxTokens());

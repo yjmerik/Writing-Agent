@@ -10663,9 +10663,29 @@
    "description": "1006 实测：作者修正真典（辰时二刻取代卯时三刻，HUMAN_PATCH+旧目废止）后，ch30 的章节约束清单（写作期派生缓存）仍持旧值，导致批准门禁反复以「正文与约束清单矛盾」阻塞，需 6 次人工裁决才放行；且检查器将「修复」标为「与已确立事实矛盾」（修复-典记自指）。方向：典目 HUMAN_PATCH/废止时按引用主题失效受影响章节的约束缓存；或门禁在约束与真典冲突时提示「约束过期」而非「正文矛盾」",
    "acceptance": "真典典目修正/废止后，受影响章节的约束缓存标记过期并在下次写作/重检时刷新；门禁报错区分「正文错」与「约束过期」；mvn test 全绿",
    "verify_cmd": "mvn test -Dtest=ContextAssemblerTest"
+  },
+  {
+   "id": "NCS-182",
+   "name": "回切 qwen3.8-flash（GLM 评估轮结束）",
+   "type": "feature",
+   "phase": 55,
+   "dependencies": [
+    "NCS-181"
+   ],
+   "status": "completed",
+   "completion_record": "ncs-182-verified",
+   "evidence": "分支 codex/NCS-182-revert-qwen38flash；revert 提交 80914c4+0689ab9；主分支 ff-only 包含。验证：mvn test 1484/0F/1S；重启后 ch40 由 qwen-flash-write 完成（225s/12.4k out/¥0.064）。GLM 评估轮（ch36-39）结论：文风场景质感更丰但速度慢 2-3 倍、成本约 2 倍、单次空响应率更高（ch36/ch38 两次检查中断），用户决定回切",
+   "files": [
+    "src/main/resources/application.yml",
+    "src/test/java/com/writing/novel/config/TokenPlanModelConfigurationTest.java"
+   ],
+   "spec": "docs/specs/2026-10-03-pipeline-resilience-and-review-ux.md",
+   "description": "GLM-5.3-flash 全通道评估轮（ch36-39）后按用户决定回切 qwen3.8-flash：revert NCS-181 两个提交，保留 NCS-178 check 1500s 预算与 NCS-174 extract 300s",
+   "acceptance": "yml 恢复 qwen 全路由（check 1500s 保留）；mvn test 全绿；重启后新章节由 qwen-flash-write 完成",
+   "verify_cmd": "grep -A4 'qwen-flash-write:' src/main/resources/application.yml | grep qwen3.8-flash"
   }
  ],
  "schema_version": 2,
- "updated_at": "2026-10-06",
+ "updated_at": "2026-10-07",
  "active_feature": null
 }

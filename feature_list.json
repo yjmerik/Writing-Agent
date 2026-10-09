@@ -10704,9 +10704,45 @@
    "description": "GLM-5.3-flash 全通道评估轮（ch36-39）后按用户决定回切 qwen3.8-flash：revert NCS-181 两个提交，保留 NCS-178 check 1500s 预算与 NCS-174 extract 300s",
    "acceptance": "yml 恢复 qwen 全路由（check 1500s 保留）；mvn test 全绿；重启后新章节由 qwen-flash-write 完成",
    "verify_cmd": "grep -A4 'qwen-flash-write:' src/main/resources/application.yml | grep qwen3.8-flash"
+  },
+  {
+   "id": "NCS-183",
+   "name": "卷间计划修订器（VolumeController）",
+   "type": "feature",
+   "phase": 55,
+   "dependencies": [
+    "NCS-179"
+   ],
+   "status": "not-started",
+   "evidence": "",
+   "files": [
+    "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
+   ],
+   "spec": "docs/reports/2026-10-09-novel-eval-shanhezhiqiren/系统根因综合报告.md",
+   "description": "根因审查R1：下一卷 planVolume 输入为占位串（NovelOrchestrator:2927-2935），趋势警告/评价/伏笔台账/弧线均不传入；重规划每5卷触发且卷边界不停车。构建卷末停车点：汇聚 VOLUME_TREND_WARNING+EvaluationRecord 低分维度+到期伏笔+弧线应达阶段为结构化约束传入 planVolume；%5 降为每卷",
+   "acceptance": "卷末生成的下一卷大纲包含对趋势告警与到期伏笔的处置（fixture 回放断言 prompt 含这些输入）；注水区（张力平坦4-6）能触发未写章重规划",
+   "verify_cmd": "mvn test -Dtest=NovelOrchestratorTest"
+  },
+  {
+   "id": "NCS-184",
+   "name": "回报预算器（PayoffLedger）+ 全书读者评审",
+   "type": "feature",
+   "phase": 55,
+   "dependencies": [
+    "NCS-183"
+   ],
+   "status": "not-started",
+   "evidence": "",
+   "files": [
+    "src/main/java/com/writing/novel/agent/"
+   ],
+   "spec": "docs/reports/2026-10-09-novel-eval-shanhezhiqiren/系统根因综合报告.md",
+   "description": "根因审查R2：读者评审单章盲评（ReaderReviewAgent 零变量注入），无 payoff 组件；55章零回报兑付+91处同型钩子是读者4.2分主因。构建按卷登记爽点/伏笔承诺/威胁兑付章的台账，逐章核销，未兑付升级 PLOT HIGH 进重写；卷末以全书视角评体验分（钩子类型统计/主线节点表注入）",
+   "acceptance": "连续 N 章无任何兑付时产生 PLOT HIGH 并触发仲裁；reader-review 上下文包含前 N 章钩子摘要",
+   "verify_cmd": "mvn test -Dtest=ReaderReviewAgentTest"
   }
  ],
  "schema_version": 2,
- "updated_at": "2026-10-07",
+ "updated_at": "2026-10-09",
  "active_feature": null
 }

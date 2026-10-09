@@ -131,6 +131,7 @@ public class VolumeReadbackService {
             try {
                 var node = com.writing.novel.llm.LlmJson.parse(r.getReportJson()).node();
                 appendIfPresent(sb, node, "characterChanges", "人物变化");
+                appendIfPresent(sb, node, "pacing", "节奏观察");
                 appendIfPresent(sb, node, "promiseStatus", "承诺状态");
                 appendIfPresent(sb, node, "deviationSummary", "偏离汇总");
                 appendIfPresent(sb, node, "suggestions", "对后续的建议");

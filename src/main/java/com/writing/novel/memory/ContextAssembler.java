@@ -1379,10 +1379,11 @@ public class ContextAssembler {
             sb.append("■ [").append(issue.getSeverity()).append("] ");
             sb.append(issue.getType()).append("：");
             // NCS-101: 风格漂移报告不截断——漂移点与高频词清单是下一章纠正的全部依据（旧 80 字截断恰好截掉）；
-            // 其余类型维持 80 字上限控制预算
+            // NCS-189: 其余类型放宽到 200 字——PACING 类纠正指令（"建议下一章设为喘息章…"）
+            // 的关键结论落在 80-200 字区间，旧上限恰好腰斩
             String desc = issue.getDescription();
             boolean fullText = issue.getType() == ContinuityIssue.Type.STYLE;
-            sb.append(!fullText && desc.length() > 80 ? desc.substring(0, 80) + "..." : desc);
+            sb.append(!fullText && desc.length() > 200 ? desc.substring(0, 200) + "..." : desc);
             sb.append("\n");
         }
 

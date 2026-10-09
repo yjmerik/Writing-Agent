@@ -106,6 +106,17 @@ class VolumeReadbackTest {
         assertTrue(report.getReportJson().contains("建议"), "建议区块（或偏离汇总出现）");
     }
 
+    /** NCS-189: 已确认回读的结论文本应透传 pacing 节奏观察（此前被 buildReadbackContext 丢弃） */
+    @Test
+    void 已确认回读结论包含节奏观察() {
+        service.generate(projectId, 1);
+        service.acknowledge(projectId, 1);
+        String ctx = service.buildReadbackContext(projectId);
+        assertTrue(ctx.contains("节奏观察"), "pacing 字段应出现在回读结论中");
+        assertTrue(ctx.contains("前半克制后半急促"), "pacing 内容应透传");
+        assertTrue(ctx.contains("人物变化"), "既有字段不回归");
+    }
+
     @Test
     void 未确认回读阻断下一卷自动续写_确认后放行() {
         // VOLUME_DONE 状态、当前章 2（卷 1 完成）

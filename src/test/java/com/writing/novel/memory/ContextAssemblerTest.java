@@ -160,4 +160,25 @@ class ContextAssemblerTest {
         }
         assertFalse(context.getFeedbackSection().contains("反馈-9"));
     }
+
+    /**
+     * NCS-189: 非 STYLE 反馈截断 80→200 字——PACING 类纠正指令
+     * （如"建议下一章设为喘息章（tension≤3）…"）曾被 80 字腰斩。
+     */
+    @Test
+    void 反馈注入截断放宽到200字() {
+        Project p = new Project("t", "c", "tag");
+        repo.saveProject(p);
+        repo.saveWritingPreferences(new WritingPreferences(p.getId()));
+        // 81-200 区间的关键内容（旧 80 字截断必然丢失）+ 200 之外的超长尾部
+        String desc = "甲".repeat(80) + "乙".repeat(60) + "丙".repeat(100);
+        repo.saveContinuityIssue(new ContinuityIssue(p.getId(), 1,
+                ContinuityIssue.Type.PACING, ContinuityIssue.Severity.MEDIUM, desc));
+
+        WritingContext context = assembler.assemble(p.getId(), 2, "第二章", "梗概", null);
+        String feedback = context.getFeedbackSection();
+        assertTrue(feedback.contains("乙乙乙"), "81-200 字区间的纠正内容应保留");
+        assertTrue(feedback.contains(desc.substring(0, 200) + "..."), "截断点应在 200 字");
+        assertFalse(feedback.contains(desc), "超长描述仍应截断（非 STYLE 不全文注入）");
+    }
 }

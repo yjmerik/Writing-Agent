@@ -10784,7 +10784,7 @@
       "type": "feature",
       "phase": 56,
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/StyleMetricsService.java",
         "src/main/java/com/writing/novel/orchestrator/ChapterProduction.java"
@@ -10792,7 +10792,9 @@
       "spec": "docs/specs/2026-10-09-narrative-quality-architecture.md",
       "description": "章节写完后确定性计算质感指标（对话段占比/成段叙述块/场景分隔数/对白乒乓/均段长）并以 TEXTURE_METRICS 事件写入 events.jsonl；observe-only：不阻断、不触发重写、不落 ContinuityIssue。为 TextureGate（NCS-195）与卷级闭环（NCS-200）建立测量基线。",
       "acceptance": "ChapterProductionTest 断言写章路径发出 TEXTURE_METRICS 事件且含 dialogueParagraphRatio/narrationRunChars/sceneBreaks/dialoguePingPong 字段",
-      "verify_cmd": "mvn test -Dtest=ChapterProductionTest"
+      "verify_cmd": "mvn test -Dtest=ChapterProductionTest",
+      "completion_record": "ncs-187-verified",
+      "evidence": "2026-10-09 verified: 03a591ba5dae（ff-merge=main 提交 03a591ba5dae）; "
     },
     {
       "id": "NCS-188",
@@ -11025,5 +11027,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-10-09",
-  "active_feature": "NCS-187"
+  "active_feature": null
 }

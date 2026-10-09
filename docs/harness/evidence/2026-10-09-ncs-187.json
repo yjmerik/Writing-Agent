@@ -1,0 +1,20 @@
+{
+ "commit": "03a591ba5daeb85b6adc6d856cee97afaebf2634",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-187"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "TDD：新增 3 用例 computeTexture（对话段占比/叙述块/乒乓/分隔）先红后绿；ChapterProductionTest 写章路径断言 TEXTURE_METRICS 事件与字段全集；分支与合并后 main 全量 1496/0/0/1skip",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-187; spec docs/specs/2026-10-09-narrative-quality-architecture.md; branch codex/ncs-187-texture-metrics-telemetry"
+}

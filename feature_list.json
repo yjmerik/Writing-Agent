@@ -10747,8 +10747,8 @@
    "type": "bug",
    "phase": 55,
    "dependencies": [],
-   "status": "in-progress",
-   "evidence": "",
+   "status": "completed",
+   "evidence": "分支 codex/ncs-185-thinking-budget；实现提交 b5e9810（已合入 main，merge-base 校验通过）；验证：mvn test 1492/0/0/1（bash -c 'source scripts/load-env.sh && mvn test'，2026-10-09）；新增 ThinkingBudgetFilterTest 8 用例全绿；e2e A/B：main 与本分支同签名失败（人审屏障既有问题，登记 NCS-186），compare-baseline PASS，回放 0 LLM 错误；生产实测：北京服务器部署后探针 ok（原 EMPTY_RESPONSE），第1章《验尸人》3756字写完，CHAPTER_WRITING 20000→40000 与 CONTINUITY_CHECK 4096→8192 两次 LLM_THINKING_BUDGET_ESCALATION 自动生效，向量索引 vectors-qwen3.7-text-embedding-1024.idx 生成（embedding flash 链路工作）",
    "files": [
     "src/main/java/com/writing/novel/llm/client/LlmUnavailableException.java",
     "src/main/java/com/writing/novel/llm/client/OpenAiCompatibleClient.java",
@@ -10767,7 +10767,7 @@
    "phase": 55,
    "dependencies": [],
    "status": "not-started",
-   "evidence": "2026-10-09 A/B 实测：main(1ddc4d5) 与 NCS-185 分支均同签名失败——e2e 3章目标只写1章(3919字)即遇人审屏障暂停，0 LLM 错误、compare-baseline PASS",
+   "evidence": "A/B：main(1ddc4d5) 与 NCS-185 分支同签名失败，与本轮改动无关",
    "files": [
     "scripts/e2e.sh",
     "src/main/java/com/writing/novel/service/"

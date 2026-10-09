@@ -47,6 +47,57 @@ class StyleMetricsServiceTest {
     }
 
     @Test
+    void 纹理指标_对话段占比_叙述块_转场与乒乓() {
+        String content = String.join("\n",
+                "「今日朝议如何？」",
+                "「三司互殴，各有说辞。」",
+                "他垂目不语，指节在案上轻轻叩了两下，像是在数什么。",
+                "窗外的雨已经落了三天，檐水在阶前积成一汪浅洼。",
+                "「陛下问的是账。」",
+                "「账在纸上。」");
+        var m = StyleMetricsService.computeTexture(content);
+        assertEquals(6, m.get("totalParagraphs"));
+        assertEquals(4.0 / 6.0, (double) m.get("dialogueParagraphRatio"), 1e-4);
+        // 连续两段叙述构成最长成段叙述块（两段长度之和）
+        int run = "他垂目不语，指节在案上轻轻叩了两下，像是在数什么。".length()
+                + "窗外的雨已经落了三天，檐水在阶前积成一汪浅洼。".length();
+        assertEquals(run, m.get("narrationRunMaxChars"));
+        assertEquals(0, m.get("sceneBreaks"), "无场景分隔标记");
+        assertEquals(0, m.get("dialoguePingPong"), "连续对白未超过 3 段不算乒乓");
+        assertEquals((double) content.replace("\n", "").length() / 6, (double) m.get("avgParagraphLength"), 1e-4);
+    }
+
+    @Test
+    void 纹理指标_乒乓与场景分隔() {
+        String content = String.join("\n",
+                "「你去了哪里？」",
+                "「城南。」",
+                "「见了谁？」",
+                "「一个故人。」",
+                "「他说了什么？」",
+                "「不该说的。」",
+                "＊＊＊",
+                "雨停之后，他独自登上城楼，看远处烽燧次第亮起，火光在暮色里明明灭灭。");
+        var m = StyleMetricsService.computeTexture(content);
+        assertEquals(1, m.get("dialoguePingPong"), "连续 6 段对白应计 1 次乒乓");
+        assertEquals(1, m.get("sceneBreaks"), "＊＊＊ 为场景分隔标记");
+        // 分隔标记后只有一段叙述
+        assertEquals("雨停之后，他独自登上城楼，看远处烽燧次第亮起，火光在暮色里明明灭灭。".length(),
+                m.get("narrationRunMaxChars"));
+    }
+
+    @Test
+    void 纹理指标_空输入边界() {
+        var m = StyleMetricsService.computeTexture("");
+        assertEquals(0, m.get("totalParagraphs"));
+        assertEquals(0.0, (double) m.get("dialogueParagraphRatio"), 1e-9);
+        assertEquals(0, m.get("narrationRunMaxChars"));
+        assertEquals(0, m.get("sceneBreaks"));
+        assertEquals(0, m.get("dialoguePingPong"));
+        assertEquals(0.0, (double) m.get("avgParagraphLength"), 1e-9);
+    }
+
+    @Test
     void ngram重复率_章内与跨章() {
         String repetitive = "他抬起头来望向远方".repeat(10);
         String fresh = "春江潮水连海平海上明月共潮生滟滟随波千万里何处春江无月明";

@@ -43,6 +43,85 @@ public final class StyleMetricsService {
         return m;
     }
 
+    /**
+     * NCS-187: 叙事纹理指标——按段落结构的确定性度量（零 LLM 成本）。
+     *
+     * <p>口径：
+     * <ul>
+     *   <li>totalParagraphs / avgParagraphLength：非空行段落（trim 后）计数与平均长度</li>
+     *   <li>dialogueParagraphRatio：含成对引号（「」或“”）的段落占比</li>
+     *   <li>narrationRunMaxChars：最长连续非对白段落块的总字数（叙述被切碎成标签短句时该值极低）</li>
+     *   <li>sceneBreaks：场景分隔标记行数（仅由 ＊*—–·※ 与空白构成、≥2 字符的行）</li>
+     *   <li>dialoguePingPong：连续 ≥4 段对白（中间无非对白段）的次数——铁律 12 的检测口径</li>
+     * </ul>
+     */
+    public static Map<String, Object> computeTexture(String content) {
+        Map<String, Object> m = new HashMap<>();
+        List<String> paras = paragraphs(content);
+        int total = paras.size();
+        int dialogue = 0;
+        for (String p : paras) {
+            if (isDialogueParagraph(p)) dialogue++;
+        }
+        int narrationRunMax = 0;
+        int run = 0;
+        int pingPong = 0;
+        int dialogueStreak = 0;
+        for (String p : paras) {
+            if (isSeparatorParagraph(p)) {
+                // 场景分隔同时中断叙述块与对白连续段
+                run = 0;
+                dialogueStreak = 0;
+                continue;
+            }
+            if (isDialogueParagraph(p)) {
+                dialogueStreak++;
+                if (dialogueStreak == 4) pingPong++;
+            } else {
+                dialogueStreak = 0;
+                run += p.length();
+                narrationRunMax = Math.max(narrationRunMax, run);
+            }
+        }
+        int totalChars = paras.stream().mapToInt(String::length).sum();
+        m.put("totalParagraphs", total);
+        m.put("dialogueParagraphRatio", round(total == 0 ? 0 : (double) dialogue / total));
+        m.put("narrationRunMaxChars", narrationRunMax);
+        m.put("sceneBreaks", paras.stream().mapToInt(p -> isSeparatorParagraph(p) ? 1 : 0).sum());
+        m.put("dialoguePingPong", pingPong);
+        m.put("avgParagraphLength", round(total == 0 ? 0 : (double) totalChars / total));
+        return m;
+    }
+
+    /** 非空行段落（trim 后）；分隔标记行保留在段落列表中以支撑 sceneBreaks 统计 */
+    static List<String> paragraphs(String content) {
+        List<String> out = new ArrayList<>();
+        if (content == null || content.isBlank()) return out;
+        for (String line : content.split("\n")) {
+            String t = line.trim();
+            if (!t.isEmpty()) out.add(t);
+        }
+        return out;
+    }
+
+    /** 含成对引号的段落视为对白段（与 dialogueDensity 的引号字符集一致） */
+    static boolean isDialogueParagraph(String paragraph) {
+        return (paragraph.contains("「") && paragraph.contains("」"))
+                || (paragraph.contains("“") && paragraph.contains("”"))
+                || (paragraph.indexOf('"') >= 0 && paragraph.indexOf('"', paragraph.indexOf('"') + 1) >= 0);
+    }
+
+    /** 场景分隔标记行：仅由 ＊*—–·※ 与空白构成且 ≥2 字符 */
+    static boolean isSeparatorParagraph(String paragraph) {
+        if (paragraph.length() < 2) return false;
+        for (char c : paragraph.toCharArray()) {
+            if (!(c == '＊' || c == '*' || c == '—' || c == '–' || c == '·' || c == '※' || Character.isWhitespace(c))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /** 句子切分：按中英文句终/分号标点 */
     static List<String> sentences(String content) {
         List<String> out = new ArrayList<>();

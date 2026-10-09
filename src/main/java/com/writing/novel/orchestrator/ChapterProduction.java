@@ -153,6 +153,11 @@ public class ChapterProduction {
                 "chapterIndex", chapterIndex,
                 "wordCount", chapter.getWordCount(),
                 "durationMs", System.currentTimeMillis() - writeStart));
+        // NCS-187: 纹理指标遥测（observe-only）——不阻断、不触发重写；TextureGate（后续 feature）消费
+        Map<String, Object> texture = com.writing.novel.service.StyleMetricsService.computeTexture(chapter.getContent());
+        texture.put("chapterIndex", chapterIndex);
+        texture.put("wordCount", chapter.getWordCount());
+        EventLog.emit("TEXTURE_METRICS", texture);
         return chapter;
     }
 

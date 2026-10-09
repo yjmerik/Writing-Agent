@@ -6,6 +6,7 @@ import com.writing.novel.domain.Project;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -66,5 +67,32 @@ class ChapterProductionTest extends ManualReviewLifecycleTestHarnessSupport {
         assertNotNull(notes);
         assertTrue(notes.contains("【作者指令】"), "prepare 应前置作者指令段");
         assertTrue(notes.contains("雨夜对峙"));
+    }
+
+    /** NCS-187: 写章路径发出 TEXTURE_METRICS 遥测事件（observe-only，不阻断不重写） */
+    @Test
+    void 写章后发出纹理指标遥测事件() {
+        Project p = seedProject();
+        var outline = repo.findOutlineByProject(p.getId()).orElseThrow();
+        var synopsis = synopsisOf(outline, 1);
+
+        java.util.List<Map<String, Object>> textureEvents = new java.util.ArrayList<>();
+        com.writing.novel.telemetry.EventLog.Listener capture = record -> {
+            if ("TEXTURE_METRICS".equals(record.get("event"))) textureEvents.add(record);
+        };
+        com.writing.novel.telemetry.EventLog.subscribe(capture);
+        try {
+            production().produce(p.getId(), 1, synopsis, null);
+        } finally {
+            com.writing.novel.telemetry.EventLog.unsubscribe(capture);
+        }
+        assertEquals(1, textureEvents.size(), "produce 应恰好发出一条 TEXTURE_METRICS 事件");
+        Map<String, Object> ev = textureEvents.get(0);
+        assertEquals(1, ev.get("chapterIndex"));
+        assertNotNull(ev.get("wordCount"));
+        for (String field : java.util.List.of("dialogueParagraphRatio", "narrationRunMaxChars",
+                "sceneBreaks", "dialoguePingPong", "totalParagraphs", "avgParagraphLength")) {
+            assertTrue(ev.containsKey(field), "TEXTURE_METRICS 应含字段 " + field);
+        }
     }
 }

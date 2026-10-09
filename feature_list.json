@@ -10784,7 +10784,7 @@
       "type": "feature",
       "phase": 56,
       "dependencies": [],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/service/StyleMetricsService.java",
         "src/main/java/com/writing/novel/orchestrator/ChapterProduction.java"
@@ -11025,5 +11025,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-10-09",
-  "active_feature": null
+  "active_feature": "NCS-187"
 }

@@ -2,7 +2,7 @@ package com.writing.novel.llm.client;
 
 /** A transport/service failure eligible for provider failover. Contains no remote body or credentials. */
 public class LlmUnavailableException extends RuntimeException {
-    public enum Reason { NETWORK, TIMEOUT, AUTH, QUOTA, RATE_LIMIT, SERVER, ENDPOINT, EMPTY_RESPONSE, PROTOCOL }
+    public enum Reason { NETWORK, TIMEOUT, AUTH, QUOTA, RATE_LIMIT, SERVER, ENDPOINT, EMPTY_RESPONSE, PROTOCOL, THINKING_BUDGET }
     private final Reason reason;
     private final int status;
     public LlmUnavailableException(Reason reason, int status) {

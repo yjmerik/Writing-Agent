@@ -81,8 +81,9 @@ class ModelConnectivityCheckTest {
                 .andExpect(jsonPath("$.latencyMs").isNumber())
                 .andExpect(jsonPath("$.sample").isString());
         // 探测必须是微型且单次：maxTokens 受限、singleAttempt、短超时
+        // NCS-185: 上限 64→512——思考模型 reasoning 普遍 100+ tokens，64 结构性必败
         assertEquals(1, client.requests.size());
-        assertTrue(client.requests.get(0).getMaxTokens() <= 64, "探测请求 maxTokens 必须受限");
+        assertTrue(client.requests.get(0).getMaxTokens() <= 512, "探测请求 maxTokens 必须受限");
         assertTrue(client.configs.get(0).isSingleAttempt(), "探测必须单次尝试");
         assertTrue(client.configs.get(0).getRequestTimeoutSeconds() <= 60, "探测超时必须短");
     }
@@ -114,8 +115,8 @@ class ModelConnectivityCheckTest {
         assertTrue(candidate.isStreaming(), "入参 streaming 不得被探测关闭");
         assertFalse(candidate.isSingleAttempt(), "入参 singleAttempt 不得被探测改动");
         assertEquals(before, Map.entry(candidate.getMaxTokens(), candidate.isSingleAttempt()));
-        // 探测本身仍受限
-        assertTrue(client.configs.get(0).getMaxTokens() <= 64);
+        // 探测本身仍受限（NCS-185: 上限 64→512 适配思考模型）
+        assertTrue(client.configs.get(0).getMaxTokens() <= 512);
         assertTrue(client.configs.get(0).isSingleAttempt());
     }
 

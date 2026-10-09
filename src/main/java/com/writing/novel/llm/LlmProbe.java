@@ -40,7 +40,8 @@ public final class LlmProbe {
         // NCS-160: 在拷贝上施加探测约束，调用方入参保持原值
         ModelConfig probe = copyOf(candidate);
         probe.setTemperature(0);
-        probe.setMaxTokens(Math.min(probe.getMaxTokens() <= 0 ? 32 : probe.getMaxTokens(), 64));
+        // NCS-185: 64 tokens 对思考模型结构性必败（reasoning 普遍 100+ tokens）；512 仍属可忽略成本
+        probe.setMaxTokens(Math.min(probe.getMaxTokens() <= 0 ? 32 : probe.getMaxTokens(), 512));
         probe.setRequestTimeoutSeconds(Math.min(Math.max(probe.getRequestTimeoutSeconds(), 1), 60));
         probe.setSingleAttempt(true);
         probe.setStreaming(false);

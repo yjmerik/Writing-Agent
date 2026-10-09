@@ -112,6 +112,11 @@ public class OpenAiCompatibleClient implements LlmClient {
                     String finishReason = choice.path("finish_reason").asText("");
                     // p16-replay-fix: 空响应是服务端故障（瞬时空响应会覆盖非空 fixture、
                     // 使后处理产出漂移）——视为可重试失败，与 ChapterWriter 空内容重试同语义
+                    // NCS-185: 思考模型吃满输出预算（finish=length+空content+非空reasoning）
+                    // 是确定性的预算标定问题，同参重试必然同败——立即抛 THINKING_BUDGET 交网关升级
+                    if (content.isBlank() && thinkingAteBudget(choice, finishReason)) {
+                        throw unavailable(LlmUnavailableException.Reason.THINKING_BUDGET, 0);
+                    }
                     if (content.isBlank() && attempt < maxAttempts - 1) {
                         log.warn("LLM 空响应(尝试{}/{}): {}，重试", attempt + 1, maxAttempts, request.getTaskType());
                         sleepBackoff(attempt, false);
@@ -218,6 +223,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                     throw new RuntimeException("LLM 调用失败（重试耗尽）: HTTP " + response.code());
                 }
                 StringBuilder content = new StringBuilder();
+                StringBuilder reasoning = new StringBuilder();
                 int promptTokens = 0, completionTokens = 0;
                 // NCS-065: 终止校验——流必须见到 [DONE] 或非空 finish_reason 才算成功；
                 // 被干净掐断的流（EOF 无异常）此前会把半截内容当成功返回（真典收割单字符 "[" 根因）
@@ -233,6 +239,8 @@ public class OpenAiCompatibleClient implements LlmClient {
                             JsonNode chunk = MAPPER.readTree(data);
                             JsonNode delta = chunk.path("choices").path(0).path("delta");
                             content.append(delta.path("content").asText(""));
+                            // NCS-185: 单独累计思考增量——思考吃满预算的识别依据
+                            reasoning.append(delta.path("reasoning_content").asText(""));
                             String finish = chunk.path("choices").path(0).path("finish_reason").asText("");
                             if (!finish.isEmpty()) { terminated = true; finishReason = finish; }
                             // usage 可能在最后一个 chunk（stream_options）或 [DONE] 帧携带
@@ -257,6 +265,10 @@ public class OpenAiCompatibleClient implements LlmClient {
                             + request.getTaskType());
                 }
                 // p16-replay-fix: 流式空聚合同样重试——瞬时空响应是服务端故障
+                // NCS-185: 思考吃满预算（length+空content+有思考增量）确定性失败，直接上抛
+                if (content.isEmpty() && thinkingAteBudget(finishReason, reasoning.length())) {
+                    throw unavailable(LlmUnavailableException.Reason.THINKING_BUDGET, 0);
+                }
                 if (content.isEmpty() && attempt < 2) {
                     log.warn("LLM 流式空聚合(尝试{}/3): {}，重试", attempt + 1, request.getTaskType());
                     sleepBackoff(attempt, false);
@@ -439,7 +451,13 @@ public class OpenAiCompatibleClient implements LlmClient {
                     throw new ContentFilterException("LLM content filtered");
                 }
                 String content = choice.path("message").path("content").asText("");
-                if (content.isBlank()) throw unavailable(LlmUnavailableException.Reason.EMPTY_RESPONSE, 0);
+                if (content.isBlank()) {
+                    // NCS-185: 思考吃满预算优先识别（探针/singleAttempt 路径）
+                    if (thinkingAteBudget(choice, choice.path("finish_reason").asText(""))) {
+                        throw unavailable(LlmUnavailableException.Reason.THINKING_BUDGET, 0);
+                    }
+                    throw unavailable(LlmUnavailableException.Reason.EMPTY_RESPONSE, 0);
+                }
                 checkCancelled();
                 // NCS-065: 透传 finish_reason（length = 输出截断）
                 return new LlmResponse(content, root.path("usage").path("prompt_tokens").asInt(),
@@ -447,6 +465,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                         choice.path("finish_reason").asText(""), null);
             }
             StringBuilder content = new StringBuilder();
+            StringBuilder reasoning = new StringBuilder();
             int promptTokens = 0, completionTokens = 0;
             boolean terminated = false;
             String finishReason = "";
@@ -467,6 +486,8 @@ public class OpenAiCompatibleClient implements LlmClient {
                     if (!finish.isEmpty()) { terminated = true; finishReason = finish; }
                     String token = choice.path("delta").path("content").asText("");
                     content.append(token);
+                    // NCS-185: 单独累计思考增量（不进 content、不回调 onToken）
+                    reasoning.append(choice.path("delta").path("reasoning_content").asText(""));
                     if (handler != null && !token.isEmpty()) {
                         try { handler.onToken(token); }
                         catch (RuntimeException e) { throw new CallbackFailure(e); }
@@ -478,7 +499,13 @@ public class OpenAiCompatibleClient implements LlmClient {
             }
             checkCancelled();
             if (!terminated) throw unavailable(LlmUnavailableException.Reason.PROTOCOL, 0);
-            if (content.toString().isBlank()) throw unavailable(LlmUnavailableException.Reason.EMPTY_RESPONSE, 0);
+            if (content.toString().isBlank()) {
+                // NCS-185: 思考吃满预算优先识别（gateway 流式路径）
+                if ("length".equals(finishReason) && reasoning.length() > 0) {
+                    throw unavailable(LlmUnavailableException.Reason.THINKING_BUDGET, 0);
+                }
+                throw unavailable(LlmUnavailableException.Reason.EMPTY_RESPONSE, 0);
+            }
             return new LlmResponse(content.toString(), promptTokens, completionTokens, finishReason, null);
         } catch (IOException e) {
             checkCancelled();
@@ -498,6 +525,16 @@ public class OpenAiCompatibleClient implements LlmClient {
     private static final class CallbackFailure extends RuntimeException {
         final RuntimeException original;
         CallbackFailure(RuntimeException original) { this.original = original; }
+    }
+
+    /** NCS-185: 思考模型吃满输出预算——finish=length 且 content 空但 reasoning_content 非空 */
+    private static boolean thinkingAteBudget(JsonNode choice, String finishReason) {
+        return "length".equals(finishReason)
+                && !choice.path("message").path("reasoning_content").asText("").isBlank();
+    }
+
+    private static boolean thinkingAteBudget(String finishReason, int reasoningLength) {
+        return "length".equals(finishReason) && reasoningLength > 0;
     }
 
     private static LlmUnavailableException unavailable(LlmUnavailableException.Reason reason, int status) {

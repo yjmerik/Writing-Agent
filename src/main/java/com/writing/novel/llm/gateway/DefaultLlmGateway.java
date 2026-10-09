@@ -105,7 +105,7 @@ public class DefaultLlmGateway implements LlmGateway {
                 // NCS-002: 发送前按该路由模型窗口核算；超窗不触达 provider，尝试下一路由（可能更大窗口）
                 guardFinalBudget(request, config);
                 if (previous != null) emitSwitch(request, previous, id, config, previousFailure, index + 1);
-                LlmResponse response = client.complete(config, request);
+                LlmResponse response = completeWithThinkingHeadroom(request, config, id);
                 checkCancelled();
                 if (response == null || response.getContent() == null || response.getContent().isBlank()) {
                     throw new LlmUnavailableException(LlmUnavailableException.Reason.EMPTY_RESPONSE, 0);
@@ -225,7 +225,7 @@ public class DefaultLlmGateway implements LlmGateway {
                     // NCS-002: 流式路径同样在发送前核算；超窗不触达 provider
                     guardFinalBudget(request, config);
                     if (previous != null) emitSwitch(request, previous, id, config, previousFailure, index + 1);
-                    client.streamComplete(config, request, attempt);
+                    streamWithThinkingHeadroom(request, config, id, attempt);
                 } catch (RequestBudgetExceededException budget) {
                     budgetFailure = budget;
                     failures.add(id + ": request-budget-exceeded");
@@ -306,6 +306,75 @@ public class DefaultLlmGateway implements LlmGateway {
      * 不静默截断、不触达 provider。contextWindow 未配置（<=0）时不设防（向后兼容）。
      * 估算采用保守折算（中文叙事 1.3 字符/token + 常量封装开销），宁高估不低估。
      */
+    /**
+     * NCS-185: 思考模型吃满输出预算（THINKING_BUDGET）是调用级预算标定问题而非供应商故障——
+     * 同 provider 以 ×2 max_tokens 升级重试（至多 2 次，上限=窗口-输入估算-安全余量-1024），
+     * 升级成功不污染供应商健康；升级耗尽按原失败路径处理（recordFailure → 熔断）。
+     * guardFinalBudget 在每次升级后以新预算复核（超窗 → RequestBudgetExceededException，非健康问题）。
+     */
+    private LlmResponse completeWithThinkingHeadroom(LlmRequest request, ModelConfig config, String id) {
+        ModelConfig cfg = config;
+        for (int escalations = 0; ; escalations++) {
+            guardFinalBudget(request, cfg);
+            try {
+                return client.complete(cfg, request);
+            } catch (LlmUnavailableException e) {
+                if (e.getReason() != LlmUnavailableException.Reason.THINKING_BUDGET || escalations >= 2) throw e;
+                ModelConfig bigger = com.writing.novel.llm.config.LlmModelConfigStore.copy(cfg);
+                int next = escalatedMaxTokens(request, cfg);
+                if (next <= cfg.getMaxTokens()) throw e; // 窗口无余量可升
+                bigger.setMaxTokens(next);
+                EventLog.emit("LLM_THINKING_BUDGET_ESCALATION", Map.of(
+                        "taskType", request.getTaskType().name(),
+                        "provider", id,
+                        "from", cfg.getMaxTokens(),
+                        "to", next,
+                        "escalation", escalations + 1));
+                cfg = bigger;
+            }
+        }
+    }
+
+    /** NCS-185: 流式版——仅当尚未向 handler 发射任何 content 且未终止时升级重试 */
+    private void streamWithThinkingHeadroom(LlmRequest request, ModelConfig config, String id,
+                                            StreamAttempt attempt) {
+        ModelConfig cfg = config;
+        for (int escalations = 0; ; escalations++) {
+            guardFinalBudget(request, cfg);
+            try {
+                client.streamComplete(cfg, request, attempt);
+                return;
+            } catch (LlmUnavailableException e) {
+                if (e.getReason() != LlmUnavailableException.Reason.THINKING_BUDGET
+                        || escalations >= 2 || attempt.emitted || attempt.terminal || attempt.failure != null) {
+                    throw e;
+                }
+                ModelConfig bigger = com.writing.novel.llm.config.LlmModelConfigStore.copy(cfg);
+                int next = escalatedMaxTokens(request, cfg);
+                if (next <= cfg.getMaxTokens()) throw e;
+                bigger.setMaxTokens(next);
+                EventLog.emit("LLM_THINKING_BUDGET_ESCALATION", Map.of(
+                        "taskType", request.getTaskType().name(),
+                        "provider", id,
+                        "from", cfg.getMaxTokens(),
+                        "to", next,
+                        "escalation", escalations + 1,
+                        "phase", "stream"));
+                cfg = bigger;
+            }
+        }
+    }
+
+    /** NCS-185: 升级目标 = min(×2, 窗口 - 输入估算 - 安全余量 - 1024)；无正余量返回原值（调用方放弃升级） */
+    private int escalatedMaxTokens(LlmRequest request, ModelConfig cfg) {
+        int doubled = cfg.getMaxTokens() * 2;
+        int window = cfg.getContextWindow();
+        if (window <= 0) return doubled;
+        int safety = Math.max(1, (int) (window * 0.05));
+        int cap = window - (int) estimatedInputTokens(request) - safety - 1024;
+        return Math.min(doubled, Math.max(cap, cfg.getMaxTokens()));
+    }
+
     void guardFinalBudget(LlmRequest request, ModelConfig config) {
         int window = config.getContextWindow();
         if (window <= 0) return;

@@ -10759,6 +10759,23 @@
    "description": "GLM glm-5.3-flash 强制思考：小 max_tokens 档（探针64/检查4096）reasoning 可吃满输出预算（finish=length+content空+reasoning非空），现被报为 EMPTY_RESPONSE 并误触发供应商熔断（单 provider 路由立即 exhausted）。新增 Reason.THINKING_BUDGET 精准识别（流式+非流式），网关同 provider ×2 升级 max_tokens 重试（≤2次，上限 contextWindow-请求预算-1024，不计熔断），探针预算 64→512。",
    "acceptance": "客户端与网关单测断言 THINKING_BUDGET 识别、×2 升级成功、不进冷却；mvn test 全绿；e2e 回放 PASS",
    "verify_cmd": "mvn test -Dtest='OpenAiCompatibleClientTest,LlmProviderFallbackTest'"
+  },
+  {
+   "id": "NCS-186",
+   "name": "E2E 回放被人审屏障暂停（1章后停写）",
+   "type": "bug",
+   "phase": 55,
+   "dependencies": [],
+   "status": "not-started",
+   "evidence": "2026-10-09 A/B 实测：main(1ddc4d5) 与 NCS-185 分支均同签名失败——e2e 3章目标只写1章(3919字)即遇人审屏障暂停，0 LLM 错误、compare-baseline PASS",
+   "files": [
+    "scripts/e2e.sh",
+    "src/main/java/com/writing/novel/service/"
+   ],
+   "spec": "data/e2e/events.jsonl 诊断（质量阻断信号：人审屏障 1 次，写作暂停 1 次）",
+   "description": "默认 e2e 回放流程在章节评审屏障处暂停，无法完成 3 章验收目标。需确认屏障触发是近期 main 引入的评审策略变化（NCS-178/183 相关）还是 e2e 配置缺自动放行；修复方向：e2e 场景显式配置 MANUAL/自动通过屏障，或 e2e.sh 断言屏障语义。",
+   "acceptance": "./scripts/e2e.sh 回放完成 3 章且报告无未决屏障；或屏障为断言内预期行为",
+   "verify_cmd": "./scripts/e2e.sh"
   }
  ],
  "schema_version": 2,

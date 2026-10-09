@@ -1,0 +1,34 @@
+{
+  "commit": "b5e9810d10a444e165f38144edf3af4eed07ef5a",
+  "cleanCheckout": true,
+  "feature": "NCS-185",
+  "branch": "codex/ncs-185-thinking-budget",
+  "implementation": {
+    "commit": "b5e9810d10a444e165f38144edf3af4eed07ef5a",
+    "notes": "THINKING_BUDGET 精准识别（流式+非流式）+ 网关同 provider ×2 预算升级重试 + 探针 64→512；新增 ThinkingBudgetFilterTest 8 用例"
+  },
+  "checks": [
+    {
+      "command": "bash -c 'source scripts/load-env.sh && mvn test'",
+      "result": "1492/0/0/1skip（2026-10-09）",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test -Dtest='OpenAiCompatibleClientTest,LlmProviderFallbackTest'",
+      "result": "PASS（verify_cmd）",
+      "exitCode": 0
+    },
+    {
+      "command": "./scripts/e2e.sh && python3 scripts/compare-baseline.py",
+      "result": "回放 0 LLM 错误，baseline PASS；屏障 A/B：main 与分支同签名失败（既有问题→NCS-186）",
+      "exitCode": 0
+    },
+    {
+      "command": "生产实测（北京 39.107.255.155）",
+      "result": "探针 ok（原 EMPTY_RESPONSE）；第1章 3756 字写完；CHAPTER_WRITING/CONTINUITY_CHECK 两次 LLM_THINKING_BUDGET_ESCALATION 生效；embedding 向量索引生成",
+      "exitCode": 0
+    }
+  ],
+  "limits": ["回执由 2026-10-09 会话从 9f1412b 已记录的验证证据补登（原提交遗漏 completions.json 记录），命令与结果均为该提交 evidence 字段原始记载"],
+  "main_commit": "b5e9810d10a444e165f38144edf3af4eed07ef5a"
+}

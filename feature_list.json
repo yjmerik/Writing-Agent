@@ -10822,7 +10822,7 @@
       "type": "feature",
       "phase": 56,
       "dependencies": [],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/memory/ContextAssembler.java",
         "src/main/java/com/writing/novel/service/VolumeReadbackService.java"
@@ -10830,7 +10830,9 @@
       "spec": "docs/specs/2026-10-09-narrative-quality-architecture.md",
       "description": "①buildFeedbackSection 对非 STYLE issue 描述的 80 字截断放宽到 200 字（PACING 建议常被截断）；②VolumeReadbackService.buildReadbackContext 保留 readback 的 pacing 观察字段（当前被丢弃），先透传不消费，供 NCS-200 使用。",
       "acceptance": "ContextAssemblerTest/VolumeReadbackServiceTest 断言新截断长度与 pacing 字段保留",
-      "verify_cmd": "mvn test -Dtest=ContextAssemblerTest,VolumeReadbackServiceTest"
+      "verify_cmd": "mvn test -Dtest=ContextAssemblerTest,VolumeReadbackServiceTest",
+      "completion_record": "ncs-189-verified",
+      "evidence": "2026-10-10 verified: ab72f3334500（ff-merge=main 提交 ab72f3334500）; "
     },
     {
       "id": "NCS-190",
@@ -11029,5 +11031,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-10-09",
-  "active_feature": "NCS-189"
+  "active_feature": null
 }

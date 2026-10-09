@@ -1,0 +1,20 @@
+{
+ "commit": "ab72f3334500066c29781137d84c324d727f1373",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-189"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "TDD：ContextAssemblerTest 81-200 字区间保留+200 截断点断言先红后绿；VolumeReadbackTest 节奏观察透传断言先红后绿；分支与合并后 main 全量 1501/0/0/1skip",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-189; spec docs/specs/2026-10-09-narrative-quality-architecture.md; branch codex/ncs-189-feedback-pacing-fix"
+}

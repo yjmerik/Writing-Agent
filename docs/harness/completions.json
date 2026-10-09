@@ -3248,8 +3248,19 @@
    "implementation_commit": "91ddf378f439be455dbcd9d7b13ad8ebab7588f8",
    "main_commit": "91ddf378f439be455dbcd9d7b13ad8ebab7588f8",
    "evidence": "docs/harness/evidence/2026-10-10-ncs-188.json"
+  },
+  {
+   "id": "ncs-189-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-189"
+   ],
+   "branch": "codex/ncs-189-feedback-pacing-fix",
+   "implementation_commit": "ab72f3334500066c29781137d84c324d727f1373",
+   "main_commit": "ab72f3334500066c29781137d84c324d727f1373",
+   "evidence": "docs/harness/evidence/2026-10-10-ncs-189.json"
   }
  ],
  "commit": "2026-10-03T23:59:00.000000+08:00",
- "main_commit": "91ddf378f439be455dbcd9d7b13ad8ebab7588f8"
+ "main_commit": "ab72f3334500066c29781137d84c324d727f1373"
 }

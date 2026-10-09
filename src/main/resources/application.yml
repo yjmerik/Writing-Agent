@@ -15,7 +15,8 @@ persistence:
     # 百炼北京 OpenAI 兼容接口；默认 1024 维，可用环境变量指定业务空间专属地址。
     api-base-url: ${DASHSCOPE_EMBEDDING_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
     api-key: ${DASHSCOPE_EMBEDDING_API_KEY:${DASHSCOPE_API_KEY:}}
-    model: qwen3.7-text-embedding
+    # 模型可按部署环境覆盖（如业务空间 qwen3.7-text-embedding-flash）；本地默认不变。
+    model: ${DASHSCOPE_EMBEDDING_MODEL:qwen3.7-text-embedding}
 
 llm:
   # NCS-108: providers/routing 唯一路由形态（熔断/failover 生效）；legacy llm.models 已弃用（解析保留+告警）。

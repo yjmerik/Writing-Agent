@@ -15,6 +15,54 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class PlotterAgentTest {
 
+    /** NCS-188: 节拍数超过上限时合并裁剪并事件化（计划侧节奏算术） */
+    @Test
+    void 节拍数超上限被合并裁剪并事件化() {
+        PlotterAgent agent = new PlotterAgent(null, new TestNovelRepositoryStub(), TestPromptHelper.create());
+        ChapterSynopsis cs = new ChapterSynopsis("proj-1", 7, "测试章", "梗概");
+        java.util.List<java.util.Map<String, Object>> events = new java.util.ArrayList<>();
+        com.writing.novel.telemetry.EventLog.Listener capture = record -> {
+            if ("OUTLINE_BEATS_TRIMMED".equals(record.get("event"))) events.add(record);
+        };
+        com.writing.novel.telemetry.EventLog.subscribe(capture);
+        try {
+            agent.parseChapterDetails(cs,
+                    "场景节拍：金殿对质→袖中密折→夜宴交锋→丙夜纵火→城门截信→禅位遗诏。爽点：密折翻案。人物：主角。目的：夺嫡转折。张力：9。",
+                    3);
+        } finally {
+            com.writing.novel.telemetry.EventLog.unsubscribe(capture);
+        }
+        String[] parts = cs.getBeats().split("→");
+        assertEquals(3, parts.length, "6 节拍超出上限 3 应合并为 3 段");
+        assertEquals(1, events.size(), "应发出一条 OUTLINE_BEATS_TRIMMED 事件");
+        assertEquals(7, events.get(0).get("chapterIndex"));
+        assertEquals(6, events.get(0).get("beatsBefore"));
+        assertEquals(3, events.get(0).get("beatsAfter"));
+    }
+
+    /** NCS-188: 节拍数在限内原样保留、不发事件；maxBeats<=0 表示不限制 */
+    @Test
+    void 节拍数在限内不裁剪() {
+        PlotterAgent agent = new PlotterAgent(null, new TestNovelRepositoryStub(), TestPromptHelper.create());
+        ChapterSynopsis cs = new ChapterSynopsis("proj-1", 2, "测试章", "梗概");
+        java.util.List<java.util.Map<String, Object>> events = new java.util.ArrayList<>();
+        com.writing.novel.telemetry.EventLog.Listener capture = record -> {
+            if ("OUTLINE_BEATS_TRIMMED".equals(record.get("event"))) events.add(record);
+        };
+        com.writing.novel.telemetry.EventLog.subscribe(capture);
+        try {
+            agent.parseChapterDetails(cs,
+                    "场景节拍：入城→探监→对峙。爽点：翻供。人物：主角。目的：真相。张力：7。", 3);
+            assertEquals(3, cs.getBeats().split("→").length);
+            agent.parseChapterDetails(cs,
+                    "场景节拍：甲→乙→丙→丁→戊。爽点：x。人物：y。目的：z。张力：5。", 0);
+            assertEquals(5, cs.getBeats().split("→").length, "maxBeats=0 不限制");
+        } finally {
+            com.writing.novel.telemetry.EventLog.unsubscribe(capture);
+        }
+        assertEquals(0, events.size(), "限内与不限制都不应发裁剪事件");
+    }
+
     @Test
     void proposeVolumeRevisionIncludesInstructionsWithoutPersistingCandidate() {
         class RecordingGateway implements LlmGateway {

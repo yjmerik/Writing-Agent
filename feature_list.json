@@ -10804,7 +10804,7 @@
       "dependencies": [
         "NCS-187"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
         "src/main/java/com/writing/novel/agent/PlotterAgent.java",
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
@@ -11027,5 +11027,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-10-09",
-  "active_feature": null
+  "active_feature": "NCS-188"
 }

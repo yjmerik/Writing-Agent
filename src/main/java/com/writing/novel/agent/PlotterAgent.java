@@ -392,6 +392,15 @@ public class PlotterAgent {
     /** 从章节原始内容中拆分场景节拍、爽点、出场人物 */
     /** p10-w3-02: 改 public 供 NovelOrchestrator.parseAndAppendVolume 复用（延迟卷大纲补全结构化字段） */
     public void parseChapterDetails(ChapterSynopsis cs, String rawContent) {
+        parseChapterDetails(cs, rawContent, 0);
+    }
+
+    /**
+     * NCS-188: 计划侧节奏算术——maxBeats>0 时校验场景节拍数，超出上限的节拍
+     * 并入末段（「、」连接）并事件化。maxBeats<=0 表示不限制（兼容旧调用）。
+     * 计划层塞入的剧情量超过一章承载容量是"剧情快、对话赶场"的上游根源。
+     */
+    public void parseChapterDetails(ChapterSynopsis cs, String rawContent, int maxBeats) {
         // 处理 markdown 加粗标记：**爽点** → 爽点
         String clean = rawContent.replaceAll("\\*\\*", "");
 
@@ -417,7 +426,7 @@ public class PlotterAgent {
             cast = castM.group(1).trim();
         }
 
-        cs.setBeats(beats);
+        cs.setBeats(trimBeatsToLimit(cs.getChapterIndex(), beats, maxBeats));
         cs.setClimax(climax);
         cs.setCast(cast);
 
@@ -456,6 +465,29 @@ public class PlotterAgent {
                 if (toResolve.length() > 0) cs.setForeshadowingsToResolve(toResolve.toString());
             }
         }
+    }
+
+    /** NCS-188: 超上限节拍并入末段；限内/不限制原样返回 */
+    private String trimBeatsToLimit(int chapterIndex, String beats, int maxBeats) {
+        if (maxBeats <= 0 || beats == null || beats.isBlank()) return beats;
+        String[] parts = beats.split("→");
+        if (parts.length <= maxBeats) return beats;
+        StringBuilder merged = new StringBuilder();
+        for (int i = 0; i < maxBeats - 1; i++) {
+            merged.append(parts[i].trim()).append("→");
+        }
+        StringBuilder tail = new StringBuilder();
+        for (int i = maxBeats - 1; i < parts.length; i++) {
+            if (tail.length() > 0) tail.append("、");
+            tail.append(parts[i].trim());
+        }
+        String tailText = tail.toString().replaceAll("。$", "");
+        merged.append(tailText).append("。");
+        com.writing.novel.telemetry.EventLog.emit("OUTLINE_BEATS_TRIMMED", Map.of(
+                "chapterIndex", chapterIndex,
+                "beatsBefore", parts.length,
+                "beatsAfter", maxBeats));
+        return merged.toString();
     }
 
     /** 清理标题中的 markdown 标记（**、#、多余空格） */

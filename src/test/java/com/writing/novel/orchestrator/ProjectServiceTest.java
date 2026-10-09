@@ -61,4 +61,21 @@ class ProjectServiceTest {
         assertTrue(repo.findWritingPreferences(shortP.getId()).isEmpty()
                 || repo.findWritingPreferences(shortP.getId()).orElseThrow().getTargetChapters() == 24);
     }
+
+    /**
+     * NCS-188（bug 复现）：preset 创建项目时 genre 已被直接设置，导致
+     * NovelOrchestrator 仅在 genre==null 推断分支应用的题材默认 maxBeatsPerChapter
+     * 从未生效——历史权谋项目应得 3 而不是通用默认 4。
+     */
+    @Test
+    void 历史预设创建项目应用题材节拍上限() {
+        var presets = new com.writing.novel.service.PresetRegistry();
+        var withRules = new com.writing.novel.orchestrator.ProjectService(
+                repo, presets, new com.writing.novel.service.GenreRuleProvider());
+        Project p = withRules.create("权谋", "庙堂之争", "历史,权谋", ProjectMode.SOLO, "historical");
+
+        assertEquals(com.writing.novel.domain.GenreProfile.HISTORICAL, p.getGenre());
+        assertEquals(3, repo.findWritingPreferences(p.getId()).orElseThrow().getMaxBeatsPerChapter(),
+                "HISTORICAL 题材默认 maxBeats 应为 3（信息密度高的题材）");
+    }
 }

@@ -18,14 +18,21 @@ public class ProjectService {
 
     private final NovelRepository repository;
     private final PresetRegistry presetRegistry;
+    private final com.writing.novel.service.GenreRuleProvider genreRuleProvider;
 
     public ProjectService(NovelRepository repository) {
-        this(repository, null);
+        this(repository, null, null);
     }
 
     public ProjectService(NovelRepository repository, PresetRegistry presetRegistry) {
+        this(repository, presetRegistry, null);
+    }
+
+    public ProjectService(NovelRepository repository, PresetRegistry presetRegistry,
+                          com.writing.novel.service.GenreRuleProvider genreRuleProvider) {
         this.repository = repository;
         this.presetRegistry = presetRegistry;
+        this.genreRuleProvider = genreRuleProvider;
     }
 
     public Project create(String title, String concept, String tags) {
@@ -69,6 +76,13 @@ public class ProjectService {
                 if (preset.getGenreHint() != null) {
                     p.setGenre(preset.getGenreHint());
                     repository.saveProject(p);
+                    // NCS-188: preset 已直接设置题材——同步应用题材默认节拍上限。
+                    // 此前该默认仅在 NovelOrchestrator 的 genre 推断分支（genre==null）生效，
+                    // preset 项目永远拿到通用默认 4，历史/悬疑/惊悚的 3 从未应用。
+                    if (genreRuleProvider != null) {
+                        prefs.setMaxBeatsPerChapter(genreRuleProvider.getDefaultMaxBeats(preset.getGenreHint()));
+                        repository.saveWritingPreferences(prefs);
+                    }
                 }
 
                 log.info("项目 {} 应用预设: {} (genre={}, dialogue={})",

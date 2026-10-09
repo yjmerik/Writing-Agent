@@ -19,8 +19,9 @@ import org.springframework.context.annotation.Configuration;
 public class OrchestratorConfig {
 
     @Bean
-    public ProjectService projectService(NovelRepository repo, PresetRegistry presetRegistry) {
-        return new ProjectService(repo, presetRegistry);
+    public ProjectService projectService(NovelRepository repo, PresetRegistry presetRegistry,
+                                         GenreRuleProvider genreRuleProvider) {
+        return new ProjectService(repo, presetRegistry, genreRuleProvider);
     }
 
     @Bean

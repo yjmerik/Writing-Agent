@@ -2999,6 +2999,13 @@ public class NovelOrchestrator {
      * 区间外条目拒绝入库并发 PLAN_VOLUME_RANGE_REJECTED 事件，由调用方占位兜底。
      * @return 解析出的章节数（0 表示解析失败）
      */
+    /** NCS-188: 项目节拍上限（无偏好=0 不限制） */
+    private int maxBeatsLimit(String projectId) {
+        return repository.findWritingPreferences(projectId)
+                .map(com.writing.novel.domain.WritingPreferences::getMaxBeatsPerChapter)
+                .orElse(0);
+    }
+
     private int parseAndAppendVolume(Outline outline, String text, String projectId,
                                        int volumeNumber, int startChapter, int endChapter) {
         // 创建新卷
@@ -3033,8 +3040,9 @@ public class NovelOrchestrator {
                 ChapterSynopsis syn = new ChapterSynopsis(projectId, chIdx, title, body);
                 // p10-w3-02: 解析结构化字段（cast/beats/climax/tension/foreshadowing），
                 // 修复延迟生成的卷大纲丢字段致 40 章后 ClimaxDiversityTracker 等追踪器失明（GAP#1）
+                // NCS-188: 按项目 maxBeatsPerChapter 做节拍算术校验（超限合并裁剪+事件化）
                 if (plotter != null) {
-                    plotter.parseChapterDetails(syn, body);
+                    plotter.parseChapterDetails(syn, body, maxBeatsLimit(projectId));
                 } else {
                     syn.setBeats(body);
                 }

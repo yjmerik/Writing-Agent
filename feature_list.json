@@ -10804,7 +10804,7 @@
       "dependencies": [
         "NCS-187"
       ],
-      "status": "in-progress",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/agent/PlotterAgent.java",
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
@@ -10812,7 +10812,9 @@
       "spec": "docs/specs/2026-10-09-narrative-quality-architecture.md",
       "description": "两部分：①parseChapterDetails 对每章节拍数做确定性校验——超出 WritingPreferences.maxBeatsPerChapter 时裁剪合并并事件化（计划侧节奏算术的第一步）；②修 bug：preset 创建项目时 genre 已被直接设置，导致 NovelOrchestrator 仅在 genre==null 分支应用的题材默认 maxBeats（HISTORICAL/MYSTERY/THRILLER=3）从未生效。bug 部分先写复现 failing test。",
       "acceptance": "PlotterAgentTest：超限节拍被裁剪并有事件；preset 创建的历史项目 maxBeatsPerChapter==3",
-      "verify_cmd": "mvn test -Dtest=PlotterAgentTest"
+      "verify_cmd": "mvn test -Dtest=PlotterAgentTest",
+      "completion_record": "ncs-188-verified",
+      "evidence": "2026-10-10 verified: 91ddf378f439（ff-merge=main 提交 91ddf378f439）; "
     },
     {
       "id": "NCS-189",
@@ -11027,5 +11029,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-10-09",
-  "active_feature": "NCS-188"
+  "active_feature": null
 }

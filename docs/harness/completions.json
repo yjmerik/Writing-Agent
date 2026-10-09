@@ -3237,8 +3237,19 @@
    "implementation_commit": "03a591ba5daeb85b6adc6d856cee97afaebf2634",
    "main_commit": "03a591ba5daeb85b6adc6d856cee97afaebf2634",
    "evidence": "docs/harness/evidence/2026-10-09-ncs-187.json"
+  },
+  {
+   "id": "ncs-188-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-188"
+   ],
+   "branch": "codex/ncs-188-outline-beats-arithmetic",
+   "implementation_commit": "91ddf378f439be455dbcd9d7b13ad8ebab7588f8",
+   "main_commit": "91ddf378f439be455dbcd9d7b13ad8ebab7588f8",
+   "evidence": "docs/harness/evidence/2026-10-10-ncs-188.json"
   }
  ],
  "commit": "2026-10-03T23:59:00.000000+08:00",
- "main_commit": "03a591ba5daeb85b6adc6d856cee97afaebf2634"
+ "main_commit": "91ddf378f439be455dbcd9d7b13ad8ebab7588f8"
 }

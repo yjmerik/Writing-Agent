@@ -1,0 +1,20 @@
+{
+ "commit": "7a85ccd0782f8e3f49f00db2a003051fa3979204",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-190"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "TDD：NarrativePolicyTest 5 用例（HISTORICAL 质感区间 0.55/节拍3/转场80/叙述块120；WUXIA/CULTIVATION/GENERAL/MYSTERY 现状等效；覆盖合并+SQLite 读回+清除；非法值拒绝）+ NarrativePolicyApiTest 2 用例（REST GET/PUT/DELETE 回路+400）先红后绿；分支与合并后 main 全量 1508/0/0/1skip",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-190; spec docs/specs/2026-10-09-narrative-quality-architecture.md; branch codex/ncs-190-narrative-policy"
+}

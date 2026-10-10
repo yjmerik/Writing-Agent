@@ -3259,8 +3259,19 @@
    "implementation_commit": "ab72f3334500066c29781137d84c324d727f1373",
    "main_commit": "ab72f3334500066c29781137d84c324d727f1373",
    "evidence": "docs/harness/evidence/2026-10-10-ncs-189.json"
+  },
+  {
+   "id": "ncs-190-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-190"
+   ],
+   "branch": "codex/ncs-190-narrative-policy",
+   "implementation_commit": "7a85ccd0782f8e3f49f00db2a003051fa3979204",
+   "main_commit": "7a85ccd0782f8e3f49f00db2a003051fa3979204",
+   "evidence": "docs/harness/evidence/2026-10-10-ncs-190.json"
   }
  ],
  "commit": "2026-10-03T23:59:00.000000+08:00",
- "main_commit": "ab72f3334500066c29781137d84c324d727f1373"
+ "main_commit": "7a85ccd0782f8e3f49f00db2a003051fa3979204"
 }

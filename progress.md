@@ -1,43 +1,34 @@
-# NCS-186 e2e 通道修复——代码完成，语料重建被配额阻塞 — 2026-10-10
+# NCS-186 完成闭环——e2e 通道恢复 + DeepSeek 本地路由 — 2026-10-10
 
 Last Updated: 2026-10-10
 
 ## Current
 
-- 上午完成 NCS-190/191（叙事策略事实源+约束统一，main 1512 全绿，见 ac15840 交接）
-- 下午 NCS-186（e2e 回放修复）进行中，分支 codex/ncs-186-e2e-replay-fix（7ad9b46）：
-  - 根因实证：**本地全部回放语料已过期**——prompt 演进（NCS-188 节拍裁剪等）使现行
-    指纹与所有已录语料失配（mystery 最新语料仅存 2 个写作 fixture 且当日 record 即中断；
-    wuxia 语料在 CHARACTER_DESIGN 阶段就失配）
-  - e2e.sh 修复已实施并实证：质量屏障自动放行（正式 review-decisions 端点+幂等键+
-    409 不强行绕过）+ PAUSED 续写回退；真实 record 运行中 ch1 屏障被自动放行、
-    回退续写生效
-  - **硬阻塞：qwen token-plan 月配额耗尽**（API 实测 insufficient_quota，
-    重置 2026-11-09 16:00 UTC = 北京 11-10 零点）——语料重建需真实 LLM，本月本地不可行
-- 待用户决策（三选一）：①部署当前分支 jar 到北京服务器用 GLM 录制（需部署授权，
-  ~1-1.5h 服务器占用 + 约 ¥1 GLM 配额）；②提供本地可用 LLM key；③等 11-10 配额重置
+- **NCS-186 已完成并合入 main（aa40e1a）**：e2e 回放通道全链恢复，语料以 DeepSeek 重建，
+  replay×2 完全一致且全验收通过，compare-baseline PASS（质量未退化，无需 bless）
+- 本地写作链 LLM 已切 DeepSeek deepseek-v4-flash（~/.zshrc 三行 DASHSCOPE_TOKEN_PLAN_* 路由覆盖，
+  qwen 配额 11-10 恢复后注释即回切；application.yml 与代码零改动）
+- 修复链（详见 feature_list evidence）：e2e.sh 放行完整动线（服务端身份→补查→作者例外裁决→
+  批准）+终态兜底+回退章数口径；contentHash 字节格式冻结测试（int 位移陷阱哨兵）；
+  EXTRACTION 32k/600s、check 16000（DeepSeek 输出/思考量实证适配）
+- 全量门禁：分支与合并后干净 main 检出 mvn test 均 1515/0/0/1skip；harness 校验 PASS（488 completed）
 
 ## Files
 
-- 分支：codex/ncs-186-e2e-replay-fix（scripts/e2e.sh + feature_list，未合并）
-- main 最新：ac15840（NCS-190/191 已闭环）
+- main：aa40e1a（NCS-186 全部提交 ff-only 合入）；语料 data/e2e-fixtures/mystery-20261010
+ （48 fixture，DeepSeek 录制，机器本地不入库）
+- 登记链：docs/harness/evidence/2026-10-10-ncs-186.json + completions.json(ncs-186-verified)
 
 ## Verification
 
-- e2e.sh bash -n 语法过；自动放行/回退在真实 record 运行中实证生效（data/e2e 留痕）
-- main 全量 1512/0/0/1skip（ac15840 后未再变更 main）
+- record（DeepSeek 全链）→ replay×2 一致 + acceptancePassed → compare-baseline PASS
+- 合并后干净 main worktree：mvn 1515 绿 + e2e replay 验收通过（干净检出需先 npm build，init.sh 内置）
 
 ## Blockers
 
-- qwen 月配额（11-10 北京零点重置）；语料重建方案待用户决策（上述三选一）
+- 无。注意：并发会话贡献了 e2e.sh 轮询容错（api() 重试/超时），已随本 feature 合入并致谢记录
 
 ## Next Steps
 
-- 用户选定语料重建方案后：record → replay×2 → compare-baseline（bless 需人工确认）→
-  合并 NCS-186 → 解锁 NCS-192（模板改版，验收依赖 e2e）
-- 等待期可做不依赖 e2e 的 feature（但注意：凡改注入上下文的 feature 最终验收都需 e2e，
-  建议攒到语料恢复后统一补验收）
-
-__zcode_status=$?
-if [ "$__zcode_status" -eq 0 ]; then pwd -P > '/var/folders/n1/0rdqrqbj0tvfcgjbgds9rmlc0000gn/T/zcode-fe59b5a1-4764-44c0-9593-dc5c9c10c85b-cwd'; fi
-exit "$__zcode_status"
+- NCS-192（模板节奏改版）已解锁——e2e 验收通道可用；改注入上下文的 feature 验收随做随录
+- golden 基线未动（新语料质量优于旧门槛）；如后续希望以 DeepSeek 语料收紧基线，需人工确认后 --bless

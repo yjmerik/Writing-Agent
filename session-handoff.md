@@ -1,45 +1,42 @@
-# 交接：NCS-186 e2e 通道——修复完成、语料重建待决策 — 2026-10-10
+# 交接：NCS-186 完成合入 main，e2e 通道恢复 + DeepSeek 本地路由 — 2026-10-10
 
 Last Updated: 2026-10-10
 
 ## Current
 
-上午 NCS-190/191 已合入 main（ac15840 交接）。下午推进 NCS-186，**代码修复完成但语料
-重建被硬阻塞**，保持 in-progress（分支 codex/ncs-186-e2e-replay-fix，7ad9b46）：
+NCS-186（e2e 回放被人审屏障暂停）**已完成闭环**：分支 codex/ncs-186-e2e-replay-fix
+（实现提交 5d90c4b/b12b81b/aa40e1a）ff-only 合入 main（aa40e1a），登记
+ncs-186-verified（evidence: docs/harness/evidence/2026-10-10-ncs-186.json）。
 
-- **根因实证（非最初假设的人审屏障单一问题）**：本地全部回放语料过期——
-  mystery-20261002 仅存 2 个 CHAPTER_WRITING fixture（当日 record 中断遗留），
-  现行 ch1 指纹 b1e79c68… 与之失配（NCS-188 节拍裁剪等 prompt 演进）；wuxia 语料
-  CHARACTER_DESIGN 阶段即失配。即 e2e 通道自 NCS-188 合并起对全部语料失效。
-- **e2e.sh 修复（7ad9b46）**：①PAUSED 时经正式 `review-decisions` 端点自动放行
-  （identity/reviewSetHash/idempotencyKey 协议与 UI 一致，409 不绕过）；②无可放行且
-  未写满时回退重发 write-all。真实 record 运行实证两者生效（ch1 屏障自动放行→续写）。
-- **硬阻塞**：qwen token-plan **月配额耗尽**（API 直测 insufficient_quota，重置
-  2026-11-09 16:00 UTC=北京 11-10 零点）。上午首次 record 消耗完本周期配额
-  （构思+ch1 全链后 QUOTA）。
+- **根因三连**（全部实证并修复）：
+  1. 旧语料自 NCS-188 全量指纹失配 + qwen 月配额阻塞 → DeepSeek 重建（环境变量路由，零代码）
+  2. e2e.sh 本地 be64 复算 contentHash 与服务端 int 位移前缀必然失配 → 改用 review-context
+     服务端身份（格式冻结测试 ChapterApprovalHashFormatTest 防退化）
+  3. DeepSeek 适配：实体图谱 50k+ 字符截断（EXTRACTION→32k/600s）、检查思考量熔断
+     （check→16000）、真 HIGH 矛盾走作者例外裁决（POST /dispositions，与 UI 动线一致）
+- **验收**：record（48 fixture）→ replay×2 完全一致且 acceptancePassed=true（3 章/0 错误/
+  0 屏障/0 未决 HIGH）→ compare-baseline PASS（质量未退化，golden 未 bless）
+- 本地写作链现走 DeepSeek deepseek-v4-flash（~/.zshrc 三行 DASHSCOPE_TOKEN_PLAN_* 覆盖，
+  11-10 qwen 恢复后注释即回切）
 
 ## Files
 
-- 分支：codex/ncs-186-e2e-replay-fix（scripts/e2e.sh 自动放行+回退；feature_list
-  evidence 含完整根因链；progress/handoff 本文件）——**续做时复用此分支**
-- main：ac15840（未动）；data/e2e-fixtures/mystery-20261010 半成品已清理
+- main：aa40e1a；语料 data/e2e-fixtures/mystery-20261010（机器本地，不入库）
+- 并发会话贡献：e2e.sh 状态轮询容错（api() 重试/超时/orphan 防护），已一并合入
 
 ## Verification
 
-- 自动放行/回退：真实 record 运行实证（data/e2e/server.log + events.jsonl 留痕：
-  APPROVE 后第二任务启动）
-- 语料重建未做（配额）；replay×2/compare-baseline 待语料后执行
+- 分支 + 合并后干净 main worktree：mvn test 1515/0/0/1skip ×2
+- e2e：record 完成 + replay×2 一致全过 + baseline PASS（合并后 main 上亦复验 replay 通过）
+- check-harness.py PASS（488 completed）
 
 ## Blockers
 
-- 语料重建三选一待用户决策：①北京服务器 GLM 录制（需部署授权：当前服务器 jar=b5e9810
-  落后 main 多个 prompt 改动，必须先部署当前分支 jar，否则指纹不匹配；服务器 SSH 直连
-  可用，重部署流程见记忆 beijing-swas-deployment）②提供本地 LLM key ③等 11-10 重置
+- 无
 
 ## Next Steps
 
-1. 用户决策后：record（E2E_FIXTURE_DIR=data/e2e-fixtures/mystery-20261010）→ replay×2
-   一致 → compare-baseline 展示对比（**bless 需人工确认**）→ 合并 NCS-186 → 回执
-2. NCS-192（模板改版）依赖 e2e 验收通道，排在 NCS-186 之后
-3. 注意：本月内凡改注入上下文的 feature（NCS-192/194/197/198/199）最终 e2e 验收都会
-   撞同一堵墙——建议集中到语料恢复后统一补验收，或随做随 A/B 指纹留证
+1. NCS-192（大纲/写作模板节奏改版）已解锁，从 main 新建分支开工；其验收依赖的 e2e 通道可用
+2. 提示：本月内凡改注入上下文的 feature（NCS-192/194/197/198/199）语料会再次失配——
+   改完 prompt 后按 DoD 以 record 重建（DeepSeek 通道 ~20 分钟/次）再 replay×2
+3. golden 仍为旧 qwen 门槛（新语料全面优于）；若要以 DeepSeek 语料收紧基线需人工 --bless

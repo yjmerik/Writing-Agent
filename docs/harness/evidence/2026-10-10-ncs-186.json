@@ -1,0 +1,36 @@
+{
+  "commit": "aa40e1a35c482bbb4e9fb6ad8741075772d8c1b8",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-186"
+  ],
+  "checks": [
+    {
+      "command": "./scripts/e2e.sh（record，E2E_FIXTURE_DIR=data/e2e-fixtures/mystery-20261010，DeepSeek deepseek-v4-flash 全链）",
+      "result": "构思+3 章全链完成，48 fixture；终局报告 0 LLM 错误/0 章失败/0 屏障/0 未决 HIGH",
+      "exitCode": 0
+    },
+    {
+      "command": "E2E_FIXTURE_DIR=data/e2e-fixtures/mystery-20261010 ./scripts/e2e.sh --mode replay ×2",
+      "result": "两次回放报告完全一致（仅时间戳/项目ID不同），均 acceptancePassed=true：3 章/13881 字/48 调用/0 错误/0 屏障/0 未决 HIGH——含屏障→补查→裁决→批准→续写链路的确定性复现",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/compare-baseline.py",
+      "result": "PASS 质量未退化：章节数 3≥1、总字数 13881≥2756、均章 4627≥2411、章失败 0、LLM 错误 0、n-gram 重复率 0.0334≤0.0689、套路词 0≤1.1——旧 golden 门槛全部满足，无需 bless",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（分支与合并后干净 main 检出）",
+      "result": "均 1515/0 failures/0 errors/1 skip（干净检出需先 frontend npm run build，init.sh 内置步骤）",
+      "exitCode": 0
+    },
+    {
+      "command": "ChapterApprovalHashFormatTest（新增）",
+      "result": "3/3 通过——冻结服务端 contentHash 长度前缀字节格式（int 位移语义=4 字节大端重复两遍），防止误改为真 be64 作废存量身份",
+      "exitCode": 0
+    }
+  ],
+  "notes": "语料重建理由：NCS-188 起 prompt 演进使全部旧语料指纹失配 + qwen token-plan 月配额 11-10 才重置；本地经 DASHSCOPE_TOKEN_PLAN_* 环境变量路由切 DeepSeek（~/.zshrc 三行，qwen 恢复后注释即回切）。并发会话贡献 e2e.sh 状态轮询容错（api() 重试/超时），随本 feature 合入。DeepSeek 预算适配：EXTRACTION 32k/600s（实体图谱 50k+ 字符 16k 截断实证）、check 16000（THINKING_BUDGET 熔断实证）。",
+  "recordedAt": "2026-10-10T23:59:00+08:00"
+}

@@ -10767,15 +10767,21 @@
       "type": "bug",
       "phase": 55,
       "dependencies": [],
-      "status": "in-progress",
-      "evidence": "2026-10-10 进行中（分支 codex/ncs-186-e2e-replay-fix，7ad9b46）：①根因实证=语料全量过期——mystery-20261002 仅存 2 个 CHAPTER_WRITING fixture 且现行 ch1 指纹 b1e79c68… 与之失配（NCS-188 节拍裁剪等 prompt 演进所致），wuxia-20260916 语料在 CHARACTER_DESIGN 阶段即失配；②e2e.sh 已加质量屏障自动放行（正式 review-decisions 端点+幂等键）与 write-all 续写回退——真实 record 运行实证：ch1 屏障被自动放行、回退续写生效（server 日志可见第二任务）；③语料重建被硬阻塞：qwen token-plan 月配额耗尽（API 实测 insufficient_quota，重置 2026-11-09 16:00 UTC=北京 11-10 零点）。待用户决策：北京服务器 GLM 录制（需部署授权）/提供本地 key/等重置",
+      "status": "completed",
+      "evidence": "2026-10-10 完成（分支 codex/ncs-186-e2e-replay-fix；实现提交 5d90c4b/b12b81b/aa40e1a；主分支包含提交 aa40e1a，ff-only 合入）。①e2e.sh 放行完整动线：服务端身份（review-context，客户端不复算 contentHash——服务端 toLengthPrefix 为 int 位移语义的 4 字节大端重复两遍，be64 本地复算必失配，格式由新增 ChapterApprovalHashFormatTest 冻结）→ recheck-async 补查 → 未解决 HIGH 走作者例外裁决（POST /dispositions，与 UI 动线一致）→ review-decisions 批准；PAUSED 轮询回退 write-all + 终态兜底扫描；回退后章数取项目级事实。②DeepSeek 适配实证：qwen token-plan 月配额阻塞后本地路由经 DASHSCOPE_TOKEN_PLAN_* 环境变量切至 api.deepseek.com/deepseek-v4-flash（~/.zshrc 三行覆盖，不改 yml不改代码）；deepseek 实体图谱 50k+ 字符在 16k 截断→EXTRACTION 预算 32k/超时 600s；检查类思考量致 THINKING_BUDGET 熔断→check 预算 16000。③验收：语料 mystery-20261010（DeepSeek 录制，48 fixture）E2E_FIXTURE_DIR=data/e2e-fixtures/mystery-20261010 ./scripts/e2e.sh --mode record 完成；replay×2 完全一致（除时间戳/项目ID）且均 acceptancePassed=true（3 章/48 调用/0 错误/0 屏障/0 未决 HIGH）；compare-baseline PASS（字数 13881≥2756、重复率 0.0334≤0.0689、0 套路词，质量未退化，golden 无需 bless）；分支与合并后干净 main 检出 mvn test 均 1515/0/0/1skip 全绿。语料重建理由：NCS-188 起全部旧语料指纹失配（prompt 演进）+qwen 配额阻塞，按 DoD 以 record 重建并双回放验证。注意：并发会话贡献了 e2e.sh 状态轮询容错（api() 重试/超时），随 aa40e1a 一并合入。",
       "files": [
-        "scripts/e2e.sh"
+        "scripts/e2e.sh",
+        "scripts/e2e_acceptance.py",
+        "src/main/resources/application.yml",
+        "src/test/java/com/writing/novel/domain/ChapterApprovalHashFormatTest.java",
+        "src/test/java/com/writing/novel/config/TokenPlanModelConfigurationTest.java",
+        "src/test/java/com/writing/novel/web/ModelConfigControllerTest.java"
       ],
       "spec": "docs/specs/2026-10-09-e2e-replay-review-barrier.md",
       "description": "默认 e2e 回放流程在章节评审屏障处暂停，无法完成 3 章验收目标。需确认屏障触发是近期 main 引入的评审策略变化（NCS-178/183 相关）还是 e2e 配置缺自动放行；修复方向：e2e 场景显式配置 MANUAL/自动通过屏障，或 e2e.sh 断言屏障语义。",
       "acceptance": "./scripts/e2e.sh 回放完成 3 章且报告无未决屏障；或屏障为断言内预期行为",
-      "verify_cmd": "./scripts/e2e.sh"
+      "verify_cmd": "./scripts/e2e.sh",
+      "completion_record": "ncs-186-verified"
     },
     {
       "id": "NCS-187",
@@ -11038,5 +11044,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-10-10",
-  "active_feature": "NCS-186"
+  "active_feature": null
 }

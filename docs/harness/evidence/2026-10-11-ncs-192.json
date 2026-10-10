@@ -1,0 +1,36 @@
+{
+  "commit": "a18678cd50f00f50cb8c97f3d2de086f65c8cc63",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-192"
+  ],
+  "checks": [
+    {
+      "command": "verify_cmd: mvn test -Dtest=PromptTemplateServiceTest",
+      "result": "5/5 通过（含 volume-outline beatRule/beatRange/承接字段渲染、chapter-writing 转场/定场条件块按需渲染）",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（分支与合并后干净 main 检出）",
+      "result": "均 1522/0/0/1skip（新增 PromptTemplateServiceTest 5 例、VolumeOutlineGenreRulesTest 1 例、ChapterWriterAgentTest 1 例；OutlineReplanningTest mock 更新至 10 参 planVolume）",
+      "exitCode": 0
+    },
+    {
+      "command": "E2E_FIXTURE_DIR=data/e2e-fixtures/mystery-20261011 ./scripts/e2e.sh --mode record",
+      "result": "DeepSeek 全链录制完成（59 fixture）；ch2 触发真质量问题（凭空证据）→ 人审屏障 → NCS-186 自动补查/放行/回退续写 → 重写过检 → 验收通过（0 LLM 错误/0 章失败/0 屏障/0 未决 HIGH）",
+      "exitCode": 0
+    },
+    {
+      "command": "E2E_FIXTURE_DIR=data/e2e-fixtures/mystery-20261011 ./scripts/e2e.sh --mode replay ×2",
+      "result": "两次回放报告完全一致（除时间戳/项目ID），均 acceptancePassed=true（3 章/12148 字/59 调用）",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/compare-baseline.py",
+      "result": "PASS 质量未退化：总字数 12148≥2756、均章 4049≥2411、n-gram 0.022≤0.0689、套路词 0≤1.1；golden 未 bless",
+      "exitCode": 0
+    }
+  ],
+  "notes": "语料重建理由（DoD）：volume-outline/chapter-writing 模板改动使 PLOTTING/CHAPTER_WRITING 全量指纹变化，record 重建 mystery-20261011 并双回放验证。非质感题材文案保持现状（beatRule 走变量传现状文案）。合并后干净 main worktree 复验：mvn 1522 绿 + replay 验收通过。",
+  "recordedAt": "2026-10-11T00:00:00+08:00"
+}

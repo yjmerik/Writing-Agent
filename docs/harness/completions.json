@@ -3292,8 +3292,19 @@
       "implementation_commit": "aa40e1a35c482bbb4e9fb6ad8741075772d8c1b8",
       "main_commit": "aa40e1a35c482bbb4e9fb6ad8741075772d8c1b8",
       "evidence": "docs/harness/evidence/2026-10-10-ncs-186.json"
+    },
+    {
+      "id": "ncs-192-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-192"
+      ],
+      "branch": "codex/ncs-192-template-pacing",
+      "implementation_commit": "a18678cd50f00f50cb8c97f3d2de086f65c8cc63",
+      "main_commit": "a18678cd50f00f50cb8c97f3d2de086f65c8cc63",
+      "evidence": "docs/harness/evidence/2026-10-11-ncs-192.json"
     }
   ],
-  "commit": "aa40e1a35c482bbb4e9fb6ad8741075772d8c1b8",
-  "main_commit": "aa40e1a35c482bbb4e9fb6ad8741075772d8c1b8"
+  "commit": "a18678cd50f00f50cb8c97f3d2de086f65c8cc63",
+  "main_commit": "a18678cd50f00f50cb8c97f3d2de086f65c8cc63"
 }

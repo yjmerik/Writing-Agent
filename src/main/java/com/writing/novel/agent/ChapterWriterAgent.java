@@ -89,6 +89,22 @@ public class ChapterWriterAgent {
         }
     }
 
+    /** NCS-192: 场景转场要求（质感题材）——每次场景切换的最短过渡字数；宽松题材空串走现状 */
+    String transitionGuideOf(String projectId) {
+        var policy = texturedPolicyOf(projectId);
+        if (policy == null || policy.getTransitionMinChars() <= 0) return "";
+        return "场景转场：每次场景切换（时间/空间/人物视角转换）必须有至少 " + policy.getTransitionMinChars()
+                + " 字的过渡段，用动作、感官或空间落点衔接，不得硬切到新场景。";
+    }
+
+    /** NCS-192: 章首定场许可（质感题材）——开篇铺陈字数上限；宽松题材空串走现状 */
+    String openingSettingGuideOf(String projectId) {
+        var policy = texturedPolicyOf(projectId);
+        if (policy == null || policy.getOpeningSettingAllowance() <= 0) return "";
+        return "章首定场：本章开篇可用不超过 " + policy.getOpeningSettingAllowance()
+                + " 字的定场描写（时间/地点/氛围），随后立即进入具体场景与人物动作；不得超出该许可铺陈设定。";
+    }
+
     /**
      * mc-p3-01: 章节写作 maxTokens 从模型配置读取（默认 20000）。
      * deepseek-v4-flash 是推理模型，reasoning_content 消耗大量输出 token，
@@ -131,16 +147,19 @@ public class ChapterWriterAgent {
         // p17-02: 结构指引/高潮技巧按题材生成（替代模板硬编码四段式）
         String structureGuide = buildStructureGuide(projectId);
         String climaxCraft = buildClimaxCraft(projectId);
-        String chapterWritingPrompt = promptService.render("chapter-writing", Map.of(
-                "styleGuide", dynamicStyleGuide,
-                "writingConstraints", ctx.getWritingConstraints() != null ? ctx.getWritingConstraints() : "",
-                "characterVoices", ctx.getCharacterVoiceSection() != null ? ctx.getCharacterVoiceSection() : "",
-                "knowledgeQuotes", ctx.getKnowledgeQuoteSection() != null ? ctx.getKnowledgeQuoteSection() : "",
-                "genrePacingRules", genrePacingRules,
-                "chapterLengthGuide", chapterLengthGuide,
-                "structureGuide", structureGuide,
-                "climaxCraft", climaxCraft,
-                "feedbackSection", ctx.getFeedbackSection() != null ? ctx.getFeedbackSection() : ""));
+        String chapterWritingPrompt = promptService.render("chapter-writing", java.util.Map.ofEntries(
+                Map.entry("styleGuide", dynamicStyleGuide),
+                Map.entry("writingConstraints", ctx.getWritingConstraints() != null ? ctx.getWritingConstraints() : ""),
+                Map.entry("characterVoices", ctx.getCharacterVoiceSection() != null ? ctx.getCharacterVoiceSection() : ""),
+                Map.entry("knowledgeQuotes", ctx.getKnowledgeQuoteSection() != null ? ctx.getKnowledgeQuoteSection() : ""),
+                Map.entry("genrePacingRules", genrePacingRules),
+                Map.entry("chapterLengthGuide", chapterLengthGuide),
+                Map.entry("structureGuide", structureGuide),
+                Map.entry("climaxCraft", climaxCraft),
+                Map.entry("feedbackSection", ctx.getFeedbackSection() != null ? ctx.getFeedbackSection() : ""),
+                // NCS-192: 转场/定场随策略注入（宽松题材空串，条件块不渲染）
+                Map.entry("transitionGuide", transitionGuideOf(projectId)),
+                Map.entry("openingSettingGuide", openingSettingGuideOf(projectId))));
         String systemPrompt = ctx.toSystemPrompt() + "\n\n" + chapterWritingPrompt;
 
         var req = LlmRequest.builder()
@@ -268,16 +287,19 @@ public class ChapterWriterAgent {
         }
         String chapterLengthGuide = buildChapterLengthGuide(projectId, chapterIndex);
         String chapterWritingPrompt = promptService != null
-                ? promptService.render("chapter-writing", java.util.Map.of(
-                    "styleGuide", dynamicStyleGuide,
-                    "writingConstraints", ctx.getWritingConstraints() != null ? ctx.getWritingConstraints() : "",
-                    "characterVoices", ctx.getCharacterVoiceSection() != null ? ctx.getCharacterVoiceSection() : "",
-                    "knowledgeQuotes", ctx.getKnowledgeQuoteSection() != null ? ctx.getKnowledgeQuoteSection() : "",
-                    "genrePacingRules", genrePacingRules,
-                    "chapterLengthGuide", chapterLengthGuide,
-                    "structureGuide", buildStructureGuide(projectId),
-                    "climaxCraft", buildClimaxCraft(projectId),
-                    "feedbackSection", ctx.getFeedbackSection() != null ? ctx.getFeedbackSection() : ""))
+                ? promptService.render("chapter-writing", java.util.Map.ofEntries(
+                    Map.entry("styleGuide", dynamicStyleGuide),
+                    Map.entry("writingConstraints", ctx.getWritingConstraints() != null ? ctx.getWritingConstraints() : ""),
+                    Map.entry("characterVoices", ctx.getCharacterVoiceSection() != null ? ctx.getCharacterVoiceSection() : ""),
+                    Map.entry("knowledgeQuotes", ctx.getKnowledgeQuoteSection() != null ? ctx.getKnowledgeQuoteSection() : ""),
+                    Map.entry("genrePacingRules", genrePacingRules),
+                    Map.entry("chapterLengthGuide", chapterLengthGuide),
+                    Map.entry("structureGuide", buildStructureGuide(projectId)),
+                    Map.entry("climaxCraft", buildClimaxCraft(projectId)),
+                    Map.entry("feedbackSection", ctx.getFeedbackSection() != null ? ctx.getFeedbackSection() : ""),
+                    // NCS-192: 重写路径同步注入转场/定场要求
+                    Map.entry("transitionGuide", transitionGuideOf(projectId)),
+                    Map.entry("openingSettingGuide", openingSettingGuideOf(projectId))))
                 : "你是网络小说写作高手。";
 
         String systemPrompt = ctx.toSystemPrompt() + "\n\n" + chapterWritingPrompt

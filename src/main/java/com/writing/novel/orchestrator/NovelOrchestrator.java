@@ -2652,7 +2652,7 @@ public class NovelOrchestrator {
                 String generated = plotter.planVolume(
                         outline.getPremise(), writtenSummary.toString(),
                         "后续卷", "根据已写剧情重规划未写卷",
-                        nextStart, nextEnd, "", "", replanGenre);
+                        nextStart, nextEnd, "", "", replanGenre, projectId);
                 Outline scratch = new Outline(projectId, outline.getPremise());
                 int nextVol = outline.getVolumes().stream().mapToInt(Volume::getVolumeIndex).max().orElse(0) + 1;
                 // p32-03: 用与 planVolume 请求一致的区间校验解析结果
@@ -2932,7 +2932,7 @@ public class NovelOrchestrator {
                     masterOutline, previousSummary,
                     "卷" + volumeNumber, volumeSummary,
                     nextStartChapter, nextEndChapter, existingCharacters, protagonistName,
-                    p.getGenre());
+                    p.getGenre(), projectId);
 
             // 解析并追加到 outline
             Outline outline = outlineOpt.get();

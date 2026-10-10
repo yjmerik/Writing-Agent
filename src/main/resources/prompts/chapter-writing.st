@@ -23,6 +23,12 @@
 {{#if structureGuide}}
 {{structureGuide}}
 {{/if}}
+{{#if transitionGuide}}
+{{transitionGuide}}
+{{/if}}
+{{#if openingSettingGuide}}
+{{openingSettingGuide}}
+{{/if}}
 
 **创意要求：**
 - 每个情节都应源于角色的利益和动机，而非外部套路

@@ -145,7 +145,7 @@ class OutlineReplanningTest {
                         org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
                         org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt(),
                         org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
-                        org.mockito.ArgumentMatchers.any()))
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
                 .thenReturn("第11章 新卷：场景节拍：无关内容");
         NovelOrchestrator orch = replanOrchestratorWith(plotterMock);
 
@@ -173,7 +173,7 @@ class OutlineReplanningTest {
                 org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt(),
                 org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any());
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -185,7 +185,7 @@ class OutlineReplanningTest {
                         org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
                         org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt(),
                         org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
-                        org.mockito.ArgumentMatchers.any()))
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
                 .thenReturn("");
         NovelOrchestrator orch = replanOrchestratorWith(plotterMock);
 
@@ -207,7 +207,7 @@ class OutlineReplanningTest {
                 org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.eq(6), org.mockito.ArgumentMatchers.eq(10),
                 org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any());
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -220,7 +220,7 @@ class OutlineReplanningTest {
                         org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
                         org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt(),
                         org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
-                        org.mockito.ArgumentMatchers.any()))
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
                 .thenReturn("完全没有章节格式的输出");
         NovelOrchestrator orch = replanOrchestratorWith(plotterMock);
 
@@ -257,7 +257,7 @@ class OutlineReplanningTest {
                         org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
                         org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt(),
                         org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
-                        org.mockito.ArgumentMatchers.any()))
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
                 .thenReturn("第10章 终局：场景节拍：收束。");
         NovelOrchestrator orch = replanOrchestratorWith(plotterMock);
 
@@ -276,13 +276,13 @@ class OutlineReplanningTest {
         m.invoke(orch, pid, p);
 
         var captor = org.mockito.ArgumentCaptor.forClass(String.class);
-        // planVolume(master, previous, title, summary, start, end, chars, protagonist, genre)
+        // planVolume(master, previous, title, summary, start, end, chars, protagonist, genre, projectId)
         org.mockito.Mockito.verify(plotterMock).planVolume(
                 org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.any(), captor.capture(),
                 org.mockito.ArgumentMatchers.eq(10), org.mockito.ArgumentMatchers.eq(10),
                 org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any());
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
         String summary = captor.getValue();
         assertTrue(summary.contains("收束") && summary.contains("终局"),
                 "含全书末章的延迟生成必须传入收束指令（不得按旧结构开新篇），实际: " + summary);

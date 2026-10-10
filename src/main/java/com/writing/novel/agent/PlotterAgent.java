@@ -25,6 +25,24 @@ public class PlotterAgent {
     /** p17-03: 注入题材规则提供者（@Bean 装配用） */
     public void setGenreRuleProvider(com.writing.novel.service.GenreRuleProvider provider) { this.genreRuleProvider = provider; }
 
+    /** NCS-192: 叙事策略注入（late-set）——卷大纲节拍数要求按策略渲染 */
+    private volatile com.writing.novel.service.NarrativePolicyService narrativePolicyService;
+
+    public void setNarrativePolicyService(com.writing.novel.service.NarrativePolicyService service) {
+        this.narrativePolicyService = service;
+    }
+
+    /** NCS-192: 质感策略解析；宽松策略或无项目上下文返回 null → 调用方走现状文案 */
+    private com.writing.novel.domain.NarrativePolicy texturedPolicyOf(String projectId) {
+        if (narrativePolicyService == null || projectId == null || projectId.isBlank()) return null;
+        try {
+            var resolved = narrativePolicyService.resolve(projectId);
+            return (resolved != null && resolved.getDialogueParagraphRatioMax() < 1.0) ? resolved : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public PlotterAgent(LlmGateway gateway, NovelRepository repository,
                         PromptTemplateService promptService) {
         this.gateway = gateway;
@@ -195,8 +213,21 @@ public class PlotterAgent {
                               int startChapter, int endChapter,
                               String existingCharacters, String protagonistName,
                               com.writing.novel.domain.GenreProfile genre) {
+        return planVolume(masterOutline, previousSummary, volumeTitle, volumeSummary,
+                startChapter, endChapter, existingCharacters, protagonistName, genre, null);
+    }
+
+    /**
+     * NCS-192: 带项目上下文的卷大纲生成——节拍数要求按 NarrativePolicy 渲染
+     * （质感题材标准章/喘息章分档；无项目或宽松策略保持现状 3-5 文案）。
+     */
+    public String planVolume(String masterOutline, String previousSummary,
+                              String volumeTitle, String volumeSummary,
+                              int startChapter, int endChapter,
+                              String existingCharacters, String protagonistName,
+                              com.writing.novel.domain.GenreProfile genre, String projectId) {
         return requestVolumeOutline(masterOutline, previousSummary, volumeTitle, volumeSummary,
-                startChapter, endChapter, existingCharacters, protagonistName, genre, "");
+                startChapter, endChapter, existingCharacters, protagonistName, genre, "", projectId);
     }
 
     /**
@@ -226,7 +257,7 @@ public class PlotterAgent {
         GenreProfile genre = repository.findProject(projectId).map(Project::getGenre).orElse(null);
         String raw = requestVolumeOutline(masterOutline, "已写至第" + writtenBoundary + "章",
                 sourceVolume.getTitle(), sourceVolume.getSummary(), startChapter, endChapter,
-                existingCharacters, protagonistName, genre, instructions);
+                existingCharacters, protagonistName, genre, instructions, projectId);
         parseChaptersInVolume(candidate, raw, projectId);
         return candidate;
     }
@@ -236,7 +267,7 @@ public class PlotterAgent {
                                         int startChapter, int endChapter,
                                         String existingCharacters, String protagonistName,
                                         com.writing.novel.domain.GenreProfile genre,
-                                        String instructions) {
+                                        String instructions, String projectId) {
         int chapterCount = endChapter - startChapter + 1;
         boolean fastPaced = genre == null || genre.isFastPaced();
         String climaxPrinciple = fastPaced
@@ -244,6 +275,16 @@ public class PlotterAgent {
                 : "2. 每章至少一个核心张力点（冲突升级/真相揭示/关键抉择），形式要多样化";
         String genreRules = genreRuleProvider != null && genre != null
                 ? genreRuleProvider.getPlottingRules(genre) : "";
+        // NCS-192: 节拍数要求按 NarrativePolicy 渲染（质感题材标准/喘息分档；现状等效保持 3-5 文案）
+        var policy = texturedPolicyOf(projectId);
+        String beatRule = policy != null
+                ? "4. 每章的场景节拍要具体（标准章 " + policy.getBeatsStandardMin() + "-"
+                    + policy.getBeatsStandardMax() + " 个用箭头分隔的具体场景；喘息章可减至 "
+                    + policy.getBeatsBreatherMin() + "-" + policy.getBeatsBreatherMax() + " 个作为节奏豁免）"
+                : "4. 每章的场景节拍要具体（3-5个用箭头分隔的具体场景）";
+        String beatRange = policy != null
+                ? policy.getBeatsStandardMin() + "-" + policy.getBeatsStandardMax()
+                : "3-5";
         String systemPrompt = promptService.render("volume-outline", java.util.Map.ofEntries(
                 java.util.Map.entry("masterOutline", masterOutline != null ? masterOutline : "（暂无总纲）"),
                 java.util.Map.entry("previousSummary", previousSummary != null ? previousSummary : "（第一卷，无前文）"),
@@ -256,7 +297,9 @@ public class PlotterAgent {
                 java.util.Map.entry("existingCharacters", existingCharacters != null ? existingCharacters : "（暂无）"),
                 java.util.Map.entry("protagonistName", protagonistName != null ? protagonistName : ""),
                 java.util.Map.entry("climaxPrinciple", climaxPrinciple),
-                java.util.Map.entry("genreRules", genreRules != null ? genreRules : "")));
+                java.util.Map.entry("genreRules", genreRules != null ? genreRules : ""),
+                java.util.Map.entry("beatRule", beatRule),
+                java.util.Map.entry("beatRange", beatRange)));
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.PLOTTING)
@@ -408,8 +451,8 @@ public class PlotterAgent {
         String climax = null;
         String cast = null;
 
-        // 提取场景节拍（"场景节拍：" 到 "爽点：" 之间）
-        Matcher beatsM = Pattern.compile("场景节拍[：:]\\s*(.+?)(?=爽点[：:]|$)", Pattern.DOTALL).matcher(clean);
+        // 提取场景节拍（"场景节拍：" 到 "承接："/"爽点：" 之间；NCS-192: 格式行新增承接字段）
+        Matcher beatsM = Pattern.compile("场景节拍[：:]\\s*(.+?)(?=承接[：:]|爽点[：:]|$)", Pattern.DOTALL).matcher(clean);
         if (beatsM.find()) {
             beats = beatsM.group(1).trim();
         }

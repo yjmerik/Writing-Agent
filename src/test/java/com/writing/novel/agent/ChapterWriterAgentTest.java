@@ -158,4 +158,50 @@ class ChapterWriterAgentTest {
         assertTrue(fast.contains("宁可精简也不要注水"), "快节奏保持现状措辞");
     }
 
+    /** NCS-192: 转场/定场要求随策略注入章写 prompt——质感题材渲染、宽松题材保持现状 */
+    @org.junit.jupiter.api.Test
+    void 章写prompt_转场定场要求随策略注入(@org.junit.jupiter.api.io.TempDir java.nio.file.Path tempDir) {
+        var cp = new com.writing.novel.persistence.sqlite.ConnectionProvider(tempDir.resolve("tw.db").toString());
+        new com.writing.novel.persistence.sqlite.SqliteSchemaInitializer(cp).initialize();
+        var repo = new com.writing.novel.persistence.sqlite.SqliteNovelRepository(cp);
+        var h = new com.writing.novel.domain.Project("权谋", "庙堂", "历史");
+        h.setGenre(com.writing.novel.domain.GenreProfile.HISTORICAL);
+        repo.saveProject(h);
+        repo.saveWritingPreferences(new com.writing.novel.domain.WritingPreferences(h.getId()));
+
+        final java.util.List<String> prompts = new java.util.ArrayList<>();
+        LlmGateway capture = new LlmGateway() {
+            @Override public LlmResponse complete(LlmRequest req) {
+                prompts.add(req.getSystemPrompt());
+                return new LlmResponse("雨落在檐角，账房里的灯火摇了一下。".repeat(200), 100, 400);
+            }
+            @Override public void streamComplete(LlmRequest req, StreamHandler handler) {}
+        };
+        WritingContext mockCtx = new WritingContext();
+        ContextAssembler mockAssembler = new ContextAssembler(null, null, null, null, null, null, null, null, null) {
+            @Override public WritingContext assemble(String pid, int ci, String ct, String cs, String wn) { return mockCtx; }
+            @Override public WritingContext assemble(String pid, int ci, String ct, String cs, String wn, int budget) { return mockCtx; }
+        };
+        ChapterWriterAgent agent = new ChapterWriterAgent(capture, mockAssembler, repo, TestPromptHelper.create());
+        agent.setNarrativePolicyService(new com.writing.novel.service.NarrativePolicyService(
+                repo, new com.writing.novel.persistence.sqlite.NarrativePolicyRepository(cp)));
+        agent.write(h.getId(), 1, "第一章 残账", "学徒发现账册异动", null);
+
+        String prompt = prompts.get(0);
+        assertTrue(prompt.contains("至少 80 字的过渡"), "质感题材章写应含转场过渡要求: "
+                + prompt.substring(0, Math.min(500, prompt.length())));
+        assertTrue(prompt.contains("定场"), "质感题材章写应含章首定场许可");
+
+        // 宽松题材：无转场/定场新增文案（现状等效）
+        var f = new com.writing.novel.domain.Project("修仙", "c", "tag");
+        f.setGenre(com.writing.novel.domain.GenreProfile.CULTIVATION);
+        repo.saveProject(f);
+        repo.saveWritingPreferences(new com.writing.novel.domain.WritingPreferences(f.getId()));
+        prompts.clear();
+        agent.write(f.getId(), 1, "第一章 入门", "少年踏上仙途", null);
+        String fastPrompt = prompts.get(0);
+        assertFalse(fastPrompt.contains("字的过渡"), "宽松题材不得新增转场要求");
+        assertFalse(fastPrompt.contains("定场许可"), "宽松题材不得新增定场许可文案");
+    }
+
 }

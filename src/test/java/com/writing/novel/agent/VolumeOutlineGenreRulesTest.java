@@ -67,6 +67,34 @@ class VolumeOutlineGenreRulesTest {
         assertTrue(gateway.lastPrompt.contains("爽点："), "降级路径模板渲染正常");
     }
 
+    /** NCS-192: 节拍数要求读 NarrativePolicy——历史题材 2-3/喘息 1-2 豁免；无 projectId 走现状 3-5 */
+    @Test
+    void 卷大纲节拍数_历史题材策略化_无项目走现状() {
+        // 无 policy service（或无 projectId）→ 现状 3-5 文案
+        plotter.planVolume("总纲", "", "卷2", "卷梗概", 9, 16, "角色A", "主角甲", GenreProfile.HISTORICAL);
+        assertTrue(gateway.lastPrompt.contains("3-5个用箭头分隔"), "无项目上下文保持现状节拍区间");
+
+        // 有项目（历史题材）→ 策略渲染：标准章 2-3、喘息章 1-2 豁免
+        var cp = new ConnectionProvider(tempDir.resolve("vo2.db").toString());
+        new SqliteSchemaInitializer(cp).initialize();
+        var repo = new SqliteNovelRepository(cp);
+        var h = new com.writing.novel.domain.Project("权谋", "庙堂", "历史");
+        h.setGenre(GenreProfile.HISTORICAL);
+        repo.saveProject(h);
+        var plotter2 = new PlotterAgent(gateway, repo, TestPromptHelper.create());
+        plotter2.setGenreRuleProvider(new GenreRuleProvider());
+        plotter2.setNarrativePolicyService(new com.writing.novel.service.NarrativePolicyService(
+                repo, new com.writing.novel.persistence.sqlite.NarrativePolicyRepository(cp)));
+        plotter2.planVolume("总纲", "", "卷2", "卷梗概", 9, 16, "角色A", "主角甲",
+                GenreProfile.HISTORICAL, h.getId());
+        assertTrue(gateway.lastPrompt.contains("标准章 2-3 个"), "标准章节拍数应按策略渲染: "
+                + gateway.lastPrompt.substring(Math.max(0, gateway.lastPrompt.length() - 600)));
+        assertTrue(gateway.lastPrompt.contains("喘息章可减至 1-2 个"), "喘息章豁免应渲染");
+        assertTrue(gateway.lastPrompt.contains("场景节拍(2-3个用箭头分隔)"), "格式行节拍区间应策略化");
+        assertTrue(gateway.lastPrompt.contains("承接："), "章梗概应含承接提示字段");
+        assertFalse(gateway.lastPrompt.contains("3-5个"), "策略化后不得残留硬编码 3-5");
+    }
+
     private static class CapturingGateway implements LlmGateway {
         String lastPrompt;
 

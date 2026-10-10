@@ -32,9 +32,13 @@ public class AgentConfig {
     @Bean
     public PlotterAgent plotterAgent(LlmGateway gateway, NovelRepository repo,
                                      PromptTemplateService promptService,
-                                     com.writing.novel.service.GenreRuleProvider genreRuleProvider) {
+                                     com.writing.novel.service.GenreRuleProvider genreRuleProvider,
+                                     com.writing.novel.persistence.sqlite.NarrativePolicyRepository narrativePolicyRepository) {
         PlotterAgent plotter = new PlotterAgent(gateway, repo, promptService);
         plotter.setGenreRuleProvider(genreRuleProvider); // p17-03: 卷大纲题材约束
+        // NCS-192: 卷大纲节拍数要求读叙事策略（宽松策略保持现状文案）
+        plotter.setNarrativePolicyService(
+                new com.writing.novel.service.NarrativePolicyService(repo, narrativePolicyRepository));
         return plotter;
     }
 

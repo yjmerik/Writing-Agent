@@ -1,51 +1,45 @@
-# 交接：NCS-190/191 完成——叙事策略事实源与约束统一 — 2026-10-10
+# 交接：NCS-186 e2e 通道——修复完成、语料重建待决策 — 2026-10-10
 
 Last Updated: 2026-10-10
 
 ## Current
 
-叙事质感架构（docs/specs/2026-10-09-narrative-quality-architecture.md）Phase 2 前两步完成，
-Phase 1（NCS-187..189）已于昨日合入。设计：测量(NCS-187 遥测)→设定点(NCS-190 policy)→
-指令(NCS-191 约束统一) 已就绪，待 ScenePlan(NCS-193/194)、TextureGate(NCS-195/196)、
-卷级闭环(NCS-200)。
+上午 NCS-190/191 已合入 main（ac15840 交接）。下午推进 NCS-186，**代码修复完成但语料
+重建被硬阻塞**，保持 in-progress（分支 codex/ncs-186-e2e-replay-fix，7ad9b46）：
 
-- **NCS-190**（7a85ccd）：NarrativePolicy 17 字段区间（对话段/引号字符占比区间、成段叙述
-  最短块、按章型节拍区间、每节拍字数、转场最短字数、场景数、定场许可、感官锚点）。
-  forGenre 两档：HISTORICAL 质感默认（0.55 对话段上限/节拍 2-3/转场 80/叙述块 120），
-  其余题材现状等效宽松（节拍上限镜像 GenreRuleProvider：MYSTERY/THRILLER=3）。
-  NarrativePolicyRepository（narrative_policy_overrides 单行 JSON/项目）+ Service
-  （resolve=默认+覆盖；save 合并校验：比例 [0,1]、min≤max、非负）+ REST
-  GET/PUT/DELETE。装配 PersistenceConfig。
-- **NCS-191**（bd135e2）：ContextAssembler.buildWritingConstraints / ChapterWriterAgent.
-  buildChapterLengthGuide / GenreRuleProvider.getChapterWritingRules 三处消费 policy：
-  HISTORICAL（textured=策略真实约束时）改区间双向/场景预算/转场定场成段叙述指令、
-  解除砍描写与铺陈禁令；**其余题材字节等价现状**。A/B 证据：干净 main(e44cc76) 与分支
-  同 promptFingerprint 799687fd7325——e2e 回放失败为 NCS-186 既有（fixture 缺失记录 0 次）
-- textured 判定：policy.dialogueParagraphRatioMax < 1.0（作者覆盖放宽历史题材会自动回退现状文案）
+- **根因实证（非最初假设的人审屏障单一问题）**：本地全部回放语料过期——
+  mystery-20261002 仅存 2 个 CHAPTER_WRITING fixture（当日 record 中断遗留），
+  现行 ch1 指纹 b1e79c68… 与之失配（NCS-188 节拍裁剪等 prompt 演进）；wuxia 语料
+  CHARACTER_DESIGN 阶段即失配。即 e2e 通道自 NCS-188 合并起对全部语料失效。
+- **e2e.sh 修复（7ad9b46）**：①PAUSED 时经正式 `review-decisions` 端点自动放行
+  （identity/reviewSetHash/idempotencyKey 协议与 UI 一致，409 不绕过）；②无可放行且
+  未写满时回退重发 write-all。真实 record 运行实证两者生效（ch1 屏障自动放行→续写）。
+- **硬阻塞**：qwen token-plan **月配额耗尽**（API 直测 insufficient_quota，重置
+  2026-11-09 16:00 UTC=北京 11-10 零点）。上午首次 record 消耗完本周期配额
+  （构思+ch1 全链后 QUOTA）。
 
 ## Files
 
-- 新增 4 主类 + 2 测试类 + narrative_policy_overrides DDL + 2 装配点（MemoryConfig/AgentConfig
-  late-set 注入）
-- 修改 3 消费类 + 3 既有测试类补用例（ContextAssemblerTest/ChapterWriterAgentTest/
-  GenreConditionalConstraintsTest）
-- 状态入口已更新；旧内容归档 docs/harness/archive/{progress,handoff}-2026-10-09-phase1-ncs187-189.md
+- 分支：codex/ncs-186-e2e-replay-fix（scripts/e2e.sh 自动放行+回退；feature_list
+  evidence 含完整根因链；progress/handoff 本文件）——**续做时复用此分支**
+- main：ac15840（未动）；data/e2e-fixtures/mystery-20261010 半成品已清理
 
 ## Verification
 
-- 合并后干净 main：`bash -c 'source scripts/load-env.sh && mvn test'` = 1512/0F/0E/1S
-- `python3 scripts/check-harness.py` PASS；NCS-190/191 completion_record 均 verified
-- e2e A/B 记录见 docs/harness/evidence/2026-10-10-ncs-191-verified.json 摘要与 NCS-186
+- 自动放行/回退：真实 record 运行实证（data/e2e/server.log + events.jsonl 留痕：
+  APPROVE 后第二任务启动）
+- 语料重建未做（配额）；replay×2/compare-baseline 待语料后执行
 
 ## Blockers
 
-- 无（e2e 回放通道被 NCS-186 阻塞——非本轮引入，已两次 A/B 实证）
+- 语料重建三选一待用户决策：①北京服务器 GLM 录制（需部署授权：当前服务器 jar=b5e9810
+  落后 main 多个 prompt 改动，必须先部署当前分支 jar，否则指纹不匹配；服务器 SSH 直连
+  可用，重部署流程见记忆 beijing-swas-deployment）②提供本地 LLM key ③等 11-10 重置
 
 ## Next Steps
 
-1. **建议先修 NCS-186**（e2e 回放 fixture 缺失/人审屏障）——NCS-192 的验收依赖 e2e record
-   通道可用；诊断：data/e2e/events.jsonl，CHAPTER_WRITING-b1e79c68151298a7 记录 0 次
-2. NCS-192 模板节奏改版（volume-outline 节拍按 policy 渲染+承接字段、chapter-writing 转场
-   指令）→ p32-15：record 重建 fixture + 连续两次 replay 一致 + 人工 bless
-3. NCS-193 ScenePlanAgent（新 agent+scene-plan.st，吸收 scene-contract）
-4. 验证建议：historical preset 新项目 record ≥10 章，对比 TEXTURE_METRICS vs《山河执棋人》基线
+1. 用户决策后：record（E2E_FIXTURE_DIR=data/e2e-fixtures/mystery-20261010）→ replay×2
+   一致 → compare-baseline 展示对比（**bless 需人工确认**）→ 合并 NCS-186 → 回执
+2. NCS-192（模板改版）依赖 e2e 验收通道，排在 NCS-186 之后
+3. 注意：本月内凡改注入上下文的 feature（NCS-192/194/197/198/199）最终 e2e 验收都会
+   撞同一堵墙——建议集中到语料恢复后统一补验收，或随做随 A/B 指纹留证

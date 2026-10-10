@@ -1,41 +1,43 @@
-# 叙事质感架构 Phase2 前两步（NCS-190/191） — 2026-10-10
+# NCS-186 e2e 通道修复——代码完成，语料重建被配额阻塞 — 2026-10-10
 
 Last Updated: 2026-10-10
 
 ## Current
 
-- NCS-190（7a85ccd，completed）：NarrativePolicy 叙事策略域对象——17 个区间字段，
-  题材默认两档（HISTORICAL 质感区间 vs 其余现状等效宽松），项目级覆盖 SQLite
-  持久化（narrative_policy_overrides 表）+ REST GET/PUT/DELETE（非法值 400）
-- NCS-191（bd135e2，completed）：约束统一读 policy——HISTORICAL 题材的
-  writingConstraints/章长指导/题材节奏规则改区间双向文案（对话段 30%-55%、
-  场景预算制解除"全覆盖 vs 不超N"矛盾、转场/定场/成段叙述指令、解除
-  "超字数先砍描写"与"禁止铺陈开场"）；**非质感题材保持现状文案字节等价**——
-  A/B 实测干净 main 与本分支 CHAPTER_WRITING promptFingerprint 完全一致（799687fd7325），零分叉
-- 装配：MemoryConfig/AgentConfig 注入 NarrativePolicyService（late-set，宽松策略自动回退现状）
+- 上午完成 NCS-190/191（叙事策略事实源+约束统一，main 1512 全绿，见 ac15840 交接）
+- 下午 NCS-186（e2e 回放修复）进行中，分支 codex/ncs-186-e2e-replay-fix（7ad9b46）：
+  - 根因实证：**本地全部回放语料已过期**——prompt 演进（NCS-188 节拍裁剪等）使现行
+    指纹与所有已录语料失配（mystery 最新语料仅存 2 个写作 fixture 且当日 record 即中断；
+    wuxia 语料在 CHARACTER_DESIGN 阶段就失配）
+  - e2e.sh 修复已实施并实证：质量屏障自动放行（正式 review-decisions 端点+幂等键+
+    409 不强行绕过）+ PAUSED 续写回退；真实 record 运行中 ch1 屏障被自动放行、
+    回退续写生效
+  - **硬阻塞：qwen token-plan 月配额耗尽**（API 实测 insufficient_quota，
+    重置 2026-11-09 16:00 UTC = 北京 11-10 零点）——语料重建需真实 LLM，本月本地不可行
+- 待用户决策（三选一）：①部署当前分支 jar 到北京服务器用 GLM 录制（需部署授权，
+  ~1-1.5h 服务器占用 + 约 ¥1 GLM 配额）；②提供本地可用 LLM key；③等 11-10 配额重置
 
 ## Files
 
-- main 链：7a85ccd(NCS-190) → e44cc76(回执) → bd135e2(NCS-191) → 5c6145e(回执)
-- 新增：domain/NarrativePolicy、persistence/sqlite/NarrativePolicyRepository、
-  service/NarrativePolicyService、web/NarrativePolicyController、
-  NarrativePolicyTest/NarrativePolicyApiTest
+- 分支：codex/ncs-186-e2e-replay-fix（scripts/e2e.sh + feature_list，未合并）
+- main 最新：ac15840（NCS-190/191 已闭环）
 
 ## Verification
 
-- 每 feature TDD 先红后绿；分支与合并后 main 全量均绿
-- 最终 main：1512 tests / 0 failures / 0 errors / 1 skipped（既有）
-- e2e/compare-baseline FAIL 为 main 既有问题（NCS-186：回放 fixture 缺失，记录时 0 次）——
-  A/B 干净 main 同签名同指纹失败，与本轮无关；修复归 NCS-186
-- check-harness PASS（531 features：487 completed / 33 not-started / 11 deferred）
+- e2e.sh bash -n 语法过；自动放行/回退在真实 record 运行中实证生效（data/e2e 留痕）
+- main 全量 1512/0/0/1skip（ac15840 后未再变更 main）
 
 ## Blockers
 
-- 无
+- qwen 月配额（11-10 北京零点重置）；语料重建方案待用户决策（上述三选一）
 
 ## Next Steps
 
-- NCS-192（模板节奏改版）依赖 NCS-190 已满足；触碰 .st → p32-15 需 record 重建
-  fixture（注意：NCS-186 修复后 e2e 才能作为验收通道，建议先修 NCS-186）
-- 之后 NCS-193/194（ScenePlan 层）、NCS-195/196（TextureGate+扩写）
-- 既有 backlog：NCS-186（e2e 屏障，已两次被 A/B 证实）> NCS-183/184 > NCS-179/180/177
+- 用户选定语料重建方案后：record → replay×2 → compare-baseline（bless 需人工确认）→
+  合并 NCS-186 → 解锁 NCS-192（模板改版，验收依赖 e2e）
+- 等待期可做不依赖 e2e 的 feature（但注意：凡改注入上下文的 feature 最终验收都需 e2e，
+  建议攒到语料恢复后统一补验收）
+
+__zcode_status=$?
+if [ "$__zcode_status" -eq 0 ]; then pwd -P > '/var/folders/n1/0rdqrqbj0tvfcgjbgds9rmlc0000gn/T/zcode-fe59b5a1-4764-44c0-9593-dc5c9c10c85b-cwd'; fi
+exit "$__zcode_status"

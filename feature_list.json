@@ -10768,7 +10768,7 @@
       "phase": 55,
       "dependencies": [],
       "status": "in-progress",
-      "evidence": "A/B：main(1ddc4d5) 与 NCS-185 分支同签名失败，与本轮改动无关",
+      "evidence": "2026-10-10 进行中（分支 codex/ncs-186-e2e-replay-fix，7ad9b46）：①根因实证=语料全量过期——mystery-20261002 仅存 2 个 CHAPTER_WRITING fixture 且现行 ch1 指纹 b1e79c68… 与之失配（NCS-188 节拍裁剪等 prompt 演进所致），wuxia-20260916 语料在 CHARACTER_DESIGN 阶段即失配；②e2e.sh 已加质量屏障自动放行（正式 review-decisions 端点+幂等键）与 write-all 续写回退——真实 record 运行实证：ch1 屏障被自动放行、回退续写生效（server 日志可见第二任务）；③语料重建被硬阻塞：qwen token-plan 月配额耗尽（API 实测 insufficient_quota，重置 2026-11-09 16:00 UTC=北京 11-10 零点）。待用户决策：北京服务器 GLM 录制（需部署授权）/提供本地 key/等重置",
       "files": [
         "scripts/e2e.sh"
       ],

@@ -81,6 +81,7 @@ public class MemoryConfig {
     @Bean
     public ContextAssembler contextAssembler(NovelRepository repository,
                                               KnowledgeBaseService knowledgeBase,
+                                              com.writing.novel.persistence.sqlite.NarrativePolicyRepository narrativePolicyRepository,
                                               SummaryService summaryService,
                                               VectorRetrievalService vectorRetrieval,
                                               EntityGraphService entityGraphService,
@@ -109,6 +110,9 @@ public class MemoryConfig {
         // NCS-123: 检测器趋势聚合反馈
         assembler.setDetectorTrendService(
                 new com.writing.novel.service.DetectorTrendService(repository));
+        // NCS-191: 叙事策略（宽松策略保持现状文案）
+        assembler.setNarrativePolicyService(
+                new com.writing.novel.service.NarrativePolicyService(repository, narrativePolicyRepository));
         return assembler;
     }
 

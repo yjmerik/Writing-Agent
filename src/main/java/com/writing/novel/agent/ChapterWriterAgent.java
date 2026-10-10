@@ -71,6 +71,24 @@ public class ChapterWriterAgent {
         this(gateway, contextAssembler, repository, null, promptService, null, null);
     }
 
+    /** NCS-191: 叙事策略注入（late-set）——null 或宽松策略时章长指导保持现状文案 */
+    private volatile com.writing.novel.service.NarrativePolicyService narrativePolicyService;
+
+    public void setNarrativePolicyService(com.writing.novel.service.NarrativePolicyService service) {
+        this.narrativePolicyService = service;
+    }
+
+    /** NCS-191: 解析策略；宽松策略（不约束）返回 null → 调用方走现状文案 */
+    private com.writing.novel.domain.NarrativePolicy texturedPolicyOf(String projectId) {
+        if (narrativePolicyService == null) return null;
+        try {
+            var resolved = narrativePolicyService.resolve(projectId);
+            return (resolved != null && resolved.getDialogueParagraphRatioMax() < 1.0) ? resolved : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     /**
      * mc-p3-01: 章节写作 maxTokens 从模型配置读取（默认 20000）。
      * deepseek-v4-flash 是推理模型，reasoning_content 消耗大量输出 token，
@@ -413,7 +431,8 @@ public class ChapterWriterAgent {
      * p11.1-J1: 根据章节序号和 maxChapterLength 生成字数指导。
      * 长短交替 + 从 prefs 读取 maxChapterLength 约束。
      */
-    private String buildChapterLengthGuide(String projectId, int chapterIndex) {
+    /** NCS-191: 包级可见供测试 */
+    String buildChapterLengthGuide(String projectId, int chapterIndex) {
         try {
             int maxLen = repository.findWritingPreferences(projectId)
                     .map(p -> p.getMaxChapterLength())
@@ -425,6 +444,23 @@ public class ChapterWriterAgent {
             // op-01: 开篇前 5 章强制高压——禁止喘息章判定
             boolean isOpening = chapterIndex <= OPENING_CHAPTERS;
             boolean isLongChapter = isOpening || chapterIndex % 3 != 0;
+            com.writing.novel.domain.NarrativePolicy policy = texturedPolicyOf(projectId);
+            if (policy != null) {
+                // NCS-191: 质感题材章长指导——篇幅导向场景深挖，定场许可替代铺陈禁令
+                int targetMax = Math.min(maxLen, 4500);
+                if (isOpening) {
+                    return "本章为开篇章（前" + OPENING_CHAPTERS + "章），目标字数 3500-" + targetMax + " 字。"
+                            + "章首可用不超过 " + policy.getOpeningSettingAllowance() + " 字定场（时、地、氛围），"
+                            + "随后 800 字内进入具体场景与人物处境；以事件或人物处境切入，张力随章内递进。";
+                } else if (isLongChapter) {
+                    return "本章为标准/高潮章，目标字数 3500-" + targetMax + " 字（上限 " + maxLen + " 字）。"
+                            + "篇幅优先用于场景深挖与感官描写，不得以删减描写换取字数达标。"
+                            + "按本章张力自然递进组织段落（切入→发展→高潮点→余韵）。";
+                } else {
+                    return "本章为喘息/过渡章，目标字数 2500-3500 字。可放缓节奏，"
+                            + "用于场景描写、人物关系深化与余韵铺陈；不需要高潮爆发。";
+                }
+            }
             if (isOpening) {
                 int targetMax = Math.min(maxLen, 4500);
                 if (fastPaced) {

@@ -92,4 +92,17 @@ class GenreConditionalConstraintsTest {
         assertFalse(gate.checkWorldbuilding(entries, "修仙", GenreProfile.CULTIVATION).pass(),
                 "CULTIVATION 仍强制 POWER_SYSTEM");
     }
+    /** NCS-191: 历史题材章节规则——对话配额改上限、场景描写配额提升（替代"背景铺陈20%"） */
+    @Test
+    void 历史题材章节规则_场景描写配额提升() {
+        var provider = new GenreRuleProvider();
+        String rules = provider.getChapterWritingRules(GenreProfile.HISTORICAL);
+        assertTrue(rules.contains("不超过 50%"), "政治对话改为上限表述");
+        assertTrue(rules.contains("叙述与场景描写"), "显式给出叙述与场景描写配额");
+        assertTrue(rules.contains("转场"), "含转场要求");
+        assertFalse(rules.contains("背景铺陈20%"), "旧的背景铺陈 20% 压制文案退役");
+        // 其他题材规则不受影响（快节奏锁现状）
+        assertTrue(provider.getChapterWritingRules(GenreProfile.CULTIVATION).contains("四段式"));
+    }
+
 }

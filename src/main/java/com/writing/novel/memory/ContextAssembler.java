@@ -940,6 +940,13 @@ public class ContextAssembler {
 
     // --- 量化写作约束（含对话密度） ---
 
+    /** NCS-191: 叙事策略注入（late-set）——null 或宽松策略时保持现状文案（字节等价） */
+    private volatile com.writing.novel.service.NarrativePolicyService narrativePolicyService;
+
+    public void setNarrativePolicyService(com.writing.novel.service.NarrativePolicyService service) {
+        this.narrativePolicyService = service;
+    }
+
     private String buildWritingConstraints(String projectId, int chapterIndex, ChapterSynopsis synopsis) {
         StringBuilder sb = new StringBuilder();
         sb.append("【本章刚性约束（逐条检查，遗漏即违规）】\n");
@@ -951,16 +958,37 @@ public class ContextAssembler {
                 .orElse(com.writing.novel.domain.GenreProfile.GENERAL);
         boolean fastPaced = genre == null || genre.isFastPaced();
 
+        // NCS-191: 策略化约束——NarrativePolicy 给出真实区间时（当前仅 HISTORICAL 质感默认）
+        // 用区间双向/场景预算/转场文案替代单向下限与"全覆盖 vs 不超N"矛盾；否则保持现状文案
+        com.writing.novel.domain.NarrativePolicy policy = null;
+        if (narrativePolicyService != null) {
+            try {
+                com.writing.novel.domain.NarrativePolicy resolved = narrativePolicyService.resolve(projectId);
+                if (resolved != null && resolved.getDialogueParagraphRatioMax() < 1.0) policy = resolved;
+            } catch (Exception e) {
+                // 策略不可用（项目缺失等）回退现状文案
+            }
+        }
+
         // 0. 对话约束（从 WritingPreferences 读取密度目标）
         var prefs = repository.findWritingPreferences(projectId);
         double density = prefs.map(p -> p.getDialogueDensity()).orElse(0.35);
         boolean enforceDialogue = prefs.map(p -> p.isEnableDialogueEnforcement()).orElse(true);
         if (enforceDialogue) {
-            int pct = (int)(density * 100);
-            sb.append("□ 本章对话占比不得低于 ").append(pct)
-              .append("%（以引号\"标注的对话内容计算），对话必须推动情节或展现角色性格\n")
-              .append("□ 每个出场角色至少说 2 句话，且符合其说话风格\n")
-              .append("□ 禁止连续 3 段纯叙述无对话\n");
+            if (policy != null) {
+                int minPct = (int) Math.round(policy.getDialogueParagraphRatioMin() * 100);
+                int maxPct = (int) Math.round(policy.getDialogueParagraphRatioMax() * 100);
+                sb.append("□ 对话段占比控制在 ").append(minPct).append("%-").append(maxPct)
+                  .append("%（含引号段落计）：低于下限说明剧情靠说明文推进，超过上限说明叙述被切碎成对话标签\n")
+                  .append("□ 每个出场角色至少说 2 句话，且符合其说话风格\n")
+                  .append("□ 对白与叙述交替织进：连续对白不超过 3 段（第 4 段对白前先写一行环境/动作/感官细节），也禁止连续 3 段纯叙述无对话\n");
+            } else {
+                int pct = (int)(density * 100);
+                sb.append("□ 本章对话占比不得低于 ").append(pct)
+                  .append("%（以引号\"标注的对话内容计算），对话必须推动情节或展现角色性格\n")
+                  .append("□ 每个出场角色至少说 2 句话，且符合其说话风格\n")
+                  .append("□ 禁止连续 3 段纯叙述无对话\n");
+            }
         }
 
         // 1. 爽点约束（p17-02: 仅快节奏题材；慢节奏题材换张力推进指引）
@@ -990,17 +1018,25 @@ public class ContextAssembler {
         // 3. 节拍覆盖 + 信息密度上限
         if (synopsis != null && synopsis.getBeats() != null && !synopsis.getBeats().isBlank()) {
             String[] beats = synopsis.getBeats().split("→");
-            sb.append("□ 场景节拍必须全部覆盖（共 ").append(beats.length)
-              .append(" 个：").append(synopsis.getBeats()).append("）\n");
-            // p10-b1: 信息密度约束
-            int maxBeats = prefs.map(com.writing.novel.domain.WritingPreferences::getMaxBeatsPerChapter).orElse(4);
-            if (beats.length > maxBeats) {
-                sb.append("□ ⚠️ 本章场景节拍数(").append(beats.length)
-                  .append(")超过上限(").append(maxBeats)
-                  .append(")，信息密度过高。请合并部分节拍或聚焦核心事件，不要试图在一章内解决所有问题\n");
+            if (policy != null) {
+                // NCS-191: 场景预算制——解除"必须全部覆盖"与"不超过 N 件"的矛盾
+                sb.append("□ 按【场景预算】展开本章场景节拍（共 ").append(beats.length)
+                  .append(" 个：").append(synopsis.getBeats()).append("）\n")
+                  .append("□ 每个节拍至少展开 ").append(policy.getCharsPerBeatMin())
+                  .append(" 字的具体场景（画面/动作/对话/心理），相邻节拍可合并为一个场景深挖，不得为凑节拍数而走马观花\n");
+            } else {
+                sb.append("□ 场景节拍必须全部覆盖（共 ").append(beats.length)
+                  .append(" 个：").append(synopsis.getBeats()).append("）\n");
+                // p10-b1: 信息密度约束
+                int maxBeats = prefs.map(com.writing.novel.domain.WritingPreferences::getMaxBeatsPerChapter).orElse(4);
+                if (beats.length > maxBeats) {
+                    sb.append("□ ⚠️ 本章场景节拍数(").append(beats.length)
+                      .append(")超过上限(").append(maxBeats)
+                      .append(")，信息密度过高。请合并部分节拍或聚焦核心事件，不要试图在一章内解决所有问题\n");
+                }
+                sb.append("□ 本章核心事件/转折不超过 ").append(maxBeats)
+                  .append(" 件——宁可深入刻画少数场景，也不要走马观花堆砌事件\n");
             }
-            sb.append("□ 本章核心事件/转折不超过 ").append(maxBeats)
-              .append(" 件——宁可深入刻画少数场景，也不要走马观花堆砌事件\n");
         }
 
         // 4. 悬念结尾（p17-02: 仅快节奏题材强制钩子；慢节奏题材允许余韵收束）
@@ -1015,8 +1051,21 @@ public class ContextAssembler {
 
         // p11.1-J1: 字数上限约束
         int maxLen = prefs.map(p -> p.getMaxChapterLength()).orElse(6000);
-        sb.append("□ 本章正文不超过 ").append(maxLen)
-          .append(" 字。超过此限请精简次要场景和描写，宁可少写也不要注水\n");
+        if (policy != null) {
+            sb.append("□ 本章正文不超过 ").append(maxLen)
+              .append(" 字。如需控制篇幅，优先合并事件与节拍，不得删减场景描写与转场\n");
+            // NCS-191: 质感三件套——转场/定场/成段叙述（治"标签化碎片叙述+零转场"病灶）
+            sb.append("□ 场景转场：每次场景切换写不少于 ").append(policy.getTransitionMinChars())
+              .append(" 字的过渡（时间推移/空间转移/感官落点），不得直接跳切\n");
+            sb.append("□ 章首定场：开篇可用不超过 ").append(policy.getOpeningSettingAllowance())
+              .append(" 字定场（时、地、氛围），随后立即进入人物与事件\n");
+            sb.append("□ 成段叙述：全章至少保留两处连续非对白的成段叙述（每处不少于 ")
+              .append(policy.getNarrationRunMinChars())
+              .append(" 字），承担背景交代、环境与心理描写\n");
+        } else {
+            sb.append("□ 本章正文不超过 ").append(maxLen)
+              .append(" 字。超过此限请精简次要场景和描写，宁可少写也不要注水\n");
+        }
 
         // 5. 多维度多样性约束（开场/冲突/爽点轮换；p17-02: 慢节奏题材措辞换「高潮类型」）
         if (diversityTracker != null) {
@@ -1055,9 +1104,15 @@ public class ContextAssembler {
                   .append("  - 首 500 字内必须出现冲突/悬念/反转，禁止用大段环境描写或世界观解说开场\n")
                   .append("  - 本章至少 2 个爽点，冲突必须在章内升级并部分解决（不能只铺悬念不推进）\n")
                   .append("  - 禁止「喘息章」节奏——每一段都要推进剧情或深化人物，不得纯氛围渲染\n");
+            } else if (policy != null) {
+                // NCS-191: 质感开篇——定场许可替代铺陈禁令
+                sb.append("□ 【开篇要求】本章是全书前").append(OPENING_CHAPTERS)
+                  .append("章之一：章首可用不超过 ").append(policy.getOpeningSettingAllowance())
+                  .append(" 字定场（时、地、氛围），随后 800 字内进入具体场景与人物处境；")
+                  .append("以事件或人物处境切入，张力随章内递进\n");
             } else {
                 sb.append("□ 【开篇要求】本章是全书前").append(OPENING_CHAPTERS)
-                  .append("章之一：前 800 字内进入具体场景与人物处境，禁止大段设定解说/环境铺陈/家族谱系罗列开场；")
+                  .append("章之一：前 800 字内进入具体场景与人物处境，禁止大段设定解说/环境铺陈/谱系罗列开场；")
                   .append("以事件或人物处境切入，张力随章内递进\n");
             }
         }

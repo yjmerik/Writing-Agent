@@ -126,4 +126,36 @@ class ChapterWriterAgentTest {
                 "章写 prompt 必须含场景锚点硬约束: " + prompt.substring(0, Math.min(400, prompt.length())));
         assertTrue(prompt.contains("连续对白"), "约束应限定连续对白上限");
     }
+    /** NCS-191: 章长指导读 NarrativePolicy——历史题材去"宁可精简"措辞、加定场许可；快节奏锁现状 */
+    @org.junit.jupiter.api.Test
+    void 章长指导_历史题材策略化_快节奏锁现状(@org.junit.jupiter.api.io.TempDir java.nio.file.Path tempDir) {
+        var cp = new com.writing.novel.persistence.sqlite.ConnectionProvider(tempDir.resolve("len.db").toString());
+        new com.writing.novel.persistence.sqlite.SqliteSchemaInitializer(cp).initialize();
+        var repo = new com.writing.novel.persistence.sqlite.SqliteNovelRepository(cp);
+
+        var h = new com.writing.novel.domain.Project("权谋", "庙堂", "历史");
+        h.setGenre(com.writing.novel.domain.GenreProfile.HISTORICAL);
+        repo.saveProject(h);
+        repo.saveWritingPreferences(new com.writing.novel.domain.WritingPreferences(h.getId()));
+
+        ChapterWriterAgent agent = new ChapterWriterAgent(null, null, repo, TestPromptHelper.create());
+        agent.setNarrativePolicyService(new com.writing.novel.service.NarrativePolicyService(
+                repo, new com.writing.novel.persistence.sqlite.NarrativePolicyRepository(cp)));
+
+        String std = agent.buildChapterLengthGuide(h.getId(), 7);
+        assertFalse(std.contains("宁可精简也不要注水"), "历史题材去除压缩性措辞");
+        assertTrue(std.contains("场景深挖"), "篇幅导向场景深挖");
+        String open = agent.buildChapterLengthGuide(h.getId(), 2);
+        assertTrue(open.contains("定场"), "开篇章含定场许可");
+        assertFalse(open.contains("禁止大段设定解说"), "开篇章解除铺陈禁令");
+
+        var f = new com.writing.novel.domain.Project("修仙", "c", "tag");
+        f.setGenre(com.writing.novel.domain.GenreProfile.CULTIVATION);
+        repo.saveProject(f);
+        repo.saveWritingPreferences(new com.writing.novel.domain.WritingPreferences(f.getId()));
+        String fast = agent.buildChapterLengthGuide(f.getId(), 7);
+        assertTrue(fast.contains("四段式"), "快节奏保持现状结构文案");
+        assertTrue(fast.contains("宁可精简也不要注水"), "快节奏保持现状措辞");
+    }
+
 }

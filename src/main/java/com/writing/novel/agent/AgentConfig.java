@@ -44,9 +44,14 @@ public class AgentConfig {
                                                    PromptTemplateService promptService,
                                                    com.writing.novel.service.GenreRuleProvider genreRuleProvider,
                                                    com.writing.novel.llm.config.LlmProperties llmProperties,
-                                                   com.writing.novel.service.WriteLeaseService writeLease) {
-        return new ChapterWriterAgent(gateway, assembler, repo, vector, promptService,
+                                                   com.writing.novel.service.WriteLeaseService writeLease,
+                                                   com.writing.novel.persistence.sqlite.NarrativePolicyRepository narrativePolicyRepository) {
+        ChapterWriterAgent agent = new ChapterWriterAgent(gateway, assembler, repo, vector, promptService,
                 genreRuleProvider, llmProperties, writeLease);
+        // NCS-191: 叙事策略（宽松策略保持现状文案）
+        agent.setNarrativePolicyService(
+                new com.writing.novel.service.NarrativePolicyService(repo, narrativePolicyRepository));
+        return agent;
     }
 
     @Bean

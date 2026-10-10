@@ -161,6 +161,63 @@ class ContextAssemblerTest {
         assertFalse(context.getFeedbackSection().contains("反馈-9"));
     }
 
+    /** NCS-191: HISTORICAL 题材约束改为 NarrativePolicy 区间双向渲染（含转场/定场/场景预算指令） */
+    @Test
+    void 历史题材策略化约束_区间双向与转场指令() {
+        Project p = new Project("权谋", "庙堂", "历史");
+        p.setGenre(GenreProfile.HISTORICAL);
+        repo.saveProject(p);
+        Outline outline = new Outline(p.getId(), "总纲");
+        Volume v1 = new Volume(p.getId(), 1, "卷一", "梗概");
+        ChapterSynopsis s2 = new ChapterSynopsis(p.getId(), 2, "夜宴", "梗概");
+        s2.setBeats("夜宴密议→城头纵火→禅位诏出");
+        v1.getSynopses().add(s2);
+        outline.getVolumes().add(v1);
+        repo.saveOutline(outline);
+
+        var policyCp = new ConnectionProvider(tempDir.resolve("policy-x.db").toString());
+        new com.writing.novel.persistence.sqlite.SqliteSchemaInitializer(policyCp).initialize();
+        assembler.setNarrativePolicyService(new com.writing.novel.service.NarrativePolicyService(
+                repo, new com.writing.novel.persistence.sqlite.NarrativePolicyRepository(policyCp)));
+        WritingContext context = assembler.assemble(p.getId(), 2, "第二章", "梗概", null);
+        String c = context.getWritingConstraints();
+        assertTrue(c.contains("30%-55%"), "对话段占比区间双向文案");
+        assertTrue(c.contains("过渡"), "转场指令");
+        assertTrue(c.contains("定场"), "章首定场许可");
+        assertTrue(c.contains("相邻节拍可合并"), "解除节拍矛盾指令");
+        assertTrue(c.contains("1200"), "每节拍字数预算");
+        assertFalse(c.contains("必须全部覆盖"), "不再要求节拍全覆盖");
+        assertFalse(c.contains("精简次要场景和描写"), "超字数不再点名砍描写");
+        assertFalse(c.contains("不得低于"), "不再只有对话下限");
+    }
+
+    /** NCS-191: 非 HISTORICAL 题材保持现状文案（字节等价，golden/回放不回归） */
+    @Test
+    void 快节奏题材约束保持现状文案() {
+        Project p = new Project("t", "c", "tag");
+        p.setGenre(GenreProfile.CULTIVATION);
+        repo.saveProject(p);
+        repo.saveWritingPreferences(new WritingPreferences(p.getId()));
+        Outline outline = new Outline(p.getId(), "总纲");
+        Volume v1 = new Volume(p.getId(), 1, "卷一", "梗概");
+        ChapterSynopsis s2 = new ChapterSynopsis(p.getId(), 2, "突破", "梗概");
+        s2.setBeats("闭关→心魔→破境");
+        v1.getSynopses().add(s2);
+        outline.getVolumes().add(v1);
+        repo.saveOutline(outline);
+
+        var policyCpY = new ConnectionProvider(tempDir.resolve("policy-y.db").toString());
+        new com.writing.novel.persistence.sqlite.SqliteSchemaInitializer(policyCpY).initialize();
+        assembler.setNarrativePolicyService(new com.writing.novel.service.NarrativePolicyService(
+                repo, new com.writing.novel.persistence.sqlite.NarrativePolicyRepository(policyCpY)));
+        WritingContext context = assembler.assemble(p.getId(), 2, "第二章", "梗概", null);
+        String c = context.getWritingConstraints();
+        assertTrue(c.contains("对话占比不得低于"), "快节奏保留对话下限文案");
+        assertTrue(c.contains("场景节拍必须全部覆盖"), "快节奏保留节拍全覆盖文案");
+        assertTrue(c.contains("精简次要场景和描写"), "快节奏保留超字数文案");
+        assertFalse(c.contains("过渡"), "快节奏不注入转场指令");
+    }
+
     /**
      * NCS-189: 非 STYLE 反馈截断 80→200 字——PACING 类纠正指令
      * （如"建议下一章设为喘息章（tension≤3）…"）曾被 80 字腰斩。

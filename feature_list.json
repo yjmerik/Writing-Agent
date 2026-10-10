@@ -10862,9 +10862,11 @@
       "dependencies": [
         "NCS-190"
       ],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
-        "src/main/java/com/writing/novel/memory/ContextAssembler.java"
+        "src/main/java/com/writing/novel/memory/ContextAssembler.java",
+        "src/main/java/com/writing/novel/agent/ChapterWriterAgent.java",
+        "src/main/java/com/writing/novel/service/GenreRuleProvider.java"
       ],
       "spec": "docs/specs/2026-10-09-narrative-quality-architecture.md",
       "description": "buildWritingConstraints/buildChapterLengthGuide/GenreRuleProvider 的硬编码文案改为渲染 NarrativePolicy：对话密度改区间双向文案；'节拍必须全部覆盖'与'不超过N件'矛盾改为'按场景预算展开、相邻节拍可合并'；超字数不再点名先砍描写；新增转场与章首定场许可指令。快节奏题材渲染结果与现状语义等价。",
@@ -11035,5 +11037,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-10-10",
-  "active_feature": null
+  "active_feature": "NCS-191"
 }

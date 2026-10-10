@@ -210,6 +210,10 @@ public class SqliteSchemaInitializer {
             "humor_style TEXT, imagery_preference TEXT, updated_at TEXT)",
         "CREATE INDEX IF NOT EXISTS idx_aesthetic_profiles ON aesthetic_profiles(project_id, revision)",
 
+        // NCS-190: 叙事策略——项目级覆盖（每项目一行 JSON，题材默认之外的差异部分）
+        "CREATE TABLE IF NOT EXISTS narrative_policy_overrides (" +
+            "project_id TEXT PRIMARY KEY, overrides_json TEXT NOT NULL, updated_at TEXT)",
+
         // NCS-025: 委托策略——按变更类别的 AUTO/CONFIRM 规则
         "CREATE TABLE IF NOT EXISTS delegation_policies (" +
             "project_id TEXT PRIMARY KEY, rules_json TEXT, updated_at TEXT)",

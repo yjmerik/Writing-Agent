@@ -10840,10 +10840,12 @@
       "type": "feature",
       "phase": 56,
       "dependencies": [],
-      "status": "not-started",
+      "status": "in-progress",
       "files": [
-        "src/main/java/com/writing/novel/domain/",
-        "src/main/java/com/writing/novel/web/"
+        "src/main/java/com/writing/novel/domain/NarrativePolicy.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/NarrativePolicyRepository.java",
+        "src/main/java/com/writing/novel/service/NarrativePolicyService.java",
+        "src/main/java/com/writing/novel/web/NarrativePolicyController.java"
       ],
       "spec": "docs/specs/2026-10-09-narrative-quality-architecture.md",
       "description": "新增 NarrativePolicy domain 对象：对话段占比区间/引号字符区间/成段叙述最短块/节拍数区间（按章型）/每节拍最低字数/转场最短字数/场景数区间/章首定场许可等字段；题材默认（历史慢节奏 vs 网文快节奏，快节奏默认≈现状保证 golden 不回归）+ 项目级覆盖持久化 + REST 读写。本 feature 只建对象与存取，不改任何 prompt 消费方。",
@@ -11030,6 +11032,6 @@
     }
   ],
   "schema_version": 2,
-  "updated_at": "2026-10-09",
-  "active_feature": null
+  "updated_at": "2026-10-10",
+  "active_feature": "NCS-190"
 }

@@ -225,6 +225,20 @@ public class PersistenceConfig {
                 promptTemplateService, planDeviationRepository, volumeReadbackRepository);
     }
 
+    // NCS-190: 叙事策略——题材默认区间 + 项目级覆盖
+    @Bean
+    @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)
+    public com.writing.novel.persistence.sqlite.NarrativePolicyRepository narrativePolicyRepository(ConnectionProvider cp) {
+        return new com.writing.novel.persistence.sqlite.NarrativePolicyRepository(cp);
+    }
+
+    @Bean
+    public com.writing.novel.service.NarrativePolicyService narrativePolicyService(
+            NovelRepository repository,
+            com.writing.novel.persistence.sqlite.NarrativePolicyRepository narrativePolicyRepository) {
+        return new com.writing.novel.service.NarrativePolicyService(repository, narrativePolicyRepository);
+    }
+
     // NCS-019: 计划偏离
     @Bean
     @ConditionalOnProperty(name = "persistence.relational", havingValue = "sqlite", matchIfMissing = true)

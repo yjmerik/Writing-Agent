@@ -3270,8 +3270,19 @@
    "implementation_commit": "7a85ccd0782f8e3f49f00db2a003051fa3979204",
    "main_commit": "7a85ccd0782f8e3f49f00db2a003051fa3979204",
    "evidence": "docs/harness/evidence/2026-10-10-ncs-190.json"
+  },
+  {
+   "id": "ncs-191-verified",
+   "kind": "verified",
+   "feature_ids": [
+    "NCS-191"
+   ],
+   "branch": "codex/ncs-191-policy-constraints",
+   "implementation_commit": "bd135e2c8a1be5eff8c3c9f97ebda6aa91b973c1",
+   "main_commit": "bd135e2c8a1be5eff8c3c9f97ebda6aa91b973c1",
+   "evidence": "docs/harness/evidence/2026-10-10-ncs-191.json"
   }
  ],
  "commit": "2026-10-03T23:59:00.000000+08:00",
- "main_commit": "7a85ccd0782f8e3f49f00db2a003051fa3979204"
+ "main_commit": "bd135e2c8a1be5eff8c3c9f97ebda6aa91b973c1"
 }

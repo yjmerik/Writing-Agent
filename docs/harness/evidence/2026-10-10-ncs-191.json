@@ -1,0 +1,20 @@
+{
+ "commit": "bd135e2c8a1be5eff8c3c9f97ebda6aa91b973c1",
+ "cleanCheckout": true,
+ "feature_ids": [
+  "NCS-191"
+ ],
+ "checks": [
+  {
+   "command": "verify_cmd（先失败复现后修复 GREEN）",
+   "result": "TDD：ContextAssemblerTest 历史题材区间双向/转场/定场/场景预算断言 + 快节奏锁现状断言、ChapterWriterAgentTest 章长指导双分支、GenreConditionalConstraintsTest 配额文案——先红后绿；分支与合并后 main 全量 1512/0/0/1skip。e2e/compare-baseline FAIL 为 main 既有（NCS-186）：A/B 干净 main(e44cc76) 与本分支同签名同 promptFingerprint(799687fd7325) 失败——本 feature 零 prompt 分叉",
+   "exitCode": 0
+  },
+  {
+   "command": "mvn compile && mvn test（特性分支与合并后 main 各一次）",
+   "result": "PASS: 全量 0 failures / 0 errors（1 skipped 为既有）",
+   "exitCode": 0
+  }
+ ],
+ "notes": "scope: NCS-191; spec docs/specs/2026-10-09-narrative-quality-architecture.md; branch codex/ncs-191-policy-constraints"
+}

@@ -56,6 +56,13 @@ public class ChapterProduction {
         this.aestheticInjection = injection;
     }
 
+    /** NCS-193: 写前场景规划服务（late-set，null=能力关闭安全降级） */
+    private volatile com.writing.novel.service.ScenePlanService scenePlanService;
+
+    public void setScenePlanService(com.writing.novel.service.ScenePlanService service) {
+        this.scenePlanService = service;
+    }
+
     ChapterProduction(NovelOrchestrator orch,
                       NovelRepository repository,
                       ChapterWriterAgent chapterWriter,
@@ -137,6 +144,15 @@ public class ChapterProduction {
             String aesthetic = aestheticInjection.apply(projectId);
             if (aesthetic != null && !aesthetic.isBlank()) {
                 enhancedNotes = (enhancedNotes != null ? enhancedNotes + "\n\n" : "") + aesthetic;
+            }
+        }
+        // NCS-193: 写前场景规划——产出并落梗概（幂等；本 feature 不改写作消费，NCS-194 起注入）
+        if (scenePlanService != null) {
+            try {
+                scenePlanService.ensurePlanned(projectId, chapterIndex);
+            } catch (Exception e) {
+                EventLog.emit("SCENE_PLAN_FAILED", Map.of(
+                        "chapterIndex", chapterIndex, "error", String.valueOf(e.getMessage())));
             }
         }
         return enhancedNotes == null ? "" : enhancedNotes;

@@ -133,6 +133,13 @@ public class NovelOrchestrator {
         }
     }
 
+    /** NCS-193: 注入写前场景规划服务（转发到生产模块；null=能力关闭）。 */
+    public void setScenePlanService(com.writing.novel.service.ScenePlanService service) {
+        if (this.production != null) {
+            this.production.setScenePlanService(service);
+        }
+    }
+
     /** NCS-007: 注入检查结果信封仓储（生产装配用）。 */
     public void setCheckResultRepository(com.writing.novel.persistence.sqlite.CheckResultRepository repo) {
         this.checkResultRepository = repo;

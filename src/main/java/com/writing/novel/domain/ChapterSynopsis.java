@@ -24,6 +24,9 @@ public class ChapterSynopsis {
     /** NCS-018: 结构化场景合同（JSON；null=未定义——注入与显示均跳过，兼容既有大纲） */
     private String sceneContract;
 
+    /** NCS-193: 写前场景规划（JSON；null=未规划——ScenePlanService 产出，NCS-194 起消费） */
+    private String scenePlan;
+
     public ChapterSynopsis(String projectId, int chapterIndex, String title, String synopsis) {
         this.id = UUID.randomUUID().toString();
         this.projectId = projectId;
@@ -46,6 +49,8 @@ public class ChapterSynopsis {
         copy.volumeArcPosition = volumeArcPosition;
         copy.foreshadowingsToPlant = foreshadowingsToPlant;
         copy.foreshadowingsToResolve = foreshadowingsToResolve;
+        copy.sceneContract = sceneContract;
+        copy.scenePlan = scenePlan;
         return copy;
     }
 
@@ -77,4 +82,6 @@ public class ChapterSynopsis {
 
     public String getSceneContract() { return sceneContract; }
     public void setSceneContract(String sceneContract) { this.sceneContract = sceneContract; }
+    public String getScenePlan() { return scenePlan; }
+    public void setScenePlan(String scenePlan) { this.scenePlan = scenePlan; }
 }

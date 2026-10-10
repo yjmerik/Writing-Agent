@@ -2597,12 +2597,13 @@ public class SqliteNovelRepository implements NovelRepository {
     private void saveSynopsis(Connection conn, String volumeId, ChapterSynopsis s) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO chapter_synopses (id,project_id,volume_id,chapter_index,title,synopsis,writing_notes," +
-                "plot_purpose,tension_level,volume_arc_position,cast,beats,climax,scene_contract) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title, " +
+                "plot_purpose,tension_level,volume_arc_position,cast,beats,climax,scene_contract,scene_plan) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title, " +
                 "synopsis=excluded.synopsis, writing_notes=excluded.writing_notes, " +
                 "plot_purpose=excluded.plot_purpose, tension_level=excluded.tension_level, " +
                 "volume_arc_position=excluded.volume_arc_position, cast=excluded.cast, " +
-                "beats=excluded.beats, climax=excluded.climax, scene_contract=excluded.scene_contract")) {
+                "beats=excluded.beats, climax=excluded.climax, scene_contract=excluded.scene_contract, " +
+                "scene_plan=excluded.scene_plan")) {
             ps.setString(1, s.getId()); ps.setString(2, s.getProjectId());
             ps.setString(3, volumeId); ps.setInt(4, s.getChapterIndex());
             ps.setString(5, s.getTitle()); ps.setString(6, s.getSynopsis());
@@ -2614,6 +2615,7 @@ public class SqliteNovelRepository implements NovelRepository {
             ps.setString(12, s.getBeats());
             ps.setString(13, s.getClimax());
             ps.setString(14, s.getSceneContract());
+            ps.setString(15, s.getScenePlan());
             ps.executeUpdate();
         }
     }
@@ -2664,6 +2666,7 @@ public class SqliteNovelRepository implements NovelRepository {
                                 srs.getString("synopsis"));
                         setField(s, "id", srs.getString("id"));
                         try { s.setSceneContract(srs.getString("scene_contract")); } catch (SQLException ignored) {}
+                        try { s.setScenePlan(srs.getString("scene_plan")); } catch (SQLException ignored) {}
                         s.setWritingNotes(srs.getString("writing_notes"));
                         try { s.setPlotPurpose(srs.getString("plot_purpose")); } catch (Exception ignored) {}
                         try { s.setTensionLevel(srs.getInt("tension_level")); } catch (Exception ignored) {}

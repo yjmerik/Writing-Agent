@@ -272,6 +272,23 @@ public class PersistenceConfig {
         return new com.writing.novel.service.SceneContractService(repository, sceneContractAgent);
     }
 
+    // NCS-193: 写前场景规划
+    @Bean
+    public com.writing.novel.agent.ScenePlanAgent scenePlanAgent(
+            com.writing.novel.llm.LlmGateway llmGateway,
+            com.writing.novel.llm.prompt.PromptTemplateService promptTemplateService) {
+        return new com.writing.novel.agent.ScenePlanAgent(llmGateway, promptTemplateService);
+    }
+
+    @Bean
+    public com.writing.novel.service.ScenePlanService scenePlanService(
+            NovelRepository repository,
+            com.writing.novel.agent.ScenePlanAgent scenePlanAgent,
+            com.writing.novel.persistence.sqlite.NarrativePolicyRepository narrativePolicyRepository) {
+        return new com.writing.novel.service.ScenePlanService(repository, scenePlanAgent,
+                new com.writing.novel.service.NarrativePolicyService(repository, narrativePolicyRepository));
+    }
+
     // NCS-010: 人物时点读取
     @Bean
     public com.writing.novel.service.CharacterAsOfService characterAsOfService(

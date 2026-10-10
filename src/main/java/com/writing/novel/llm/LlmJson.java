@@ -23,6 +23,9 @@ public final class LlmJson {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
+    /** NCS-193: 共享 mapper 读取端——构造结构化 JSON 节点（ScenePlanAgent 规范化输出） */
+    public static ObjectMapper mapper() { return MAPPER; }
+
     public enum Failure { EMPTY, INVALID }
 
     /** 解析结果：node 与 failure 二选一（ok() 判定） */

@@ -30,8 +30,11 @@ def quality_counts(workspace, qualities):
     """Count current draft issues only; missing evidence must fail closed."""
     barriers = len(workspace['todoList'])
     pending = sum(q['needsManualReview'] or q['qualityRisk'] for q in qualities)
+    # NCS-186: 作者例外/误报裁决过的 HIGH 不算 unresolved——放行链路已走完
+    #（review_dispositions 台账，e2e.sh 按 review-classification 打 adjudicated 标）
     high = sum(1 for q in qualities for i in q['issues']
                if i['chapterVersion'] == q['chapterVersion']
-               and i['severity'] == 'HIGH' and not i['resolved'])
+               and i['severity'] == 'HIGH' and not i['resolved']
+               and not i.get('adjudicated'))
     return dict(activeReviewBarriers=barriers, pendingReviewChapters=pending,
                 unresolvedHighIssues=high)

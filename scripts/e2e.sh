@@ -146,43 +146,77 @@ echo "$WRITE_RESULT"
 TASK_ID=$(echo "$WRITE_RESULT" | python3 -c "import json,sys; print(json.load(sys.stdin)['taskId'])")
 
 # NCS-186: 质量屏障自动放行——e2e 是确定性验证通道，写作循环因人审屏障 PAUSED 时
-# 经正式批准端点放行（幂等键/身份协议与 UI 相同）；批准被 409 拒绝（如未解决 HIGH）
-# 则不强行绕过，交由验收判定失败并留诊断。
+# 对 NEEDS_MANUAL_REVIEW 章节执行与 UI 相同的补救动线：补查（recheck-async，
+# 守卫"未完成/unknown"类屏障的正解）→ 批准（review-decisions，幂等键协议）。
+# 同一动线在 record 与 replay 中一致执行，保证回放确定性；批准被 409 拒绝
+# （如真实未解决 HIGH）不强行绕过，交由验收判定失败并留诊断。
 approve_pending() {
   python3 - "$BASE" "$PROJECT_ID" "$CHAPTERS" <<'PYEOF'
-import json, sys, urllib.request, urllib.error, uuid
+import hashlib, json, struct, sys, time, urllib.request, urllib.error, uuid
 base, pid, chapters = sys.argv[1], sys.argv[2], int(sys.argv[3])
 opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-def get(path):
-    with opener.open(f"{base}{path}", timeout=30) as r:
-        return json.load(r)
-approved = 0
+
+def req_json(method, path, body=None, timeout=90):
+    r = urllib.request.Request(base + path,
+        data=json.dumps(body).encode("utf-8") if body is not None else None,
+        headers={"Content-Type": "application/json"}, method=method)
+    with opener.open(r, timeout=timeout) as resp:
+        return json.load(resp)
+
+def content_hash(title, content):
+    md = hashlib.sha256()
+    for text in ((title or ""), (content or "")):
+        b = text.encode("utf-8")
+        md.update(struct.pack(">Q", len(b)))
+        md.update(b)
+    return md.hexdigest()
+
+resolved = 0
 for idx in range(1, chapters + 1):
     try:
-        ctx = get(f"/api/projects/{pid}/chapters/{idx}/review-context")
+        ch = req_json("GET", f"/api/projects/{pid}/chapters/{idx}")
     except Exception:
         continue
-    if not ctx.get("barrierIds") or not ctx.get("identity"):
+    if not ch or ch.get("status") != "NEEDS_MANUAL_REVIEW":
         continue
-    body = {
-        "identity": ctx["identity"],
-        "reviewSetHash": ctx.get("reviewSetHash"),
-        "idempotencyKey": str(uuid.uuid4()),
-        "reason": "e2e 自动放行（NCS-186 确定性验证通道）",
+    ident = {
+        "projectId": pid, "chapterIndex": idx,
+        "version": ch.get("version"),
+        "contentHash": content_hash(ch.get("title"), ch.get("content")),
     }
-    req = urllib.request.Request(
-        f"{base}/api/projects/{pid}/chapters/{idx}/review-decisions",
-        data=json.dumps(body).encode("utf-8"),
-        headers={"Content-Type": "application/json"}, method="POST")
+    # ① 补查：重跑检查链（守卫 unknown/未完成类屏障无报告可批，先补查生成报告）
     try:
-        with opener.open(req, timeout=60) as r:
-            if r.status == 200:
-                approved += 1
-                print(f"  ↪ 已放行章节 {idx} 的评审屏障")
+        job = req_json("POST", f"/api/projects/{pid}/chapters/{idx}/recheck-async",
+                       {"identity": ident})
+        job_id = job.get("jobId")
+        if job_id:
+            deadline = time.time() + 1500
+            while time.time() < deadline:
+                st = req_json("GET", f"/api/projects/{pid}/long-tasks/{job_id}")
+                if st.get("status") in ("DONE", "FAILED", "FAILED_RETRYABLE"):
+                    break
+                time.sleep(5)
+            print(f"  ↪ 章节 {idx} 补查完成（{st.get('status')}）")
     except urllib.error.HTTPError as e:
-        print(f"  ⚠ 章节 {idx} 放行被拒（HTTP {e.code}）：{e.read().decode('utf-8', 'ignore')[:200]}",
+        print(f"  ⚠ 章节 {idx} 补查失败（HTTP {e.code}）：{e.read().decode('utf-8','ignore')[:160]}",
               file=sys.stderr)
-print(approved)
+    # ② 批准：复核上下文（优先服务端身份），仍有待审集合则放行
+    try:
+        ctx = req_json("GET", f"/api/projects/{pid}/chapters/{idx}/review-context")
+        use_ident = ctx.get("identity") or ident
+        if ctx.get("barrierIds") or not ctx.get("approval"):
+            req_json("POST", f"/api/projects/{pid}/chapters/{idx}/review-decisions", {
+                "identity": use_ident,
+                "reviewSetHash": ctx.get("reviewSetHash"),
+                "idempotencyKey": str(uuid.uuid4()),
+                "reason": "e2e 自动放行（NCS-186 确定性验证通道：补查后批准）",
+            })
+            resolved += 1
+            print(f"  ↪ 已放行章节 {idx}")
+    except urllib.error.HTTPError as e:
+        print(f"  ⚠ 章节 {idx} 放行被拒（HTTP {e.code}）：{e.read().decode('utf-8','ignore')[:200]}",
+              file=sys.stderr)
+print(resolved)
 PYEOF
 }
 
@@ -201,7 +235,6 @@ for i in $(seq 1 "$POLL_LIMIT"); do
   TASK_STATE=$(echo "$TASK_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['status'])")
   case "$TASK_STATE" in
     COMPLETED|FAILED|CANCELLED) break ;;
-    # p32-15: PAUSED 是合法流程停点（如一致性门禁标记人审后写作循环暂停）——
     # p32-15: PAUSED 是合法流程停点（如一致性门禁标记人审后写作循环暂停）——
     # NCS-186: 先经正式批准端点自动放行再继续轮询（同一定动线保证 record/replay 确定
     # 性）；无可放行且未写满时回退重发 write-all（覆盖批准后任务未复活的情况）；

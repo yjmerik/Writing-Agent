@@ -10767,11 +10767,10 @@
       "type": "bug",
       "phase": 55,
       "dependencies": [],
-      "status": "not-started",
+      "status": "in-progress",
       "evidence": "A/B：main(1ddc4d5) 与 NCS-185 分支同签名失败，与本轮改动无关",
       "files": [
-        "scripts/e2e.sh",
-        "src/main/java/com/writing/novel/service/"
+        "scripts/e2e.sh"
       ],
       "spec": "docs/specs/2026-10-09-e2e-replay-review-barrier.md",
       "description": "默认 e2e 回放流程在章节评审屏障处暂停，无法完成 3 章验收目标。需确认屏障触发是近期 main 引入的评审策略变化（NCS-178/183 相关）还是 e2e 配置缺自动放行；修复方向：e2e 场景显式配置 MANUAL/自动通过屏障，或 e2e.sh 断言屏障语义。",
@@ -11039,5 +11038,5 @@
   ],
   "schema_version": 2,
   "updated_at": "2026-10-10",
-  "active_feature": null
+  "active_feature": "NCS-186"
 }

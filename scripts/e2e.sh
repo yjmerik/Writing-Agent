@@ -145,6 +145,47 @@ WRITE_RESULT=$(curl --noproxy '*' -sf -X POST "$BASE/api/projects/$PROJECT_ID/wr
 echo "$WRITE_RESULT"
 TASK_ID=$(echo "$WRITE_RESULT" | python3 -c "import json,sys; print(json.load(sys.stdin)['taskId'])")
 
+# NCS-186: 质量屏障自动放行——e2e 是确定性验证通道，写作循环因人审屏障 PAUSED 时
+# 经正式批准端点放行（幂等键/身份协议与 UI 相同）；批准被 409 拒绝（如未解决 HIGH）
+# 则不强行绕过，交由验收判定失败并留诊断。
+approve_pending() {
+  python3 - "$BASE" "$PROJECT_ID" "$CHAPTERS" <<'PYEOF'
+import json, sys, urllib.request, urllib.error, uuid
+base, pid, chapters = sys.argv[1], sys.argv[2], int(sys.argv[3])
+opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+def get(path):
+    with opener.open(f"{base}{path}", timeout=30) as r:
+        return json.load(r)
+approved = 0
+for idx in range(1, chapters + 1):
+    try:
+        ctx = get(f"/api/projects/{pid}/chapters/{idx}/review-context")
+    except Exception:
+        continue
+    if not ctx.get("barrierIds") or not ctx.get("identity"):
+        continue
+    body = {
+        "identity": ctx["identity"],
+        "reviewSetHash": ctx.get("reviewSetHash"),
+        "idempotencyKey": str(uuid.uuid4()),
+        "reason": "e2e 自动放行（NCS-186 确定性验证通道）",
+    }
+    req = urllib.request.Request(
+        f"{base}/api/projects/{pid}/chapters/{idx}/review-decisions",
+        data=json.dumps(body).encode("utf-8"),
+        headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with opener.open(req, timeout=60) as r:
+            if r.status == 200:
+                approved += 1
+                print(f"  ↪ 已放行章节 {idx} 的评审屏障")
+    except urllib.error.HTTPError as e:
+        print(f"  ⚠ 章节 {idx} 放行被拒（HTTP {e.code}）：{e.read().decode('utf-8', 'ignore')[:200]}",
+              file=sys.stderr)
+print(approved)
+PYEOF
+}
+
 # 异步写作——轮询任务直到终态
 # replay（3 章）固定 10 分钟上限；record/live 为每章预留 10 分钟，覆盖完整质检流水线。
 if [ "$MODE" = "replay" ]; then
@@ -154,14 +195,35 @@ else
   [ "$POLL_LIMIT" -lt 600 ] && POLL_LIMIT=1800
 fi
 TASK_JSON=""
+APPROVAL_ROUNDS=0
 for i in $(seq 1 "$POLL_LIMIT"); do
   TASK_JSON=$(curl --noproxy '*' -sf "$BASE/api/projects/$PROJECT_ID/writing-tasks/$TASK_ID")
   TASK_STATE=$(echo "$TASK_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['status'])")
   case "$TASK_STATE" in
     COMPLETED|FAILED|CANCELLED) break ;;
     # p32-15: PAUSED 是合法流程停点（如一致性门禁标记人审后写作循环暂停）——
-    # 与 record 行为一致，按已写章节评估，不再傻等
-    PAUSED) break ;;
+    # p32-15: PAUSED 是合法流程停点（如一致性门禁标记人审后写作循环暂停）——
+    # NCS-186: 先经正式批准端点自动放行再继续轮询（同一定动线保证 record/replay 确定
+    # 性）；无可放行且未写满时回退重发 write-all（覆盖批准后任务未复活的情况）；
+    # 两者都无进展才按已写章节评估收尾。
+    PAUSED)
+      WRITTEN_NOW=$(echo "$TASK_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['chaptersWritten'])")
+      if [ "$APPROVAL_ROUNDS" -lt 10 ]; then
+        APPROVAL_ROUNDS=$((APPROVAL_ROUNDS + 1))
+        APPROVED=$(approve_pending 2>/dev/null | tail -1)
+        if [ "${APPROVED:-0}" -gt 0 ] 2>/dev/null; then
+          sleep 5
+          continue
+        fi
+        if [ "$WRITTEN_NOW" -lt "$CHAPTERS" ]; then
+          echo "  ↪ 无可放行屏障但任务 PAUSED（${WRITTEN_NOW}/${CHAPTERS}），重发 write-all 续写"
+          WRITE_RESULT=$(curl --noproxy '*' -sf -X POST "$BASE/api/projects/$PROJECT_ID/write-all?maxChapters=$((CHAPTERS - WRITTEN_NOW))")
+          TASK_ID=$(echo "$WRITE_RESULT" | python3 -c "import json,sys; print(json.load(sys.stdin)['taskId'])")
+          sleep 5
+          continue
+        fi
+      fi
+      break ;;
   esac
   if [ $(( i % 30 )) -eq 0 ]; then
     TASK_CHAPTERS=$(echo "$TASK_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['chaptersWritten'])")

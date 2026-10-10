@@ -52,8 +52,9 @@ class TokenPlanModelConfigurationTest {
         }
         assertEquals(20000, properties.forTaskType("CHAPTER_WRITING").getMaxTokens());
         // NCS-066: 提取路由独立预算且关思考（输出不被 reasoning 挤占）
+        // NCS-186: 16000→32000——deepseek-v4-flash 实体图谱 50k+ 字符在 16k 截断（章后处理必败）
         var extraction = properties.forTaskType("EXTRACTION");
-        assertEquals(16000, extraction.getMaxTokens());
+        assertEquals(32000, extraction.getMaxTokens());
         assertEquals(0.1, extraction.getTemperature());
         assertFalse(extraction.isThinkingEnabled());
     }

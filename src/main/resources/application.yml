@@ -87,10 +87,13 @@ llm:
       api-key: ${DASHSCOPE_TOKEN_PLAN_API_KEY:}
       model: ${DASHSCOPE_TOKEN_PLAN_MODEL:qwen3.8-flash}
       temperature: 0.1
-      max-tokens: 16000
+      # NCS-186: 16k 实测不够——deepseek-v4-flash 实体图谱输出 50k+ 字符在 16000 截断
+      # （章后处理 JSON 解析失败且重试同因失败）。qwen3.8-flash 上限 32k 输出，一并兼容。
+      max-tokens: 32000
       # NCS-174: 提取类调用（max 16k token）实测最慢 <2min——预算 600→300s 收紧，
       # 上游停滞时扇出阶段等待上限由此与 NCS-173 fanout 超时共同兜底
-      request-timeout-seconds: 300
+      # NCS-186: 输出预算 16k→32k 后 300s 不足以覆盖 ~20k token 生成时长，放宽回 600s
+      request-timeout-seconds: 600
       context-window: 64000
       streaming: true
       thinking-enabled: false

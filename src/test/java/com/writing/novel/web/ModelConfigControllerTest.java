@@ -75,7 +75,8 @@ class ModelConfigControllerTest {
         var extraction = findEntry(root, "EXTRACTION");
         assertEquals("提取任务", extraction.path("label").asText());
         assertEquals("YML", extraction.path("source").asText());
-        assertEquals(16000, extraction.path("maxTokens").asInt());
+        // NCS-186: 16000→32000（deepseek-v4-flash 实体图谱 50k+ 字符在 16k 截断）
+        assertEquals(32000, extraction.path("maxTokens").asInt());
         var chapter = findEntry(root, "CHAPTER_WRITING");
         var ymlChapter = llmProperties.forTaskType("CHAPTER_WRITING"); // NCS-108: providers 形态生效配置
         assertEquals("YML", chapter.path("source").asText());

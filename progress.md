@@ -1,34 +1,33 @@
-# 叙事质感架构落地 Phase1（NCS-187..189） — 2026-10-09
+# 叙事质感架构 Phase2 前两步（NCS-190/191） — 2026-10-10
 
 Last Updated: 2026-10-10
 
 ## Current
 
-- 《山河执棋人》质量根因（剧情快/对话乒乓/缺描写转场）落为正式 spec：
-  docs/specs/2026-10-09-narrative-quality-architecture.md（六组件闭环控制设计，
-  NCS-187..200 已登记 feature_list，phase 56）
-- Phase 1「看见」三个 feature 全部完成并合入 main：
-  - NCS-187 纹理遥测（03a591b）：StyleMetricsService.computeTexture——对话段占比/
-    成段叙述块/场景分隔/对白乒乓/均段长，写章后 TEXTURE_METRICS 事件（observe-only）
-  - NCS-188 节拍算术（91ddf37）：parseChapterDetails 超限节拍合并裁剪+OUTLINE_BEATS_TRIMMED
-    事件；修 preset genre/maxBeats 未生效 bug（历史项目 4→3）
-  - NCS-189 反馈链小修（ab72f33）：反馈截断 80→200 字；readback pacing 节奏观察透传
-- 基线修复顺带完成：NCS-185 completions.json 记录补登、NCS-186 spec 指针修正
-  （b3575e6，docs 分支）
+- NCS-190（7a85ccd，completed）：NarrativePolicy 叙事策略域对象——17 个区间字段，
+  题材默认两档（HISTORICAL 质感区间 vs 其余现状等效宽松），项目级覆盖 SQLite
+  持久化（narrative_policy_overrides 表）+ REST GET/PUT/DELETE（非法值 400）
+- NCS-191（bd135e2，completed）：约束统一读 policy——HISTORICAL 题材的
+  writingConstraints/章长指导/题材节奏规则改区间双向文案（对话段 30%-55%、
+  场景预算制解除"全覆盖 vs 不超N"矛盾、转场/定场/成段叙述指令、解除
+  "超字数先砍描写"与"禁止铺陈开场"）；**非质感题材保持现状文案字节等价**——
+  A/B 实测干净 main 与本分支 CHAPTER_WRITING promptFingerprint 完全一致（799687fd7325），零分叉
+- 装配：MemoryConfig/AgentConfig 注入 NarrativePolicyService（late-set，宽松策略自动回退现状）
 
 ## Files
 
-- spec：docs/specs/2026-10-09-narrative-quality-architecture.md
-- main 链：b3575e6(登记) → 03a591b(NCS-187) → dcce672(回执) → 91ddf37(NCS-188) →
-  8e1fe3b(回执) → ab72f33(NCS-189) → 7594cea(回执)
-- 实测数据：对话段占比 77%/均段 17.3 字/引号字符 37%（低于 50% 指令却无人测量）——
-  证据在 spec 背景节 + docs/reports/2026-10-09-novel-eval-shanhezhiqiren/
+- main 链：7a85ccd(NCS-190) → e44cc76(回执) → bd135e2(NCS-191) → 5c6145e(回执)
+- 新增：domain/NarrativePolicy、persistence/sqlite/NarrativePolicyRepository、
+  service/NarrativePolicyService、web/NarrativePolicyController、
+  NarrativePolicyTest/NarrativePolicyApiTest
 
 ## Verification
 
-- 每个 feature：TDD 先红后绿；分支全量 + 合并后 main 全量均绿
-- 最终 main：1501 tests / 0 failures / 0 errors / 1 skipped（既有）
-- python3 scripts/check-harness.py PASS（531 features：485 completed / 35 not-started / 11 deferred）
+- 每 feature TDD 先红后绿；分支与合并后 main 全量均绿
+- 最终 main：1512 tests / 0 failures / 0 errors / 1 skipped（既有）
+- e2e/compare-baseline FAIL 为 main 既有问题（NCS-186：回放 fixture 缺失，记录时 0 次）——
+  A/B 干净 main 同签名同指纹失败，与本轮无关；修复归 NCS-186
+- check-harness PASS（531 features：487 completed / 33 not-started / 11 deferred）
 
 ## Blockers
 
@@ -36,6 +35,7 @@ Last Updated: 2026-10-10
 
 ## Next Steps
 
-- NCS-190 NarrativePolicy 域对象+题材默认+持久化+REST（Phase 2 起点，无依赖可直接开）
-- 之后 NCS-191/192（约束统一读 policy + 模板节奏改版——注意 p32-15 需 record 重建 fixture）
-- 既有 backlog 不变：NCS-186（e2e 屏障）/NCS-183/184/NCS-179/180/177
+- NCS-192（模板节奏改版）依赖 NCS-190 已满足；触碰 .st → p32-15 需 record 重建
+  fixture（注意：NCS-186 修复后 e2e 才能作为验收通道，建议先修 NCS-186）
+- 之后 NCS-193/194（ScenePlan 层）、NCS-195/196（TextureGate+扩写）
+- 既有 backlog：NCS-186（e2e 屏障，已两次被 A/B 证实）> NCS-183/184 > NCS-179/180/177

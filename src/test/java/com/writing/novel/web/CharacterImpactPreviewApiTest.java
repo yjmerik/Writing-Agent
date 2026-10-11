@@ -179,4 +179,28 @@ class CharacterImpactPreviewApiTest {
                 .andExpect(status().isBadRequest());
         assertEquals("revenge", repository.findCharacter(charId(pid)).orElseThrow().getMotivation());
     }
+
+    /** NCS-045: 未命中归未知；分析绑定基准并持久化检查范围 */
+    @org.junit.jupiter.api.Test
+    void 影响分析未知语义与持久化() throws Exception {
+        String pid = seed();
+        String cid = charId(pid);
+        Map<String, Object> body = new HashMap<>();
+        body.put("motivation", "changed motivation");
+        body.put("confirm", false);
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .post("/api/projects/{id}/characters/{cid}/impact-preview", pid, cid)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(om.writeValueAsString(body)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.baseVersion").isNotEmpty())
+                .andExpect(jsonPath("$.impact.unknownReferences").exists())
+                .andExpect(jsonPath("$.persisted").value(false));
+        // 持久化可查（追加式）
+        var repo2 = new com.writing.novel.persistence.sqlite.CharacterImpactAnalysisRepository(
+                new com.writing.novel.persistence.sqlite.ConnectionProvider("./data/test-character-impact.db"));
+        var latest = repo2.findLatest(pid, cid);
+        org.junit.jupiter.api.Assertions.assertTrue(latest.isPresent(), "影响分析应落库");
+        org.junit.jupiter.api.Assertions.assertTrue(latest.get().getListsJson().contains("unknownReferences"));
+    }
 }

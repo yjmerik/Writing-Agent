@@ -257,6 +257,13 @@ public class PersistenceConfig {
                 llmGateway, promptTemplateService, planDeviationRepository);
     }
 
+    // NCS-045: 影响分析仓储（与主库同文件）
+    @Bean
+    public com.writing.novel.persistence.sqlite.CharacterImpactAnalysisRepository characterImpactAnalysisRepository(
+            ConnectionProvider connectionProvider) {
+        return new com.writing.novel.persistence.sqlite.CharacterImpactAnalysisRepository(connectionProvider);
+    }
+
     // NCS-018: 场景合同
     @Bean
     public com.writing.novel.agent.SceneContractAgent sceneContractAgent(

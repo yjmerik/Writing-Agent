@@ -30,6 +30,8 @@ public class ContentController {
     private final WritingTaskExecutor writingTaskExecutor;
     private final ChapterRevisionService chapterRevision;
     private final ProjectActionPolicy actionPolicy = new ProjectActionPolicy();
+    /** NCS-045: 影响分析持久化 */
+    private final com.writing.novel.persistence.sqlite.CharacterImpactAnalysisRepository impactAnalysisRepository;
 
     @Autowired
     public ContentController(NovelRepository repository, NovelOrchestrator orchestrator,
@@ -37,7 +39,8 @@ public class ContentController {
                              OutlineStructureService outlineStructure,
                              com.writing.novel.service.PlanEditionService planEdition,
                              com.writing.novel.service.SupportWithdrawalService supportWithdrawal,
-                             com.writing.novel.service.RevisionRequestService revisionRequests) {
+                             com.writing.novel.service.RevisionRequestService revisionRequests,
+                             com.writing.novel.persistence.sqlite.CharacterImpactAnalysisRepository impactAnalysisRepository) {
         this.repository = repository;
         this.orchestrator = orchestrator;
         this.canonPatch = canonPatch;
@@ -48,6 +51,7 @@ public class ContentController {
                 orchestrator == null ? null : orchestrator::refreshChapterAfterRevisionAsync,
                 supportWithdrawal, revisionRequests);
         this.revisionRequests = revisionRequests;
+        this.impactAnalysisRepository = impactAnalysisRepository;
     }
 
     /** Unit-test compatibility for controller tests that do not exercise outline editing. */
@@ -56,7 +60,22 @@ public class ContentController {
         this(repository, orchestrator, canonPatch, writingTaskExecutor,
                 canonPatch == null ? null : new OutlineStructureService(
                         repository, canonPatch, writingTaskExecutor),
-                new com.writing.novel.service.PlanEditionService(repository), null, null);
+                new com.writing.novel.service.PlanEditionService(repository), null, null,
+                new com.writing.novel.persistence.sqlite.CharacterImpactAnalysisRepository(
+                        new com.writing.novel.persistence.sqlite.ConnectionProvider("./data/novel.db")));
+    }
+
+    /** NCS-045: 8 参兼容构造（outline/plan 版本；影响分析仓储用默认路径降级） */
+    public ContentController(NovelRepository repository, NovelOrchestrator orchestrator,
+                             CanonPatchService canonPatch, WritingTaskExecutor writingTaskExecutor,
+                             OutlineStructureService outlineStructure,
+                             com.writing.novel.service.PlanEditionService planEdition,
+                             com.writing.novel.service.SupportWithdrawalService supportWithdrawal,
+                             com.writing.novel.service.RevisionRequestService revisionRequests) {
+        this(repository, orchestrator, canonPatch, writingTaskExecutor, outlineStructure,
+                planEdition, supportWithdrawal, revisionRequests,
+                new com.writing.novel.persistence.sqlite.CharacterImpactAnalysisRepository(
+                        new com.writing.novel.persistence.sqlite.ConnectionProvider("./data/novel.db")));
     }
 
     @GetMapping("/worldbuilding")
@@ -107,10 +126,12 @@ public class ContentController {
             if (!id.equals(current.getProjectId())) {
                 throw new IllegalArgumentException("人物不属于该项目");
             }
+            String token = characterPreviewToken(current);
             return java.util.Map.of(
                     "persisted", false,
-                    "previewToken", characterPreviewToken(current),
-                    "impact", characterImpact(id, current, body));
+                    "previewToken", token,
+                    "baseVersion", token,
+                    "impact", characterImpact(id, current, body, token));
         }
         return withChapterWork(id, () -> {
             Character patch = new Character(id, str(body.get("name")), str(body.get("role")));
@@ -158,9 +179,11 @@ public class ContentController {
             throw new IllegalArgumentException("人物不属于该项目");
         }
         java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+        String token = characterPreviewToken(current);
         result.put("persisted", false);
-        result.put("previewToken", characterPreviewToken(current));
-        result.put("impact", characterImpact(id, current, body == null ? Map.of() : body));
+        result.put("previewToken", token);
+        result.put("baseVersion", token); // NCS-045: 分析基准=人物规范状态指纹
+        result.put("impact", characterImpact(id, current, body == null ? Map.of() : body, token));
         return result;
     }
 
@@ -172,28 +195,44 @@ public class ContentController {
         return com.writing.novel.util.ReviewFingerprint.sha256Hex12(canonical);
     }
 
-    /** 影响分析：确定引用（正文含名字）/可能引用（标题或梗概含名字）/覆盖不足（无文本可查）。 */
-    private Map<String, Object> characterImpact(String projectId, Character c, Map<String, Object> changes) {
+    /**
+     * NCS-045: 影响分析——确定引用（正文含名字）/未知（未命中≠无影响，可能用别名代称）/
+     * 覆盖不足（无文本可查）；分析绑定基准（人物规范状态指纹）并持久保存检查范围
+     * （逐章版本），confirm=false 的预览也可取证。
+     */
+    private Map<String, Object> characterImpact(String projectId, Character c,
+                                                Map<String, Object> changes, String previewToken) {
         String name = n(c.getName());
         java.util.List<Integer> certain = new java.util.ArrayList<>();
-        java.util.List<Integer> possible = new java.util.ArrayList<>();
+        java.util.List<Integer> unknown = new java.util.ArrayList<>();
         java.util.List<Integer> insufficient = new java.util.ArrayList<>();
+        // 检查范围持久化载体：逐章（章号, 版本）
+        var scope = new java.util.ArrayList<java.util.Map<String, Object>>();
         for (Chapter ch : repository.findChaptersByProject(projectId)) {
             String content = ch.getContent();
+            scope.add(java.util.Map.of("chapterIndex", ch.getChapterIndex(),
+                    "chapterVersion", ch.getVersion()));
             if (content == null) {
                 insufficient.add(ch.getChapterIndex());
             } else if (!name.isEmpty() && content.contains(name)) {
                 certain.add(ch.getChapterIndex());
             } else {
-                possible.add(ch.getChapterIndex());
+                unknown.add(ch.getChapterIndex()); // 未命中归未知而非无影响
             }
         }
         java.util.Map<String, Object> impact = new java.util.LinkedHashMap<>();
         impact.put("certainReferences", certain);
-        impact.put("possibleReferences", possible);
+        impact.put("unknownReferences", unknown);
+        impact.put("possibleReferences", unknown); // 兼容旧 UI 键（语义=未知）
         impact.put("insufficientCoverage", insufficient);
         impact.put("changes", changes);
         impact.put("autoRewriteHistory", false); // 不承诺自动修复历史正文
+        try {
+            impactAnalysisRepository.save(new com.writing.novel.domain.CharacterImpactAnalysis(
+                    projectId, c.getId(), previewToken, scope,
+                    certain, unknown, insufficient));
+        } catch (Exception ignored) {
+        }
         return impact;
     }
 

@@ -63,6 +63,21 @@ public class ChapterProduction {
         this.scenePlanService = service;
     }
 
+    /** NCS-195: 叙事策略解析（late-set，null=门禁关闭） */
+    private volatile com.writing.novel.service.NarrativePolicyService texturePolicyService;
+
+    public void setTexturePolicyService(com.writing.novel.service.NarrativePolicyService service) {
+        this.texturePolicyService = service;
+    }
+
+    /** NCS-195: 质感单项扩写通道（late-set，NCS-196 接线；null=跳过并事件化） */
+    private volatile java.util.function.BiConsumer<String, java.util.List<String>> textureExpansionChannel;
+
+    public void setTextureExpansionChannel(
+            java.util.function.BiConsumer<String, java.util.List<String>> channel) {
+        this.textureExpansionChannel = channel;
+    }
+
     ChapterProduction(NovelOrchestrator orch,
                       NovelRepository repository,
                       ChapterWriterAgent chapterWriter,
@@ -260,7 +275,7 @@ public class ChapterProduction {
             pauseForQuality(projectId, chapterIndex, chapter, "规则检查未完成：" + e.getMessage());
         }
 
-        // p11.1-J4: 说明文密度检测——连续无对话段落
+        // p11.1-J4: 说明文密度检测已并入 TextureGate（NCS-195 反向检测），此处保留原行为兼容
         try {
             if (expositionDetector != null) {
                 expositionDetector.detect(projectId, chapterIndex, chapter.getContent())
@@ -273,7 +288,53 @@ public class ChapterProduction {
             log.warn("说明文密度检测失败(章{}): {}", chapterIndex, e.getMessage());
         }
 
+        // NCS-195: 双向质感门禁——写后、读者评审前；重写已触发或门禁关闭时跳过
+        rewritten = rewritten || applyTextureGate(projectId, chapterIndex, chapter);
+
         return rewritten;
+    }
+
+    /** NCS-195: 双向质感门禁执行——越界落 issue + 分级路由（质感单项→扩写通道，结构性→整章重写） */
+    private boolean applyTextureGate(String projectId, int chapterIndex, Chapter chapter) {
+        if (texturePolicyService == null) return false;
+        try {
+            var policy = texturePolicyService.resolve(projectId);
+            var verdict = new com.writing.novel.service.TextureGate()
+                    .check(projectId, chapterIndex, chapter.getContent(), policy);
+            EventLog.emit("TEXTURE_GATE", Map.of(
+                    "chapterIndex", chapterIndex,
+                    "pass", verdict.pass(),
+                    "issues", verdict.issues().size(),
+                    "expansionTargets", verdict.expansionTargets().size(),
+                    "rewriteTargets", verdict.rewriteTargets().size(),
+                    "dialogueParagraphRatio", verdict.dialogueRatio(),
+                    "dialoguePingPong", verdict.pingPongCount()));
+            if (verdict.pass()) return false;
+            verdict.issues().forEach(repository::saveContinuityIssue);
+            verdict.issues().forEach(i -> log.warn("质感门禁(章{}): {}", chapterIndex, i.getDescription()));
+            // 结构性越界 → 既有整章重写（纠偏指令携带具体质感目标）
+            if (!verdict.rewriteTargets().isEmpty()) {
+                String instruction = "质感修复（结构性）：本章 " + String.join("；", verdict.rewriteTargets())
+                        + "。重写时逐项落实上述目标，其余情节事实不得改变。";
+                return rewriteWithCorrection(projectId, chapterIndex, chapter, instruction, null);
+            }
+            // 质感单项 → 定点扩写通道（NCS-196 接线；未接线时事件化降级）
+            if (!verdict.expansionTargets().isEmpty()) {
+                if (textureExpansionChannel != null) {
+                    textureExpansionChannel.accept(projectId, verdict.expansionTargets());
+                } else {
+                    EventLog.emit("TEXTURE_EXPANSION_SKIPPED", Map.of(
+                            "chapterIndex", chapterIndex,
+                            "targets", String.join("；", verdict.expansionTargets())));
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            // 门禁是增强能力——解析/执行失败不阻断章节
+            EventLog.emit("TEXTURE_GATE_FAILED", Map.of(
+                    "chapterIndex", chapterIndex, "error", EventLog.truncate(String.valueOf(e.getMessage()), 200)));
+            return false;
+        }
     }
 
     /**

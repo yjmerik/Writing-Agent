@@ -140,6 +140,21 @@ public class NovelOrchestrator {
         }
     }
 
+    /** NCS-195: 注入叙事策略解析（质感门禁用，转发到生产模块；null=门禁关闭）。 */
+    public void setTexturePolicyService(com.writing.novel.service.NarrativePolicyService service) {
+        if (this.production != null) {
+            this.production.setTexturePolicyService(service);
+        }
+    }
+
+    /** NCS-195/196: 注入质感单项扩写通道（NCS-196 定点扩写实现；null=事件化降级）。 */
+    public void setTextureExpansionChannel(
+            java.util.function.BiConsumer<String, java.util.List<String>> channel) {
+        if (this.production != null) {
+            this.production.setTextureExpansionChannel(channel);
+        }
+    }
+
     /** NCS-007: 注入检查结果信封仓储（生产装配用）。 */
     public void setCheckResultRepository(com.writing.novel.persistence.sqlite.CheckResultRepository repo) {
         this.checkResultRepository = repo;

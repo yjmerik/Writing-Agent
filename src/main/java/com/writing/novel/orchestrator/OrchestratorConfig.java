@@ -76,7 +76,8 @@ public class OrchestratorConfig {
                                                   com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository,
                                                   com.writing.novel.service.VolumeReadbackService volumeReadbackService,
                                                   com.writing.novel.service.AestheticProfileService aestheticProfileService,
-                                                  com.writing.novel.service.ScenePlanService scenePlanService) {
+                                                  com.writing.novel.service.ScenePlanService scenePlanService,
+                                                  com.writing.novel.persistence.sqlite.NarrativePolicyRepository narrativePolicyRepository) {
         NovelOrchestrator orchestrator = new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
@@ -114,6 +115,9 @@ public class OrchestratorConfig {
         orchestrator.setAestheticInjection(aestheticProfileService::buildInjection);
         // NCS-193: 写前场景规划（产出落梗概；写作消费归 NCS-194）
         orchestrator.setScenePlanService(scenePlanService);
+        // NCS-195: 双向质感门禁——解析叙事策略（宽松策略门禁自动关闭）
+        orchestrator.setTexturePolicyService(new com.writing.novel.service.NarrativePolicyService(
+                repo, narrativePolicyRepository));
         return orchestrator;
     }
 

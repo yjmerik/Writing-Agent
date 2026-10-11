@@ -2910,6 +2910,86 @@ public class NovelOrchestrator {
      * p12-fix: 分层大纲延迟生成——尝试用 planVolume 生成下一卷的详细章节大纲。
      * @return true 如果成功扩展了大纲（新增了章节梗概）
      */
+    /**
+     * NCS-183: 卷际交接结构化约束——刚收卷的 VOLUME_TREND_WARNING + 评价低分维度
+     * + 到期伏笔 + 弧线应达阶段，注入下一卷 planVolume 卷梗概（无数据返回空串）。
+     */
+    private String buildVolumeHandoffConstraints(String projectId, int nextVolumeNumber) {
+        try {
+            var outlineOpt = repository.findOutlineByProject(projectId);
+            if (outlineOpt.isEmpty()) return "";
+            var outline = outlineOpt.get();
+            var closed = outline.getVolumes().stream()
+                    .filter(v -> v.getVolumeIndex() < nextVolumeNumber)
+                    .reduce((a, b) -> a.getVolumeIndex() >= b.getVolumeIndex() ? a : b)
+                    .orElse(null);
+            if (closed == null || closed.getSynopses().isEmpty()) return "";
+            int fromChapter = closed.getSynopses().stream()
+                    .mapToInt(ChapterSynopsis::getChapterIndex).min().orElse(0);
+            int toChapter = closed.getSynopses().stream()
+                    .mapToInt(ChapterSynopsis::getChapterIndex).max().orElse(0);
+
+            StringBuilder sb = new StringBuilder("【卷际交接约束（卷")
+                    .append(closed.getVolumeIndex()).append(" 收卷事实——下一卷大纲必须处置）】\n");
+
+            // ① 检测趋势告警
+            String trend = detectorTrendService != null
+                    ? detectorTrendService.volumeGate(projectId, fromChapter, toChapter) : "";
+            if (trend != null && !trend.isBlank()) {
+                sb.append("- 趋势告警：").append(EventLog.truncate(trend, 200)).append("\n");
+            }
+
+            // ② 评价低分维度（<7 的维度 + 改进建议）
+            repository.findLatestEvaluation(projectId).ifPresent(rec -> {
+                if (rec.getScores() != null) {
+                    var low = rec.getScores().entrySet().stream()
+                            .filter(e -> e.getValue() < 7)
+                            .map(e -> e.getKey() + "=" + e.getValue())
+                            .toList();
+                    if (!low.isEmpty()) {
+                        sb.append("- 评价低分维度：").append(String.join("、", low));
+                        if (rec.getImprovementNotes() != null && !rec.getImprovementNotes().isBlank()) {
+                            sb.append("（改进建议：").append(EventLog.truncate(rec.getImprovementNotes(), 120)).append("）");
+                        }
+                        sb.append("\n");
+                    }
+                }
+            });
+
+            // ③ 到期伏笔（mustResolve/HIGH 且超过悬置阈值）
+            int threshold = repository.findWritingPreferences(projectId)
+                    .map(prefs -> prefs.getForeshadowSuspenseThreshold()).orElse(8);
+            for (var f : repository.findUnresolvedForeshadowings(projectId)) {
+                boolean priority = f.isMustResolve() || f.getPriority() == Foreshadowing.Priority.HIGH;
+                if (priority && f.isStale(toChapter, threshold)) {
+                    sb.append("- 到期伏笔：").append(EventLog.truncate(f.getDescription(), 80))
+                            .append("（第").append(f.getPlantedAtChapter()).append("章埋设")
+                            .append(f.getExpectedResolveChapter() > 0
+                                    ? "，预计第" + f.getExpectedResolveChapter() + "章回收" : "")
+                            .append("）——下一卷必须安排回收或明确顺延\n");
+                }
+            }
+
+            // ④ 弧线衔接（刚收卷的弧线位置 → 下一卷递进）
+            var arcPositions = closed.getSynopses().stream()
+                    .map(ChapterSynopsis::getVolumeArcPosition)
+                    .filter(a -> a != null && !a.isBlank())
+                    .distinct()
+                    .toList();
+            if (!arcPositions.isEmpty()) {
+                sb.append("- 弧线衔接：卷").append(closed.getVolumeIndex()).append("已达 ")
+                        .append(String.join("/", arcPositions))
+                        .append("——下一卷应递进（如 RISING→CLIMAX），不得原地重复\n");
+            }
+
+            // 仅含标题（无任何实际条目）时返回空串
+            return sb.toString().split("\n").length > 1 ? sb.toString().trim() : "";
+        } catch (Exception e) {
+            log.warn("卷际交接约束构建失败: {}", e.getMessage());
+            return "";
+        }
+    }
+
     private boolean tryExtendLayeredOutline(String projectId, Project p) {
         try {
             log.info("tryExtendLayeredOutline 触发: projectId={}, currentChapter={}", projectId, p.getCurrentChapterIndex());
@@ -2984,8 +3064,15 @@ public class NovelOrchestrator {
             String pacingDirective = volumePacingController != null
                     ? volumePacingController.directiveFor(projectId, volumeNumber) : "";
 
-            String effectiveVolumeSummary = pacingDirective.isBlank()
-                    ? volumeSummary : volumeSummary + "\n\n" + pacingDirective;
+            // NCS-183: 卷际交接结构化约束——趋势告警/评价低分维度/到期伏笔/弧线应达阶段
+            String handoffConstraints = buildVolumeHandoffConstraints(projectId, volumeNumber);
+            String effectiveVolumeSummary = volumeSummary;
+            if (!pacingDirective.isBlank()) {
+                effectiveVolumeSummary = effectiveVolumeSummary + "\n\n" + pacingDirective;
+            }
+            if (!handoffConstraints.isBlank()) {
+                effectiveVolumeSummary = effectiveVolumeSummary + "\n\n" + handoffConstraints;
+            }
             String volumeText = plotter.planVolume(
                     masterOutline, previousSummary,
                     "卷" + volumeNumber, effectiveVolumeSummary,

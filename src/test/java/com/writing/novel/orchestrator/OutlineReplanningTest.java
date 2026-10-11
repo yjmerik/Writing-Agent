@@ -307,4 +307,67 @@ class OutlineReplanningTest {
         assertTrue(outline.getVolumes().stream().noneMatch(v -> v.getSynopses().isEmpty()),
                 "解析 0 章不得残留空卷（空卷+重复卷号会挡死大纲 PUT 保存）");
     }
+
+    /** NCS-183: 卷际交接结构化约束（趋势/评价低分/到期伏笔/弧线）注入 planVolume 卷梗概 */
+    @org.junit.jupiter.api.Test
+    void 卷际交接约束注入planVolume梗概(@org.junit.jupiter.api.io.TempDir java.nio.file.Path td) throws Exception {
+        savePrefs(10);
+        var spyPlotter = org.mockito.Mockito.mock(PlotterAgent.class);
+        org.mockito.Mockito.when(spyPlotter.planVolume(
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt(),
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
+                .thenReturn("第5章 新卷：场景节拍：无关内容");
+        NovelOrchestrator orch = replanOrchestratorWith(spyPlotter);
+
+        Outline outline = new Outline(pid, "总纲");
+        Volume v1 = new Volume(pid, 1, "卷一", "");
+        ChapterSynopsis s8 = new ChapterSynopsis(pid, 8, "第8章", "推进");
+        s8.setVolumeArcPosition("RISING");
+        v1.addSynopsis(s8);
+        outline.addVolume(v1);
+        repo.saveOutline(outline);
+        Project p = repo.findProject(pid).orElseThrow();
+        p.setCurrentChapterIndex(8);
+        repo.saveProject(p);
+
+        // 到期伏笔（mustResolve + 已过悬置阈值——调低阈值使第1章埋设在第5章视为到期）
+        var prefs0 = repo.findWritingPreferences(pid).orElseThrow();
+        prefs0.setForeshadowSuspenseThreshold(2);
+        repo.saveWritingPreferences(prefs0);
+        var f = new com.writing.novel.domain.Foreshadowing(pid, "冷库里少的那半箱货", "仓房对白", 1);
+        f.setMustResolve(true);
+        f.setPriority(com.writing.novel.domain.Foreshadowing.Priority.HIGH);
+        f.setExpectedResolveChapter(6);
+        repo.saveForeshadowing(f);
+
+        Method m = NovelOrchestrator.class.getDeclaredMethod("buildVolumeHandoffConstraints",
+                String.class, int.class);
+        m.setAccessible(true);
+        String constraints = (String) m.invoke(orch, pid, 2);
+        assertTrue(constraints.contains("趋势") || constraints.contains("伏笔") || constraints.contains("弧线"),
+                "至少一类交接事实");
+        assertTrue(constraints.contains("【卷际交接约束"), "应产出交接约束: " + constraints);
+        assertTrue(constraints.contains("冷库里少的那半箱货"), "到期伏笔应注入");
+        assertTrue(constraints.contains("第1章埋设"), "埋设章应注入");
+        assertTrue(constraints.contains("预计第6章回收"), "预计回收章应注入");
+        assertTrue(constraints.contains("RISING"), "弧线衔接应注入");
+
+        // 注入 planVolume：直接验证 tryExtendLayeredOutline 传出的 summary 含约束
+        Method m2 = NovelOrchestrator.class.getDeclaredMethod("tryExtendLayeredOutline",
+                String.class, Project.class);
+        m2.setAccessible(true);
+        m2.invoke(orch, pid, p);
+        var captor = org.mockito.ArgumentCaptor.forClass(String.class);
+        org.mockito.Mockito.verify(spyPlotter).planVolume(
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), captor.capture(),
+                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+        assertTrue(captor.getValue().contains("【卷际交接约束"), "planVolume 卷梗概应含交接约束: "
+                + captor.getValue());
+    }
 }

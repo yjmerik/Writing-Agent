@@ -11072,18 +11072,19 @@
       "type": "bug",
       "phase": 55,
       "dependencies": [],
-      "status": "in-progress",
-      "evidence": "2026-10-11 HISTORICAL 1 章录制实战验证（质感链路端到端）发现：TEXTURE_GATE 正确拦截（对白乒乓+场景数超区间）并路由整章重写，但重写调用 LLM_TRUNCATED（20000 输出顶格，DeepSeek reasoning+纠偏上下文膨胀）→ rewriteForCorrection 拒绝截断稿 → 内容未替换（v2=reindex 重存）→ 质感问题滞留终稿（MEDIUM 非阻断）。replay×2 确定性复现同链。",
+      "status": "completed",
+      "evidence": "2026-10-11 完成（分支 codex/ncs-201-rewrite-budget，实现提交 297b77c，主分支 ff-only 合入）。CHAPTER_WRITING max-tokens 20000→32000：HISTORICAL 录制实证质感重写在 20k 顶格截断（LLM_TRUNCATED→rewriteForCorrection 拒绝→内容未替换→质感问题滞留终稿）；修复后 TEXTURE_GATE 拦截 3 项→结构性越界重写完整落库（v2[REWRITE] 5118 字，无截断）。验收：TokenPlanModelConfigurationTest 先红后绿 8/8；全量 1549/0/0/1skip ×2；HISTORICAL 1 章语料 replay×2 一致全验收 + baseline PASS。如实记录：重写稿对质感目标遵从有限（64%→63%）——模型遵从性问题留作后续 feature 候选。语料重建理由：budgetForModel 收缩使检索 topK 变化→CHAPTER_WRITING prompt 全量变化。",
       "files": [
         "src/main/resources/application.yml"
       ],
       "description": "CHAPTER_WRITING max-tokens 20000 在 DeepSeek 下被重写路径顶格（初写同参未截断——纠偏上下文+场景规划注入放大 reasoning）。与 NCS-186 EXTRACTION 32k 同型预算标定问题。",
       "acceptance": "HISTORICAL 1 章录制中质感重写完整落库（LLM_TRUNCATED 消失、TEXTURE_GATE 拦截项在重写稿中改善），replay×2 一致全验收",
       "verify_cmd": "mvn test -Dtest=TokenPlanModelConfigurationTest",
-      "spec": "docs/specs/2026-10-11-rewrite-output-budget.md"
+      "spec": "docs/specs/2026-10-11-rewrite-output-budget.md",
+      "completion_record": "ncs-201-verified"
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-10-11",
-  "active_feature": "NCS-201"
+  "active_feature": null
 }

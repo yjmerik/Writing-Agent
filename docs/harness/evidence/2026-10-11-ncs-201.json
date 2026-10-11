@@ -1,0 +1,26 @@
+{
+  "commit": "297b77c3e6791a7be4fee9b8a242fc114c0d4f1f",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-201"
+  ],
+  "checks": [
+    {
+      "command": "verify_cmd: mvn test -Dtest=TokenPlanModelConfigurationTest",
+      "result": "8/8 通过（CHAPTER_WRITING 32000 断言，先红后绿）",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（分支与合并后干净 main 检出）",
+      "result": "1549/0/0/1skip ×2",
+      "exitCode": 0
+    },
+    {
+      "command": "HISTORICAL 1 章重录 + replay×2 + baseline",
+      "result": "TEXTURE_GATE 拦截 3 项（对白 64% 超限/乒乓 2 处/场景数 0 超区间）→ 结构性越界路由整章重写 → 重写稿完整落库（v2[REWRITE] 5118 字，LLM_TRUNCATED 消失——20k 时代重写必然被拒）；replay×2 均 acceptancePassed=true、质感链路确定性复现；compare-baseline PASS",
+      "exitCode": 0
+    }
+  ],
+  "notes": "如实记录：重写稿对重写目标的遵从有限（对白占比 64%→63%、分隔行未增加）——截断修复使重写得以落库，重写遵从性属模型质量问题，可作为后续 feature（如重写后复检门禁/更强目标锚定）登记。DeepSeek 瞬时 EMPTY_RESPONSE 再现两次（构思/章写），冷却重试均恢复。",
+  "recordedAt": "2026-10-11T14:00:00+08:00"
+}

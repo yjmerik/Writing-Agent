@@ -3391,8 +3391,19 @@
       "implementation_commit": "1b277a40f5a49a63ce22880ade3f18b2ec8c3f4c",
       "main_commit": "1b277a40f5a49a63ce22880ade3f18b2ec8c3f4c",
       "evidence": "docs/harness/evidence/2026-10-11-ncs-200.json"
+    },
+    {
+      "id": "ncs-201-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-201"
+      ],
+      "branch": "codex/ncs-201-rewrite-budget",
+      "implementation_commit": "297b77c3e6791a7be4fee9b8a242fc114c0d4f1f",
+      "main_commit": "297b77c3e6791a7be4fee9b8a242fc114c0d4f1f",
+      "evidence": "docs/harness/evidence/2026-10-11-ncs-201.json"
     }
   ],
-  "commit": "1b277a40f5a49a63ce22880ade3f18b2ec8c3f4c",
-  "main_commit": "1b277a40f5a49a63ce22880ade3f18b2ec8c3f4c"
+  "commit": "297b77c3e6791a7be4fee9b8a242fc114c0d4f1f",
+  "main_commit": "297b77c3e6791a7be4fee9b8a242fc114c0d4f1f"
 }

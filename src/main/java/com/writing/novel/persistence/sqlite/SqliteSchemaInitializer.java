@@ -463,6 +463,15 @@ public class SqliteSchemaInitializer {
     private void applyMigrations(Statement st) {
         // p18-02: checkpoints 表新增 payload 列（审批质量信息）
 
+        // NCS-052: 断言支持组表（追加式——历史不可变；幂等）
+        try (var ct = st.getConnection().prepareStatement(
+                "CREATE TABLE IF NOT EXISTS assertion_supports (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, project_id TEXT NOT NULL, fact_id TEXT NOT NULL, " +
+                "link TEXT NOT NULL, support_fact_id TEXT NOT NULL, support_snapshot TEXT, " +
+                "status TEXT DEFAULT 'ACTIVE', created_at TEXT)")) {
+            ct.execute();
+        } catch (java.sql.SQLException ignored) {
+        }
         // NCS-045: 人物修改影响分析表（追加式；幂等）
         try (var ct = st.getConnection().prepareStatement(
                 "CREATE TABLE IF NOT EXISTS character_impact_analyses (" +

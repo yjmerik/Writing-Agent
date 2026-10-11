@@ -27,10 +27,12 @@ public class SupportPropagationService {
     /** NCS-053: 外根存在性覆盖——在集合中的节点视为存在；不在集合的"游离节点"（无入边且无支持行）视为不存在 */
     private final java.util.Set<String> existingRoots;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public SupportPropagationService(AssertionSupportRepository supports) {
         this(supports, null);
     }
 
+    /** 测试：显式登记外根存在性集合 */
     public SupportPropagationService(AssertionSupportRepository supports,
                                      java.util.Set<String> existingRoots) {
         this.supports = supports;

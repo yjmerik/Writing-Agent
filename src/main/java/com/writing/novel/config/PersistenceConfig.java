@@ -257,6 +257,19 @@ public class PersistenceConfig {
                 llmGateway, promptTemplateService, planDeviationRepository);
     }
 
+    // NCS-052/053: 断言支持组仓储与撤回传播服务
+    @Bean
+    public com.writing.novel.persistence.sqlite.AssertionSupportRepository assertionSupportRepository(
+            ConnectionProvider connectionProvider) {
+        return new com.writing.novel.persistence.sqlite.AssertionSupportRepository(connectionProvider);
+    }
+
+    @Bean
+    public com.writing.novel.service.SupportPropagationService supportPropagationService(
+            com.writing.novel.persistence.sqlite.AssertionSupportRepository assertionSupportRepository) {
+        return new com.writing.novel.service.SupportPropagationService(assertionSupportRepository);
+    }
+
     // NCS-046: 影响闭包服务（依赖影响分析仓储）
     @Bean
     public com.writing.novel.service.ImpactClosureService impactClosureService(

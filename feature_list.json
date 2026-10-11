@@ -10659,16 +10659,18 @@
       "dependencies": [
         "NCS-179"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "2026-10-11 完成（分支 codex/ncs-180-canon-cache-invalidate，主分支 ff-only 合入）。封闭式核对段读时与真典现值比对：manifest FACT 条目沿 supersededBy 链取现行目——已修正条目呈现现行真典+写作时旧约束对照+「正文按旧约束写作并非错误，不得据此报告矛盾」的门禁区分指令；已废止条目标注；未变化条目原样。消除「正文符合写作时约束却被判矛盾」的批准阻塞循环（1006 实测 6 次人工裁决场景）。验收：ContinuityContextParityTest 7/7（新增修正/废止/未变 3 例）；全量 1554/0/0/1skip ×2；语料复用。",
       "files": [
-        "src/main/java/com/writing/novel/memory/",
-        "src/main/java/com/writing/novel/orchestrator/"
+        "src/main/java/com/writing/novel/agent/ContinuityCheckerAgent.java",
+        "src/main/java/com/writing/novel/agent/AgentConfig.java",
+        "src/test/java/com/writing/novel/agent/ContinuityContextParityTest.java"
       ],
       "spec": "docs/specs/2026-10-03-pipeline-resilience-and-review-ux.md",
       "description": "1006 实测：作者修正真典（辰时二刻取代卯时三刻，HUMAN_PATCH+旧目废止）后，ch30 的章节约束清单（写作期派生缓存）仍持旧值，导致批准门禁反复以「正文与约束清单矛盾」阻塞，需 6 次人工裁决才放行；且检查器将「修复」标为「与已确立事实矛盾」（修复-典记自指）。方向：典目 HUMAN_PATCH/废止时按引用主题失效受影响章节的约束缓存；或门禁在约束与真典冲突时提示「约束过期」而非「正文矛盾」",
       "acceptance": "真典典目修正/废止后，受影响章节的约束缓存标记过期并在下次写作/重检时刷新；门禁报错区分「正文错」与「约束过期」；mvn test 全绿",
-      "verify_cmd": "mvn test -Dtest=ContextAssemblerTest"
+      "verify_cmd": "mvn test -Dtest=ContextAssemblerTest",
+      "completion_record": "ncs-180-verified"
     },
     {
       "id": "NCS-181",

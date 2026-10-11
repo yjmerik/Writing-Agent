@@ -3435,8 +3435,19 @@
       "implementation_commit": "afb45bbe7fd5646da43d491eb86886d0d83d31ce",
       "main_commit": "afb45bbe7fd5646da43d491eb86886d0d83d31ce",
       "evidence": "docs/harness/evidence/2026-10-11-ncs-179.json"
+    },
+    {
+      "id": "ncs-180-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-180"
+      ],
+      "branch": "codex/ncs-180-canon-cache-invalidate",
+      "implementation_commit": "c39ff0440706c8389f9aba985095547248e110a4",
+      "main_commit": "c39ff0440706c8389f9aba985095547248e110a4",
+      "evidence": "docs/harness/evidence/2026-10-11-ncs-180.json"
     }
   ],
-  "commit": "afb45bbe7fd5646da43d491eb86886d0d83d31ce",
-  "main_commit": "afb45bbe7fd5646da43d491eb86886d0d83d31ce"
+  "commit": "c39ff0440706c8389f9aba985095547248e110a4",
+  "main_commit": "c39ff0440706c8389f9aba985095547248e110a4"
 }

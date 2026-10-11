@@ -1,0 +1,21 @@
+{
+  "commit": "c39ff0440706c8389f9aba985095547248e110a4",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-180"
+  ],
+  "checks": [
+    {
+      "command": "ContinuityContextParityTest（含新增 3 例）",
+      "result": "7/7：典目修正→[真典·已修正]+现行值+旧约束对照+「不得据此报告矛盾」指令；废止→[真典·已废止]；未修正条目原样",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test 全量（分支+合并后干净 main）",
+      "result": "1554/0/0/1skip ×2",
+      "exitCode": 0
+    }
+  ],
+  "notes": "读时现值比对（沿 supersededBy 链）优于写时失效标记：无需失效传播管道，重检/复检天然取现行值。修正/废止标注仅在典目变更时出现——既有语料 prompt 不变，无需重录。storyCanon 经 late-set 注入 checker（AgentConfig 接线）。",
+  "recordedAt": "2026-10-11T18:00:00+08:00"
+}

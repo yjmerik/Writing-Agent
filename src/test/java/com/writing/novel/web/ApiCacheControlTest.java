@@ -39,4 +39,22 @@ class ApiCacheControlTest {
         mvc.perform(get("/"))
                 .andExpect(status().isOk());
     }
+
+    /** NCS-177: SPA 壳 no-store（升级后浏览器首屏拿新 bundle）；带指纹 assets 长缓存 */
+    @org.junit.jupiter.api.Test
+    void indexHtml携带noStore_带指纹assets长缓存() throws Exception {
+        mvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", containsString("no-store")));
+        mvc.perform(get("/index.html"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", containsString("no-store")));
+        var assetsDir = new java.io.File("src/main/resources/static/assets");
+        var files = assetsDir.listFiles();
+        org.junit.jupiter.api.Assumptions.assumeTrue(files != null && files.length > 0,
+                "前端未构建时跳过 assets 断言（init.sh 构建后生效）");
+        mvc.perform(get("/assets/" + files[0].getName()))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", containsString("max-age")));
+    }
 }

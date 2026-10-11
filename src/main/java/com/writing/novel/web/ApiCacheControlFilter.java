@@ -20,7 +20,13 @@ public class ApiCacheControlFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        if (request.getRequestURI().startsWith("/api/")) {
+        String uri = request.getRequestURI();
+        if (uri.startsWith("/api/")) {
+            response.setHeader("Cache-Control", "no-store");
+        }
+        // NCS-177: SPA 壳必须 no-store——升级换 jar 后浏览器不得从 HTTP 缓存读旧
+        // index.html（否则加载旧 bundle，新功能不可见）；assets/* 带指纹走长缓存
+        if (uri.equals("/") || uri.equals("/index.html")) {
             response.setHeader("Cache-Control", "no-store");
         }
         filterChain.doFilter(request, response);

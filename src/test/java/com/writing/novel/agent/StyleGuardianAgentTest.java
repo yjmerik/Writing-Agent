@@ -86,4 +86,60 @@ class StyleGuardianAgentTest {
                 "新范本入库");
         assertTrue(saved.getSampleChapterIndices().size() >= 2, "范本章号登记");
     }
+
+    /** NCS-199: 质感维度建档——新档案含描写密度/转场手法/对话配比三字段 */
+    @org.junit.jupiter.api.Test
+    void 建档含质感维度三字段() {
+        LlmGateway mockGateway = new LlmGateway() {
+            @Override
+            public LlmResponse complete(LlmRequest req) {
+                return new LlmResponse("""
+                    【基调】沉郁克制
+                    【叙事】第三人称限制视角，节奏舒缓
+                    【注意事项】多用物件细节承载情绪；避免直白抒情
+                    【描写密度】高：每场景至少两处感官锚点
+                    【转场手法】时间跳切+物件叠印
+                    【对话配比】叙述 6:对话 4
+                    """, 50, 100);
+            }
+            @Override
+            public void streamComplete(LlmRequest req, StreamHandler handler) {}
+        };
+        StyleGuardianAgent agent = new StyleGuardianAgent(mockGateway, null, TestPromptHelper.create());
+        StyleProfile profile = agent.establishProfile("proj-tex", "历史权谋构思");
+        assertEquals("高：每场景至少两处感官锚点", profile.getDescriptionDensity());
+        assertEquals("时间跳切+物件叠印", profile.getTransitionTechnique());
+        assertEquals("叙述 6:对话 4", profile.getDialogueNarrationRatio());
+    }
+
+    /** NCS-199: 旧档案解析兼容——缺质感维度列的档案读回不炸、字段为 null */
+    @org.junit.jupiter.api.Test
+    void 旧档案缺质感维度解析兼容(@org.junit.jupiter.api.io.TempDir java.nio.file.Path tempDir) {
+        var cp = new com.writing.novel.persistence.sqlite.ConnectionProvider(tempDir.resolve("old.db").toString());
+        new com.writing.novel.persistence.sqlite.SqliteSchemaInitializer(cp).initialize();
+        var repo = new com.writing.novel.persistence.sqlite.SqliteNovelRepository(cp);
+        var p = new com.writing.novel.domain.Project("t", "c", "tag");
+        repo.saveProject(p);
+        // 旧档案：三字段 null（模拟 NCS-199 之前的存量）
+        var legacy = new StyleProfile(p.getId());
+        legacy.setTone("热血");
+        repo.saveStyleProfile(legacy);
+        var loaded = repo.findStyleProfileByProject(p.getId()).orElseThrow();
+        assertEquals("热血", loaded.getTone());
+        assertNull(loaded.getDescriptionDensity());
+        assertNull(loaded.getTransitionTechnique());
+        assertNull(loaded.getDialogueNarrationRatio());
+        // 再经 updateProfile 缺失维度输出时不回退、不炸（空输出兼容）
+        LlmGateway oldFormat = new LlmGateway() {
+            @Override public LlmResponse complete(LlmRequest req) {
+                return new LlmResponse("【基调】沉郁\n【叙事】第三人称\n【注意事项】无", 10, 10);
+            }
+            @Override public void streamComplete(LlmRequest req, StreamHandler h) {}
+        };
+        StyleGuardianAgent agent = new StyleGuardianAgent(oldFormat, repo, TestPromptHelper.create());
+        var updated = agent.updateProfile(p.getId(), "近期章节文本……");
+        assertNotNull(updated);
+        assertEquals("沉郁", updated.getTone());
+        assertNull(updated.getDescriptionDensity(), "旧格式输出不产生质感字段");
+    }
 }

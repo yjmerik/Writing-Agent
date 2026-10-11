@@ -11032,7 +11032,7 @@
       "type": "feature",
       "phase": 56,
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/resources/prompts/style-establish.st",
         "src/main/java/com/writing/novel/agent/StyleGuardianAgent.java"
@@ -11040,7 +11040,9 @@
       "spec": "docs/specs/2026-10-09-narrative-quality-architecture.md",
       "description": "风格建档增加描写密度/转场手法/叙述-对话配比三个维度字段；解析兼容旧档案（缺失字段不炸）。",
       "acceptance": "StyleGuardianAgentTest：新档案含三字段；旧档案解析兼容",
-      "verify_cmd": "mvn test -Dtest=StyleGuardianAgentTest"
+      "verify_cmd": "mvn test -Dtest=StyleGuardianAgentTest",
+      "completion_record": "ncs-199-verified",
+      "evidence": "2026-10-11 完成（分支 codex/ncs-199-style-texture-dims，实现提交 0276221，主分支 ff-only 合入）。style-establish.st 新增【描写密度】【转场手法】【对话配比】三个输出维度；StyleProfile 三字段（descriptionDensity/transitionTechnique/dialogueNarrationRatio）+ style_profiles 三列 safeAddColumn 迁移；establishProfile/updateProfile 双路径解析（输出缺失保持原值），旧档案缺列解析兼容（null 不炸）。验收：StyleGuardianAgentTest 5/5（新增建档三字段+旧档案兼容 2 例）；全量 1545/0/0/1skip ×2；DeepSeek 语料 1 章录制（29 fixture，用户指示录制改 1 章/次）→ replay×2 全验收 → baseline PASS。"
     },
     {
       "id": "NCS-200",

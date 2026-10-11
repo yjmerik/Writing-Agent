@@ -96,6 +96,13 @@ public class StyleGuardianAgent {
         profile.setTone(extractField(resp.getContent(), "基调"));
         profile.setVoice(extractField(resp.getContent(), "叙事"));
         profile.setDosAndDonts(extractField(resp.getContent(), "注意事项"));
+        // NCS-199: 质感维度建档（解析失败保持 null——旧输出格式兼容）
+        String density = extractField(resp.getContent(), "描写密度");
+        if (!density.isBlank()) profile.setDescriptionDensity(density);
+        String transition = extractField(resp.getContent(), "转场手法");
+        if (!transition.isBlank()) profile.setTransitionTechnique(transition);
+        String mix = extractField(resp.getContent(), "对话配比");
+        if (!mix.isBlank()) profile.setDialogueNarrationRatio(mix);
 
         if (repository != null) repository.saveStyleProfile(profile);
         return profile;
@@ -156,6 +163,13 @@ public class StyleGuardianAgent {
         if (!newTone.isBlank()) profile.setTone(newTone);
         if (!newVoice.isBlank()) profile.setVoice(newVoice);
         if (!newDosAndDonts.isBlank()) profile.setDosAndDonts(newDosAndDonts);
+        // NCS-199: 质感维度随卷演化（输出缺失保持原值）
+        String newDensity = extractField(resp.getContent(), "描写密度");
+        if (!newDensity.isBlank()) profile.setDescriptionDensity(newDensity);
+        String newTransition = extractField(resp.getContent(), "转场手法");
+        if (!newTransition.isBlank()) profile.setTransitionTechnique(newTransition);
+        String newMix = extractField(resp.getContent(), "对话配比");
+        if (!newMix.isBlank()) profile.setDialogueNarrationRatio(newMix);
 
         repository.saveStyleProfile(profile);
         return profile;

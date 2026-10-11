@@ -483,6 +483,10 @@ public class SqliteSchemaInitializer {
         safeAddColumn(st, "ALTER TABLE writing_preferences ADD COLUMN fast_pace_window INTEGER DEFAULT 4");
         // NCS-102: 风格例文范本段（JSON 数组，至多 3 段）
         safeAddColumn(st, "ALTER TABLE style_profiles ADD COLUMN style_samples TEXT");
+        // NCS-199: 质感维度（旧档案为 NULL，解析兼容）
+        safeAddColumn(st, "ALTER TABLE style_profiles ADD COLUMN description_density TEXT");
+        safeAddColumn(st, "ALTER TABLE style_profiles ADD COLUMN transition_technique TEXT");
+        safeAddColumn(st, "ALTER TABLE style_profiles ADD COLUMN dialogue_narration_ratio TEXT");
         // NCS-128: 风格意图快照（锁定副本）——卷末 updateProfile 不再触碰
         safeAddColumn(st, "ALTER TABLE style_profiles ADD COLUMN intent_tone TEXT");
         safeAddColumn(st, "ALTER TABLE style_profiles ADD COLUMN intent_voice TEXT");

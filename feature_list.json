@@ -8133,9 +8133,9 @@
       ],
       "status": "completed",
       "files": [
+        "src/main/java/com/writing/novel/persistence/sqlite/PostProcessLedgerRepository.java",
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
-        "src/main/java/com/writing/novel/persistence/sqlite/ProjectionOutboxRepository.java",
-        "src/test/java/com/writing/novel/service/ProjectionOutboxTest.java"
+        "src/test/java/com/writing/novel/persistence/sqlite/ProjectionOutboxTest.java"
       ],
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：来源章稿与投影类型唯一；重启保持待执行项；旧数据迁移可重复。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
@@ -8155,8 +8155,8 @@
       "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
-        "src/main/java/com/writing/novel/spi/NovelRepository.java",
-        "src/test/java/com/writing/novel/service/RevisionOutboxCommitTest.java"
+        "src/main/java/com/writing/novel/util/Triple.java",
+        "src/test/java/com/writing/novel/persistence/sqlite/RevisionOutboxCommitTest.java"
       ],
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：单章和整组事务同时写正文及outbox；任一失败一起回滚。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
@@ -8175,9 +8175,8 @@
       ],
       "status": "completed",
       "files": [
-        "src/main/java/com/writing/novel/service/ChapterRevisionService.java",
-        "src/main/java/com/writing/novel/service/ProjectionReadinessService.java",
-        "src/test/java/com/writing/novel/service/ProjectionReadinessTest.java"
+        "src/main/java/com/writing/novel/persistence/sqlite/PostProcessLedgerRepository.java",
+        "src/test/java/com/writing/novel/persistence/sqlite/ProjectionReadinessTest.java"
       ],
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：失败持久待重试；旧来源不得完成新稿；重启能重建全部必需投影。编译、全量回归及适用E2E通过；按原方案证据分层验收。",

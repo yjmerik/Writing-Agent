@@ -2790,13 +2790,16 @@ public class SqliteNovelRepository implements NovelRepository {
     public void saveStyleProfile(StyleProfile p) {
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO style_profiles (project_id,tone,voice,dos_and_donts,sample_chapter_indices,style_samples,updated_at,intent_tone,intent_voice,intent_dos_and_donts) " +
-                     "VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET tone=excluded.tone, " +
+                     "INSERT INTO style_profiles (project_id,tone,voice,dos_and_donts,sample_chapter_indices,style_samples,updated_at,intent_tone,intent_voice,intent_dos_and_donts,description_density,transition_technique,dialogue_narration_ratio) " +
+                     "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(project_id) DO UPDATE SET tone=excluded.tone, " +
                      "voice=excluded.voice, dos_and_donts=excluded.dos_and_donts, " +
                      "sample_chapter_indices=excluded.sample_chapter_indices, " +
                      "style_samples=excluded.style_samples, updated_at=excluded.updated_at, " +
                      "intent_tone=excluded.intent_tone, intent_voice=excluded.intent_voice, " +
-                     "intent_dos_and_donts=excluded.intent_dos_and_donts")) {
+                     "intent_dos_and_donts=excluded.intent_dos_and_donts, " +
+                     "description_density=excluded.description_density, " +
+                     "transition_technique=excluded.transition_technique, " +
+                     "dialogue_narration_ratio=excluded.dialogue_narration_ratio")) {
             ps.setString(1, p.getProjectId()); ps.setString(2, p.getTone());
             ps.setString(3, p.getVoice()); ps.setString(4, p.getDosAndDonts());
             ps.setString(5, String.join(",", p.getSampleChapterIndices().stream()
@@ -2809,6 +2812,9 @@ public class SqliteNovelRepository implements NovelRepository {
                 ps.setString(9, getIntent(p, "voice"));
                 ps.setString(10, getIntent(p, "dos"));
             } catch (Exception ignoreColumn) { throw new RuntimeException(ignoreColumn); }
+            ps.setString(11, p.getDescriptionDensity());
+            ps.setString(12, p.getTransitionTechnique());
+            ps.setString(13, p.getDialogueNarrationRatio());
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
@@ -2861,6 +2867,10 @@ public class SqliteNovelRepository implements NovelRepository {
                                     new com.fasterxml.jackson.core.type.TypeReference<java.util.List<String>>() {}));
                 }
             } catch (Exception ignored) {}
+            // NCS-199: 质感维度恢复（旧档案列为空 → null，解析兼容）
+            try { p.setDescriptionDensity(rs.getString("description_density")); } catch (Exception ignored) {}
+            try { p.setTransitionTechnique(rs.getString("transition_technique")); } catch (Exception ignored) {}
+            try { p.setDialogueNarrationRatio(rs.getString("dialogue_narration_ratio")); } catch (Exception ignored) {}
             // NCS-128: 意图快照恢复（旧库列为空 → 未锁定）
             try {
                 String it = rs.getString("intent_tone");

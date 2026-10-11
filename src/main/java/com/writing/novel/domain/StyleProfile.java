@@ -13,6 +13,10 @@ public class StyleProfile {
     private List<Integer> sampleChapterIndices;  // 作为风格样本的章节号
     /** NCS-102: 风格范本段（例文 few-shot 锚点；来源 preset/作者例文/作者确认的生成段落，至多 3 段） */
     private List<String> styleSamples = new ArrayList<>();
+    /** NCS-199: 质感维度（描写密度/转场手法/对话配比；null=旧档案未建档，解析兼容） */
+    private String descriptionDensity;
+    private String transitionTechnique;
+    private String dialogueNarrationRatio;
     /** NCS-128: 风格意图快照（tone/voice/dosAndDonts 首次确立时的锁定副本）——漂移检测的固定基准；
      *  为 null 表示尚未锁定（旧数据/未迁移），锁定后 updateProfile 只改可演化字段、不再触碰意图 */
     private String intentTone;
@@ -45,6 +49,12 @@ public class StyleProfile {
         this.updatedAt = Instant.now();
     }
 
+    public String getDescriptionDensity() { return descriptionDensity; }
+    public void setDescriptionDensity(String v) { this.descriptionDensity = v; this.updatedAt = Instant.now(); }
+    public String getTransitionTechnique() { return transitionTechnique; }
+    public void setTransitionTechnique(String v) { this.transitionTechnique = v; this.updatedAt = Instant.now(); }
+    public String getDialogueNarrationRatio() { return dialogueNarrationRatio; }
+    public void setDialogueNarrationRatio(String v) { this.dialogueNarrationRatio = v; this.updatedAt = Instant.now(); }
     public String getProjectId() { return projectId; }
     public String getTone() { return tone; }
     public void setTone(String t) { this.tone = t; this.updatedAt = Instant.now(); }

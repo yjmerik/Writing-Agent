@@ -45,6 +45,8 @@ class ContinuityContextParityTest {
     private InjectionManifestRepository manifestRepo;
     private String pid;
     private String factId;
+    private com.writing.novel.persistence.sqlite.StoryFactRepository factRepo;
+    private com.writing.novel.persistence.sqlite.SqliteStoryCanon canon;
     private final AtomicReference<String> lastUserMessage = new AtomicReference<>();
 
     @BeforeEach
@@ -53,8 +55,8 @@ class ContinuityContextParityTest {
         new SqliteSchemaInitializer(cp).initialize();
         repository = new SqliteNovelRepository(cp);
         manifestRepo = new InjectionManifestRepository(cp);
-        StoryFactRepository factRepo = new StoryFactRepository(cp);
-        SqliteStoryCanon canon = new SqliteStoryCanon(factRepo);
+        factRepo = new StoryFactRepository(cp);
+        canon = new SqliteStoryCanon(factRepo);
         gateway = new RelevanceGateway(repository, canon);
 
         Project p = new Project("同源测试", "构思", "wuxia");
@@ -98,6 +100,7 @@ class ContinuityContextParityTest {
         ContinuityCheckerAgent agent = new ContinuityCheckerAgent(llm, repository,
                 TestPromptHelper.create(), gateway, null);
         agent.setManifestRepository(manifestRepo);
+        agent.setStoryCanon(canon);
         return agent;
     }
 
@@ -143,5 +146,51 @@ class ContinuityContextParityTest {
     void cast解析_与写作侧同源() {
         var cast = com.writing.novel.orchestrator.CheckSettingsBuilder.castOf(repository, pid, 5);
         assertEquals(java.util.List.of("林凡", "赵九"), cast, "应从大纲解析本章 cast");
+    }
+
+    /** NCS-180: 典目修正后约束清单标注「已修正」并给出现行真典，检查不再把旧约束写作判为矛盾 */
+    @org.junit.jupiter.api.Test
+    void 典目修正后约束清单标注已修正并给现行值() {
+        // 写作时清单快照 = 旧断言
+        InjectionManifest manifest = new InjectionManifest(pid, 5, 1, 16000);
+        manifest.addEntry("bibleSection", InjectionManifest.Kind.FACT, factId,
+                "林凡：左手旧伤未愈", 10);
+        manifestRepo.save(manifest);
+        // 作者修正真典：旧目 SUPERSEDED → 新目 ACTIVE（断言变更）
+        StoryFact patched = new StoryFact(pid, StoryFact.FactType.CHARACTER_STATE, "林凡",
+                "左手伤已痊愈", 3);
+        factRepo.supersede(factRepo.findById(factId).orElseThrow(), patched);
+
+        agent().check(pid, 5, "正文提到左手旧伤未愈。", "设定：无");
+        String msg = lastUserMessage.get();
+        assertTrue(msg.contains("[真典·已修正]"), "修正条目应标注: " + msg);
+        assertTrue(msg.contains("左手伤已痊愈"), "应给出现行真典");
+        assertTrue(msg.contains("写作时旧约束"), "应保留旧约束对照");
+        assertTrue(msg.contains("不得据此报告矛盾"), "应含门禁区分指令");
+    }
+
+    /** NCS-180: 典目废止后约束清单标注「已废止」 */
+    @org.junit.jupiter.api.Test
+    void 典目废止后约束清单标注已废止() {
+        InjectionManifest manifest = new InjectionManifest(pid, 5, 1, 16000);
+        manifest.addEntry("bibleSection", InjectionManifest.Kind.FACT, "nonexistent-fact-id",
+                "林凡：不存在的旧约束", 10);
+        manifestRepo.save(manifest);
+        agent().check(pid, 5, "正文", "设定：无");
+        String msg = lastUserMessage.get();
+        assertTrue(msg.contains("[真典·已废止]"), "查无条目应标注废止: " + msg);
+    }
+
+    /** NCS-180: 未修正的条目保持原样（无标注） */
+    @org.junit.jupiter.api.Test
+    void 未修正条目保持原样() {
+        InjectionManifest manifest = new InjectionManifest(pid, 5, 1, 16000);
+        manifest.addEntry("bibleSection", InjectionManifest.Kind.FACT, factId,
+                "林凡：左手旧伤未愈", 10);
+        manifestRepo.save(manifest);
+        agent().check(pid, 5, "正文", "设定：无");
+        String msg = lastUserMessage.get();
+        assertTrue(msg.contains("- [真典] 林凡：左手旧伤未愈"), "未修正条目原样呈现");
+        assertFalse(msg.contains("[真典·已修正]"), "不得误标");
     }
 }

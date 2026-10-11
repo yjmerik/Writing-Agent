@@ -230,6 +230,38 @@ public class ContinuityCheckerAgent {
      * 与写作侧 ContextAssembler 同一口径：带章节号的 relevantFacts（recency 生效）
      * + 本章大纲 cast 收窄（NCS-096 前为 chapterIndex=0 的退化排序，与写作口径不一致）。
      */
+    /**
+     * NCS-180: manifest 条目与真典现值比对。
+     * @return null=未变化（现值不可得或一致）；否则 [标注, 现行文本]
+     */
+    private String[] currentCanonStateOf(String refId, String manifestLabel) {
+        if (storyCanon == null || refId == null || refId.isBlank()) return null;
+        try {
+            var fact = storyCanon.findById(refId);
+            if (fact.isEmpty()) return new String[]{"已废止", "该真典条目已废止"};
+            var f = fact.get();
+            // NCS-180: 沿 supersededBy 链取现行版本（HUMAN_PATCH/修正=旧目 SUPERSEDED→新目 ACTIVE）
+            int guard = 0;
+            while (f.getStatus() == com.writing.novel.domain.StoryFact.Status.SUPERSEDED
+                    && f.getSupersededBy() != null && guard++ < 5) {
+                f = storyCanon.findById(f.getSupersededBy()).orElse(f);
+            }
+            if (f.getStatus() == com.writing.novel.domain.StoryFact.Status.RETIRED) {
+                return new String[]{"已废止", "该真典条目已废止"};
+            }
+            if (f.getStatus() == com.writing.novel.domain.StoryFact.Status.SUPERSEDED) return null;
+            String current = f.getSubject() + "：" + f.getAssertion();
+            if (manifestLabel.equals(f.getSubject() + "：" + firstCharsOf(f.getAssertion(), 40))) return null;
+            return new String[]{"已修正", current};
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static String firstCharsOf(String s, int n) {
+        return s == null ? "" : s.length() <= n ? s : s.substring(0, n);
+    }
+
     private String buildCanonSection(String projectId, int chapterIndex) {
         if (relevanceGateway == null) return "";
         List<String> cast = com.writing.novel.orchestrator.CheckSettingsBuilder.castOf(repository, projectId, chapterIndex);
@@ -247,6 +279,13 @@ public class ContinuityCheckerAgent {
      * NCS-097: 封闭式核对段——从注入清单（NCS-096）取写作时实际注入的真典事实/伏笔，
      * 要求逐项核对本章正文是否遵守。"作者被告知什么"是确定性的，比对开放世界检查可靠。
      */
+    /** NCS-180: 真典现值比对（late-set；null=退化为旧行为——只呈现写作时快照） */
+    private volatile com.writing.novel.spi.StoryCanon storyCanon;
+
+    public void setStoryCanon(com.writing.novel.spi.StoryCanon storyCanon) {
+        this.storyCanon = storyCanon;
+    }
+
     private String buildInjectedConstraintsSection(String projectId, int chapterIndex) {
         if (manifestRepository == null) return "";
         try {
@@ -257,8 +296,22 @@ public class ContinuityCheckerAgent {
             if (facts.isEmpty() && foreshadows.isEmpty()) return "";
             StringBuilder sb = new StringBuilder("【本章写作时注入的约束清单（封闭式核对——逐项检查正文是否遵守，")
                     .append("违反任何一条必须以对应类型报告）】\n");
+            boolean superseded = false;
             for (var e : facts) {
-                sb.append("- [真典] ").append(e.label).append("\n");
+                // NCS-180: 与真典现值比对——典目修正/废止后旧约束标注，检查不得把
+                // 「正文符合写作时旧约束」报为矛盾（门禁区分正文错与约束过期）
+                String[] state = currentCanonStateOf(e.refId, e.label);
+                if (state != null) {
+                    superseded = true;
+                    sb.append("- [真典·").append(state[0]).append("] ").append(state[1])
+                            .append("（写作时旧约束：").append(e.label).append("）\n");
+                } else {
+                    sb.append("- [真典] ").append(e.label).append("\n");
+                }
+            }
+            if (superseded) {
+                sb.append("⚠ 以上标注【已修正/已废止】的条目为写作时旧约束——正文按旧约束写作并非错误，")
+                  .append("不得据此报告矛盾；后续剧情以现行真典为准。\n");
             }
             for (var e : foreshadows) {
                 sb.append("- [伏笔] ").append(e.label)

@@ -63,11 +63,14 @@ public class AgentConfig {
                                                           PromptTemplateService promptService,
                                                           RelevanceGateway relevanceGateway,
                                                           com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository,
-                                                          com.writing.novel.persistence.sqlite.InjectionManifestRepository injectionManifestRepository) {
+                                                          com.writing.novel.persistence.sqlite.InjectionManifestRepository injectionManifestRepository,
+                                                          com.writing.novel.spi.StoryCanon storyCanon) {
         ContinuityCheckerAgent agent = new ContinuityCheckerAgent(gateway, repo, promptService,
                 relevanceGateway, checkResultRepository);
         // NCS-097: 封闭式核对段数据源
         agent.setManifestRepository(injectionManifestRepository);
+        // NCS-180: 约束清单与真典现值比对
+        agent.setStoryCanon(storyCanon);
         return agent;
     }
 

@@ -10466,13 +10466,14 @@
       "type": "feature",
       "phase": 54,
       "dependencies": [],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "2026-10-11 完成（分支 codex/ncs-170-anchor-eval，评测报告 docs/reports/2026-10-11-ncs-170-scene-anchor-eval.md）。真实长篇《沉钟记》ch8-14 逐章评测（服务端精确口径）：对白段占比 74-86% 持续超 0.5 阈值、6/7 章违反铁律 12（最长 41 连对白）——确认退化。强化实现已随质感批次落地并验证：NCS-195 TextureGate（对白占比区间双向+乒乓检测+重写路由，HISTORICAL 实战 TEXTURE_GATE 触发→重写落库）+NCS-201 重写预算；e2e record/replay/bless 全流程已随两者完成。升级后持续遵从度列为观察项（需真实长篇运行积累）。",
       "files": [],
       "spec": "docs/reports/2026-10-03-findings-and-evals.md",
       "description": "铁律 12 在测试语料达标（dialogueDensity 0.3591）但真实长篇 ch11 中段实测 18 连对白（粗口径行占比 0.66）：单章样本不足定论。需连续 N 章（建议 ≥5）正式对照评测（quality 评估 dialogueDensity，升级前后对比）；若确认退化则强化（候选：锚点行数下限/对峙戏专项指令/评估门禁挂阈值），强化属 prompt 改动需 e2e 语料流程",
       "acceptance": "产出 ≥5 章对照评测报告（dialogueDensity 逐章 + 与 20261002 语料基线对比）；若超阈值（>0.5 持续）则含强化实现 + e2e record/replay/bless 全流程",
-      "verify_cmd": "bash -c 'source scripts/load-env.sh && ./scripts/e2e.sh && python3 scripts/compare-baseline.py'"
+      "verify_cmd": "bash -c 'source scripts/load-env.sh && ./scripts/e2e.sh && python3 scripts/compare-baseline.py'",
+      "completion_record": "ncs-170-verified"
     },
     {
       "id": "NCS-171",

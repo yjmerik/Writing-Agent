@@ -1,0 +1,21 @@
+{
+  "commit": "138eccd06431b5968384ba65b6a1b0b421ce65e6",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-170"
+  ],
+  "checks": [
+    {
+      "command": "verify_cmd: e2e replay + compare-baseline",
+      "result": "acceptancePassed=true + PASS 质量未退化",
+      "exitCode": 0
+    },
+    {
+      "command": "评测报告",
+      "result": "docs/reports/2026-10-11-ncs-170-scene-anchor-eval.md——真实长篇《沉钟记》7 章逐章：对白段占比 74-86% 持续超 0.5 阈值、6/7 章违反铁律 12（最长 41 连对照 ch11 原始观察 18 连同向）；山河执棋人片段同向",
+      "exitCode": 0
+    }
+  ],
+  "notes": "确认退化→强化实现=NCS-195 TextureGate（对白占比区间双向+乒乓检测+重写路由，已合入且 HISTORICAL 实战触发）+NCS-201 预算修复；e2e record/replay 全流程已随两者完成。诚实注记：升级后持续遵从度需真实长篇运行积累再评（观察项）；山河执棋人 200 章在远端未纳入。",
+  "recordedAt": "2026-10-11T21:00:00+08:00"
+}

@@ -3468,8 +3468,19 @@
       "implementation_commit": "10cd2ad46ba9614f68d0c4f3971ccc01e436b3a9",
       "main_commit": "10cd2ad46ba9614f68d0c4f3971ccc01e436b3a9",
       "evidence": "docs/harness/evidence/2026-10-11-ncs-184.json"
+    },
+    {
+      "id": "ncs-170-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-170"
+      ],
+      "branch": "codex/ncs-170-anchor-eval",
+      "implementation_commit": "138eccd06431b5968384ba65b6a1b0b421ce65e6",
+      "main_commit": "138eccd06431b5968384ba65b6a1b0b421ce65e6",
+      "evidence": "docs/harness/evidence/2026-10-11-ncs-170.json"
     }
   ],
-  "commit": "10cd2ad46ba9614f68d0c4f3971ccc01e436b3a9",
-  "main_commit": "10cd2ad46ba9614f68d0c4f3971ccc01e436b3a9"
+  "commit": "138eccd06431b5968384ba65b6a1b0b421ce65e6",
+  "main_commit": "138eccd06431b5968384ba65b6a1b0b421ce65e6"
 }

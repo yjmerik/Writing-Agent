@@ -89,4 +89,53 @@ public class ScenePlanService {
         if (content == null || content.length() <= PREVIOUS_TAIL_CHARS) return content == null ? "" : content;
         return content.substring(content.length() - PREVIOUS_TAIL_CHARS);
     }
+
+    /**
+     * NCS-194: 把场景规划 JSON 渲染为写作任务注入段——每场景字数下限/转场规格/
+     * 质感提示 + 场景分隔标记指令。坏输入返回空串（调用方零注入）。
+     */
+    public String renderWritingGuide(String scenePlanJson) {
+        if (scenePlanJson == null || scenePlanJson.isBlank()) return "";
+        var parsed = com.writing.novel.llm.LlmJson.parse(scenePlanJson);
+        if (!parsed.ok() || !parsed.node().isObject()) return "";
+        var scenes = parsed.node().path("scenes");
+        if (!scenes.isArray() || scenes.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        sb.append("【场景规划（按场景顺序写作；每个场景写完后另起一行插入分隔标记 <<<场景>>>，最后一个场景后不加）】");
+        int index = 0;
+        for (var s : scenes) {
+            index++;
+            int budget = s.path("charBudget").asInt(0);
+            if (budget <= 0) return "";
+            int floor = Math.max(200, budget * 3 / 4);
+            sb.append("\n场景").append(index).append("（目标约 ").append(budget)
+                    .append(" 字，下限 ").append(floor).append(" 字）");
+            String transition = s.path("transitionType").asText("");
+            int transitionMin = s.path("transitionMinChars").asInt(0);
+            if (!"opening".equals(transition) && transitionMin > 0) {
+                sb.append("｜与上场景过渡≥").append(transitionMin).append(" 字");
+            }
+            String time = s.path("time").asText("");
+            String location = s.path("location").asText("");
+            if (!time.isBlank() || !location.isBlank()) {
+                sb.append("｜").append(time).append(time.isBlank() || location.isBlank() ? "" : "·").append(location);
+            }
+            var characters = s.path("characters");
+            if (characters.isArray() && !characters.isEmpty()) {
+                StringBuilder names = new StringBuilder();
+                for (var c : characters) {
+                    if (names.length() > 0) names.append("、");
+                    names.append(c.asText());
+                }
+                sb.append("｜人物：").append(names);
+            }
+            String hint = s.path("textureHint").asText("");
+            if (!hint.isBlank()) sb.append("｜质感：").append(hint);
+            String causal = s.path("causalConstraint").asText("");
+            if (!causal.isBlank()) sb.append("｜必须成立：").append(causal);
+        }
+        int total = parsed.node().path("totalBudget").asInt(0);
+        if (total > 0) sb.append("\n全部场景合计目标 ").append(total).append(" 字。");
+        return sb.toString();
+    }
 }

@@ -499,7 +499,7 @@ public class ContentController {
                 .forEach(ch -> {
                     sb.append("## 第").append(ch.getChapterIndex()).append("章 ")
                             .append(ch.getTitle()).append("（v").append(ch.getVersion()).append("）\n\n");
-                    sb.append(ch.getContent() == null ? "" : ch.getContent()).append("\n\n");
+                    sb.append(com.writing.novel.util.SceneMarkerSanitizer.sanitize(ch.getContent())).append("\n\n");
                 });
         return sb.toString();
     }

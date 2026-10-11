@@ -233,7 +233,8 @@ public class ChapterWriterAgent {
         // p9-4: 复用已存在的同索引章节（避免重复行）
         // NCS-001: LLM 返回后、落库前校验写入门禁——取消/接手后晚到的正文不得进入主稿
         guardWriteLease(projectId, chapterIndex, "chapter-write");
-        String cleanContent = sanitizeChapterNumbers(resp.getContent(), chapterIndex);
+        String cleanContent = com.writing.novel.util.SceneMarkerSanitizer.sanitize(
+                sanitizeChapterNumbers(resp.getContent(), chapterIndex));
         Chapter chapter = repository.findChapterByIndex(projectId, chapterIndex)
                 .orElse(new Chapter(projectId, chapterIndex, chapterTitle));
         chapter.setContent(cleanContent);
@@ -329,7 +330,8 @@ public class ChapterWriterAgent {
             return null;
         }
 
-        String cleanContent = sanitizeChapterNumbers(resp.getContent(), chapterIndex);
+        String cleanContent = com.writing.novel.util.SceneMarkerSanitizer.sanitize(
+                sanitizeChapterNumbers(resp.getContent(), chapterIndex));
         // p16-05: 重写改变了正文——立即按章重建向量索引（清旧 chunk + 新正文入库）。
         // 调用方若拒收该重写（长度保护等），需用保留的原正文重放 reindexChapter 恢复一致。
         reindexChapter(projectId, chapterIndex, cleanContent);

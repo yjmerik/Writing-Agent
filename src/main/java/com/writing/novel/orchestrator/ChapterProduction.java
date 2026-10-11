@@ -146,10 +146,14 @@ public class ChapterProduction {
                 enhancedNotes = (enhancedNotes != null ? enhancedNotes + "\n\n" : "") + aesthetic;
             }
         }
-        // NCS-193: 写前场景规划——产出并落梗概（幂等；本 feature 不改写作消费，NCS-194 起注入）
+        // NCS-193: 写前场景规划——产出并落梗概（幂等）；NCS-194: 渲染场景预算进写作任务
         if (scenePlanService != null) {
             try {
-                scenePlanService.ensurePlanned(projectId, chapterIndex);
+                String plan = scenePlanService.ensurePlanned(projectId, chapterIndex);
+                String guide = scenePlanService.renderWritingGuide(plan);
+                if (guide != null && !guide.isBlank()) {
+                    enhancedNotes = (enhancedNotes != null ? enhancedNotes + "\n\n" : "") + guide;
+                }
             } catch (Exception e) {
                 EventLog.emit("SCENE_PLAN_FAILED", Map.of(
                         "chapterIndex", chapterIndex, "error", String.valueOf(e.getMessage())));
@@ -357,8 +361,17 @@ public class ChapterProduction {
             var synopsis = findSynopsis(outline, chapterIndex);
             if (synopsis == null) return false;
             int revisionBase = chapter.getVersion();
+            // NCS-194: 重写路径同步注入场景预算（与首写同一动线）
+            String rewriteNotes = synopsis.getWritingNotes();
+            if (scenePlanService != null) {
+                String guide = scenePlanService.renderWritingGuide(synopsis.getScenePlan());
+                if (guide != null && !guide.isBlank()) {
+                    rewriteNotes = (rewriteNotes == null || rewriteNotes.isBlank()
+                            ? guide : rewriteNotes + "\n\n" + guide);
+                }
+            }
             String newContent = chapterWriter.rewriteForCorrection(projectId, chapterIndex, synopsis.getTitle(),
-                    synopsis.getSynopsis(), synopsis.getWritingNotes(), issueDesc);
+                    synopsis.getSynopsis(), rewriteNotes, issueDesc);
             if (newContent == null || newContent.length() < Math.max(2000, chapter.getContent().length() * 0.7)) {
                 if (newContent != null) chapterWriter.reindexChapter(projectId, chapterIndex, chapter.getContent());
                 return false;

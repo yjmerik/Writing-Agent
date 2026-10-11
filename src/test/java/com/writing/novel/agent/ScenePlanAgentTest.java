@@ -115,6 +115,36 @@ class ScenePlanAgentTest {
         assertNull(agent("").generateScenePlan("t", "s", "b", "", "", 2000, 4500), "空输出");
     }
 
+    /** NCS-194: 场景规划渲染为写作任务段——预算下限/转场规格/质感/标记指令；坏输入空串 */
+    @Test
+    void 渲染写作指南含预算下限转场与标记指令() {
+        ScenePlanService service = new ScenePlanService(null, null, null);
+        String guide = service.renderWritingGuide("""
+                {"scenes":[
+                  {"time":"子夜","location":"账房","characters":["沈砚","郑三斤"],"charBudget":900,
+                   "transitionType":"opening","transitionMinChars":0,"textureHint":"油灯、算珠声",
+                   "causalConstraint":"账册第三页异动被发现"},
+                  {"time":"拂晓","location":"柜坊","characters":["沈砚","掌柜"],"charBudget":800,
+                   "transitionType":"time","transitionMinChars":80,"textureHint":"开门声",
+                   "causalConstraint":"掌柜否认第三页"}
+                ],"totalBudget":1700}""");
+        assertTrue(guide.contains("<<<场景>>>"), "分隔标记指令应存在");
+        assertTrue(guide.contains("下限 675 字"), "字数下限 = 预算×3/4: " + guide);
+        assertTrue(guide.contains("与上场景过渡≥80 字"), "转场规格应渲染");
+        assertTrue(guide.contains("子夜·账房"), "时间地点应渲染");
+        assertTrue(guide.contains("质感：油灯、算珠声"), "质感提示应渲染");
+        assertTrue(guide.contains("必须成立：掌柜否认第三页"), "因果约束应渲染");
+        assertTrue(guide.contains("合计目标 1700 字"), "合计预算应渲染");
+        String scene1 = guide.substring(guide.indexOf("场景1（"), guide.indexOf("场景2（"));
+        assertFalse(scene1.contains("过渡"), "首场景 opening 无过渡要求");
+        assertFalse(scene1.contains("<<<场景>>>"), "标记指令只在段头出现一次");
+
+        assertEquals("", service.renderWritingGuide(null), "null 输入零注入");
+        assertEquals("", service.renderWritingGuide("  "), "空白输入零注入");
+        assertEquals("", service.renderWritingGuide("不是 JSON"), "坏 JSON 零注入");
+        assertEquals("", service.renderWritingGuide("{\"scenes\":[]}"), "空场景零注入");
+    }
+
     @Test
     void 写前规划落梗概且幂等(@TempDir Path tempDir) {
         var cp = new ConnectionProvider(tempDir.resolve("sp.db").toString());

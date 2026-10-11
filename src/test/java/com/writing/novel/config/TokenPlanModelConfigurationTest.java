@@ -51,6 +51,8 @@ class TokenPlanModelConfigurationTest {
             assertTrue(config.isStreaming());
         }
         assertEquals(32000, properties.forTaskType("CHAPTER_WRITING").getMaxTokens()); // NCS-201
+        // NCS-179: 检查路由关思考——completion=纯输出，规模确定（台账爆炸治理）
+        assertFalse(properties.forTaskType("CONTINUITY_CHECK").isThinkingEnabled());
         // NCS-066: 提取路由独立预算且关思考（输出不被 reasoning 挤占）
         // NCS-186: 16000→32000——deepseek-v4-flash 实体图谱 50k+ 字符在 16k 截断（章后处理必败）
         var extraction = properties.forTaskType("EXTRACTION");

@@ -71,6 +71,11 @@ llm:
       # ×2×2 升级（8192/16384）均被 reasoning 吃满 → THINKING_BUDGET 熔断 →
       # 连续性检查未完成 → 章节卡 NEEDS_MANUAL_REVIEW（录制中失败=回放语料洞）
       max-tokens: 16000
+      # NCS-179: 关思考——推理无上界致完成 token 随台账爆炸（实测 96,859 token
+      # finishReason=length 截断→INVALID→复检循环）。检查是封闭式核对（输入台账
+      # 已注入，无需模型自由推理），关思考后 completion=纯输出，上限确定。
+      # 检测质量由 CheckerGoldenSetTest 回归把关。
+      thinking-enabled: false
       request-timeout-seconds: 1500
       context-window: 64000
       streaming: true

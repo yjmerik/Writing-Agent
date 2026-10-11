@@ -124,6 +124,9 @@ public class OrchestratorConfig {
         orchestrator.setTexturePassageEditor(passageEditor);
         // NCS-200: 卷级节奏闭环（单例 bean，MemoryConfig 的 assembler 同源注入）
         orchestrator.setVolumePacingController(volumePacingController);
+        // NCS-184: 回报预算器（兑付缺口 → PLOT HIGH → 重写；读者评审钩子摘要）
+        orchestrator.production().setPayoffLedger(
+                new com.writing.novel.service.PayoffLedger(repo));
         return orchestrator;
     }
 

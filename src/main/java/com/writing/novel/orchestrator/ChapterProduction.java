@@ -78,6 +78,13 @@ public class ChapterProduction {
         this.texturePassageEditor = editor;
     }
 
+    /** NCS-184: 回报预算器（late-set；null=闭环关闭） */
+    private volatile com.writing.novel.service.PayoffLedger payoffLedger;
+
+    public void setPayoffLedger(com.writing.novel.service.PayoffLedger ledger) {
+        this.payoffLedger = ledger;
+    }
+
     ChapterProduction(NovelOrchestrator orch,
                       NovelRepository repository,
                       ChapterWriterAgent chapterWriter,
@@ -294,6 +301,32 @@ public class ChapterProduction {
 
         // NCS-195: 双向质感门禁——写后、读者评审前；重写已触发或门禁关闭时跳过
         rewritten = rewritten || applyTextureGate(projectId, chapterIndex, chapter, cast);
+
+        // NCS-184: 回报预算器——连续 N 章零兑付 → PLOT HIGH → 整章重写（兑付缺口指令）
+        if (!rewritten && payoffLedger != null) {
+            try {
+                var payoffIssue = payoffLedger.checkChapterPayoff(projectId, chapterIndex);
+                if (payoffIssue.isPresent()) {
+                    var issue = payoffIssue.get();
+                    repository.saveContinuityIssue(issue);
+                    log.warn("回报缺口(章{}): {}", chapterIndex, issue.getDescription());
+                    EventLog.emit("PAYOFF_GAP", Map.of("chapterIndex", chapterIndex));
+                    var hooks = payoffLedger.openHooks(projectId);
+                    StringBuilder instruction = new StringBuilder("回报兑付修复：")
+                            .append(issue.getDescription());
+                    if (!hooks.isEmpty()) {
+                        instruction.append("在册可兑付钩子：");
+                        hooks.stream().limit(5).forEach(f ->
+                                instruction.append("「").append(f.getDescription(), 0,
+                                        Math.min(40, f.getDescription().length())).append("」"));
+                    }
+                    rewritten = rewriteWithCorrection(projectId, chapterIndex, chapter,
+                            instruction.toString(), null);
+                }
+            } catch (Exception e) {
+                log.warn("回报预算检查失败: {}", e.getMessage());
+            }
+        }
 
         return rewritten;
     }
@@ -562,7 +595,10 @@ public class ChapterProduction {
     private com.writing.novel.domain.ReviewReport checkedReaderReview(String projectId, int chapterIndex,
                                                                        Chapter chapter) {
         if (readerReviewAgent == null) return null;
-        var review = readerReviewAgent.review(chapterIndex, chapter.getContent());
+        // NCS-184: 全书视角——前 N 章钩子/兑付摘要注入盲评
+        String hooksSummary = payoffLedger != null
+                ? payoffLedger.recentHooksSummary(projectId, chapterIndex) : "";
+        var review = readerReviewAgent.review(chapterIndex, chapter.getContent(), hooksSummary);
         if (review.getSummary() == null || review.getSummary().isBlank()
                 || "检验解析失败".equals(review.getSummary()))
             throw new IllegalStateException("读者检查没有返回有效评价");

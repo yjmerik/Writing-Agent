@@ -32,12 +32,24 @@ public class ReaderReviewAgent {
      * 以读者视角检验章节。
      */
     public ReviewReport review(int chapterIndex, String chapterContent) {
+        return review(chapterIndex, chapterContent, "");
+    }
+
+    /**
+     * NCS-184: 带全书视角上下文的读者评审——前 N 章钩子/兑付摘要注入
+     * （单章盲评看不到承诺台账是 55 章零兑付的主因之一）。
+     */
+    public ReviewReport review(int chapterIndex, String chapterContent, String hooksSummary) {
         String systemPrompt = promptService.render("reader-review", Map.of());
+        String userMessage = hooksSummary == null || hooksSummary.isBlank()
+                ? chapterContent
+                : "【前几章钩子与兑付台账（评审时以此为全书承诺背景，评估本章是否推进/兑付）】\n"
+                    + hooksSummary + "\n\n【本章正文】\n" + chapterContent;
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.GENERAL)
                 .systemPrompt(systemPrompt)
-                .userMessage(chapterContent)
+                .userMessage(userMessage)
                 .temperature(0.3)
                 .maxTokens(1500)
                 .build();

@@ -1,0 +1,27 @@
+{
+  "commit": "21323a23a00b185d0af9635263086f0d755435f0",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-052",
+    "NCS-053"
+  ],
+  "checks": [
+    {
+      "command": "AssertionSupportGroupTest(052)",
+      "result": "3/3：AND 前提/OR 来源保存（生成主键）+快照归属不可变字段；撤回改状态不删行（历史不可变）；按支持项反查依赖者",
+      "exitCode": 0
+    },
+    {
+      "command": "SupportPropagationTest(053)",
+      "result": "4/4：AND 缺一级联失效（撤 P1 双 OR 后 P1 失效→A 级联）；OR 余一保留；环不自证（撤环入口后环上节点全失效）；传播至依赖者且无关者不受影响",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test 全量",
+      "result": "1593/0/0/1skip（含 232 Spring 装配错误的修复后全绿）",
+      "exitCode": 0
+    }
+  ],
+  "notes": "语义实现要点：AND 前提组与 OR 来源组是独立支持通道（AND 组全存活→存活；否则 OR 任一存活）；有支持历史但全失效即失效（不走外根存在性）；环上节点不自证（inProgress 断环）；外根存在性覆盖集（生产 null=宽松，事实表背书）。修复过程如实记录：①findLatest/roundtrip ②@Service 双构造缺默认构造致 232 Spring 失败→补双 bean+@Autowired 标注。实现提交直接落 main（延续本会话状态），分支指针已补。",
+  "recordedAt": "2026-10-12T03:00:00+08:00"
+}

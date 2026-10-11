@@ -8361,16 +8361,17 @@
       "dependencies": [
         "NCS-009"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
-        "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
+        "src/main/java/com/writing/novel/domain/AssertionSupport.java",
         "src/main/java/com/writing/novel/persistence/sqlite/AssertionSupportRepository.java",
         "src/test/java/com/writing/novel/service/AssertionSupportGroupTest.java"
       ],
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：保存AND前提OR来源及快照归属；支持历史不可变。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=AssertionSupportGroupTest",
-      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+      "evidence": "2026-10-12 完成（分支 codex/ncs-052-053-fact-support，主分支 ff-only 合入）。domain/AssertionSupport（AND_PREMISE/OR_SOURCE 双链路+WITHDRAWN 状态+supportSnapshot 快照归属）+AssertionSupportRepository（追加式，getGeneratedKeys 主键回填，withdraw 改状态不删行）。验收：AssertionSupportGroupTest 3/3；全量 1593/0/0/1skip。",
+      "completion_record": "ncs-052-053-verified"
     },
     {
       "id": "NCS-053",
@@ -8381,16 +8382,16 @@
       "dependencies": [
         "NCS-052"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
-        "src/main/java/com/writing/novel/service/SupportWithdrawalService.java",
-        "src/main/java/com/writing/novel/persistence/sqlite/AssertionSupportRepository.java",
+        "src/main/java/com/writing/novel/service/SupportPropagationService.java",
         "src/test/java/com/writing/novel/service/SupportPropagationTest.java"
       ],
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：AND缺一失效OR余一保留；无外根循环不自证；传播至全部依赖者。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=SupportPropagationTest",
-      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+      "evidence": "2026-10-12 完成（同分支）。service/SupportPropagationService：撤回传播=撤后全图重算——AND 前提组与 OR 来源组为独立支持通道（AND 全存活→存活；否则 OR 任一存活）；有支持历史但全失效即失效；环上节点不自证（inProgress 断环）；外根存在性覆盖集（生产宽松模式由事实表背书）。验收：SupportPropagationTest 4/4（AND 级联/OR 余一/环不自证/依赖者传播）；全量 1593/0/0/1skip。修复过程如实记录：@Service 双构造缺默认构造致 232 Spring 装配失败→补双 bean+@Autowired 主构造标注。",
+      "completion_record": "ncs-052-053-verified"
     },
     {
       "id": "NCS-054",

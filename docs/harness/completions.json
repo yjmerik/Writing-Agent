@@ -3540,8 +3540,20 @@
       "implementation_commit": "c8d2fead09725903b6e84c5e9f23f6d2ab759588",
       "main_commit": "c8d2fead09725903b6e84c5e9f23f6d2ab759588",
       "evidence": "docs/harness/evidence/2026-10-12-ncs-046-047.json"
+    },
+    {
+      "id": "ncs-052-053-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-052",
+        "NCS-053"
+      ],
+      "branch": "codex/ncs-052-053-fact-support",
+      "implementation_commit": "21323a23a00b185d0af9635263086f0d755435f0",
+      "main_commit": "21323a23a00b185d0af9635263086f0d755435f0",
+      "evidence": "docs/harness/evidence/2026-10-12-ncs-052-053.json"
     }
   ],
-  "commit": "c8d2fead09725903b6e84c5e9f23f6d2ab759588",
-  "main_commit": "c8d2fead09725903b6e84c5e9f23f6d2ab759588"
+  "commit": "21323a23a00b185d0af9635263086f0d755435f0",
+  "main_commit": "21323a23a00b185d0af9635263086f0d755435f0"
 }

@@ -147,11 +147,10 @@ public class NovelOrchestrator {
         }
     }
 
-    /** NCS-195/196: 注入质感单项扩写通道（NCS-196 定点扩写实现；null=事件化降级）。 */
-    public void setTextureExpansionChannel(
-            java.util.function.BiConsumer<String, java.util.List<String>> channel) {
+    /** NCS-196: 注入质感定点扩写编辑器（null=扩写跳过并事件化）。 */
+    public void setTexturePassageEditor(com.writing.novel.agent.PassageEditor editor) {
         if (this.production != null) {
-            this.production.setTextureExpansionChannel(channel);
+            this.production.setTexturePassageEditor(editor);
         }
     }
 

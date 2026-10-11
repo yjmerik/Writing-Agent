@@ -11,6 +11,7 @@ import com.writing.novel.domain.Foreshadowing;
 import com.writing.novel.domain.Outline;
 import com.writing.novel.domain.Volume;
 import com.writing.novel.spi.NovelRepository;
+import java.util.ArrayList;
 import com.writing.novel.telemetry.EventContext;
 import com.writing.novel.telemetry.EventLog;
 import org.slf4j.Logger;
@@ -70,12 +71,11 @@ public class ChapterProduction {
         this.texturePolicyService = service;
     }
 
-    /** NCS-195: 质感单项扩写通道（late-set，NCS-196 接线；null=跳过并事件化） */
-    private volatile java.util.function.BiConsumer<String, java.util.List<String>> textureExpansionChannel;
+    /** NCS-196: 质感定点扩写编辑器（late-set；null=跳过并事件化） */
+    private volatile com.writing.novel.agent.PassageEditor texturePassageEditor;
 
-    public void setTextureExpansionChannel(
-            java.util.function.BiConsumer<String, java.util.List<String>> channel) {
-        this.textureExpansionChannel = channel;
+    public void setTexturePassageEditor(com.writing.novel.agent.PassageEditor editor) {
+        this.texturePassageEditor = editor;
     }
 
     ChapterProduction(NovelOrchestrator orch,
@@ -293,13 +293,13 @@ public class ChapterProduction {
         }
 
         // NCS-195: 双向质感门禁——写后、读者评审前；重写已触发或门禁关闭时跳过
-        rewritten = rewritten || applyTextureGate(projectId, chapterIndex, chapter);
+        rewritten = rewritten || applyTextureGate(projectId, chapterIndex, chapter, cast);
 
         return rewritten;
     }
 
-    /** NCS-195: 双向质感门禁执行——越界落 issue + 分级路由（质感单项→扩写通道，结构性→整章重写） */
-    private boolean applyTextureGate(String projectId, int chapterIndex, Chapter chapter) {
+    /** NCS-195: 双向质感门禁执行——越界落 issue + 分级路由（质感单项→定点扩写，结构性→整章重写） */
+    private boolean applyTextureGate(String projectId, int chapterIndex, Chapter chapter, List<String> cast) {
         if (texturePolicyService == null) return false;
         try {
             var policy = texturePolicyService.resolve(projectId);
@@ -322,15 +322,10 @@ public class ChapterProduction {
                         + "。重写时逐项落实上述目标，其余情节事实不得改变。";
                 return rewriteWithCorrection(projectId, chapterIndex, chapter, instruction, null);
             }
-            // 质感单项 → 定点扩写通道（NCS-196 接线；未接线时事件化降级）
+            // 质感单项 → 定点扩写通道（NCS-196）：挑最弱 1-2 场景段 EXPAND，复验通过才替换
             if (!verdict.expansionTargets().isEmpty()) {
-                if (textureExpansionChannel != null) {
-                    textureExpansionChannel.accept(projectId, verdict.expansionTargets());
-                } else {
-                    EventLog.emit("TEXTURE_EXPANSION_SKIPPED", Map.of(
-                            "chapterIndex", chapterIndex,
-                            "targets", String.join("；", verdict.expansionTargets())));
-                }
+                return expandForTexture(projectId, chapterIndex, chapter, cast,
+                        verdict.expansionTargets());
             }
             return false;
         } catch (Exception e) {
@@ -339,6 +334,113 @@ public class ChapterProduction {
                     "chapterIndex", chapterIndex, "error", EventLog.truncate(String.valueOf(e.getMessage()), 200)));
             return false;
         }
+    }
+
+    /**
+     * NCS-196: 定点扩写修复通道——按修复方向挑最弱 1-2 场景段调 PassageEditor EXPAND
+     * （1.5-2 倍、感官细节/心理/动作、情节事实不变），扩写稿经 ConsistencyGuard 快速复验：
+     * 无 HIGH 才替换（autoRewriteIfCurrent 版本化落库）；有 HIGH 回退原文并升级整章重写。
+     *
+     * @return 是否触发了整章重写（qualityGate 的 rewritten 语义）
+     */
+    boolean expandForTexture(String projectId, int chapterIndex, Chapter chapter,
+                             List<String> cast, List<String> targets) {
+        if (texturePassageEditor == null) {
+            EventLog.emit("TEXTURE_EXPANSION_SKIPPED", Map.of("chapterIndex", chapterIndex,
+                    "reason", "passageEditor 未接线"));
+            return false;
+        }
+        String content = chapter.getContent();
+        List<String> segments = sceneSegments(content);
+        if (segments.size() < 2) {
+            EventLog.emit("TEXTURE_EXPANSION_SKIPPED", Map.of("chapterIndex", chapterIndex,
+                    "reason", "无可识别的场景分段"));
+            return false;
+        }
+        boolean dialogueOverrun = targets.stream().anyMatch(t -> t.contains("超出区间上限"));
+        // 最弱优先：对白超标取对白密度最高的段，其余取对白密度最低（叙述最重）的段
+        List<String> ranked = new ArrayList<>(segments);
+        ranked.sort(java.util.Comparator.comparingDouble(this::dialogueRatioOf));
+        List<String> selected = dialogueOverrun
+                ? List.of(ranked.get(ranked.size() - 1),
+                  ranked.size() > 2 ? ranked.get(ranked.size() - 2) : ranked.get(0))
+                : List.of(ranked.get(0), ranked.size() > 2 ? ranked.get(1) : ranked.get(ranked.size() - 1));
+        String instruction = "定点扩写：将该场景段扩写至原文的 1.5-2 倍，补充感官细节（视觉/听觉/触觉/嗅觉）、"
+                + "人物心理与微动作。本轮修复目标：" + String.join("；", targets)
+                + "。硬约束：不得改变任何情节事实（人物、事件、时间、因果均保持不变），不得新增人物或事件。";
+
+        String candidate = content;
+        int expandedCount = 0;
+        for (String segment : selected) {
+            if (segment.equals(selected.get(0)) && expandedCount > 0) continue; // 去重（段少于3时可能重叠）
+            String contextBefore = content.substring(0, Math.max(0, content.indexOf(segment)));
+            String expanded = texturePassageEditor.editPassage(projectId, segment,
+                    contextBefore.length() > 600 ? contextBefore.substring(contextBefore.length() - 600) : contextBefore,
+                    "", instruction, "EXPAND");
+            if (expanded == null || expanded.isBlank()) continue;
+            int grown = expanded.length();
+            if (grown < segment.length() || grown > segment.length() * 3) continue; // 不接受缩水或失控膨胀
+            candidate = candidate.replace(segment, expanded);
+            expandedCount++;
+        }
+        if (expandedCount == 0 || candidate.equals(content)) {
+            EventLog.emit("TEXTURE_EXPANSION_SKIPPED", Map.of("chapterIndex", chapterIndex,
+                    "reason", "扩写输出不可用"));
+            return false;
+        }
+
+        // 快速复验：扩写稿引入 HIGH 矛盾（情节漂移）→ 回退原文并升级整章重写
+        List<ContinuityIssue> recheck = consistencyGuard != null
+                ? consistencyGuard.check(projectId, chapterIndex, candidate, cast) : List.of();
+        boolean hasHigh = recheck.stream().anyMatch(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH);
+        if (hasHigh) {
+            EventLog.emit("TEXTURE_EXPAND_REJECTED", Map.of("chapterIndex", chapterIndex,
+                    "reason", EventLog.truncate(recheck.stream()
+                            .filter(i -> i.getSeverity() == ContinuityIssue.Severity.HIGH)
+                            .map(ContinuityIssue::getDescription).findFirst().orElse("HIGH"), 200)));
+            return rewriteWithCorrection(projectId, chapterIndex, chapter,
+                    "质感修复（定点扩写复验未过，升级整章重写）：" + String.join("；", targets), null);
+        }
+        int revisionBase = chapter.getVersion();
+        orch.autoRewriteIfCurrent(projectId, chapterIndex, revisionBase,
+                chapter.getTitle(), candidate, "TEXTURE_EXPAND");
+        repository.findChapterByIndex(projectId, chapterIndex).ifPresent(chapter::adoptStateFrom);
+        EventLog.emit("TEXTURE_EXPANDED", Map.of(
+                "chapterIndex", chapterIndex, "expandedSegments", expandedCount));
+        return false;
+    }
+
+    /** 按场景分隔行切分段落组（分隔行归属前一段落组尾） */
+    static List<String> sceneSegments(String content) {
+        List<String> out = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        for (String line : content.split("\n")) {
+            String trimmed = line.trim();
+            boolean separator = trimmed.length() >= 2 && !trimmed.isEmpty()
+                    && trimmed.chars().allMatch(c -> "＊*—–·※ \t".indexOf(c) >= 0);
+            current.append(line).append('\n');
+            if (separator) {
+                out.add(current.toString());
+                current.setLength(0);
+            }
+        }
+        if (!current.toString().isBlank()) out.add(current.toString());
+        return out.stream().map(String::trim).filter(s -> !s.isEmpty()).toList();
+    }
+
+    /** 段内对白字符占比（「」/“”引号内字符 / 全部字符）——最弱场景排序用 */
+    private double dialogueRatioOf(String segment) {
+        int total = 0, quoted = 0;
+        boolean inQuote = false;
+        for (char c : segment.toCharArray()) {
+            if (c == '「' || c == '“') { inQuote = true; continue; }
+            if (c == '」' || c == '”') { inQuote = false; continue; }
+            if (!Character.isWhitespace(c)) {
+                total++;
+                if (inQuote) quoted++;
+            }
+        }
+        return total == 0 ? 0 : (double) quoted / total;
     }
 
     /**

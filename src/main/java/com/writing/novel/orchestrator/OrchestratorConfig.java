@@ -118,6 +118,8 @@ public class OrchestratorConfig {
         // NCS-195: 双向质感门禁——解析叙事策略（宽松策略门禁自动关闭）
         orchestrator.setTexturePolicyService(new com.writing.novel.service.NarrativePolicyService(
                 repo, narrativePolicyRepository));
+        // NCS-196: 质感单项定点扩写编辑器
+        orchestrator.setTexturePassageEditor(passageEditor);
         return orchestrator;
     }
 

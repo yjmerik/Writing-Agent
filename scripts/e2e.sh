@@ -32,10 +32,11 @@ done
 
 case "$ACCEPTANCE" in full|smoke) ;; *) echo "非法 acceptance: $ACCEPTANCE"; exit 1 ;; esac
 
-# replay 模式固定 3 章（功能冒烟，不重跑完整长篇）；record/live 按 --chapters（默认 3）
+# replay 默认 3 章（功能冒烟）；语料录制章数可显式覆盖（NCS-199 起 record 按 --chapters 1 重建，
+# replay 必须显式传相同章数，否则 fixture miss）。record/live 按 --chapters（默认 3）。
 if [ "$MODE" = "replay" ]; then
-  CHAPTERS=3
-  echo "ℹ️ replay 模式：固定 3 章回放，验收模式=$ACCEPTANCE"
+  CHAPTERS="${CHAPTERS:-3}"
+  echo "ℹ️ replay 模式：${CHAPTERS} 章回放，验收模式=$ACCEPTANCE"
 else
   CHAPTERS="${CHAPTERS:-3}"
 fi

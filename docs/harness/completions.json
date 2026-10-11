@@ -3358,8 +3358,19 @@
       "implementation_commit": "b21099916e04003d40fcb9b54ed8816166882637",
       "main_commit": "b21099916e04003d40fcb9b54ed8816166882637",
       "evidence": "docs/harness/evidence/2026-10-11-ncs-197.json"
+    },
+    {
+      "id": "ncs-198-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-198"
+      ],
+      "branch": "codex/ncs-198-style-harvest",
+      "implementation_commit": "e1a68404750dc3959aafaf748f10a76bffa0c22a",
+      "main_commit": "e1a68404750dc3959aafaf748f10a76bffa0c22a",
+      "evidence": "docs/harness/evidence/2026-10-11-ncs-198.json"
     }
   ],
-  "commit": "b21099916e04003d40fcb9b54ed8816166882637",
-  "main_commit": "b21099916e04003d40fcb9b54ed8816166882637"
+  "commit": "e1a68404750dc3959aafaf748f10a76bffa0c22a",
+  "main_commit": "e1a68404750dc3959aafaf748f10a76bffa0c22a"
 }

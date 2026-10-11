@@ -1,0 +1,26 @@
+{
+  "commit": "e1a68404750dc3959aafaf748f10a76bffa0c22a",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-198"
+  ],
+  "checks": [
+    {
+      "command": "StyleGuardianAgentTest/PresetStyleAssetTest（含新增 2 例）",
+      "result": "18/18：高分章入库+cap 3 滚动淘汰最旧+低分不收+章号登记；7 预设 styleSamples 非空",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（分支与合并后干净 main 检出）",
+      "result": "1543/0/0/1skip ×2",
+      "exitCode": 0
+    },
+    {
+      "command": "record + replay×2 + baseline",
+      "result": "record 完成 58 fixture（建立样本在 ch1 即进入 few-shot）；replay×2（--chapters 3）均 acceptancePassed=true；compare-baseline PASS",
+      "exitCode": 0
+    }
+  ],
+  "notes": "historical 样本取自 data/exports/山河执棋人-手机阅读版.html ch36-39（GLM 输出，清望/凭随仓期两段）；e2e.sh replay 章数支持显式覆盖（--chapters，NCS-199 起语料按 1 章录制）。establishProfile 改 load-or-create 修复 preset 样本被基线重建抹掉的缺口。",
+  "recordedAt": "2026-10-11T07:30:00+08:00"
+}

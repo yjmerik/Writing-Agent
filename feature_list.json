@@ -11012,7 +11012,7 @@
       "dependencies": [
         "NCS-197"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/agent/StyleGuardianAgent.java",
         "src/main/resources/presets/"
@@ -11020,7 +11020,9 @@
       "spec": "docs/specs/2026-10-09-narrative-quality-architecture.md",
       "description": "卷末从读者分≥8 的章节抽 1-2 段进 StyleProfile.samples（cap 3 滚动刷新）；7 个 preset 补 styleSamples（historical 用《山河执棋人》GLM 段 ch36-39 提炼），激活 ChapterWriterAgent 既有 few-shot 通道。",
       "acceptance": "StyleGuardianAgentTest/PresetRegistryTest：高分章段落入库 cap 3；preset 加载断言 7 题材样本非空",
-      "verify_cmd": "mvn test -Dtest=StyleGuardianAgentTest,PresetRegistryTest"
+      "verify_cmd": "mvn test -Dtest=StyleGuardianAgentTest,PresetRegistryTest",
+      "completion_record": "ncs-198-verified",
+      "evidence": "2026-10-11 完成（分支 codex/ncs-198-style-harvest，实现提交 e1a6840，主分支 ff-only 合入）。卷末范本收割：NovelOrchestrator.generateVolumeSummary 调 StyleGuardianAgent.harvestHighScoreSamples（读者分≥8 章按分数降序抽最佳段——章内最长成段叙述 clip 220 字，cap 3 滚动刷新，单次至多 2 段，STYLE_SAMPLE_HARVESTED 事件）；StyleProfile.addStyleSample 改滚动（满 3 淘汰最旧）；establishProfile 改 load-or-create（preset 播种样本不被基线重建抹掉）；6 预设补 styleSamples 各 2 段（historical 用《山河执棋人》ch36-39 提炼），ChapterWriterAgent few-shot 通道激活。验收：StyleGuardianAgentTest 3/3 + PresetStyleAssetTest 5/5（新增 7 预设非空断言）；全量 1543/0/0/1skip ×2；DeepSeek 语料重建 58 fixture → replay×2 全验收 → baseline PASS。e2e.sh replay 章数支持 --chapters 显式覆盖（用户指示：录制改 1 章/次）。"
     },
     {
       "id": "NCS-199",

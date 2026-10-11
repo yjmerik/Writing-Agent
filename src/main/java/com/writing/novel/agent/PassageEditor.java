@@ -34,6 +34,13 @@ public class PassageEditor {
         this.repository = repository;
     }
 
+    /** NCS-035: 创作约定消费（late-set）——段落修订请求携带精确契约版本及内容 */
+    private volatile com.writing.novel.service.AuthorIntentContextService authorIntentContextService;
+
+    public void setAuthorIntentContextService(com.writing.novel.service.AuthorIntentContextService service) {
+        this.authorIntentContextService = service;
+    }
+
     /** NCS-127: 风格约束段（含 NCS-102 范本 few-shot；无档案时为空串） */
     private String styleGuideFor(String projectId) {
         if (repository == null || projectId == null) return "";
@@ -80,6 +87,9 @@ public class PassageEditor {
         if (passageText == null || passageText.isBlank()) return null;
         if (mode == null) mode = "REWRITE";
 
+        String intentSection = projectId == null ? "" :
+                com.writing.novel.service.AuthorIntentConsumeSupport.sectionFor(
+                        authorIntentContextService, projectId, 2000, "PASSAGE_REVISION");
         String systemPrompt = promptService.render("passage-edit", Map.of(
                 "mode", mode,
                 "contextBefore", contextBefore != null ? contextBefore : "（本章开头）",
@@ -88,9 +98,11 @@ public class PassageEditor {
                 "contextAfter", contextAfter != null ? contextAfter : "（本章结尾）",
                 "instruction", instruction != null ? instruction : "改善这段文字的质量"));
 
+        String fullSystemPrompt = intentSection == null || intentSection.isBlank()
+                ? systemPrompt : systemPrompt + "\n\n" + intentSection;
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.GENERAL)
-                .systemPrompt(systemPrompt)
+                .systemPrompt(fullSystemPrompt)
                 .userMessage("请执行段落编辑。")
                 .temperature(0.7)
                 .maxTokens(4096)

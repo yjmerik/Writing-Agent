@@ -19,26 +19,37 @@ public class AgentConfig {
 
     @Bean
     public WorldBuilderAgent worldBuilderAgent(LlmGateway gateway, KnowledgeBaseService kb,
-                                               PromptTemplateService promptService) {
-        return new WorldBuilderAgent(gateway, kb, promptService);
+                                               PromptTemplateService promptService,
+                                               com.writing.novel.service.AuthorIntentContextService authorIntentContextService) {
+        WorldBuilderAgent agent = new WorldBuilderAgent(gateway, kb, promptService);
+        // NCS-034: 世界规划请求携带精确契约版本及内容
+        agent.setAuthorIntentContextService(authorIntentContextService);
+        return agent;
     }
 
     @Bean
     public CharacterDesignerAgent characterDesignerAgent(LlmGateway gateway, KnowledgeBaseService kb,
-                                                         PromptTemplateService promptService) {
-        return new CharacterDesignerAgent(gateway, kb, promptService);
+                                                         PromptTemplateService promptService,
+                                                         com.writing.novel.service.AuthorIntentContextService authorIntentContextService) {
+        CharacterDesignerAgent agent = new CharacterDesignerAgent(gateway, kb, promptService);
+        // NCS-034: 人物设计请求携带精确契约版本及内容
+        agent.setAuthorIntentContextService(authorIntentContextService);
+        return agent;
     }
 
     @Bean
     public PlotterAgent plotterAgent(LlmGateway gateway, NovelRepository repo,
                                      PromptTemplateService promptService,
                                      com.writing.novel.service.GenreRuleProvider genreRuleProvider,
-                                     com.writing.novel.persistence.sqlite.NarrativePolicyRepository narrativePolicyRepository) {
+                                     com.writing.novel.persistence.sqlite.NarrativePolicyRepository narrativePolicyRepository,
+                                     com.writing.novel.service.AuthorIntentContextService authorIntentContextService) {
         PlotterAgent plotter = new PlotterAgent(gateway, repo, promptService);
         plotter.setGenreRuleProvider(genreRuleProvider); // p17-03: 卷大纲题材约束
         // NCS-192: 卷大纲节拍数要求读叙事策略（宽松策略保持现状文案）
         plotter.setNarrativePolicyService(
                 new com.writing.novel.service.NarrativePolicyService(repo, narrativePolicyRepository));
+        // NCS-034: 卷计划请求携带精确契约版本及内容
+        plotter.setAuthorIntentContextService(authorIntentContextService);
         return plotter;
     }
 
@@ -64,13 +75,16 @@ public class AgentConfig {
                                                           RelevanceGateway relevanceGateway,
                                                           com.writing.novel.persistence.sqlite.CheckResultRepository checkResultRepository,
                                                           com.writing.novel.persistence.sqlite.InjectionManifestRepository injectionManifestRepository,
-                                                          com.writing.novel.spi.StoryCanon storyCanon) {
+                                                          com.writing.novel.spi.StoryCanon storyCanon,
+                                                          com.writing.novel.service.AuthorIntentContextService authorIntentContextService) {
         ContinuityCheckerAgent agent = new ContinuityCheckerAgent(gateway, repo, promptService,
                 relevanceGateway, checkResultRepository);
         // NCS-097: 封闭式核对段数据源
         agent.setManifestRepository(injectionManifestRepository);
         // NCS-180: 约束清单与真典现值比对
         agent.setStoryCanon(storyCanon);
+        // NCS-035: 核查遵从创作约定
+        agent.setAuthorIntentContextService(authorIntentContextService);
         return agent;
     }
 
@@ -210,8 +224,12 @@ public class AgentConfig {
     }
 
     @Bean
-    public PassageEditor passageEditor(LlmGateway gateway, PromptTemplateService promptService) {
-        return new PassageEditor(gateway, promptService);
+    public PassageEditor passageEditor(LlmGateway gateway, PromptTemplateService promptService,
+                                       com.writing.novel.service.AuthorIntentContextService authorIntentContextService) {
+        PassageEditor editor = new PassageEditor(gateway, promptService);
+        // NCS-035: 段落修订遵从创作约定
+        editor.setAuthorIntentContextService(authorIntentContextService);
+        return editor;
     }
 
     @Bean

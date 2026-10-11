@@ -65,6 +65,11 @@ public class ContinuityCheckerAgent {
     public CheckResultEnvelope checkWithEnvelope(String projectId, int chapterIndex,
                                                 String chapterContent, String relevantSettings) {
         String systemPrompt = promptService.render("continuity-check", Map.of());
+        // NCS-035: 核查遵从创作约定并审计所用修订
+        String intentSection = com.writing.novel.service.AuthorIntentConsumeSupport.sectionFor(
+                authorIntentContextService, projectId, 2000, "REVIEW_CHECK");
+        String fullSystemPrompt = intentSection.isBlank() ? systemPrompt
+                : systemPrompt + "\n\n" + intentSection;
 
         StringBuilder msg = new StringBuilder("新章节内容：\n").append(chapterContent)
                 .append("\n\n相关设定：\n").append(relevantSettings);
@@ -102,7 +107,7 @@ public class ContinuityCheckerAgent {
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.CONTINUITY_CHECK)
-                .systemPrompt(systemPrompt)
+                .systemPrompt(fullSystemPrompt)
                 .userMessage(msg.toString())
                 .temperature(0.2)
                 // NCS-121: 1000→2000——多问题章节输出被截断→INVALID→整章人工（实测高频介入源）
@@ -279,6 +284,13 @@ public class ContinuityCheckerAgent {
      * NCS-097: 封闭式核对段——从注入清单（NCS-096）取写作时实际注入的真典事实/伏笔，
      * 要求逐项核对本章正文是否遵守。"作者被告知什么"是确定性的，比对开放世界检查可靠。
      */
+    /** NCS-035: 创作约定消费（late-set）——核查请求携带精确契约版本及内容并审计 */
+    private volatile com.writing.novel.service.AuthorIntentContextService authorIntentContextService;
+
+    public void setAuthorIntentContextService(com.writing.novel.service.AuthorIntentContextService service) {
+        this.authorIntentContextService = service;
+    }
+
     /** NCS-180: 真典现值比对（late-set；null=退化为旧行为——只呈现写作时快照） */
     private volatile com.writing.novel.spi.StoryCanon storyCanon;
 

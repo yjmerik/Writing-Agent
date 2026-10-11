@@ -17,6 +17,14 @@ import java.util.regex.Pattern;
  */
 public class CharacterDesignerAgent {
 
+    /** NCS-034: 创作约定消费（late-set，null=空契约处理） */
+    private volatile com.writing.novel.service.AuthorIntentContextService authorIntentContextService;
+
+    public void setAuthorIntentContextService(com.writing.novel.service.AuthorIntentContextService service) {
+        this.authorIntentContextService = service;
+    }
+
+
     private final LlmGateway gateway;
     private final KnowledgeBaseService knowledgeBase;
     private final PromptTemplateService promptService;
@@ -45,6 +53,11 @@ public class CharacterDesignerAgent {
                 "styleGuide", "",
                 "diversityGuide", diversityGuide != null ? diversityGuide : "",
                 "motifGuide", motifGuide));
+        // NCS-034: 人物设计请求携带精确契约版本及内容
+        String intentSection = com.writing.novel.service.AuthorIntentConsumeSupport.sectionFor(
+                authorIntentContextService, projectId, 2000, "CHARACTER_PLANNING");
+        String fullSystemPrompt = intentSection.isBlank() ? systemPrompt
+                : systemPrompt + "\n\n" + intentSection;
 
         String userMessage = "剧情需求：" + requirement
                 + "\n已有人物：" + existingDesc
@@ -52,7 +65,7 @@ public class CharacterDesignerAgent {
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.CHARACTER_DESIGN)
-                .systemPrompt(systemPrompt)
+                .systemPrompt(fullSystemPrompt)
                 .userMessage(userMessage)
                 .temperature(0.85)
                 .maxTokens(1500)

@@ -18,6 +18,14 @@ import java.util.Map;
  */
 public class WorldBuilderAgent {
 
+    /** NCS-034: 创作约定消费（late-set，null=空契约处理） */
+    private volatile com.writing.novel.service.AuthorIntentContextService authorIntentContextService;
+
+    public void setAuthorIntentContextService(com.writing.novel.service.AuthorIntentContextService service) {
+        this.authorIntentContextService = service;
+    }
+
+
     private final LlmGateway gateway;
     private final KnowledgeBaseService knowledgeBase;
     private final PromptTemplateService promptService;
@@ -61,6 +69,11 @@ public class WorldBuilderAgent {
                 "concept", safeConcept, "tags", safeTags,
                 "styleGuide", "",
                 "diversityGuide", diversityGuide != null ? diversityGuide : ""));
+        // NCS-034: 世界规划请求携带精确契约版本及内容（空契约零注入）
+        String intentSection = com.writing.novel.service.AuthorIntentConsumeSupport.sectionFor(
+                authorIntentContextService, projectId, 2000, "WORLD_PLANNING");
+        String fullSystemPrompt = intentSection.isBlank() ? systemPrompt
+                : systemPrompt + "\n\n" + intentSection;
 
         String userMessage = "构思：" + concept + "\n类型标签：" + tags
                 + "\n请生成 5-8 条世界观设定。"
@@ -69,7 +82,7 @@ public class WorldBuilderAgent {
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.WORLDBUILDING)
-                .systemPrompt(systemPrompt)
+                .systemPrompt(fullSystemPrompt)
                 .userMessage(userMessage)
                 .temperature(0.9)
                 .maxTokens(2000)

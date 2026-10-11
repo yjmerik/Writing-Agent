@@ -1,5 +1,6 @@
 package com.writing.novel.service;
 
+import com.writing.novel.domain.AuthorIntent;
 import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.memory.TokenBudget;
 import com.writing.novel.spi.NovelRepository;
@@ -15,6 +16,14 @@ public class AuthorIntentContextService {
     public AuthorIntentContextService(NovelRepository repository, PromptTemplateService prompts) {
         this.repository = repository;
         this.prompts = prompts;
+    }
+
+    /** NCS-034: 当前契约修订号（空契约=-1）——规划/修订/核查请求审计所用修订 */
+    public int currentRevision(String projectId) {
+        return repository.findAuthorIntent(projectId)
+                .filter(i -> !i.isEmpty())
+                .map(AuthorIntent::getRevision)
+                .orElse(-1);
     }
 
     /** Empty contracts preserve existing requests. Nonempty contracts are never silently truncated. */

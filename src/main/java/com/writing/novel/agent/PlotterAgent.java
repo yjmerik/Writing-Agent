@@ -32,6 +32,13 @@ public class PlotterAgent {
         this.narrativePolicyService = service;
     }
 
+    /** NCS-034: 创作约定消费（late-set） */
+    private volatile com.writing.novel.service.AuthorIntentContextService authorIntentContextService;
+
+    public void setAuthorIntentContextService(com.writing.novel.service.AuthorIntentContextService service) {
+        this.authorIntentContextService = service;
+    }
+
     /** NCS-192: 质感策略解析；宽松策略或无项目上下文返回 null → 调用方走现状文案 */
     private com.writing.novel.domain.NarrativePolicy texturedPolicyOf(String projectId) {
         if (narrativePolicyService == null || projectId == null || projectId.isBlank()) return null;
@@ -285,6 +292,9 @@ public class PlotterAgent {
         String beatRange = policy != null
                 ? policy.getBeatsStandardMin() + "-" + policy.getBeatsStandardMax()
                 : "3-5";
+        // NCS-034: 卷计划请求携带精确契约版本及内容
+        String intentSection = com.writing.novel.service.AuthorIntentConsumeSupport.sectionFor(
+                authorIntentContextService, projectId, 2000, "VOLUME_PLANNING");
         String systemPrompt = promptService.render("volume-outline", java.util.Map.ofEntries(
                 java.util.Map.entry("masterOutline", masterOutline != null ? masterOutline : "（暂无总纲）"),
                 java.util.Map.entry("previousSummary", previousSummary != null ? previousSummary : "（第一卷，无前文）"),
@@ -300,6 +310,9 @@ public class PlotterAgent {
                 java.util.Map.entry("genreRules", genreRules != null ? genreRules : ""),
                 java.util.Map.entry("beatRule", beatRule),
                 java.util.Map.entry("beatRange", beatRange)));
+        if (!intentSection.isBlank()) {
+            systemPrompt = systemPrompt + "\n\n" + intentSection;
+        }
 
         var req = LlmRequest.builder()
                 .taskType(LlmTaskType.PLOTTING)

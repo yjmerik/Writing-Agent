@@ -1693,6 +1693,18 @@ public class NovelOrchestrator {
         } catch (Exception e) {
             log.warn("风格基线更新失败: {}", e.getMessage());
         }
+
+        // NCS-198: 卷末范本收割——读者分 ≥8 的章节抽 1-2 段入 styleSamples（cap 3 滚动）
+        try {
+            List<Integer> volumeChapters = new java.util.ArrayList<>();
+            for (int i = fromChapter; i <= toChapter; i++) volumeChapters.add(i);
+            int harvested = styleGuardian.harvestHighScoreSamples(projectId, volumeChapters, 8);
+            if (harvested > 0) {
+                log.info("卷末范本收割(卷{}): {} 段入 styleSamples", volume.getVolumeIndex(), harvested);
+            }
+        } catch (Exception e) {
+            log.warn("卷末范本收割失败: {}", e.getMessage());
+        }
     }
 
     /** p6-4: 卷末从最近章节重新评估 StyleProfile */

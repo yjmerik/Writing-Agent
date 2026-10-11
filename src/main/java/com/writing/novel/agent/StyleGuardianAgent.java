@@ -7,6 +7,7 @@ import com.writing.novel.llm.LlmTaskType;
 import com.writing.novel.llm.prompt.PromptTemplateService;
 import com.writing.novel.spi.NovelRepository;
 
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,6 +28,53 @@ public class StyleGuardianAgent {
         this.promptService = promptService;
     }
 
+    /**
+     * NCS-198: 卷末范本收割——读者分 ≥minScore 的章节抽最佳段落入 styleSamples
+     * （cap 3 滚动刷新，单次至多 2 段；分数高的章优先）。激活 ChapterWriterAgent
+     * 既有 few-shot 通道（NCS-102）。返回实际入库段数。
+     */
+    public int harvestHighScoreSamples(String projectId, List<Integer> chapterIndexes, int minScore) {
+        if (repository == null || chapterIndexes == null || chapterIndexes.isEmpty()) return 0;
+        var profileOpt = repository.findStyleProfileByProject(projectId);
+        StyleProfile profile = profileOpt.orElseGet(() -> new StyleProfile(projectId));
+        int added = 0;
+        // 分数高的章优先出样
+        List<Integer> ordered = new java.util.ArrayList<>(chapterIndexes);
+        ordered.sort(java.util.Comparator.comparingInt((Integer idx) ->
+                repository.findChapterReview(projectId, idx)
+                        .map(com.writing.novel.domain.ChapterReview::getOverallScore).orElse(0)).reversed());
+        for (int idx : ordered) {
+            if (added >= 2) break;
+            var review = repository.findChapterReview(projectId, idx);
+            if (review.isEmpty() || review.get().getOverallScore() < minScore) continue;
+            String best = bestParagraphOf(projectId, idx);
+            if (best == null) continue;
+            var before = List.copyOf(profile.getStyleSamples());
+            profile.addStyleSample(best);
+            profile.addSampleChapter(idx);
+            if (!before.equals(profile.getStyleSamples())) added++;
+        }
+        if (added > 0) repository.saveStyleProfile(profile);
+        if (added > 0) {
+            com.writing.novel.telemetry.EventLog.emit("STYLE_SAMPLE_HARVESTED", java.util.Map.of(
+                    "projectId", projectId, "samples", added));
+        }
+        return added;
+    }
+
+    /** 章内最佳范本段：最长的成段叙述（>80 字），clip 至 220 字 */
+    private String bestParagraphOf(String projectId, int chapterIndex) {
+        return repository.findChapterByIndex(projectId, chapterIndex)
+                .map(com.writing.novel.domain.Chapter::getContent)
+                .map(content -> java.util.Arrays.stream(content.split("\n"))
+                        .map(String::trim)
+                        .filter(l -> l.length() > 80)
+                        .max(java.util.Comparator.comparingInt(String::length))
+                        .map(l -> l.length() > 220 ? l.substring(0, 220) : l)
+                        .orElse(null))
+                .orElse(null);
+    }
+
     /** 基于世界观构思建立全书风格基线（在构思阶段调用，先于人物/大纲/写作） */
     public StyleProfile establishProfile(String projectId, String conceptAndTags) {
         String systemPrompt = promptService.render("style-establish", Map.of());
@@ -40,7 +88,11 @@ public class StyleGuardianAgent {
                 .build();
 
         var resp = gateway.complete(req);
-        StyleProfile profile = new StyleProfile(projectId);
+        // NCS-198: load-or-create——preset 播种的 styleSamples（few-shot 范本）不被
+        // 基线重建抹掉；tone/voice/dosAndDonts 仍按本次评估覆盖
+        StyleProfile profile = repository != null
+                ? repository.findStyleProfileByProject(projectId).orElseGet(() -> new StyleProfile(projectId))
+                : new StyleProfile(projectId);
         profile.setTone(extractField(resp.getContent(), "基调"));
         profile.setVoice(extractField(resp.getContent(), "叙事"));
         profile.setDosAndDonts(extractField(resp.getContent(), "注意事项"));

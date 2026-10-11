@@ -9,10 +9,18 @@
     "enableClimaxRotation": true,
     "enableCharacterVoice": true,
     "enableKnowledgeQuotes": true,
-    "preferredQuoteSources": ["古籍", "心理学", "法医学"],
+    "preferredQuoteSources": [
+      "古籍",
+      "心理学",
+      "法医学"
+    ],
     "preventTransitionOverlap": true
   },
   "styleTone": "悬疑、冷静、推理驱动",
   "styleVoice": "第三人称，慢节奏，注重细节描写和逻辑链条，对话中暗藏线索",
-  "styleDosAndDonts": "线索必须公平（读者理论上可提前推理出真相）；禁止超自然力量解决谜题；每个嫌疑人都需要有不在场证明或动机"
+  "styleDosAndDonts": "线索必须公平（读者理论上可提前推理出真相）；禁止超自然力量解决谜题；每个嫌疑人都需要有不在场证明或动机",
+  "styleSamples": [
+    "雨衣搭在椅背上，还在滴水。他蹲下来看那摊水——从进门到现在不过十分钟，水渍的边缘却已经干了半圈。也就是说，这件雨衣比主人来得早，至少早一个小时。他把这个念头压进笔记本，笔尖顿了顿，没有念出来。",
+    "“锁没有被撬过。”她用手电扫过门框，“可抽屉里的保险单昨夜还是副本。”屋里很静，只有雨点砸在天窗上。他忽然注意到地毯的花纹——一朵被打乱的波斯菊，绒毛倒伏的方向，指向书房那扇从来不上锁的门。"
+  ]
 }

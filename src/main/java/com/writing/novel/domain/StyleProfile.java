@@ -34,13 +34,15 @@ public class StyleProfile {
         this.updatedAt = Instant.now();
     }
 
-    /** NCS-102: 追加例文范本（去重、上限 3 段） */
+    /** NCS-102/198: 追加例文范本（去重、上限 3 段滚动刷新——满时淘汰最旧） */
     public void addStyleSample(String sample) {
         if (sample == null || sample.isBlank()) return;
-        if (styleSamples.size() < 3 && !styleSamples.contains(sample)) {
-            styleSamples.add(sample);
-            this.updatedAt = Instant.now();
+        if (styleSamples.contains(sample)) return;
+        if (styleSamples.size() >= 3) {
+            styleSamples.remove(0);
         }
+        styleSamples.add(sample);
+        this.updatedAt = Instant.now();
     }
 
     public String getProjectId() { return projectId; }

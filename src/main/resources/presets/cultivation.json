@@ -9,10 +9,18 @@
     "enableClimaxRotation": true,
     "enableCharacterVoice": true,
     "enableKnowledgeQuotes": true,
-    "preferredQuoteSources": ["兵法", "古籍", "阵法"],
+    "preferredQuoteSources": [
+      "兵法",
+      "古籍",
+      "阵法"
+    ],
     "preventTransitionOverlap": true
   },
   "styleTone": "热血、冷峻、成长驱动",
   "styleVoice": "第三人称，快节奏，多动作描写，战斗场景注重画面感和打击感",
-  "styleDosAndDonts": "禁止科幻元素混入；人物名字必须与设定一致；境界提升必须有代价；避免路人震惊体"
+  "styleDosAndDonts": "禁止科幻元素混入；人物名字必须与设定一致；境界提升必须有代价；避免路人震惊体",
+  "styleSamples": [
+    "灵气如水漫过丹田，他数着呼吸，一息，两息，第三息时气海深处那点暖意终于滚成一线，顺着旧年淤塞的经脉往前拱。疼，像有人拿烧红的针在骨头缝里挑，他咬着牙不肯哼，师尊说过，引气入体时叫出声，气就散了。",
+    "“你灵根残了。”长老的声音不高，落在演武场上却像钟。人群哄的一声炸开，只有他站着没动，掌心那半块玉佩硌出血印——那是娘留下的唯一东西，也是三年前那场大火里，唯一没烧化的东西。"
+  ]
 }

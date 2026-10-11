@@ -67,4 +67,16 @@ class PresetStyleAssetTest {
         // 其他题材不受影响
         assertTrue(gate.check("p", 1, "耳边响起系统提示。", GenreProfile.MYSTERY).isEmpty());
     }
+
+    /** NCS-198: 内置 7 预设 styleSamples 非空（激活 ChapterWriterAgent few-shot 通道） */
+    @org.junit.jupiter.api.Test
+    void 内置七预设均携带风格范本() {
+        var registry = new com.writing.novel.service.PresetRegistry();
+        var presets = registry.listPresets();
+        assertEquals(7, presets.size(), "内置预设 7 个");
+        for (var preset : presets) {
+            assertFalse(preset.getStyleSamples().isEmpty(),
+                    preset.getName() + " 应携带 styleSamples");
+        }
+    }
 }

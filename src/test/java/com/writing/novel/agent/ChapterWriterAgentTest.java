@@ -204,4 +204,32 @@ class ChapterWriterAgentTest {
         assertFalse(fastPrompt.contains("定场许可"), "宽松题材不得新增定场许可文案");
     }
 
+    /** NCS-194: 模型按场景规划插入的分隔标记在入库前被剥除，正文文本保留 */
+    @org.junit.jupiter.api.Test
+    void 分隔标记入库前被清除() {
+        WritingContext mockCtx = new WritingContext();
+        ContextAssembler mockAssembler = new ContextAssembler(null, null, null, null, null, null, null, null, null) {
+            @Override public WritingContext assemble(String pid, int ci, String ct, String cs, String wn) { return mockCtx; }
+            @Override public WritingContext assemble(String pid, int ci, String ct, String cs, String wn, int budget) { return mockCtx; }
+        };
+        String marked = ("他在灯下翻开账册，指尖停住。\n\n<<<场景>>>\n\n雨点敲着后巷的青石，他追出门去。\n\n<场景>\n\n拂晓的柜坊刚开门，掌柜的笑意淡得像水。\n\n").repeat(40);
+        final java.util.List<String> saved = new java.util.ArrayList<>();
+        LlmGateway markedGateway = new LlmGateway() {
+            @Override public LlmResponse complete(LlmRequest req) { return new LlmResponse(marked, 500, 900); }
+            @Override public void streamComplete(LlmRequest req, StreamHandler handler) {}
+        };
+        com.writing.novel.spi.NovelRepository captureRepo = new TestNovelRepositoryStub() {
+            @Override public String saveChapter(Chapter c) { saved.add(c.getContent()); return c.getId(); }
+        };
+        ChapterWriterAgent agent = new ChapterWriterAgent(markedGateway, mockAssembler, captureRepo, TestPromptHelper.create());
+        agent.write("proj-scene", 1, "第一章 残账", "学徒发现账册异动", null);
+
+        assertFalse(saved.isEmpty(), "章节应入库");
+        String content = saved.get(0);
+        assertFalse(content.contains("<<<场景>>>"), "入库正文不得含分隔标记");
+        assertFalse(content.contains("<场景>"), "入库正文不得含变体标记");
+        assertTrue(content.contains("他在灯下翻开账册"), "标记外正文保留");
+        assertTrue(content.contains("拂晓的柜坊刚开门"), "末段正文保留");
+    }
+
 }

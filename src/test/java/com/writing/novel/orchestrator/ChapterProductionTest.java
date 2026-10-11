@@ -69,6 +69,36 @@ class ChapterProductionTest extends ManualReviewLifecycleTestHarnessSupport {
         assertTrue(notes.contains("雨夜对峙"));
     }
 
+    /** NCS-194: prepare 把场景规划渲染进写作任务（每场景字数下限/转场规格/标记指令） */
+    @Test
+    void prepare注入场景预算与分隔标记指令() {
+        Project p = seedProject();
+        var outline = repo.findOutlineByProject(p.getId()).orElseThrow();
+        var synopsis = synopsisOf(outline, 1);
+        synopsis.setScenePlan("""
+                {"scenes":[
+                  {"time":"子夜","location":"账房","characters":["沈砚"],"charBudget":1200,
+                   "transitionType":"opening","transitionMinChars":0,"textureHint":"油灯","causalConstraint":"异动被发现"},
+                  {"time":"拂晓","location":"柜坊","characters":["沈砚","掌柜"],"charBudget":1600,
+                   "transitionType":"time","transitionMinChars":80,"textureHint":"开门声","causalConstraint":"掌柜否认"}
+                ],"totalBudget":2800}""");
+        repo.saveOutline(outline);
+
+        var prod = production();
+        prod.setScenePlanService(new com.writing.novel.service.ScenePlanService(repo, null, null) {
+            @Override
+            public String ensurePlanned(String projectId, int chapterIndex) {
+                return synopsis.getScenePlan(); // 已有规划：幂等返回，不再调用 LLM
+            }
+        });
+        String notes = prod.prepare(p.getId(), 1, synopsis, null);
+        assertTrue(notes.contains("【场景规划"), "prepare 应注入场景规划段: " + notes);
+        assertTrue(notes.contains("下限 900 字"), "每场景字数下限应渲染（1200*3/4）");
+        assertTrue(notes.contains("与上场景过渡≥80 字"), "转场规格应渲染");
+        assertTrue(notes.contains("<<<场景>>>"), "分隔标记指令应渲染");
+        assertTrue(notes.contains("合计目标 2800 字"), "合计预算应渲染");
+    }
+
     /** NCS-187: 写章路径发出 TEXTURE_METRICS 遥测事件（observe-only，不阻断不重写） */
     @Test
     void 写章后发出纹理指标遥测事件() {

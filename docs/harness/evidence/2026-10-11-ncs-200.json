@@ -1,0 +1,26 @@
+{
+  "commit": "1b277a40f5a49a63ce22880ade3f18b2ec8c3f4c",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-200"
+  ],
+  "checks": [
+    {
+      "command": "VolumePacingControllerTest（新增 4 例）",
+      "result": "4/4：卷末聚合纹理均值+读者分+趋势→指令落库（确定性设定点：对白超限→压低对白密度）；迟滞（新事件不改已持久化设定点）；约束映射（首卷空/次卷取前卷/同卷同指令）；下一卷 planVolume 梗概注入指令（反射 tryExtendLayeredOutline + mock plotter 捕获）",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（分支含 main 合入 + 合并后干净 main 检出）",
+      "result": "均 1549/0/0/1skip（合并后干净 main 首轮 1 偶发失败、立即重跑全绿）",
+      "exitCode": 0
+    },
+    {
+      "command": "replay×2 + baseline",
+      "result": "既有 1 章语料 replay×2 均 acceptancePassed=true（closeVolume 仅卷末触发、1 章 e2e 不到卷边界，指令注入零 prompt 变化）+ compare-baseline PASS；卷末闭环由单测覆盖",
+      "exitCode": 0
+    }
+  ],
+  "notes": "volumeNumber 为章节算术（8 章/卷）——测试数据对齐该算术；指令库与主库同文件（ConnectionProvider 单例）；controller 单例 bean（EventLog 纹理缓冲全局唯一）；MemoryConfig assembler 经 controller::constraintsFor 注入。",
+  "recordedAt": "2026-10-11T13:00:00+08:00"
+}

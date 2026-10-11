@@ -11054,7 +11054,7 @@
         "NCS-189",
         "NCS-190"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/VolumePacingController.java",
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
@@ -11062,7 +11062,9 @@
       "spec": "docs/specs/2026-10-09-narrative-quality-architecture.md",
       "description": "卷末（volumeGate 钩子）聚合本卷 TEXTURE_METRICS 指标+检测趋势+读者子分+readback.pacing（NCS-189 已透传）→ 持久化 VolumePacingDirective；注入 ①tryExtendLayeredOutline 的 planVolume 调用（替换占位卷梗概）②下一卷 writingConstraints。迟滞原则：卷内设定点不变，只在卷边界调整。",
       "acceptance": "VolumePacingControllerTest：卷末产生 directive；下一卷 planVolume prompt 与写作约束含 directive 内容；卷内章设定点不变",
-      "verify_cmd": "mvn test -Dtest=VolumePacingControllerTest"
+      "verify_cmd": "mvn test -Dtest=VolumePacingControllerTest",
+      "completion_record": "ncs-200-verified",
+      "evidence": "2026-10-11 完成（分支 codex/ncs-200-volume-pacing，主分支 ff-only 合入——分支先合入并行推进的 main/NCS-199 再回归）。service/VolumePacingController：卷末聚合本卷 TEXTURE_METRICS 均值（EventLog 订阅滚动缓冲 60 条，closeVolume 清空=迟滞窗口）+检测趋势告警+读者子分均值+回读 pacing（NCS-189 透传）→ VolumePacingDirective 持久化（volume_pacing_directives 表）；确定性设定点规则（对白占比>55%→压低对白密度、乒乓>0→连续对白≤3 段、读者均分<7→强化张力点）；注入 ①tryExtendLayeredOutline 的 planVolume 卷梗概 ②ContextAssembler.buildWritingConstraints（controller::constraintsFor，同卷同指令）；卷内设定点不变（迟滞）。验收：VolumePacingControllerTest 4/4；全量 1549/0/0/1skip ×2；既有 1 章语料 replay×2 全验收 + baseline PASS。"
     }
   ],
   "schema_version": 2,

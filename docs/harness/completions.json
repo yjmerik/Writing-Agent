@@ -3413,8 +3413,19 @@
       "implementation_commit": "032fdbc17c1da16a5cea1a53e629895917ee1ba2",
       "main_commit": "032fdbc17c1da16a5cea1a53e629895917ee1ba2",
       "evidence": "docs/harness/evidence/2026-10-11-ncs-177.json"
+    },
+    {
+      "id": "ncs-171-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-171"
+      ],
+      "branch": "codex/ncs-171-task-lifecycle-logs",
+      "implementation_commit": "97eab4350b4f906d16f0c316f2070c0c0d25b347",
+      "main_commit": "97eab4350b4f906d16f0c316f2070c0c0d25b347",
+      "evidence": "docs/harness/evidence/2026-10-11-ncs-171.json"
     }
   ],
-  "commit": "032fdbc17c1da16a5cea1a53e629895917ee1ba2",
-  "main_commit": "032fdbc17c1da16a5cea1a53e629895917ee1ba2"
+  "commit": "97eab4350b4f906d16f0c316f2070c0c0d25b347",
+  "main_commit": "97eab4350b4f906d16f0c316f2070c0c0d25b347"
 }

@@ -1,0 +1,21 @@
+{
+  "commit": "97eab4350b4f906d16f0c316f2070c0c0d25b347",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-171"
+  ],
+  "checks": [
+    {
+      "command": "verify_cmd: mvn test -Dtest=WritingTaskExecutorTest",
+      "result": "3/3（新增 ListAppender 取证测试：协作任务启动/开始/终态三段日志可见，先红后绿）",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test 全量（分支+干净 main 检出）",
+      "result": "1551/0/0/1skip ×2",
+      "exitCode": 0
+    }
+  ],
+  "notes": "根因（写入 evidence）：协作任务路径（executeCollaborative，批准自动恢复/全书协作共用）仅失败分支有日志——启动/正常终态无任何 log 语句；logback 为同步 FILE appender（异步 appender 假说不成立）。修复：补「协作任务已启动」「写作任务开始(协作)」「写作任务终态(协作) ... = 状态, 写了 N 章（原因）」三条日志，与既有 writeAll 生命周期文案对齐。",
+  "recordedAt": "2026-10-11T16:00:00+08:00"
+}

@@ -10480,13 +10480,14 @@
       "type": "bug",
       "phase": 54,
       "dependencies": [],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "2026-10-11 完成（分支 codex/ncs-171-task-lifecycle-logs，主分支 ff-only 合入）。根因实证：协作任务路径 executeCollaborative（批准→自动恢复→续写共用入口）仅 catch 分支有日志，启动/正常终态零 log 语句；logback 为同步 RollingFileAppender（「异步 appender 缓冲」假说不成立）。修复：补三条生命周期日志（协作任务已启动/写作任务开始(协作)/写作任务终态(协作)=状态+写了N章+原因）。验收：WritingTaskExecutorTest 3/3（ListAppender 取证，先红后绿）；全量 1551/0/0/1skip ×2。",
       "files": [],
       "spec": "docs/reports/2026-10-03-findings-and-evals.md",
       "description": "18095 验收轮：批准后 AUTO_RUN 任务续写 ch11 的生命周期日志未出现在 app.log/stdout（均停在 22:48:42，而数据链路正确）。假说：logback 异步 appender 缓冲未刷或协作任务线程 logger 上下文差异。调查根因并保证任务启动/终态等关键日志落 app.log",
       "acceptance": "批准→自动恢复→写章→暂停链路中，任务启动/终态日志在 app.log 可见（ListAppender 或实例日志取证）；根因写入 evidence",
-      "verify_cmd": "mvn test -Dtest=WritingTaskExecutorTest"
+      "verify_cmd": "mvn test -Dtest=WritingTaskExecutorTest",
+      "completion_record": "ncs-171-verified"
     },
     {
       "id": "NCS-172",

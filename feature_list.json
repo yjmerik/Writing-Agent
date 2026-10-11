@@ -8197,8 +8197,7 @@
       "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
-        "src/main/java/com/writing/novel/service/WorkspaceViewService.java",
-        "src/test/java/com/writing/novel/service/ReadySnapshotAdmissionTest.java"
+        "src/test/java/com/writing/novel/orchestrator/ReadySnapshotAdmissionTest.java"
       ],
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：正文领先就绪时阻断受影响续写；工作台返回同源身份和原因。编译、全量回归及适用E2E通过；按原方案证据分层验收。",

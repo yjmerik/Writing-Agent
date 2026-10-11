@@ -161,7 +161,8 @@ class VectorCleanupOnRewritePathsTest {
     // ---------- 用例 1：ChapterWriterAgent.rewriteForCorrection ----------
 
     @Test
-    void rewriteForCorrection后该章旧chunk被清新chunk入库() {
+    void rewriteForCorrection候选隔离_接受时才清旧建新() {
+        // NCS-039: 拒收候选不改变当前检索——生成期不动索引（旧 chunk 原样保留）
         String pid = seedProjectWithChapterAndOldVectors(300);
         String cid = chapterId(pid);
 
@@ -170,6 +171,11 @@ class VectorCleanupOnRewritePathsTest {
 
         assertNotNull(out);
         assertTrue(out.contains(NEW_MARKER), "重写应返回新版正文");
+        assertNotNull(store.getText(cid), "候选未接受——旧索引原样保留（隔离）");
+        assertNotNull(store.getText(cid + "#chunk9"), "高序号旧 chunk 原样保留（隔离）");
+
+        // 接受（调用方落库后按接受稿重建）——旧 chunk 清理 + 新 chunk 入库
+        chapterWriter.reindexChapter(pid, 1, out);
         assertOldChunksCleared(cid);
         assertNewContentIndexed(pid, cid);
     }

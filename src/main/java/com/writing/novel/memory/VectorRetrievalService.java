@@ -47,6 +47,27 @@ public class VectorRetrievalService {
                 .toList();
     }
 
+    /**
+     * NCS-040: 按 id 前缀原子替换投影——embedding 失败时原索引完整（embed 前置，
+     * 存储未动）；成功后 delete+upsert 成对替换匹配来源的投影。
+     * 空新块=纯删除。调用方保证 idPrefix 与新块 id 同前缀（同章来源）。
+     */
+    public void replaceByPrefixAtomic(String idPrefix, List<IndexedText> newChunks) {
+        if (newChunks.isEmpty()) {
+            removeByIdPrefix(idPrefix);
+            flush();
+            return;
+        }
+        // 失败点前置：embedding 在触碰存储之前完成——失败即原索引完整
+        var vectors = embeddingProvider.embedBatch(newChunks.stream().map(IndexedText::text).toList());
+        vectorStore.deleteByPrefix(idPrefix);
+        for (int i = 0; i < newChunks.size(); i++) {
+            IndexedText t = newChunks.get(i);
+            vectorStore.upsert(t.id(), t.projectId(), t.text(), vectors.get(i));
+        }
+        flush();
+    }
+
     public String getText(String id) {
         return vectorStore.getText(id);
     }

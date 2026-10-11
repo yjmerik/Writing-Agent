@@ -569,12 +569,17 @@ public class ChapterProduction {
             String newContent = chapterWriter.rewriteForCorrection(projectId, chapterIndex, synopsis.getTitle(),
                     synopsis.getSynopsis(), rewriteNotes, issueDesc);
             if (newContent == null || newContent.length() < Math.max(2000, chapter.getContent().length() * 0.7)) {
-                if (newContent != null) chapterWriter.reindexChapter(projectId, chapterIndex, chapter.getContent());
+                // NCS-039: 候选未预索引——拒收无需恢复，原索引天然完整
                 return false;
             }
             boolean applied = orch.autoRewriteIfCurrent(projectId, chapterIndex, revisionBase,
                     chapter.getTitle(), newContent, "REWRITE");
             repository.findChapterByIndex(projectId, chapterIndex).ifPresent(chapter::adoptStateFrom);
+            if (applied) {
+                // NCS-039: 接受后才建索引（拒收候选不改变当前检索）
+                try { chapterWriter.reindexChapter(projectId, chapterIndex, newContent); }
+                catch (Exception e) { log.warn("接受重写的索引重建失败: {}", e.getMessage()); }
+            }
             return applied;
         } catch (Exception e) {
             log.warn("纠偏重写失败，保留原版本: {}", e.getMessage());

@@ -332,9 +332,8 @@ public class ChapterWriterAgent {
 
         String cleanContent = com.writing.novel.util.SceneMarkerSanitizer.sanitize(
                 sanitizeChapterNumbers(resp.getContent(), chapterIndex));
-        // p16-05: 重写改变了正文——立即按章重建向量索引（清旧 chunk + 新正文入库）。
-        // 调用方若拒收该重写（长度保护等），需用保留的原正文重放 reindexChapter 恢复一致。
-        reindexChapter(projectId, chapterIndex, cleanContent);
+        // NCS-039: 拒收候选不改变当前检索——重写稿在此不建索引；
+        // 索引在调用方接受（autoRewriteIfCurrent 落库）后按接受的正文重建。
         return cleanContent;
     }
 
@@ -408,11 +407,9 @@ public class ChapterWriterAgent {
 
     /** 按段落分块索引章节正文，每块 ~800 字，确保中后段情节也能被召回。D2: 批量索引（一次embedding调用） */
     private void indexChapterInChunks(String projectId, Chapter chapter, String content) {
-        // p10-w1-03: 重索引前清理该章旧版本 chunk（chapterId 与 chapterId#chunkN），
-        // 避免重写后新旧正文并存导致向量检索召回自相矛盾的旧情节（复现 GAP#9）
-        if (vectorRetrieval != null) {
-            vectorRetrieval.removeByIdPrefix(chapter.getId());
-        }
+        // p10-w1-03 / NCS-040: 旧版本 chunk 清理与新版入库合并为原子替换——
+        // embedding 失败时原索引完整（避免重写后新旧正文并存召回自相矛盾，GAP#9）
+        if (vectorRetrieval == null) return;
         String prefix = "第" + chapter.getChapterIndex() + "章 " + chapter.getTitle() + "：";
         String fullText = prefix + content;
         int chunkSize = 800;
@@ -442,8 +439,8 @@ public class ChapterWriterAgent {
                         projectId, current.toString(), "CHAPTER"));
             }
         }
-        // D2: 一次性批量索引（embedding 调用 5-8 次 → 1 次）
-        vectorRetrieval.indexBatch(chunks);
+        // D2 / NCS-040: 原子替换（embedding 一次调用，失败原索引完整）
+        vectorRetrieval.replaceByPrefixAtomic(chapter.getId(), chunks);
     }
 
     /** 从 StyleProfile 提取风格指引（tone + dosAndDonts）作为 styleGuide 变量 */

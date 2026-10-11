@@ -238,4 +238,44 @@ class ContextAssemblerTest {
         assertTrue(feedback.contains(desc.substring(0, 200) + "..."), "截断点应在 200 字");
         assertFalse(feedback.contains(desc), "超长描述仍应截断（非 STYLE 不全文注入）");
     }
+
+    /** NCS-197: 上一章全文注入（文风锚定）——超长章节不再截 2000 字尾，首尾俱在 */
+    @Test
+    void recentTextSection包含上一章全文() {
+        Project p = new Project("t", "c", "tag");
+        repo.saveProject(p);
+        Chapter prev = new Chapter(p.getId(), 1, "第一章");
+        String body = "雨夜开场的第一句话，出现在章首。".repeat(3)
+                + "中间叙述推进情节。".repeat(500)
+                + "衔接点：他熄灯离开，账册留在案上。";
+        prev.setContent(body);
+        repo.saveChapter(prev);
+
+        WritingContext ctx = assembler.assemble(p.getId(), 2, "第二章", "续写", null);
+        String rt = ctx.getRecentTextSection();
+        assertTrue(rt.contains("雨夜开场的第一句话"), "章首应注入（旧实现只取尾部 2000 字）");
+        assertTrue(rt.contains("衔接点：他熄灯离开"), "章尾应保留");
+        assertTrue(rt.contains("【精确衔接点"), "精确衔接点机制保留");
+    }
+
+    /** NCS-197: 预算紧张时 recentText 裁剪保留衔接点块 */
+    @Test
+    void recentText预算裁剪保留精确衔接点() {
+        Project p = new Project("t", "c", "tag");
+        repo.saveProject(p);
+        Chapter prev = new Chapter(p.getId(), 1, "第一章");
+        prev.setContent("长章开头，文风锚定。".repeat(3)
+                + "叙述中段推进情节发展。".repeat(1600)
+                + "【精确衔接点】他熄灯离开。");
+        repo.saveChapter(prev);
+
+        WritingContext full = assembler.assemble(p.getId(), 2, "第二章", "续写", null,
+                TokenBudget.DEFAULT_BUDGET);
+        int fullLen = full.getRecentTextSection().length();
+
+        WritingContext tight = assembler.assemble(p.getId(), 2, "第二章", "续写", null, 3000);
+        String rt = tight.getRecentTextSection();
+        assertTrue(rt.contains("【精确衔接点"), "低预算下衔接点块完整保留: " + rt.substring(Math.max(0, rt.length() - 200)));
+        assertTrue(rt.length() < fullLen, "低预算应发生裁剪 " + rt.length() + " vs " + fullLen);
+    }
 }

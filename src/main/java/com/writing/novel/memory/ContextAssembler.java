@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 public class ContextAssembler {
 
     private static final int RETRIEVAL_TOP_K = 5;
-    private static final int RECENT_TEXT_CHARS = 2000;
     private static final int RECENT_SUMMARY_WINDOW = 5;
     /** op-01: 开篇高压章节数——前 N 章强制快速抓人 */
     public static final int OPENING_CHAPTERS = 5;
@@ -572,12 +571,8 @@ public class ContextAssembler {
 
         StringBuilder sb = new StringBuilder();
 
-        // 截取上章末尾作为参考上下文
-        if (content.length() > RECENT_TEXT_CHARS) {
-            sb.append("...").append(content.substring(content.length() - RECENT_TEXT_CHARS));
-        } else {
-            sb.append(content);
-        }
+        // NCS-197: 上一章全文注入（文风锚定）——不再截 2000 字尾部；衔接点机制保留
+        sb.append(content);
 
         // 精确衔接点：提取最后 3 句话
         String[] sentences = content.split("(?<=[。！？])");
@@ -1501,10 +1496,6 @@ public class ContextAssembler {
             total = trimAndReckon(ctx.getVolumeOutlineSection(), scaled(1500, budget),
                     t -> ctx.setVolumeOutlineSection(t), total);
         }
-        if (total > budget && ctx.getRecentTextSection() != null) {
-            total = trimAndReckon(ctx.getRecentTextSection(), scaled(800, budget),
-                    t -> ctx.setRecentTextSection(t), total);
-        }
         if (total > budget && ctx.getRecentSummarySection() != null) {
             total = trimAndReckon(ctx.getRecentSummarySection(), scaled(4000, budget),
                     t -> ctx.setRecentSummarySection(t), total);
@@ -1512,6 +1503,15 @@ public class ContextAssembler {
         if (total > budget && ctx.getRelevantForeshadowings() != null) {
             total = trimAndReckon(ctx.getRelevantForeshadowings(), scaled(500, budget),
                     t -> ctx.setRelevantForeshadowings(t), total);
+        }
+        // NCS-197: 上一章全文是文风锚定与衔接的核心——裁剪顺序后移（低于摘要/伏笔，
+        // 高于 premise）；大预算按比例放大（40800 写作预算下 ≈30k 上限，6000 字章节
+        // 全文免裁）；衔接点块尾部保留
+        if (total > budget && ctx.getRecentTextSection() != null) {
+            int cap = budget > TokenBudget.DEFAULT_BUDGET
+                    ? scaled(12000, budget)
+                    : Math.max(800, (int) (budget * 0.30));
+            total = trimRecentTextKeepHandoff(ctx, cap, total);
         }
         // p16-06-B: premise（故事原旨/总纲）最后参与裁剪——链尾=最低优先级，仅预算极端紧张时触发。
         // 「【故事原旨】永不裁剪」的设计针对 premise 的核心段（立意/主线位于文本头部）：
@@ -1521,6 +1521,21 @@ public class ContextAssembler {
         if (total > budget && ctx.getPremiseSection() != null) {
             ctx.setPremiseSection(truncatePremiseHead(ctx.getPremiseSection()));
         }
+    }
+
+    /** NCS-197: recentText 截断保留【精确衔接点】块（头部截断、衔接尾部完整保留） */
+    private int trimRecentTextKeepHandoff(WritingContext ctx, int capTokens, int total) {
+        String text = ctx.getRecentTextSection();
+        if (text == null) return total;
+        int marker = text.indexOf("【精确衔接点");
+        String tail = marker >= 0 ? text.substring(marker) : "";
+        String head = marker >= 0 ? text.substring(0, marker) : text;
+        int tailTokens = TokenBudget.estimateTokens(tail);
+        String trimmedHead = TokenBudget.truncateToTokens(head, Math.max(200, capTokens - tailTokens));
+        String combined = trimmedHead + tail;
+        total += TokenBudget.estimateTokens(combined) - TokenBudget.estimateTokens(text);
+        ctx.setRecentTextSection(combined);
+        return total;
     }
 
     /** NCS-115: 截断并按新文本重算该 section 的 token 增量（避免全量重渲染） */

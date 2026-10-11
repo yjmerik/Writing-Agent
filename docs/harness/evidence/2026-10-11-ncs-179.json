@@ -1,0 +1,26 @@
+{
+  "commit": "afb45bbe7fd5646da43d491eb86886d0d83d31ce",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-179"
+  ],
+  "checks": [
+    {
+      "command": "CheckerGoldenSetTest/ContinuityCheckerAgentTest/ContinuityContextParityTest/CheckResultEnvelopeTest",
+      "result": "全绿（历史问题回归集通过——模板契约收紧不破坏解析与已知检测）",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test 全量（分支+合并后干净 main 检出）",
+      "result": "1551/0/0/1skip ×2",
+      "exitCode": 0
+    },
+    {
+      "command": "1 章 mystery record + replay×2 + baseline",
+      "result": "CONTINUITY_CHECK completion 465/390/386 token（治理前实测 45k→96,859 length 截断）；0 LLM_TRUNCATED；replay×2 acceptancePassed=true；baseline PASS",
+      "exitCode": 0
+    }
+  ],
+  "notes": "治理=①check 路由 thinking-enabled:false（推理无上界是爆炸根源；检查为封闭式核对，输入台账已注入）②模板输出契约（纯清单/≤120字/≤10条/禁叙述）。TokenPlanModelConfigurationTest 加关思考断言。",
+  "recordedAt": "2026-10-11T17:00:00+08:00"
+}

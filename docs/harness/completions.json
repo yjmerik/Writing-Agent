@@ -3424,8 +3424,19 @@
       "implementation_commit": "97eab4350b4f906d16f0c316f2070c0c0d25b347",
       "main_commit": "97eab4350b4f906d16f0c316f2070c0c0d25b347",
       "evidence": "docs/harness/evidence/2026-10-11-ncs-171.json"
+    },
+    {
+      "id": "ncs-179-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-179"
+      ],
+      "branch": "codex/ncs-179-check-output-governance",
+      "implementation_commit": "afb45bbe7fd5646da43d491eb86886d0d83d31ce",
+      "main_commit": "afb45bbe7fd5646da43d491eb86886d0d83d31ce",
+      "evidence": "docs/harness/evidence/2026-10-11-ncs-179.json"
     }
   ],
-  "commit": "97eab4350b4f906d16f0c316f2070c0c0d25b347",
-  "main_commit": "97eab4350b4f906d16f0c316f2070c0c0d25b347"
+  "commit": "afb45bbe7fd5646da43d491eb86886d0d83d31ce",
+  "main_commit": "afb45bbe7fd5646da43d491eb86886d0d83d31ce"
 }

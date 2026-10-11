@@ -10638,8 +10638,8 @@
       "dependencies": [
         "NCS-178"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "2026-10-11 完成（分支 codex/ncs-179-check-output-governance，主分支 ff-only 合入）。爆炸根源=推理模型 reasoning 无上界+分析叙述（实测 96,859 completion length 截断→INVALID→复检循环）。治理：①qwen-flash-check 路由 thinking-enabled:false（检查为封闭式核对，输入台账已注入；TokenPlanModelConfigurationTest 加断言）②continuity-check.st 输出契约（纯问题清单/单条≤120字/至多10条/禁分析叙述）。验收：CheckerGoldenSet 等回归全绿；全量 1551/0/0/1skip ×2；实测 completion 465/390/386 token（<20k 上限 43 倍余量）、0 截断；1 章 mystery 语料重建 replay×2 全验收 + baseline PASS。",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/",
         "src/main/resources/prompts/"
@@ -10647,7 +10647,8 @@
       "spec": "docs/specs/2026-10-03-pipeline-resilience-and-review-ux.md",
       "description": "1004-1005 监控实测：CONTINUITY_CHECK 完成 token 随台账增长爆炸——ch14 45k→ch13 57k→ch18 96,859 token 且 finishReason=length 截断（时间预算 NCS-178 已不够，输出侧失控）。检查器对全量真典/伏笔/关系台账逐项展开分析导致。方向：约束检查输出为紧凑结构化问题清单（禁止分析过程叙述）、或按本章实体切片注入台账、或分片检查",
       "acceptance": "连续性检查完成 token 稳定在可控上限（如 <20k）且不再 length 截断；检查仍能发现已知类真实问题（以历史问题为回归集）；mvn test 全绿",
-      "verify_cmd": "grep LLM_TRUNCATED data/logs/events.jsonl | grep CONTINUITY | wc -l"
+      "verify_cmd": "grep LLM_TRUNCATED data/logs/events.jsonl | grep CONTINUITY | wc -l",
+      "completion_record": "ncs-179-verified"
     },
     {
       "id": "NCS-180",

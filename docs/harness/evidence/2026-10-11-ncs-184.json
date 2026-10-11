@@ -1,0 +1,21 @@
+{
+  "commit": "10cd2ad46ba9614f68d0c4f3971ccc01e436b3a9",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-184"
+  ],
+  "checks": [
+    {
+      "command": "PayoffLedgerTest（新增 3 例）",
+      "result": "3/3：缺口量化（连续 4 章无兑付）PLOT HIGH；开篇豁免+兑付重置；钩子摘要（前 N 章兑付[兑付]/埋钩[埋钩] 窗口）",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test 全量（分支+合并后干净 main 检出）",
+      "result": "1558/0/0/1skip ×2",
+      "exitCode": 0
+    }
+  ],
+  "notes": "兑付事件=伏笔 resolvedAtChapter（确定性）；缺口=当前章-最近兑付章≥上限（默认 6，豁免前 3 章 setup 期）。PLOT HIGH 经 rewriteWithCorrection 进重写（在册钩子列示）。读者评审 review(chapterIndex, content, hooksSummary) 重载——summary 含前 3 章钩子/兑付。兑付口径注：爽点兑付暂以伏笔回收为代表（大纲 climax 字段为规划态非兑付事实），后续可扩展。",
+  "recordedAt": "2026-10-11T20:00:00+08:00"
+}

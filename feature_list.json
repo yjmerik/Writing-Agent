@@ -10740,15 +10740,20 @@
       "dependencies": [
         "NCS-183"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "2026-10-11 完成（分支 codex/ncs-184-payoff-ledger，主分支 ff-only 合入）。service/PayoffLedger：伏笔回收=确定性兑付事件，连续 N 章零兑付（默认 6，开篇 3 章豁免）→PLOT HIGH issue 落库+PAYOFF_GAP 事件→rewriteWithCorrection（在册钩子列示进指令）；ReaderReviewAgent.review 三参重载：前 3 章钩子/兑付台账注入盲评上下文（单章盲评→全书视角）。验收：PayoffLedgerTest 3/3（缺口量化/豁免重置/摘要窗口）；全量 1558/0/0/1skip ×2。语料复用（检查为条件触发）。",
       "files": [
-        "src/main/java/com/writing/novel/agent/"
+        "src/main/java/com/writing/novel/service/PayoffLedger.java",
+        "src/main/java/com/writing/novel/agent/ReaderReviewAgent.java",
+        "src/main/java/com/writing/novel/orchestrator/ChapterProduction.java",
+        "src/main/java/com/writing/novel/orchestrator/OrchestratorConfig.java",
+        "src/test/java/com/writing/novel/service/PayoffLedgerTest.java"
       ],
       "spec": "docs/reports/2026-10-09-novel-eval-shanhezhiqiren/系统根因综合报告.md",
       "description": "根因审查R2：读者评审单章盲评（ReaderReviewAgent 零变量注入），无 payoff 组件；55章零回报兑付+91处同型钩子是读者4.2分主因。构建按卷登记爽点/伏笔承诺/威胁兑付章的台账，逐章核销，未兑付升级 PLOT HIGH 进重写；卷末以全书视角评体验分（钩子类型统计/主线节点表注入）",
       "acceptance": "连续 N 章无任何兑付时产生 PLOT HIGH 并触发仲裁；reader-review 上下文包含前 N 章钩子摘要",
-      "verify_cmd": "mvn test -Dtest=ReaderReviewAgentTest"
+      "verify_cmd": "mvn test -Dtest=ReaderReviewAgentTest",
+      "completion_record": "ncs-184-verified"
     },
     {
       "id": "NCS-185",

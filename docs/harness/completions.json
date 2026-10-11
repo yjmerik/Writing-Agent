@@ -3457,8 +3457,19 @@
       "implementation_commit": "26b922bff17bb36f32e7696f56ab02b2d6e1a1a2",
       "main_commit": "26b922bff17bb36f32e7696f56ab02b2d6e1a1a2",
       "evidence": "docs/harness/evidence/2026-10-11-ncs-183.json"
+    },
+    {
+      "id": "ncs-184-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-184"
+      ],
+      "branch": "codex/ncs-184-payoff-ledger",
+      "implementation_commit": "10cd2ad46ba9614f68d0c4f3971ccc01e436b3a9",
+      "main_commit": "10cd2ad46ba9614f68d0c4f3971ccc01e436b3a9",
+      "evidence": "docs/harness/evidence/2026-10-11-ncs-184.json"
     }
   ],
-  "commit": "26b922bff17bb36f32e7696f56ab02b2d6e1a1a2",
-  "main_commit": "26b922bff17bb36f32e7696f56ab02b2d6e1a1a2"
+  "commit": "10cd2ad46ba9614f68d0c4f3971ccc01e436b3a9",
+  "main_commit": "10cd2ad46ba9614f68d0c4f3971ccc01e436b3a9"
 }

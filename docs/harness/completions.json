@@ -3314,8 +3314,30 @@
       "implementation_commit": "b556fa8c9201f0d9d7fe02cf1da53ccd6f822202",
       "main_commit": "b556fa8c9201f0d9d7fe02cf1da53ccd6f822202",
       "evidence": "docs/harness/evidence/2026-10-11-ncs-193.json"
+    },
+    {
+      "id": "ncs-194-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-194"
+      ],
+      "branch": "codex/ncs-194-scene-budget-inject",
+      "implementation_commit": "b6f8d3c558887be549190d22c9215c1bc7091224",
+      "main_commit": "b6f8d3c558887be549190d22c9215c1bc7091224",
+      "evidence": "docs/harness/evidence/2026-10-11-ncs-194.json"
+    },
+    {
+      "id": "ncs-195-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-195"
+      ],
+      "branch": "codex/ncs-195-texture-gate",
+      "implementation_commit": "fc5167db86482ffe9e002a5b7398b9d97c786ffe",
+      "main_commit": "fc5167db86482ffe9e002a5b7398b9d97c786ffe",
+      "evidence": "docs/harness/evidence/2026-10-11-ncs-195.json"
     }
   ],
-  "commit": "b556fa8c9201f0d9d7fe02cf1da53ccd6f822202",
-  "main_commit": "b556fa8c9201f0d9d7fe02cf1da53ccd6f822202"
+  "commit": "fc5167db86482ffe9e002a5b7398b9d97c786ffe",
+  "main_commit": "fc5167db86482ffe9e002a5b7398b9d97c786ffe"
 }

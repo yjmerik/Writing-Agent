@@ -1,0 +1,26 @@
+{
+  "commit": "b6f8d3c558887be549190d22c9215c1bc7091224",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-194"
+  ],
+  "checks": [
+    {
+      "command": "mvn test（verify 域 ChapterWriterAgentTest/ScenePlanAgentTest/ChapterProductionTest）",
+      "result": "16/16 通过：prepare 注入【场景规划】段（下限/转场/标记指令/合计）、重写路径同步、renderWritingGuide 坏输入零注入、分隔标记（<<<场景>>>/变体）入库前剥除且正文保留",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（分支与合并后干净 main 检出）",
+      "result": "1530/0/0/1skip ×2",
+      "exitCode": 0
+    },
+    {
+      "command": "record + replay×2 + baseline",
+      "result": "首次 record 遇 DeepSeek 瞬时 EMPTY_RESPONSE 构思失败（清理重试）；重录完成 55 fixture；replay×2 完全一致均 acceptancePassed=true（14264 字/55 调用）；compare-baseline PASS",
+      "exitCode": 0
+    }
+  ],
+  "notes": "语料重建理由：写作 notes 注入场景规划段使 CHAPTER_WRITING prompt 全量变化。入库与 book-export 双侧 sanitize；重写路径与首写同一动线。合并后干净 main worktree 复验通过。",
+  "recordedAt": "2026-10-11T02:00:00+08:00"
+}

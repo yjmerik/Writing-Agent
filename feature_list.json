@@ -10934,7 +10934,7 @@
         "NCS-193",
         "NCS-191"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/agent/ChapterWriterAgent.java",
         "src/main/java/com/writing/novel/memory/ContextAssembler.java"
@@ -10942,7 +10942,9 @@
       "spec": "docs/specs/2026-10-09-narrative-quality-architecture.md",
       "description": "ChapterProduction.prepare 将 ScenePlan 渲染进写作任务（每场景字数下限/转场规格/质感提示），正文以场景分隔标记分段；入库/导出侧 sanitize 分隔标记。重写路径同步注入。",
       "acceptance": "ChapterWriterAgentTest：任务含场景预算；含分隔标记的正文入库后标记被 sanitize",
-      "verify_cmd": "mvn test -Dtest=ChapterWriterAgentTest"
+      "verify_cmd": "mvn test -Dtest=ChapterWriterAgentTest",
+      "completion_record": "ncs-194-verified",
+      "evidence": "2026-10-11 完成（分支 codex/ncs-194-scene-budget-inject，实现提交 b6f8d3c，主分支包含 b6f8d3c ff-only 合入）。ChapterProduction.prepare 将 ScenePlan 渲染为【场景规划】段进写作任务（每场景字数下限=预算×3/4/转场规格≥transitionMinChars/质感提示/<<<场景>>>分隔标记指令/合计目标），纠偏重写路径同步注入；SceneMarkerSanitizer（容错 <场景>..<<<场景>>> 变体）在 ChapterWriterAgent 两处入库点与 book-export 剥除标记；ScenePlanService.renderWritingGuide 坏输入零注入。验收：16 相关测试全绿；全量 1530/0/0/1skip ×2；DeepSeek 语料重建（55 fixture，首次 record 遇 DeepSeek 瞬时故障重试成功）→ replay×2 完全一致全验收 → compare-baseline PASS。"
     },
     {
       "id": "NCS-195",
@@ -10953,7 +10955,7 @@
         "NCS-187",
         "NCS-190"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/TextureGate.java",
         "src/main/java/com/writing/novel/orchestrator/ChapterProduction.java"
@@ -10961,7 +10963,9 @@
       "spec": "docs/specs/2026-10-09-narrative-quality-architecture.md",
       "description": "写后、读者评审前运行确定性双向门禁：指标 vs NarrativePolicy 区间→越界落 ContinuityIssue(TEXTURE/PACING) + TEXTURE_GATE 事件；新增对白乒乓检测（连续>3段对白无锚点行）；质感单项越界→路由定点扩写（NCS-196），结构性越界→既有整章重写且纠偏指令携带具体质感目标；ExpositionDetector 并入作为反向检测。",
       "acceptance": "TextureGateTest：构造越界样本分别路由到扩写/重写路径；正常样本 PASS 不产生 issue",
-      "verify_cmd": "mvn test -Dtest=TextureGateTest"
+      "verify_cmd": "mvn test -Dtest=TextureGateTest",
+      "completion_record": "ncs-195-verified",
+      "evidence": "2026-10-11 完成（分支 codex/ncs-195-texture-gate，实现提交 128d9d8，主分支包含 fc5167d ff-only 合入——分支先合入并行推进的 main/NCS-194 再回归）。service/TextureGate：computeTexture 段落级指标 vs NarrativePolicy 区间双向比对（对白段占比双向/叙述碎片化/对白乒乓新增检测/段落均长/场景数结构性），越界落 TEXTURE/PACING issue + TEXTURE_GATE 事件；分级路由——质感单项→expansionTargets（late-set 扩写通道，NCS-196 接线），结构性→rewriteWithCorrection 且纠偏指令携带具体质感目标；ExpositionDetector 并入反向检测；宽松策略（非历史题材）不设防保证快节奏零分叉。验收：TextureGateTest 7/7；全量 1537/0/0/1skip ×2；既有语料 replay×2 全验收（门禁零 LLM 调用、mystery 宽松策略不触发）→ compare-baseline PASS。"
     },
     {
       "id": "NCS-196",

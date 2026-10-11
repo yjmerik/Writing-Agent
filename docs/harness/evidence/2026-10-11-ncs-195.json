@@ -1,0 +1,26 @@
+{
+  "commit": "fc5167db86482ffe9e002a5b7398b9d97c786ffe",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-195"
+  ],
+  "checks": [
+    {
+      "command": "verify_cmd: mvn test -Dtest=TextureGateTest",
+      "result": "7/7 通过：正常样本 PASS 零 issue、对白占比超上限→扩写目标、乒乓检测（连续>3段对白）→补锚点目标、叙述碎片化→成段扩写目标、场景数超区间→整章重写目标（携带具体指标）、宽松策略不设防、说明文并入反向目标",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（分支含 main 合入后 + 合并后干净 main 检出）",
+      "result": "均 1537/0/0/1skip（新增 TextureGateTest 7 例；main 合入特性分支消解 194 并行）",
+      "exitCode": 0
+    },
+    {
+      "command": "record/replay + baseline",
+      "result": "门禁零 LLM 调用（确定性）且 mystery 语料宽松策略不触发——既有语料 replay×2 均 acceptancePassed=true + compare-baseline PASS（无回归）；质感路径由单测覆盖，历史题材端到端验证归 NCS-196 扩写通道接线时一并覆盖",
+      "exitCode": 0
+    }
+  ],
+  "notes": "TEXTURE 类型加入 ContinuityIssue.Type（字符串回读兼容旧行）；qualityGate 末段接入（重写已触发则跳过，避免双写）；扩写通道 late-set（NCS-196 接线，未接线事件化降级 TEXTURE_EXPANSION_SKIPPED）。",
+  "recordedAt": "2026-10-11T03:00:00+08:00"
+}

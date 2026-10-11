@@ -50,11 +50,13 @@ class TokenPlanModelConfigurationTest {
             assertEquals(64000, config.getContextWindow());
             assertTrue(config.isStreaming());
         }
-        assertEquals(20000, properties.forTaskType("CHAPTER_WRITING").getMaxTokens());
+        assertEquals(32000, properties.forTaskType("CHAPTER_WRITING").getMaxTokens()); // NCS-201
         // NCS-066: 提取路由独立预算且关思考（输出不被 reasoning 挤占）
         // NCS-186: 16000→32000——deepseek-v4-flash 实体图谱 50k+ 字符在 16k 截断（章后处理必败）
         var extraction = properties.forTaskType("EXTRACTION");
         assertEquals(32000, extraction.getMaxTokens());
+        // NCS-201: 章写路由 20000→32000——质感重写（纠偏上下文+场景规划注入）在 20k 顶格截断
+        assertEquals(32000, properties.forTaskType("CHAPTER_WRITING").getMaxTokens());
         assertEquals(0.1, extraction.getTemperature());
         assertFalse(extraction.isThinkingEnabled());
     }

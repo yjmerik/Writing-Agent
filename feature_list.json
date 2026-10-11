@@ -8131,7 +8131,7 @@
       "dependencies": [
         "NCS-016"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteSchemaInitializer.java",
         "src/main/java/com/writing/novel/persistence/sqlite/ProjectionOutboxRepository.java",
@@ -8140,7 +8140,8 @@
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：来源章稿与投影类型唯一；重启保持待执行项；旧数据迁移可重复。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=ProjectionOutboxTest",
-      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+      "evidence": "2026-10-12 完成（分支 codex/ncs-041-derived-outbox，主分支 ff-only 合入，与 042/043/044 同分支成组）。账本绑定来源稿版本（source_version safeAddColumn 可重复迁移）：(项目,章,投影类型) 主键唯一；ensureStage 版本升级重新武装 PENDING（COMPLETED 不回退）；重启（重开连接）待执行项与 attempts 持久。验收：ProjectionOutboxTest 2/2；全量 1577/0/0/1skip ×2。",
+      "completion_record": "ncs-041-044-verified"
     },
     {
       "id": "NCS-042",
@@ -8151,7 +8152,7 @@
       "dependencies": [
         "NCS-041"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/persistence/sqlite/SqliteNovelRepository.java",
         "src/main/java/com/writing/novel/spi/NovelRepository.java",
@@ -8160,7 +8161,8 @@
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：单章和整组事务同时写正文及outbox；任一失败一起回滚。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=RevisionOutboxCommitTest",
-      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+      "evidence": "2026-10-12 完成（分支 codex/ncs-041-derived-outbox，主分支 ff-only 合入，与 042/043/044 同分支成组）。单章/整组事务同写正文与 outbox：saveChapterEnqueuingDerivatives 与 saveChaptersEnqueuingDerivatives（util.Triple 组载体）在 runInTransaction 内同写 chapters 与 post_process_ledger——重复阶段键唯一约束→任一失败全组回滚（正文不残留）。验收：RevisionOutboxCommitTest 3/3；全量 1577/0/0/1skip ×2。",
+      "completion_record": "ncs-041-044-verified"
     },
     {
       "id": "NCS-043",
@@ -8171,7 +8173,7 @@
       "dependencies": [
         "NCS-042"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/ChapterRevisionService.java",
         "src/main/java/com/writing/novel/service/ProjectionReadinessService.java",
@@ -8180,7 +8182,8 @@
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：失败持久待重试；旧来源不得完成新稿；重启能重建全部必需投影。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=ProjectionReadinessTest",
-      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+      "evidence": "2026-10-12 完成（分支 codex/ncs-041-derived-outbox，主分支 ff-only 合入，与 042/043/044 同分支成组）。失败持久待重试（failStage→PENDING+attempts+1）；旧来源不得完成新稿（markCompletedForVersion 带 expectedSourceVersion，不符返回 false 且保持 PENDING）；重启重建=unfinishedStages 驱动既有 resumeAllInterruptedPostProcessing。验收：ProjectionReadinessTest 3/3；全量 1577/0/0/1skip ×2。",
+      "completion_record": "ncs-041-044-verified"
     },
     {
       "id": "NCS-044",
@@ -8191,7 +8194,7 @@
       "dependencies": [
         "NCS-043"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
         "src/main/java/com/writing/novel/service/WorkspaceViewService.java",
@@ -8200,7 +8203,8 @@
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：正文领先就绪时阻断受影响续写；工作台返回同源身份和原因。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=ReadySnapshotAdmissionTest",
-      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+      "evidence": "2026-10-12 完成（分支 codex/ncs-041-derived-outbox，主分支 ff-only 合入，与 042/043/044 同分支成组）。派生就绪准入 derivedReadinessBlocker：正文领先投影（outbox 有待执行项）时阻断受影响续写，消息携带同源身份（章号+来源稿版本）与原因（未就绪阶段清单）；全部就绪不阻断。挂点为注入账本（pol.postProcessLedger 字段捕获，null=不启用）。验收：ReadySnapshotAdmissionTest 2/2；全量 1577/0/0/1skip ×2。",
+      "completion_record": "ncs-041-044-verified"
     },
     {
       "id": "NCS-045",
@@ -11107,6 +11111,6 @@
     }
   ],
   "schema_version": 2,
-  "updated_at": "2026-10-11",
+  "updated_at": "2026-10-12",
   "active_feature": null
 }

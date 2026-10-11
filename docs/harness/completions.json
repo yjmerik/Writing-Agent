@@ -3503,8 +3503,22 @@
       "implementation_commit": "2627fb91f7785348e17222793b8816013502bd50",
       "main_commit": "2627fb91f7785348e17222793b8816013502bd50",
       "evidence": "docs/harness/evidence/2026-10-11-ncs-039-040.json"
+    },
+    {
+      "id": "ncs-041-044-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-041",
+        "NCS-042",
+        "NCS-043",
+        "NCS-044"
+      ],
+      "branch": "codex/ncs-041-derived-outbox",
+      "implementation_commit": "00d6688d4b59a33e8a3824db893a053c607d533f",
+      "main_commit": "00d6688d4b59a33e8a3824db893a053c607d533f",
+      "evidence": "docs/harness/evidence/2026-10-11-ncs-041-044.json"
     }
   ],
-  "commit": "2627fb91f7785348e17222793b8816013502bd50",
-  "main_commit": "2627fb91f7785348e17222793b8816013502bd50"
+  "commit": "00d6688d4b59a33e8a3824db893a053c607d533f",
+  "main_commit": "00d6688d4b59a33e8a3824db893a053c607d533f"
 }

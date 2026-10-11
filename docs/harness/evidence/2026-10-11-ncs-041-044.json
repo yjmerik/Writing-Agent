@@ -1,0 +1,39 @@
+{
+  "commit": "00d6688d4b59a33e8a3824db893a053c607d533f",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-041",
+    "NCS-042",
+    "NCS-043",
+    "NCS-044"
+  ],
+  "checks": [
+    {
+      "command": "ProjectionOutboxTest(041)",
+      "result": "2/2：(来源章稿,投影类型)唯一+版本升级重新武装（RUNNING 同版保持/PENDING 新版绑定）+重启待执行项保持+迁移可重复（初始化器跑两遍）",
+      "exitCode": 0
+    },
+    {
+      "command": "RevisionOutboxCommitTest(042)",
+      "result": "3/3：单章同事务（正文+2行账）+重复阶段键唯一约束→整体回滚（正文不残留）+整组组事务任一失败全组回滚",
+      "exitCode": 0
+    },
+    {
+      "command": "ProjectionReadinessTest(043)",
+      "result": "3/3：失败持久待重试（PENDING+attempts）；旧来源完成标记不命中新稿（v1 标记 v2 账目→false+保持 PENDING）；重启仅剩未完成投影待重建",
+      "exitCode": 0
+    },
+    {
+      "command": "ReadySnapshotAdmissionTest(044)",
+      "result": "2/2：正文领先投影时阻断，消息含同源身份（第 1 章/v2）+原因（未就绪阶段清单+续写影响）；全部就绪不阻断",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test 全量（分支+合并后干净 main 检出）",
+      "result": "1577/0/0/1skip ×2",
+      "exitCode": 0
+    }
+  ],
+  "notes": "账本 v2：post_process_ledger + source_version/attempts（safeAddColumn 可重复迁移）；ensureStage 版本升级重武装语义（COMPLETED 不回退）；saveChapterEnqueuingDerivatives/saveChaptersEnqueuingDerivatives（util.Triple 组载体）同事务；derivedReadinessBlocker 用注入账本（pol.postProcessLedger 字段捕获）。044 的 write-all 集成挂点为 derivedReadinessBlocker（工作台 reason 通道后续 UI 批次接入）。",
+  "recordedAt": "2026-10-12T00:00:00+08:00"
+}

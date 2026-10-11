@@ -455,6 +455,8 @@ public class WritingTaskExecutor {
                     : previous == null ? null : previous.getInstruction());
             captureLeaseEpoch(task);
             repository.saveWritingTask(task);
+            // NCS-171: 协作任务生命周期日志（批准自动恢复/全书协作共用此入口）
+            log.info("协作任务已启动: projectId={}, taskId={}", projectId, task.getId());
             executor.submit(() -> executeCollaborative(task));
             return task;
         } catch (RuntimeException e) {
@@ -506,6 +508,8 @@ public class WritingTaskExecutor {
     private void executeCollaborative(WritingTask task) {
         String id = task.getProjectId();
         int written = 0;
+        // NCS-171: 生命周期起止必须可见（18095：批准→自动恢复→续写全程无日志）
+        log.info("写作任务开始(协作): {}", task.getId());
         try {
             // Keep one writing loop so cross-chapter failure and quality counters retain meaning.
             while (!shuttingDown && !isCancelled(task.getId()) && !overBudget(id)) {
@@ -552,6 +556,9 @@ public class WritingTaskExecutor {
             }
         } finally {
             task.setChaptersWritten(written);
+            log.info("写作任务终态(协作): {} = {}, 写了 {} 章{}", task.getId(),
+                    task.getStatus(), written,
+                    task.getErrorMessage() == null ? "" : "（" + task.getErrorMessage() + "）");
             finishCollaborative(task);
         }
     }

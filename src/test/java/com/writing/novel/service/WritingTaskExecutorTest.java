@@ -111,4 +111,41 @@ class WritingTaskExecutorTest {
         }
         assertEquals(WritingTask.Status.COMPLETED, task.getStatus());
     }
+
+    /** NCS-171: 协作任务（批准后自动恢复路径）的生命周期日志必须在 app.log 可见 */
+    @org.junit.jupiter.api.Test
+    void 协作任务生命周期日志_启动与终态可见() throws Exception {
+        var logger = (ch.qos.logback.classic.Logger)
+                org.slf4j.LoggerFactory.getLogger(WritingTaskExecutor.class);
+        var listAppender = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        listAppender.start();
+        logger.addAppender(listAppender);
+        try {
+            // WRITING 态 + runWritingLoop 返回 1 → 协作循环自然结束 → PAUSED（创作已停下）
+            Project p = repo.findProject(pid).orElseThrow();
+            p.setState(NovelState.WRITING);
+            repo.saveProject(p);
+            org.mockito.Mockito.when(orchestrator.runWritingLoop(
+                    org.mockito.ArgumentMatchers.eq(pid), org.mockito.ArgumentMatchers.anyInt(),
+                    org.mockito.ArgumentMatchers.any(java.util.function.BooleanSupplier.class),
+                    org.mockito.ArgumentMatchers.any()))
+                    .thenReturn(1);
+
+            WritingTask task = executor.startCollaborative(pid, null);
+            for (int i = 0; i < 100 && !taskTerminal(task.getId()); i++) {
+                TimeUnit.MILLISECONDS.sleep(50);
+            }
+            assertTrue(taskTerminal(task.getId()), "协作任务应落终态");
+
+            var messages = listAppender.list.stream()
+                    .map(ch.qos.logback.classic.spi.ILoggingEvent::getFormattedMessage)
+                    .toList();
+            assertTrue(messages.stream().anyMatch(m -> m.contains("写作任务开始(协作)")),
+                    "协作任务启动必须落日志（18095 验收轮缺失项）: " + messages);
+            assertTrue(messages.stream().anyMatch(m -> m.contains("写作任务终态(协作)")),
+                    "协作任务终态必须落日志: " + messages);
+        } finally {
+            logger.detachAppender(listAppender);
+        }
+    }
 }

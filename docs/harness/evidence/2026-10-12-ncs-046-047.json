@@ -1,0 +1,27 @@
+{
+  "commit": "c8d2fead09725903b6e84c5e9f23f6d2ab759588",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-046",
+    "NCS-047"
+  ],
+  "checks": [
+    {
+      "command": "ImpactClosureTest(046)",
+      "result": "3/3：闭包=certain∪隐含（关系链同场 ch2 经崔蘅入闭包，无关 ch3 保留未知）；无分析返回空走全量；预算语义（EXPANSION_BUDGET=3，停止时保留未知）",
+      "exitCode": 0
+    },
+    {
+      "command": "GroupCoverageGateTest(047)",
+      "result": "5/5：缺 READER_REVIEW 拒绝；未处置/空处置 UNKNOWN 拒绝；覆盖完整+已处置接受；报告绑定 12hex 候选 hash 且不同 afterJson hash 不同",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test 全量（分支+合并后干净 main 检出）",
+      "result": "1586/0/0/1skip ×2",
+      "exitCode": 0
+    }
+  ],
+  "notes": "修复过程：findLatest 未回读 lists_json 列（占位构造）导致闭包恒空——加 restore 构造。闭包服务经构造注入仓储（PersistenceConfig bean）。隐含后果判据=unknown 章正文含关系链人物名。",
+  "recordedAt": "2026-10-12T02:00:00+08:00"
+}

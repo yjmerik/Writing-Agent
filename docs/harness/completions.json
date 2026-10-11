@@ -3528,8 +3528,20 @@
       "implementation_commit": "f7c82970347ca0cf761810658d16474b0c313292",
       "main_commit": "f7c82970347ca0cf761810658d16474b0c313292",
       "evidence": "docs/harness/evidence/2026-10-12-ncs-045.json"
+    },
+    {
+      "id": "ncs-046-047-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-046",
+        "NCS-047"
+      ],
+      "branch": "codex/ncs-046-repair-closure",
+      "implementation_commit": "c8d2fead09725903b6e84c5e9f23f6d2ab759588",
+      "main_commit": "c8d2fead09725903b6e84c5e9f23f6d2ab759588",
+      "evidence": "docs/harness/evidence/2026-10-12-ncs-046-047.json"
     }
   ],
-  "commit": "f7c82970347ca0cf761810658d16474b0c313292",
-  "main_commit": "f7c82970347ca0cf761810658d16474b0c313292"
+  "commit": "c8d2fead09725903b6e84c5e9f23f6d2ab759588",
+  "main_commit": "c8d2fead09725903b6e84c5e9f23f6d2ab759588"
 }

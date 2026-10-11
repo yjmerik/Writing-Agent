@@ -8236,16 +8236,17 @@
       "dependencies": [
         "NCS-045"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
-        "src/main/java/com/writing/novel/service/RevisionRepairService.java",
-        "src/main/java/com/writing/novel/service/ImpactAnalysisService.java",
+        "src/main/java/com/writing/novel/service/ImpactClosureService.java",
+        "src/main/java/com/writing/novel/config/PersistenceConfig.java",
         "src/test/java/com/writing/novel/service/ImpactClosureTest.java"
       ],
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：隐含后果和关系链进入补查；修复产生新影响时扩展闭包，预算停止保留未知。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=ImpactClosureTest",
-      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+      "evidence": "2026-10-12 完成（分支 codex/ncs-046-repair-closure，主分支 ff-only 合入）。service/ImpactClosureService：补查闭包=直接影响（certain）∪隐含后果（unknown 章正文含关系链人物）∪预算内扩展（EXPANSION_BUDGET=3，停止保留未知）；无分析依据返回空走全量。修复过程：NCS-045 仓储 findLatest 未回读 lists_json（占位构造）→加 restore 构造。验收：ImpactClosureTest 3/3；全量 1586/0/0/1skip ×2。",
+      "completion_record": "ncs-046-047-verified"
     },
     {
       "id": "NCS-047",
@@ -8256,16 +8257,16 @@
       "dependencies": [
         "NCS-046"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
-        "src/main/java/com/writing/novel/service/GroupAcceptanceService.java",
-        "src/main/java/com/writing/novel/web/RevisionRequestController.java",
+        "src/main/java/com/writing/novel/service/GroupCoverageGate.java",
         "src/test/java/com/writing/novel/service/GroupCoverageGateTest.java"
       ],
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：缺必需检查或未处置UNKNOWN禁止接受；报告绑定精确候选hash。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=GroupCoverageGateTest",
-      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+      "evidence": "2026-10-12 完成（同分支）。service/GroupCoverageGate：章节类候选采纳门禁——REQUIRED_CHECKS（CONTINUITY/READER_REVIEW）缺失或 UNKNOWN 未处置（含空处置）禁止接受；报告绑定精确候选 hash（afterJson SHA-256 12hex）。验收：GroupCoverageGateTest 5/5；全量 1586/0/0/1skip ×2。",
+      "completion_record": "ncs-046-047-verified"
     },
     {
       "id": "NCS-048",

@@ -1,0 +1,26 @@
+{
+  "commit": "027622191e69815463bbd0b5308d5e0497646b8e",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-199"
+  ],
+  "checks": [
+    {
+      "command": "StyleGuardianAgentTest（含新增 2 例）",
+      "result": "5/5：新档案含描写密度/转场手法/对话配比三字段；旧档案缺列解析兼容（null 不炸、旧格式更新输出不产生质感字段）",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（分支与合并后干净 main 检出）",
+      "result": "1545/0/0/1skip ×2",
+      "exitCode": 0
+    },
+    {
+      "command": "record（--chapters 1）+ replay×2 + baseline",
+      "result": "1 章录制 29 fixture（用户指示：录制改 1 章/次，e2e.sh replay 支持 --chapters 显式指定）；replay×2 均 acceptancePassed=true；compare-baseline PASS",
+      "exitCode": 0
+    }
+  ],
+  "notes": "质感维度列经 safeAddColumn 迁移；建档/更新双路径解析，输出缺失保持原值。录制耗时从 ~25 分钟降至 ~12 分钟。",
+  "recordedAt": "2026-10-11T12:00:00+08:00"
+}

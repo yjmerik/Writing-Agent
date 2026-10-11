@@ -1,6 +1,6 @@
-# 交接：质感批次 NCS-192~200 完成，剩余老批次待续 — 2026-10-11
+# 交接：质感批次 NCS-192~200 完成，剩余老批次待续 — 2026-10-12
 
-Last Updated: 2026-10-11
+Last Updated: 2026-10-12
 
 ## Current
 
@@ -14,14 +14,14 @@ Last Updated: 2026-10-11
 ## Files
 
 - main：2940412；语料 mystery-20261011（1 章 29 fixture，DeepSeek）
-- 证据链：docs/harness/evidence/2026-10-11-ncs-192..200.json + completions(ncs-19x-verified)
+- 证据链：docs/harness/evidence/2026-10-12-ncs-192..200.json + completions(ncs-19x-verified)
 
 ## Verification
 
 - 每特性：专属测试+全量（1549/0/0/1skip）+ record→replay×2 --chapters 1 一致 + baseline PASS
 - check-harness PASS（497 completed）
 
-## HISTORICAL 端到端验证（2026-10-11 补充）
+## HISTORICAL 端到端验证（2026-10-12 补充）
 
 - 质感链路实战全通：ScenePlan(3 场景/4200 预算) → 章写 → TEXTURE_GATE 拦截 3 项
   （对白 64% 超限/乒乓 2 处/场景数 0 超区间）→ 结构性越界路由整章重写 → 重写完整落库

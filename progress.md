@@ -1,6 +1,6 @@
-# 质感批次 NCS-192~200 全部完成 — 2026-10-11
+# 质感批次 NCS-192~200 全部完成 — 2026-10-12
 
-Last Updated: 2026-10-11
+Last Updated: 2026-10-12
 
 ## Current
 
@@ -12,14 +12,14 @@ Last Updated: 2026-10-11
 
 ## Files
 
-- main：1b277a4（NCS-200 实现）+ 回执提交；证据 docs/harness/evidence/2026-10-11-ncs-{192..200}.json
+- main：1b277a4（NCS-200 实现）+ 回执提交；证据 docs/harness/evidence/2026-10-12-ncs-{192..200}.json
 
 ## Verification
 
 - 每特性 verify_cmd 专属测试全绿 + 全量 mvn test（1522→1549 递增）+ replay×2 一致 + baseline PASS（无 bless）
 - 干净 main worktree 复验全部通过；两处一次性 flake（ApiCacheControl 未构建前端/PersistenceSmoke）重跑消失
 
-## HISTORICAL 端到端验证（2026-10-11 补充）
+## HISTORICAL 端到端验证（2026-10-12 补充）
 
 - 质感链路实战全通：ScenePlan(3 场景/4200 预算) → 章写 → TEXTURE_GATE 拦截 3 项
   （对白 64% 超限/乒乓 2 处/场景数 0 超区间）→ 结构性越界路由整章重写 → 重写完整落库

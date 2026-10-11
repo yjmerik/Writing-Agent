@@ -77,7 +77,9 @@ public class OrchestratorConfig {
                                                   com.writing.novel.service.VolumeReadbackService volumeReadbackService,
                                                   com.writing.novel.service.AestheticProfileService aestheticProfileService,
                                                   com.writing.novel.service.ScenePlanService scenePlanService,
-                                                  com.writing.novel.persistence.sqlite.NarrativePolicyRepository narrativePolicyRepository) {
+                                                  com.writing.novel.persistence.sqlite.NarrativePolicyRepository narrativePolicyRepository,
+                                                  com.writing.novel.persistence.sqlite.ConnectionProvider connectionProvider,
+                                                  com.writing.novel.service.VolumePacingController volumePacingController) {
         NovelOrchestrator orchestrator = new NovelOrchestrator(repo, projectService, worldBuilder, characterDesigner,
                 plotter, chapterWriter, continuityChecker, styleGuardian, memoryManager,
                 summaryService, contextAssembler, qualityEvaluationAgent, entityGraphService,
@@ -120,7 +122,20 @@ public class OrchestratorConfig {
                 repo, narrativePolicyRepository));
         // NCS-196: 质感单项定点扩写编辑器
         orchestrator.setTexturePassageEditor(passageEditor);
+        // NCS-200: 卷级节奏闭环（单例 bean，MemoryConfig 的 assembler 同源注入）
+        orchestrator.setVolumePacingController(volumePacingController);
         return orchestrator;
+    }
+
+    /** NCS-200: 卷级节奏闭环控制器（单例——EventLog 纹理缓冲全局唯一） */
+    @Bean
+    public com.writing.novel.service.VolumePacingController volumePacingController(
+            com.writing.novel.persistence.sqlite.ConnectionProvider connectionProvider,
+            NovelRepository repo,
+            com.writing.novel.service.VolumeReadbackService volumeReadbackService) {
+        return new com.writing.novel.service.VolumePacingController(
+                new com.writing.novel.persistence.sqlite.VolumePacingDirectiveRepository(connectionProvider),
+                repo, volumeReadbackService);
     }
 
     /** p22-05: 必需策略校验——缺失能力让 Spring 启动失败并指名（fail-loud 组合） */

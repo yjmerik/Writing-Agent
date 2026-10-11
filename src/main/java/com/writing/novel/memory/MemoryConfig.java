@@ -82,6 +82,7 @@ public class MemoryConfig {
     public ContextAssembler contextAssembler(NovelRepository repository,
                                               KnowledgeBaseService knowledgeBase,
                                               com.writing.novel.persistence.sqlite.NarrativePolicyRepository narrativePolicyRepository,
+                                              com.writing.novel.service.VolumePacingController pacingController,
                                               SummaryService summaryService,
                                               VectorRetrievalService vectorRetrieval,
                                               EntityGraphService entityGraphService,
@@ -113,6 +114,8 @@ public class MemoryConfig {
         // NCS-191: 叙事策略（宽松策略保持现状文案）
         assembler.setNarrativePolicyService(
                 new com.writing.novel.service.NarrativePolicyService(repository, narrativePolicyRepository));
+        // NCS-200: 卷级节奏指令进写作约束（单例 controller 由 OrchestratorConfig 提供）
+        assembler.setVolumePacingConstraints(pacingController::constraintsFor);
         return assembler;
     }
 

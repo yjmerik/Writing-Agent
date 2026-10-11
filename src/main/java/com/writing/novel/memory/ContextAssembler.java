@@ -209,6 +209,18 @@ public class ContextAssembler {
 
         // 写作偏好：对话约束（含密度目标）+ 原有的量化约束
         ctx.setWritingConstraints(buildWritingConstraints(projectId, chapterIndex, fullSynopsis));
+        // NCS-200: 卷级节奏指令追加到写作约束（迟滞——指令只在卷边界更新）
+        if (volumePacingConstraints != null) {
+            try {
+                String pacing = volumePacingConstraints.apply(projectId, chapterIndex);
+                if (pacing != null && !pacing.isBlank()) {
+                    String current = ctx.getWritingConstraints();
+                    ctx.setWritingConstraints((current == null || current.isBlank()
+                            ? pacing : current + "\n\n" + pacing));
+                }
+            } catch (Exception ignored) {
+            }
+        }
 
         // 角色声音注入（说话风格 + 知识领域）
         ctx.setCharacterVoiceSection(buildCharacterVoiceSection(projectId, fullSynopsis));
@@ -934,6 +946,13 @@ public class ContextAssembler {
     }
 
     // --- 量化写作约束（含对话密度） ---
+
+    // NCS-200: 卷级节奏指令（late-set）——(projectId, chapterIndex) → 指令文本；null=不注入
+    private volatile java.util.function.BiFunction<String, Integer, String> volumePacingConstraints;
+
+    public void setVolumePacingConstraints(java.util.function.BiFunction<String, Integer, String> supplier) {
+        this.volumePacingConstraints = supplier;
+    }
 
     /** NCS-191: 叙事策略注入（late-set）——null 或宽松策略时保持现状文案（字节等价） */
     private volatile com.writing.novel.service.NarrativePolicyService narrativePolicyService;

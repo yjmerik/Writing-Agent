@@ -154,6 +154,13 @@ public class NovelOrchestrator {
         }
     }
 
+    /** NCS-200: 卷级节奏闭环控制器（null=闭环关闭）。 */
+    private volatile com.writing.novel.service.VolumePacingController volumePacingController;
+
+    public void setVolumePacingController(com.writing.novel.service.VolumePacingController controller) {
+        this.volumePacingController = controller;
+    }
+
     /** NCS-007: 注入检查结果信封仓储（生产装配用）。 */
     public void setCheckResultRepository(com.writing.novel.persistence.sqlite.CheckResultRepository repo) {
         this.checkResultRepository = repo;
@@ -1660,11 +1667,13 @@ public class NovelOrchestrator {
         }
 
         // p5-c3: ChekhovAudit——卷末检查未回收伏笔
+        String trendWarningForPacing = "";
         try {
             chekhovAudit(projectId, volume.getVolumeIndex(), fromChapter, toChapter);
             // NCS-123: 检测器产出趋势门禁（卷级聚合，非逐章阻断）
             if (detectorTrendService != null) {
                 String trendWarning = detectorTrendService.volumeGate(projectId, fromChapter, toChapter);
+                trendWarningForPacing = trendWarning;
                 if (!trendWarning.isEmpty()) {
                     EventLog.emit("VOLUME_TREND_WARNING", Map.of(
                             "projectId", projectId, "fromChapter", fromChapter,
@@ -1674,6 +1683,16 @@ public class NovelOrchestrator {
             }
         } catch (Exception e) {
             log.warn("伏笔审计失败: {}", e.getMessage());
+        }
+
+        // NCS-200: 卷级节奏闭环——卷末聚合纹理/趋势/读者分/回读节奏 → 下一卷设定点
+        if (volumePacingController != null) {
+            try {
+                volumePacingController.closeVolume(projectId, volume.getVolumeIndex(),
+                        fromChapter, toChapter, trendWarningForPacing);
+            } catch (Exception e) {
+                log.warn("卷级节奏闭环失败: {}", e.getMessage());
+            }
         }
 
         // p11-H2: 卷末批量升级角色——把本卷出现但无档案的实体升级为角色
@@ -2961,9 +2980,15 @@ public class NovelOrchestrator {
                     ? "（延迟生成，根据总纲规划）本卷为全书最后阶段（至第" + nextEndChapter
                       + "章全书完结）：必须收束主线、集中回收未回收伏笔、走向终局；不得开启新篇、不得埋设新悬念"
                     : "（延迟生成，根据总纲规划）";
+            // NCS-200: 卷级节奏指令注入卷梗概（替换占位梗概的空泛性；迟滞——仅卷边界调整）
+            String pacingDirective = volumePacingController != null
+                    ? volumePacingController.directiveFor(projectId, volumeNumber) : "";
+
+            String effectiveVolumeSummary = pacingDirective.isBlank()
+                    ? volumeSummary : volumeSummary + "\n\n" + pacingDirective;
             String volumeText = plotter.planVolume(
                     masterOutline, previousSummary,
-                    "卷" + volumeNumber, volumeSummary,
+                    "卷" + volumeNumber, effectiveVolumeSummary,
                     nextStartChapter, nextEndChapter, existingCharacters, protagonistName,
                     p.getGenre(), projectId);
 

@@ -1,0 +1,26 @@
+{
+  "commit": "b21099916e04003d40fcb9b54ed8816166882637",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-197"
+  ],
+  "checks": [
+    {
+      "command": "ContextAssemblerTest（含新增 2 例）",
+      "result": "11/11：上一章全文注入（章首+章尾+衔接点均在，旧实现仅尾部 2000 字）；低预算裁剪保留【精确衔接点】块且确实收缩",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（分支与合并后干净 main 检出）",
+      "result": "1541/0/0/1skip ×2",
+      "exitCode": 0
+    },
+    {
+      "command": "record + replay×2 + baseline",
+      "result": "record 完成 59 fixture（首次启动遇 DeepSeek 瞬时 EMPTY_RESPONSE 构思失败，冷却重试成功）；replay×2 均 acceptancePassed=true；compare-baseline PASS",
+      "exitCode": 0
+    }
+  ],
+  "notes": "写作预算 40800（=64000-20000-3200）下 recentText 上限按比例放大至 ≈30k token，6000 字章节全文免裁；预算紧张时衔接点块尾部完整保留。",
+  "recordedAt": "2026-10-11T06:00:00+08:00"
+}

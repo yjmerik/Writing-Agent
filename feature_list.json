@@ -10993,14 +10993,16 @@
       "type": "feature",
       "phase": 56,
       "dependencies": [],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/memory/ContextAssembler.java"
       ],
       "spec": "docs/specs/2026-10-09-narrative-quality-architecture.md",
       "description": "RECENT_TEXT_CHARS 2000→上一章全文（保留精确衔接点机制），前章再带尾部；applyTokenBudget 裁剪顺序同步调整，写作预算 40800 token 内校验。",
       "acceptance": "ContextAssemblerTest：recentTextSection 含上一章全文；预算裁剪单测通过",
-      "verify_cmd": "mvn test -Dtest=ContextAssemblerTest"
+      "verify_cmd": "mvn test -Dtest=ContextAssemblerTest",
+      "completion_record": "ncs-197-verified",
+      "evidence": "2026-10-11 完成（分支 codex/ncs-197-full-prev-chapter，实现提交 b210999，主分支 ff-only 合入）。ContextAssembler.buildRecentText 上一章全文注入（删除 RECENT_TEXT_CHARS=2000 截尾，精确衔接点机制保留）；applyTokenBudget 裁剪顺序后移（recentText 低于摘要/伏笔、高于 premise），大预算 12000 token 比例放大（40800 写作预算下 ≈30k，6000 字章节免裁），衔接点块尾部保留（trimRecentTextKeepHandoff）。验收：ContextAssemblerTest 11/11（新增全文注入+低预算保留衔接点 2 例）；全量 1541/0/0/1skip ×2；DeepSeek 语料重建 59 fixture（首次遇瞬时 EMPTY_RESPONSE 冷却重试）→ replay×2 全验收 → baseline PASS。"
     },
     {
       "id": "NCS-198",

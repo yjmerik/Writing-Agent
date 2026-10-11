@@ -40,11 +40,11 @@ public class CharacterImpactAnalysisRepository {
             ps.setString(2, characterId);
             ResultSet rs = ps.executeQuery();
             if (!rs.next()) return Optional.empty();
-            var a = new CharacterImpactAnalysis(rs.getString("project_id"), rs.getString("character_id"),
-                    rs.getString("base_version"), java.util.List.of(), java.util.List.of(),
-                    java.util.List.of(), java.util.List.of());
-            a.setId(rs.getLong("id"));
-            return Optional.of(a);
+            return Optional.of(new CharacterImpactAnalysis(rs.getLong("id"),
+                    rs.getString("project_id"), rs.getString("character_id"),
+                    rs.getString("base_version"), rs.getString("scope_json"),
+                    rs.getString("lists_json"),
+                    java.time.Instant.parse(rs.getString("created_at"))));
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 

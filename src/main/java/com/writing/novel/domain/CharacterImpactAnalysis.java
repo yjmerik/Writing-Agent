@@ -13,6 +13,18 @@ public class CharacterImpactAnalysis {
     private final String listsJson;        // certain/unknown/insufficient 清单
     private final Instant createdAt;
 
+    /** NCS-045: 持久层恢复专用（直读列值） */
+    public CharacterImpactAnalysis(Long id, String projectId, String characterId, String baseVersion,
+                                   String scopeJson, String listsJson, Instant createdAt) {
+        this.id = id;
+        this.projectId = projectId;
+        this.characterId = characterId;
+        this.baseVersion = baseVersion;
+        this.scopeJson = scopeJson;
+        this.listsJson = listsJson;
+        this.createdAt = createdAt;
+    }
+
     public CharacterImpactAnalysis(String projectId, String characterId, String baseVersion,
                                    Object scope, Object certain, Object unknown, Object insufficient) {
         this.projectId = projectId;

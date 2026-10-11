@@ -257,6 +257,14 @@ public class PersistenceConfig {
                 llmGateway, promptTemplateService, planDeviationRepository);
     }
 
+    // NCS-046: 影响闭包服务（依赖影响分析仓储）
+    @Bean
+    public com.writing.novel.service.ImpactClosureService impactClosureService(
+            NovelRepository repository,
+            com.writing.novel.persistence.sqlite.CharacterImpactAnalysisRepository characterImpactAnalysisRepository) {
+        return new com.writing.novel.service.ImpactClosureService(repository, characterImpactAnalysisRepository);
+    }
+
     // NCS-045: 影响分析仓储（与主库同文件）
     @Bean
     public com.writing.novel.persistence.sqlite.CharacterImpactAnalysisRepository characterImpactAnalysisRepository(

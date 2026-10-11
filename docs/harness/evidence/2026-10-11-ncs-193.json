@@ -1,0 +1,31 @@
+{
+  "commit": "b556fa8c9201f0d9d7fe02cf1da53ccd6f822202",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-193"
+  ],
+  "checks": [
+    {
+      "command": "verify_cmd: mvn test -Dtest=ScenePlanAgentTest",
+      "result": "5/5 通过：2-4 场景解析字段齐全（time/location/characters/charBudget/transitionType/transitionMinChars/textureHint/causalConstraint）、预算合计低于/超出字数区间按比例归一、场景数越界与坏输出 null 降级、写前规划落梗概+幂等",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（分支与合并后干净 main 检出）",
+      "result": "均 1527/0/0/1skip（新增 ScenePlanAgentTest 5 例）",
+      "exitCode": 0
+    },
+    {
+      "command": "E2E_FIXTURE_DIR=data/e2e-fixtures/mystery-20261011 record + replay×2",
+      "result": "首次 record 因 DeepSeek 瞬时 NETWORK/EMPTY_RESPONSE 熔断失败（清理重试）；重试 record 完成（57 fixture，SCENE_PLAN_READY×3 实战触发）；replay×2 完全一致均 acceptancePassed=true（3 章/10444 字/57 调用）",
+      "exitCode": 0
+    },
+    {
+      "command": "python3 scripts/compare-baseline.py",
+      "result": "PASS 质量未退化（全部门槛满足，golden 未 bless）",
+      "exitCode": 0
+    }
+  ],
+  "notes": "语料重建理由：prepare 新增 GENERAL 场景规划调用，回放调用序列变化。scene_plan 列经 safeAddColumn 迁移；旧大纲 scenePlan=NULL 行为不变（ensurePlanned 幂等补齐）。合并后干净 main worktree 复验 1527 绿 + replay 验收通过。",
+  "recordedAt": "2026-10-11T01:00:00+08:00"
+}

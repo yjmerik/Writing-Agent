@@ -10913,7 +10913,7 @@
       "dependencies": [
         "NCS-190"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/agent/ScenePlanAgent.java",
         "src/main/resources/prompts/scene-plan.st"
@@ -10921,7 +10921,9 @@
       "spec": "docs/specs/2026-10-09-narrative-quality-architecture.md",
       "description": "写前新增轻量场景规划步骤：输入章梗概节拍+上一章尾部+NarrativePolicy，输出 2-4 场景 JSON（时间/地点/出场/字数预算/转场方式与最低字数/质感提示/因果约束字段吸收 scene-contract）。GENERAL 路由小输出。仅产出并落梗概，不改写作消费（归 NCS-194）。",
       "acceptance": "ScenePlanAgentTest：给定梗概解析出 2-4 场景，字段齐全，预算合计落在本章字数区间",
-      "verify_cmd": "mvn test -Dtest=ScenePlanAgentTest"
+      "verify_cmd": "mvn test -Dtest=ScenePlanAgentTest",
+      "completion_record": "ncs-193-verified",
+      "evidence": "2026-10-11 完成（分支 codex/ncs-193-scene-plan，实现提交 b556fa8，主分支包含 b556fa8 ff-only 合入）。ScenePlanAgent（GENERAL 路由，scene-plan.st）：章梗概→2-4 场景 JSON（时间/地点/出场/字数预算/转场方式与最低字数/质感提示/因果约束吸收 scene-contract）；预算合计确定性归一到本章字数区间（缩放+余数记最大场景）；场景数越界/坏输出 null 降级。ScenePlanService.ensurePlanned 幂等落梗概（ChapterSynopsis.scenePlan + scene_plan 列 safeAddColumn 迁移），ChapterProduction.prepare 接入（late-set + SCENE_PLAN_READY/UNAVAILABLE/FAILED 事件，失败不阻断写作）；写作消费留待 NCS-194。验收：ScenePlanAgentTest 5/5；全量 1527/0/0/1skip ×2；DeepSeek 语料 mystery-20261011 重建（57 fixture，SCENE_PLAN_READY×3 实战；首次 record 遇 DeepSeek 瞬时故障清理重试）→ replay×2 完全一致全验收 → compare-baseline PASS。"
     },
     {
       "id": "NCS-194",

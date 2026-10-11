@@ -3303,8 +3303,19 @@
       "implementation_commit": "a18678cd50f00f50cb8c97f3d2de086f65c8cc63",
       "main_commit": "a18678cd50f00f50cb8c97f3d2de086f65c8cc63",
       "evidence": "docs/harness/evidence/2026-10-11-ncs-192.json"
+    },
+    {
+      "id": "ncs-193-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-193"
+      ],
+      "branch": "codex/ncs-193-scene-plan",
+      "implementation_commit": "b556fa8c9201f0d9d7fe02cf1da53ccd6f822202",
+      "main_commit": "b556fa8c9201f0d9d7fe02cf1da53ccd6f822202",
+      "evidence": "docs/harness/evidence/2026-10-11-ncs-193.json"
     }
   ],
-  "commit": "a18678cd50f00f50cb8c97f3d2de086f65c8cc63",
-  "main_commit": "a18678cd50f00f50cb8c97f3d2de086f65c8cc63"
+  "commit": "b556fa8c9201f0d9d7fe02cf1da53ccd6f822202",
+  "main_commit": "b556fa8c9201f0d9d7fe02cf1da53ccd6f822202"
 }

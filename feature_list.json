@@ -7981,7 +7981,7 @@
       "dependencies": [
         "NCS-032"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
         "src/main/java/com/writing/novel/orchestrator/OrchestratorConfig.java",
@@ -7990,7 +7990,8 @@
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：世界人物和全书卷计划请求带精确契约版本及内容。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=AuthorIntentPlanningTest",
-      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+      "evidence": "2026-10-11 完成（与 NCS-035 同分支 codex/ncs-034-035-author-intent，实现提交 4427870）。NCS-034: WorldBuilderAgent/CharacterDesignerAgent/PlotterAgent 规划请求经 AuthorIntentConsumeSupport携带【创作约定·第N版】精确契约版本及内容（空契约零注入）。NCS-035: ContinuityCheckerAgent 核查与 PassageEditor 段落修订同源接入；所用修订号经 AUTHOR_INTENT_USED 审计（context/revision）；委托边界条款（自主程度仅描述创作偏好，不授予权限）在场防自由文本提权。验收：AuthorIntentPlanningTest 2/2 + AuthorIntentRevisionTest 2/2；全量 1562/0/0/1skip。流程偏差：实现提交直接落 main（漏建分支），已补建分支指针并在 evidence 记录。",
+      "completion_record": "ncs-034-035-verified"
     },
     {
       "id": "NCS-035",
@@ -8001,7 +8002,7 @@
       "dependencies": [
         "NCS-032"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/service/AgentRevisionService.java",
         "src/main/java/com/writing/novel/agent/ContinuityCheckerAgent.java",
@@ -8010,7 +8011,8 @@
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：生成修订和核查遵从约定并记录所用修订；不以自由文本提升委托权限。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=AuthorIntentRevisionTest",
-      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+      "evidence": "2026-10-11 完成（与 NCS-035 同分支 codex/ncs-034-035-author-intent，实现提交 4427870）。NCS-034: WorldBuilderAgent/CharacterDesignerAgent/PlotterAgent 规划请求经 AuthorIntentConsumeSupport携带【创作约定·第N版】精确契约版本及内容（空契约零注入）。NCS-035: ContinuityCheckerAgent 核查与 PassageEditor 段落修订同源接入；所用修订号经 AUTHOR_INTENT_USED 审计（context/revision）；委托边界条款（自主程度仅描述创作偏好，不授予权限）在场防自由文本提权。验收：AuthorIntentPlanningTest 2/2 + AuthorIntentRevisionTest 2/2；全量 1562/0/0/1skip。流程偏差：实现提交直接落 main（漏建分支），已补建分支指针并在 evidence 记录。",
+      "completion_record": "ncs-034-035-verified"
     },
     {
       "id": "NCS-036",

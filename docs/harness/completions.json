@@ -3479,8 +3479,20 @@
       "implementation_commit": "138eccd06431b5968384ba65b6a1b0b421ce65e6",
       "main_commit": "138eccd06431b5968384ba65b6a1b0b421ce65e6",
       "evidence": "docs/harness/evidence/2026-10-11-ncs-170.json"
+    },
+    {
+      "id": "ncs-034-035-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-034",
+        "NCS-035"
+      ],
+      "branch": "codex/ncs-034-035-author-intent",
+      "implementation_commit": "4427870b921404972503723061c796addfe5ef5f",
+      "main_commit": "4427870b921404972503723061c796addfe5ef5f",
+      "evidence": "docs/harness/evidence/2026-10-11-ncs-034-035.json"
     }
   ],
-  "commit": "138eccd06431b5968384ba65b6a1b0b421ce65e6",
-  "main_commit": "138eccd06431b5968384ba65b6a1b0b421ce65e6"
+  "commit": "4427870b921404972503723061c796addfe5ef5f",
+  "main_commit": "4427870b921404972503723061c796addfe5ef5f"
 }

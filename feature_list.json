@@ -7983,9 +7983,11 @@
       ],
       "status": "completed",
       "files": [
-        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
-        "src/main/java/com/writing/novel/orchestrator/OrchestratorConfig.java",
-        "src/test/java/com/writing/novel/service/AuthorIntentPlanningTest.java"
+        "src/main/java/com/writing/novel/service/AuthorIntentConsumeSupport.java",
+        "src/main/java/com/writing/novel/agent/WorldBuilderAgent.java",
+        "src/main/java/com/writing/novel/agent/CharacterDesignerAgent.java",
+        "src/main/java/com/writing/novel/agent/PlotterAgent.java",
+        "src/test/java/com/writing/novel/agent/AuthorIntentPlanningTest.java"
       ],
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：世界人物和全书卷计划请求带精确契约版本及内容。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
@@ -8004,9 +8006,9 @@
       ],
       "status": "completed",
       "files": [
-        "src/main/java/com/writing/novel/service/AgentRevisionService.java",
         "src/main/java/com/writing/novel/agent/ContinuityCheckerAgent.java",
-        "src/test/java/com/writing/novel/service/AuthorIntentRevisionTest.java"
+        "src/main/java/com/writing/novel/agent/PassageEditor.java",
+        "src/test/java/com/writing/novel/agent/AuthorIntentRevisionTest.java"
       ],
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：生成修订和核查遵从约定并记录所用修订；不以自由文本提升委托权限。编译、全量回归及适用E2E通过；按原方案证据分层验收。",

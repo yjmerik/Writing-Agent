@@ -1,0 +1,21 @@
+{
+  "commit": "26b922bff17bb36f32e7696f56ab02b2d6e1a1a2",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-183"
+  ],
+  "checks": [
+    {
+      "command": "OutlineReplanningTest（含新增 1 例）",
+      "result": "9/9：交接约束含到期伏笔（描述/埋设章/预计回收章）、弧线衔接（RISING 递进）；tryExtendLayeredOutline 传出的 planVolume 卷梗概含【卷际交接约束】段",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test 全量（分支+合并后干净 main 检出）",
+      "result": "1555/0/0/1skip ×2",
+      "exitCode": 0
+    }
+  ],
+  "notes": "交接约束四类：①detectorTrendService.volumeGate（刚收卷区间）②EvaluationRecord 低分维度（<7）+改进建议 ③到期伏笔（mustResolve/HIGH 且 isStale，含埋设/预计回收章）④弧线位置分布→递进指令。%5→每卷重规划。与 NCS-200 pacing 指令并列注入（互不影响）。注水区触发重规划：张力平坦的检测由 DetectorTrendService.volumeGate 承担并经本通道进 planVolume。",
+  "recordedAt": "2026-10-11T19:00:00+08:00"
+}

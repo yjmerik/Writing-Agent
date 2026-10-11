@@ -10720,15 +10720,17 @@
       "dependencies": [
         "NCS-179"
       ],
-      "status": "not-started",
-      "evidence": "",
+      "status": "completed",
+      "evidence": "2026-10-11 完成（分支 codex/ncs-183-volume-controller，主分支 ff-only 合入）。卷际交接结构化约束 buildVolumeHandoffConstraints：刚收卷的 VOLUME_TREND_WARNING+评价低分维度（<7+改进建议）+到期伏笔（mustResolve/HIGH 且 isStale，含埋设/预计回收章+回收指令）+弧线位置递进指令 → 注入下一卷 planVolume 卷梗概（与 NCS-200 pacing 指令并列）；总纲中段重规划每 5 卷→每卷触发。验收：OutlineReplanningTest 9/9（新增交接约束+planVolume 注入断言）；全量 1555/0/0/1skip ×2。卷号语义注意：planVolume 的 volumeNumber 为 8 章/卷章节算术——测试数据已对齐。",
       "files": [
-        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java"
+        "src/main/java/com/writing/novel/orchestrator/NovelOrchestrator.java",
+        "src/test/java/com/writing/novel/orchestrator/OutlineReplanningTest.java"
       ],
       "spec": "docs/reports/2026-10-09-novel-eval-shanhezhiqiren/系统根因综合报告.md",
       "description": "根因审查R1：下一卷 planVolume 输入为占位串（NovelOrchestrator:2927-2935），趋势警告/评价/伏笔台账/弧线均不传入；重规划每5卷触发且卷边界不停车。构建卷末停车点：汇聚 VOLUME_TREND_WARNING+EvaluationRecord 低分维度+到期伏笔+弧线应达阶段为结构化约束传入 planVolume；%5 降为每卷",
       "acceptance": "卷末生成的下一卷大纲包含对趋势告警与到期伏笔的处置（fixture 回放断言 prompt 含这些输入）；注水区（张力平坦4-6）能触发未写章重规划",
-      "verify_cmd": "mvn test -Dtest=NovelOrchestratorTest"
+      "verify_cmd": "mvn test -Dtest=NovelOrchestratorTest",
+      "completion_record": "ncs-183-verified"
     },
     {
       "id": "NCS-184",

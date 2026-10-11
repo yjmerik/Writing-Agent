@@ -3446,8 +3446,19 @@
       "implementation_commit": "c39ff0440706c8389f9aba985095547248e110a4",
       "main_commit": "c39ff0440706c8389f9aba985095547248e110a4",
       "evidence": "docs/harness/evidence/2026-10-11-ncs-180.json"
+    },
+    {
+      "id": "ncs-183-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-183"
+      ],
+      "branch": "codex/ncs-183-volume-controller",
+      "implementation_commit": "26b922bff17bb36f32e7696f56ab02b2d6e1a1a2",
+      "main_commit": "26b922bff17bb36f32e7696f56ab02b2d6e1a1a2",
+      "evidence": "docs/harness/evidence/2026-10-11-ncs-183.json"
     }
   ],
-  "commit": "c39ff0440706c8389f9aba985095547248e110a4",
-  "main_commit": "c39ff0440706c8389f9aba985095547248e110a4"
+  "commit": "26b922bff17bb36f32e7696f56ab02b2d6e1a1a2",
+  "main_commit": "26b922bff17bb36f32e7696f56ab02b2d6e1a1a2"
 }

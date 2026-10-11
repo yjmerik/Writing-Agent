@@ -10600,8 +10600,9 @@
       "status": "completed",
       "evidence": "2026-10-11 完成（分支 codex/ncs-177-index-cache，主分支 ff-only 合入）。ApiCacheControlFilter 扩展：/ 与 /index.html 设 no-store（升级换 jar 后浏览器首屏拿新 SPA 壳）；新增 StaticResourceCacheConfig：/assets/** immutable 一年长缓存（vite 内容指纹文件名）。验收：ApiCacheControlTest 3/3（新增壳 no-store+assets 长缓存断言）；全量 1550/0/0/1skip ×2。无注入上下文变化，语料复用。",
       "files": [
-        "src/main/java/com/writing/novel/web/",
-        "src/main/resources/application.yml"
+        "src/main/java/com/writing/novel/web/ApiCacheControlFilter.java",
+        "src/main/java/com/writing/novel/web/StaticResourceCacheConfig.java",
+        "src/test/java/com/writing/novel/web/ApiCacheControlTest.java"
       ],
       "spec": "docs/specs/2026-10-03-pipeline-resilience-and-review-ux.md",
       "description": "NCS-176 验证时实测：服务升级换 jar 后，浏览器仍从 HTTP 缓存读旧 index.html→加载旧 JS bundle，新功能不可见需手动绕过缓存。Spring Boot 静态资源未对 index.html 设置 no-cache；assets 带 hash 可长缓存。应为 index.html 配置 no-store（或 ETag+must-revalidate），assets/* 配置 immutable 长缓存",

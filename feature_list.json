@@ -8213,16 +8213,19 @@
       "dependencies": [
         "NCS-014"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
-        "src/main/java/com/writing/novel/service/ImpactAnalysisService.java",
-        "src/main/java/com/writing/novel/persistence/sqlite/RevisionRequestRepository.java",
-        "src/test/java/com/writing/novel/service/ImpactEvidenceTest.java"
+        "src/main/java/com/writing/novel/web/ContentController.java",
+        "src/main/java/com/writing/novel/domain/CharacterImpactAnalysis.java",
+        "src/main/java/com/writing/novel/persistence/sqlite/CharacterImpactAnalysisRepository.java",
+        "src/main/java/com/writing/novel/config/PersistenceConfig.java",
+        "src/test/java/com/writing/novel/web/CharacterImpactPreviewApiTest.java"
       ],
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：未命中归未知而非无影响；分析绑定基准版本并持久保存检查范围。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=ImpactEvidenceTest",
-      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+      "evidence": "2026-10-12 完成（分支 codex/ncs-045-impact-unknown，主分支 ff-only 合入）。未命中章节归 unknownReferences（不再暗示无影响，possibleReferences 兼容键保留）；分析绑定基准 baseVersion=人物规范状态指纹（12hex SHA-256）；检查范围（逐章版本）与certain/unknown/insufficient 清单持久化（character_impact_analyses 追加式，CharacterImpactAnalysisRepository.save/findLatest）。验收：CharacterImpactPreviewApiTest 13/13（新增未知语义+持久化 1 例）；全量 1578/0/0/1skip ×2。",
+      "completion_record": "ncs-045-verified"
     },
     {
       "id": "NCS-046",

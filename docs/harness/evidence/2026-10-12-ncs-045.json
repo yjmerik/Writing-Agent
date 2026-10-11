@@ -1,0 +1,21 @@
+{
+  "commit": "f7c82970347ca0cf761810658d16474b0c313292",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-045"
+  ],
+  "checks": [
+    {
+      "command": "CharacterImpactPreviewApiTest（含新增 1 例）",
+      "result": "13/13：unknownReferences 存在（未命中归未知）、baseVersion 绑定、分析落库可查",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test 全量（分支+合并后干净 main 检出）",
+      "result": "1578/0/0/1skip ×2",
+      "exitCode": 0
+    }
+  ],
+  "notes": "持久化表 character_impact_analyses（追加式，CREATE IF NOT EXISTS 幂等）；baseVersion=人物规范状态 SHA-256 12hex；scope_json 逐章（章号,版本）；ContentController 4/8/9 参构造链（bean 注入主路径，8 参测试构造硬编码降级 ./data/novel.db——测试库用 TestPropertySource 同路径）。",
+  "recordedAt": "2026-10-12T01:00:00+08:00"
+}

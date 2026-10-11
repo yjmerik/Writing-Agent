@@ -3517,8 +3517,19 @@
       "implementation_commit": "00d6688d4b59a33e8a3824db893a053c607d533f",
       "main_commit": "00d6688d4b59a33e8a3824db893a053c607d533f",
       "evidence": "docs/harness/evidence/2026-10-11-ncs-041-044.json"
+    },
+    {
+      "id": "ncs-045-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-045"
+      ],
+      "branch": "codex/ncs-045-impact-unknown",
+      "implementation_commit": "f7c82970347ca0cf761810658d16474b0c313292",
+      "main_commit": "f7c82970347ca0cf761810658d16474b0c313292",
+      "evidence": "docs/harness/evidence/2026-10-12-ncs-045.json"
     }
   ],
-  "commit": "00d6688d4b59a33e8a3824db893a053c607d533f",
-  "main_commit": "00d6688d4b59a33e8a3824db893a053c607d533f"
+  "commit": "f7c82970347ca0cf761810658d16474b0c313292",
+  "main_commit": "f7c82970347ca0cf761810658d16474b0c313292"
 }

@@ -24,6 +24,8 @@ while [ $# -gt 0 ]; do
     --preset) PRESET="$2"; shift 2
       case "$PRESET" in
         wuxia) PRESET_TAGS="武侠,江湖" ;;
+        historical) PRESET_TAGS="历史,权谋,古代" ;;
+        cultivation) PRESET_TAGS="修仙,玄幻" ;;
         *) PRESET_TAGS="悬疑,古代" ;;
       esac ;;
     *) echo "未知参数: $1"; exit 1 ;;

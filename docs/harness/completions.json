@@ -3336,8 +3336,19 @@
       "implementation_commit": "fc5167db86482ffe9e002a5b7398b9d97c786ffe",
       "main_commit": "fc5167db86482ffe9e002a5b7398b9d97c786ffe",
       "evidence": "docs/harness/evidence/2026-10-11-ncs-195.json"
+    },
+    {
+      "id": "ncs-196-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-196"
+      ],
+      "branch": "codex/ncs-196-texture-expand",
+      "implementation_commit": "90055714f20ce2684a2ca1bf23f72bd579e4e1a3",
+      "main_commit": "90055714f20ce2684a2ca1bf23f72bd579e4e1a3",
+      "evidence": "docs/harness/evidence/2026-10-11-ncs-196.json"
     }
   ],
-  "commit": "fc5167db86482ffe9e002a5b7398b9d97c786ffe",
-  "main_commit": "fc5167db86482ffe9e002a5b7398b9d97c786ffe"
+  "commit": "90055714f20ce2684a2ca1bf23f72bd579e4e1a3",
+  "main_commit": "90055714f20ce2684a2ca1bf23f72bd579e4e1a3"
 }

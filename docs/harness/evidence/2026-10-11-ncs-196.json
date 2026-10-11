@@ -1,0 +1,26 @@
+{
+  "commit": "90055714f20ce2684a2ca1bf23f72bd579e4e1a3",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-196"
+  ],
+  "checks": [
+    {
+      "command": "verify_cmd: mvn test -Dtest=PassageEditorTest,ChapterProductionTest",
+      "result": "通过（ChapterProductionTest 4/4）；新增 TextureExpandTest 2/2：扩写复验通过→版本化替换且指令约束情节事实不变；HIGH 漂移→TEXTURE_EXPAND_REJECTED 回退并升级整章重写",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（分支 + 合并后干净 main 检出）",
+      "result": "分支 1539/0/0/1skip；干净 main 首轮 1 失败（偶发 flake，报告随 worktree 清理不可考）、立即重跑 1539/0/0/1skip 全绿",
+      "exitCode": 0
+    },
+    {
+      "command": "replay×2 + baseline",
+      "result": "既有语料 replay×2 均 acceptancePassed=true（扩写通道仅质感题材触发，mystery 宽松策略零新调用）+ compare-baseline PASS；质感题材端到端扩写随 HISTORICAL 语料在批次收尾统一覆盖",
+      "exitCode": 0
+    }
+  ],
+  "notes": "EXPAND 输出长度护栏 [1x,3x]；复验复用既有 consistencyGuard。",
+  "recordedAt": "2026-10-11T05:00:00+08:00"
+}

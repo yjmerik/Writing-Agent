@@ -10975,7 +10975,7 @@
       "dependencies": [
         "NCS-195"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/agent/PassageEditor.java",
         "src/main/java/com/writing/novel/orchestrator/ChapterProduction.java"
@@ -10983,7 +10983,9 @@
       "spec": "docs/specs/2026-10-09-narrative-quality-architecture.md",
       "description": "TextureGate 挑最弱 1-2 场景段自动调用 EXPAND 模式扩写（1.5-2倍、感官细节/心理/动作），扩写后 ConsistencyGuard 快速复验，通过则替换、失败回退原文并升级整章重写。情节事实不变。",
       "acceptance": "PassageEditorTest/ChapterProductionTest：对话超标样本扩写后复验通过且情节事实不变；复验失败回退",
-      "verify_cmd": "mvn test -Dtest=PassageEditorTest,ChapterProductionTest"
+      "verify_cmd": "mvn test -Dtest=PassageEditorTest,ChapterProductionTest",
+      "completion_record": "ncs-196-verified",
+      "evidence": "2026-10-11 完成（分支 codex/ncs-196-texture-expand，实现提交 9005571，主分支 ff-only 合入）。ChapterProduction.expandForTexture：TextureGate 质感单项越界→按修复方向挑最弱 1-2 场景段，PassageEditor EXPAND（1.5-2倍、感官/心理/动作、情节事实不变硬约束），输出长度护栏 [1x,3x]；扩写稿 consistencyGuard 快速复验——无 HIGH 版本化替换（autoRewriteIfCurrent/TEXTURE_EXPANDED），HIGH 漂移回退原文并升级整章重写（TEXTURE_EXPAND_REJECTED）。验收：TextureExpandTest 2/2 + ChapterProductionTest 4/4；全量分支 1539 绿 + 干净 main 重跑绿（首轮 1 偶发失败重跑消失）；既有语料 replay×2 全验收 + baseline PASS。"
     },
     {
       "id": "NCS-197",

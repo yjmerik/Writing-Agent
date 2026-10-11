@@ -11065,9 +11065,25 @@
       "verify_cmd": "mvn test -Dtest=VolumePacingControllerTest",
       "completion_record": "ncs-200-verified",
       "evidence": "2026-10-11 完成（分支 codex/ncs-200-volume-pacing，主分支 ff-only 合入——分支先合入并行推进的 main/NCS-199 再回归）。service/VolumePacingController：卷末聚合本卷 TEXTURE_METRICS 均值（EventLog 订阅滚动缓冲 60 条，closeVolume 清空=迟滞窗口）+检测趋势告警+读者子分均值+回读 pacing（NCS-189 透传）→ VolumePacingDirective 持久化（volume_pacing_directives 表）；确定性设定点规则（对白占比>55%→压低对白密度、乒乓>0→连续对白≤3 段、读者均分<7→强化张力点）；注入 ①tryExtendLayeredOutline 的 planVolume 卷梗概 ②ContextAssembler.buildWritingConstraints（controller::constraintsFor，同卷同指令）；卷内设定点不变（迟滞）。验收：VolumePacingControllerTest 4/4；全量 1549/0/0/1skip ×2；既有 1 章语料 replay×2 全验收 + baseline PASS。"
+    },
+    {
+      "id": "NCS-201",
+      "name": "质感重写输出截断——CHAPTER_WRITING 预算 20k→32k",
+      "type": "bug",
+      "phase": 55,
+      "dependencies": [],
+      "status": "in-progress",
+      "evidence": "2026-10-11 HISTORICAL 1 章录制实战验证（质感链路端到端）发现：TEXTURE_GATE 正确拦截（对白乒乓+场景数超区间）并路由整章重写，但重写调用 LLM_TRUNCATED（20000 输出顶格，DeepSeek reasoning+纠偏上下文膨胀）→ rewriteForCorrection 拒绝截断稿 → 内容未替换（v2=reindex 重存）→ 质感问题滞留终稿（MEDIUM 非阻断）。replay×2 确定性复现同链。",
+      "files": [
+        "src/main/resources/application.yml"
+      ],
+      "description": "CHAPTER_WRITING max-tokens 20000 在 DeepSeek 下被重写路径顶格（初写同参未截断——纠偏上下文+场景规划注入放大 reasoning）。与 NCS-186 EXTRACTION 32k 同型预算标定问题。",
+      "acceptance": "HISTORICAL 1 章录制中质感重写完整落库（LLM_TRUNCATED 消失、TEXTURE_GATE 拦截项在重写稿中改善），replay×2 一致全验收",
+      "verify_cmd": "mvn test -Dtest=TokenPlanModelConfigurationTest",
+      "spec": "docs/specs/2026-10-11-rewrite-output-budget.md"
     }
   ],
   "schema_version": 2,
   "updated_at": "2026-10-11",
-  "active_feature": null
+  "active_feature": "NCS-201"
 }

@@ -4,6 +4,7 @@ import com.writing.novel.domain.*;
 import com.writing.novel.domain.Character;
 import com.writing.novel.domain.ThreadStatus;  // 显式导入，避免与 java.lang.Character 歧义
 import com.writing.novel.domain.WritingPreferences;
+import com.writing.novel.orchestrator.ChapterPostProcessor;
 import com.writing.novel.spi.NovelRepository;
 import com.writing.novel.util.ReviewFingerprint;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -335,6 +336,58 @@ public class SqliteNovelRepository implements NovelRepository {
         try (Connection conn = cp.getConnection()) {
             return saveChapter(conn, c);
         } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /**
+     * NCS-042: 章正文与派生任务入账同事务——单章与整组共用；
+     * 任一失败一起回滚（重复阶段键触发唯一约束→整体回滚）。
+     */
+    /** NCS-042: 整组事务——组内每章 (章节, 阶段集, 来源版本) 同一事务；任一失败全组回滚 */
+    public boolean saveChaptersEnqueuingDerivatives(
+            List<com.writing.novel.util.Triple<Chapter, List<ChapterPostProcessor.Stage>, Integer>> group) {
+        return runInTransaction(conn -> {
+            for (var item : group) {
+                Chapter c = item.first();
+                saveChapter(conn, c);
+                String sql = "INSERT INTO post_process_ledger " +
+                        "(project_id, chapter_index, stage, status, updated_at, source_version, attempts) " +
+                        "VALUES (?,?,?,'PENDING',?,?,0)";
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    for (ChapterPostProcessor.Stage s : item.second()) {
+                        ps.setString(1, c.getProjectId());
+                        ps.setInt(2, c.getChapterIndex());
+                        ps.setString(3, s.name());
+                        ps.setString(4, java.time.Instant.now().toString());
+                        ps.setInt(5, item.third());
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                } catch (SQLException e) { throw new RuntimeException(e); }
+            }
+            return true;
+        });
+    }
+
+    public boolean saveChapterEnqueuingDerivatives(Chapter c,
+            List<ChapterPostProcessor.Stage> stages, int sourceVersion) {
+        return runInTransaction(conn -> {
+            saveChapter(conn, c);
+            String sql = "INSERT INTO post_process_ledger " +
+                    "(project_id, chapter_index, stage, status, updated_at, source_version, attempts) " +
+                    "VALUES (?,?,?,'PENDING',?,?,0)";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                for (ChapterPostProcessor.Stage s : stages) {
+                    ps.setString(1, c.getProjectId());
+                    ps.setInt(2, c.getChapterIndex());
+                    ps.setString(3, s.name());
+                    ps.setString(4, java.time.Instant.now().toString());
+                    ps.setInt(5, sourceVersion);
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            } catch (SQLException e) { throw new RuntimeException(e); }
+            return true;
+        });
     }
 
     /** B1: 事务内保存章节——使用传入连接 */

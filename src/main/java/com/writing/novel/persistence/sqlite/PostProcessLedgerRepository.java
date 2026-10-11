@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -37,17 +38,93 @@ public class PostProcessLedgerRepository {
 
     /** 无行则建 PENDING 行（有行不改动——不覆盖已 RUNNING/COMPLETED） */
     public void ensureStage(String projectId, int chapterIndex, ChapterPostProcessor.Stage stage) {
-        String sql = "INSERT INTO post_process_ledger (project_id, chapter_index, stage, status, updated_at) " +
-                "VALUES (?,?,?,'PENDING',?) ON CONFLICT(project_id, chapter_index, stage) DO NOTHING";
+        ensureStage(projectId, chapterIndex, stage, 0);
+    }
+
+    /**
+     * NCS-041: 带来源稿版本的入账——(项目,章,投影类型) 唯一；
+     * 来源稿版本升级（重写）时重新武装 PENDING 并绑定新版本。
+     */
+    public void ensureStage(String projectId, int chapterIndex,
+                            ChapterPostProcessor.Stage stage, int sourceVersion) {
+        String sql = "INSERT INTO post_process_ledger (project_id, chapter_index, stage, status, updated_at, source_version, attempts) " +
+                "VALUES (?,?,?,'PENDING',?,?,0) " +
+                "ON CONFLICT(project_id, chapter_index, stage) DO UPDATE SET " +
+                "status=CASE WHEN excluded.source_version>COALESCE(post_process_ledger.source_version,0) " +
+                "  AND post_process_ledger.status!='COMPLETED' THEN 'PENDING' ELSE post_process_ledger.status END, " +
+                "source_version=CASE WHEN excluded.source_version>COALESCE(post_process_ledger.source_version,0) " +
+                "  THEN excluded.source_version ELSE post_process_ledger.source_version END, " +
+                "updated_at=excluded.updated_at";
         try (Connection conn = cp.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, projectId);
             ps.setInt(2, chapterIndex);
             ps.setString(3, stage.name());
             ps.setString(4, Instant.now().toString());
+            ps.setInt(5, sourceVersion);
             ps.executeUpdate();
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
+
+    /** NCS-043: 失败持久待重试——状态回 PENDING、attempts+1（重启后仍在账） */
+    public void failStage(String projectId, int chapterIndex, ChapterPostProcessor.Stage stage) {
+        String sql = "UPDATE post_process_ledger SET status='PENDING', " +
+                "attempts=COALESCE(attempts,0)+1, updated_at=? " +
+                "WHERE project_id=? AND chapter_index=? AND stage=?";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, Instant.now().toString());
+            ps.setString(2, projectId);
+            ps.setInt(3, chapterIndex);
+            ps.setString(4, stage.name());
+            ps.executeUpdate();
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /**
+     * NCS-043: 带来源版本的完成标记——旧来源不得完成新稿：
+     * 账本版本与预期不符时返回 false（调用方按新稿重新入账）。
+     */
+    public boolean markCompletedForVersion(String projectId, int chapterIndex,
+                                           ChapterPostProcessor.Stage stage, int expectedSourceVersion) {
+        ensureStage(projectId, chapterIndex, stage, expectedSourceVersion);
+        String sql = "UPDATE post_process_ledger SET status='COMPLETED', updated_at=? " +
+                "WHERE project_id=? AND chapter_index=? AND stage=? AND status!='COMPLETED' " +
+                "AND COALESCE(source_version,0)=?";
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, Instant.now().toString());
+            ps.setString(2, projectId);
+            ps.setInt(3, chapterIndex);
+            ps.setString(4, stage.name());
+            ps.setInt(5, expectedSourceVersion);
+            int rows = ps.executeUpdate();
+            return rows == 1;
+        } catch (SQLException e) { throw new RuntimeException(e); }
+    }
+
+    /** NCS-041: 待执行项（含来源稿版本与重试计数）——重启后仍在（SQLite 持久） */
+    public List<Map<String, Object>> pendingTasks(String projectId, int chapterIndex) {
+        String sql = "SELECT stage, status, COALESCE(source_version,0) AS sv, COALESCE(attempts,0) AS att " +
+                "FROM post_process_ledger WHERE project_id=? AND chapter_index=? AND status!='COMPLETED'";
+        List<Map<String, Object>> out = new ArrayList<>();
+        try (Connection conn = cp.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, projectId);
+            ps.setInt(2, chapterIndex);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Map<String, Object> row = new java.util.LinkedHashMap<>();
+                row.put("stage", ChapterPostProcessor.Stage.valueOf(rs.getString("stage")));
+                row.put("status", rs.getString("status"));
+                row.put("sourceVersion", rs.getInt("sv"));
+                row.put("attempts", rs.getInt("att"));
+                out.add(row);
+            }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return out;
+    }
+
 
     /** 标记 RUNNING——COMPLETED 是终态，不降级 */
     public void markRunning(String projectId, int chapterIndex, ChapterPostProcessor.Stage stage) {

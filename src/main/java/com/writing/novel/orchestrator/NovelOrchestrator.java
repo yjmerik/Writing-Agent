@@ -276,6 +276,7 @@ public class NovelOrchestrator {
         this.factHarvester = pol.factHarvester();
         this.archiveCompactor = pol.archiveCompactor();
         this.costBudgetMonitor = pol.costBudgetMonitor();
+        this.postProcessLedger = pol.postProcessLedger();
         this.chapterRevisionService = new ChapterRevisionService(repository);
         // p22-04: 章节生产模块——写前装配/正文生成/质量链/纠偏重写经此模块
         this.production = new ChapterProduction(this, repository, chapterWriter,
@@ -2910,6 +2911,31 @@ public class NovelOrchestrator {
      * p12-fix: 分层大纲延迟生成——尝试用 planVolume 生成下一卷的详细章节大纲。
      * @return true 如果成功扩展了大纲（新增了章节梗概）
      */
+    /** NCS-044: 后处理账本引用（就绪准入用；null=不启用） */
+    private final com.writing.novel.persistence.sqlite.PostProcessLedgerRepository postProcessLedger;
+
+    /**
+     * NCS-044: 派生就绪准入——正文领先派生投影（outbox 有待执行项）时阻断受影响续写，
+     * 返回同源身份与原因（章号+阶段+来源稿版本）；就绪返回空。
+     */
+    public java.util.Optional<String> derivedReadinessBlocker(String projectId, int nextChapterIndex) {
+        try {
+            if (postProcessLedger == null) return java.util.Optional.empty();
+            var chapter = repository.findChapterByIndex(projectId, nextChapterIndex - 1);
+            if (chapter.isEmpty()) return java.util.Optional.empty();
+            var pending = postProcessLedger.pendingTasks(projectId, nextChapterIndex - 1);
+            if (pending.isEmpty()) return java.util.Optional.empty();
+            var ids = pending.stream()
+                    .map(t -> t.get("stage") + "(v" + t.get("sourceVersion") + ",尝试" + t.get("attempts") + ")")
+                    .toList();
+            return java.util.Optional.of("第 " + (nextChapterIndex - 1) + " 章派生投影未就绪（来源稿 v"
+                    + chapter.get().getVersion() + "）：" + String.join("、", ids)
+                    + "——续写将基于陈旧投影，请先完成派生刷新");
+        } catch (Exception e) {
+            return java.util.Optional.empty(); // 就绪性检查自身失败不阻断（容错降级）
+        }
+    }
+
     /**
      * NCS-183: 卷际交接结构化约束——刚收卷的 VOLUME_TREND_WARNING + 评价低分维度
      * + 到期伏笔 + 弧线应达阶段，注入下一卷 planVolume 卷梗概（无数据返回空串）。

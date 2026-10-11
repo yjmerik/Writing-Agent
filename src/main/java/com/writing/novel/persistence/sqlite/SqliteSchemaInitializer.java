@@ -462,6 +462,10 @@ public class SqliteSchemaInitializer {
 
     private void applyMigrations(Statement st) {
         // p18-02: checkpoints 表新增 payload 列（审批质量信息）
+
+        // NCS-041: 派生任务账本——来源稿版本绑定与重试计数（旧行 NULL=0，可重复迁移）
+        safeAddColumn(st, "ALTER TABLE post_process_ledger ADD COLUMN source_version INTEGER");
+        safeAddColumn(st, "ALTER TABLE post_process_ledger ADD COLUMN attempts INTEGER");
         safeAddColumn(st, "ALTER TABLE checkpoints ADD COLUMN payload TEXT");
         // p10-c1: foreshadowings 表新增列
         safeAddColumn(st, "ALTER TABLE foreshadowings ADD COLUMN priority TEXT DEFAULT 'MEDIUM'");

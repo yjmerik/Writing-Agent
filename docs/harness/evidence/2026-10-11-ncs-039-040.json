@@ -1,0 +1,22 @@
+{
+  "commit": "2627fb91f7785348e17222793b8816013502bd50",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-039",
+    "NCS-040"
+  ],
+  "checks": [
+    {
+      "command": "verify_cmd: CorrectionIndexIsolationTest / AtomicVectorProjectionTest",
+      "result": "2/2 + 3/3：生成期索引零触碰（never indexBatch/replace/remove）+接受时重建；embedding 失败原索引完整（旧 chunk 可检索）；成功后 id 集合恰为新投影；纯删除语义",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn test 全量（分支+合并后干净 main 检出）",
+      "result": "1567/0/0/1skip ×2",
+      "exitCode": 0
+    }
+  ],
+  "notes": "NCS-039 反转原契约（预索引候选→拒收回滚）为「接受后建索引」；VectorCleanupOnRewritePathsTest 用例 1 更新到新契约（其余两条路径本就接受后索引，不改）。NCS-040 replaceByPrefixAtomic：embed 前置（失败点不触存储）、deleteByPrefix+upsert 成对、空块=纯删除；indexChapterInChunks 全面切换。",
+  "recordedAt": "2026-10-11T23:00:00+08:00"
+}

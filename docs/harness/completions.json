@@ -3491,8 +3491,20 @@
       "implementation_commit": "4427870b921404972503723061c796addfe5ef5f",
       "main_commit": "4427870b921404972503723061c796addfe5ef5f",
       "evidence": "docs/harness/evidence/2026-10-11-ncs-034-035.json"
+    },
+    {
+      "id": "ncs-039-040-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-039",
+        "NCS-040"
+      ],
+      "branch": "codex/ncs-039-040-index-isolation",
+      "implementation_commit": "2627fb91f7785348e17222793b8816013502bd50",
+      "main_commit": "2627fb91f7785348e17222793b8816013502bd50",
+      "evidence": "docs/harness/evidence/2026-10-11-ncs-039-040.json"
     }
   ],
-  "commit": "4427870b921404972503723061c796addfe5ef5f",
-  "main_commit": "4427870b921404972503723061c796addfe5ef5f"
+  "commit": "2627fb91f7785348e17222793b8816013502bd50",
+  "main_commit": "2627fb91f7785348e17222793b8816013502bd50"
 }

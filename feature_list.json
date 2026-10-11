@@ -8088,16 +8088,18 @@
       "dependencies": [
         "NCS-001"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/agent/ChapterWriterAgent.java",
-        "src/main/java/com/writing/novel/orchestrator/ChapterPostProcessor.java",
-        "src/test/java/com/writing/novel/service/CorrectionIndexIsolationTest.java"
+        "src/main/java/com/writing/novel/orchestrator/ChapterProduction.java",
+        "src/test/java/com/writing/novel/agent/CorrectionIndexIsolationTest.java",
+        "src/test/java/com/writing/novel/agent/VectorCleanupOnRewritePathsTest.java"
       ],
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：拒收候选不改变当前检索；接受后才建索引。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=CorrectionIndexIsolationTest",
-      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+      "evidence": "2026-10-11 完成（分支 codex/ncs-039-040-index-isolation，主分支 ff-only 合入）。rewriteForCorrection 不再预索引候选（拒收不改变当前检索——原「先索引候选+拒收回滚」契约反转）；接受侧（rewriteWithCorrection autoRewriteIfCurrent 落库后）按接受稿 reindexChapter 重建。验收：CorrectionIndexIsolationTest 2/2（生成期 never 索引+接受重建+拒收零恢复）；VectorCleanupOnRewritePathsTest 用例 1 更新至新契约；全量 1567/0/0/1skip ×2。",
+      "completion_record": "ncs-039-040-verified"
     },
     {
       "id": "NCS-040",
@@ -8108,16 +8110,17 @@
       "dependencies": [
         "NCS-039"
       ],
-      "status": "not-started",
+      "status": "completed",
       "files": [
         "src/main/java/com/writing/novel/memory/VectorRetrievalService.java",
-        "src/main/java/com/writing/novel/persistence/embedding/EmbeddedVectorStore.java",
-        "src/test/java/com/writing/novel/service/AtomicVectorProjectionTest.java"
+        "src/main/java/com/writing/novel/agent/ChapterWriterAgent.java",
+        "src/test/java/com/writing/novel/memory/AtomicVectorProjectionTest.java"
       ],
       "spec": "docs/specs/2026-09-20-ncs-completion.md",
       "acceptance": "运行 verify_cmd 通过：embedding失败时原索引完整；成功后原子替换匹配来源的投影。编译、全量回归及适用E2E通过；按原方案证据分层验收。",
       "verify_cmd": "mvn test -Dtest=AtomicVectorProjectionTest",
-      "evidence": "来源：2026-09-20完整性审计A01–A09；待实现验证。"
+      "evidence": "2026-10-11 完成（同分支）。VectorRetrievalService.replaceByPrefixAtomic：embedBatch 前置（失败点不触存储→原索引完整）、deleteByPrefix+upsert 成对替换、空新块=纯删除；indexChapterInChunks 切换至原子替换（消除「先删旧后建新」中 embedding 失败的投影真空/混态窗口）。验收：AtomicVectorProjectionTest 3/3（失败完整性/成功替换/纯删除）；全量 1567/0/0/1skip ×2。",
+      "completion_record": "ncs-039-040-verified"
     },
     {
       "id": "NCS-041",

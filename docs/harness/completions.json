@@ -3402,8 +3402,19 @@
       "implementation_commit": "297b77c3e6791a7be4fee9b8a242fc114c0d4f1f",
       "main_commit": "297b77c3e6791a7be4fee9b8a242fc114c0d4f1f",
       "evidence": "docs/harness/evidence/2026-10-11-ncs-201.json"
+    },
+    {
+      "id": "ncs-177-verified",
+      "kind": "verified",
+      "feature_ids": [
+        "NCS-177"
+      ],
+      "branch": "codex/ncs-177-index-cache",
+      "implementation_commit": "032fdbc17c1da16a5cea1a53e629895917ee1ba2",
+      "main_commit": "032fdbc17c1da16a5cea1a53e629895917ee1ba2",
+      "evidence": "docs/harness/evidence/2026-10-11-ncs-177.json"
     }
   ],
-  "commit": "297b77c3e6791a7be4fee9b8a242fc114c0d4f1f",
-  "main_commit": "297b77c3e6791a7be4fee9b8a242fc114c0d4f1f"
+  "commit": "032fdbc17c1da16a5cea1a53e629895917ee1ba2",
+  "main_commit": "032fdbc17c1da16a5cea1a53e629895917ee1ba2"
 }

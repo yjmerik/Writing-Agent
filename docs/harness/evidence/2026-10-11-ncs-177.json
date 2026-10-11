@@ -1,0 +1,26 @@
+{
+  "commit": "032fdbc17c1da16a5cea1a53e629895917ee1ba2",
+  "cleanCheckout": true,
+  "feature_ids": [
+    "NCS-177"
+  ],
+  "checks": [
+    {
+      "command": "ApiCacheControlTest（含新增 1 例）",
+      "result": "3/3：/ 与 /index.html 携带 no-store；带指纹 assets 含 max-age+immutable（前端未构建时 Assumptions 跳过）",
+      "exitCode": 0
+    },
+    {
+      "command": "mvn compile && mvn test（分支与合并后干净 main 检出）",
+      "result": "1550/0/0/1skip ×2",
+      "exitCode": 0
+    },
+    {
+      "command": "verify_cmd 的 curl 部分",
+      "result": "MockMvc 断言等价覆盖响应头（curl -sI 需部署实例，由部署验收时复核）",
+      "exitCode": 0
+    }
+  ],
+  "notes": "无注入上下文变化——语料复用。assets 长缓存依赖 vite 文件名指纹（hash）。",
+  "recordedAt": "2026-10-11T15:00:00+08:00"
+}
